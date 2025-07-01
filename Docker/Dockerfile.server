@@ -1,0 +1,61 @@
+# Base node image for all server environments
+FROM node:20-slim AS server-base
+WORKDIR /usr/src/app
+
+COPY server/package*.json ./
+
+# Development server environment
+FROM server-base AS server-development
+
+# Install all dependencies including dev ones
+RUN npm install --include=dev
+
+# Now copy server source code
+COPY server .
+
+ENV NODE_ENV=development
+EXPOSE 5000
+
+CMD ["npm", "run", "dev"]
+
+# QA server environment
+FROM server-base AS server-qa
+
+# Install only production dependencies
+RUN npm ci --only=production
+
+# Now copy server source code
+COPY server .
+
+# Set permissions safely
+RUN mkdir -p /usr/src/app/public/temp && \
+    chown -R node:node /usr/src/app && \
+    chmod -R 775 /usr/src/app/public/temp
+
+USER node
+
+ENV NODE_ENV=qa
+EXPOSE 5000
+
+CMD ["node", "src/server.js"]
+
+# Production server environment
+FROM server-base AS server-production
+
+# Install only production dependencies
+RUN npm ci --only=production
+
+# Now copy server source code
+COPY server .
+
+# Set permissions safely
+RUN mkdir -p /usr/src/app/public/temp && \
+    chown -R node:node /usr/src/app && \
+    chmod -R 775 /usr/src/app/public/temp
+
+USER node
+
+ENV NODE_ENV=production
+EXPOSE 5000
+
+CMD ["node", "src/server.js"]

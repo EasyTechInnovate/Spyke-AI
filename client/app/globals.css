@@ -1,0 +1,255 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  /* Brand Colors */
+  --brand-primary: #00FF89;
+  --brand-primary-text: #121212;
+  --brand-dark: #121212;
+  --brand-dark-text: #00FF89;
+  --brand-secondary: #FFC050;
+  --brand-secondary-text: #FFFFFF;
+  --brand-white: #FFFFFF;
+  --brand-white-text: #FFC050;
+  
+  /* Font Families - Updated to use Next.js font variables */
+  --font-title: var(--font-league-spartan), 'League Spartan', sans-serif;
+  --font-body: var(--font-kumbh-sans), 'Kumbh Sans', sans-serif;
+  
+  /* Default theme variables */
+  --radius: 0.625rem;
+  --background: #FFFFFF;
+  --foreground: #121212;
+  --card: #FFFFFF;
+  --card-foreground: #121212;
+  --popover: #FFFFFF;
+  --popover-foreground: #121212;
+  --primary: #00FF89;
+  --primary-foreground: #121212;
+  --secondary: #FFC050;
+  --secondary-foreground: #FFFFFF;
+  --muted: #f5f5f5;
+  --muted-foreground: #6b7280;
+  --accent: #00FF89;
+  --accent-foreground: #121212;
+  --destructive: #ef4444;
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --ring: #00FF89;
+  --chart-1: #00FF89;
+  --chart-2: #FFC050;
+  --chart-3: #121212;
+  --chart-4: #10b981;
+  --chart-5: #f59e0b;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #121212;
+  --sidebar-primary: #00FF89;
+  --sidebar-primary-foreground: #121212;
+  --sidebar-accent: #FFC050;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: #00FF89;
+}
+
+.dark {
+  --background: #121212;
+  --foreground: #00FF89;
+  --card: #1f1f1f;
+  --card-foreground: #00FF89;
+  --popover: #1f1f1f;
+  --popover-foreground: #00FF89;
+  --primary: #00FF89;
+  --primary-foreground: #121212;
+  --secondary: #FFC050;
+  --secondary-foreground: #FFFFFF;
+  --muted: #2a2a2a;
+  --muted-foreground: #9ca3af;
+  --accent: #00FF89;
+  --accent-foreground: #121212;
+  --destructive: #ef4444;
+  --border: #374151;
+  --input: #374151;
+  --ring: #00FF89;
+  --chart-1: #00FF89;
+  --chart-2: #FFC050;
+  --chart-3: #FFFFFF;
+  --chart-4: #10b981;
+  --chart-5: #f59e0b;
+  --sidebar: #121212;
+  --sidebar-foreground: #00FF89;
+  --sidebar-primary: #00FF89;
+  --sidebar-primary-foreground: #121212;
+  --sidebar-accent: #FFC050;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #374151;
+  --sidebar-ring: #00FF89;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-title);
+    font-weight: 700;
+  }
+  
+  /* Typography Classes */
+  .title-font {
+    font-family: var(--font-title);
+  }
+  
+  .body-font {
+    font-family: var(--font-body);
+  }
+  
+  .font-league-spartan {
+    font-family: var(--font-title);
+  }
+  
+  .font-kumbh-sans {
+    font-family: var(--font-body);
+  }
+  
+  /* Brand Color Classes */
+  .brand-primary {
+    background-color: var(--brand-primary);
+    color: var(--brand-primary-text);
+  }
+  
+  .brand-dark {
+    background-color: var(--brand-dark);
+    color: var(--brand-dark-text);
+  }
+  
+  .brand-secondary {
+    background-color: var(--brand-secondary);
+    color: var(--brand-secondary-text);
+  }
+  
+  .brand-white {
+    background-color: var(--brand-white);
+    color: var(--brand-white-text);
+  }
+  
+  .text-brand-primary {
+    color: var(--brand-primary);
+  }
+  
+  .text-brand-dark {
+    color: var(--brand-dark);
+  }
+  
+  .text-brand-secondary {
+    color: var(--brand-secondary);
+  }
+  
+  .bg-brand-primary {
+    background-color: var(--brand-primary);
+  }
+  
+  .bg-brand-dark {
+    background-color: var(--brand-dark);
+  }
+  
+  .bg-brand-secondary {
+    background-color: var(--brand-secondary);
+  }
+  
+  .bg-brand-white {
+    background-color: var(--brand-white);
+  }
+  
+  .border-brand-primary {
+    border-color: var(--brand-primary);
+  }
+  
+  .border-brand-secondary {
+    border-color: var(--brand-secondary);
+  }
+  
+  .border-brand-dark {
+    border-color: var(--brand-dark);
+  }
+  
+  /* Gradient Classes */
+  .gradient-primary {
+    background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
+  }
+  
+  .gradient-dark {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, #2a2a2a 100%);
+  }
+  
+  .gradient-text-primary {
+    background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Hover States */
+  .hover-brand-primary:hover {
+    background-color: #00e67c;
+  }
+  
+  .hover-brand-secondary:hover {
+    background-color: #ffb83d;
+  }
+  
+  .hover-brand-dark:hover {
+    background-color: #2a2a2a;
+  }
+  
+  /* Logo styles */
+  .logo-icon {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+  }
+}

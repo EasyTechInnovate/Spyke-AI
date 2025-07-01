@@ -1,0 +1,183 @@
+version: '3.9'
+
+services:
+    # Development environment
+    mongo:
+        container_name: mongo_container
+        image: 'mongo'
+        volumes:
+            - mongo-data:/data/db
+        networks:
+            - queue-net
+        env_file:
+            - ../.env.development
+        command: mongod --bind_ip_all
+        restart: always
+        profiles:
+            - development
+
+    client:
+        container_name: client
+        build:
+            context: ..
+            dockerfile: ./Docker/Dockerfile.client
+            target: client-development
+        ports:
+            - '5173:5173'
+        restart: always
+        env_file:
+            - ../.env.development
+        volumes:
+            - ../client/src:/app/src
+            - ../client/package.json:/app/package.json
+            - /usr/src/app/node_modules
+        depends_on:
+            - server
+        networks:
+            - queue-net
+        profiles:
+            - development
+
+    server:
+        container_name: server
+        build:
+            context: ..
+            dockerfile: ./Docker/Dockerfile.server
+            target: server-development
+        ports:
+            - '5000:5000'
+        depends_on:
+            - mongo
+        env_file:
+            - ../.env.development
+        volumes:
+            - ../server/src:/usr/src/app/src
+            - ../server/package.json:/usr/src/app/package.json
+            - ../server/nodemon.json:/usr/src/app/nodemon.json
+        networks:
+            - queue-net
+        profiles:
+            - development
+
+    # Production environment
+    prod-client:
+        container_name: prod-client
+        build:
+            context: ..
+            dockerfile: ./Docker/Dockerfile.client
+            target: client-production
+        restart: always
+        env_file:
+            - ../.env.production
+        expose:
+            - "3000"
+        networks:
+            - prod-net
+        profiles:
+            - production
+
+    prod-server:
+        container_name: prod-server
+        build:
+            context: ..
+            dockerfile: ./Docker/Dockerfile.server
+            target: server-production
+        env_file:
+            - ../.env.production
+        ports:
+            - '5000:5000'
+        expose:
+            - "5000"
+        networks:
+            - prod-net
+        profiles:
+            - production
+
+    prod-nginx:
+        build:
+            context: ..
+            dockerfile: ./Docker/Dockerfile.nginx
+            args:
+                - ENVIRONMENT=prod
+        container_name: nginx-prod
+        ports:
+            - '80:80'
+            - '443:443'
+        volumes:
+            - ../nginx/nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
+            - /etc/letsencrypt/live/<your-domain-url>/fullchain.pem:/etc/letsencrypt/live/<your-domain-url>/fullchain.pem:ro
+            - /etc/letsencrypt/live/<your-domain-url>/privkey.pem:/etc/letsencrypt/live/<your-domain-url>/privkey.pem:ro
+        restart: always
+        networks:
+            - prod-net
+        depends_on:
+            - prod-server
+            - prod-client
+        profiles:
+            - production
+
+    # QA environment
+    qa-client:
+        container_name: qa-client
+        build:
+            context: ..
+            dockerfile: ./Docker/Dockerfile.client
+            target: client-qa
+        restart: always
+        env_file:
+            - ../.env.qa
+        ports:
+            - '3001:3000'
+        networks:
+            - qa-net
+        profiles:
+            - qa
+
+    qa-server:
+        container_name: qa-server
+        build:
+            context: ..
+            dockerfile: ./Docker/Dockerfile.server
+            target: server-qa
+        env_file:
+            - ../.env.qa
+        ports:
+            - '5001:5000'
+        networks:
+            - qa-net
+        profiles:
+            - qa
+
+    qa-nginx:
+        build:
+            context: ..
+            dockerfile: ./Docker/Dockerfile.nginx
+            args:
+                - ENVIRONMENT=qa
+        container_name: qa-nginx
+        ports:
+            - '8080:80'
+            - '8443:443'
+        volumes:
+            - ../nginx/nginx.qa.conf:/etc/nginx/conf.d/default.conf:ro
+            - /etc/letsencrypt/live/<your-qa-domain-url>/fullchain.pem:/etc/letsencrypt/live/<your-qa-domain-url>/fullchain.pem:ro
+            - /etc/letsencrypt/live/<your-qa-domain-url>/privkey.pem:/etc/letsencrypt/live/<your-qa-domain-url>/privkey.pem:ro
+        restart: always
+        networks:
+            - qa-net
+        depends_on:
+            - qa-server
+            - qa-client
+        profiles:
+            - qa
+
+networks:
+    queue-net:
+        driver: bridge
+    prod-net:
+        driver: bridge
+    qa-net:
+        driver: bridge
+
+volumes:
+    mongo-data:

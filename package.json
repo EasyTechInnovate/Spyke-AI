@@ -1,0 +1,47 @@
+{
+    "name": "node-react-mongo-js",
+    "version": "1.0.0",
+    "main": "index.js",
+    "type": "module",
+    "scripts": {
+        "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+        "dev:client": "cd client && npm run dev",
+        "dev:server": "cd server && npm run dev",
+        "build": "npm run build:client && npm run build:server",
+        "build:client": "cd client && npm run build",
+        "build:server": "cd server && npm run build",
+        "start": "cd server && npm start",
+        "lint": "eslint",
+        "lint:fix": "eslint --fix",
+        "format:check": "prettier . --check",
+        "format:fix": "prettier . --fix",
+        "prepare": "husky"
+    },
+    "author": "Manish",
+    "license": "ISC",
+    "lint-staged": {
+        "*.{js,jsx}": [
+            "npm run lint:fix",
+            "npm run format:fix"
+        ]
+    },
+    "devDependencies": {
+        "@commitlint/cli": "^19.8.0",
+        "@commitlint/config-conventional": "^19.8.0",
+        "@eslint/js": "^9.26.0",
+        "eslint": "^9.26.0",
+        "eslint-config-prettier": "^10.1.2",
+        "globals": "^16.0.0",
+        "husky": "^9.1.7",
+        "lint-staged": "^15.5.1",
+        "prettier": "3.5.3"
+    },
+    "engines": {
+        "node": ">=18.0.0",
+        "npm": ">=9.0.0"
+    },
+    "dependencies": {
+        "concurrently": "^9.1.2",
+        "react-icons": "^5.5.0"
+    }
+}

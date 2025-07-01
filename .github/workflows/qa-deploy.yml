@@ -1,0 +1,92 @@
+name: Deploy to QA Server
+
+on:
+    push:
+        branches:
+            - development
+    workflow_dispatch:
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup SSH key
+              run: |
+                  mkdir -p ~/.ssh
+                  echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+                  chmod 600 ~/.ssh/id_rsa
+                  ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+            - name: Deploy to QA Server
+              env:
+                  DEPLOY_PATH: /home/qa
+                  DEPLOY_HOST: ${{ secrets.SERVER_IP }}
+                  DEPLOY_USER: ${{ secrets.SERVER_USER }}
+                  GITHUB_USERNAME: ${{ github.repository_owner }}
+                  GITHUB_REPO: ${{ github.repository }}
+                  GITHUB_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+                  DOMAIN: <your-qa-domain-url>
+              run: |
+                  # Pass environment variables to the SSH session
+                  ssh $DEPLOY_USER@$DEPLOY_HOST "
+                    export DEPLOY_PATH='$DEPLOY_PATH'
+                    export GITHUB_USERNAME='$GITHUB_USERNAME'
+                    export GITHUB_REPO='$GITHUB_REPO'
+                    export GITHUB_TOKEN='$GITHUB_TOKEN'
+                    export DOMAIN='$DOMAIN'
+                    
+                    # Create directory if it doesn't exist
+                    mkdir -p '$DEPLOY_PATH'
+                    
+                    # Initialize git repository if it doesn't exist
+                    cd '$DEPLOY_PATH'
+                    if [ ! -d .git ]; then
+                      git init
+                      git remote add origin https://$GITHUB_USERNAME:$GITHUB_TOKEN@github.com/$GITHUB_REPO.git
+                    else
+                      git remote set-url origin https://$GITHUB_USERNAME:$GITHUB_TOKEN@github.com/$GITHUB_REPO.git
+                    fi
+
+                    # Fetch and reset to match remote development branch
+                    git fetch origin development
+                    git reset --hard origin/development
+
+                    # Continue with deployment...
+                    if [ ! -f \"Docker/docker-compose.yml\" ]; then
+                      echo '❌ Error: Docker/docker-compose.yml not found'
+                      exit 1
+                    fi
+
+                    # SSL Certificate Setup with Certbot
+                    echo '🔒 Checking/Updating SSL certificates for QA...'
+                    certbot certonly --standalone -d $DOMAIN --non-interactive --agree-tos -m Ayankhan@luxesstore.in || { echo '❌ Certbot failed for QA'; exit 1; }
+
+                    # Stop existing QA containers
+                    echo '🛑 Stopping existing QA containers...'
+                    docker compose -f Docker/docker-compose.yml --profile qa down || true
+
+                    # Build and deploy with Docker Compose
+                    echo '🏗️ Building and deploying QA with Docker Compose...'
+                    docker compose -f Docker/docker-compose.yml --env-file .env.qa --profile qa up -d --build || { echo '❌ Docker Compose failed for QA'; exit 1; }
+
+                    # Clean up old Docker resources
+                    echo '🧹 Cleaning up Docker resources...'
+                    docker system prune -f || { echo '⚠️ Docker prune failed'; exit 1; }
+
+                    echo '✨ QA Deployment completed successfully!'
+                  "
+
+            - name: Verify QA Deployment
+              run: |
+                  echo "⏳ Waiting for QA services to start..."
+                  sleep 30  # Allow time for services to start
+
+                  # Check if services are responding
+                  echo "🔍 Verifying QA service availability..."
+                  curl -f -s -S --retry 3 --retry-delay 5 -I https://<your-qa-domain-url>:8443 || {
+                    echo "❌ QA Service verification failed"
+                    exit 1
+                  }
