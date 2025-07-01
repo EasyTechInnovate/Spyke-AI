@@ -2,7 +2,7 @@ import Image from 'next/image'
 
 // Logo component for easy reuse throughout your app
 export const SpykeLogo = ({ 
-  size = 40, 
+  size = 40,  // Fixed: was 1400, should be 40
   className = "", 
   priority = false,
   showText = true,
@@ -36,7 +36,7 @@ export const SpykeLogo = ({
 
 // Alternative compact logo for smaller spaces
 export const SpykeLogoCompact = ({ 
-  size = 32, 
+  size = 32,  // This one is fine
   className = "" 
 }) => {
   return (

@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { League_Spartan, Kumbh_Sans } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'sonner'
+import { appConfig } from '@/lib/config'
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -26,15 +27,43 @@ const kumbhSans = Kumbh_Sans({
     weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900']
 })
 
+// client/app/layout.jsx
 export const metadata = {
-    title: 'Spyke AI – Premium AI Prompts & Automation Marketplace',
-    description:
-        'Discover premium AI prompts, automation solutions, and digital tools created by experts. Spyke AI is the leading marketplace for battle-tested prompts, comprehensive guides, and AI-powered automation solutions that transform your workflow.',
-    keywords:
-        'Spyke AI, AI prompts, automation, digital tools, prompt marketplace, AI solutions, artificial intelligence, productivity tools, prompt engineering, AI marketplace, automation scripts, digital products',
-    authors: [{ name: 'Spyke AI Team' }],
-    creator: 'Spyke AI',
-    publisher: 'Spyke AI',
+    title: `${appConfig.company.name} – ${appConfig.company.tagline}`,
+    description: appConfig.company.description,
+    keywords: '...', 
+    openGraph: {
+        title: `${appConfig.company.name} – ${appConfig.company.tagline}`,
+        description: appConfig.company.description,
+        url: 'https://spykeai.com',
+        siteName: 'Spyke AI',
+        images: [
+            {
+                url: '/og-image.png',
+                width: 1200,
+                height: 630,
+            }
+        ],
+        locale: 'en_US',
+        type: 'website',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: `${appConfig.company.name} – ${appConfig.company.tagline}`,
+        description: appConfig.company.description,
+        images: ['/twitter-image.png'],
+    },
+    robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+            index: true,
+            follow: true,
+            'max-video-preview': -1,
+            'max-image-preview': 'large',
+            'max-snippet': -1,
+        },
+    },
 }
 
 export default function RootLayout({ children }) {
