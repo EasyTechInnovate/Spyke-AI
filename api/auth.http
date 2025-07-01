@@ -1,0 +1,182 @@
+@baseUrl = http://localhost:5000/v1
+@contentType = application/json
+
+@userEmailAddress = user@gmail.com
+@userPassword = password123
+
+@accessToken = YOUR_JWT_TOKEN_HERE
+
+###
+# Check Authentication Service Health
+GET {{baseUrl}}/auth/health
+Content-Type: {{contentType}}
+
+###
+# User Registration
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "emailAddress": "{{userEmailAddress}}",
+  "phoneNumber": "919876543210",
+  "password": "{{userPassword}}",
+  "userLocation": {
+    "lat": 12.9716,
+    "long": 77.5946
+  },
+  "consent": true,
+  "role": "user"
+}
+
+###
+# Account Confirmation
+POST {{baseUrl}}/auth/confirmation
+Content-Type: {{contentType}}
+
+{
+  "token": "confirmation_token_here",
+  "code": "123456"
+}
+
+###
+# User Login
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "emailAddress": "{{userEmailAddress}}",
+  "password": "{{userPassword}}",
+  "rememberMe": true
+}
+
+###
+# Google Login
+POST {{baseUrl}}/auth/google-login
+Content-Type: {{contentType}}
+
+{
+  "googleId": "google_user_id_123",
+  "profile": {
+    "name": "John Doe",
+    "picture": "https://lh3.googleusercontent.com/a/profile.jpg",
+    "email": "john.google@example.com"
+  }
+}
+
+###
+# Get User Profile (requires authentication)
+GET {{baseUrl}}/auth/me
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+###
+# Logout (requires authentication)
+POST {{baseUrl}}/auth/logout
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+###
+# Refresh Token
+POST {{baseUrl}}/auth/refresh-token
+Content-Type: {{contentType}}
+
+{
+  "refreshToken": "your_refresh_token_here"
+}
+
+###
+# Forgot Password
+POST {{baseUrl}}/auth/forgot-password
+Content-Type: {{contentType}}
+
+{
+  "emailAddress": "{{userEmailAddress}}"
+}
+
+###
+# Reset Password
+POST {{baseUrl}}/auth/reset-password
+Content-Type: {{contentType}}
+
+{
+  "token": "reset_token_here",
+  "newPassword": "newPassword123",
+  "confirmPassword": "newPassword123"
+}
+
+###
+# Change Password (requires authentication)
+POST {{baseUrl}}/auth/change-password
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "currentPassword": "{{userPassword}}",
+  "newPassword": "newPassword456",
+  "confirmPassword": "newPassword456"
+}
+
+###
+# Update Profile (requires authentication)
+PUT {{baseUrl}}/auth/update-profile
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "name": "John Doe Updated",
+  "phoneNumber": "919876543999",
+  "avatar": "https://example.com/new-avatar.jpg",
+  "userLocation": {
+    "lat": 13.0827,
+    "long": 80.2707
+  }
+}
+
+###
+# Resend Confirmation
+POST {{baseUrl}}/auth/resend-confirmation
+Content-Type: {{contentType}}
+
+{
+  "emailAddress": "{{userEmailAddress}}"
+}
+
+###
+# Check Email Availability
+POST {{baseUrl}}/auth/check-email
+Content-Type: {{contentType}}
+
+{
+  "emailAddress": "new.user@example.com"
+}
+
+###
+# Validate Token
+POST {{baseUrl}}/auth/validate-token
+Content-Type: {{contentType}}
+
+{
+  "token": "token_to_validate_here"
+}
+
+###
+# Logout (requires authentication)
+POST {{baseUrl}}/auth/logout
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+###
+# Registration with Invalid Data (Testing Validation)
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "emailAddress": "invalid-email",
+  "phoneNumber": "123",
+  "password": "123",
+  "userLocation": {
+    "lat": "invalid",
+    "long": "invalid"
+  },
+  "consent": false
+}
