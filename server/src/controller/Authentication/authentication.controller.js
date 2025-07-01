@@ -33,14 +33,11 @@ export default {
             }
 
             const timezones = quicker.countryTimezone(isoCode)
-            console.log('timezones', timezones)
-
             if (!timezones || Object.keys(timezones).length === 0) {
                 return httpError(next, new Error(responseMessage.AUTH.INVALID_PHONE_NUMBER), req, 422)
             }
 
-            const timezone = timezones[0].name
-
+            const timezone = Object.keys(timezones)[0]
             const token = quicker.generateRandomId()
             const code = quicker.generateOtp(6)
 
@@ -88,9 +85,15 @@ export default {
             const newUser = new userModel(userData)
             const savedUser = await newUser.save()
 
-            // TODO: Send email
+            const userResponse = {
+                id: savedUser._id,
+                emailAddress: savedUser.emailAddress,
+                accountConfirmation: {
+                    status: savedUser.accountConfirmation.status
+                }
+            }
 
-            httpResponse(req, res, 201, responseMessage.CREATED)
+            httpResponse(req, res, 201, responseMessage.CREATED, userResponse)
         } catch (err) {
             if (err.code === 11000) {
                 const field = Object.keys(err.keyPattern)[0]
@@ -108,7 +111,6 @@ export default {
     confirmation: async (req, res, next) => {
         try {
             const { params, query } = req
-
             const { token } = params
             const { code } = query
 
@@ -127,23 +129,21 @@ export default {
 
             user.accountConfirmation.status = true
             user.accountConfirmation.timestamp = dayjs().utc().toDate()
+            user.isActive = true
 
             await user.save()
 
-            // TODO: Send confirmation email
+            const userResponse = {
+                id: user._id,
+                emailAddress: user.emailAddress,
+                accountConfirmation: {
+                    status: user.accountConfirmation.status,
+                    confirmedAt: user.accountConfirmation.timestamp
+                }
+            }
 
-            httpResponse(req, res, 200, responseMessage.AUTH.ACCOUNT_CONFIRMED)
+            httpResponse(req, res, 200, responseMessage.AUTH.ACCOUNT_CONFIRMED, userResponse)
         } catch (err) {
-            if (err.code === 11000) {
-                const field = Object.keys(err.keyPattern)[0]
-                return httpError(next, new Error(responseMessage.ERROR.DUPLICATE_ENTRY(field)), req, 400)
-            }
-
-            if (err.name === 'ValidationError') {
-                const firstError = Object.values(err.errors)[0]
-                return httpError(next, new Error(firstError.message), req, 422)
-            }
-
             httpError(next, err, req, 500)
         }
     },
@@ -161,13 +161,19 @@ export default {
                 return httpError(next, new Error(responseMessage.AUTH.ACCOUNT_NOT_CONFIRMED), req, 401)
             }
 
+            if (!user.isActive) {
+                return httpError(next, new Error(responseMessage.AUTH.ACCOUNT_DEACTIVATED), req, 401)
+            }
+
             const isPasswordValid = await user.comparePassword(password)
             if (!isPasswordValid) {
                 return httpError(next, new Error(responseMessage.AUTH.LOGIN_FAILED), req, 401)
             }
 
             const accessTokenPayload = {
-                userId: user._id
+                userId: user._id,
+                emailAddress: user.emailAddress,
+                roles: user.roles
             }
 
             const refreshTokenPayload = {
@@ -175,16 +181,15 @@ export default {
             }
 
             const accessToken = quicker.generateToken(accessTokenPayload, config.jwt.accessToken.secret, config.jwt.accessToken.expiresIn)
-
             const refreshToken = quicker.generateToken(refreshTokenPayload, config.jwt.refreshToken.secret, config.jwt.refreshToken.expiresIn)
 
             user.updateLoginInfo(req.ip || req.connection.remoteAddress)
-            user.isActive = true
             await user.save()
 
             await refreshTokenModel.create({
                 token: refreshToken
             })
+
             const domain = quicker.getDomainFromUrl(req.get('origin') || req.get('host'))
 
             res.cookie('accessToken', accessToken, {
@@ -203,7 +208,27 @@ export default {
                 secure: !(config.env === 'development')
             })
 
-            httpResponse(req, res, 200, responseMessage.AUTH.LOGIN_SUCCESS)
+            const userResponse = {
+                id: user._id,
+                emailAddress: user.emailAddress,
+                name: user.name,
+                avatar: user.avatar,
+                roles: user.roles,
+                isActive: user.isActive,
+                phoneNumber: user.phoneNumber,
+                timezone: user.timezone,
+                userLocation: user.userLocation,
+                loginInfo: {
+                    lastLogin: user.loginInfo.lastLogin,
+                    loginCount: user.loginInfo.loginCount
+                },
+                tokens: {
+                    accessToken,
+                    refreshToken
+                }
+            }
+
+            httpResponse(req, res, 200, responseMessage.AUTH.LOGIN_SUCCESS, userResponse)
         } catch (err) {
             httpError(next, err, req, 500)
         }
@@ -217,11 +242,181 @@ export default {
             httpError(next, err, req, 500)
         } 
     },
-    logout: async (req, res, next) => {},
-    refreshToken: async (req, res, next) => {},
-    forgotPassword: async (req, res, next) => {},
-    resetPassword: async (req, res, next) => {},
-    changePassword: async (req, res, next) => {},
-    updateProfile: async (req, res, next) => {}
-}
+    logout: async (req, res, next) => {
+        try {
+            const refreshToken = req.cookies.refreshToken || req.headers.authorization?.replace('Bearer ', '')
 
+            if (refreshToken) {
+                await refreshTokenModel.deleteOne({ token: refreshToken })
+            }
+
+            res.clearCookie('accessToken', {
+                path: config.env === 'development' ? '/v1' : '/api/v1'
+            }).clearCookie('refreshToken', {
+                path: config.env === 'development' ? '/v1' : '/api/v1'
+            })
+
+            httpResponse(req, res, 200, responseMessage.SUCCESS)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+    refreshToken: async (req, res, next) => {
+        try {
+            const refreshToken = req.cookies.refreshToken || req.body.refreshToken || req.headers.authorization?.replace('Bearer ', '')
+
+            if (!refreshToken) {
+                return httpError(next, new Error(responseMessage.AUTH.TOKEN_INVALID), req, 401)
+            }
+
+            const tokenExists = await refreshTokenModel.findOne({ token: refreshToken })
+            if (!tokenExists) {
+                return httpError(next, new Error(responseMessage.AUTH.TOKEN_INVALID), req, 401)
+            }
+
+            const decoded = quicker.verifyToken(refreshToken, config.jwt.refreshToken.secret)
+            
+            const user = await userModel.findById(decoded.userId)
+            if (!user || !user.isActive) {
+                return httpError(next, new Error(responseMessage.AUTH.TOKEN_INVALID), req, 401)
+            }
+
+            const accessTokenPayload = {
+                userId: user._id,
+                emailAddress: user.emailAddress,
+                roles: user.roles
+            }
+
+            const newAccessToken = quicker.generateToken(accessTokenPayload, config.jwt.accessToken.secret, config.jwt.accessToken.expiresIn)
+
+            const domain = quicker.getDomainFromUrl(req.get('origin') || req.get('host'))
+
+            res.cookie('accessToken', newAccessToken, {
+                path: config.env === 'development' ? '/v1' : '/api/v1',
+                domain: domain,
+                sameSite: 'strict',
+                maxAge: 1000 * config.jwt.accessToken.expiresIn,
+                httpOnly: true,
+                secure: !(config.env === 'development')
+            })
+
+            const responseData = {
+                accessToken: newAccessToken
+            }
+
+            httpResponse(req, res, 200, responseMessage.SUCCESS, responseData)
+        } catch (err) {
+            if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+                return httpError(next, new Error(responseMessage.AUTH.TOKEN_INVALID), req, 401)
+            }
+            httpError(next, err, req, 500)
+        }
+    },
+    forgotPassword: async (req, res, next) => {
+        try {
+            const { emailAddress } = req.body
+
+            const user = await userModel.findOne({ emailAddress })
+            if (!user) {
+                return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('User')), req, 404)
+            }
+
+            const resetToken = quicker.generateRandomId()
+            const resetExpiry = dayjs().add(1, 'hour').unix()
+
+            user.passwordReset.token = resetToken
+            user.passwordReset.expiry = resetExpiry
+            await user.save()
+
+            httpResponse(req, res, 200, responseMessage.SUCCESS)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+    resetPassword: async (req, res, next) => {
+        try {
+            const { token, newPassword } = req.body
+
+            const user = await userModel.findOne({
+                'passwordReset.token': token,
+                'passwordReset.expiry': { $gt: dayjs().unix() }
+            })
+
+            if (!user) {
+                return httpError(next, new Error(responseMessage.AUTH.PASSWORD_RESET_TOKEN_EXPIRED), req, 400)
+            }
+
+            user.password = newPassword
+            user.passwordReset.token = null
+            user.passwordReset.expiry = null
+            user.passwordReset.lastResetAt = dayjs().utc().toDate()
+
+            await user.save()
+
+            httpResponse(req, res, 200, responseMessage.AUTH.PASSWORD_RESET_SUCCESS)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+    changePassword: async (req, res, next) => {
+        try {
+            const { currentPassword, newPassword } = req.body
+            const { authenticatedUser } = req
+
+            const user = await userModel.findById(authenticatedUser.id)
+            if (!user) {
+                return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('User')), req, 404)
+            }
+
+            const isCurrentPasswordValid = await user.comparePassword(currentPassword)
+            if (!isCurrentPasswordValid) {
+                return httpError(next, new Error(responseMessage.AUTH.INVALID_PASSWORD), req, 400)
+            }
+
+            user.password = newPassword
+            await user.save()
+
+            httpResponse(req, res, 200, responseMessage.SUCCESS)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+    updateProfile: async (req, res, next) => {
+        try {
+            const { name, phoneNumber, avatar, userLocation } = req.body
+            const { authenticatedUser } = req
+
+            const user = await userModel.findById(authenticatedUser.id)
+            if (!user) {
+                return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('User')), req, 404)
+            }
+
+            if (name) user.name = name
+            if (avatar) user.avatar = avatar
+            if (userLocation) user.userLocation = userLocation
+            
+            if (phoneNumber) {
+                const { countryCode, isoCode, internationalNumber } = quicker.parsePhoneNumber(`+${phoneNumber}`)
+                if (!countryCode || !isoCode || !internationalNumber) {
+                    return httpError(next, new Error(responseMessage.AUTH.INVALID_PHONE_NUMBER), req, 422)
+                }
+                user.phoneNumber = { countryCode, isoCode, internationalNumber }
+            }
+
+            await user.save()
+
+            const userResponse = {
+                id: user._id,
+                emailAddress: user.emailAddress,
+                name: user.name,
+                avatar: user.avatar,
+                phoneNumber: user.phoneNumber,
+                userLocation: user.userLocation
+            }
+
+            httpResponse(req, res, 200, responseMessage.UPDATED, userResponse)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    }
+}
