@@ -6,7 +6,6 @@ export default {
 
     SERVICE: (service) => `${service} service is running.`,
 
-
     ERROR: {
         SOMETHING_WENT_WRONG: 'Something went wrong!',
         INTERNAL_SERVER_ERROR: 'Internal server error',
@@ -30,6 +29,25 @@ export default {
         PAGINATION_INVALID: 'Invalid pagination parameters',
         SORT_INVALID: 'Invalid sort parameters',
         FILTER_INVALID: 'Invalid filter parameters'
+    },
+    AUTH: {
+        LOGIN_SUCCESS: 'Login successful',
+        LOGIN_FAILED: 'Invalid email or password',
+        UNAUTHORIZED: 'You are not authorized to access this resource',
+        FORBIDDEN: 'You do not have permission to perform this action',
+        TOKEN_EXPIRED: 'Authentication token has expired',
+        TOKEN_INVALID: 'Authentication token is invalid',
+        ALREADY_EXIST: (entity, value) => `${entity} with value ${value} already exists`,
+        INVALID_PHONE_NUMBER: 'Invalid phone number provided',
+        ACCOUNT_ALREADY_CONFIRMED: 'Account already confirmed',
+        ACCOUNT_NOT_CONFIRMED: 'Account not confirmed',
+        PASSWORD_NOT_MATCH: 'Password does not match',
+        INVALID_PASSWORD: 'Invalid password provided',
+        PASSWORD_RESET_SUCCESS: 'Password reset successful',
+        PASSWORD_RESET_FAILED: 'Password reset failed',
+        PASSWORD_RESET_TOKEN_EXPIRED: 'Password reset token has expired',
+        ACCOUNT_CONFIRMED: 'Account confirmed successfully',
+        ACCOUNT_DEACTIVATED: 'Account is deactivated'
     },
 
     customMessage: (message) => message
