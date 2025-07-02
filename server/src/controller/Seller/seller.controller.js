@@ -127,7 +127,7 @@ export default {
                 return httpError(next, new Error(responseMessage.SELLER.CANNOT_UPDATE_APPROVED_PROFILE), req, 400)
             }
 
-            Object.keys(updateData).forEach(key => {
+            Object.keys(updateData).forEach((key) => {
                 if (updateData[key] !== undefined && key !== 'verification' && key !== 'commissionOffer') {
                     sellerProfile[key] = updateData[key]
                 }
@@ -412,16 +412,7 @@ export default {
 
     searchSellers: async (req, res, next) => {
         try {
-            const { 
-                niche, 
-                tool, 
-                country, 
-                minRating = 0, 
-                page = 1, 
-                limit = 10,
-                sortBy = 'createdAt',
-                sortOrder = 'desc'
-            } = req.query
+            const { niche, tool, country, minRating = 0, page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = req.query
 
             const query = {
                 'verification.status': ESellerVerificationStatus.APPROVED,
@@ -440,7 +431,8 @@ export default {
             const skip = (parseInt(page) - 1) * parseInt(limit)
 
             const [sellers, totalCount] = await Promise.all([
-                sellerProfileModel.find(query)
+                sellerProfileModel
+                    .find(query)
                     .select('fullName bio niches toolsSpecialization location sellerBanner stats customAutomationServices')
                     .populate('userId', 'avatar createdAt')
                     .sort(sort)
@@ -467,13 +459,7 @@ export default {
 
     getAllProfiles: async (req, res, next) => {
         try {
-            const { 
-                status = 'all', 
-                page = 1, 
-                limit = 10,
-                sortBy = 'createdAt',
-                sortOrder = 'desc'
-            } = req.query
+            const { status = 'all', page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = req.query
 
             const query = {}
             if (status !== 'all') {
@@ -486,11 +472,7 @@ export default {
             const skip = (parseInt(page) - 1) * parseInt(limit)
 
             const [profiles, totalCount] = await Promise.all([
-                sellerProfileModel.find(query)
-                    .populate('userId', 'emailAddress avatar createdAt')
-                    .sort(sort)
-                    .skip(skip)
-                    .limit(parseInt(limit)),
+                sellerProfileModel.find(query).populate('userId', 'emailAddress avatar createdAt').sort(sort).skip(skip).limit(parseInt(limit)),
                 sellerProfileModel.countDocuments(query)
             ])
 
@@ -588,5 +570,49 @@ export default {
         } catch (err) {
             httpError(next, err, req, 500)
         }
+    },
+    acceptCounterOffer: async (req, res, next) => {
+        try {
+            const { authenticatedUser } = req
+            const { sellerId } = req.params
+
+            const sellerProfile = await sellerProfileModel.findById(sellerId)
+            if (!sellerProfile) {
+                return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('Seller profile')), req, 404)
+            }
+
+            if (sellerProfile.commissionOffer.status !== ECommissionOfferStatus.COUNTER_OFFERED) {
+                return httpError(next, new Error(responseMessage.SELLER.NO_COUNTER_OFFER), req, 400)
+            }
+
+            sellerProfile.commissionOffer.rate = sellerProfile.commissionOffer.counterOffer.rate
+            sellerProfile.commissionOffer.status = ECommissionOfferStatus.PENDING
+            sellerProfile.commissionOffer.offeredBy = authenticatedUser.id
+            sellerProfile.commissionOffer.offeredAt = dayjs().utc().toDate()
+
+            sellerProfile.commissionOffer.counterOffer = {
+                rate: null,
+                reason: null,
+                submittedAt: null
+            }
+
+            await sellerProfile.save()
+
+            await notificationService.sendToUser(
+                sellerProfile.userId,
+                'Counter Offer Accepted!',
+                `Great news! We've accepted your counter offer of ${sellerProfile.commissionOffer.rate}%. Please accept this updated offer to complete your seller approval.`,
+                'success'
+            )
+
+            httpResponse(req, res, 200, responseMessage.SELLER.COUNTER_OFFER_ACCEPTED, {
+                sellerId,
+                acceptedRate: sellerProfile.commissionOffer.rate,
+                acceptedAt: sellerProfile.commissionOffer.offeredAt
+            })
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
     }
 }
+

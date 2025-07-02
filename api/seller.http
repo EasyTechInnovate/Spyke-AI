@@ -6,9 +6,9 @@
 @adminEmailAddress = admin@gmail.com
 @adminPassword = adminPassword123
 
-@sellerAccessToken = YOUR_SELLER_JWT_TOKEN_HERE
-@adminAccessToken = YOUR_ADMIN_JWT_TOKEN_HERE
-@sellerId = YOUR_SELLER_ID_HERE
+@sellerAccessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODY0ZmQ3ODc2ZTU0MmU5MjRmNGI3NjYiLCJlbWFpbEFkZHJlc3MiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGVzIjpbInVzZXIiLCJzZWxsZXIiXSwiaWF0IjoxNzUxNDU1MTIzLCJleHAiOjE3NTE0NTg3MjN9.pqiXX-s00SejJRNNoV9nIguqv6UWC_loVQHk6dYhr1U
+@adminAccessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODY1MTIzYTBhOWVmODIxN2NmYmIzMGIiLCJlbWFpbEFkZHJlc3MiOiJhZG1pbkBnbWFpbC5jb20iLCJyb2xlcyI6WyJhZG1pbiJdLCJpYXQiOjE3NTE0NTU1NTUsImV4cCI6MTc1MTQ1OTE1NX0.Yx4h8s2ADN3MtDPYiIwDqSQIiYlJndv2irOFomRuqNU
+@sellerId = 686510610a9ef8217cfbb2fa
 
 ###
 # ================================
@@ -289,69 +289,11 @@ Authorization: Bearer {{adminAccessToken}}
 }
 
 ###
-# ================================
-# ERROR TESTING & EDGE CASES
-# ================================
-
-###
-# Create Profile with Missing Required Fields
-POST {{baseUrl}}/seller/profile
+# Admin: Accept Counter Offer
+POST {{baseUrl}}/seller/admin/commission/accept-counter/{{sellerId}}
 Content-Type: {{contentType}}
-Authorization: Bearer {{sellerAccessToken}}
+Authorization: Bearer {{adminAccessToken}}
 
-{
-  "fullName": "Test",
-  "email": "invalid-email",
-  "bio": "Short bio",
-  "niches": [],
-  "toolsSpecialization": [],
-  "location": {},
-  "payoutInfo": {
-    "method": "paypal"
-  }
-}
-
-###
-# Update Profile When Not Authenticated
-PUT {{baseUrl}}/seller/profile
-Content-Type: {{contentType}}
-
-{
-  "bio": "Trying to update without auth"
-}
-
-###
-# Accept Commission Offer Without Pending Offer
-POST {{baseUrl}}/seller/commission/accept
-Content-Type: {{contentType}}
-Authorization: Bearer {{sellerAccessToken}}
-
-###
-# Submit Counter Offer with Invalid Rate
-POST {{baseUrl}}/seller/commission/counter-offer
-Content-Type: {{contentType}}
-Authorization: Bearer {{sellerAccessToken}}
-
-{
-  "rate": 60,
-  "reason": "Testing invalid rate"
-}
-
-###
-# Access Admin Route Without Admin Role
-GET {{baseUrl}}/seller/admin/profiles
-Content-Type: {{contentType}}
-Authorization: Bearer {{sellerAccessToken}}
-
-###
-# Get Non-existent Public Profile
-GET {{baseUrl}}/seller/public/64f7b1c2e8a4b5d6c7e8f9a0
-Content-Type: {{contentType}}
-
-###
-# Search with Invalid Parameters
-GET {{baseUrl}}/seller/search?minRating=10&page=0&limit=200
-Content-Type: {{contentType}}
 
 ###
 # ================================

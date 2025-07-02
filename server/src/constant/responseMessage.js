@@ -49,6 +49,48 @@ export default {
         ACCOUNT_CONFIRMED: 'Account confirmed successfully',
         ACCOUNT_DEACTIVATED: 'Account is deactivated'
     },
+    SELLER: {
+        PROFILE_CREATED: 'Seller profile created successfully and submitted for review',
+        PROFILE_ALREADY_EXISTS: 'You already have a seller profile',
+        PROFILE_SUBMITTED: 'Profile submitted for verification successfully',
+        PROFILE_ALREADY_SUBMITTED: 'Profile has already been submitted for review',
+        PROFILE_NOT_ACTIVE: 'Seller profile is not active or approved',
+        INCOMPLETE_PROFILE: 'Please complete your profile before submitting for verification (minimum 80% completion required)',
+        CANNOT_UPDATE_APPROVED_PROFILE: 'Cannot update profile once it has been approved. Contact support for changes.',
+        
+        // Commission related
+        COMMISSION_OFFERED: 'Commission offer sent to seller successfully',
+        COMMISSION_ACCEPTED: 'Commission offer accepted successfully. Welcome to our seller community!',
+        COMMISSION_REJECTED: 'Commission offer rejected',
+        COMMISSION_ALREADY_RESPONDED: 'You have already responded to this commission offer',
+        NO_COMMISSION_OFFER: 'No pending commission offer found',
+        COUNTER_OFFER_SUBMITTED: 'Counter offer submitted successfully',
+        
+        // Verification related
+        CANNOT_OFFER_COMMISSION: 'Can only offer commission to profiles under review',
+        CANNOT_REJECT_PROFILE: 'Can only reject profiles that are under review',
+        PROFILE_REJECTED: 'Seller profile has been rejected',
+        
+        // Payout related
+        PAYOUT_INFO_UPDATED: 'Payout information updated successfully',
+        PAYOUT_INFO_INVALID: 'Invalid payout information provided',
+        PAYOUT_VERIFICATION_PENDING: 'Payout information is pending verification',
+        PAYOUT_VERIFIED: 'Payout information verified successfully',
+        
+        // Statistics
+        STATS_UPDATED: 'Seller statistics updated successfully',
+        INVALID_RATING: 'Rating must be between 1 and 5',
+        
+        // Profile completion
+        PROFILE_COMPLETION_LOW: 'Profile completion is below required threshold',
+        REQUIRED_FIELDS_MISSING: 'Please fill in all required fields',
+        
+        // Search and discovery
+        NO_SELLERS_FOUND: 'No sellers found matching your criteria',
+        SEARCH_RESULTS_FOUND: (count) => `Found ${count} sellers matching your criteria`,
+        COUNTER_OFFER_ACCEPTED: 'Counter offer accepted successfully',
+        NO_COUNTER_OFFER: 'No pending counter offer found'
+    },
 
     customMessage: (message) => message
 }
