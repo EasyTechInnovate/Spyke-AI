@@ -1,0 +1,208 @@
+@baseUrl = http://localhost:5000/v1
+@contentType = application/json
+
+@userEmailAddress = user@gmail.com
+@userPassword = newPassword456
+
+@accessToken = YOUR_JWT_TOKEN_HERE
+
+###
+# Check Authentication Service Health
+GET {{baseUrl}}/auth/health
+Content-Type: {{contentType}}
+
+###
+# User Registration
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "emailAddress": "{{userEmailAddress}}",
+  "phoneNumber": "919876543210",
+  "password": "{{userPassword}}",
+  "userLocation": {
+    "lat": 12.9716,
+    "long": 77.5946
+  },
+  "consent": true,
+  "role": "user"
+}
+
+###
+# Account Confirmation
+POST {{baseUrl}}/auth/confirmation
+Content-Type: {{contentType}}
+
+{
+  "token": "confirmation_token_here",
+  "code": "123456"
+}
+
+###
+# User Login
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "emailAddress": "{{userEmailAddress}}",
+  "password": "{{userPassword}}"
+}
+
+###
+# Google Login
+POST {{baseUrl}}/auth/google-login
+Content-Type: {{contentType}}
+
+{
+  "googleId": "google_user_id_123",
+  "profile": {
+    "name": "John Doe",
+    "picture": "https://lh3.googleusercontent.com/a/profile.jpg",
+    "email": "john.google@example.com"
+  }
+}
+
+###
+# Get User Profile (requires authentication)
+GET {{baseUrl}}/auth/me
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+###
+# Logout (requires authentication)
+POST {{baseUrl}}/auth/logout
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+###
+# Refresh Token
+POST {{baseUrl}}/auth/refresh-token
+Content-Type: {{contentType}}
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODY0NWZiOWY0OWM2M2MyOWM3NmI0MWQiLCJpYXQiOjE3NTE0NDY2NTAsImV4cCI6MTc4Mjk4MjY1MH0.Lj_HG-oZbInqAWs4AR4Wgciez7axqmX8wPCIMzZqUFw"
+}
+
+###
+# Forgot Password
+POST {{baseUrl}}/auth/forgot-password
+Content-Type: {{contentType}}
+
+{
+  "emailAddress": "{{userEmailAddress}}"
+}
+
+###
+# Reset Password
+POST {{baseUrl}}/auth/reset-password
+Content-Type: {{contentType}}
+
+{
+  "token": "922eaeca-4482-4efa-bbd5-16207a2c999f",
+  "newPassword": "newPassword123",
+  "confirmPassword": "newPassword123"
+}
+
+###
+# Change Password (requires authentication)
+POST {{baseUrl}}/auth/change-password
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "currentPassword": "{{userPassword}}",
+  "newPassword": "newPassword456",
+  "confirmPassword": "newPassword456"
+}
+
+###
+# Update Profile (requires authentication)
+PUT {{baseUrl}}/auth/update-profile
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "name": "John Doe Updated",
+  "phoneNumber": "919876543999",
+  "avatar": "https://example.com/new-avatar.jpg",
+  "userLocation": {
+    "lat": 13.0827,
+    "long": 80.2707
+  }
+}
+
+
+###
+# Logout (requires authentication)
+POST {{baseUrl}}/auth/logout
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+
+###
+# Check Email Availability
+POST {{baseUrl}}/auth/check-email
+Content-Type: {{contentType}}
+
+{
+  "emailAddress": "test@example.com"
+}
+
+###
+# Get Notifications (requires authentication)
+GET {{baseUrl}}/auth/notifications?page=1&limit=10&type=info
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+###
+# Mark Notification as Read (requires authentication)
+POST {{baseUrl}}/auth/notifications/read
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "notificationId": "notification_id_here"
+}
+
+###
+# Send Notification (admin only)
+POST {{baseUrl}}/auth/notifications/send
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "userId": "user_id_here",
+  "title": "Payment Received",
+  "message": "Your payment of $99 has been processed successfully.",
+  "type": "success",
+  "expiresAt": "2024-12-31T23:59:59Z"
+}
+
+###
+# Send Bulk Notification (admin only)
+POST {{baseUrl}}/auth/notifications/send-bulk
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "userIds": ["user1_id", "user2_id", "user3_id"],
+  "title": "System Update",
+  "message": "New features have been added to your dashboard.",
+  "type": "info"
+}
+
+###
+# Registration with Invalid Data (Testing Validation)
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "emailAddress": "invalid-email",
+  "phoneNumber": "123",
+  "password": "123",
+  "userLocation": {
+    "lat": "invalid",
+    "long": "invalid"
+  },
+  "consent": false
+}

@@ -1,5 +1,4 @@
 import express from 'express'
-import router from './router/apiRouter.js'
 import globalErrorHandler from './middleware/globalErrorHandler.js'
 import responseMessage from './constant/responseMessage.js'
 import httpError from './util/httpError.js'
@@ -7,6 +6,7 @@ import helmet from 'helmet'
 import cors from 'cors'
 import config from './config/config.js'
 import cookieParser from 'cookie-parser'
+import router from './router/index.js'
 
 const app = express()
 
