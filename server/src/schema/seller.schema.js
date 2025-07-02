@@ -374,7 +374,6 @@ const sellerSchemas = {
     }),
 
     offerCommission: z.object({
-        sellerId: z.string().min(1, 'Seller ID is required'),
         rate: z.number()
             .min(1, 'Commission rate must be at least 1%')
             .max(50, 'Commission rate cannot exceed 50%')

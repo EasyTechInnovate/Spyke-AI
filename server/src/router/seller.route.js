@@ -8,40 +8,56 @@ import { EUserRole } from '../constant/application.js'
 
 const router = Router()
 
+// Public routes (no authentication required)
 router.route('/public/:sellerId').get(validateRequest(sellerSchemas.sellerIdParam, 'params'), sellerController.getPublicProfile)
-
 router.route('/search').get(validateRequest(sellerSchemas.searchSellers, 'query'), sellerController.searchSellers)
 
-router.use(authentication)
-
+// Authenticated seller routes
 router
     .route('/profile')
-    .post(validateRequest(sellerSchemas.createProfile), sellerController.createProfile)
-    .get(sellerController.getProfile)
-    .put(validateRequest(sellerSchemas.updateProfile), sellerController.updateProfile)
+    .post(authentication, validateRequest(sellerSchemas.createProfile), sellerController.createProfile)
+    .get(authentication, authorization([EUserRole.SELLER]), sellerController.getProfile)
+    .put(authentication, validateRequest(sellerSchemas.updateProfile), sellerController.updateProfile)
 
-router.route('/verification/submit').post(validateRequest(sellerSchemas.submitVerification), sellerController.submitForVerification)
+router.route('/verification/submit').post(authentication, validateRequest(sellerSchemas.submitVerification), sellerController.submitForVerification)
+router.route('/commission/accept').post(authentication, sellerController.acceptCommissionOffer)
+router.route('/commission/reject').post(authentication, validateRequest(sellerSchemas.rejectCommissionOffer), sellerController.rejectCommissionOffer)
+router.route('/commission/counter-offer').post(authentication, validateRequest(sellerSchemas.submitCounterOffer), sellerController.submitCounterOffer)
+router.route('/stats').get(authentication, sellerController.getStats)
+router.route('/payout').put(authentication, validateRequest(sellerSchemas.updatePayoutInfo), sellerController.updatePayoutInfo)
 
-router.route('/commission/accept').post(sellerController.acceptCommissionOffer)
-
-router.route('/commission/reject').post(validateRequest(sellerSchemas.rejectCommissionOffer), sellerController.rejectCommissionOffer)
-
-router.route('/commission/counter-offer').post(validateRequest(sellerSchemas.submitCounterOffer), sellerController.submitCounterOffer)
-
-router.route('/stats').get(sellerController.getStats)
-
-router.route('/payout').put(validateRequest(sellerSchemas.updatePayoutInfo), sellerController.updatePayoutInfo)
-
-router.use(authorization([EUserRole.ADMIN]))
-
-router.route('/admin/profiles').get(validateRequest(sellerSchemas.getAllProfiles, 'query'), sellerController.getAllProfiles)
+// Admin only routes
+router
+    .route('/admin/profiles')
+    .get(authentication, authorization([EUserRole.ADMIN]), validateRequest(sellerSchemas.getAllProfiles, 'query'), sellerController.getAllProfiles)
 
 router
     .route('/admin/commission/offer/:sellerId')
-    .post(validateRequest(sellerSchemas.sellerIdParam, 'params'), validateRequest(sellerSchemas.offerCommission), sellerController.offerCommission)
+    .post(
+        authentication,
+        authorization([EUserRole.ADMIN]),
+        validateRequest(sellerSchemas.sellerIdParam, 'params'),
+        validateRequest(sellerSchemas.offerCommission),
+        sellerController.offerCommission
+    )
 
 router
     .route('/admin/profile/reject/:sellerId')
-    .post(validateRequest(sellerSchemas.sellerIdParam, 'params'), validateRequest(sellerSchemas.rejectProfile), sellerController.rejectProfile)
+    .post(
+        authentication,
+        authorization([EUserRole.ADMIN]),
+        validateRequest(sellerSchemas.sellerIdParam, 'params'),
+        validateRequest(sellerSchemas.rejectProfile),
+        sellerController.rejectProfile
+    )
 
+router
+    .route('/admin/commission/accept-counter/:sellerId')
+    .post(
+        authentication,
+        authorization([EUserRole.ADMIN]),
+        validateRequest(sellerSchemas.sellerIdParam, 'params'),
+        sellerController.acceptCounterOffer
+    )
 export default router
+

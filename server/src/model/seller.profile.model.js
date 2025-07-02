@@ -371,7 +371,6 @@ const sellerProfileSchema = new mongoose.Schema(
     }
 )
 
-sellerProfileSchema.index({ userId: 1 })
 sellerProfileSchema.index({ email: 1 })
 sellerProfileSchema.index({ 'verification.status': 1 })
 sellerProfileSchema.index({ 'location.country': 1 })
