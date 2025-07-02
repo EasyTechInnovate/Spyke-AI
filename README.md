@@ -225,6 +225,3 @@ Each listing includes:
 * CMS integration
 * Database schema
 
----
-
-Would you like this exported as a **PDF**, **Notion document**, or **presentation** for your client submission?
