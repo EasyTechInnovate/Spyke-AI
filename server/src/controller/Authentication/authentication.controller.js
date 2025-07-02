@@ -7,6 +7,7 @@ import utc from 'dayjs/plugin/utc.js'
 import config from '../../config/config.js'
 import userModel from '../../model/user.model.js'
 import refreshTokenModel from '../../model/refresh.token.model.js'
+import { notificationService } from '../../util/notification.js'
 
 dayjs.extend(utc)
 
@@ -85,6 +86,13 @@ export default {
             const newUser = new userModel(userData)
             const savedUser = await newUser.save()
 
+            await notificationService.sendToUser(
+                savedUser._id,
+                'Welcome to Our Platform!',
+                'Your account has been created successfully. Please confirm your email to get started.',
+                'success'
+            )
+
             const userResponse = {
                 id: savedUser._id,
                 emailAddress: savedUser.emailAddress,
@@ -133,6 +141,13 @@ export default {
 
             await user.save()
 
+            await notificationService.sendToUser(
+                user._id,
+                'Account Confirmed Successfully!',
+                'Your account has been verified. You now have full access to all platform features.',
+                'success'
+            )
+
             const userResponse = {
                 id: user._id,
                 emailAddress: user.emailAddress,
@@ -161,10 +176,6 @@ export default {
                 return httpError(next, new Error(responseMessage.AUTH.ACCOUNT_NOT_CONFIRMED), req, 401)
             }
 
-            if (!user.isActive) {
-                return httpError(next, new Error(responseMessage.AUTH.ACCOUNT_DEACTIVATED), req, 401)
-            }
-
             const isPasswordValid = await user.comparePassword(password)
             if (!isPasswordValid) {
                 return httpError(next, new Error(responseMessage.AUTH.LOGIN_FAILED), req, 401)
@@ -189,6 +200,13 @@ export default {
             await refreshTokenModel.create({
                 token: refreshToken
             })
+
+            await notificationService.sendToUser(
+                user._id,
+                'Login Successful',
+                `Welcome back! You logged in from ${req.ip || 'unknown location'} at ${dayjs().format('MMM DD, YYYY HH:mm')}`,
+                'info'
+            )
 
             const domain = quicker.getDomainFromUrl(req.get('origin') || req.get('host'))
 
@@ -234,13 +252,13 @@ export default {
         }
     },
     me: async (req, res, next) => {
-       try {
+        try {
             const { authenticatedUser } = req
 
             httpResponse(req, res, 200, responseMessage.SUCCESS, authenticatedUser)
         } catch (err) {
             httpError(next, err, req, 500)
-        } 
+        }
     },
     logout: async (req, res, next) => {
         try {
@@ -275,7 +293,7 @@ export default {
             }
 
             const decoded = quicker.verifyToken(refreshToken, config.jwt.refreshToken.secret)
-            
+
             const user = await userModel.findById(decoded.userId)
             if (!user || !user.isActive) {
                 return httpError(next, new Error(responseMessage.AUTH.TOKEN_INVALID), req, 401)
@@ -328,6 +346,14 @@ export default {
             user.passwordReset.expiry = resetExpiry
             await user.save()
 
+            await notificationService.sendToUser(
+                user._id,
+                'Password Reset Requested',
+                'A password reset request has been initiated for your account. If this was not you, please contact support.',
+                'warning',
+                dayjs().add(1, 'hour').toDate()
+            )
+
             httpResponse(req, res, 200, responseMessage.SUCCESS)
         } catch (err) {
             httpError(next, err, req, 500)
@@ -353,6 +379,13 @@ export default {
 
             await user.save()
 
+            await notificationService.sendToUser(
+                user._id,
+                'Password Reset Successful',
+                'Your password has been successfully reset. If this was not you, please contact support immediately.',
+                'success'
+            )
+
             httpResponse(req, res, 200, responseMessage.AUTH.PASSWORD_RESET_SUCCESS)
         } catch (err) {
             httpError(next, err, req, 500)
@@ -376,6 +409,13 @@ export default {
             user.password = newPassword
             await user.save()
 
+            await notificationService.sendToUser(
+                user._id,
+                'Password Changed Successfully',
+                'Your account password has been updated. If this was not you, please contact support immediately.',
+                'success'
+            )
+
             httpResponse(req, res, 200, responseMessage.SUCCESS)
         } catch (err) {
             httpError(next, err, req, 500)
@@ -394,7 +434,7 @@ export default {
             if (name) user.name = name
             if (avatar) user.avatar = avatar
             if (userLocation) user.userLocation = userLocation
-            
+
             if (phoneNumber) {
                 const { countryCode, isoCode, internationalNumber } = quicker.parsePhoneNumber(`+${phoneNumber}`)
                 if (!countryCode || !isoCode || !internationalNumber) {
@@ -404,6 +444,13 @@ export default {
             }
 
             await user.save()
+
+            await notificationService.sendToUser(
+                user._id,
+                'Profile Updated',
+                'Your profile information has been successfully updated.',
+                'info'
+            )
 
             const userResponse = {
                 id: user._id,
@@ -415,6 +462,142 @@ export default {
             }
 
             httpResponse(req, res, 200, responseMessage.UPDATED, userResponse)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+    checkEmailAvailability: async (req, res, next) => {
+        try {
+            const { emailAddress } = req.body
+
+            const existingUser = await userModel.findOne({ emailAddress })
+
+            const suggestions = []
+            if (existingUser) {
+                const username = emailAddress.split('@')[0]
+                const domain = emailAddress.split('@')[1]
+
+                suggestions.push(`${username}${Math.floor(Math.random() * 1000)}@${domain}`)
+                suggestions.push(`${username}.${Math.floor(Math.random() * 100)}@${domain}`)
+                suggestions.push(`${username}_${new Date().getFullYear()}@${domain}`)
+            }
+
+            const responseData = {
+                available: !existingUser,
+                emailAddress,
+                suggestions: existingUser ? suggestions : []
+            }
+
+            httpResponse(req, res, 200, responseMessage.SUCCESS, responseData)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+    getNotifications: async (req, res, next) => {
+        try {
+            const { authenticatedUser } = req
+            const { page = 1, limit = 10, type } = req.query
+
+            const user = await userModel.findById(authenticatedUser.id)
+            if (!user) {
+                return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('User')), req, 404)
+            }
+
+            let notifications = user.notifications
+
+            if (type) {
+                notifications = notifications.filter((n) => n.type === type)
+            }
+
+            notifications = notifications.filter((n) => !n.expiresAt || n.expiresAt > new Date())
+
+            const startIndex = (page - 1) * limit
+            const endIndex = startIndex + parseInt(limit)
+            const paginatedNotifications = notifications.sort((a, b) => b.createdAt - a.createdAt).slice(startIndex, endIndex)
+
+            const responseData = {
+                notifications: paginatedNotifications,
+                pagination: {
+                    page: parseInt(page),
+                    limit: parseInt(limit),
+                    total: notifications.length,
+                    totalPages: Math.ceil(notifications.length / limit)
+                },
+                unreadCount: notifications.filter((n) => !n.isRead).length
+            }
+
+            httpResponse(req, res, 200, responseMessage.SUCCESS, responseData)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+    markNotificationRead: async (req, res, next) => {
+        try {
+            const { authenticatedUser } = req
+            const { notificationId } = req.body
+
+            const user = await userModel.findById(authenticatedUser.id)
+            if (!user) {
+                return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('User')), req, 404)
+            }
+
+            user.markNotificationAsRead(notificationId)
+            await user.save()
+
+            const notification = user.notifications.id(notificationId)
+
+            httpResponse(req, res, 200, responseMessage.UPDATED, {
+                notificationId,
+                isRead: notification?.isRead || false,
+                readAt: notification?.readAt || null
+            })
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+    sendNotification: async (req, res, next) => {
+        try {
+            const { userId, title, message, type = 'info', expiresAt } = req.body
+
+            const success = await notificationService.sendToUser(userId, title, message, type, expiresAt)
+
+            if (!success) {
+                return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('User')), req, 404)
+            }
+
+            httpResponse(req, res, 201, responseMessage.CREATED)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+    sendBulkNotification: async (req, res, next) => {
+        try {
+            const { userIds, title, message, type = 'info', expiresAt } = req.body
+
+            const success = await notificationService.sendToUser(userIds[0], title, message, type, expiresAt)
+
+            if (userIds.length === 1) {
+                if (!success) {
+                    return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('User')), req, 404)
+                }
+            } else {
+                await userModel.updateMany(
+                    { _id: { $in: userIds.slice(1) } },
+                    {
+                        $push: {
+                            notifications: {
+                                title,
+                                message,
+                                type,
+                                expiresAt,
+                                createdAt: new Date()
+                            }
+                        }
+                    }
+                )
+            }
+
+            httpResponse(req, res, 200, responseMessage.SUCCESS)
         } catch (err) {
             httpError(next, err, req, 500)
         }
