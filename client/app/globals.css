@@ -1,6 +1,121 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+:root {
+  --brand-primary: #00ff89;
+  --brand-secondary: #00cc6e;
+  --brand-dark: #000000;
+}
+
+@font-face {
+  font-family: 'League Spartan';
+  font-weight: 700;
+  font-display: swap;
+  src: local('League Spartan Bold'),
+       url('/fonts/league-spartan-bold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Kumbh Sans';
+  font-weight: 400;
+  font-display: swap;
+  src: local('Kumbh Sans Regular'),
+       url('/fonts/kumbh-sans-regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Kumbh Sans';
+  font-weight: 500;
+  font-display: swap;
+  src: local('Kumbh Sans Medium'),
+       url('/fonts/kumbh-sans-medium.woff2') format('woff2');
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  z-index: 999;
+  padding: 1rem;
+  background-color: var(--brand-primary);
+  color: black;
+  text-decoration: none;
+  border-radius: 0.5rem;
+}
+
+.skip-link:focus {
+  left: 50%;
+  transform: translateX(-50%);
+  top: 1rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .text-gray-300 {
+    color: #f3f4f6;
+  }
+  .text-gray-400 {
+    color: #e5e7eb;
+  }
+  .bg-white\/10 {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+  .border-white\/20 {
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+}
+
+*:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Performance optimizations */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -355,4 +470,15 @@
 
 .bg-promptbase-card {
   background-color: #252547;
+}
+
+.logo-icon {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+[data-component="SpykeLogo"] img {
+  max-width: 100% !important;
+  height: auto !important;
 }
