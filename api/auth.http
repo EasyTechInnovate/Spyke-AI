@@ -2,7 +2,7 @@
 @contentType = application/json
 
 @userEmailAddress = user@gmail.com
-@userPassword = password123
+@userPassword = newPassword456
 
 @accessToken = YOUR_JWT_TOKEN_HERE
 
@@ -45,8 +45,7 @@ Content-Type: {{contentType}}
 
 {
   "emailAddress": "{{userEmailAddress}}",
-  "password": "{{userPassword}}",
-  "rememberMe": true
+  "password": "{{userPassword}}"
 }
 
 ###
@@ -81,7 +80,7 @@ POST {{baseUrl}}/auth/refresh-token
 Content-Type: {{contentType}}
 
 {
-  "refreshToken": "your_refresh_token_here"
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODY0NWZiOWY0OWM2M2MyOWM3NmI0MWQiLCJpYXQiOjE3NTE0NDY2NTAsImV4cCI6MTc4Mjk4MjY1MH0.Lj_HG-oZbInqAWs4AR4Wgciez7axqmX8wPCIMzZqUFw"
 }
 
 ###
@@ -99,7 +98,7 @@ POST {{baseUrl}}/auth/reset-password
 Content-Type: {{contentType}}
 
 {
-  "token": "reset_token_here",
+  "token": "922eaeca-4482-4efa-bbd5-16207a2c999f",
   "newPassword": "newPassword123",
   "confirmPassword": "newPassword123"
 }
@@ -132,14 +131,13 @@ Authorization: Bearer {{accessToken}}
   }
 }
 
-###
-# Resend Confirmation
-POST {{baseUrl}}/auth/resend-confirmation
-Content-Type: {{contentType}}
 
-{
-  "emailAddress": "{{userEmailAddress}}"
-}
+###
+# Logout (requires authentication)
+POST {{baseUrl}}/auth/logout
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
 
 ###
 # Check Email Availability
@@ -147,23 +145,51 @@ POST {{baseUrl}}/auth/check-email
 Content-Type: {{contentType}}
 
 {
-  "emailAddress": "new.user@example.com"
+  "emailAddress": "test@example.com"
 }
 
 ###
-# Validate Token
-POST {{baseUrl}}/auth/validate-token
-Content-Type: {{contentType}}
-
-{
-  "token": "token_to_validate_here"
-}
-
-###
-# Logout (requires authentication)
-POST {{baseUrl}}/auth/logout
+# Get Notifications (requires authentication)
+GET {{baseUrl}}/auth/notifications?page=1&limit=10&type=info
 Content-Type: {{contentType}}
 Authorization: Bearer {{accessToken}}
+
+###
+# Mark Notification as Read (requires authentication)
+POST {{baseUrl}}/auth/notifications/read
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "notificationId": "notification_id_here"
+}
+
+###
+# Send Notification (admin only)
+POST {{baseUrl}}/auth/notifications/send
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "userId": "user_id_here",
+  "title": "Payment Received",
+  "message": "Your payment of $99 has been processed successfully.",
+  "type": "success",
+  "expiresAt": "2024-12-31T23:59:59Z"
+}
+
+###
+# Send Bulk Notification (admin only)
+POST {{baseUrl}}/auth/notifications/send-bulk
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "userIds": ["user1_id", "user2_id", "user3_id"],
+  "title": "System Update",
+  "message": "New features have been added to your dashboard.",
+  "type": "info"
+}
 
 ###
 # Registration with Invalid Data (Testing Validation)
