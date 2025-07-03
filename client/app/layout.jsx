@@ -1,4 +1,3 @@
-// app/layout.jsx
 import { League_Spartan, Kumbh_Sans } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'sonner'
@@ -239,19 +238,8 @@ export default function RootLayout({ children }) {
                     duration={4000}
                     closeButton
                     toastOptions={{
-                        className: 'font-kumbh-sans shadow-lg rounded-lg border border-green-500/30 bg-[#0f0f0f] text-white',
-                        style: {
-                            padding: '12px 16px',
-                            borderRadius: '12px',
-                            fontSize: '14px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            color: 'white',
-                            background: '#111',
-                            border: '1px solid rgba(0,255,137,0.3)',
-                            backdropFilter: 'blur(10px)'
-                        },
+                        className:
+                            'rounded-xl border border-[#00FF89]/30 bg-[#0f0f0f]/80 backdrop-blur-md text-white text-sm px-4 py-3 flex items-center gap-2 shadow-md font-medium',
                         iconTheme: {
                             primary: '#00FF89',
                             secondary: '#0f0f0f'

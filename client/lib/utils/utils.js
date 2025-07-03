@@ -1,233 +1,239 @@
-import dynamic from 'next/dynamic';
 
-export function lazyLucideIcon(iconName, sizeClass = 'w-6 h-6') {
-  return dynamic(() =>
-    import('lucide-react').then(mod => {
-      const Icon = mod[iconName];
-      if (typeof Icon !== 'function') {
-        throw new Error(`Icon "${iconName}" not found in lucide-react.`);
-      }
-      return { default: Icon };
-    }), {
-      loading: () => <span className={sizeClass} />,
-      ssr: false
+// Email validation
+export const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+
+// Phone validation
+export const validatePhone = (phone, code) => {
+  const cleaned = phone.replace(/\D/g, '')
+  return code === '+1' ? cleaned.length === 10 : cleaned.length >= 6 && cleaned.length <= 15
+}
+
+export const formatPhone = (value, code) => {
+  const cleaned = value.replace(/\D/g, '').slice(0, code === '+1' ? 10 : 15)
+
+  if (code === '+1' && cleaned.length <= 10) {
+    if (cleaned.length <= 3) return cleaned
+    if (cleaned.length <= 6) return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`
+    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`
+  }
+
+  return cleaned
+}
+
+
+// Password strength checker
+export const checkPasswordStrength = (pwd) => {
+  if (!pwd) return { score: 0, isValid: false }
+  let score = 0
+  if (pwd.length >= 8) score++
+  if (/[A-Z]/.test(pwd)) score++
+  if (/[a-z]/.test(pwd)) score++
+  if (/[0-9]/.test(pwd)) score++
+  if (/[^A-Za-z0-9]/.test(pwd)) score++
+  return { score: Math.min(4, score), isValid: score >= 3 }
+}
+
+// Debounce function
+
+
+// Country codes data
+export const countryCodes = [
+  { code: '+1', country: 'US/CA', flag: '🇺🇸' },
+  { code: '+44', country: 'UK', flag: '🇬🇧' },
+  { code: '+91', country: 'India', flag: '🇮🇳' },
+  { code: '+86', country: 'China', flag: '🇨🇳' },
+  { code: '+81', country: 'Japan', flag: '🇯🇵' },
+  { code: '+49', country: 'Germany', flag: '🇩🇪' },
+  { code: '+33', country: 'France', flag: '🇫🇷' },
+  { code: '+61', country: 'Australia', flag: '🇦🇺' },
+  { code: '+82', country: 'South Korea', flag: '🇰🇷' },
+  { code: '+39', country: 'Italy', flag: '🇮🇹' },
+  { code: '+34', country: 'Spain', flag: '🇪🇸' },
+  { code: '+31', country: 'Netherlands', flag: '🇳🇱' },
+  { code: '+46', country: 'Sweden', flag: '🇸🇪' },
+  { code: '+47', country: 'Norway', flag: '🇳🇴' },
+  { code: '+41', country: 'Switzerland', flag: '🇨🇭' },
+  { code: '+65', country: 'Singapore', flag: '🇸🇬' },
+  { code: '+64', country: 'New Zealand', flag: '🇳🇿' },
+  { code: '+971', country: 'UAE', flag: '🇦🇪' },
+  { code: '+966', country: 'Saudi Arabia', flag: '🇸🇦' },
+  { code: '+55', country: 'Brazil', flag: '🇧🇷' },
+  { code: '+52', country: 'Mexico', flag: '🇲🇽' },
+  { code: '+54', country: 'Argentina', flag: '🇦🇷' },
+  { code: '+27', country: 'South Africa', flag: '🇿🇦' },
+  { code: '+234', country: 'Nigeria', flag: '🇳🇬' },
+  { code: '+20', country: 'Egypt', flag: '🇪🇬' },
+  { code: '+62', country: 'Indonesia', flag: '🇮🇩' },
+  { code: '+60', country: 'Malaysia', flag: '🇲🇾' },
+  { code: '+63', country: 'Philippines', flag: '🇵🇭' },
+  { code: '+66', country: 'Thailand', flag: '🇹🇭' },
+  { code: '+84', country: 'Vietnam', flag: '🇻🇳' },
+  { code: '+7', country: 'Russia', flag: '🇷🇺' },
+  { code: '+380', country: 'Ukraine', flag: '🇺🇦' },
+  { code: '+48', country: 'Poland', flag: '🇵🇱' },
+  { code: '+36', country: 'Hungary', flag: '🇭🇺' },
+  { code: '+420', country: 'Czech Republic', flag: '🇨🇿' },
+  { code: '+43', country: 'Austria', flag: '🇦🇹' },
+  { code: '+32', country: 'Belgium', flag: '🇧🇪' },
+  { code: '+45', country: 'Denmark', flag: '🇩🇰' },
+  { code: '+358', country: 'Finland', flag: '🇫🇮' },
+  { code: '+30', country: 'Greece', flag: '🇬🇷' },
+  { code: '+353', country: 'Ireland', flag: '🇮🇪' },
+  { code: '+351', country: 'Portugal', flag: '🇵🇹' },
+  { code: '+40', country: 'Romania', flag: '🇷🇴' },
+  { code: '+90', country: 'Turkey', flag: '🇹🇷' },
+  { code: '+972', country: 'Israel', flag: '🇮🇱' },
+  { code: '+92', country: 'Pakistan', flag: '🇵🇰' },
+  { code: '+94', country: 'Sri Lanka', flag: '🇱🇰' },
+  { code: '+880', country: 'Bangladesh', flag: '🇧🇩' },
+  { code: '+98', country: 'Iran', flag: '🇮🇷' },
+  { code: '+964', country: 'Iraq', flag: '🇮🇶' },
+  { code: '+962', country: 'Jordan', flag: '🇯🇴' },
+  { code: '+961', country: 'Lebanon', flag: '🇱🇧' },
+  { code: '+212', country: 'Morocco', flag: '🇲🇦' },
+  { code: '+216', country: 'Tunisia', flag: '🇹🇳' },
+  { code: '+213', country: 'Algeria', flag: '🇩🇿' },
+  { code: '+254', country: 'Kenya', flag: '🇰🇪' },
+  { code: '+255', country: 'Tanzania', flag: '🇹🇿' },
+  { code: '+256', country: 'Uganda', flag: '🇺🇬' },
+  { code: '+233', country: 'Ghana', flag: '🇬🇭' },
+  { code: '+237', country: 'Cameroon', flag: '🇨🇲' },
+  { code: '+225', country: "Côte d'Ivoire", flag: '🇨🇮' },
+  { code: '+221', country: 'Senegal', flag: '🇸🇳' },
+  { code: '+212', country: 'Western Sahara', flag: '🇪🇭' },
+  { code: '+56', country: 'Chile', flag: '🇨🇱' },
+  { code: '+57', country: 'Colombia', flag: '🇨🇴' },
+  { code: '+58', country: 'Venezuela', flag: '🇻🇪' },
+  { code: '+51', country: 'Peru', flag: '🇵🇪' },
+  { code: '+593', country: 'Ecuador', flag: '🇪🇨' },
+  { code: '+591', country: 'Bolivia', flag: '🇧🇴' },
+  { code: '+595', country: 'Paraguay', flag: '🇵🇾' },
+  { code: '+598', country: 'Uruguay', flag: '🇺🇾' },
+  { code: '+506', country: 'Costa Rica', flag: '🇨🇷' },
+  { code: '+503', country: 'El Salvador', flag: '🇸🇻' },
+  { code: '+502', country: 'Guatemala', flag: '🇬🇹' },
+  { code: '+504', country: 'Honduras', flag: '🇭🇳' },
+  { code: '+505', country: 'Nicaragua', flag: '🇳🇮' },
+  { code: '+507', country: 'Panama', flag: '🇵🇦' },
+  { code: '+852', country: 'Hong Kong', flag: '🇭🇰' },
+  { code: '+853', country: 'Macau', flag: '🇲🇴' },
+  { code: '+886', country: 'Taiwan', flag: '🇹🇼' },
+  { code: '+976', country: 'Mongolia', flag: '🇲🇳' },
+  { code: '+977', country: 'Nepal', flag: '🇳🇵' },
+  { code: '+93', country: 'Afghanistan', flag: '🇦🇫' },
+  { code: '+95', country: 'Myanmar', flag: '🇲🇲' },
+  { code: '+855', country: 'Cambodia', flag: '🇰🇭' },
+  { code: '+856', country: 'Laos', flag: '🇱🇦' }
+]
+
+// Additional utility functions you might need
+
+// Format currency
+export const formatCurrency = (amount, currency = 'USD') => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency,
+  }).format(amount)
+}
+
+// Truncate text
+export const truncateText = (text, maxLength = 100) => {
+  if (text.length <= maxLength) return text
+  return text.substring(0, maxLength) + '...'
+}
+
+// Generate initials from name
+export const getInitials = (name, email) => {
+  if (name && name !== email?.split('@')[0]) {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+  }
+  return email?.slice(0, 2).toUpperCase() || 'U'
+}
+
+// Check if object is empty
+export const isEmpty = (obj) => {
+  return Object.keys(obj).length === 0
+}
+
+// Deep clone object
+export const deepClone = (obj) => {
+  return JSON.parse(JSON.stringify(obj))
+}
+
+// Generate random ID
+export const generateId = () => {
+  return Math.random().toString(36).substring(2) + Date.now().toString(36)
+}
+
+// Format date
+export const formatDate = (date, format = 'short') => {
+  const options = {
+    short: { year: 'numeric', month: 'short', day: 'numeric' },
+    long: { year: 'numeric', month: 'long', day: 'numeric' },
+    full: { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' },
+    time: { hour: '2-digit', minute: '2-digit' },
+    datetime: { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }
+  }
+  
+  return new Date(date).toLocaleDateString('en-US', options[format] || options.short)
+}
+
+// Slugify text for URLs
+export const slugify = (text) => {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '')
+}
+
+// Check if user is on mobile
+export const isMobile = () => {
+  if (typeof window === 'undefined') return false
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+}
+
+// Local storage helpers with error handling
+export const storage = {
+  get: (key) => {
+    try {
+      if (typeof window === 'undefined') return null
+      const item = window.localStorage.getItem(key)
+      return item ? JSON.parse(item) : null
+    } catch (error) {
+      console.error(`Error reading ${key} from localStorage:`, error)
+      return null
     }
-  );
-}
-
-/**
- * Formats phone number as user types
- * @param {string} value - Raw phone input
- * @returns {string} Formatted phone number
- */
-
-
-/**
- * Validates if phone number is valid
- * @param {string} phoneNumber - Phone number to validate
- * @returns {boolean} Is valid phone number
- */
-export const validatePhoneNumber = (phoneNumber) => {
-  // Remove all non-numeric characters for validation
-  const cleaned = phoneNumber.replace(/\D/g, '');
+  },
   
-  // Check if empty
-  if (!cleaned) {
-    return false;
+  set: (key, value) => {
+    try {
+      if (typeof window === 'undefined') return
+      window.localStorage.setItem(key, JSON.stringify(value))
+    } catch (error) {
+      console.error(`Error writing ${key} to localStorage:`, error)
+    }
+  },
+  
+  remove: (key) => {
+    try {
+      if (typeof window === 'undefined') return
+      window.localStorage.removeItem(key)
+    } catch (error) {
+      console.error(`Error removing ${key} from localStorage:`, error)
+    }
+  },
+  
+  clear: () => {
+    try {
+      if (typeof window === 'undefined') return
+      window.localStorage.clear()
+    } catch (error) {
+      console.error('Error clearing localStorage:', error)
+    }
   }
-  
-  // US phone number validation (10 or 11 digits)
-  if (cleaned.length === 10) {
-    // Valid US number without country code
-    // Area code cannot start with 0 or 1
-    return /^[2-9]\d{9}$/.test(cleaned);
-  }
-  
-  if (cleaned.length === 11 && cleaned.startsWith('1')) {
-    // Valid US number with country code
-    // Second digit (area code) cannot be 0 or 1
-    return /^1[2-9]\d{9}$/.test(cleaned);
-  }
-  
-  // International phone number validation
-  // Most international numbers are between 7 and 15 digits
-  if (cleaned.length >= 7 && cleaned.length <= 15) {
-    // Basic international validation
-    // Should not start with 0 (that's usually for domestic calls)
-    return /^[1-9]\d{6,14}$/.test(cleaned);
-  }
-  
-  return false;
-}
-
-/**
- * Checks password strength and returns detailed analysis
- * @param {string} password - Password to check
- * @returns {Object} Strength analysis with score, feedback, and validity
- */
-export const checkPasswordStrength = (password) => {
-  let score = 0;
-  const feedback = [];
-  
-  // Check if password exists
-  if (!password) {
-    return {
-      score: 0,
-      strength: 'none',
-      feedback: ['Password is required'],
-      percentage: 0,
-      isValid: false
-    };
-  }
-  
-  // Length check
-  if (password.length >= 8) {
-    score += 1;
-  } else {
-    feedback.push('Use at least 8 characters');
-  }
-  
-  if (password.length >= 12) {
-    score += 1;
-  }
-  
-  // Uppercase letter check
-  if (/[A-Z]/.test(password)) {
-    score += 1;
-  } else {
-    feedback.push('Include at least one uppercase letter');
-  }
-  
-  // Lowercase letter check
-  if (/[a-z]/.test(password)) {
-    score += 1;
-  } else {
-    feedback.push('Include at least one lowercase letter');
-  }
-  
-  // Number check
-  if (/[0-9]/.test(password)) {
-    score += 1;
-  } else {
-    feedback.push('Include at least one number');
-  }
-  
-  // Special character check
-  if (/[^A-Za-z0-9]/.test(password)) {
-    score += 1;
-  } else {
-    feedback.push('Include at least one special character (!@#$%^&*)');
-  }
-  
-  // Common patterns check (negative scoring)
-  const commonPatterns = [
-    /12345/,
-    /password/i,
-    /qwerty/i,
-    /abc123/i,
-    /111111/,
-    /123123/,
-    /admin/i,
-    /letmein/i,
-    /welcome/i,
-    /monkey/i,
-    /dragon/i
-  ];
-  
-  const hasCommonPattern = commonPatterns.some(pattern => pattern.test(password));
-  if (hasCommonPattern) {
-    score = Math.max(0, score - 2);
-    feedback.push('Avoid common patterns and words');
-  }
-  
-  // Sequential characters check
-  const hasSequential = /(abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz|012|123|234|345|456|567|678|789)/i.test(password);
-  if (hasSequential) {
-    score = Math.max(0, score - 1);
-    feedback.push('Avoid sequential characters');
-  }
-  
-  // Repeated characters check
-  const hasRepeated = /(.)\1{2,}/.test(password);
-  if (hasRepeated) {
-    score = Math.max(0, score - 1);
-    feedback.push('Avoid repeated characters');
-  }
-  
-  // Determine strength label
-  let strength;
-  if (score <= 2) {
-    strength = 'weak';
-  } else if (score <= 3) {
-    strength = 'fair';
-  } else if (score <= 4) {
-    strength = 'good';
-  } else {
-    strength = 'strong';
-  }
-  
-  // Calculate percentage (max score is 6)
-  const percentage = Math.min(100, Math.round((score / 6) * 100));
-  
-  return {
-    score: Math.min(4, Math.max(0, Math.round(score * 0.67))), // Normalize to 0-4 scale
-    strength,
-    percentage,
-    feedback: feedback.length > 0 ? feedback : ['Password is strong'],
-    isValid: score >= 3 // Minimum acceptable score
-  };
-}
-
-export const PasswordStrength = ({ password }) => {
-  const strength = checkPasswordStrength(password)
-  const requirements = [
-    { met: password.length >= 8, text: 'At least 8 characters' },
-    { met: /[A-Z]/.test(password), text: 'One uppercase letter' },
-    { met: /[a-z]/.test(password), text: 'One lowercase letter' },
-    { met: /[0-9]/.test(password), text: 'One number' },
-    { met: /[^A-Za-z0-9]/.test(password), text: 'One special character' }
-  ]
-
-  return (
-    <AnimatePresence>
-      {password && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
-          className="mt-2 space-y-2"
-        >
-          <div className="flex gap-1">
-            {[...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className={`h-1 flex-1 rounded-full transition-colors ${
-                  i < strength.score
-                    ? strength.score <= 1 ? 'bg-red-500'
-                    : strength.score <= 2 ? 'bg-yellow-500'
-                    : strength.score <= 3 ? 'bg-blue-500'
-                    : 'bg-green-500'
-                    : 'bg-gray-700'
-                }`}
-              />
-            ))}
-          </div>
-          <div className="space-y-1">
-            {requirements.map((req, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs">
-                {req.met ? (
-                  <Check className="w-3 h-3 text-green-500" />
-                ) : (
-                  <X className="w-3 h-3 text-gray-500" />
-                )}
-                <span className={req.met ? 'text-green-500' : 'text-gray-500'}>
-                  {req.text}
-                </span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  )
 }

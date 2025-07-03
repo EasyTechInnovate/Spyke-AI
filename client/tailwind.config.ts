@@ -35,8 +35,8 @@ const config: Config = {
         // ... rest of your colors
       },
       fontFamily: {
-        'league-spartan': ['var(--font-league-spartan)'],
-        'kumbh-sans': ['var(--font-kumbh-sans)'],
+        kumbh: ['var(--font-kumbh-sans)'],
+        spartan: ['var(--font-league-spartan)']
       },
     },
   },

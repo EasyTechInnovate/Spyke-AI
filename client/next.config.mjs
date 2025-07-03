@@ -1,12 +1,133 @@
-/**
- * @type {import('next').NextConfig}
- */
+/** @type {import('next').NextConfig} */
+import bundleAnalyzer from '@next/bundle-analyzer'
+import crypto from 'crypto'
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+})
 
 const nextConfig = {
-    reactStrictMode: true,
-    eslint: {
-        ignoreDuringBuilds: true
+  reactStrictMode: true,
+
+  modularizeImports: {
+    'lucide-react': {
+      transform: 'lucide-react/dist/esm/icons/{{member}}',
+    },
+    lodash: {
+      transform: 'lodash/{{member}}',
+    },
+  },
+
+  productionBrowserSourceMaps: false,
+
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'sonner', '@/components', '@/lib'],
+  },
+
+  // ✅ Updated according to Next.js 14+ requirements
+  serverExternalPackages: ['bcrypt', 'sharp'],
+
+  compiler: {
+    removeConsole:
+      process.env.NODE_ENV === 'production'
+        ? {
+            exclude: ['error', 'warn'],
+          }
+        : false,
+  },
+
+  webpack: (config, { dev, isServer }) => {
+    if (!dev && !isServer) {
+      config.optimization = {
+        ...config.optimization,
+        moduleIds: 'deterministic',
+        splitChunks: {
+          chunks: 'all',
+          minSize: 20000,
+          minRemainingSize: 0,
+          minChunks: 1,
+          maxAsyncRequests: 30,
+          maxInitialRequests: 30,
+          cacheGroups: {
+            defaultVendors: false,
+            default: false,
+            framework: {
+              name: 'framework',
+              chunks: 'all',
+              test: /[\\/]node_modules[\\/](react|react-dom|scheduler|prop-types|use-sync-external-store)[\\/]/,
+              priority: 40,
+              enforce: true,
+            },
+            lib: {
+              test(module) {
+                return module.size() > 160000
+              },
+              name(module) {
+                const hash = crypto.createHash('sha1')
+                hash.update(module.identifier())
+                return `lib-${hash.digest('hex').substring(0, 8)}`
+              },
+              priority: 30,
+              minChunks: 1,
+              reuseExistingChunk: true,
+            },
+            commons: {
+              name: 'commons',
+              chunks: 'all',
+              minChunks: 2,
+              priority: 20,
+              reuseExistingChunk: true,
+            },
+            shared: {
+              name(module, chunks) {
+                return `shared-${crypto
+                  .createHash('sha1')
+                  .update(chunks.map((c) => c.name).join('_'))
+                  .digest('hex')
+                  .substring(0, 8)}`
+              },
+              priority: 10,
+              minChunks: 2,
+              reuseExistingChunk: true,
+            },
+          },
+        },
+      }
     }
+
+    config.module.rules.push({
+      test: /\.map$/,
+      use: 'ignore-loader',
+    })
+
+    return config
+  },
+
+  compress: true,
+  poweredByHeader: false,
+
+  async headers() {
+    return [
+      {
+        source: '/:all*(svg|jpg|jpeg|png|gif|ico|webp|avif)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ]
+  },
 }
 
-export default nextConfig
+export default withBundleAnalyzer(nextConfig)

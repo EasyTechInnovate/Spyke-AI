@@ -54,7 +54,6 @@ export default function HeroSection() {
 
     const handleSearch = useCallback(() => {
         if (searchQuery.trim()) {
-            console.log('Searching for:', searchQuery)
             // Navigate to search results
         }
     }, [searchQuery])
