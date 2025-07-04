@@ -32,7 +32,11 @@ Content-Type: {{contentType}}
 
 ###
 # Account Confirmation
+<<<<<<< HEAD
 POST {{baseUrl}}/auth/confirmation/{{token}}/?code={{code}}
+=======
+POST {{baseUrl}}/auth/confirmation
+>>>>>>> release/qa
 Content-Type: {{contentType}}
 
 {
