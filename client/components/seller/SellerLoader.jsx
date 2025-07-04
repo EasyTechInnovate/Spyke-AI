@@ -1,99 +1,40 @@
-import { theme } from '@/config/theme';
 import React from 'react';
-
 
 const SellerPageLoader = () => {
   return (
     <div 
-      className="fixed inset-0 flex items-center justify-center z-50"
-      style={{ backgroundColor: theme.colors.background.dark }}
+      className="fixed inset-0 bg-[#121212] flex items-center justify-center z-50"
+      role="status"
+      aria-label="Loading seller dashboard"
     >
       <div className="flex flex-col items-center">
-        {/* Animated bars */}
-        <div className="flex items-end gap-1 h-12 mb-6">
-          <div 
-            className="w-1 animate-bar-1"
-            style={{ backgroundColor: theme.colors.brand.primary }}
-          />
-          <div 
-            className="w-1 animate-bar-2"
-            style={{ backgroundColor: theme.colors.brand.primary }}
-          />
-          <div 
-            className="w-1 animate-bar-3"
-            style={{ backgroundColor: theme.colors.brand.primary }}
-          />
-          <div 
-            className="w-1 animate-bar-4"
-            style={{ backgroundColor: theme.colors.brand.primary }}
-          />
-          <div 
-            className="w-1 animate-bar-5"
-            style={{ backgroundColor: theme.colors.brand.primary }}
-          />
+        {/* Animated bars with CSS-only animation */}
+        <div className="flex items-end gap-1.5 h-16">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="w-2 bg-[#00FF89] rounded-full animate-pulse"
+              style={{
+                height: `${20 + i * 15}%`,
+                animationDelay: `${i * 100}ms`,
+                animationDuration: '1.5s'
+              }}
+              aria-hidden="true"
+            />
+          ))}
         </div>
         
-        <h2 
-          className="text-lg tracking-wide"
-          style={{ 
-            color: theme.colors.brand.primary,
-            fontFamily: theme.fonts.title
-          }}
-        >
-          Seller Center
-        </h2>
-      </div>
+        <h2 className="text-xl text-[#00FF89] mt-6 font-[var(--font-league-spartan)]">
 
-      <style jsx>{`
-        @keyframes bar-1 {
-          0%, 100% { height: 20%; }
-          50% { height: 100%; }
-        }
+          Loading Seller Center
+        </h2>
+        <p className="text-sm text-gray-500 mt-2 font-[var(--font-kumbh-sans)]">
+          Preparing your dashboard...
+        </p>
         
-        @keyframes bar-2 {
-          0%, 100% { height: 40%; }
-          50% { height: 80%; }
-        }
-        
-        @keyframes bar-3 {
-          0%, 100% { height: 60%; }
-          50% { height: 90%; }
-        }
-        
-        @keyframes bar-4 {
-          0%, 100% { height: 80%; }
-          50% { height: 70%; }
-        }
-        
-        @keyframes bar-5 {
-          0%, 100% { height: 100%; }
-          50% { height: 50%; }
-        }
-        
-        .animate-bar-1 {
-          animation: bar-1 1.2s ease-in-out infinite;
-        }
-        
-        .animate-bar-2 {
-          animation: bar-2 1.2s ease-in-out infinite;
-          animation-delay: 0.1s;
-        }
-        
-        .animate-bar-3 {
-          animation: bar-3 1.2s ease-in-out infinite;
-          animation-delay: 0.2s;
-        }
-        
-        .animate-bar-4 {
-          animation: bar-4 1.2s ease-in-out infinite;
-          animation-delay: 0.3s;
-        }
-        
-        .animate-bar-5 {
-          animation: bar-5 1.2s ease-in-out infinite;
-          animation-delay: 0.4s;
-        }
-      `}</style>
+        {/* Screen reader only text */}
+        <span className="sr-only">Please wait while we load your seller dashboard</span>
+      </div>
     </div>
   );
 };

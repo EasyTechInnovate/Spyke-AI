@@ -237,3 +237,17 @@ export const storage = {
     }
   }
 }
+
+export function getCurrencyFromCountry(country) {
+  const map = {
+    India: { symbol: '₹', code: 'INR' },
+    USA: { symbol: '$', code: 'USD' },
+    UnitedKingdom: { symbol: '£', code: 'GBP' },
+    Canada: { symbol: 'C$', code: 'CAD' },
+    Germany: { symbol: '€', code: 'EUR' },
+    Australia: { symbol: 'A$', code: 'AUD' },
+    default: { symbol: '$', code: 'USD' }
+  }
+
+  return map[country] || map.default
+}
