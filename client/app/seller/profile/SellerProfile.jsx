@@ -20,7 +20,10 @@ import {
     MessageSquare,
     TrendingUp,
     Users,
-    BarChart3
+    BarChart3,
+    AlertTriangle,
+    Check,
+    X
 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -53,6 +56,137 @@ const SellerPageLoader = () => {
 
                 <h2 className="text-xltext-[#00FF89] mt-6 font-[var(--font-league-spartan)]">Loading Seller Center</h2>
                 <p className="text-sm text-gray-500 mt-2 font-[var(--font-kumbh-sans)]">Preparing your dashboard...</p>
+            </div>
+        </div>
+    )
+}
+
+// Commission Offer Modal Component
+const CommissionOfferModal = ({ isOpen, onClose, currentOffer, onSubmit }) => {
+    const [counterRate, setCounterRate] = useState('')
+    const [reason, setReason] = useState('')
+    const [submitting, setSubmitting] = useState(false)
+
+    if (!isOpen) return null
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        if (!counterRate || counterRate < 1 || counterRate > 50) {
+            toast.error('Please enter a valid commission rate between 1% and 50%')
+            return
+        }
+        if (!reason || reason.length < 10) {
+            toast.error('Please provide a reason for your counter offer (minimum 10 characters)')
+            return
+        }
+
+        setSubmitting(true)
+        await onSubmit({ rate: Number(counterRate), reason })
+        setSubmitting(false)
+    }
+
+    return (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-[#1a1a1a] border border-gray-800 rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 className="text-2xl font-bold text-white font-league-spartan">Counter Offer</h3>
+                        <p className="text-sm text-gray-400 mt-1">Negotiate your commission rate</p>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-gray-800 rounded-lg transition-colors group">
+                        <X className="w-5 h-5 text-gray-400 group-hover:text-white" />
+                    </button>
+                </div>
+
+                {/* Current Offer Display */}
+                <div className="bg-[#121212] border border-gray-800 rounded-xl p-4 mb-6">
+                    <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-400">Current Platform Offer</span>
+                        <span className="text-2xl font-bold text-[#00FF89]">{currentOffer}%</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">The platform will take {currentOffer}% from each sale</p>
+                </div>
+
+                <form onSubmit={handleSubmit}>
+                    {/* Counter Rate Input */}
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-300 mb-3">Your Counter Rate (%)</label>
+                        <div className="relative">
+                            <input
+                                type="number"
+                                min="1"
+                                max="50"
+                                step="0.5"
+                                value={counterRate}
+                                onChange={(e) => setCounterRate(e.target.value)}
+                                className="w-full px-4 py-3 bg-[#0a0a0a] border border-gray-700 rounded-xl text-white text-lg focus:outline-none focus:ring-2 focus:ring-[#00FF89] focus:border-transparent transition-all"
+                                placeholder="Enter your preferred rate"
+                                required
+                            />
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                                <span className="text-lg">%</span>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between mt-2">
+                            <p className="text-xs text-gray-500">Suggest a commission rate between 1% and 50%</p>
+                            {counterRate && <p className="text-xs text-[#00FF89]">You'll keep {100 - counterRate}% of sales</p>}
+                        </div>
+                    </div>
+
+                    {/* Reason Textarea */}
+                    <div className="mb-8">
+                        <label className="block text-sm font-medium text-gray-300 mb-3">Reason for Counter Offer</label>
+                        <div className="relative">
+                            <textarea
+                                value={reason}
+                                onChange={(e) => setReason(e.target.value)}
+                                className="w-full px-4 py-3 bg-[#0a0a0a] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89] focus:border-transparent resize-none transition-all"
+                                rows="4"
+                                placeholder="Explain why you're requesting this rate..."
+                                required
+                            />
+                            <div className="absolute bottom-3 right-3 text-xs text-gray-500">{reason.length}/10 min</div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">Help us understand your perspective</p>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-3">
+                        <button
+                            type="submit"
+                            disabled={submitting}
+                            className="flex-1 px-6 py-3 bg-[#00FF89] text-[#121212] rounded-xl font-semibold hover:bg-[#00FF89]/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]">
+                            {submitting ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <div className="w-4 h-4 border-2 border-[#121212] border-t-transparent rounded-full animate-spin" />
+                                    Submitting...
+                                </span>
+                            ) : (
+                                'Submit Counter Offer'
+                            )}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            disabled={submitting}
+                            className="flex-1 px-6 py-3 bg-gray-800 text-white rounded-xl font-semibold hover:bg-gray-700 transition-all border border-gray-700">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+
+                {/* Info Footer */}
+                <div className="mt-6 pt-6 border-t border-gray-800">
+                    <div className="flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                        <p className="text-xs text-gray-500">
+                            Your counter offer will be reviewed by our team. We'll notify you once a decision is made.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     )
@@ -94,6 +228,9 @@ export default function SellerProfile() {
     const [stats, setStats] = useState(null)
     const [isMobile, setIsMobile] = useState(false)
     const [selectedCurrency, setSelectedCurrency] = useState('USD')
+    const [showCounterOfferModal, setShowCounterOfferModal] = useState(false)
+    const [processingOffer, setProcessingOffer] = useState(false)
+    const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
 
     const currencyConfig = {
         USD: { symbol: '$', rate: 1, position: 'before' },
@@ -180,12 +317,66 @@ export default function SellerProfile() {
         }
     }
 
+    const handleAcceptOffer = async () => {
+        try {
+            setProcessingOffer(true)
+
+            // Create a minimum delay to show the loader
+            const minimumLoaderTime = new Promise((resolve) => setTimeout(resolve, 2000))
+
+            // Make the API call
+            const apiCall = sellerAPI.acceptCommissionOffer()
+
+            // Wait for both the API call and minimum time
+            const [response] = await Promise.all([apiCall, minimumLoaderTime])
+
+            if (response.success) {
+                setProcessingOffer(false)
+                setShowSuccessAnimation(true)
+
+                // Show success animation for 2 seconds
+                setTimeout(() => {
+                    toast.success('Commission offer accepted successfully!')
+                    setShowSuccessAnimation(false)
+                    fetchSellerData()
+                }, 2000)
+            }
+        } catch (error) {
+            toast.error('Failed to accept commission offer')
+            setProcessingOffer(false)
+        }
+    }
+
+    const handleCounterOffer = async ({ rate, reason }) => {
+        try {
+            const response = await sellerAPI.submitCounterOffer({ rate, reason })
+            if (response.success) {
+                toast.success('Counter offer submitted successfully!')
+                setShowCounterOfferModal(false)
+                // Refresh the profile data
+                await fetchSellerData()
+            }
+        } catch (error) {
+            toast.error('Failed to submit counter offer')
+        }
+    }
+
     const getVerificationBadge = (status) => {
         const badges = {
             pending: {
                 color: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30',
                 icon: Clock,
                 text: 'Verification Pending'
+            },
+            under_review: {
+                color: 'bg-blue-500/20 text-blue-500 border-blue-500/30',
+                icon: Eye,
+                text: 'Under Review'
+            },
+            commission_offered: {
+                color: 'bg-[#00FF89]/20 text-[#00FF89] border-[#00FF89]/30',
+                icon: DollarSign,
+                text: 'Commission Offered'
             },
             approved: {
                 color: 'bg-green-500/20 text-green-500 border-green-500/30',
@@ -259,6 +450,83 @@ export default function SellerProfile() {
                     className={`flex-1 h-full overflow-y-auto overflow-x-hidden bg-[#121212] text-white ${!isMobile ? 'ml-64' : ''}`}
                     role="main">
                     <div className="w-full p-4 sm:p-6 lg:p-8">
+                        {/* Commission Offer Banner */}
+                        {sellerProfile.verification?.status === 'commission_offered' && sellerProfile.commissionOffer?.status === 'pending' && (
+                            <div className="mb-6 bg-[#00FF89]/10 border border-[#00FF89]/30 rounded-xl p-6">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-12 h-12 bg-[#00FF89]/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <DollarSign className="w-6 h-6 text-[#00FF89]" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="text-xl font-semibold text-white mb-2">Commission Offer Received!</h3>
+                                        <p className="text-gray-300 mb-4">
+                                            The platform has offered you a commission rate of{' '}
+                                            <span className="text-2xl font-bold text-[#00FF89]">{sellerProfile.commissionOffer.rate}%</span> on all
+                                            your sales.
+                                        </p>
+                                        <p className="text-sm text-gray-400 mb-6">
+                                            This means the platform will take {sellerProfile.commissionOffer.rate}% from each sale you make. You can
+                                            accept this offer or propose a different rate.
+                                        </p>
+
+                                        <div className="flex flex-wrap gap-3">
+                                            <button
+                                                onClick={handleAcceptOffer}
+                                                disabled={processingOffer}
+                                                className="flex items-center gap-2 px-6 py-3 bg-[#00FF89] text-[#121212] font-medium rounded-lg hover:bg-[#00FF89]/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] min-w-[160px] justify-center">
+                                                {processingOffer ? (
+                                                    <>
+                                                        <div className="w-5 h-5 border-2 border-[#121212] border-t-transparent rounded-full animate-spin" />
+                                                        <span>Accepting...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Check className="w-5 h-5" />
+                                                        <span>Accept Offer</span>
+                                                    </>
+                                                )}
+                                            </button>
+                                            <button
+                                                onClick={() => setShowCounterOfferModal(true)}
+                                                disabled={processingOffer}
+                                                className="flex items-center gap-2 px-6 py-3 bg-[#121212] border border-[#00FF89]/30 text-[#00FF89] font-medium rounded-lg hover:bg-[#00FF89]/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] min-w-[180px] justify-center">
+                                                <AlertTriangle className="w-5 h-5" />
+                                                Make Counter Offer
+                                            </button>
+                                        </div>
+
+                                        <p className="text-xs text-gray-500 mt-4">
+                                            Offered on: {new Date(sellerProfile.commissionOffer.offeredAt).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Counter Offer Pending Banner */}
+                        {sellerProfile.commissionOffer?.counterOffer?.rate && sellerProfile.commissionOffer?.status === 'pending' && (
+                            <div className="mb-6 bg-[#FFC050]/10 border border-[#FFC050]/30 rounded-xl p-6">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-12 h-12 bg-[#FFC050]/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <Clock className="w-6 h-6 text-[#FFC050]" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="text-xl font-semibold text-white mb-2">Counter Offer Submitted</h3>
+                                        <p className="text-gray-300 mb-2">
+                                            You have submitted a counter offer of{' '}
+                                            <span className="text-lg font-bold text-[#FFC050]">
+                                                {sellerProfile.commissionOffer.counterOffer.rate}%
+                                            </span>
+                                        </p>
+                                        <p className="text-sm text-gray-400 mb-2">Reason: {sellerProfile.commissionOffer.counterOffer.reason}</p>
+                                        <p className="text-xs text-gray-500">
+                                            Submitted on: {new Date(sellerProfile.commissionOffer.counterOffer.submittedAt).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Page Header */}
                         <header className="mb-6 sm:mb-8">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -507,6 +775,25 @@ export default function SellerProfile() {
 
                             {/* Right Column */}
                             <aside className="xl:col-span-1 space-y-6">
+                                {/* Commission Info (if accepted) */}
+                                {sellerProfile.commissionOffer?.acceptedAt && (
+                                    <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6">
+                                        <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Commission Details</h2>
+                                        <div className="space-y-3">
+                                            <div>
+                                                <p className="text-xs sm:text-sm text-gray-400">Commission Rate</p>
+                                                <p className="text-xl sm:text-2xl font-bold text-[#00FF89]">{sellerProfile.commissionOffer.rate}%</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs sm:text-sm text-gray-400">Accepted On</p>
+                                                <p className="text-sm text-white">
+                                                    {new Date(sellerProfile.commissionOffer.acceptedAt).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Payout Info */}
                                 <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6">
                                     <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Payout Settings</h2>
@@ -652,6 +939,34 @@ export default function SellerProfile() {
                     </nav>
                 )}
             </div>
+
+            {/* Counter Offer Modal */}
+            <CommissionOfferModal
+                isOpen={showCounterOfferModal}
+                onClose={() => setShowCounterOfferModal(false)}
+                currentOffer={sellerProfile?.commissionOffer?.rate}
+                onSubmit={handleCounterOffer}
+            />
+
+            {/* Custom CSS for animations */}
+            <style jsx>{`
+                @keyframes slideIn {
+                    from {
+                        width: 0;
+                    }
+                    to {
+                        width: 100%;
+                    }
+                }
+
+                .animation-delay-150 {
+                    animation-delay: 150ms;
+                }
+
+                .animation-delay-300 {
+                    animation-delay: 300ms;
+                }
+            `}</style>
         </>
     )
 }

@@ -34,16 +34,29 @@ export default function SignInPage() {
         setLoading(true);
       
         try {
-          const user = await authAPI.login(formData);
-          toast.success('Login successful');
-          router.push('/');
+            const response = await authAPI.login(formData);
+            const { user } = response;
+            
+            toast.success('Login successful');
+            
+            // Define role-based routes
+            const roleRoutes = {
+                admin: '/admin',
+                seller: '/dashboard',
+                moderator: '/moderate',
+                user: '/'
+            };
+            
+            // Redirect based on role, with fallback
+            const redirectPath = roleRoutes[user.role] || '/';
+            router.push(redirectPath);
+            
         } catch (err) {
-          toast.error(err?.response?.data?.message || 'Login failed');
+            toast.error(err?.response?.data?.message || 'Login failed');
         } finally {
-          setLoading(false);
+            setLoading(false);
         }
-      };
-      
+    };
 
     return (
         <div className="min-h-screen bg-black relative overflow-hidden">
@@ -139,7 +152,7 @@ export default function SignInPage() {
                             </form>
 
                             <p className="mt-6 text-center text-gray-400 text-sm">
-                                Don’t have an account?{' '}
+                                Don't have an account?{' '}
                                 <Link href="/signup" className="text-[#00FF89] hover:underline font-semibold">
                                     Sign up
                                 </Link>

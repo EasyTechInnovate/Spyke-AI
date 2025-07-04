@@ -24,6 +24,20 @@ export const sellerAPI = {
         const response = await apiClient.get('v1/seller/profile')
         return response.data
     },
+    
+    acceptCommissionOffer: async () => {
+        const res = await apiClient.post('v1/seller/commission/accept')
+        return res?.data
+    },
+    
+    // Submit counter offer
+    submitCounterOffer: async ({ rate, reason }) => {
+        const res = await apiClient.post('v1/seller/commission/counter-offer', { 
+            rate, 
+            reason 
+        })
+        return res?.data
+    },
 
     /**
      * Update seller profile

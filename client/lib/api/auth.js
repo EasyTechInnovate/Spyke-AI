@@ -24,24 +24,30 @@ export const authAPI = {
         })
     },
 
-    login: async (credentials) => {      
+    login: async (credentials) => {
         const res = await apiClient.post('v1/auth/login', {
-          emailAddress: credentials.emailAddress,
-          password: credentials.password
-        });
-      
-        const data = res?.data;
-      
+            emailAddress: credentials.emailAddress,
+            password: credentials.password
+        })
+
+        const data = res?.data
+
         if (data?.tokens?.accessToken) {
-          apiClient.setAuthToken(data.tokens.accessToken);
-          localStorage.setItem('authToken', data.tokens.accessToken);
-          localStorage.setItem('refreshToken', data.tokens.refreshToken);
-          localStorage.setItem('user', JSON.stringify(data));
+            apiClient.setAuthToken(data.tokens.accessToken)
+            localStorage.setItem('authToken', data.tokens.accessToken)
+            localStorage.setItem('refreshToken', data.tokens.refreshToken)
+            localStorage.setItem('user', JSON.stringify(data))
+            document.cookie = `authToken=${data.tokens.accessToken}; path=/; max-age=86400` // 24 hours
+
+            if (data?.roles) {
+                localStorage.setItem('roles', JSON.stringify(data.roles))
+                document.cookie = `roles=${JSON.stringify(data.roles)}; path=/; max-age=86400` // 24 hours
+            }
         }
-      
-        return data;
-      },
-      
+
+        return data
+    },
+
     // Google Login
     googleLogin: async (googleData) => {
         const response = await apiClient.post('v1/auth/google-login', {
@@ -70,19 +76,18 @@ export const authAPI = {
         return await apiClient.get('v1/auth/me')
     },
 
-    // Logout
     logout: async () => {
         try {
             const response = await apiClient.post('v1/auth/logout')
-            // Clear tokens
             apiClient.setAuthToken(null)
+            localStorage.removeItem('roles')
             if (typeof window !== 'undefined') {
                 localStorage.removeItem('refreshToken')
             }
             return response
         } catch (error) {
-            // Even if API call fails, clear local tokens
             apiClient.setAuthToken(null)
+            localStorage.removeItem('roles')
             if (typeof window !== 'undefined') {
                 localStorage.removeItem('refreshToken')
             }
@@ -90,7 +95,6 @@ export const authAPI = {
         }
     },
 
-    // Refresh Token
     refreshToken: async () => {
         const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null
 
@@ -202,3 +206,4 @@ export const authAPI = {
 }
 
 export default authAPI
+

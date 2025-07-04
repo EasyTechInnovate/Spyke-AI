@@ -50,7 +50,6 @@ const structuredData = {
     }
 }
 
-// ✅ Viewport - required to be outside metadata in App Router
 export const viewport = {
     width: 'device-width',
     initialScale: 1,
@@ -58,13 +57,11 @@ export const viewport = {
     userScalable: true
 }
 
-// ✅ Theme Color - required to be outside metadata in App Router
 export const themeColor = [
     { media: '(prefers-color-scheme: light)', color: '#00FF89' },
     { media: '(prefers-color-scheme: dark)', color: '#00FF89' }
 ]
 
-// ✅ Metadata
 export const metadata = {
     metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://spykeai.com'),
     title: {

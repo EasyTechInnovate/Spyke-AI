@@ -130,7 +130,7 @@ export default function Header() {
         setDropdownOpen(false)
 
         if (role === 'seller') {
-            router.push('/seller/dashboard')
+            router.push('/seller/profile')
         } else {
             router.push('/account/purchases')
         }
@@ -302,7 +302,7 @@ export default function Header() {
 
                                                 <div className="border-t border-gray-800 py-2">
                                                     <Link
-                                                        href="/seller/dashboard"
+                                                        href="/seller/profile"
                                                         className="flex items-center gap-3 px-4 py-2 text-sm text-brand-primary hover:bg-gray-800 transition-colors"
                                                         onClick={() => setDropdownOpen(false)}>
                                                         <Store className="h-4 w-4" />
