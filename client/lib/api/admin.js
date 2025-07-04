@@ -51,7 +51,6 @@ export const adminAPI = {
             }
         },
 
-        // Profile Actions
         profile: {
             // Reject seller profile
             reject: async (sellerId, reason) => {

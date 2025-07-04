@@ -62,13 +62,20 @@ export default function PendingSellersPage() {
     const fetchPendingSellers = async () => {
         setLoading(true)
         try {
-
             const response = await adminAPI.sellers.getByStatus.fetch(activeStatusFilter, page, 30)
             if (response?.profiles) {
-                const sellersWithStatus = response.profiles.map((seller) => ({
+                let sellersWithStatus = response.profiles.map((seller) => ({
                     ...seller,
                     currentStatus: seller.verification?.status || seller.status || 'pending'
                 }))
+
+                if (activeStatusFilter === 'all') {
+                    sellersWithStatus = sellersWithStatus.filter((seller) => {
+                        const status = seller.currentStatus || seller.status
+                        return status !== 'approved' && status !== 'active'
+                    })
+                }
+
                 setSellers(sellersWithStatus)
                 setFilteredSellers(sellersWithStatus)
                 setPagination(response.pagination || {})
@@ -107,7 +114,6 @@ export default function PendingSellersPage() {
         }
     }, [searchQuery, sellers])
 
-    // Toggle seller expansion
     const toggleSellerExpansion = (sellerId) => {
         const newExpanded = new Set(expandedSellers)
         if (newExpanded.has(sellerId)) {
@@ -127,14 +133,12 @@ export default function PendingSellersPage() {
             // Temporary: You might need to create this endpoint
             toast.info('Start review functionality needs to be implemented in backend')
 
-            // Refresh the list
             fetchPendingSellers()
         } catch (error) {
             toast.error('Failed to start review')
         }
     }
 
-    // Handle commission offer
     const handleOfferCommission = async () => {
         if (!selectedSeller) return
 
@@ -149,7 +153,6 @@ export default function PendingSellersPage() {
         }
     }
 
-    // Handle reject seller
     const handleRejectSeller = async (sellerId, reason) => {
         try {
             await adminAPI.sellers.profile.reject(sellerId, reason)
@@ -160,7 +163,6 @@ export default function PendingSellersPage() {
         }
     }
 
-    // Format date
     const formatDate = (date) => {
         if (!date) return 'N/A'
         return new Date(date).toLocaleDateString('en-US', {
@@ -170,7 +172,6 @@ export default function PendingSellersPage() {
         })
     }
 
-    // Get counts by status
     const getStatusCounts = () => {
         if (activeStatusFilter === 'all') {
             return {
@@ -388,8 +389,6 @@ export default function PendingSellersPage() {
                                                 </div>
                                             </div>
                                         </div>
-
-                                        {/* Action Buttons based on status */}
                                         <div className="flex items-center gap-2">
                                             {status === 'pending' && (
                                                 <button
@@ -633,3 +632,4 @@ export default function PendingSellersPage() {
         </div>
     )
 }
+
