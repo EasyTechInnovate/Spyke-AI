@@ -1,0 +1,11 @@
+{
+    "presets": ["next/babel"],
+    "plugins": [
+      ["transform-imports", {
+        "lucide-react": {
+          "transform": "lucide-react/dist/esm/icons/{{member}}",
+          "preventFullImport": true
+        }
+      }]
+    ]
+  }

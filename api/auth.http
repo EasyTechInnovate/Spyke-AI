@@ -5,6 +5,8 @@
 @userPassword = newPassword456
 
 @accessToken = YOUR_JWT_TOKEN_HERE
+@token = 70018672-d952-4db8-bb1f-38123945eef4
+@code = 348225
 
 ###
 # Check Authentication Service Health
@@ -30,7 +32,11 @@ Content-Type: {{contentType}}
 
 ###
 # Account Confirmation
+<<<<<<< HEAD
+POST {{baseUrl}}/auth/confirmation/{{token}}/?code={{code}}
+=======
 POST {{baseUrl}}/auth/confirmation
+>>>>>>> release/qa
 Content-Type: {{contentType}}
 
 {

@@ -1,0 +1,374 @@
+@baseUrl = http://localhost:5000/v1
+@contentType = application/json
+
+@sellerEmailAddress = seller@gmail.com
+@sellerPassword = sellerPassword123
+@adminEmailAddress = admin@gmail.com
+@adminPassword = adminPassword123
+
+@sellerAccessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODY0ZmQ3ODc2ZTU0MmU5MjRmNGI3NjYiLCJlbWFpbEFkZHJlc3MiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGVzIjpbInVzZXIiLCJzZWxsZXIiXSwiaWF0IjoxNzUxNDU1MTIzLCJleHAiOjE3NTE0NTg3MjN9.pqiXX-s00SejJRNNoV9nIguqv6UWC_loVQHk6dYhr1U
+@adminAccessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODY1MTIzYTBhOWVmODIxN2NmYmIzMGIiLCJlbWFpbEFkZHJlc3MiOiJhZG1pbkBnbWFpbC5jb20iLCJyb2xlcyI6WyJhZG1pbiJdLCJpYXQiOjE3NTE0NTU1NTUsImV4cCI6MTc1MTQ1OTE1NX0.Yx4h8s2ADN3MtDPYiIwDqSQIiYlJndv2irOFomRuqNU
+@sellerId = 686510610a9ef8217cfbb2fa
+
+###
+# ================================
+# PUBLIC SELLER ROUTES (No Auth)
+# ================================
+
+###
+# Get Public Seller Profile
+GET {{baseUrl}}/seller/public/{{sellerId}}
+Content-Type: {{contentType}}
+
+###
+# Search Sellers
+GET {{baseUrl}}/seller/search?niche=E-commerce&tool=Zapier&country=United States&minRating=4&page=1&limit=10&sortBy=stats.averageRating&sortOrder=desc
+Content-Type: {{contentType}}
+
+###
+# Search Sellers - Basic
+GET {{baseUrl}}/seller/search
+Content-Type: {{contentType}}
+
+###
+# Search Sellers - Filter by Niche
+GET {{baseUrl}}/seller/search?niche=Social Media&page=1&limit=5
+Content-Type: {{contentType}}
+
+###
+# Search Sellers - Filter by Tool
+GET {{baseUrl}}/seller/search?tool=Make&minRating=3.5
+Content-Type: {{contentType}}
+
+###
+# ================================
+# SELLER PROFILE MANAGEMENT
+# ================================
+
+###
+# Create Seller Profile
+POST {{baseUrl}}/seller/profile
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+{
+  "fullName": "John Doe Automation Expert",
+  "email": "{{sellerEmailAddress}}",
+  "websiteUrl": "https://johndoeautomation.com",
+  "bio": "I'm a certified automation specialist with 5+ years of experience in creating seamless workflows for e-commerce businesses. I help entrepreneurs save time and increase efficiency through smart automation solutions using Zapier, Make, and custom integrations.",
+  "niches": ["E-commerce", "Social Media", "Email Marketing"],
+  "toolsSpecialization": ["Zapier", "Make", "Shopify", "Mailchimp", "HubSpot"],
+  "location": {
+    "country": "United States",
+    "timezone": "America/New_York"
+  },
+  "sellerBanner": "https://example.com/seller-banner.jpg",
+  "socialHandles": {
+    "linkedin": "https://linkedin.com/in/johndoe",
+    "twitter": "https://twitter.com/johndoeauto",
+    "instagram": "https://instagram.com/automation_expert",
+    "youtube": "https://youtube.com/c/johndoeautomation"
+  },
+  "customAutomationServices": true,
+  "portfolioLinks": [
+    "https://github.com/johndoe/automation-portfolio",
+    "https://dribbble.com/johndoe/automations",
+    "https://johndoeautomation.com/case-studies"
+  ],
+  "payoutInfo": {
+    "method": "paypal",
+    "paypalEmail": "{{sellerEmailAddress}}"
+  }
+}
+
+###
+# Get Seller Profile
+GET {{baseUrl}}/seller/profile
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+###
+# Update Seller Profile
+PUT {{baseUrl}}/seller/profile
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+{
+  "bio": "Updated bio: I'm a certified automation specialist with 6+ years of experience in creating seamless workflows for e-commerce and SaaS businesses. I specialize in complex integrations and custom automation solutions.",
+  "niches": ["E-commerce", "Social Media", "Email Marketing", "Lead Generation"],
+  "toolsSpecialization": ["Zapier", "Make", "n8n", "Shopify", "Mailchimp", "HubSpot", "Airtable"],
+  "websiteUrl": "https://johndoeautomation.pro",
+  "customAutomationServices": true,
+  "settings": {
+    "autoApproveProducts": false,
+    "emailNotifications": true,
+    "marketingEmails": false
+  }
+}
+
+###
+# ================================
+# SELLER VERIFICATION PROCESS
+# ================================
+
+###
+# Submit Profile for Verification
+POST {{baseUrl}}/seller/verification/submit
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+{
+  "identityProof": "https://storage.example.com/documents/identity-proof.pdf",
+  "businessProof": "https://storage.example.com/documents/business-license.pdf",
+  "taxDocument": "https://storage.example.com/documents/tax-document.pdf"
+}
+
+###
+# ================================
+# COMMISSION MANAGEMENT
+# ================================
+
+###
+# Accept Commission Offer
+POST {{baseUrl}}/seller/commission/accept
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+###
+# Reject Commission Offer
+POST {{baseUrl}}/seller/commission/reject
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+{
+  "reason": "The commission rate of 10% is too low for the quality of services I provide. I was expecting at least 15% based on my experience and portfolio."
+}
+
+###
+# Submit Counter Offer
+POST {{baseUrl}}/seller/commission/counter-offer
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+{
+  "rate": 18,
+  "reason": "Based on my 6+ years of experience, proven track record, and the premium quality of automations I deliver, I believe an 18% commission rate would be more appropriate. I'm willing to discuss this further."
+}
+
+###
+# ================================
+# SELLER STATISTICS & ANALYTICS
+# ================================
+
+###
+# Get Seller Statistics
+GET {{baseUrl}}/seller/stats
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+###
+# ================================
+# PAYOUT MANAGEMENT
+# ================================
+
+###
+# Update Payout Information - PayPal
+PUT {{baseUrl}}/seller/payout
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+{
+  "payoutInfo": {
+    "method": "paypal",
+    "paypalEmail": "seller.payouts@gmail.com"
+  }
+}
+
+###
+# Update Payout Information - Bank Transfer
+PUT {{baseUrl}}/seller/payout
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+{
+  "payoutInfo": {
+    "method": "bank",
+    "bankDetails": {
+      "accountHolderName": "John Doe",
+      "accountNumber": "1234567890",
+      "routingNumber": "021000021",
+      "bankName": "Chase Bank",
+      "swiftCode": "CHASUS33"
+    }
+  }
+}
+
+###
+# Update Payout Information - Stripe
+PUT {{baseUrl}}/seller/payout
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+{
+  "payoutInfo": {
+    "method": "stripe",
+    "stripeAccountId": "acct_1234567890abcdef"
+  }
+}
+
+###
+# Update Payout Information - Wise
+PUT {{baseUrl}}/seller/payout
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+{
+  "payoutInfo": {
+    "method": "wise",
+    "wiseEmail": "seller@wise.com"
+  }
+}
+
+###
+# ================================
+# ADMIN ROUTES (Admin Access Required)
+# ================================
+
+###
+# Get All Seller Profiles for Review
+GET {{baseUrl}}/seller/admin/profiles?status=under_review&page=1&limit=10&sortBy=verification.submittedAt&sortOrder=desc
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+###
+# Get All Seller Profiles - All Statuses
+GET {{baseUrl}}/seller/admin/profiles?status=all&page=1&limit=20
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+###
+# Get Pending Commission Offers
+GET {{baseUrl}}/seller/admin/profiles?status=commission_offered&page=1&limit=10
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+###
+# Get Approved Sellers
+GET {{baseUrl}}/seller/admin/profiles?status=approved&page=1&limit=15
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+###
+# Offer Commission to Seller
+POST {{baseUrl}}/seller/admin/commission/offer/{{sellerId}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+{
+  "rate": 15
+}
+
+###
+# Offer Higher Commission Rate
+POST {{baseUrl}}/seller/admin/commission/offer/{{sellerId}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+{
+  "rate": 20
+}
+
+###
+# Reject Seller Profile
+POST {{baseUrl}}/seller/admin/profile/reject/{{sellerId}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+{
+  "reason": "The submitted portfolio does not demonstrate sufficient experience with automation tools. Please provide more detailed case studies and examples of complex automation workflows you have created. Additionally, the business proof document is unclear - please resubmit a clearer version."
+}
+
+###
+# Admin: Accept Counter Offer
+POST {{baseUrl}}/seller/admin/commission/accept-counter/{{sellerId}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+
+###
+# ================================
+# COMPLEX WORKFLOW TESTING
+# ================================
+
+###
+# Full Seller Journey - Step 1: Create Profile
+POST {{baseUrl}}/seller/profile
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+{
+  "fullName": "Sarah Johnson - E-commerce Automation Expert",
+  "email": "sarah.johnson@example.com",
+  "websiteUrl": "https://sarahautomations.com",
+  "bio": "Specialized e-commerce automation consultant with 8+ years helping online stores scale through intelligent workflow automation. Expert in Shopify, WooCommerce, and marketplace integrations. I've helped over 200+ businesses automate their order processing, inventory management, and customer communication workflows, resulting in average time savings of 15+ hours per week.",
+  "niches": ["E-commerce", "Customer Support", "Data Analysis", "Marketing Automation"],
+  "toolsSpecialization": ["Zapier", "Make", "Shopify", "WooCommerce", "Klaviyo", "Mailchimp", "Airtable", "Google Sheets"],
+  "location": {
+    "country": "Canada",
+    "timezone": "America/Toronto"
+  },
+  "sellerBanner": "https://sarahautomations.com/banner.jpg",
+  "socialHandles": {
+    "linkedin": "https://linkedin.com/in/sarahjohnson-automation",
+    "twitter": "https://twitter.com/SarahAutomates",
+    "youtube": "https://youtube.com/c/SarahAutomations"
+  },
+  "customAutomationServices": true,
+  "portfolioLinks": [
+    "https://sarahautomations.com/portfolio",
+    "https://github.com/sarahjohnson/ecommerce-automations",
+    "https://sarahautomations.com/case-studies/shopify-automation",
+    "https://sarahautomations.com/testimonials"
+  ],
+  "payoutInfo": {
+    "method": "bank",
+    "bankDetails": {
+      "accountHolderName": "Sarah Johnson",
+      "accountNumber": "9876543210",
+      "routingNumber": "011401533",
+      "bankName": "TD Canada Trust",
+      "swiftCode": "TDOMCATTTOR"
+    }
+  }
+}
+
+###
+# Full Seller Journey - Step 2: Check Profile Status
+GET {{baseUrl}}/seller/profile
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+###
+# Full Seller Journey - Step 3: Submit for Verification
+POST {{baseUrl}}/seller/verification/submit
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+{
+  "identityProof": "https://storage.sarahautomations.com/documents/government-id.pdf",
+  "businessProof": "https://storage.sarahautomations.com/documents/business-registration.pdf",
+  "taxDocument": "https://storage.sarahautomations.com/documents/tax-return-2023.pdf"
+}
+
+###
+# Performance Testing - Bulk Search Requests
+GET {{baseUrl}}/seller/search?niche=E-commerce&limit=50
+Content-Type: {{contentType}}
+
+###
+GET {{baseUrl}}/seller/search?tool=Zapier&limit=50
+Content-Type: {{contentType}}
+
+###
+GET {{baseUrl}}/seller/search?country=United States&minRating=4.5&limit=50
+Content-Type: {{contentType}}

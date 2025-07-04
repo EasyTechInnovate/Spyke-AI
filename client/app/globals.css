@@ -1,6 +1,121 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+:root {
+  --brand-primary: #00ff89;
+  --brand-secondary: #00cc6e;
+  --brand-dark: #000000;
+}
+
+@font-face {
+  font-family: 'League Spartan';
+  font-weight: 700;
+  font-display: swap;
+  src: local('League Spartan Bold'),
+       url('/fonts/league-spartan-bold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Kumbh Sans';
+  font-weight: 400;
+  font-display: swap;
+  src: local('Kumbh Sans Regular'),
+       url('/fonts/kumbh-sans-regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Kumbh Sans';
+  font-weight: 500;
+  font-display: swap;
+  src: local('Kumbh Sans Medium'),
+       url('/fonts/kumbh-sans-medium.woff2') format('woff2');
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  z-index: 999;
+  padding: 1rem;
+  background-color: var(--brand-primary);
+  color: black;
+  text-decoration: none;
+  border-radius: 0.5rem;
+}
+
+.skip-link:focus {
+  left: 50%;
+  transform: translateX(-50%);
+  top: 1rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .text-gray-300 {
+    color: #f3f4f6;
+  }
+  .text-gray-400 {
+    color: #e5e7eb;
+  }
+  .bg-white\/10 {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+  .border-white\/20 {
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+}
+
+*:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Performance optimizations */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -252,4 +367,321 @@
     max-width: 100%;
     max-height: 100%;
   }
+}
+/* Enhanced Animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes float-delayed {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-30px);
+  }
+}
+
+@keyframes gradient-x {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 6s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.animate-gradient-x {
+  background-size: 200% 200%;
+  animation: gradient-x 3s ease infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+/* Animation delays */
+.animation-delay-100 { animation-delay: 100ms; }
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-300 { animation-delay: 300ms; }
+.animation-delay-400 { animation-delay: 400ms; }
+.animation-delay-500 { animation-delay: 500ms; }
+.animation-delay-600 { animation-delay: 600ms; }
+.animation-delay-700 { animation-delay: 700ms; }
+.animation-delay-800 { animation-delay: 800ms; }
+.animate-gradient {
+  background-size: 300% 300%;
+  animation: gradient 8s ease infinite;
+}
+
+@keyframes gradient {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  33% {
+    transform: translateY(-30px) translateX(10px);
+  }
+  66% {
+    transform: translateY(30px) translateX(-10px);
+  }
+}
+
+.bg-300\% {
+  background-size: 300% 300%;
+}
+/* Add to your globals.css */
+.bg-promptbase {
+  background-color: #1a1a2e;
+}
+
+.bg-promptbase-card {
+  background-color: #252547;
+}
+
+.logo-icon {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+[data-component="SpykeLogo"] img {
+  max-width: 100% !important;
+  height: auto !important;
+}
+/* ========================================
+   Enhanced Checkbox Styles - SpykeAI
+   Add this to your globals.css
+   ======================================== */
+
+/* Reset default checkbox appearance */
+input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  
+  /* Keep 16px visual size as requested */
+  width: 16px !important;
+  height: 16px !important;
+  
+  /* Positioning for larger click area */
+  position: relative;
+  margin: 0;
+  
+  /* Visual styling matching your dark theme */
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 2px solid #4B5563;
+  border-radius: 4px;
+  cursor: pointer;
+  
+  /* Smooth transitions */
+  transition: all 200ms ease;
+  
+  /* Remove outline for custom focus */
+  outline: none;
+  
+  /* Prevent selection */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Create 44x44px invisible click area for better mobile UX */
+/* ========================================
+   Fixed Checkbox Styles - SpykeAI
+   Replace your previous checkbox CSS with this
+   ======================================== */
+
+/* Reset and force 16px size */
+input[type="checkbox"] {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  
+  /* Force exact 16px size */
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  min-height: 16px !important;
+  max-width: 16px !important;
+  max-height: 16px !important;
+  
+  /* Reset any padding/margin that might affect size */
+  padding: 0 !important;
+  margin: 0;
+  
+  /* Positioning */
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+  
+  /* Visual styling */
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  border: 2px solid #4B5563 !important;
+  border-radius: 4px !important;
+  cursor: pointer;
+  
+  /* Smooth transitions */
+  transition: all 200ms ease;
+  
+  /* Remove outline */
+  outline: none !important;
+  
+  /* Prevent selection */
+  user-select: none;
+  -webkit-user-select: none;
+  
+  /* Ensure no box-sizing issues */
+  box-sizing: border-box !important;
+}
+
+/* Fix for Tailwind w-4 h-4 override */
+input[type="checkbox"].w-4 {
+  width: 16px !important;
+}
+
+input[type="checkbox"].h-4 {
+  height: 16px !important;
+}
+
+/* Invisible click area */
+input[type="checkbox"]::before {
+  content: '';
+  position: absolute;
+  inset: -14px;
+  cursor: pointer;
+  z-index: 1;
+}
+
+/* Hover state */
+input[type="checkbox"]:hover:not(:disabled):not(:checked) {
+  border-color: #6B7280 !important;
+  background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Focus state */
+input[type="checkbox"]:focus-visible {
+  border-color: #00FF89 !important;
+  box-shadow: 0 0 0 2px rgba(0, 255, 137, 0.5) !important;
+}
+
+/* Checked state with properly sized checkmark */
+input[type="checkbox"]:checked {
+  background-color: #00FF89 !important;
+  border-color: #00FF89 !important;
+  /* Larger checkmark that fits the 16px box properly */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' d='M2 7l3 3L12 3'/%3E%3C/svg%3E") !important;
+  background-size: 14px 14px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Alternative: If checkmark still appears small, use this instead */
+input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 8px;
+  border: solid black;
+  border-width: 0 2.5px 2.5px 0;
+  transform: translate(-50%, -60%) rotate(45deg);
+  display: block;
+}
+
+/* Remove background-image if using ::after checkmark */
+input[type="checkbox"]:checked.use-after-checkmark {
+  background-image: none !important;
+}
+
+/* Checked hover */
+input[type="checkbox"]:checked:hover:not(:disabled) {
+  background-color: rgba(0, 255, 137, 0.9) !important;
+  border-color: rgba(0, 255, 137, 0.9) !important;
+}
+
+/* Disabled state */
+input[type="checkbox"]:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  background-color: rgba(31, 41, 55, 0.5) !important;
+}
+
+/* Error state */
+input[type="checkbox"][aria-invalid="true"],
+input[type="checkbox"].error {
+  border-color: #EF4444 !important;
+}
+
+/* Ensure no interference from other styles */
+input[type="checkbox"] * {
+  display: none !important;
+}
+
+/* Fix for any container affecting size */
+div:has(> input[type="checkbox"]) {
+  display: inline-block;
+  line-height: 1;
+}
+
+/* Specific fix for your implementation */
+label input[type="checkbox"] {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+/* Animation */
+@keyframes checkbox-pop {
+  0% { transform: scale(0.9); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+input[type="checkbox"]:checked {
+  animation: checkbox-pop 200ms ease-out;
+}
+input[type="url"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="password"],
+input[data-no-grammar] {
+  /* Disable Grammarly */
+  font-family: inherit !important;
+}
+
+/* Disable Grammarly indicators */
+grammarly-desktop-integration {
+  display: none !important;
 }

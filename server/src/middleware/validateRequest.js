@@ -8,6 +8,7 @@ export const validateRequest = (schema, target = 'body') => {
                 break;
             case 'params':
                 dataToValidate = req.params;
+                
                 break;
             case 'body':
             default:
@@ -16,6 +17,7 @@ export const validateRequest = (schema, target = 'body') => {
         }
 
         const result = schema.safeParse(dataToValidate);
+        
 
         if (!result.success) {
             const formattedErrors = Object.entries(result.error.format())
