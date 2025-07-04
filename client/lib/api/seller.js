@@ -7,8 +7,6 @@ export const sellerAPI = {
      */
     createProfile: async (data) => {
         const token = localStorage.getItem('authToken') || localStorage.getItem('accessToken') || localStorage.getItem('sellerAccessToken')
-        console.log('Token found:', !!token)
-        console.log('Sending request with token:', token ? 'Yes' : 'No')
         const response = await apiClient.post('v1/seller/profile', data, {
             headers: {
                 Authorization: `Bearer ${token}`,

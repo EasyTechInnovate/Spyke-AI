@@ -91,9 +91,7 @@ class ApiClient {
     // Create request with retry logic
 
 async makeRequest(url, options) {
-    const authHeaders = this.getAuthHeaders()
-    console.log('Auth headers:', authHeaders) // Add this debug line
-    
+    const authHeaders = this.getAuthHeaders()    
     const request = {
         url,
         ...options,
@@ -103,9 +101,6 @@ async makeRequest(url, options) {
             ...options.headers
         }
     }
-    
-    console.log('Final request headers:', request.headers) // Add this debug line
-
     try {
         const response = await fetch(url, request)
         return this.handleResponse(response, request)

@@ -256,7 +256,7 @@ export default function SellerProfile() {
 
                 {/* Main Content */}
                 <main
-                    className={`h-full overflow-y-auto overflow-x-hidden bg-[#121212] text-white ${!isMobile ? 'ml-64' : ''}`}
+                    className={`flex-1 h-full overflow-y-auto overflow-x-hidden bg-[#121212] text-white ${!isMobile ? 'ml-64' : ''}`}
                     role="main">
                     <div className="w-full p-4 sm:p-6 lg:p-8">
                         {/* Page Header */}

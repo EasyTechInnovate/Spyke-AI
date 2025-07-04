@@ -159,8 +159,6 @@ export default function BecomeSellerPage() {
         const newErrors = {}
         const stepConfig = formSteps.find((s) => s.id === step)
 
-        console.log(`Validating step ${step}`)
-
         stepConfig.fields.forEach((fieldName) => {
             const fieldConfig = formFields[fieldName]
             const value = formData[fieldName]
@@ -199,7 +197,6 @@ export default function BecomeSellerPage() {
             }
         })
 
-        console.log('Validation errors:', newErrors)
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }
@@ -216,7 +213,6 @@ export default function BecomeSellerPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
-        console.log('=== FORM SUBMISSION DEBUG ===')
 
         if (!validateStep(3)) {
             return
@@ -224,12 +220,9 @@ export default function BecomeSellerPage() {
 
         // Set loading to true BEFORE the try block
         setLoading(true)
-        console.log('Loading set to true')
 
         try {
-            console.log('Starting API call...')
             const response = await sellerAPI.createProfile(formData)
-            console.log('API Response:', response)
 
             // Check for success - the response structure shows success: true
             if (response.success || response.statusCode === 201) {
@@ -256,7 +249,6 @@ export default function BecomeSellerPage() {
         } finally {
             // Always set loading to false
             setLoading(false)
-            console.log('Loading set to false')
         }
     }
 
@@ -655,7 +647,6 @@ export default function BecomeSellerPage() {
                                                                         key={tz.value}
                                                                         type="button"
                                                                         onClick={() => {
-                                                                            console.log('Selected timezone:', tz.value)
                                                                             setFormData((prev) => ({
                                                                                 ...prev,
                                                                                 location: { ...prev.location, timezone: tz.value }
