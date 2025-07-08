@@ -1,8 +1,20 @@
 import AdminDashboardPage from './Dashboard'
 
 export const metadata = {
-    title: 'Sign In - Spyke AI',
-    description: 'Login into  your account and join thousands of creators and buyers on Spyke AI marketplace',
+    title: 'Admin Dashboard - Spyke AI',
+    description: 'Manage users, monitor platform activity, oversee marketplace operations, and access administrative tools for Spyke AI.',
+    keywords: 'admin dashboard, spyke ai admin, platform management, user management, marketplace administration',
+    openGraph: {
+        title: 'Admin Dashboard - Spyke AI',
+        description: 'Administrative control panel for Spyke AI marketplace platform',
+        type: 'website',
+    },
+    robots: {
+        index: false,
+        follow: false,
+        noarchive: true,
+        nosnippet: true,
+    },
 }
 
 export default function Page() {

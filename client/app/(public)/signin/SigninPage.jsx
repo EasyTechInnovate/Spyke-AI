@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -18,6 +18,9 @@ export default function SignInPage() {
         emailAddress: '',
         password: ''
     })
+    
+    // Prevent duplicate toasts
+    const toastShown = useRef(false)
 
     const handleBlur = (e) => {
         const { name } = e.target
@@ -31,29 +34,45 @@ export default function SignInPage() {
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        
+        if (loading) return;
+        
         setLoading(true);
-      
+        toastShown.current = false;
+        toast.dismiss();
+        
         try {
             const response = await authAPI.login(formData);
-            const { user } = response;
             
-            toast.success('Login successful');
-            
-            // Define role-based routes
-            const roleRoutes = {
-                admin: '/admin',
-                seller: '/dashboard',
-                moderator: '/moderate',
-                user: '/'
-            };
-            
-            // Redirect based on role, with fallback
-            const redirectPath = roleRoutes[user.role] || '/';
-            router.push(redirectPath);
+            // Show success toast
+            if (!toastShown.current) {
+                toastShown.current = true;
+                toast.success('Login successful! Redirecting...', {
+                    id: 'login-success',
+                    duration: 2000
+                });
+            }
+
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 500);
             
         } catch (err) {
-            toast.error(err?.response?.data?.message || 'Login failed');
-        } finally {
+            console.error('Login error:', err);
+            
+            const errorMessage = err?.response?.data?.message || 
+                               err?.data?.message || 
+                               err?.message || 
+                               'Login failed';
+            
+            if (!toastShown.current) {
+                toastShown.current = true;
+                toast.error(errorMessage, {
+                    id: 'login-error',
+                    duration: 5000
+                });
+            }
+            
             setLoading(false);
         }
     };
@@ -89,6 +108,7 @@ export default function SignInPage() {
                                         className="w-full px-4 py-3 bg-black/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent"
                                         placeholder="you@example.com"
                                         required
+                                        disabled={loading}
                                     />
                                 </div>
 
@@ -104,11 +124,13 @@ export default function SignInPage() {
                                             placeholder="Enter your password"
                                             className="w-full px-4 py-3 bg-black/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 pr-12 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent"
                                             required
+                                            disabled={loading}
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                                            disabled={loading}>
                                             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                         </button>
                                     </div>
@@ -117,7 +139,11 @@ export default function SignInPage() {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-200 ${loading ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-[#00FF89] text-black hover:bg-[#00FF89]/90 transform hover:scale-[1.02] active:scale-[0.98]'}`}>
+                                    className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-200 ${
+                                        loading 
+                                            ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
+                                            : 'bg-[#00FF89] text-black hover:bg-[#00FF89]/90 transform hover:scale-[1.02] active:scale-[0.98]'
+                                    }`}>
                                     {loading ? (
                                         <span className="flex items-center justify-center gap-2">
                                             <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
@@ -139,8 +165,13 @@ export default function SignInPage() {
 
                                 <button
                                     type="button"
-                                    onClick={() => authAPI.googleAuth()}
-                                    className="w-full py-3 px-6 bg-white text-black rounded-lg font-semibold hover:bg-gray-100 transition-all duration-200 flex items-center justify-center gap-3">
+                                    onClick={() => !loading && authAPI.googleAuth()}
+                                    disabled={loading}
+                                    className={`w-full py-3 px-6 bg-white text-black rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-3 ${
+                                        loading 
+                                            ? 'opacity-50 cursor-not-allowed' 
+                                            : 'hover:bg-gray-100'
+                                    }`}>
                                     <svg className="w-5 h-5" viewBox="0 0 24 24">
                                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                                         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -153,7 +184,11 @@ export default function SignInPage() {
 
                             <p className="mt-6 text-center text-gray-400 text-sm">
                                 Don't have an account?{' '}
-                                <Link href="/signup" className="text-[#00FF89] hover:underline font-semibold">
+                                <Link 
+                                    href="/signup" 
+                                    className={`text-[#00FF89] font-semibold ${
+                                        loading ? 'pointer-events-none opacity-50' : 'hover:underline'
+                                    }`}>
                                     Sign up
                                 </Link>
                             </p>
