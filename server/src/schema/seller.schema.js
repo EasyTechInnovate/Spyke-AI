@@ -380,7 +380,6 @@ const sellerSchemas = {
     }),
 
     rejectProfile: z.object({
-        sellerId: z.string().min(1, 'Seller ID is required'),
         reason: z.string()
             .min(10, 'Rejection reason must be at least 10 characters long')
             .max(1000, 'Rejection reason cannot exceed 1000 characters')

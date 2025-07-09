@@ -564,15 +564,17 @@ export default {
             const { authenticatedUser } = req
             const { sellerId } = req.params
             const { reason } = req.body
-            console.log('BODDDY', req.body)
-            console.log('sellerId', sellerId)
 
             const sellerProfile = await sellerProfileModel.findById(sellerId)
             if (!sellerProfile) {
                 return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('Seller profile')), req, 404)
             }
 
-            if (sellerProfile.verification.status !== ESellerVerificationStatus.UNDER_REVIEW) {
+            const canReject =
+                sellerProfile.verification.status === ESellerVerificationStatus.UNDER_REVIEW ||
+                sellerProfile.verification.status === ESellerVerificationStatus.COMMISSION_OFFERED
+
+            if (!canReject) {
                 return httpError(next, new Error(responseMessage.SELLER.CANNOT_REJECT_PROFILE), req, 400)
             }
 
@@ -580,6 +582,23 @@ export default {
             sellerProfile.verification.reviewedAt = dayjs().utc().toDate()
             sellerProfile.verification.reviewedBy = authenticatedUser.id
             sellerProfile.verification.rejectionReason = reason
+
+            sellerProfile.commissionOffer = {
+                rate: null,
+                offeredBy: null,
+                offeredAt: null,
+                status: 'pending',
+                negotiationRound: 1,
+                lastOfferedBy: 'admin',
+                acceptedAt: null,
+                rejectedAt: new Date(),
+                rejectionReason: reason,
+                counterOffer: {
+                    rate: null,
+                    reason: null,
+                    submittedAt: null
+                }
+            }
 
             await sellerProfile.save()
 

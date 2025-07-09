@@ -66,7 +66,7 @@ export default {
         COUNTER_OFFER_SUBMITTED: 'Counter offer submitted successfully',
 
         CANNOT_OFFER_COMMISSION: 'Can only offer commission to profiles under review or respond to counter offers',
-        CANNOT_REJECT_PROFILE: 'Can only reject profiles that are under review',
+        CANNOT_REJECT_PROFILE: 'Can only reject profiles that are under review or in commission negotiation',
         PROFILE_REJECTED: 'Seller profile has been rejected',
         MAX_NEGOTIATION_ROUNDS_REACHED: 'Maximum negotiation rounds (5) reached. Please contact support for further assistance.',
 
