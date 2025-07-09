@@ -587,7 +587,7 @@ export default {
                 rate: null,
                 offeredBy: null,
                 offeredAt: null,
-                status: 'pending',
+                status: 'rejected',
                 negotiationRound: 1,
                 lastOfferedBy: 'admin',
                 acceptedAt: null,
