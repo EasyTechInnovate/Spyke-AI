@@ -289,6 +289,15 @@ const sellerProfileSchema = new mongoose.Schema(
                 enum: ['pending', 'accepted', 'rejected', 'counter_offered'],
                 default: 'pending'
             },
+            negotiationRound: {
+                type: Number,
+                default: 1
+            },
+            lastOfferedBy: {
+                type: String,
+                enum: ['admin', 'seller'],
+                default: 'admin'
+            },
             acceptedAt: {
                 type: Date,
                 default: null
@@ -420,11 +429,35 @@ sellerProfileSchema.methods.rejectCommissionOffer = function(reason) {
 }
 
 sellerProfileSchema.methods.submitCounterOffer = function(rate, reason) {
+    if (this.commissionOffer.negotiationRound >= 5) {
+        throw new Error('Maximum negotiation rounds reached')
+    }
+    
     this.commissionOffer.status = 'counter_offered'
+    this.commissionOffer.negotiationRound += 1
+    this.commissionOffer.lastOfferedBy = 'seller'
     this.commissionOffer.counterOffer = {
         rate: rate,
         reason: reason,
         submittedAt: new Date()
+    }
+}
+
+sellerProfileSchema.methods.adminCounterOffer = function(rate, adminId) {
+    if (this.commissionOffer.negotiationRound >= 5) {
+        throw new Error('Maximum negotiation rounds reached')
+    }
+    
+    this.commissionOffer.rate = rate
+    this.commissionOffer.status = 'pending'
+    this.commissionOffer.negotiationRound += 1
+    this.commissionOffer.lastOfferedBy = 'admin'
+    this.commissionOffer.offeredBy = adminId
+    this.commissionOffer.offeredAt = new Date()
+    this.commissionOffer.counterOffer = {
+        rate: null,
+        reason: null,
+        submittedAt: null
     }
 }
 

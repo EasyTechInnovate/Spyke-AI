@@ -282,8 +282,12 @@ export default {
                 return httpError(next, new Error(responseMessage.SELLER.NO_COMMISSION_OFFER), req, 400)
             }
 
-            if (sellerProfile.commissionOffer.status !== ECommissionOfferStatus.PENDING) {
+            if (sellerProfile.commissionOffer.status !== ECommissionOfferStatus.PENDING || sellerProfile.commissionOffer.lastOfferedBy !== 'admin') {
                 return httpError(next, new Error(responseMessage.SELLER.COMMISSION_ALREADY_RESPONDED), req, 400)
+            }
+
+            if (sellerProfile.commissionOffer.negotiationRound >= 5) {
+                return httpError(next, new Error(responseMessage.SELLER.MAX_NEGOTIATION_ROUNDS_REACHED), req, 400)
             }
 
             sellerProfile.submitCounterOffer(rate, reason)
@@ -299,7 +303,8 @@ export default {
             httpResponse(req, res, 200, responseMessage.SELLER.COUNTER_OFFER_SUBMITTED, {
                 counterOfferRate: rate,
                 reason: reason,
-                submittedAt: sellerProfile.commissionOffer.counterOffer.submittedAt
+                submittedAt: sellerProfile.commissionOffer.counterOffer.submittedAt,
+                negotiationRound: sellerProfile.commissionOffer.negotiationRound
             })
         } catch (err) {
             httpError(next, err, req, 500)
@@ -503,19 +508,35 @@ export default {
                 return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('Seller profile')), req, 404)
             }
 
-            if (sellerProfile.verification.status !== ESellerVerificationStatus.UNDER_REVIEW) {
+            const canOfferCommission =
+                sellerProfile.verification.status === ESellerVerificationStatus.UNDER_REVIEW ||
+                (sellerProfile.verification.status === ESellerVerificationStatus.COMMISSION_OFFERED &&
+                    sellerProfile.commissionOffer.status === 'counter_offered' &&
+                    sellerProfile.commissionOffer.lastOfferedBy === 'seller')
+
+            if (!canOfferCommission) {
                 return httpError(next, new Error(responseMessage.SELLER.CANNOT_OFFER_COMMISSION), req, 400)
             }
 
-            sellerProfile.verification.status = ESellerVerificationStatus.COMMISSION_OFFERED
-            sellerProfile.verification.reviewedAt = dayjs().utc().toDate()
-            sellerProfile.verification.reviewedBy = authenticatedUser.id
+            if (sellerProfile.commissionOffer.negotiationRound >= 5) {
+                return httpError(next, new Error(responseMessage.SELLER.MAX_NEGOTIATION_ROUNDS_REACHED), req, 400)
+            }
 
-            sellerProfile.commissionOffer = {
-                rate,
-                offeredBy: authenticatedUser.id,
-                offeredAt: dayjs().utc().toDate(),
-                status: ECommissionOfferStatus.PENDING
+            if (sellerProfile.verification.status === ESellerVerificationStatus.UNDER_REVIEW) {
+                sellerProfile.verification.status = ESellerVerificationStatus.COMMISSION_OFFERED
+                sellerProfile.verification.reviewedAt = dayjs().utc().toDate()
+                sellerProfile.verification.reviewedBy = authenticatedUser.id
+
+                sellerProfile.commissionOffer = {
+                    rate,
+                    offeredBy: authenticatedUser.id,
+                    offeredAt: dayjs().utc().toDate(),
+                    status: ECommissionOfferStatus.PENDING,
+                    negotiationRound: 1,
+                    lastOfferedBy: 'admin'
+                }
+            } else {
+                sellerProfile.adminCounterOffer(rate, authenticatedUser.id)
             }
 
             await sellerProfile.save()
@@ -530,7 +551,8 @@ export default {
             httpResponse(req, res, 200, responseMessage.SELLER.COMMISSION_OFFERED, {
                 sellerId,
                 commissionRate: rate,
-                offeredAt: sellerProfile.commissionOffer.offeredAt
+                offeredAt: sellerProfile.commissionOffer.offeredAt,
+                negotiationRound: sellerProfile.commissionOffer.negotiationRound
             })
         } catch (err) {
             httpError(next, err, req, 500)
@@ -585,8 +607,14 @@ export default {
                 return httpError(next, new Error(responseMessage.SELLER.NO_COUNTER_OFFER), req, 400)
             }
 
+            if (sellerProfile.commissionOffer.negotiationRound >= 5) {
+                return httpError(next, new Error(responseMessage.SELLER.MAX_NEGOTIATION_ROUNDS_REACHED), req, 400)
+            }
+
             sellerProfile.commissionOffer.rate = sellerProfile.commissionOffer.counterOffer.rate
             sellerProfile.commissionOffer.status = ECommissionOfferStatus.PENDING
+            sellerProfile.commissionOffer.negotiationRound += 1
+            sellerProfile.commissionOffer.lastOfferedBy = 'admin'
             sellerProfile.commissionOffer.offeredBy = authenticatedUser.id
             sellerProfile.commissionOffer.offeredAt = dayjs().utc().toDate()
 
@@ -608,7 +636,8 @@ export default {
             httpResponse(req, res, 200, responseMessage.SELLER.COUNTER_OFFER_ACCEPTED, {
                 sellerId,
                 acceptedRate: sellerProfile.commissionOffer.rate,
-                acceptedAt: sellerProfile.commissionOffer.offeredAt
+                acceptedAt: sellerProfile.commissionOffer.offeredAt,
+                negotiationRound: sellerProfile.commissionOffer.negotiationRound
             })
         } catch (err) {
             httpError(next, err, req, 500)
