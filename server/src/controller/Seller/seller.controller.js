@@ -564,6 +564,8 @@ export default {
             const { authenticatedUser } = req
             const { sellerId } = req.params
             const { reason } = req.body
+            console.log('BODDDY', req.body)
+            console.log('sellerId', sellerId)
 
             const sellerProfile = await sellerProfileModel.findById(sellerId)
             if (!sellerProfile) {

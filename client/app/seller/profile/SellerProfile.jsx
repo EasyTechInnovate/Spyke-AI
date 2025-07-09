@@ -25,7 +25,9 @@ import {
     HelpCircle,
     FileText,
     Handshake,
-    Rocket
+    Rocket,
+    Building,
+    User
 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -57,6 +59,204 @@ const SellerPageLoader = () => {
                 <h2 className="text-xltext-[#00FF89] mt-6 font-[var(--font-league-spartan)]">Loading Seller Center</h2>
                 <p className="text-sm text-gray-500 mt-2 font-[var(--font-kumbh-sans)]">Preparing your dashboard...</p>
             </div>
+        </div>
+    )
+}
+
+const CommissionNegotiationHistory = ({ commissionOffer, verificationStatus }) => {
+    if (!commissionOffer || verificationStatus !== 'commission_offered') {
+        return null
+    }
+
+    // Build negotiation history based on available data
+    const buildNegotiationHistory = () => {
+        const history = []
+        const currentRound = commissionOffer.negotiationRound || 1
+
+        // For each round, we'll create entries
+        for (let round = 1; round <= currentRound; round++) {
+            // Admin offers are on odd rounds, seller counters on even rounds
+            if (round % 2 === 1) {
+                // Admin offer round
+                const isCurrentOffer = round === currentRound && commissionOffer.lastOfferedBy === 'admin'
+                history.push({
+                    id: `admin-${round}`,
+                    type: 'offer',
+                    by: 'admin',
+                    rate: isCurrentOffer ? commissionOffer.rate : null,
+                    timestamp: isCurrentOffer ? commissionOffer.offeredAt : null,
+                    status: isCurrentOffer ? commissionOffer.status : 'completed',
+                    round: Math.ceil(round / 2),
+                    message: `Admin offer${round > 1 ? ' (revised)' : ''}`
+                })
+            } else {
+                // Seller counter offer round
+                const isCurrentCounter = round === currentRound && commissionOffer.lastOfferedBy === 'seller'
+                const hasCounterOffer = commissionOffer.counterOffer?.rate
+
+                if (hasCounterOffer || isCurrentCounter) {
+                    history.push({
+                        id: `seller-${round}`,
+                        type: 'counter',
+                        by: 'seller',
+                        rate: commissionOffer.counterOffer?.rate,
+                        reason: commissionOffer.counterOffer?.reason,
+                        timestamp: commissionOffer.counterOffer?.submittedAt,
+                        status: commissionOffer.status === 'counter_offered' ? 'pending' : 'completed',
+                        round: Math.ceil(round / 2),
+                        message: 'Your counter offer'
+                    })
+                }
+            }
+        }
+
+        // Add final status if accepted or rejected
+        if (commissionOffer.acceptedAt) {
+            history.push({
+                id: 'accepted',
+                type: 'accepted',
+                by: 'seller',
+                timestamp: commissionOffer.acceptedAt,
+                status: 'accepted',
+                message: 'Offer accepted'
+            })
+        } else if (commissionOffer.rejectedAt) {
+            history.push({
+                id: 'rejected',
+                type: 'rejected',
+                by: 'seller',
+                timestamp: commissionOffer.rejectedAt,
+                reason: commissionOffer.rejectionReason,
+                status: 'rejected',
+                message: 'Offer rejected'
+            })
+        }
+
+        return history
+    }
+
+    const negotiationHistory = buildNegotiationHistory()
+
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'pending':
+                return 'text-yellow-500 bg-yellow-500/20'
+            case 'accepted':
+                return 'text-green-500 bg-green-500/20'
+            case 'rejected':
+                return 'text-red-500 bg-red-500/20'
+            case 'completed':
+                return 'text-gray-400 bg-gray-700/50'
+            default:
+                return 'text-gray-400 bg-gray-700/50'
+        }
+    }
+
+    const getIcon = (item) => {
+        if (item.type === 'accepted') return <Check className="w-4 h-4" />
+        if (item.type === 'rejected') return <X className="w-4 h-4" />
+        if (item.by === 'admin') return <Building className="w-4 h-4" />
+        return <User className="w-4 h-4" />
+    }
+
+    return (
+        <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 h-full flex flex-col">
+            {/* Compact Header */}
+            <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-white">Negotiation History</h3>
+                <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">
+                    Round {commissionOffer.negotiationRound}
+                </span>
+            </div>
+
+            {/* Compact Timeline */}
+            <div className="flex-1 space-y-3 overflow-y-auto max-h-[280px]">
+                {negotiationHistory.map((item, index) => (
+                    <div key={item.id} className="flex items-start gap-3">
+                        {/* Icon */}
+                        <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${getStatusColor(item.status)}`}>
+                            {getIcon(item)}
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <p className="text-sm font-medium text-white">{item.message}</p>
+                                        <span className={`text-xs px-2 py-0.5 rounded ${
+                                            item.by === 'admin' 
+                                                ? 'bg-blue-500/20 text-blue-400' 
+                                                : 'bg-purple-500/20 text-purple-400'
+                                        }`}>
+                                            {item.by === 'admin' ? 'Admin' : 'You'}
+                                        </span>
+                                    </div>
+                                    
+                                    {item.rate && (
+                                        <p className="text-lg font-bold text-[#00FF89] mt-1">
+                                            {item.rate}% <span className="text-xs text-gray-400 font-normal">commission</span>
+                                        </p>
+                                    )}
+
+                                    {item.status === 'pending' && (
+                                        <div className="flex items-center gap-1 mt-1">
+                                            <Clock className="w-3 h-3 text-yellow-500" />
+                                            <span className="text-xs text-yellow-500">Awaiting response</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {item.timestamp && (
+                                    <span className="text-xs text-gray-500 flex-shrink-0">
+                                        {new Date(item.timestamp).toLocaleDateString('en-US', {
+                                            month: 'short',
+                                            day: 'numeric'
+                                        })}
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Reason - Compact */}
+                            {item.reason && (
+                                <div className="mt-2 p-2 bg-[#121212] rounded text-xs text-gray-400 line-clamp-2">
+                                    {item.reason}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Summary - More Compact */}
+            {commissionOffer.status === 'pending' && !commissionOffer.acceptedAt && (
+                <div className="mt-4 pt-4 border-t border-gray-700">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-xs text-gray-500">Current offer</p>
+                            <p className="text-sm font-semibold text-white">{commissionOffer.rate}% commission</p>
+                        </div>
+                        <div className="text-right bg-[#00FF89]/10 px-3 py-2 rounded-lg">
+                            <p className="text-xs text-gray-400">You keep</p>
+                            <p className="text-lg font-bold text-[#00FF89]">{100 - commissionOffer.rate}%</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {commissionOffer.acceptedAt && (
+                <div className="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                    <div className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        <div className="flex-1">
+                            <p className="text-sm font-medium text-green-500">Agreement Finalized</p>
+                            <p className="text-xs text-gray-400">
+                                {commissionOffer.rate}% commission rate accepted
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
@@ -483,6 +683,7 @@ export default function SellerProfile() {
     const [showCounterOfferModal, setShowCounterOfferModal] = useState(false)
     const [processingOffer, setProcessingOffer] = useState(false)
     const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
+    const [isApproved, setisApproved] = useState(false)
 
     const currencyConfig = {
         USD: { symbol: '$', rate: 1, position: 'before' },
@@ -547,6 +748,7 @@ export default function SellerProfile() {
             if (response) {
                 setSellerProfile(response)
                 setStats(response.stats)
+                setisApproved(response.verification.status === 'approved')
                 const detectedCurrency = detectCurrencyFromLocation(response.location)
                 setSelectedCurrency(detectedCurrency)
             } else {
@@ -780,476 +982,478 @@ export default function SellerProfile() {
                                 </div>
                             </div>
                         </header>
-
-                        <MobileCommissionCard
-                            commissionOffer={sellerProfile.commissionOffer}
-                            verificationStatus={sellerProfile.verification?.status}
-                            onAccept={handleAcceptOffer}
-                            onCounter={() => setShowCounterOfferModal(true)}
-                            processingOffer={processingOffer}
-                        />
-                        {sellerProfile.verification?.status === 'pending' && (
-                            <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex items-start gap-3">
-                                <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                                <div className="flex-1">
-                                    <h3 className="text-yellow-500 font-medium mb-1">Verification in Progress</h3>
-                                    <p className="text-sm text-gray-300">
-                                        Your seller account is under review. You can start adding products, but they won't be visible to buyers until
-                                        your account is verified.
-                                    </p>
-                                    {sellerProfile.verification?.submittedAt && (
-                                        <p className="text-xs text-gray-400 mt-2">
-                                            Submitted: {new Date(sellerProfile.verification.submittedAt).toLocaleDateString()}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-
-                        {sellerProfile.verification?.status === 'rejected' && sellerProfile.verification?.rejectionReason && (
-                            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3">
-                                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                                <div className="flex-1">
-                                    <h3 className="text-red-500 font-medium mb-1">Verification Failed</h3>
-                                    <p className="text-sm text-gray-300">{sellerProfile.verification.rejectionReason}</p>
-                                    <Link
-                                        href="/seller/verification"
-                                        className="inline-flex items-center gap-2 mt-3 text-sm text-red-400 hover:text-red-300 transition-colors">
-                                        Submit for Verification Again →
-                                    </Link>
-                                </div>
-                            </div>
-                        )}
-
-                        {sellerProfile.verification?.status === 'commission_offered' &&
-                            sellerProfile.commissionOffer?.status === 'pending' &&
-                            !sellerProfile.commissionOffer?.counterOffer?.rate && (
-                                <div className="hidden md:block mb-6 bg-[#00FF89]/10 border border-[#00FF89]/30 rounded-xl p-6">
-                                    <div className="flex items-start gap-4">
-                                        <div className="w-12 h-12 bg-[#00FF89]/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                                            <DollarSign className="w-6 h-6 text-[#00FF89]" />
-                                        </div>
+                        {!isApproved && (
+                            <div>
+                                <MobileCommissionCard
+                                    commissionOffer={sellerProfile.commissionOffer}
+                                    verificationStatus={sellerProfile.verification?.status}
+                                    onAccept={handleAcceptOffer}
+                                    onCounter={() => setShowCounterOfferModal(true)}
+                                    processingOffer={processingOffer}
+                                />
+                                {sellerProfile.verification?.status === 'pending' && (
+                                    <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex items-start gap-3">
+                                        <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
                                         <div className="flex-1">
-                                            <h3 className="text-xl font-semibold text-white mb-2">Commission Offer Received!</h3>
-                                            <p className="text-gray-300 mb-4">
-                                                The platform has offered you a commission rate of{' '}
-                                                <span className="text-2xl font-bold text-[#00FF89]">{sellerProfile.commissionOffer.rate}%</span>
-                                                <CommissionTooltip rate={sellerProfile.commissionOffer.rate} /> on all your sales.
+                                            <h3 className="text-yellow-500 font-medium mb-1">Verification in Progress</h3>
+                                            <p className="text-sm text-gray-300">
+                                                Your seller account is under review. You can start adding products, but they won't be visible to
+                                                buyers until your account is verified.
                                             </p>
-                                            <p className="text-sm text-gray-400 mb-6">
-                                                This means the platform will take {sellerProfile.commissionOffer.rate}% from each sale you make. You
-                                                can accept this offer or propose a different rate.
-                                            </p>
-
-                                            <div className="flex flex-wrap gap-3">
-                                                <button
-                                                    onClick={handleAcceptOffer}
-                                                    disabled={processingOffer}
-                                                    className="flex items-center gap-2 px-6 py-3 bg-[#00FF89] text-[#121212] font-medium rounded-lg hover:bg-[#00FF89]/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] min-w-[160px] justify-center">
-                                                    {processingOffer ? (
-                                                        <>
-                                                            <div className="w-5 h-5 border-2 border-[#121212] border-t-transparent rounded-full animate-spin" />
-                                                            <span>Accepting...</span>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Check className="w-5 h-5" />
-                                                            <span>Accept Offer</span>
-                                                        </>
-                                                    )}
-                                                </button>
-                                                <button
-                                                    onClick={() => setShowCounterOfferModal(true)}
-                                                    disabled={processingOffer}
-                                                    className="flex items-center gap-2 px-6 py-3 bg-[#121212] border border-[#00FF89]/30 text-[#00FF89] font-medium rounded-lg hover:bg-[#00FF89]/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] min-w-[180px] justify-center">
-                                                    <AlertTriangle className="w-5 h-5" />
-                                                    Make Counter Offer
-                                                </button>
-                                            </div>
-
-                                            <p className="text-xs text-gray-500 mt-4">
-                                                Offered on: {new Date(sellerProfile.commissionOffer.offeredAt).toLocaleDateString()}
-                                            </p>
+                                            {sellerProfile.verification?.submittedAt && (
+                                                <p className="text-xs text-gray-400 mt-2">
+                                                    Submitted: {new Date(sellerProfile.verification.submittedAt).toLocaleDateString()}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
 
-                        {sellerProfile.commissionOffer?.status === 'counter_offered' && sellerProfile.commissionOffer?.counterOffer?.rate && (
-                            <div className="mb-6 bg-[#FFC050]/10 border border-[#FFC050]/30 rounded-xl p-6">
-                                <div className="flex items-start gap-4">
-                                    <div className="w-12 h-12 bg-[#FFC050]/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <Clock className="w-6 h-6 text-[#FFC050]" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <h3 className="text-xl font-semibold text-white mb-2">Counter Offer Under Review</h3>
-                                        <p className="text-gray-300 mb-3">
-                                            You have submitted a counter offer of{' '}
-                                            <span className="text-lg font-bold text-[#FFC050]">
-                                                {sellerProfile.commissionOffer.counterOffer.rate}%
-                                            </span>
-                                            <CommissionTooltip rate={sellerProfile.commissionOffer.counterOffer.rate} /> commission rate (Original
-                                            offer: {sellerProfile.commissionOffer.rate}%)
-                                        </p>
-                                        <div className="bg-[#121212] border border-gray-800 rounded-lg p-4 mb-4">
-                                            <p className="text-sm font-medium text-gray-400 mb-1">Your Reason:</p>
-                                            <p className="text-sm text-gray-300">{sellerProfile.commissionOffer.counterOffer.reason}</p>
+                                {sellerProfile.verification?.status === 'rejected' && sellerProfile.verification?.rejectionReason && (
+                                    <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3">
+                                        <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                                        <div className="flex-1">
+                                            <h3 className="text-red-500 font-medium mb-1">Verification Failed</h3>
+                                            <p className="text-sm text-gray-300">{sellerProfile.verification.rejectionReason}</p>
+                                            <Link
+                                                href="/seller/verification"
+                                                className="inline-flex items-center gap-2 mt-3 text-sm text-red-400 hover:text-red-300 transition-colors">
+                                                Submit for Verification Again →
+                                            </Link>
                                         </div>
-                                        <p className="text-xs text-gray-500">
-                                            Submitted on: {new Date(sellerProfile.commissionOffer.counterOffer.submittedAt).toLocaleDateString()}
-                                        </p>
-                                        <p className="text-xs text-gray-400 mt-2">
-                                            Our team is reviewing your counter offer. We'll notify you once a decision is made.
-                                        </p>
                                     </div>
-                                </div>
-                            </div>
-                        )}
+                                )}
 
-                        {(sellerProfile.verification?.status === 'commission_offered' ||
-                            sellerProfile.verification?.status === 'approved' ||
-                            sellerProfile.verification?.status === 'under_review') && (
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                                <div className="lg:col-span-2">
-                                    <CommissionProgressStepper
-                                        verificationStatus={sellerProfile.verification.status}
-                                        commissionStatus={sellerProfile.commissionOffer?.status}
-                                        hasCounterOffer={!!sellerProfile.commissionOffer?.counterOffer?.rate}
-                                        acceptedAt={sellerProfile.commissionOffer?.acceptedAt}
-                                    />
-                                </div>
-                                <div className="lg:col-span-1">
-                                    <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 h-full flex flex-col justify-center">
-                                        <h3 className="text-sm font-medium text-gray-400 mb-3">Commission Status</h3>
-                                        <div className="space-y-2">
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-xs text-gray-500">Platform Rate</span>
-                                                <span className="text-lg font-bold text-[#00FF89]">
-                                                    {sellerProfile.commissionOffer?.rate || '-'}%
-                                                </span>
+                                {sellerProfile.verification?.status === 'commission_offered' &&
+                                    sellerProfile.commissionOffer?.status === 'pending' &&
+                                    !sellerProfile.commissionOffer?.counterOffer?.rate && (
+                                        <div className="hidden md:block mb-6 bg-[#00FF89]/10 border border-[#00FF89]/30 rounded-xl p-6">
+                                            <div className="flex items-start gap-4">
+                                                <div className="w-12 h-12 bg-[#00FF89]/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                    <DollarSign className="w-6 h-6 text-[#00FF89]" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h3 className="text-xl font-semibold text-white mb-2">Commission Offer Received!</h3>
+                                                    <div className="text-gray-300 mb-4">
+                                                        The platform has offered you a commission rate of{' '}
+                                                        <span className="text-2xl font-bold text-[#00FF89]">
+                                                            {sellerProfile.commissionOffer.rate}%
+                                                        </span>
+                                                        <CommissionTooltip rate={sellerProfile.commissionOffer.rate} /> on all your sales.
+                                                    </div>
+                                                    <div className="text-sm text-gray-400 mb-6">
+                                                        This means the platform will take {sellerProfile.commissionOffer.rate}% from each sale you
+                                                        make. You can accept this offer or propose a different rate.
+                                                    </div>
+
+                                                    <div className="flex flex-wrap gap-3">
+                                                        <button
+                                                            onClick={handleAcceptOffer}
+                                                            disabled={processingOffer}
+                                                            className="flex items-center gap-2 px-6 py-3 bg-[#00FF89] text-[#121212] font-medium rounded-lg hover:bg-[#00FF89]/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] min-w-[160px] justify-center">
+                                                            {processingOffer ? (
+                                                                <>
+                                                                    <div className="w-5 h-5 border-2 border-[#121212] border-t-transparent rounded-full animate-spin" />
+                                                                    <span>Accepting...</span>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <Check className="w-5 h-5" />
+                                                                    <span>Accept Offer</span>
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setShowCounterOfferModal(true)}
+                                                            disabled={processingOffer}
+                                                            className="flex items-center gap-2 px-6 py-3 bg-[#121212] border border-[#00FF89]/30 text-[#00FF89] font-medium rounded-lg hover:bg-[#00FF89]/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] min-w-[180px] justify-center">
+                                                            <AlertTriangle className="w-5 h-5" />
+                                                            Make Counter Offer
+                                                        </button>
+                                                    </div>
+
+                                                    <p className="text-xs text-gray-500 mt-4">
+                                                        Offered on: {new Date(sellerProfile.commissionOffer.offeredAt).toLocaleDateString()}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            {sellerProfile.commissionOffer?.counterOffer?.rate && (
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-xs text-gray-500">Your Counter</span>
+                                        </div>
+                                    )}
+
+                                {sellerProfile.commissionOffer?.status === 'counter_offered' && sellerProfile.commissionOffer?.counterOffer?.rate && (
+                                    <div className="mb-6 bg-[#FFC050]/10 border border-[#FFC050]/30 rounded-xl p-6">
+                                        <div className="flex items-start gap-4">
+                                            <div className="w-12 h-12 bg-[#FFC050]/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                <Clock className="w-6 h-6 text-[#FFC050]" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="text-xl font-semibold text-white mb-2">Counter Offer Under Review</h3>
+                                                <div className="text-gray-300 mb-3">
+                                                    You have submitted a counter offer of{' '}
                                                     <span className="text-lg font-bold text-[#FFC050]">
                                                         {sellerProfile.commissionOffer.counterOffer.rate}%
                                                     </span>
+                                                    <CommissionTooltip rate={sellerProfile.commissionOffer.counterOffer.rate} /> commission rate
+                                                    (Original offer: {sellerProfile.commissionOffer.rate}%)
                                                 </div>
-                                            )}
-                                            <div className="pt-2 border-t border-gray-700">
-                                                <span className="text-xs text-gray-500">Status</span>
-                                                <p className="text-sm text-[#00FF89] font-medium">
-                                                    {sellerProfile.commissionOffer?.status === 'counter_offered'
-                                                        ? 'Under Review'
-                                                        : sellerProfile.commissionOffer?.acceptedAt
-                                                          ? 'Accepted'
-                                                          : 'Pending Action'}
+                                                <div className="bg-[#121212] border border-gray-800 rounded-lg p-4 mb-4">
+                                                    <p className="text-sm font-medium text-gray-400 mb-1">Your Reason:</p>
+                                                    <p className="text-sm text-gray-300">{sellerProfile.commissionOffer.counterOffer.reason}</p>
+                                                </div>
+                                                <p className="text-xs text-gray-500">
+                                                    Submitted on:{' '}
+                                                    {new Date(sellerProfile.commissionOffer.counterOffer.submittedAt).toLocaleDateString()}
+                                                </p>
+                                                <p className="text-xs text-gray-400 mt-2">
+                                                    Our team is reviewing your counter offer. We'll notify you once a decision is made.
                                                 </p>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                )}
+
+                                {(sellerProfile.verification?.status === 'commission_offered' ||
+                                    sellerProfile.verification?.status === 'approved' ||
+                                    sellerProfile.verification?.status === 'under_review') && (
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                                        <div className="lg:col-span-2">
+                                            <CommissionProgressStepper
+                                                verificationStatus={sellerProfile.verification.status}
+                                                commissionStatus={sellerProfile.commissionOffer?.status}
+                                                hasCounterOffer={!!sellerProfile.commissionOffer?.counterOffer?.rate}
+                                                acceptedAt={sellerProfile.commissionOffer?.acceptedAt}
+                                            />
+                                        </div>
+                                        <div className="lg:col-span-1">
+                                            {sellerProfile.verification?.status === 'commission_offered' &&
+                                            !sellerProfile.commissionOffer?.acceptedAt &&
+                                            sellerProfile.commissionOffer?.negotiationRound > 1 ? (
+                                                <CommissionNegotiationHistory
+                                                    commissionOffer={sellerProfile.commissionOffer}
+                                                    verificationStatus={sellerProfile.verification?.status}
+                                                />
+                                            ) : (
+                                                <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 h-full flex flex-col justify-center">
+                                                    <div className="text-center">
+                                                        <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
+                                                            <Clock className="w-8 h-8 text-gray-500" />
+                                                        </div>
+                                                        <h3 className="text-sm font-medium text-white mb-1">
+                                                            {sellerProfile.verification?.status === 'under_review'
+                                                                ? 'Under Review'
+                                                                : 'Pending Verification'}
+                                                        </h3>
+                                                        <p className="text-xs text-gray-400">We'll notify you once your account is reviewed</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
-                        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
-                            <StatCard
-                                icon={DollarSign}
-                                value={formatCurrency(stats?.totalEarnings || 0)}
-                                label="Total Earnings"
-                                color="bg-[#00FF89]"
-                                trend={12.5}
-                                loading={loading}
-                            />
-                            <StatCard
-                                icon={ShoppingCart}
-                                value={stats?.totalSales || 0}
-                                label="Total Sales"
-                                color="bg-purple-500"
-                                trend={8.2}
-                                loading={loading}
-                            />
-                            <StatCard
-                                icon={Package}
-                                value={stats?.totalProducts || 0}
-                                label="Total Products"
-                                color="bg-blue-500"
-                                loading={loading}
-                            />
-                            <StatCard
-                                icon={Star}
-                                value={stats?.averageRating?.toFixed(1) || '0.0'}
-                                label="Average Rating"
-                                color="bg-[#FFC050]"
-                                loading={loading}
-                            />
-                        </section>
-
-                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
-                            <section className="xl:col-span-2 space-y-6">
-                                {stats?.totalProducts === 0 && (
-                                    <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6 sm:p-8 text-center">
-                                        <Package className="w-12 h-12 sm:w-16 sm:h-16 text-gray-600 mx-auto mb-4" />
-                                        <h2 className="text-xl sm:text-2xl font-semibold text-white mb-2">Start Selling Today!</h2>
-                                        <p className="text-sm sm:text-base text-gray-400 mb-6 max-w-md mx-auto">
-                                            {canAddProducts
-                                                ? "You haven't added any products yet. Create your first product and start earning."
-                                                : sellerProfile.verification?.status === 'commission_offered'
-                                                  ? 'Accept the commission offer to start adding products and begin selling.'
-                                                  : 'Complete your verification to start adding products.'}
-                                        </p>
-                                        {canAddProducts ? (
-                                            <Link
-                                                href="/seller/products/new"
-                                                className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-[#00FF89] text-[#121212] font-medium rounded-lg hover:bg-[#00FF89]/90 transition-colors">
-                                                <Plus className="w-5 h-5" />
-                                                Create Your First Product
-                                            </Link>
-                                        ) : sellerProfile.verification?.status === 'commission_offered' &&
-                                          !sellerProfile.commissionOffer?.acceptedAt ? (
-                                            <button
-                                                onClick={handleAcceptOffer}
-                                                disabled={processingOffer}
-                                                className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-[#00FF89] text-[#121212] font-medium rounded-lg hover:bg-[#00FF89]/90 transition-colors disabled:opacity-50">
-                                                {processingOffer ? (
-                                                    <>
-                                                        <div className="w-5 h-5 border-2 border-[#121212] border-t-transparent rounded-full animate-spin" />
-                                                        <span>Accepting...</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Check className="w-5 h-5" />
-                                                        Accept Commission Offer
-                                                    </>
-                                                )}
-                                            </button>
-                                        ) : (
-                                            <div className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-gray-700 text-gray-400 font-medium rounded-lg cursor-not-allowed">
-                                                <AlertCircle className="w-5 h-5" />
-                                                Verification Required
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                                <article className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6">
-                                    <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Profile Overview</h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                                        <div>
-                                            <h3 className="text-sm font-medium text-gray-400 mb-3">Business Info</h3>
-                                            <dl className="space-y-3">
-                                                <div>
-                                                    <dt className="text-xs text-gray-500">Email</dt>
-                                                    <dd className="text-sm sm:text-base text-white break-all">{sellerProfile.email}</dd>
-                                                </div>
-                                                <div>
-                                                    <dt className="text-xs text-gray-500">Website</dt>
-                                                    <dd className="text-sm sm:text-base">
-                                                        {sellerProfile.websiteUrl ? (
-                                                            <a
-                                                                href={sellerProfile.websiteUrl}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="text-[#00FF89] hover:text-[#00FF89]/80 break-all">
-                                                                {sellerProfile.websiteUrl}
-                                                            </a>
-                                                        ) : (
-                                                            <span className="text-gray-500">Not provided</span>
-                                                        )}
-                                                    </dd>
-                                                </div>
-                                                <div>
-                                                    <dt className="text-xs text-gray-500">Location</dt>
-                                                    <dd className="text-sm sm:text-base text-white">{sellerProfile.location.country}</dd>
-                                                </div>
-                                            </dl>
-                                        </div>
-
-                                        <div>
-                                            <h3 className="text-sm font-medium text-gray-400 mb-3">Expertise</h3>
-                                            <div className="space-y-3">
-                                                <div>
-                                                    <p className="text-xs text-gray-500 mb-2">Niches</p>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {sellerProfile.niches.map((niche, index) => (
-                                                            <span
-                                                                key={index}
-                                                                className="text-xs px-2 py-1 bg-[#00FF89]/20 text-[#00FF89] rounded">
-                                                                {niche}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs text-gray-500 mb-2">Tools</p>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {sellerProfile.toolsSpecialization.map((tool, index) => (
-                                                            <span
-                                                                key={index}
-                                                                className="text-xs px-2 py-1 bg-blue-500/20 text-blue-400 rounded">
-                                                                {tool}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </article>
-                                <section className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                                    <div className="relative group">
-                                        <Link
-                                            href={canAddProducts ? '/seller/products' : '#'}
-                                            onClick={(e) => {
-                                                if (!canAddProducts) {
-                                                    e.preventDefault()
-                                                }
-                                            }}
-                                            className={`bg-[#1f1f1f] border border-gray-800 rounded-lg p-4 transition-all text-center group block ${
-                                                canAddProducts ? 'hover:border-[#00FF89]/50' : 'opacity-60 cursor-not-allowed'
-                                            }`}>
-                                            <Package className="w-8 h-8 text-[#00FF89] mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                                            <span className="text-xs sm:text-sm text-gray-300">Products</span>
-                                        </Link>
-                                        {!canAddProducts && (
-                                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-[#0a0a0a] border border-gray-700 rounded text-xs text-gray-300 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
-                                                Complete verification first
-                                            </div>
-                                        )}
-                                    </div>
-                                    <Link
-                                        href="/seller/orders"
-                                        className="bg-[#1f1f1f] border border-gray-800 rounded-lg p-4 hover:border-[#00FF89]/50 transition-all text-center group">
-                                        <ShoppingCart className="w-8 h-8 text-purple-500 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                                        <span className="text-xs sm:text-sm text-gray-300">Orders</span>
-                                    </Link>
-                                    <Link
-                                        href="/seller/analytics"
-                                        className="bg-[#1f1f1f] border border-gray-800 rounded-lg p-4 hover:border-[#00FF89]/50 transition-all text-center group">
-                                        <BarChart3 className="w-8 h-8 text-blue-500 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                                        <span className="text-xs sm:text-sm text-gray-300">Analytics</span>
-                                    </Link>
-                                    <Link
-                                        href="/seller/customers"
-                                        className="bg-[#1f1f1f] border border-gray-800 rounded-lg p-4 hover:border-[#00FF89]/50 transition-all text-center group">
-                                        <Users className="w-8 h-8 text-[#FFC050] mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                                        <span className="text-xs sm:text-sm text-gray-300">Customers</span>
-                                    </Link>
+                        {isApproved && (
+                            <>
+                                <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+                                    <StatCard
+                                        icon={DollarSign}
+                                        value={formatCurrency(stats?.totalEarnings || 0)}
+                                        label="Total Earnings"
+                                        color="bg-[#00FF89]"
+                                        trend={12.5}
+                                        loading={loading}
+                                    />
+                                    <StatCard
+                                        icon={ShoppingCart}
+                                        value={stats?.totalSales || 0}
+                                        label="Total Sales"
+                                        color="bg-purple-500"
+                                        trend={8.2}
+                                        loading={loading}
+                                    />
+                                    <StatCard
+                                        icon={Package}
+                                        value={stats?.totalProducts || 0}
+                                        label="Total Products"
+                                        color="bg-blue-500"
+                                        loading={loading}
+                                    />
+                                    <StatCard
+                                        icon={Star}
+                                        value={stats?.averageRating?.toFixed(1) || '0.0'}
+                                        label="Average Rating"
+                                        color="bg-[#FFC050]"
+                                        loading={loading}
+                                    />
                                 </section>
-                            </section>
-
-                            <aside className="xl:col-span-1 space-y-6">
-                                {sellerProfile.commissionOffer?.acceptedAt && (
-                                    <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6">
-                                        <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Commission Details</h2>
-                                        <div className="space-y-3">
-                                            <div>
-                                                <p className="text-xs sm:text-sm text-gray-400">Commission Rate</p>
-                                                <p className="text-xl sm:text-2xl font-bold text-[#00FF89]">{sellerProfile.commissionOffer.rate}%</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs sm:text-sm text-gray-400">Accepted On</p>
-                                                <p className="text-sm text-white">
-                                                    {new Date(sellerProfile.commissionOffer.acceptedAt).toLocaleDateString()}
+                                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
+                                    <section className="xl:col-span-2 space-y-6">
+                                        {stats?.totalProducts === 0 && (
+                                            <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6 sm:p-8 text-center">
+                                                <Package className="w-12 h-12 sm:w-16 sm:h-16 text-gray-600 mx-auto mb-4" />
+                                                <h2 className="text-xl sm:text-2xl font-semibold text-white mb-2">Start Selling Today!</h2>
+                                                <p className="text-sm sm:text-base text-gray-400 mb-6 max-w-md mx-auto">
+                                                    {canAddProducts
+                                                        ? "You haven't added any products yet. Create your first product and start earning."
+                                                        : sellerProfile.verification?.status === 'commission_offered'
+                                                          ? 'Accept the commission offer to start adding products and begin selling.'
+                                                          : 'Complete your verification to start adding products.'}
                                                 </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6">
-                                    <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Payout Settings</h2>
-                                    <div className="space-y-4">
-                                        <div>
-                                            <p className="text-xs sm:text-sm text-gray-400">Available Balance</p>
-                                            <p className="text-xl sm:text-2xl font-bold text-[#00FF89]">
-                                                {formatCurrency(stats?.totalEarnings || 0)}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs sm:text-sm text-gray-400">Payout Method</p>
-                                            <div className="flex items-center gap-2">
-                                                <p className="text-sm text-white capitalize">{sellerProfile.payoutInfo.method}</p>
-                                                {sellerProfile.payoutInfo.isVerified ? (
-                                                    <span className="flex items-center gap-1 text-xs px-2 py-0.5 bg-green-500/20 text-green-500 rounded-full">
-                                                        <CheckCircle className="w-3 h-3" />
-                                                        Verified
-                                                    </span>
+                                                {canAddProducts ? (
+                                                    <Link
+                                                        href="/seller/products/new"
+                                                        className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-[#00FF89] text-[#121212] font-medium rounded-lg hover:bg-[#00FF89]/90 transition-colors">
+                                                        <Plus className="w-5 h-5" />
+                                                        Create Your First Product
+                                                    </Link>
+                                                ) : sellerProfile.verification?.status === 'commission_offered' &&
+                                                  !sellerProfile.commissionOffer?.acceptedAt ? (
+                                                    <button
+                                                        onClick={handleAcceptOffer}
+                                                        disabled={processingOffer}
+                                                        className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-[#00FF89] text-[#121212] font-medium rounded-lg hover:bg-[#00FF89]/90 transition-colors disabled:opacity-50">
+                                                        {processingOffer ? (
+                                                            <>
+                                                                <div className="w-5 h-5 border-2 border-[#121212] border-t-transparent rounded-full animate-spin" />
+                                                                <span>Accepting...</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Check className="w-5 h-5" />
+                                                                Accept Commission Offer
+                                                            </>
+                                                        )}
+                                                    </button>
                                                 ) : (
-                                                    <span className="flex items-center gap-1 text-xs px-2 py-0.5 bg-yellow-500/20 text-yellow-500 rounded-full">
-                                                        <AlertCircle className="w-3 h-3" />
-                                                        Not Verified
-                                                    </span>
+                                                    <div className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-gray-700 text-gray-400 font-medium rounded-lg cursor-not-allowed">
+                                                        <AlertCircle className="w-5 h-5" />
+                                                        Verification Required
+                                                    </div>
                                                 )}
                                             </div>
-                                        </div>
-                                        {sellerProfile.payoutInfo.paypalEmail && (
-                                            <div>
-                                                <p className="text-xs sm:text-sm text-gray-400">PayPal Email</p>
-                                                <p className="text-sm text-white truncate">{sellerProfile.payoutInfo.paypalEmail}</p>
+                                        )}
+                                        <article className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6">
+                                            <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Profile Overview</h2>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                                                <div>
+                                                    <h3 className="text-sm font-medium text-gray-400 mb-3">Business Info</h3>
+                                                    <dl className="space-y-3">
+                                                        <div>
+                                                            <dt className="text-xs text-gray-500">Email</dt>
+                                                            <dd className="text-sm sm:text-base text-white break-all">{sellerProfile.email}</dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt className="text-xs text-gray-500">Website</dt>
+                                                            <dd className="text-sm sm:text-base">
+                                                                {sellerProfile.websiteUrl ? (
+                                                                    <a
+                                                                        href={sellerProfile.websiteUrl}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="text-[#00FF89] hover:text-[#00FF89]/80 break-all">
+                                                                        {sellerProfile.websiteUrl}
+                                                                    </a>
+                                                                ) : (
+                                                                    <span className="text-gray-500">Not provided</span>
+                                                                )}
+                                                            </dd>
+                                                        </div>
+                                                        <div>
+                                                            <dt className="text-xs text-gray-500">Location</dt>
+                                                            <dd className="text-sm sm:text-base text-white">{sellerProfile.location.country}</dd>
+                                                        </div>
+                                                    </dl>
+                                                </div>
+
+                                                <div>
+                                                    <h3 className="text-sm font-medium text-gray-400 mb-3">Expertise</h3>
+                                                    <div className="space-y-3">
+                                                        <div>
+                                                            <p className="text-xs text-gray-500 mb-2">Niches</p>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {sellerProfile.niches.map((niche, index) => (
+                                                                    <span
+                                                                        key={index}
+                                                                        className="text-xs px-2 py-1 bg-[#00FF89]/20 text-[#00FF89] rounded">
+                                                                        {niche}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs text-gray-500 mb-2">Tools</p>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {sellerProfile.toolsSpecialization.map((tool, index) => (
+                                                                    <span
+                                                                        key={index}
+                                                                        className="text-xs px-2 py-1 bg-blue-500/20 text-blue-400 rounded">
+                                                                        {tool}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </article>
+                                        <section className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                                            <div className="relative group">
+                                                <Link
+                                                    href={canAddProducts ? '/seller/products' : '#'}
+                                                    onClick={(e) => {
+                                                        if (!canAddProducts) {
+                                                            e.preventDefault()
+                                                        }
+                                                    }}
+                                                    className={`bg-[#1f1f1f] border border-gray-800 rounded-lg p-4 transition-all text-center group block ${canAddProducts ? 'hover:border-[#00FF89]/50' : 'opacity-60 cursor-not-allowed'}`}>
+                                                    <Package className="w-8 h-8 text-[#00FF89] mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                                                    <span className="text-xs sm:text-sm text-gray-300">Products</span>
+                                                </Link>
+                                                {!canAddProducts && (
+                                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-[#0a0a0a] border border-gray-700 rounded text-xs text-gray-300 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
+                                                        Complete verification first
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <Link
+                                                href="/seller/orders"
+                                                className="bg-[#1f1f1f] border border-gray-800 rounded-lg p-4 hover:border-[#00FF89]/50 transition-all text-center group">
+                                                <ShoppingCart className="w-8 h-8 text-purple-500 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                                                <span className="text-xs sm:text-sm text-gray-300">Orders</span>
+                                            </Link>
+                                            <Link
+                                                href="/seller/analytics"
+                                                className="bg-[#1f1f1f] border border-gray-800 rounded-lg p-4 hover:border-[#00FF89]/50 transition-all text-center group">
+                                                <BarChart3 className="w-8 h-8 text-blue-500 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                                                <span className="text-xs sm:text-sm text-gray-300">Analytics</span>
+                                            </Link>
+                                            <Link
+                                                href="/seller/customers"
+                                                className="bg-[#1f1f1f] border border-gray-800 rounded-lg p-4 hover:border-[#00FF89]/50 transition-all text-center group">
+                                                <Users className="w-8 h-8 text-[#FFC050] mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                                                <span className="text-xs sm:text-sm text-gray-300">Customers</span>
+                                            </Link>
+                                        </section>
+                                    </section>
+
+                                    <aside className="xl:col-span-1 space-y-6">
+                                        {sellerProfile.commissionOffer?.acceptedAt && (
+                                            <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6">
+                                                <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Commission Details</h2>
+                                                <div className="space-y-3">
+                                                    <div>
+                                                        <p className="text-xs sm:text-sm text-gray-400">Commission Rate</p>
+                                                        <p className="text-xl sm:text-2xl font-bold text-[#00FF89]">
+                                                            {sellerProfile.commissionOffer.rate}%
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs sm:text-sm text-gray-400">Accepted On</p>
+                                                        <p className="text-sm text-white">
+                                                            {new Date(sellerProfile.commissionOffer.acceptedAt).toLocaleDateString()}
+                                                        </p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         )}
-                                        <Link
-                                            href="/seller/payouts"
-                                            className="inline-flex items-center gap-2 text-sm text-[#00FF89] hover:text-[#00FF89]/80 transition-colors">
-                                            <CreditCard className="w-4 h-4" />
-                                            Manage Payouts
-                                        </Link>
-                                    </div>
-                                </div>
-                                <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6">
-                                    <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Settings Overview</h2>
-                                    <div className="space-y-3">
-                                        <div className="flex items-center justify-between py-2">
-                                            <span className="text-sm text-gray-300">Email Notifications</span>
-                                            <span
-                                                className={`text-sm font-medium ${sellerProfile.settings.emailNotifications ? 'text-[#00FF89]' : 'text-gray-500'}`}>
-                                                {sellerProfile.settings.emailNotifications ? 'Enabled' : 'Disabled'}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between py-2 border-t border-gray-800">
-                                            <span className="text-sm text-gray-300">Marketing Emails</span>
-                                            <span
-                                                className={`text-sm font-medium ${sellerProfile.settings.marketingEmails ? 'text-[#00FF89]' : 'text-gray-500'}`}>
-                                                {sellerProfile.settings.marketingEmails ? 'Enabled' : 'Disabled'}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between py-2 border-t border-gray-800">
-                                            <span className="text-sm text-gray-300">Auto-approve Products</span>
-                                            <span
-                                                className={`text-sm font-medium ${sellerProfile.settings.autoApproveProducts ? 'text-[#00FF89]' : 'text-gray-500'}`}>
-                                                {sellerProfile.settings.autoApproveProducts ? 'Enabled' : 'Disabled'}
-                                            </span>
-                                        </div>
-                                    </div>
 
-                                    <Link
-                                        href="/seller/settings"
-                                        className="inline-flex items-center gap-2 mt-4 text-sm text-[#00FF89] hover:text-[#00FF89]/80 transition-colors">
-                                        <Settings className="w-4 h-4" />
-                                        Manage Settings
-                                    </Link>
-                                </div>
-                                <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6">
-                                    <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Performance</h2>
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <p className="text-2xl sm:text-3xl font-bold text-white">{stats?.profileViews || 0}</p>
-                                                <p className="text-xs sm:text-sm text-gray-400">Profile Views</p>
+                                        <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6">
+                                            <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Payout Settings</h2>
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <p className="text-xs sm:text-sm text-gray-400">Available Balance</p>
+                                                    <p className="text-xl sm:text-2xl font-bold text-[#00FF89]">
+                                                        {formatCurrency(stats?.totalEarnings || 0)}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs sm:text-sm text-gray-400">Payout Method</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-sm text-white capitalize">{sellerProfile.payoutInfo.method}</p>
+                                                        {sellerProfile.payoutInfo.isVerified ? (
+                                                            <span className="flex items-center gap-1 text-xs px-2 py-0.5 bg-green-500/20 text-green-500 rounded-full">
+                                                                <CheckCircle className="w-3 h-3" />
+                                                                Verified
+                                                            </span>
+                                                        ) : (
+                                                            <span className="flex items-center gap-1 text-xs px-2 py-0.5 bg-yellow-500/20 text-yellow-500 rounded-full">
+                                                                <AlertCircle className="w-3 h-3" />
+                                                                Not Verified
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                {sellerProfile.payoutInfo.paypalEmail && (
+                                                    <div>
+                                                        <p className="text-xs sm:text-sm text-gray-400">PayPal Email</p>
+                                                        <p className="text-sm text-white truncate">{sellerProfile.payoutInfo.paypalEmail}</p>
+                                                    </div>
+                                                )}
+                                                <Link
+                                                    href="/seller/payouts"
+                                                    className="inline-flex items-center gap-2 text-sm text-[#00FF89] hover:text-[#00FF89]/80 transition-colors">
+                                                    <CreditCard className="w-4 h-4" />
+                                                    Manage Payouts
+                                                </Link>
                                             </div>
-                                            <Eye className="w-8 h-8 text-gray-600" />
                                         </div>
-                                        <div className="pt-4 border-t border-gray-800">
-                                            <p className="text-xs text-gray-500 mb-2">This Month</p>
-                                            <div className="flex items-center gap-2">
-                                                <TrendingUp className="w-4 h-4 text-green-400" />
-                                                <span className="text-sm text-green-400">+18.2%</span>
+                                        <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6">
+                                            <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Settings Overview</h2>
+                                            <div className="space-y-3">
+                                                <div className="flex items-center justify-between py-2">
+                                                    <span className="text-sm text-gray-300">Email Notifications</span>
+                                                    <span
+                                                        className={`text-sm font-medium ${sellerProfile.settings.emailNotifications ? 'text-[#00FF89]' : 'text-gray-500'}`}>
+                                                        {sellerProfile.settings.emailNotifications ? 'Enabled' : 'Disabled'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center justify-between py-2 border-t border-gray-800">
+                                                    <span className="text-sm text-gray-300">Marketing Emails</span>
+                                                    <span
+                                                        className={`text-sm font-medium ${sellerProfile.settings.marketingEmails ? 'text-[#00FF89]' : 'text-gray-500'}`}>
+                                                        {sellerProfile.settings.marketingEmails ? 'Enabled' : 'Disabled'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center justify-between py-2 border-t border-gray-800">
+                                                    <span className="text-sm text-gray-300">Auto-approve Products</span>
+                                                    <span
+                                                        className={`text-sm font-medium ${sellerProfile.settings.autoApproveProducts ? 'text-[#00FF89]' : 'text-gray-500'}`}>
+                                                        {sellerProfile.settings.autoApproveProducts ? 'Enabled' : 'Disabled'}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <Link
+                                                href="/seller/settings"
+                                                className="inline-flex items-center gap-2 mt-4 text-sm text-[#00FF89] hover:text-[#00FF89]/80 transition-colors">
+                                                <Settings className="w-4 h-4" />
+                                                Manage Settings
+                                            </Link>
+                                        </div>
+                                        <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6">
+                                            <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Performance</h2>
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-2xl sm:text-3xl font-bold text-white">{stats?.profileViews || 0}</p>
+                                                        <p className="text-xs sm:text-sm text-gray-400">Profile Views</p>
+                                                    </div>
+                                                    <Eye className="w-8 h-8 text-gray-600" />
+                                                </div>
+                                                <div className="pt-4 border-t border-gray-800">
+                                                    <p className="text-xs text-gray-500 mb-2">This Month</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <TrendingUp className="w-4 h-4 text-green-400" />
+                                                        <span className="text-sm text-green-400">+18.2%</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </aside>
                                 </div>
-                            </aside>
-                        </div>
+                            </>
+                        )}
                     </div>
                 </main>
                 {isMobile && (

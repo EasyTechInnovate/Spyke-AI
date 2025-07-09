@@ -46,8 +46,8 @@ router
     .post(
         authentication,
         authorization([EUserRole.ADMIN]),
-        validateRequest(sellerSchemas.sellerIdParam, 'params'),
-        validateRequest(sellerSchemas.rejectProfile),
+        // validateRequest(sellerSchemas.sellerIdParam, 'params'),
+        // validateRequest(sellerSchemas.rejectProfile),
         sellerController.rejectProfile
     )
 

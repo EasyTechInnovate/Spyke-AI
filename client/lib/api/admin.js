@@ -46,7 +46,11 @@ export const adminAPI = {
 
             // Accept counter offer from seller
             acceptCounter: async (sellerId) => {
-                const res = await apiClient.post(`seller/admin/commission/accept-counter/${sellerId}`)
+                const res = await apiClient.post(`v1/seller/admin/commission/accept-counter/${sellerId}`)
+                return res?.data
+            },
+            reject: async (sellerId, reason) => {
+                const res = await apiClient.post(`v1/seller/admin/profile/reject/${sellerId}`, {reason})
                 return res?.data
             }
         },
@@ -54,7 +58,7 @@ export const adminAPI = {
         profile: {
             // Reject seller profile
             reject: async (sellerId, reason) => {
-                const res = await apiClient.post(`seller/admin/profile/reject/${sellerId}`, { reason })
+                const res = await apiClient.post(`v1/seller/admin/profile/reject/${sellerId}`, { reason })
                 return res?.data
             },
 
