@@ -147,9 +147,9 @@ export const metadata = {
         }
     },
     verification: {
-        google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION,
-        yandex: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION,
-        bing: process.env.NEXT_PUBLIC_BING_VERIFICATION
+        google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION || undefined,
+        yandex: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION || undefined,
+        bing: process.env.NEXT_PUBLIC_BING_VERIFICATION || undefined
     },
     appleWebApp: {
         capable: true,

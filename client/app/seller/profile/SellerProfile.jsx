@@ -272,11 +272,15 @@ const CommissionProgressStepper = ({ verificationStatus, commissionStatus, hasCo
                 }
                 return 'active'
 
-            case 3:
-                if (verificationStatus === 'commission_offered' || verificationStatus === 'approved') {
-                    return 'completed'
-                }
-                return verificationStatus === 'under_review' ? 'pending' : 'pending'
+                case 3:
+                    if (verificationStatus === 'commission_offered' && !acceptedAt) {
+                        return 'active'
+                    }
+                    if (verificationStatus === 'approved' || acceptedAt) {
+                        return 'completed'
+                    }
+                    return 'pending'
+                
 
             case 4:
                 if (verificationStatus === 'commission_offered' && !acceptedAt) {
@@ -305,9 +309,15 @@ const CommissionProgressStepper = ({ verificationStatus, commissionStatus, hasCo
         },
         {
             id: 3,
-            title: 'Commission Offered',
-            icon: DollarSign
-        },
+            title:
+              verificationStatus === 'commission_offered' || acceptedAt
+                ? 'Commission Offered'
+                : 'Document Under Review',
+                icon:
+                verificationStatus === 'commission_offered' || acceptedAt
+                  ? DollarSign
+                  : Eye
+          },
         {
             id: 4,
             title: 'Negotiation',
@@ -328,63 +338,75 @@ const CommissionProgressStepper = ({ verificationStatus, commissionStatus, hasCo
     const progressPercentage = activeStep ? (steps.indexOf(activeStep) / (steps.length - 1)) * 100 : (completedSteps / (steps.length - 1)) * 100
 
     return (
-        <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 mb-6">
-            <h3 className="text-sm font-medium text-gray-400 mb-4">Your Progress</h3>
+        <div className="w-full max-w-full bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6 mb-6">
+          <h3 className="text-sm font-medium text-gray-400 mb-4">Your Progress</h3>
+      
+          {/* Progress Bar */}
+          {/* Show progress bar only on large screens */}
+<div className="relative mb-6 w-full h-1 hidden lg:block">
+  <div className="absolute top-0 left-0 right-0 h-1 bg-gray-700 rounded-full overflow-hidden">
+    <div
+      className="h-full bg-[#00FF89] rounded-full transition-all duration-500"
+      style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+    />
+  </div>
+</div>
 
-            <div className="relative mb-4">
-                <div className="h-1 bg-gray-700 rounded-full overflow-hidden">
-                    <div
-                        className="h-full bg-[#00FF89] rounded-full transition-all duration-500"
-                        style={{ width: `${Math.min(progressPercentage, 100)}%` }}
-                    />
+      
+          {/* Step Indicators */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-y-4 gap-x-2">
+            {steps.map((step, index) => {
+              const Icon = step.icon;
+              const isCompleted = step.status === "completed";
+              const isActive = step.status === "active";
+      
+              return (
+                <div
+                  key={step.id}
+                  className="flex flex-col items-center text-center w-1/5 min-w-[70px] flex-grow">
+                  <div
+                    className={`
+                      w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 mb-1
+                      ${
+                        isCompleted
+                          ? "bg-[#00FF89] text-[#121212]"
+                          : isActive
+                          ? "bg-[#00FF89]/20 text-[#00FF89] ring-2 ring-[#00FF89]"
+                          : "bg-gray-700 text-gray-500"
+                      }
+                    `}
+                  >
+                    {isCompleted ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
+                  </div>
+                  <p
+                    className={`text-[11px] sm:text-xs font-medium text-center ${
+                      isActive
+                        ? "text-[#00FF89]"
+                        : isCompleted
+                        ? "text-gray-300"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    {step.title}
+                  </p>
                 </div>
+              );
+            })}
+          </div>
+      
+          {/* Current Step Info */}
+          {steps.find((s) => s.status === "active") && (
+            <div className="mt-4 pt-4 border-t border-gray-800">
+              <p className="text-sm text-gray-400">
+                <span className="text-[#00FF89] font-medium">Current Step:</span>{" "}
+                {steps.find((s) => s.status === "active")?.title}
+                {hasCounterOffer && " - Counter offer submitted"}
+              </p>
             </div>
-
-            <div className="flex justify-between items-center">
-                {steps.map((step, index) => {
-                    const Icon = step.icon
-                    const isCompleted = step.status === 'completed'
-                    const isActive = step.status === 'active'
-                    const isPending = step.status === 'pending'
-
-                    return (
-                        <div
-                            key={step.id}
-                            className="flex flex-col items-center text-center">
-                            <div
-                                className={`
-                                w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 mb-2
-                                ${
-                                    isCompleted
-                                        ? 'bg-[#00FF89] text-[#121212]'
-                                        : isActive
-                                          ? 'bg-[#00FF89]/20 text-[#00FF89] ring-2 ring-[#00FF89]'
-                                          : 'bg-gray-700 text-gray-500'
-                                }
-                            `}>
-                                {isCompleted ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
-                            </div>
-                            <p
-                                className={`text-xs font-medium hidden sm:block ${
-                                    isActive ? 'text-[#00FF89]' : isCompleted ? 'text-gray-300' : 'text-gray-500'
-                                }`}>
-                                {step.title}
-                            </p>
-                        </div>
-                    )
-                })}
-            </div>
-
-            {steps.find((s) => s.status === 'active') && (
-                <div className="mt-4 pt-4 border-t border-gray-800">
-                    <p className="text-sm text-gray-400">
-                        <span className="text-[#00FF89] font-medium">Current Step:</span> {steps.find((s) => s.status === 'active').title}
-                        {hasCounterOffer && ' - Counter offer submitted'}
-                    </p>
-                </div>
-            )}
+          )}
         </div>
-    )
+      );
+      
 }
 
 const CommissionTooltip = ({ rate }) => {
@@ -1145,7 +1167,7 @@ export default function SellerProfile() {
                                     sellerProfile.verification?.status === 'approved' ||
                                     sellerProfile.verification?.status === 'under_review') && (
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                                        <div className="lg:col-span-2">
+                                        <div className="lg:col-span-3">
                                             <CommissionProgressStepper
                                                 verificationStatus={sellerProfile.verification.status}
                                                 commissionStatus={sellerProfile.commissionOffer?.status}
@@ -1156,25 +1178,11 @@ export default function SellerProfile() {
                                         <div className="lg:col-span-1">
                                             {sellerProfile.verification?.status === 'commission_offered' &&
                                             !sellerProfile.commissionOffer?.acceptedAt &&
-                                            sellerProfile.commissionOffer?.negotiationRound > 1 ? (
+                                            sellerProfile.commissionOffer?.negotiationRound > 1 && (
                                                 <CommissionNegotiationHistory
                                                     commissionOffer={sellerProfile.commissionOffer}
                                                     verificationStatus={sellerProfile.verification?.status}
                                                 />
-                                            ) : (
-                                                <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 h-full flex flex-col justify-center">
-                                                    <div className="text-center">
-                                                        <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
-                                                            <Clock className="w-8 h-8 text-gray-500" />
-                                                        </div>
-                                                        <h3 className="text-sm font-medium text-white mb-1">
-                                                            {sellerProfile.verification?.status === 'under_review'
-                                                                ? 'Under Review'
-                                                                : 'Pending Verification'}
-                                                        </h3>
-                                                        <p className="text-xs text-gray-400">We'll notify you once your account is reviewed</p>
-                                                    </div>
-                                                </div>
                                             )}
                                         </div>
                                     </div>
