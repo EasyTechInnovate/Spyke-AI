@@ -60,7 +60,9 @@ export default function SignInPage() {
             }
 
             setTimeout(() => {
-                window.location.href = '/'
+                if (typeof window !== 'undefined') {
+                    window.location.href = '/'
+                }
             }, 500)
         } catch (err) {
             console.error('Login error:', err)
