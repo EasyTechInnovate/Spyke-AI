@@ -1,3 +1,5 @@
+import { safeLocalStorage, safeSessionStorage, safeCookie, safeWindow } from '@/lib/utils/browser'
+
 export const authAPI = {
     // Health Check
     // Health Check
@@ -26,20 +28,20 @@ export const authAPI = {
             apiClient.setAuthToken(data.tokens.accessToken)
 
             const cookieOptions = `path=/; max-age=86400; SameSite=Lax`
-            document.cookie = `authToken=${data.tokens.accessToken}; ${cookieOptions}`
+            safeCookie.set('authToken', data.tokens.accessToken, cookieOptions)
 
             if (data?.roles) {
-                document.cookie = `roles=${JSON.stringify(data.roles)}; ${cookieOptions}`
+                safeCookie.set('roles', JSON.stringify(data.roles), cookieOptions)
             }
 
-            localStorage.setItem('authToken', data.tokens.accessToken)
+            safeLocalStorage.setItem('authToken', data.tokens.accessToken)
             if (data.tokens.refreshToken) {
-                localStorage.setItem('refreshToken', data.tokens.refreshToken)
+                safeLocalStorage.setItem('refreshToken', data.tokens.refreshToken)
             }
-            localStorage.setItem('user', JSON.stringify(data))
+            safeLocalStorage.setItem('user', JSON.stringify(data))
 
             if (data?.roles) {
-                localStorage.setItem('roles', JSON.stringify(data.roles))
+                safeLocalStorage.setItem('roles', JSON.stringify(data.roles))
             }
         }
 
@@ -84,23 +86,23 @@ export const authAPI = {
 
                 // Set cookies with proper attributes
                 const cookieOptions = `path=/; max-age=86400; SameSite=Lax`
-                document.cookie = `authToken=${data.tokens.accessToken}; ${cookieOptions}`
+                safeCookie.set('authToken', data.tokens.accessToken, cookieOptions)
 
                 if (data?.roles) {
-                    document.cookie = `roles=${JSON.stringify(data.roles)}; ${cookieOptions}`
+                    safeCookie.set('roles', JSON.stringify(data.roles), cookieOptions)
                 }
 
                 // Set localStorage items
-                localStorage.setItem('authToken', data.tokens.accessToken)
-                localStorage.setItem('refreshToken', data.tokens.refreshToken)
-                localStorage.setItem('user', JSON.stringify(data))
+                safeLocalStorage.setItem('authToken', data.tokens.accessToken)
+                safeLocalStorage.setItem('refreshToken', data.tokens.refreshToken)
+                safeLocalStorage.setItem('user', JSON.stringify(data))
 
                 if (data?.roles) {
-                    localStorage.setItem('roles', JSON.stringify(data.roles))
+                    safeLocalStorage.setItem('roles', JSON.stringify(data.roles))
                 }
 
                 // Store login time for session management
-                localStorage.setItem('loginTime', new Date().toISOString())
+                safeLocalStorage.setItem('loginTime', new Date().toISOString())
 
                 // Add a small delay to ensure cookies are set
                 await new Promise((resolve) => setTimeout(resolve, 100))
@@ -157,7 +159,7 @@ export const authAPI = {
 
     // Google OAuth Redirect
     googleAuth: () => {
-        window.location.href = `${apiClient.baseURL}/v1/auth/google`
+        safeWindow.redirect(`${apiClient.baseURL}/v1/auth/google`)
     },
 
     // Get Current User Profile

@@ -26,16 +26,18 @@ export default function BecomeSellerPage() {
     const [portfolioInput, setPortfolioInput] = useState('')
 
     useEffect(() => {
-        const user = JSON.parse(localStorage.getItem('user') || '{}')
-        if (user.emailAddress) {
-            // Pre-fill paypal email but let user change business email
-            setFormData((prev) => ({
-                ...prev,
-                payoutInfo: {
-                    ...prev.payoutInfo,
-                    paypalEmail: user.emailAddress
-                }
-            }))
+        if (typeof window !== 'undefined') {
+            const user = JSON.parse(localStorage.getItem('user') || '{}')
+            if (user.emailAddress) {
+                // Pre-fill paypal email but let user change business email
+                setFormData((prev) => ({
+                    ...prev,
+                    payoutInfo: {
+                        ...prev.payoutInfo,
+                        paypalEmail: user.emailAddress
+                    }
+                }))
+            }
         }
     }, [])
 
@@ -227,10 +229,12 @@ export default function BecomeSellerPage() {
             // Check for success - the response structure shows success: true
             if (response.success || response.statusCode === 201) {
                 // Update user role in localStorage
-                const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
-                currentUser.roles = ['user', 'seller']
-                currentUser.sellerId = response.data?.id // Save seller ID
-                localStorage.setItem('user', JSON.stringify(currentUser))
+                if (typeof window !== 'undefined') {
+                    const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
+                    currentUser.roles = ['user', 'seller']
+                    currentUser.sellerId = response.data?.id // Save seller ID
+                    localStorage.setItem('user', JSON.stringify(currentUser))
+                }
 
                 // Show success message
                 toast.success(response.message || '🎉 Welcome to our seller community!')

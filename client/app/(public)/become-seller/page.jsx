@@ -5,6 +5,8 @@ export const metadata = {
     description: 'Become a Seller',
 }
 
+export const dynamic = 'force-dynamic'
+
 export default function Page() {
     return <BecomeSellerPage />
 }

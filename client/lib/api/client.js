@@ -1,4 +1,5 @@
 import config from '@/config'
+import { safeLocalStorage, safeSessionStorage, safeWindow } from '@/lib/utils/browser'
 
 class ApiClient {
     constructor() {
@@ -60,10 +61,11 @@ class ApiClient {
                 this.clearAuth()
 
                 // Only redirect if not already on signin page
-                if (typeof window !== 'undefined' && window.location.pathname !== '/signin') {
+                const location = safeWindow.getLocation()
+                if (location.pathname !== '/signin') {
                     // Store the intended destination
-                    sessionStorage.setItem('redirectAfterLogin', window.location.pathname)
-                    window.location.href = '/signin'
+                    safeSessionStorage.setItem('redirectAfterLogin', location.pathname)
+                    safeWindow.redirect('/signin')
                 }
             }
 

@@ -12,13 +12,15 @@ export default function UnauthorizedPage() {
 
     useEffect(() => {
         // Get user's actual role from localStorage or sessionStorage
-        try {
-            const roles = JSON.parse(localStorage.getItem('roles') || '[]')
-            if (roles.length > 0) {
-                setUserRole(roles[0])
+        if (typeof window !== 'undefined') {
+            try {
+                const roles = JSON.parse(localStorage.getItem('roles') || '[]')
+                if (roles.length > 0) {
+                    setUserRole(roles[0])
+                }
+            } catch (e) {
+                console.error('Error parsing roles:', e)
             }
-        } catch (e) {
-            console.error('Error parsing roles:', e)
         }
     }, [])
 

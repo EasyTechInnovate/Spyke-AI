@@ -22,12 +22,14 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         // Check if user is logged in on mount
-        const storedUser = localStorage.getItem('user')
-        if (storedUser) {
-            try {
-                setUser(JSON.parse(storedUser))
-            } catch (error) {
-                console.error('Failed to parse user data:', error)
+        if (typeof window !== 'undefined') {
+            const storedUser = localStorage.getItem('user')
+            if (storedUser) {
+                try {
+                    setUser(JSON.parse(storedUser))
+                } catch (error) {
+                    console.error('Failed to parse user data:', error)
+                }
             }
         }
         setLoading(false)
@@ -45,9 +47,11 @@ export function AuthProvider({ children }) {
     }
 
     const logout = () => {
-        localStorage.removeItem('authToken')
-        localStorage.removeItem('refreshToken')
-        localStorage.removeItem('user')
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('authToken')
+            localStorage.removeItem('refreshToken')
+            localStorage.removeItem('user')
+        }
         setUser(null)
         router.push('/signin')
     }
