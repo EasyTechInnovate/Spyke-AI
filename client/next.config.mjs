@@ -9,6 +9,9 @@ const withBundleAnalyzer = bundleAnalyzer({
 const nextConfig = {
   reactStrictMode: true,
 
+  // Disable static generation for problematic pages during build
+  output: process.env.NODE_ENV === 'production' ? 'standalone' : undefined,
+
   modularizeImports: {
     'lucide-react': {
       transform: 'lucide-react/dist/esm/icons/{{member}}',
