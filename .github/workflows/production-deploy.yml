@@ -62,7 +62,7 @@ jobs:
 
                     # SSL Certificate Setup with Certbot
                     echo '🔒 Checking/Updating SSL certificates...'
-                    certbot certonly --standalone -d $DOMAIN --non-interactive --agree-tos -m Ayankhan@luxesstore.in || { echo '❌ Certbot failed'; exit 1; }
+                    certbot certonly --standalone -d $DOMAIN --non-interactive --agree-tos -m srikanishkav@gmail.com || { echo '❌ Certbot failed'; exit 1; }
                     
                     # Stop existing containers
                     echo '🛑 Stopping existing containers...'

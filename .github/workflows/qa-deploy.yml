@@ -28,7 +28,7 @@ jobs:
                   GITHUB_USERNAME: ${{ github.repository_owner }}
                   GITHUB_REPO: ${{ github.repository }}
                   GITHUB_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
-                  DOMAIN: <your-qa-domain-url>
+                  DOMAIN: qa.spykeai.com
               run: |
                   # Pass environment variables to the SSH session
                   ssh $DEPLOY_USER@$DEPLOY_HOST "
@@ -51,8 +51,8 @@ jobs:
                     fi
 
                     # Fetch and reset to match remote development branch
-                    git fetch origin development
-                    git reset --hard origin/development
+                    git fetch origin release-qa
+                    git reset --hard origin/release-qa
 
                     # Continue with deployment...
                     if [ ! -f \"Docker/docker-compose.yml\" ]; then
@@ -62,7 +62,7 @@ jobs:
 
                     # SSL Certificate Setup with Certbot
                     echo '🔒 Checking/Updating SSL certificates for QA...'
-                    certbot certonly --standalone -d $DOMAIN --non-interactive --agree-tos -m Ayankhan@luxesstore.in || { echo '❌ Certbot failed for QA'; exit 1; }
+                    certbot certonly --standalone -d $DOMAIN --non-interactive --agree-tos -m srikanishkav@gmail.com || { echo '❌ Certbot failed for QA'; exit 1; }
 
                     # Stop existing QA containers
                     echo '🛑 Stopping existing QA containers...'
