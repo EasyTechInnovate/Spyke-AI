@@ -3,7 +3,7 @@ name: Deploy to QA Server
 on:
     push:
         branches:
-            - development
+            - release-qa
     workflow_dispatch:
 
 jobs:
@@ -86,7 +86,7 @@ jobs:
 
                   # Check if services are responding
                   echo "🔍 Verifying QA service availability..."
-                  curl -f -s -S --retry 3 --retry-delay 5 -I https://<your-qa-domain-url>:8443 || {
+                  curl -f -s -S --retry 3 --retry-delay 5 -I https://qa.spykeai.com:8443 || {
                     echo "❌ QA Service verification failed"
                     exit 1
                   }

@@ -50,7 +50,6 @@ const structuredData = {
     }
 }
 
-// ✅ Viewport - required to be outside metadata in App Router
 export const viewport = {
     width: 'device-width',
     initialScale: 1,
@@ -58,13 +57,11 @@ export const viewport = {
     userScalable: true
 }
 
-// ✅ Theme Color - required to be outside metadata in App Router
 export const themeColor = [
     { media: '(prefers-color-scheme: light)', color: '#00FF89' },
     { media: '(prefers-color-scheme: dark)', color: '#00FF89' }
 ]
 
-// ✅ Metadata
 export const metadata = {
     metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://spykeai.com'),
     title: {
@@ -167,6 +164,34 @@ export const metadata = {
     }
 }
 
+// Toaster configuration
+const toasterConfig = {
+    baseStyle: {
+        background: 'linear-gradient(135deg, rgba(15, 15, 15, 0.95) 0%, rgba(31, 31, 31, 0.95) 100%)',
+        backdropFilter: 'blur(12px)',
+        border: '1px solid rgba(0, 255, 137, 0.2)',
+        borderRadius: '12px',
+        padding: '16px',
+        color: '#ffffff',
+        fontSize: '14px',
+        fontWeight: '500',
+        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 0 20px -5px rgba(0, 255, 137, 0.1)',
+        maxWidth: '400px'
+    },
+    variants: {
+        success: {
+            background: 'linear-gradient(135deg, rgba(0, 255, 137, 0.1) 0%, rgba(15, 15, 15, 0.95) 100%)',
+            border: '1px solid rgba(0, 255, 137, 0.4)',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 0 30px -5px rgba(0, 255, 137, 0.2)'
+        },
+        error: {
+            background: 'linear-gradient(135deg, rgba(255, 85, 85, 0.1) 0%, rgba(15, 15, 15, 0.95) 100%)',
+            border: '1px solid rgba(255, 85, 85, 0.4)',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 0 30px -5px rgba(255, 85, 85, 0.2)'
+        }
+    }
+}
+
 export default function RootLayout({ children }) {
     return (
         <html
@@ -235,14 +260,38 @@ export default function RootLayout({ children }) {
                     position="top-right"
                     richColors
                     expand
-                    duration={4000}
+                    duration={8000} // 8 seconds as default for all toasts
                     closeButton
+                    gap={12}
+                    offset="20px"
                     toastOptions={{
-                        className:
-                            'rounded-xl border border-[#00FF89]/30 bg-[#0f0f0f]/80 backdrop-blur-md text-white text-sm px-4 py-3 flex items-center gap-2 shadow-md font-medium',
-                        iconTheme: {
-                            primary: '#00FF89',
-                            secondary: '#0f0f0f'
+                        className: 'font-kumbh-sans',
+                        style: toasterConfig.baseStyle,
+                        success: {
+                            style: {
+                                ...toasterConfig.baseStyle,
+                                ...toasterConfig.variants.success
+                            },
+                            iconTheme: {
+                                primary: '#00FF89',
+                                secondary: '#0f0f0f'
+                            }
+                        },
+                        error: {
+                            style: {
+                                ...toasterConfig.baseStyle,
+                                ...toasterConfig.variants.error
+                            },
+                            iconTheme: {
+                                primary: '#ff5555',
+                                secondary: '#0f0f0f'
+                            }
+                        },
+                        loading: {
+                            iconTheme: {
+                                primary: '#00FF89',
+                                secondary: '#0f0f0f'
+                            }
                         }
                     }}
                 />
@@ -257,4 +306,3 @@ export default function RootLayout({ children }) {
         </html>
     )
 }
-

@@ -150,11 +150,6 @@ export const EPagination = {
     MAX_LIMIT: 100
 }
 
-export const ECommissionLimits = {
-    MIN_RATE: 1,
-    MAX_RATE: 50,
-    DEFAULT_RATE: 15
-}
 
 export const EProfileCompletion = {
     MIN_PERCENTAGE: 80,
@@ -167,4 +162,11 @@ export const EProfileCompletion = {
         'location',
         'payoutInfo'
     ]
+}
+
+export const ECommissionLimits = {
+    MIN_RATE: 1,
+    MAX_RATE: 50,
+    DEFAULT_RATE: 15,
+    MAX_NEGOTIATION_ROUNDS: 5
 }

@@ -1,4 +1,8 @@
-import React, { useState } from 'react'
+'use client'
+
+import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import {
     Home,
     Package,
@@ -14,10 +18,12 @@ import {
     Sparkles
 } from 'lucide-react'
 import { SpykeLogo } from '../Logo'
+import api from '@/lib/api'
 
 const EnhancedSidebar = ({ currentPath = '/dashboard', sellerName = '' }) => {
     const [isCollapsed, setIsCollapsed] = useState(false)
     const [hoveredItem, setHoveredItem] = useState(null)
+    const router = useRouter()
 
     const menuItems = [
         { icon: Home, label: 'Dashboard', path: '/dashboard' },
@@ -29,6 +35,28 @@ const EnhancedSidebar = ({ currentPath = '/dashboard', sellerName = '' }) => {
         { icon: Wallet, label: 'Payouts', path: '/payouts' },
         { icon: Settings, label: 'Settings', path: '/settings' }
     ]
+
+    const handleLogout = async () => {
+        console.log('Logout function called!')
+
+        try {
+            if (api && api.auth && api.auth.logout) {
+                await api.auth.logout()
+            }
+        } catch (err) {
+            console.error('API logout failed:', err)
+        }
+
+        localStorage.removeItem('authToken')
+        localStorage.removeItem('refreshToken')
+        localStorage.removeItem('user')
+        localStorage.removeItem('sellerProfile')
+        sessionStorage.clear()
+
+        toast.success('Logged out successfully')
+
+        window.location.href = '/signin'
+    }
 
     return (
         <div className={`${isCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 ease-in-out`}>
@@ -71,7 +99,7 @@ const EnhancedSidebar = ({ currentPath = '/dashboard', sellerName = '' }) => {
                         </div>
                         {!isCollapsed && (
                             <div className="flex-1 min-w-0">
-                                <h3 className="text-white  font-[var(--font-league-spartan)] truncate">{sellerName || 'Seller'}</h3>
+                                <h3 className="text-white font-[var(--font-league-spartan)] truncate">{sellerName || 'Seller'}</h3>
                             </div>
                         )}
                     </div>
@@ -88,22 +116,22 @@ const EnhancedSidebar = ({ currentPath = '/dashboard', sellerName = '' }) => {
                             return (
                                 <li key={item.path}>
                                     <a
-                                        href={item.path}
+                                        href={`/seller${item.path}`}
                                         className={`
-                      flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
-                      ${isActive ? 'bg-[#00FF89] text-[#121212]' : 'text-gray-400 hover:bg-[#00FF89]/10 hover:text-[#00FF89]'}
-                      ${isCollapsed ? 'justify-center' : ''}
-                      relative overflow-hidden group
-                    `}
+                                            flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+                                            ${isActive ? 'bg-[#00FF89] text-[#121212]' : 'text-gray-400 hover:bg-[#00FF89]/10 hover:text-[#00FF89]'}
+                                            ${isCollapsed ? 'justify-center' : ''}
+                                            relative overflow-hidden group
+                                        `}
                                         onMouseEnter={() => setHoveredItem(item.path)}
                                         onMouseLeave={() => setHoveredItem(null)}>
                                         {/* Hover effect */}
                                         <div
                                             className={`
-                      absolute inset-0 bg-gradient-to-r from-[#00FF89]/0 via-[#00FF89]/10 to-[#00FF89]/0
-                      transform -translate-x-full group-hover:translate-x-full transition-transform duration-700
-                      ${isActive ? 'hidden' : ''}
-                    `}></div>
+                                                absolute inset-0 bg-gradient-to-r from-[#00FF89]/0 via-[#00FF89]/10 to-[#00FF89]/0
+                                                transform -translate-x-full group-hover:translate-x-full transition-transform duration-700
+                                                ${isActive ? 'hidden' : ''}
+                                            `}></div>
 
                                         <Icon className={`w-5 h-5 relative z-10 ${isActive ? 'text-[#121212]' : ''}`} />
 
@@ -111,9 +139,9 @@ const EnhancedSidebar = ({ currentPath = '/dashboard', sellerName = '' }) => {
                                             <>
                                                 <span
                                                     className={`
-                          font-[var(--font-kumbh-sans)] relative z-10
-                          ${isActive ? 'font-semibold' : ''}
-                        `}>
+                                                        font-[var(--font-kumbh-sans)] relative z-10
+                                                        ${isActive ? 'font-semibold' : ''}
+                                                    `}>
                                                     {item.label}
                                                 </span>
 
@@ -139,15 +167,19 @@ const EnhancedSidebar = ({ currentPath = '/dashboard', sellerName = '' }) => {
                     </ul>
                 </nav>
 
-                {/* Logout */}
+                {/* Logout Button - WORKING VERSION */}
                 <div className="p-3 border-t border-gray-800">
                     <button
+                        onClick={() => {
+                            console.log('Button clicked - calling handleLogout')
+                            handleLogout()
+                        }}
                         className={`
-              flex items-center gap-3 w-full px-3 py-2.5 rounded-lg
-              text-gray-400 hover:bg-red-500/10 hover:text-red-400
-              transition-all duration-200
-              ${isCollapsed ? 'justify-center' : ''}
-            `}>
+                            flex items-center gap-3 w-full px-3 py-2.5 rounded-lg
+                            text-gray-400 hover:bg-red-500/10 hover:text-red-400
+                            transition-all duration-200 cursor-pointer
+                            ${isCollapsed ? 'justify-center' : ''}
+                        `}>
                         <LogOut className="w-5 h-5" />
                         {!isCollapsed && <span className="font-[var(--font-kumbh-sans)]">Logout</span>}
                     </button>

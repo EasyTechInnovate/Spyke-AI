@@ -8,6 +8,7 @@ class ApiClient {
         }
         this.isRefreshing = false
         this.refreshSubscribers = []
+        this.authToken = null // Cache token in memory
     }
 
     // Subscribe to token refresh
@@ -23,51 +24,58 @@ class ApiClient {
 
     // Helper method to build full URL
     buildURL(endpoint) {
-        // Remove leading slash if present
         const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint
         return `${this.baseURL}/${cleanEndpoint}`
     }
+
     // Helper method to handle responses
     async handleResponse(response, originalRequest) {
-        // Handle 401 Unauthorized - token might be expired
-        if (response.status === 401 && !originalRequest._retry) {
+        // Handle 401 Unauthorized
+        if (response.status === 401) {
             const error = await response
                 .clone()
                 .json()
                 .catch(() => ({}))
 
-            // Check if this is a seller-specific endpoint
-            const isSellerEndpoint = originalRequest.url.includes('/seller/')
-
-            if (isSellerEndpoint) {
-                console.error('Seller authentication failed:', {
-                    endpoint: originalRequest.url,
-                    hasToken: !!this.getAuthHeaders().Authorization
-                })
-            }
-
+            // Don't redirect if this is a login attempt
             const isLoginAttempt = originalRequest.url.includes('/auth/login')
-            const isUnconfirmed = error?.message?.toLowerCase().includes('not confirmed')
-            const isInvalidCreds = error?.message?.toLowerCase().includes('invalid')
-
-            if (isLoginAttempt && (isUnconfirmed || isInvalidCreds)) {
+            if (isLoginAttempt) {
                 throw {
                     status: response.status,
                     statusText: response.statusText,
-                    message: error.message || 'Login failed',
+                    message: error.message || 'Invalid credentials',
                     data: error,
-                    errors: error.errors || {}
+                    response: {
+                        status: response.status,
+                        data: error
+                    }
                 }
             }
 
-            // For other 401 errors
+            // For other 401s, clear auth and redirect
+            if (!originalRequest._retry) {
+                originalRequest._retry = true
+
+                // Clear all auth data
+                this.clearAuth()
+
+                // Only redirect if not already on signin page
+                if (typeof window !== 'undefined' && window.location.pathname !== '/signin') {
+                    // Store the intended destination
+                    sessionStorage.setItem('redirectAfterLogin', window.location.pathname)
+                    window.location.href = '/signin'
+                }
+            }
+
             throw {
                 status: response.status,
                 statusText: response.statusText,
-                message: error.message || 'Authentication required. Please log in.',
-                data: error,
-                errors: error.errors || {},
-                authError: true
+                message: 'Authentication required',
+                authError: true,
+                response: {
+                    status: response.status,
+                    data: error
+                }
             }
         }
 
@@ -77,42 +85,51 @@ class ApiClient {
             throw {
                 status: response.status,
                 statusText: response.statusText,
-                message: error.message || 'An error occurred',
+                message: error.message || `Request failed with status ${response.status}`,
                 data: error,
-                errors: error.errors || {}
+                errors: error.errors || {},
+                response: {
+                    status: response.status,
+                    data: error
+                }
             }
         }
 
-        // Handle empty responses
+        // Handle successful responses
         const text = await response.text()
         return text ? JSON.parse(text) : null
     }
 
     // Create request with retry logic
+    async makeRequest(url, options) {
+        const authHeaders = this.getAuthHeaders()
+        const request = {
+            url,
+            ...options,
+            headers: {
+                ...this.defaultHeaders,
+                ...authHeaders,
+                ...options.headers
+            }
+        }
 
-async makeRequest(url, options) {
-    const authHeaders = this.getAuthHeaders()
-    console.log('Auth headers:', authHeaders) // Add this debug line
-    
-    const request = {
-        url,
-        ...options,
-        headers: {
-            ...this.defaultHeaders,
-            ...authHeaders,  // This should include Authorization
-            ...options.headers
+        try {
+            const response = await fetch(url, request)
+            return this.handleResponse(response, request)
+        } catch (error) {
+            // Ensure error has proper structure
+            if (!error.response) {
+                console.error('Network or parsing error:', error)
+                throw {
+                    status: 0,
+                    message: error.message || 'Network error occurred',
+                    networkError: true,
+                    originalError: error
+                }
+            }
+            throw error
         }
     }
-    
-    console.log('Final request headers:', request.headers) // Add this debug line
-
-    try {
-        const response = await fetch(url, request)
-        return this.handleResponse(response, request)
-    } catch (error) {
-        // ... error handling
-    }
-}
 
     // GET request
     async get(endpoint, options = {}) {
@@ -157,34 +174,40 @@ async makeRequest(url, options) {
         })
     }
 
+    // Improved auth header management
     getAuthHeaders() {
-        let token = null
+        // First check memory cache
+        if (this.authToken) {
+            return { Authorization: `Bearer ${this.authToken}` }
+        }
 
+        // Then check localStorage
         if (typeof window !== 'undefined') {
-            // Try multiple possible token keys
-            token = localStorage.getItem('authToken') || localStorage.getItem('accessToken') || localStorage.getItem('sellerAccessToken')
-
-            // Debug log in development
-            if (process.env.NODE_ENV === 'development' && !token) {
-                console.warn('No auth token found in localStorage')
+            const token = localStorage.getItem('authToken')
+            if (token) {
+                this.authToken = token // Cache it
+                return { Authorization: `Bearer ${token}` }
             }
         }
 
-        return token ? { Authorization: `Bearer ${token}` } : {}
+        return {}
     }
+
+    // Check if authenticated
     isAuthenticated() {
         const headers = this.getAuthHeaders()
         return !!headers.Authorization
     }
+
+    // Get current token
     getCurrentToken() {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('authToken') || localStorage.getItem('accessToken') || localStorage.getItem('sellerAccessToken')
-        }
-        return null
+        return this.authToken || (typeof window !== 'undefined' ? localStorage.getItem('authToken') : null)
     }
 
     // Set auth token
     setAuthToken(token) {
+        this.authToken = token // Update memory cache
+
         if (typeof window !== 'undefined') {
             if (token) {
                 localStorage.setItem('authToken', token)
@@ -194,28 +217,66 @@ async makeRequest(url, options) {
         }
     }
 
+    // Clear all auth data
+    clearAuth() {
+        this.authToken = null
+
+        if (typeof window !== 'undefined') {
+            // Clear all possible auth keys
+            const authKeys = ['authToken', 'refreshToken', 'user', 'roles', 'accessToken', 'sellerAccessToken']
+            authKeys.forEach((key) => localStorage.removeItem(key))
+
+            // Clear auth cookies
+            document.cookie = 'authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT'
+            document.cookie = 'roles=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT'
+
+            // Clear session storage
+            sessionStorage.removeItem('currentUser')
+        }
+    }
+
+    // Logout method
+    async logout() {
+        try {
+            // Try to call logout endpoint if exists
+            await this.post('v1/auth/logout').catch(() => {
+                // Ignore errors - we'll clear local data anyway
+            })
+        } finally {
+            // Always clear local auth data
+            this.clearAuth()
+
+            // Redirect to signin
+            if (typeof window !== 'undefined') {
+                window.location.href = '/signin'
+            }
+        }
+    }
+
     // Upload file
     async upload(endpoint, formData, options = {}) {
+        const url = this.buildURL(endpoint)
+        const authHeaders = this.getAuthHeaders()
+
         try {
-            const response = await fetch(this.buildURL(endpoint), {
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
-                    ...this.getAuthHeaders(),
+                    ...authHeaders,
+                    // Don't set Content-Type for FormData
                     ...options.headers
                 },
                 body: formData,
                 ...options
             })
+
             return this.handleResponse(response, {
-                url: this.buildURL(endpoint),
+                url,
                 method: 'POST',
-                headers: {
-                    ...this.getAuthHeaders(),
-                    ...options.headers
-                }
+                headers: authHeaders
             })
         } catch (error) {
-            console.error('API Upload Error:', error)
+            console.error('Upload error:', error)
             throw error
         }
     }
@@ -233,7 +294,11 @@ async makeRequest(url, options) {
             })
 
             if (!response.ok) {
-                throw new Error(`Download failed: ${response.statusText}`)
+                const error = await response.json().catch(() => ({}))
+                throw {
+                    status: response.status,
+                    message: error.message || `Download failed: ${response.statusText}`
+                }
             }
 
             const blob = await response.blob()
@@ -254,7 +319,7 @@ async makeRequest(url, options) {
 
             return { success: true, filename }
         } catch (error) {
-            console.error('API Download Error:', error)
+            console.error('Download error:', error)
             throw error
         }
     }
@@ -316,7 +381,14 @@ async makeRequest(url, options) {
         }
     }
 }
+
+// Create singleton instance
 const apiClient = new ApiClient()
 
-export default apiClient
+// Only run in browser
+if (typeof window !== 'undefined') {
+    // Make it available globally for debugging
+    window.apiClient = apiClient
+}
 
+export default apiClient

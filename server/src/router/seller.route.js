@@ -17,7 +17,7 @@ router
     .route('/profile')
     .post(authentication, validateRequest(sellerSchemas.createProfile), sellerController.createProfile)
     .get(authentication, authorization([EUserRole.SELLER]), sellerController.getProfile)
-    .put(authentication, validateRequest(sellerSchemas.updateProfile), sellerController.updateProfile)
+    .put(authentication,authorization([EUserRole.ADMIN,EUserRole.SELLER]),validateRequest(sellerSchemas.updateProfile), sellerController.updateProfile)
 
 router.route('/verification/submit').post(authentication, validateRequest(sellerSchemas.submitVerification), sellerController.submitForVerification)
 router.route('/commission/accept').post(authentication, sellerController.acceptCommissionOffer)

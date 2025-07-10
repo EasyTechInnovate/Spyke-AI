@@ -144,7 +144,6 @@ export default function SignupPage() {
         async (e) => {
             e.preventDefault()
 
-            // Mark all fields as touched
             setTouched({
                 emailAddress: true,
                 phoneNumber: true,
@@ -156,14 +155,13 @@ export default function SignupPage() {
 
             setLoading(true)
             try {
-                // Remove + from country code and any non-digits from phone number
                 const countryCodeDigits = formData.countryCode.replace(/\D/g, '')
                 const phoneNumberDigits = formData.phoneNumber.replace(/\D/g, '')
                 const fullPhoneNumber = countryCodeDigits + phoneNumberDigits
 
                 await api.auth.register({
                     emailAddress: formData.emailAddress.toLowerCase().trim(),
-                    phoneNumber: fullPhoneNumber, // Now contains only digits, no + sign
+                    phoneNumber: fullPhoneNumber,
                     password: formData.password,
                     consent: formData.consent,
                     marketingConsent: formData.marketingConsent,
