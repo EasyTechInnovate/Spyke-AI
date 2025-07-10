@@ -27,11 +27,13 @@ import {
     Handshake,
     Rocket,
     Building,
-    User
+    User,
+    Upload
 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import sellerAPI from '@/lib/api/seller'
+import DocumentUploadModal from '@/components/seller/SellerDocumentUpload'
 
 const SellerSidebar = dynamic(() => import('@/components/seller/SellerSidebar'), {
     ssr: false,
@@ -164,15 +166,15 @@ const CommissionNegotiationHistory = ({ commissionOffer, verificationStatus }) =
             {/* Compact Header */}
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium text-white">Negotiation History</h3>
-                <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">
-                    Round {commissionOffer.negotiationRound}
-                </span>
+                <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">Round {commissionOffer.negotiationRound}</span>
             </div>
 
             {/* Compact Timeline */}
             <div className="flex-1 space-y-3 overflow-y-auto max-h-[280px]">
                 {negotiationHistory.map((item, index) => (
-                    <div key={item.id} className="flex items-start gap-3">
+                    <div
+                        key={item.id}
+                        className="flex items-start gap-3">
                         {/* Icon */}
                         <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${getStatusColor(item.status)}`}>
                             {getIcon(item)}
@@ -184,15 +186,14 @@ const CommissionNegotiationHistory = ({ commissionOffer, verificationStatus }) =
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <p className="text-sm font-medium text-white">{item.message}</p>
-                                        <span className={`text-xs px-2 py-0.5 rounded ${
-                                            item.by === 'admin' 
-                                                ? 'bg-blue-500/20 text-blue-400' 
-                                                : 'bg-purple-500/20 text-purple-400'
-                                        }`}>
+                                        <span
+                                            className={`text-xs px-2 py-0.5 rounded ${
+                                                item.by === 'admin' ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'
+                                            }`}>
                                             {item.by === 'admin' ? 'Admin' : 'You'}
                                         </span>
                                     </div>
-                                    
+
                                     {item.rate && (
                                         <p className="text-lg font-bold text-[#00FF89] mt-1">
                                             {item.rate}% <span className="text-xs text-gray-400 font-normal">commission</span>
@@ -218,11 +219,7 @@ const CommissionNegotiationHistory = ({ commissionOffer, verificationStatus }) =
                             </div>
 
                             {/* Reason - Compact */}
-                            {item.reason && (
-                                <div className="mt-2 p-2 bg-[#121212] rounded text-xs text-gray-400 line-clamp-2">
-                                    {item.reason}
-                                </div>
-                            )}
+                            {item.reason && <div className="mt-2 p-2 bg-[#121212] rounded text-xs text-gray-400 line-clamp-2">{item.reason}</div>}
                         </div>
                     </div>
                 ))}
@@ -250,9 +247,7 @@ const CommissionNegotiationHistory = ({ commissionOffer, verificationStatus }) =
                         <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
                         <div className="flex-1">
                             <p className="text-sm font-medium text-green-500">Agreement Finalized</p>
-                            <p className="text-xs text-gray-400">
-                                {commissionOffer.rate}% commission rate accepted
-                            </p>
+                            <p className="text-xs text-gray-400">{commissionOffer.rate}% commission rate accepted</p>
                         </div>
                     </div>
                 </div>
@@ -684,6 +679,20 @@ export default function SellerProfile() {
     const [processingOffer, setProcessingOffer] = useState(false)
     const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
     const [isApproved, setisApproved] = useState(false)
+    const [showDocumentUpload, setShowDocumentUpload] = useState(false)
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768)
+        }
+        checkMobile()
+        window.addEventListener('resize', checkMobile)
+        return () => window.removeEventListener('resize', checkMobile)
+    }, [])
+
+    useEffect(() => {
+        fetchSellerData()
+    }, [])
 
     const currencyConfig = {
         USD: { symbol: '$', rate: 1, position: 'before' },
@@ -724,19 +733,6 @@ export default function SellerProfile() {
         }
         return countryToCurrency[location?.country] || 'USD'
     }
-
-    useEffect(() => {
-        const checkMobile = () => {
-            setIsMobile(window.innerWidth < 768)
-        }
-        checkMobile()
-        window.addEventListener('resize', checkMobile)
-        return () => window.removeEventListener('resize', checkMobile)
-    }, [])
-
-    useEffect(() => {
-        fetchSellerData()
-    }, [])
 
     const fetchSellerData = async () => {
         try {
@@ -905,7 +901,7 @@ export default function SellerProfile() {
                                     <div className="relative">
                                         <select
                                             value={selectedCurrency}
-                                            onChange={(e) => setSelectedCurrency(e.target.value)}
+                                            onChange={(e) => setSelectedCurrency(e?.target.value)}
                                             className="appearance-none w-full pl-4 pr-10 py-2 bg-[#1a1a1a] border border-gray-800 text-sm text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00FF89] focus:border-[#00FF89] transition-colors">
                                             <option value="USD">USD ($)</option>
                                             <option value="INR">INR (₹)</option>
@@ -992,19 +988,52 @@ export default function SellerProfile() {
                                     processingOffer={processingOffer}
                                 />
                                 {sellerProfile.verification?.status === 'pending' && (
-                                    <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex items-start gap-3">
-                                        <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                                        <div className="flex-1">
-                                            <h3 className="text-yellow-500 font-medium mb-1">Verification in Progress</h3>
-                                            <p className="text-sm text-gray-300">
-                                                Your seller account is under review. You can start adding products, but they won't be visible to
-                                                buyers until your account is verified.
-                                            </p>
-                                            {sellerProfile.verification?.submittedAt && (
-                                                <p className="text-xs text-gray-400 mt-2">
-                                                    Submitted: {new Date(sellerProfile.verification.submittedAt).toLocaleDateString()}
+                                    <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                                        <div className="flex items-start gap-3">
+                                            <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                                            <div className="flex-1">
+                                                <h3 className="text-yellow-500 font-medium mb-1">Verification Documents Required</h3>
+                                                <p className="text-sm text-gray-300">
+                                                    To complete your verification, please upload the required documents. Your account will be reviewed
+                                                    once all documents are submitted.
                                                 </p>
-                                            )}
+                                                <button
+                                                    onClick={() => setShowDocumentUpload(true)}
+                                                    className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-[#121212] font-medium rounded-lg hover:bg-yellow-400 transition-colors">
+                                                    <Upload className="w-4 h-4" />
+                                                    {sellerProfile.verification?.submittedAt ? 'Re-upload Documents' : 'Upload Documents'}
+                                                </button>
+                                                {sellerProfile.verification?.submittedAt && (
+                                                    <p className="text-xs text-gray-400 mt-2">
+                                                        Last submitted: {new Date(sellerProfile.verification.submittedAt).toLocaleDateString()}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                {sellerProfile.verification?.status === 'under_review' && (
+                                    <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                                        <div className="flex items-start gap-3">
+                                            <Eye className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                                            <div className="flex-1">
+                                                <h3 className="text-blue-500 font-medium mb-1">Documents Under Review</h3>
+                                                <p className="text-sm text-gray-300">
+                                                    Your verification documents are being reviewed. Once approved, you'll receive a commission offer
+                                                    to start selling on our platform.
+                                                </p>
+                                                <div className="mt-3 flex items-center gap-2">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                                                        <span className="text-xs text-gray-400">Awaiting commission offer from admin</span>
+                                                    </div>
+                                                </div>
+                                                {sellerProfile.verification?.submittedAt && (
+                                                    <p className="text-xs text-gray-400 mt-2">
+                                                        Submitted: {new Date(sellerProfile.verification.submittedAt).toLocaleDateString()}
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -1511,6 +1540,14 @@ export default function SellerProfile() {
                 onClose={() => setShowCounterOfferModal(false)}
                 currentOffer={sellerProfile?.commissionOffer?.rate}
                 onSubmit={handleCounterOffer}
+            />
+            <DocumentUploadModal
+                isOpen={showDocumentUpload}
+                onClose={() => setShowDocumentUpload(false)}
+                onSuccess={() => {
+                    setShowDocumentUpload(false)
+                    fetchSellerData()
+                }}
             />
 
             {showSuccessAnimation && (
