@@ -2,33 +2,12 @@
 export const dynamic = 'force-dynamic';
 
 import { useState, useEffect, useCallback, memo, useRef } from 'react'
-import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { appConfig } from '@/lib/config'
-import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion'
+import { motion } from 'framer-motion'
+import { ArrowRight, Sparkles, Star, Zap, Search, TrendingUp } from 'lucide-react';
+import Container from '../layout/Container';
 
-const ArrowRight = dynamic(() => import('lucide-react').then((mod) => ({ default: mod.ArrowRight })), {
-    loading: () => <span className="w-5 h-5" />
-})
-const Search = dynamic(() => import('lucide-react').then((mod) => ({ default: mod.Search })), {
-    loading: () => <span className="w-6 h-6" />
-})
-const Sparkles = dynamic(() => import('lucide-react').then((mod) => ({ default: mod.Sparkles })), {
-    loading: () => <span className="w-8 h-8" />
-})
-const Star = dynamic(() => import('lucide-react').then((mod) => ({ default: mod.Star })), {
-    loading: () => <span className="w-8 h-8" />
-})
-const Zap = dynamic(() => import('lucide-react').then((mod) => ({ default: mod.Zap })), {
-    loading: () => <span className="w-8 h-8" />
-})
-const TrendingUp = dynamic(() => import('lucide-react').then((mod) => ({ default: mod.TrendingUp })), {
-    loading: () => <span className="w-5 h-5" />
-})
-
-const Container = dynamic(() => import('@/components/layout/Container'), {
-    loading: () => <div className="container mx-auto px-4" />
-})
 
 // Custom floating particles component - responsive
 const FloatingParticles = () => {
@@ -227,7 +206,6 @@ const AnimatedText = ({ text, className }) => {
     )
 }
 
-// Glowing button component - responsive
 const GlowingButton = ({ children, href, primary = false, onClick, className = "" }) => {
     const [isHovered, setIsHovered] = useState(false)
     const [isMobile, setIsMobile] = useState(false)
