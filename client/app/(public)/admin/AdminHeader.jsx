@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic';
+
 import { Bell, Menu, Search } from 'lucide-react'
 
 export default function AdminHeader({ setSidebarOpen, currentPath }) {

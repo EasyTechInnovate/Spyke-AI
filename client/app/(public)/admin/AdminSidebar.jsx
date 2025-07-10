@@ -1,9 +1,13 @@
+
 'use client'
+
+export const dynamic = 'force-dynamic';
 
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { LayoutDashboard, X, LogOut, UserCheck, ChevronDown, Package, TrendingUp, ShieldCheck, Settings } from 'lucide-react'
+
 
 export default function AdminSidebar({ sidebarOpen, setSidebarOpen, currentPath }) {
     const router = useRouter()
