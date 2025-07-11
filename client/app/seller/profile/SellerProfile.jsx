@@ -187,9 +187,8 @@ const CommissionNegotiationHistory = ({ commissionOffer, verificationStatus }) =
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <p className="text-sm font-medium text-white">{item.message}</p>
                                         <span
-                                            className={`text-xs px-2 py-0.5 rounded ${
-                                                item.by === 'admin' ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'
-                                            }`}>
+                                            className={`text-xs px-2 py-0.5 rounded ${item.by === 'admin' ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'
+                                                }`}>
                                             {item.by === 'admin' ? 'Admin' : 'You'}
                                         </span>
                                     </div>
@@ -272,15 +271,15 @@ const CommissionProgressStepper = ({ verificationStatus, commissionStatus, hasCo
                 }
                 return 'active'
 
-                case 3:
-                    if (verificationStatus === 'commission_offered' && !acceptedAt) {
-                        return 'active'
-                    }
-                    if (verificationStatus === 'approved' || acceptedAt) {
-                        return 'completed'
-                    }
-                    return 'pending'
-                
+            case 3:
+                if (verificationStatus === 'commission_offered' && !acceptedAt) {
+                    return 'active'
+                }
+                if (verificationStatus === 'approved' || acceptedAt) {
+                    return 'completed'
+                }
+                return 'pending'
+
 
             case 4:
                 if (verificationStatus === 'commission_offered' && !acceptedAt) {
@@ -310,14 +309,14 @@ const CommissionProgressStepper = ({ verificationStatus, commissionStatus, hasCo
         {
             id: 3,
             title:
-              verificationStatus === 'commission_offered' || acceptedAt
-                ? 'Commission Offered'
-                : 'Document Under Review',
-                icon:
                 verificationStatus === 'commission_offered' || acceptedAt
-                  ? DollarSign
-                  : Eye
-          },
+                    ? 'Commission Offered'
+                    : 'Document Under Review',
+            icon:
+                verificationStatus === 'commission_offered' || acceptedAt
+                    ? DollarSign
+                    : Eye
+        },
         {
             id: 4,
             title: 'Negotiation',
@@ -339,74 +338,72 @@ const CommissionProgressStepper = ({ verificationStatus, commissionStatus, hasCo
 
     return (
         <div className="w-full max-w-full bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6 mb-6">
-          <h3 className="text-sm font-medium text-gray-400 mb-4">Your Progress</h3>
-      
-          {/* Progress Bar */}
-          {/* Show progress bar only on large screens */}
-<div className="relative mb-6 w-full h-1 hidden lg:block">
-  <div className="absolute top-0 left-0 right-0 h-1 bg-gray-700 rounded-full overflow-hidden">
-    <div
-      className="h-full bg-[#00FF89] rounded-full transition-all duration-500"
-      style={{ width: `${Math.min(progressPercentage, 100)}%` }}
-    />
-  </div>
-</div>
+            <h3 className="text-sm font-medium text-gray-400 mb-4">Your Progress</h3>
 
-      
-          {/* Step Indicators */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-y-4 gap-x-2">
-            {steps.map((step, index) => {
-              const Icon = step.icon;
-              const isCompleted = step.status === "completed";
-              const isActive = step.status === "active";
-      
-              return (
-                <div
-                  key={step.id}
-                  className="flex flex-col items-center text-center w-1/5 min-w-[70px] flex-grow">
-                  <div
-                    className={`
-                      w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 mb-1
-                      ${
-                        isCompleted
-                          ? "bg-[#00FF89] text-[#121212]"
-                          : isActive
-                          ? "bg-[#00FF89]/20 text-[#00FF89] ring-2 ring-[#00FF89]"
-                          : "bg-gray-700 text-gray-500"
-                      }
-                    `}
-                  >
-                    {isCompleted ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
-                  </div>
-                  <p
-                    className={`text-[11px] sm:text-xs font-medium text-center ${
-                      isActive
-                        ? "text-[#00FF89]"
-                        : isCompleted
-                        ? "text-gray-300"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    {step.title}
-                  </p>
+            {/* Progress Bar */}
+            {/* Show progress bar only on large screens */}
+            <div className="relative mb-6 w-full h-1 hidden lg:block">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                        className="h-full bg-[#00FF89] rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+                    />
                 </div>
-              );
-            })}
-          </div>
-      
-          {/* Current Step Info */}
-          {steps.find((s) => s.status === "active") && (
-            <div className="mt-4 pt-4 border-t border-gray-800">
-              <p className="text-sm text-gray-400">
-                <span className="text-[#00FF89] font-medium">Current Step:</span>{" "}
-                {steps.find((s) => s.status === "active")?.title}
-                {hasCounterOffer && " - Counter offer submitted"}
-              </p>
             </div>
-          )}
+
+
+            {/* Step Indicators */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-y-4 gap-x-2">
+                {steps.map((step, index) => {
+                    const Icon = step.icon;
+                    const isCompleted = step.status === "completed";
+                    const isActive = step.status === "active";
+
+                    return (
+                        <div
+                            key={step.id}
+                            className="flex flex-col items-center text-center w-1/5 min-w-[70px] flex-grow">
+                            <div
+                                className={`
+                      w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 mb-1
+                      ${isCompleted
+                                        ? "bg-[#00FF89] text-[#121212]"
+                                        : isActive
+                                            ? "bg-[#00FF89]/20 text-[#00FF89] ring-2 ring-[#00FF89]"
+                                            : "bg-gray-700 text-gray-500"
+                                    }
+                    `}
+                            >
+                                {isCompleted ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
+                            </div>
+                            <p
+                                className={`text-[11px] sm:text-xs font-medium text-center ${isActive
+                                        ? "text-[#00FF89]"
+                                        : isCompleted
+                                            ? "text-gray-300"
+                                            : "text-gray-500"
+                                    }`}
+                            >
+                                {step.title}
+                            </p>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Current Step Info */}
+            {steps.find((s) => s.status === "active") && (
+                <div className="mt-4 pt-4 border-t border-gray-800">
+                    <p className="text-sm text-gray-400">
+                        <span className="text-[#00FF89] font-medium">Current Step:</span>{" "}
+                        {steps.find((s) => s.status === "active")?.title}
+                        {hasCounterOffer && " - Counter offer submitted"}
+                    </p>
+                </div>
+            )}
         </div>
-      );
-      
+    );
+
 }
 
 const CommissionTooltip = ({ rate }) => {
@@ -965,11 +962,10 @@ export default function SellerProfile() {
                                                     e.preventDefault()
                                                 }
                                             }}
-                                            className={`flex items-center gap-2 px-4 py-2 font-medium rounded-lg transition-all text-sm sm:text-base ${
-                                                canAddProducts
+                                            className={`flex items-center gap-2 px-4 py-2 font-medium rounded-lg transition-all text-sm sm:text-base ${canAddProducts
                                                     ? 'bg-[#00FF89] text-[#121212] hover:bg-[#00FF89]/90'
                                                     : 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                                            }`}
+                                                }`}
                                             aria-label="Add new product"
                                             aria-disabled={!canAddProducts}>
                                             <Plus className="w-4 h-4" />
@@ -980,16 +976,16 @@ export default function SellerProfile() {
                                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
                                                 <p className="text-xs text-gray-300">
                                                     {sellerProfile.verification?.status === 'commission_offered' &&
-                                                    !sellerProfile.commissionOffer?.acceptedAt
+                                                        !sellerProfile.commissionOffer?.acceptedAt
                                                         ? 'Accept commission offer to add products'
                                                         : sellerProfile.verification?.status === 'under_review'
-                                                          ? 'Account under review'
-                                                          : sellerProfile.verification?.status === 'rejected'
-                                                            ? 'Verification required to add products'
-                                                            : sellerProfile.verification?.status === 'approved' &&
-                                                                !sellerProfile.commissionOffer?.acceptedAt
-                                                              ? 'Complete commission agreement to add products'
-                                                              : 'Complete verification to add products'}
+                                                            ? 'Account under review'
+                                                            : sellerProfile.verification?.status === 'rejected'
+                                                                ? 'Verification required to add products'
+                                                                : sellerProfile.verification?.status === 'approved' &&
+                                                                    !sellerProfile.commissionOffer?.acceptedAt
+                                                                    ? 'Complete commission agreement to add products'
+                                                                    : 'Complete verification to add products'}
                                                 </p>
                                                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
                                                     <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-700"></div>
@@ -1166,27 +1162,27 @@ export default function SellerProfile() {
                                 {(sellerProfile.verification?.status === 'commission_offered' ||
                                     sellerProfile.verification?.status === 'approved' ||
                                     sellerProfile.verification?.status === 'under_review') && (
-                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                                        <div className="lg:col-span-3">
-                                            <CommissionProgressStepper
-                                                verificationStatus={sellerProfile.verification.status}
-                                                commissionStatus={sellerProfile.commissionOffer?.status}
-                                                hasCounterOffer={!!sellerProfile.commissionOffer?.counterOffer?.rate}
-                                                acceptedAt={sellerProfile.commissionOffer?.acceptedAt}
-                                            />
-                                        </div>
-                                        <div className="lg:col-span-1">
-                                            {sellerProfile.verification?.status === 'commission_offered' &&
-                                            !sellerProfile.commissionOffer?.acceptedAt &&
-                                            sellerProfile.commissionOffer?.negotiationRound > 1 && (
-                                                <CommissionNegotiationHistory
-                                                    commissionOffer={sellerProfile.commissionOffer}
-                                                    verificationStatus={sellerProfile.verification?.status}
+                                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                                            <div className="lg:col-span-3">
+                                                <CommissionProgressStepper
+                                                    verificationStatus={sellerProfile.verification.status}
+                                                    commissionStatus={sellerProfile.commissionOffer?.status}
+                                                    hasCounterOffer={!!sellerProfile.commissionOffer?.counterOffer?.rate}
+                                                    acceptedAt={sellerProfile.commissionOffer?.acceptedAt}
                                                 />
-                                            )}
+                                            </div>
+                                            <div className="lg:col-span-1">
+                                                {sellerProfile.verification?.status === 'commission_offered' &&
+                                                    !sellerProfile.commissionOffer?.acceptedAt &&
+                                                    sellerProfile.commissionOffer?.negotiationRound > 1 && (
+                                                        <CommissionNegotiationHistory
+                                                            commissionOffer={sellerProfile.commissionOffer}
+                                                            verificationStatus={sellerProfile.verification?.status}
+                                                        />
+                                                    )}
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
+                                    )}
                             </div>
                         )}
 
@@ -1234,8 +1230,8 @@ export default function SellerProfile() {
                                                     {canAddProducts
                                                         ? "You haven't added any products yet. Create your first product and start earning."
                                                         : sellerProfile.verification?.status === 'commission_offered'
-                                                          ? 'Accept the commission offer to start adding products and begin selling.'
-                                                          : 'Complete your verification to start adding products.'}
+                                                            ? 'Accept the commission offer to start adding products and begin selling.'
+                                                            : 'Complete your verification to start adding products.'}
                                                 </p>
                                                 {canAddProducts ? (
                                                     <Link
@@ -1245,7 +1241,7 @@ export default function SellerProfile() {
                                                         Create Your First Product
                                                     </Link>
                                                 ) : sellerProfile.verification?.status === 'commission_offered' &&
-                                                  !sellerProfile.commissionOffer?.acceptedAt ? (
+                                                    !sellerProfile.commissionOffer?.acceptedAt ? (
                                                     <button
                                                         onClick={handleAcceptOffer}
                                                         disabled={processingOffer}
