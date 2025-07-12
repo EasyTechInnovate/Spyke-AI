@@ -1,4 +1,5 @@
 import { safeLocalStorage, safeSessionStorage, safeCookie, safeWindow } from '@/lib/utils/browser'
+import apiClient from './client'
 
 export const authAPI = {
     // Health Check

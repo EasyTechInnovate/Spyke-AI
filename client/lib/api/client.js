@@ -394,4 +394,6 @@ if (typeof window !== 'undefined') {
     window.apiClient = apiClient
 }
 
+// Auth API will be attached after import to avoid circular dependency
+
 export default apiClient
