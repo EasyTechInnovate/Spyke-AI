@@ -1,0 +1,78 @@
+'use client'
+
+import { createContext, useContext, useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { authAPI } from '@/lib/api/auth'
+import { getUserRole, hasRole } from './auth'
+
+const AuthContext = createContext({})
+
+export const useAuth = () => {
+    const context = useContext(AuthContext)
+    if (!context) {
+        throw new Error('useAuth must be used within AuthProvider')
+    }
+    return context
+}
+
+export function AuthProvider({ children }) {
+    const [user, setUser] = useState(null)
+    const [loading, setLoading] = useState(true)
+    const router = useRouter()
+
+    useEffect(() => {
+        // Check if user is logged in on mount
+        if (typeof window !== 'undefined') {
+            const storedUser = localStorage.getItem('user')
+            if (storedUser) {
+                try {
+                    setUser(JSON.parse(storedUser))
+                } catch (error) {
+                    console.error('Failed to parse user data:', error)
+                }
+            }
+        }
+        setLoading(false)
+    }, [])
+
+    const login = async (credentials) => {
+        const userData = await authAPI.login(credentials)
+        setUser(userData)
+        
+        // Get appropriate redirect path based on role
+        const redirectPath = getRedirectPath(userData)
+        router.push(redirectPath)
+        
+        return userData
+    }
+
+    const logout = () => {
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('authToken')
+            localStorage.removeItem('refreshToken')
+            localStorage.removeItem('user')
+        }
+        setUser(null)
+        router.push('/signin')
+    }
+
+    const value = {
+        user,
+        login,
+        logout,
+        loading,
+        isAuthenticated: !!user,
+        // Role checking helpers
+        isAdmin: hasRole(user, 'admin'),
+        isSeller: hasRole(user, 'seller'),
+        isModerator: hasRole(user, 'moderator'),
+        hasRole: (role) => hasRole(user, role),
+        primaryRole: getUserRole(user)
+    }
+
+    return (
+        <AuthContext.Provider value={value}>
+            {children}
+        </AuthContext.Provider>
+    )
+}

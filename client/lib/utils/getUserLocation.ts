@@ -18,6 +18,12 @@ export interface UserLocation {
     const { useCache = true, enableToast = true } = options
   
     return new Promise((resolve) => {
+      // Check if we're in a browser environment
+      if (typeof window === 'undefined') {
+        setLocationStatus('denied')
+        return resolve(null)
+      }
+
       if (useCache) {
         const cached = localStorage.getItem('userLocation')
         if (cached) {
