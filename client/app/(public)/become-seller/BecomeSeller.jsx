@@ -158,20 +158,20 @@ export default function BecomeSellerPage() {
                     <>
                         <div className="grid md:grid-cols-2 gap-6">
                             <FormSelect
-                                label={formFields?.location?.country?.label}
+                                label={formFields?.location?.fields?.country?.label || 'Country'}
                                 name="location.country"
-                                value={formData?.location?.country}
+                                value={formData?.location?.country || ''}
                                 onChange={handleInputChange}
                                 options={countries}
                                 placeholder="Select country"
-                                required={formFields.location.country.required}
+                                required={formFields?.location?.fields?.country?.required}
                                 error={errors['location.country']}
                             />
 
                             <FormSearchableSelect
-                                label={formFields.location.timezone.label}
+                                label={formFields?.location?.fields?.timezone?.label || 'Timezone'}
                                 name="location.timezone"
-                                value={formData.location.timezone}
+                                value={formData?.location?.timezone || ''}
                                 onChange={handleInputChange}
                                 options={timezones.map(tz => ({
                                     value: tz.value,
@@ -179,7 +179,7 @@ export default function BecomeSellerPage() {
                                     description: tz.offset
                                 }))}
                                 placeholder="Search timezone..."
-                                required={formFields.location.timezone.required}
+                                required={formFields?.location?.fields?.timezone?.required}
                                 error={errors['location.timezone']}
                             />
                         </div>
@@ -189,25 +189,25 @@ export default function BecomeSellerPage() {
                             <div className="grid md:grid-cols-2 gap-4">
                                 <FormInput
                                     type="url"
-                                    value={formData.socialHandles.linkedin}
+                                    value={formData?.socialHandles?.linkedin || ''}
                                     onChange={(e) => handleSocialHandleChange('linkedin', e.target.value)}
                                     placeholder="LinkedIn URL"
                                 />
                                 <FormInput
                                     type="url"
-                                    value={formData.socialHandles.twitter}
+                                    value={formData?.socialHandles?.twitter || ''}
                                     onChange={(e) => handleSocialHandleChange('twitter', e.target.value)}
                                     placeholder="Twitter URL"
                                 />
                                 <FormInput
                                     type="url"
-                                    value={formData.socialHandles.instagram}
+                                    value={formData?.socialHandles?.instagram || ''}
                                     onChange={(e) => handleSocialHandleChange('instagram', e.target.value)}
                                     placeholder="Instagram URL"
                                 />
                                 <FormInput
                                     type="url"
-                                    value={formData.socialHandles.youtube}
+                                    value={formData?.socialHandles?.youtube || ''}
                                     onChange={(e) => handleSocialHandleChange('youtube', e.target.value)}
                                     placeholder="YouTube URL"
                                 />
@@ -215,14 +215,14 @@ export default function BecomeSellerPage() {
                         </div>
 
                         <FormTagInput
-                            label={formFields.portfolioLinks.label + ' (Optional)'}
+                            label={(formFields?.portfolioLinks?.label || 'Portfolio Links') + ' (Optional)'}
                             name="portfolioLinks"
-                            value={formData.portfolioLinks}
+                            value={formData?.portfolioLinks || []}
                             onAddTag={addPortfolioLink}
                             onRemoveTag={removePortfolioLink}
-                            placeholder={formFields.portfolioLinks.placeholder}
-                            required={formFields.portfolioLinks.required}
-                            maxItems={formFields.portfolioLinks.maxItems}
+                            placeholder={formFields?.portfolioLinks?.placeholder || 'https://example.com/portfolio'}
+                            required={formFields?.portfolioLinks?.required}
+                            maxItems={formFields?.portfolioLinks?.maxItems}
                             error={errors.portfolioLinks}
                         />
 
@@ -230,23 +230,23 @@ export default function BecomeSellerPage() {
                             <h4 className="text-lg font-medium text-white mb-4">Payout Information</h4>
                             <div className="space-y-4">
                                 <FormSelect
-                                    label={formFields.payoutInfo.fields.method.label}
+                                    label={formFields?.payoutInfo?.fields?.method?.label || 'Payout Method'}
                                     name="payoutInfo.method"
-                                    value={formData.payoutInfo.method}
+                                    value={formData?.payoutInfo?.method || ''}
                                     onChange={handleInputChange}
-                                    options={formFields.payoutInfo.fields.method.options}
-                                    required={formFields.payoutInfo.fields.method.required}
+                                    options={formFields?.payoutInfo?.fields?.method?.options || []}
+                                    required={formFields?.payoutInfo?.fields?.method?.required}
                                 />
 
-                                {formData.payoutInfo.method === 'paypal' && (
+                                {formData?.payoutInfo?.method === 'paypal' && (
                                     <FormInput
-                                        label={formFields.payoutInfo.fields.paypalEmail.label}
+                                        label={formFields?.payoutInfo?.fields?.paypalEmail?.label || 'PayPal Email'}
                                         name="payoutInfo.paypalEmail"
                                         type="email"
-                                        value={formData.payoutInfo.paypalEmail}
+                                        value={formData?.payoutInfo?.paypalEmail || ''}
                                         onChange={handleInputChange}
-                                        placeholder={formFields.payoutInfo.fields.paypalEmail.placeholder}
-                                        required={formFields.payoutInfo.fields.paypalEmail.required}
+                                        placeholder={formFields?.payoutInfo?.fields?.paypalEmail?.placeholder || 'Enter your PayPal email'}
+                                        required={formFields?.payoutInfo?.fields?.paypalEmail?.required}
                                         error={errors['payoutInfo.paypalEmail']}
                                     />
                                 )}
