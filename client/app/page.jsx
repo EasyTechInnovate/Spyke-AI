@@ -1,7 +1,7 @@
 "use client"
 
-import HeroSection from "@/components/landing/HeroSection"
-import PageLayout from "@/components/layout/PageLayout"
+import HeroSection from "@/components/features/landing/HeroSection"
+import PageLayout from "@/components/shared/layout/PageLayout"
 
 export default function HomePage() {
   return (

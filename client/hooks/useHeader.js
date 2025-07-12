@@ -30,7 +30,6 @@ export function useHeader() {
                 try {
                     const parsed = JSON.parse(userStr)
                     setUser(parsed)
-                    fetchCartCount()
 
                     const roles = rolesStr ? JSON.parse(rolesStr) : []
                     setUserRoles(roles)
@@ -54,21 +53,12 @@ export function useHeader() {
         return () => window.removeEventListener('storage', loadUserFromStorage)
     }, [pathname])
 
-    // Fetch cart count
-    const fetchCartCount = async () => {
-        try {
-            const response = await api.cart.getCount()
-            setCartCount(response.data.count || 0)
-        } catch (err) {
-            console.error('Cart fetch error:', err)
-        }
-    }
 
     // Fetch notifications count
     const fetchNotifications = async () => {
         try {
             const response = await api.notifications.getUnreadCount()
-            setNotifications(response.data.count || 0)
+            setNotifications(response?.data?.count || 0)
         } catch (err) {
             console.error('Notifications fetch error:', err)
         }

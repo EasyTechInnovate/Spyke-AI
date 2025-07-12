@@ -4,8 +4,8 @@ export const dynamic = 'force-dynamic';
 
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
-import AdminSidebar from './AdminSidebar'
-import AdminHeader from './AdminHeader'
+import AdminSidebar from '@/components/features/admin/AdminSidebar'
+import AdminHeader from '@/components/features/admin/AdminHeader'
 
 
 export default function AdminLayout({ children }) {
