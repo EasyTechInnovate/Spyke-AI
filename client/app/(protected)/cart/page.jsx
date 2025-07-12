@@ -85,17 +85,25 @@ function EmptyCart({ track }) {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <a
                     href="/explore"
-                    onClick={() => track(ANALYTICS_EVENTS.BUTTON.CTA_CLICKED, { cta: 'explore', location: 'empty_cart' })}
-                    className="px-6 py-3 bg-[#00FF89] text-black rounded-lg font-semibold hover:bg-[#00FF89]/90 transition-colors"
+                    onClick={(e) => {
+                        e.preventDefault()
+                        track(ANALYTICS_EVENTS.BUTTON.CTA_CLICKED, { cta: 'explore', location: 'empty_cart' })
+                        // Temporarily disabled - coming soon
+                    }}
+                    className="px-6 py-3 bg-[#00FF89] text-black rounded-lg font-semibold hover:bg-[#00FF89]/90 transition-colors cursor-pointer"
                 >
-                    Explore Marketplace
+                    Explore Marketplace (Coming Soon)
                 </a>
                 <a
                     href="/categories"
-                    onClick={() => track(ANALYTICS_EVENTS.BUTTON.CTA_CLICKED, { cta: 'categories', location: 'empty_cart' })}
-                    className="px-6 py-3 border border-gray-700 text-white rounded-lg font-semibold hover:border-gray-600 transition-colors"
+                    onClick={(e) => {
+                        e.preventDefault()
+                        track(ANALYTICS_EVENTS.BUTTON.CTA_CLICKED, { cta: 'categories', location: 'empty_cart' })
+                        // Temporarily disabled - coming soon
+                    }}
+                    className="px-6 py-3 border border-gray-700 text-white rounded-lg font-semibold hover:border-gray-600 transition-colors cursor-pointer"
                 >
-                    Browse Categories
+                    Browse Categories (Coming Soon)
                 </a>
             </div>
         </div>

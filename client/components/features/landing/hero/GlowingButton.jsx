@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useResponsive } from '@/hooks/useResponsive'
 
-export default function GlowingButton({ children, href, primary = false, onClick, className = "" }) {
+export default function GlowingButton({ children, href, primary = false, onClick, className = "", prefetch = true }) {
   const [isHovered, setIsHovered] = useState(false)
   const { isMobile } = useResponsive()
   
@@ -38,7 +38,7 @@ export default function GlowingButton({ children, href, primary = false, onClick
   )
   
   if (href) {
-    return <Link href={href}><ButtonContent /></Link>
+    return <Link href={href} prefetch={prefetch}><ButtonContent /></Link>
   }
   
   return <button onClick={onClick}><ButtonContent /></button>

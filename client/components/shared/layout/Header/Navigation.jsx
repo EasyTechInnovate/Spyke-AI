@@ -3,10 +3,10 @@ import { Users, TrendingUp } from 'lucide-react'
 import { useTrackClick } from '@/hooks/useTrackEvent'
 
 const NAVIGATION_ITEMS = [
-    { name: 'Explore', href: '/explore' },
-    { name: 'Categories', href: '/categories' },
-    { name: 'Top Creators', href: '/creators' },
-    { name: 'Hire', href: '/hire', icon: Users }
+    { name: 'Explore', href: '/explore', prefetch: false },
+    { name: 'Categories', href: '/categories', prefetch: false },
+    { name: 'Top Creators', href: '/creators', prefetch: false },
+    { name: 'Hire', href: '/hire', prefetch: false, icon: Users }
 ]
 
 export default function Navigation({ showBecomeSeller, searchOpen }) {
@@ -21,6 +21,7 @@ export default function Navigation({ showBecomeSeller, searchOpen }) {
                 <Link
                     key={item.name}
                     href={item.href}
+                    prefetch={item.prefetch !== false}
                     onClick={() => trackNavClick({ item: item.name, href: item.href })}
                     className="group flex items-center gap-2 font-kumbh-sans font-medium text-base xl:text-lg text-gray-300 hover:text-brand-primary transition-all duration-300"
                 >

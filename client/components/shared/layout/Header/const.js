@@ -1,10 +1,10 @@
 import { BarChart3, Briefcase, DollarSign, Heart, MessageSquare, Package, Settings, User, Users } from "lucide-react"
 
 export const NAVIGATION = [
-    { name: 'Explore', href: '/explore' },
-    { name: 'Categories', href: '/categories' },
-    { name: 'Top Creators', href: '/creators' },
-    { name: 'Hire', href: '/hire', icon: Users }
+    { name: 'Explore', href: '/explore', prefetch: false },
+    { name: 'Categories', href: '/categories', prefetch: false },
+    { name: 'Top Creators', href: '/creators', prefetch: false },
+    { name: 'Hire', href: '/hire', prefetch: false, icon: Users }
 ]
 
 export const USER_MENU_ITEMS = [

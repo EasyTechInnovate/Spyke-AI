@@ -171,6 +171,7 @@ function CTAButtons({ isSeller }) {
     >
       <GlowingButton
         href="/explore"
+        prefetch={false}
         primary={true}
         className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-brand-primary hover:bg-brand-primary/90 text-black rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base lg:text-lg transition-all duration-200 group"
       >

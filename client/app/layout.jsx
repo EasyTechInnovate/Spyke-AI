@@ -287,9 +287,13 @@ export default function RootLayout({ children }) {
 
                 <AnalyticsProvider>
                     <main id="main-content">{children}</main>
-                    <Analytics />
+                    {process.env.NODE_ENV === 'production' && process.env.VERCEL === '1' && (
+                        <Analytics />
+                    )}
                     <ConsentBanner />
-                    <AnalyticsDebugPanel />
+                    {process.env.NODE_ENV === 'development' && (
+                        <AnalyticsDebugPanel />
+                    )}
                 </AnalyticsProvider>
 
                 <Toaster

@@ -47,30 +47,33 @@ export default function Footer() {
         setShowCookieConsent(false)
     }
 
+    // Routes that don't exist yet - disable prefetching to avoid 404 errors
+    const nonExistentRoutes = ['/features', '/pricing', '/api', '/roadmap', '/explore', '/categories', '/sellers', '/new', '/blog', '/guides', '/help', '/community', '/about', '/careers', '/contact', '/press']
+    
     const footerLinks = {
         Product: [
-            { name: 'Features', href: '/features' },
-            { name: 'Pricing', href: '/pricing' },
-            { name: 'API Access', href: '/api' },
-            { name: 'Roadmap', href: '/roadmap' }
+            { name: 'Features', href: '/features', prefetch: false },
+            { name: 'Pricing', href: '/pricing', prefetch: false },
+            { name: 'API Access', href: '/api', prefetch: false },
+            { name: 'Roadmap', href: '/roadmap', prefetch: false }
         ],
         Marketplace: [
-            { name: 'Explore', href: '/explore' },
-            { name: 'Categories', href: '/categories' },
-            { name: 'Top Sellers', href: '/sellers' },
-            { name: 'New Arrivals', href: '/new' }
+            { name: 'Explore', href: '/explore', prefetch: false },
+            { name: 'Categories', href: '/categories', prefetch: false },
+            { name: 'Top Sellers', href: '/sellers', prefetch: false },
+            { name: 'New Arrivals', href: '/new', prefetch: false }
         ],
         Resources: [
-            { name: 'Blog', href: '/blog' },
-            { name: 'Guides', href: '/guides' },
-            { name: 'Help Center', href: '/help' },
-            { name: 'Community', href: '/community' }
+            { name: 'Blog', href: '/blog', prefetch: false },
+            { name: 'Guides', href: '/guides', prefetch: false },
+            { name: 'Help Center', href: '/help', prefetch: false },
+            { name: 'Community', href: '/community', prefetch: false }
         ],
         Company: [
-            { name: 'About', href: '/about' },
-            { name: 'Careers', href: '/careers' },
-            { name: 'Contact', href: '/contact' },
-            { name: 'Press Kit', href: '/press' }
+            { name: 'About', href: '/about', prefetch: false },
+            { name: 'Careers', href: '/careers', prefetch: false },
+            { name: 'Contact', href: '/contact', prefetch: false },
+            { name: 'Press Kit', href: '/press', prefetch: false }
         ]
     }
 
@@ -125,6 +128,7 @@ export default function Footer() {
                                             <li key={link.name}>
                                                 <Link
                                                     href={link.href}
+                                                    prefetch={link.prefetch !== false}
                                                     onClick={() => track(ANALYTICS_EVENTS.NAVIGATION.FOOTER_LINK_CLICKED, eventProperties.navigation(link.name, category))}
                                                     className="font-kumbh-sans text-sm text-gray-400 hover:text-brand-primary transition-colors">
                                                     {link.name}
