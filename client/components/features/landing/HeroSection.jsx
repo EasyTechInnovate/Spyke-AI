@@ -46,7 +46,6 @@ export default function HeroSection() {
 
   const handleSearch = useCallback((query) => {
     // Navigate to search results
-    console.log('Search:', query)
   }, [])
 
   return (

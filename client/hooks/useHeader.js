@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { toast } from 'sonner'
+import toast from '@/lib/utils/toast'
 import api from '@/lib/api'
 
 export function useHeader() {
@@ -133,7 +133,7 @@ export function useHeader() {
             handleClearUser()
             setDropdownOpen(false)
             window.dispatchEvent(new Event('storage'))
-            toast.success('Logged out successfully')
+            toast.auth.logoutSuccess()
             router.push('/')
         }
     }

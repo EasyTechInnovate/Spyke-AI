@@ -8,6 +8,8 @@ import {
 } from 'lucide-react'
 import UserAvatar, { getDisplayName } from './UserAvatar'
 import RoleSwitcher from './RoleSwitcher'
+import { useTrackEvent, useTrackClick } from '@/hooks/useTrackEvent'
+import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 
 const USER_MENU_ITEMS = [
     { name: 'My Purchases', href: '/account/purchases', icon: Package },
@@ -35,12 +37,22 @@ const UserDropdown = forwardRef(({
     onLogout,
     onSwitchRole
 }, ref) => {
+    const track = useTrackEvent()
+    const trackLogoutClick = useTrackClick(ANALYTICS_EVENTS.AUTH.LOGOUT_CLICKED)
     const menuItems = currentRole === 'seller' && isSeller ? SELLER_MENU_ITEMS : USER_MENU_ITEMS
 
     return (
         <div className="relative hidden md:block" ref={ref}>
             <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
+                onClick={() => {
+                    setDropdownOpen(!dropdownOpen)
+                    if (!dropdownOpen) {
+                        track(ANALYTICS_EVENTS.NAVIGATION.USER_DROPDOWN_OPENED, {
+                            role: currentRole,
+                            isSeller
+                        })
+                    }
+                }}
                 className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg bg-white/5 hover:bg-brand-primary/10 transition-all duration-300"
             >
                 {isSeller && (
@@ -105,7 +117,12 @@ const UserDropdown = forwardRef(({
                                     key={item.name}
                                     href={item.href}
                                     className="group flex items-center justify-between px-5 py-3 text-sm text-gray-300 hover:text-white hover:bg-gray-800/50 transition-all duration-200"
-                                    onClick={() => setDropdownOpen(false)}
+                                    onClick={() => {
+                                        track(ANALYTICS_EVENTS.NAVIGATION.USER_MENU_ITEM_CLICKED, 
+                                            eventProperties.navigation(item.name, currentRole === 'seller' ? 'seller_menu' : 'user_menu')
+                                        )
+                                        setDropdownOpen(false)
+                                    }}
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 bg-gray-800/50 rounded-lg group-hover:bg-gray-700/50 transition-colors">
@@ -124,7 +141,12 @@ const UserDropdown = forwardRef(({
                                 <Link
                                     href="/become-seller"
                                     className="flex items-center justify-between px-5 py-3 text-sm hover:bg-gray-800/50 transition-colors group"
-                                    onClick={() => setDropdownOpen(false)}
+                                    onClick={() => {
+                                        track(ANALYTICS_EVENTS.SELLER.BECOME_SELLER_CLICKED, {
+                                            source: 'user_dropdown'
+                                        })
+                                        setDropdownOpen(false)
+                                    }}
                                 >
                                     <div className="flex items-center gap-3 text-brand-primary">
                                         <div className="p-2 bg-brand-primary/10 rounded-lg">
@@ -137,7 +159,10 @@ const UserDropdown = forwardRef(({
                             )}
 
                             <button
-                                onClick={onLogout}
+                                onClick={(e) => {
+                                    trackLogoutClick(e)
+                                    onLogout()
+                                }}
                                 className="w-full flex items-center justify-between px-5 py-3 text-sm text-gray-300 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200 border-t border-gray-700 group"
                             >
                                 <div className="flex items-center gap-3">

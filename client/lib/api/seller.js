@@ -13,7 +13,7 @@ export const sellerAPI = {
                 'Content-Type': 'application/json'
             }
         })
-        return response.data
+        return response
     },
 
     /**

@@ -37,15 +37,11 @@ const EnhancedSidebar = ({ currentPath = '/dashboard', sellerName = '' }) => {
     ]
 
     const handleLogout = async () => {
-        console.log('Logout function called!')
-
         try {
             if (api && api.auth && api.auth.logout) {
                 await api.auth.logout()
             }
-        } catch (err) {
-            console.error('API logout failed:', err)
-        }
+        } catch (err) {}
 
         if (typeof window !== 'undefined') {
             localStorage.removeItem('authToken')
@@ -53,9 +49,9 @@ const EnhancedSidebar = ({ currentPath = '/dashboard', sellerName = '' }) => {
             localStorage.removeItem('user')
             localStorage.removeItem('sellerProfile')
             sessionStorage.clear()
-            
+
             toast.success('Logged out successfully')
-            
+
             window.location.href = '/signin'
         }
     }
@@ -173,7 +169,6 @@ const EnhancedSidebar = ({ currentPath = '/dashboard', sellerName = '' }) => {
                 <div className="p-3 border-t border-gray-800">
                     <button
                         onClick={() => {
-                            console.log('Button clicked - calling handleLogout')
                             handleLogout()
                         }}
                         className={`
@@ -193,3 +188,4 @@ const EnhancedSidebar = ({ currentPath = '/dashboard', sellerName = '' }) => {
 
 export const SellerSidebar = EnhancedSidebar
 export default EnhancedSidebar
+

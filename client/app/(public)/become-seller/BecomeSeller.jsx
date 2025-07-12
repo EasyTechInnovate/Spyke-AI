@@ -1,9 +1,11 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Check } from 'lucide-react'
 import Header from '@/components/shared/layout/Header'
 import Container from '@/components/shared/layout/Container'
+import { useTrackEvent } from '@/hooks/useTrackEvent'
+import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 import {
     MultiStepForm,
     FormInput,
@@ -24,6 +26,8 @@ import {
 } from '@/lib/config/forms/SellerFormConfig'
 
 export default function BecomeSellerPage() {
+    const track = useTrackEvent()
+    
     const {
         formData,
         errors,
@@ -38,6 +42,11 @@ export default function BecomeSellerPage() {
         validateStep,
         handleSubmit
     } = useSellerForm()
+    
+    // Track page view
+    useEffect(() => {
+        track(ANALYTICS_EVENTS.SELLER.BECOME_SELLER_VIEWED, eventProperties.seller('page_view'))
+    }, [])
 
     const renderStepContent = ({ currentStep }) => {
         switch (currentStep) {
@@ -260,6 +269,18 @@ export default function BecomeSellerPage() {
         }
     }
 
+    // Track step completion
+    const handleStepChange = (newStep) => {
+        // Track when moving forward (completing a step)
+        if (newStep > 1) {
+            track(ANALYTICS_EVENTS.SELLER.ONBOARDING_STEP_COMPLETED, eventProperties.seller('step_completed', {
+                completedStep: newStep - 1,
+                currentStep: newStep,
+                stepTitle: formSteps[newStep - 2]?.title
+            }))
+        }
+    }
+
     return (
         <>
             <Header />
@@ -307,6 +328,7 @@ export default function BecomeSellerPage() {
                         loading={loading}
                         submitError={submitError}
                         validateStep={validateStep}
+                        onStepChange={handleStepChange}
                         submitButtonText="Create Seller Profile"
                         submitButtonIcon={<Check className="w-5 h-5" />}
                         compactStepIndicator={false}

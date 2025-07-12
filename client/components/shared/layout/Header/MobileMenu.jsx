@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { X, Menu, TrendingUp, ShoppingCart, LogOut, Store, User } from 'lucide-react'
 import UserAvatar, { getDisplayName, getInitials } from './UserAvatar'
+import { useTrackEvent } from '@/hooks/useTrackEvent'
+import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 
 export default function MobileMenu({ 
     isOpen, 
@@ -15,6 +17,8 @@ export default function MobileMenu({
     onSwitchRole,
     onLogout 
 }) {
+    const track = useTrackEvent()
+    
     if (!isOpen) return null
 
     return (
@@ -26,7 +30,10 @@ export default function MobileMenu({
                         key={item.name}
                         href={item.href}
                         className="flex items-center gap-2 font-kumbh-sans font-medium text-base sm:text-lg text-gray-300 hover:text-brand-primary px-4 py-3 hover:bg-white/5 transition-all"
-                        onClick={onClose}
+                        onClick={() => {
+                            track(ANALYTICS_EVENTS.NAVIGATION.MOBILE_MENU_ITEM_CLICKED, eventProperties.navigation(item.name, 'main_navigation'))
+                            onClose()
+                        }}
                     >
                         {item.icon && <item.icon className="h-5 w-5 opacity-70" />}
                         <span>{item.name}</span>
@@ -37,7 +44,10 @@ export default function MobileMenu({
                     <Link
                         href="/become-seller"
                         className="flex items-center gap-2 font-kumbh-sans font-medium text-base sm:text-lg text-brand-primary px-4 py-3 hover:bg-white/5 transition-all"
-                        onClick={onClose}
+                        onClick={() => {
+                            track('Mobile Become Seller Click')
+                            onClose()
+                        }}
                     >
                         <TrendingUp className="h-5 w-5 opacity-70" />
                         <span>Become a seller</span>
@@ -101,7 +111,12 @@ export default function MobileMenu({
                             <Link
                                 href="/cart"
                                 className="flex items-center gap-2 font-kumbh-sans font-medium text-base sm:text-lg text-gray-300 px-4 py-3 hover:bg-white/5 transition-all"
-                                onClick={onClose}
+                                onClick={() => {
+                                    track('Mobile Cart Click', {
+                                        cartCount
+                                    })
+                                    onClose()
+                                }}
                             >
                                 <ShoppingCart className="h-5 w-5 opacity-70" />
                                 <span>Cart {cartCount > 0 && `(${cartCount})`}</span>
@@ -113,7 +128,13 @@ export default function MobileMenu({
                                     key={item.name}
                                     href={item.href}
                                     className="flex items-center gap-2 font-kumbh-sans font-medium text-base sm:text-lg text-gray-300 px-4 py-3 hover:bg-white/5 transition-all"
-                                    onClick={onClose}
+                                    onClick={() => {
+                                        track(ANALYTICS_EVENTS.NAVIGATION.MOBILE_MENU_ITEM_CLICKED, {
+                                            ...eventProperties.navigation(item.name, 'user_menu'),
+                                            role: currentRole
+                                        })
+                                        onClose()
+                                    }}
                                 >
                                     <item.icon className="h-5 w-5 opacity-70" />
                                     <span>{item.name}</span>
@@ -124,7 +145,12 @@ export default function MobileMenu({
                                 <Link
                                     href="/become-seller"
                                     className="flex items-center gap-2 font-kumbh-sans font-medium text-base sm:text-lg text-brand-primary px-4 py-3 hover:bg-white/5 transition-all"
-                                    onClick={onClose}
+                                    onClick={() => {
+                                        track('Mobile Become Seller Click', {
+                                            source: 'mobile_menu'
+                                        })
+                                        onClose()
+                                    }}
                                 >
                                     <Store className="h-5 w-5" />
                                     <span>Become a Seller</span>
@@ -135,6 +161,7 @@ export default function MobileMenu({
                             <div className="mt-4 px-4 pb-4 border-t border-gray-700 pt-4">
                                 <button
                                     onClick={() => {
+                                        track('Mobile Logout Click')
                                         onLogout()
                                         onClose()
                                     }}

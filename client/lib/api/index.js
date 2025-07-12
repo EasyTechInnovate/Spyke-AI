@@ -3,6 +3,7 @@ export { default as apiClient } from './client'
 export { authAPI } from './auth'
 export { default as sellerAPI } from './seller'
 export { adminAPI } from './admin'
+export { analyticsApi } from './analytics'
 // export { default as productsAPI } from './products'
 // export { default as workflowAPI } from './workflow'
 

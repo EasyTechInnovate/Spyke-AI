@@ -13,6 +13,8 @@ import SearchOverlay from './Header/SearchOverlay'
 import Link from 'next/link'
 import Container from './Container'
 import { NAVIGATION, SELLER_MENU_ITEMS, USER_MENU_ITEMS } from './Header/const'
+import { useTrackEvent } from '@/hooks/useTrackEvent'
+import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 
 export default function Header() {
     const {
@@ -32,7 +34,8 @@ export default function Header() {
         isSeller,
         showBecomeSeller
     } = useHeader()
-
+    
+    const track = useTrackEvent()
     const menuItems = currentRole === 'seller' && isSeller ? SELLER_MENU_ITEMS : USER_MENU_ITEMS
 
     return (
@@ -109,7 +112,10 @@ export default function Header() {
                             {/* Mobile Menu Toggle */}
                             <button
                                 className="md:hidden p-2 sm:p-2.5 text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all"
-                                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+                                onClick={() => {
+                                    track(ANALYTICS_EVENTS.NAVIGATION.MOBILE_MENU_TOGGLED, eventProperties.navigation('menu', mobileMenuOpen ? 'close' : 'open'))
+                                    setMobileMenuOpen(!mobileMenuOpen)
+                                }}>
                                 {mobileMenuOpen ? <X className="h-5 w-5 sm:h-6 sm:w-6" /> : <Menu className="h-5 w-5 sm:h-6 sm:w-6" />}
                             </button>
                         </div>

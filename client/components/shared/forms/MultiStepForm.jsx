@@ -85,7 +85,10 @@ export default function MultiStepForm({
             }
         }
 
-        await onSubmit(formData)
+        // Call onSubmit with the form data
+        if (onSubmit) {
+            await onSubmit(formData)
+        }
     }
 
     const isLastStep = currentStep === steps.length
@@ -149,6 +152,12 @@ export default function MultiStepForm({
                             <button
                                 type="submit"
                                 disabled={loading}
+                                onClick={(e) => {
+                                    // Ensure form submission happens
+                                    if (!loading && isLastStep) {
+                                        handleSubmit(e)
+                                    }
+                                }}
                                 className={`inline-flex items-center px-8 py-3 bg-brand-primary text-black font-semibold rounded-lg transition-all duration-300 ${
                                     loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-brand-primary/90 cursor-pointer'
                                 }`}

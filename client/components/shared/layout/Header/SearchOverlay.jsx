@@ -2,11 +2,14 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, X, Mic, Package, Tag, History, TrendingUp as TrendingUpIcon, ChevronRight, Star } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
+import toast from '@/lib/utils/toast'
 import api from '@/lib/api'
+import { useTrackEvent } from '@/hooks/useTrackEvent'
+import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 
 export default function SearchOverlay({ isOpen, onClose }) {
     const router = useRouter()
+    const track = useTrackEvent()
     const [searchQuery, setSearchQuery] = useState('')
     const [searchResults, setSearchResults] = useState({ products: [], categories: [] })
     const [isSearching, setIsSearching] = useState(false)
@@ -17,8 +20,11 @@ export default function SearchOverlay({ isOpen, onClose }) {
 
     // Focus input when opened
     useEffect(() => {
-        if (isOpen && searchInputRef.current) {
-            searchInputRef.current.focus()
+        if (isOpen) {
+            track(ANALYTICS_EVENTS.SEARCH.OPENED)
+            if (searchInputRef.current) {
+                searchInputRef.current.focus()
+            }
         }
     }, [isOpen])
 
@@ -43,7 +49,7 @@ export default function SearchOverlay({ isOpen, onClose }) {
     // Voice search handler
     const handleVoiceSearch = () => {
         if (!voiceSupported) {
-            toast.error('Voice search is not supported in your browser')
+            toast.search.voiceNotSupported()
             return
         }
 
@@ -56,24 +62,28 @@ export default function SearchOverlay({ isOpen, onClose }) {
 
         recognition.onstart = () => {
             setIsListening(true)
-            toast.info('Listening... Speak now')
+            toast.search.voiceListening()
         }
 
         recognition.onresult = (event) => {
             const transcript = event.results[0][0].transcript
             setSearchQuery(transcript)
             setIsListening(false)
-            toast.success(`Searching for: "${transcript}"`)
+            toast.search.voiceSuccess(transcript)
+            track('Voice Search Completed', {
+                transcript,
+                transcriptLength: transcript.length
+            })
         }
 
         recognition.onerror = (event) => {
             setIsListening(false)
             if (event.error === 'no-speech') {
-                toast.error('No speech detected. Please try again.')
+                toast.search.voiceNoSpeech()
             } else if (event.error === 'not-allowed') {
-                toast.error('Microphone access denied.')
+                toast.search.voiceAccessDenied()
             } else {
-                toast.error(`Error: ${event.error}`)
+                toast.search.voiceError(event.error)
             }
         }
 
@@ -85,6 +95,7 @@ export default function SearchOverlay({ isOpen, onClose }) {
             recognition.stop()
         } else {
             recognition.start()
+            track('Voice Search Started')
         }
     }
 
@@ -96,12 +107,19 @@ export default function SearchOverlay({ isOpen, onClose }) {
         }
 
         setIsSearching(true)
+        track(ANALYTICS_EVENTS.SEARCH.QUERY_ENTERED, eventProperties.search(query))
+        
         try {
             const response = await api.search.query(query)
             setSearchResults(response.data)
+            
         } catch (error) {
             console.error('Search error:', error)
-            toast.error('Search failed. Please try again.')
+            track('Search Failed', {
+                query,
+                error: error.message
+            })
+            toast.search.searchError()
         } finally {
             setIsSearching(false)
         }
@@ -122,6 +140,13 @@ export default function SearchOverlay({ isOpen, onClose }) {
         const updatedRecent = [item.title, ...recentSearches.filter((s) => s !== item.title)].slice(0, 5)
         setRecentSearches(updatedRecent)
         localStorage.setItem('recentSearches', JSON.stringify(updatedRecent))
+
+        track(ANALYTICS_EVENTS.SEARCH.RESULT_CLICKED, {
+            ...eventProperties.search(searchQuery, 1),
+            resultType: 'product',
+            resultId: item.id,
+            resultTitle: item.title
+        })
 
         // Navigate to product
         router.push(`/product/${item.id}`)

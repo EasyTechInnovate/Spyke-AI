@@ -4,12 +4,17 @@ import { useState, useEffect } from 'react'
 import Container from '@/components/shared/layout/Container'
 import Header from '@/components/shared/layout/Header'
 import { ShoppingCart, Trash2, Plus, Minus } from 'lucide-react'
+import { useTrackEvent } from '@/hooks/useTrackEvent'
+import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 
 export default function CartPage() {
+    const track = useTrackEvent()
     const [cartItems, setCartItems] = useState([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
+        track(ANALYTICS_EVENTS.CART.VIEWED, eventProperties.cart())
+        
         // Simulate loading cart items
         setTimeout(() => {
             setCartItems([])
@@ -54,9 +59,9 @@ export default function CartPage() {
                         </div>
 
                         {cartItems.length === 0 ? (
-                            <EmptyCart />
+                            <EmptyCart track={track} />
                         ) : (
-                            <CartContent items={cartItems} setItems={setCartItems} />
+                            <CartContent items={cartItems} setItems={setCartItems} track={track} />
                         )}
                     </div>
                 </Container>
@@ -65,7 +70,7 @@ export default function CartPage() {
     )
 }
 
-function EmptyCart() {
+function EmptyCart({ track }) {
     return (
         <div className="text-center py-16">
             <div className="w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -80,12 +85,14 @@ function EmptyCart() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <a
                     href="/explore"
+                    onClick={() => track(ANALYTICS_EVENTS.BUTTON.CTA_CLICKED, { cta: 'explore', location: 'empty_cart' })}
                     className="px-6 py-3 bg-[#00FF89] text-black rounded-lg font-semibold hover:bg-[#00FF89]/90 transition-colors"
                 >
                     Explore Marketplace
                 </a>
                 <a
                     href="/categories"
+                    onClick={() => track(ANALYTICS_EVENTS.BUTTON.CTA_CLICKED, { cta: 'categories', location: 'empty_cart' })}
                     className="px-6 py-3 border border-gray-700 text-white rounded-lg font-semibold hover:border-gray-600 transition-colors"
                 >
                     Browse Categories
@@ -95,12 +102,21 @@ function EmptyCart() {
     )
 }
 
-function CartContent({ items, setItems }) {
+function CartContent({ items, setItems, track }) {
     const updateQuantity = (id, newQuantity) => {
+        const item = items.find(i => i.id === id)
+        
         if (newQuantity <= 0) {
             removeItem(id)
             return
         }
+        
+        track(ANALYTICS_EVENTS.CART.QUANTITY_UPDATED, {
+            ...eventProperties.cart(id, newQuantity, item?.price),
+            itemTitle: item?.title,
+            oldQuantity: item?.quantity,
+            action: newQuantity > item?.quantity ? 'increase' : 'decrease'
+        })
         
         setItems(items.map(item => 
             item.id === id ? { ...item, quantity: newQuantity } : item
@@ -108,6 +124,13 @@ function CartContent({ items, setItems }) {
     }
 
     const removeItem = (id) => {
+        const item = items.find(i => i.id === id)
+        
+        track(ANALYTICS_EVENTS.CART.ITEM_REMOVED, {
+            ...eventProperties.cart(id, item?.quantity, item?.price),
+            itemTitle: item?.title
+        })
+        
         setItems(items.filter(item => item.id !== id))
     }
 
@@ -151,7 +174,14 @@ function CartContent({ items, setItems }) {
                         </div>
                     </div>
 
-                    <button className="w-full py-3 bg-[#00FF89] text-black rounded-lg font-semibold hover:bg-[#00FF89]/90 transition-colors">
+                    <button 
+                        onClick={() => track(ANALYTICS_EVENTS.CART.CHECKOUT_CLICKED, {
+                            ...eventProperties.cart(),
+                            itemsCount: items.length,
+                            totalAmount: total
+                        })}
+                        className="w-full py-3 bg-[#00FF89] text-black rounded-lg font-semibold hover:bg-[#00FF89]/90 transition-colors"
+                    >
                         Proceed to Checkout
                     </button>
                     

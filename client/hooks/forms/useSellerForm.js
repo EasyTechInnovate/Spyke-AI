@@ -2,10 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
+import toast from '@/lib/utils/toast'
 import sellerAPI from '@/lib/api/seller'
+import apiClient from '@/lib/api/client'
 import { useFormValidation } from './useFormValidation'
 import { formFields, defaultFormValues, formSteps } from '@/lib/config/forms/SellerFormConfig'
+import { useTrackEvent } from '@/hooks/useTrackEvent'
+import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 
 /**
  * Custom hook for seller form management
@@ -13,9 +16,11 @@ import { formFields, defaultFormValues, formSteps } from '@/lib/config/forms/Sel
  */
 export function useSellerForm() {
     const router = useRouter()
+    const track = useTrackEvent()
     const [loading, setLoading] = useState(false)
     const [submitError, setSubmitError] = useState('')
     const [formData, setFormData] = useState(defaultFormValues)
+    const [hasStartedForm, setHasStartedForm] = useState(false)
 
     const {
         errors,
@@ -47,6 +52,12 @@ export function useSellerForm() {
      */
     const handleInputChange = useCallback((e) => {
         const { name, value, type, checked } = e.target
+        
+        // Track form start on first interaction
+        if (!hasStartedForm) {
+            track(ANALYTICS_EVENTS.SELLER.ONBOARDING_STARTED, eventProperties.seller('form_started'))
+            setHasStartedForm(true)
+        }
 
         if (name.includes('.')) {
             const [parent, child] = name.split('.')
@@ -68,7 +79,7 @@ export function useSellerForm() {
         if (errors[name]) {
             clearError(name)
         }
-    }, [errors, clearError])
+    }, [errors, clearError, hasStartedForm, track])
 
     /**
      * Handle social handle change
@@ -97,7 +108,7 @@ export function useSellerForm() {
 
         const field = formFields[fieldName]
         if (field.maxItems && formData[fieldName].length >= field.maxItems) {
-            toast.error(`Maximum ${field.maxItems} items allowed`)
+            toast.validation.maxItems(fieldName, field.maxItems)
             return
         }
 
@@ -130,13 +141,13 @@ export function useSellerForm() {
         }
 
         if (field.maxItems && formData.portfolioLinks.length >= field.maxItems) {
-            toast.error(`Maximum ${field.maxItems} portfolio links allowed`)
+            toast.validation.maxItems('portfolio links', field.maxItems)
             return
         }
 
         // Validate URL
         if (field.validation && !field.validation.pattern.test(link.trim())) {
-            toast.error(field.validation.message)
+            toast.validation.invalid('URL format')
             return
         }
 
@@ -184,11 +195,23 @@ export function useSellerForm() {
     const handleSubmit = useCallback(async (data) => {
         setLoading(true)
         setSubmitError('')
+        
+        track(ANALYTICS_EVENTS.SELLER.PROFILE_SUBMITTED, eventProperties.seller('profile_submitted', {
+            expertise: data.expertise,
+            nichesCount: data.niches?.length || 0,
+            toolsCount: data.tools?.length || 0,
+            hasWebsite: !!data.websiteUrl,
+            hasSocialProfiles: !!(data.socialProfiles?.twitter || data.socialProfiles?.linkedin || data.socialProfiles?.github)
+        }))
 
         try {
             const response = await sellerAPI.createProfile(data)
 
             if (response.success || response.statusCode === 201) {
+                track(ANALYTICS_EVENTS.SELLER.ONBOARDING_COMPLETED, eventProperties.seller('onboarding_completed', {
+                    sellerId: response.data?.id
+                }))
+                
                 // Update user role in localStorage
                 if (typeof window !== 'undefined') {
                     const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
@@ -197,23 +220,36 @@ export function useSellerForm() {
                     localStorage.setItem('user', JSON.stringify(currentUser))
                 }
 
-                toast.success(response.message || '🎉 Welcome to our seller community!')
+                toast.seller.profileCreated()
                 
-                setTimeout(() => {
-                    router.push('/seller/dashboard')
-                }, 1000)
+                // Log user out after successful seller creation
+                setTimeout(async () => {
+                    try {
+                        await apiClient.logout()
+                    } catch (error) {
+                        // If logout fails, still redirect to signin
+                        if (typeof window !== 'undefined') {
+                            window.location.href = '/signin'
+                        }
+                    }
+                }, 2000)
             } else {
                 throw new Error(response.message || 'Failed to create seller profile')
             }
         } catch (error) {
             console.error('API Error:', error)
             const errorMessage = error.message || 'Failed to create seller profile'
-            toast.error(errorMessage)
+            
+            track(ANALYTICS_EVENTS.ERROR.GENERAL_ERROR, eventProperties.seller('profile_submission_failed', {
+                error: errorMessage
+            }))
+            
+            toast.seller.profileError(errorMessage)
             setSubmitError(errorMessage)
         } finally {
             setLoading(false)
         }
-    }, [router])
+    }, [router, track])
 
     return {
         formData,

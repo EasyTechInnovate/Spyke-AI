@@ -3,6 +3,10 @@ import './globals.css'
 import { Toaster } from 'sonner'
 import { appConfig } from '@/lib/config'
 import Script from 'next/script'
+import { AnalyticsProvider } from '@/providers/AnalyticsProvider'
+import { Analytics } from '@vercel/analytics/react'
+import ConsentBanner from '@/components/analytics/ConsentBanner'
+import AnalyticsDebugPanel from '@/components/analytics/DebugPanel'
 
 const leagueSpartan = League_Spartan({
     variable: '--font-league-spartan',
@@ -164,30 +168,57 @@ export const metadata = {
     }
 }
 
-// Toaster configuration
+// Enhanced Toaster configuration with improved UX
 const toasterConfig = {
     baseStyle: {
-        background: 'linear-gradient(135deg, rgba(15, 15, 15, 0.95) 0%, rgba(31, 31, 31, 0.95) 100%)',
-        backdropFilter: 'blur(12px)',
+        background: 'linear-gradient(135deg, rgba(15, 15, 15, 0.98) 0%, rgba(31, 31, 31, 0.98) 100%)',
+        backdropFilter: 'blur(16px)',
         border: '1px solid rgba(0, 255, 137, 0.2)',
-        borderRadius: '12px',
-        padding: '16px',
+        borderRadius: '16px',
+        padding: '20px',
         color: '#ffffff',
-        fontSize: '14px',
+        fontSize: '15px',
         fontWeight: '500',
-        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 0 20px -5px rgba(0, 255, 137, 0.1)',
-        maxWidth: '400px'
+        lineHeight: '1.4',
+        boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.4), 0 0 30px -5px rgba(0, 255, 137, 0.1)',
+        maxWidth: '420px',
+        minHeight: '60px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        transform: 'translateZ(0)', // Force hardware acceleration
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
     },
     variants: {
         success: {
-            background: 'linear-gradient(135deg, rgba(0, 255, 137, 0.1) 0%, rgba(15, 15, 15, 0.95) 100%)',
-            border: '1px solid rgba(0, 255, 137, 0.4)',
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 0 30px -5px rgba(0, 255, 137, 0.2)'
+            background: 'linear-gradient(135deg, rgba(0, 255, 137, 0.15) 0%, rgba(15, 15, 15, 0.98) 100%)',
+            border: '1px solid rgba(0, 255, 137, 0.5)',
+            boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.4), 0 0 40px -5px rgba(0, 255, 137, 0.25)',
+            animation: 'slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
         },
         error: {
-            background: 'linear-gradient(135deg, rgba(255, 85, 85, 0.1) 0%, rgba(15, 15, 15, 0.95) 100%)',
-            border: '1px solid rgba(255, 85, 85, 0.4)',
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 0 30px -5px rgba(255, 85, 85, 0.2)'
+            background: 'linear-gradient(135deg, rgba(255, 85, 85, 0.15) 0%, rgba(15, 15, 15, 0.98) 100%)',
+            border: '1px solid rgba(255, 85, 85, 0.5)',
+            boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.4), 0 0 40px -5px rgba(255, 85, 85, 0.25)',
+            animation: 'slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+        },
+        warning: {
+            background: 'linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(15, 15, 15, 0.98) 100%)',
+            border: '1px solid rgba(255, 193, 7, 0.5)',
+            boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.4), 0 0 40px -5px rgba(255, 193, 7, 0.25)',
+            animation: 'slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+        },
+        info: {
+            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(15, 15, 15, 0.98) 100%)',
+            border: '1px solid rgba(59, 130, 246, 0.5)',
+            boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.4), 0 0 40px -5px rgba(59, 130, 246, 0.25)',
+            animation: 'slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+        },
+        loading: {
+            background: 'linear-gradient(135deg, rgba(0, 255, 137, 0.1) 0%, rgba(15, 15, 15, 0.98) 100%)',
+            border: '1px solid rgba(0, 255, 137, 0.3)',
+            boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.4), 0 0 30px -5px rgba(0, 255, 137, 0.15)',
+            animation: 'slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
         }
     }
 }
@@ -254,16 +285,22 @@ export default function RootLayout({ children }) {
                     Skip to main content
                 </a>
 
-                <main id="main-content">{children}</main>
+                <AnalyticsProvider>
+                    <main id="main-content">{children}</main>
+                    <Analytics />
+                    <ConsentBanner />
+                    <AnalyticsDebugPanel />
+                </AnalyticsProvider>
 
                 <Toaster
                     position="top-right"
                     richColors
                     expand
-                    duration={8000} // 8 seconds as default for all toasts
+                    duration={5000}
                     closeButton
-                    gap={12}
-                    offset="20px"
+                    gap={16}
+                    offset="24px"
+                    visibleToasts={4}
                     toastOptions={{
                         className: 'font-kumbh-sans',
                         style: toasterConfig.baseStyle,
@@ -275,7 +312,8 @@ export default function RootLayout({ children }) {
                             iconTheme: {
                                 primary: '#00FF89',
                                 secondary: '#0f0f0f'
-                            }
+                            },
+                            duration: 4000
                         },
                         error: {
                             style: {
@@ -285,9 +323,36 @@ export default function RootLayout({ children }) {
                             iconTheme: {
                                 primary: '#ff5555',
                                 secondary: '#0f0f0f'
-                            }
+                            },
+                            duration: 7000
+                        },
+                        warning: {
+                            style: {
+                                ...toasterConfig.baseStyle,
+                                ...toasterConfig.variants.warning
+                            },
+                            iconTheme: {
+                                primary: '#ffc107',
+                                secondary: '#0f0f0f'
+                            },
+                            duration: 6000
+                        },
+                        info: {
+                            style: {
+                                ...toasterConfig.baseStyle,
+                                ...toasterConfig.variants.info
+                            },
+                            iconTheme: {
+                                primary: '#3b82f6',
+                                secondary: '#0f0f0f'
+                            },
+                            duration: 5000
                         },
                         loading: {
+                            style: {
+                                ...toasterConfig.baseStyle,
+                                ...toasterConfig.variants.loading
+                            },
                             iconTheme: {
                                 primary: '#00FF89',
                                 secondary: '#0f0f0f'

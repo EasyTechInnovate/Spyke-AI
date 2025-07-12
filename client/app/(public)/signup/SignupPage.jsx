@@ -6,9 +6,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Container from '@/components/shared/layout/Container'
 import Header from '@/components/shared/layout/Header'
-import { toast } from 'sonner'
+import toast from '@/lib/utils/toast'
 import api from '@/lib/api'
 import { checkPasswordStrength, countryCodes, validateEmail, validatePhone, formatPhone } from '@/lib/utils/utils'
+import { useTrackEvent, useTrackForm } from '@/hooks/useTrackEvent'
+import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 
 export const debounce = (func, wait) => {
     let timeout
@@ -20,6 +22,8 @@ export const debounce = (func, wait) => {
 
 export default function SignupPage() {
     const router = useRouter()
+    const track = useTrackEvent()
+    const { trackFormStart, trackFormSubmit, trackFormError } = useTrackForm('Sign Up Form')
     const [loading, setLoading] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
     const [emailChecking, setEmailChecking] = useState(false)
@@ -40,6 +44,11 @@ export default function SignupPage() {
 
     const emailCheckRef = useRef(null)
     const dropdownRef = useRef(null)
+
+    // Track page view
+    useEffect(() => {
+        track(ANALYTICS_EVENTS.AUTH.SIGNUP_VIEWED)
+    }, [])
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -97,11 +106,16 @@ export default function SignupPage() {
             setErrors((prev) => ({ ...prev, [name]: '' }))
             setTouched((prev) => ({ ...prev, [name]: true }))
 
+            // Track form start on first interaction
+            if (!touched.emailAddress && name === 'emailAddress' && value.length === 1) {
+                trackFormStart()
+            }
+
             if (name === 'emailAddress' && emailCheckRef.current) {
                 emailCheckRef.current(value)
             }
         },
-        [formData.countryCode]
+        [formData.countryCode, touched.emailAddress, trackFormStart]
     )
 
     const handleBlur = useCallback((e) => {
@@ -154,6 +168,11 @@ export default function SignupPage() {
             if (!validateForm()) return
 
             setLoading(true)
+            track(ANALYTICS_EVENTS.AUTH.SIGNUP_CLICKED, {
+                ...eventProperties.auth(formData.emailAddress, true),
+                hasMarketingConsent: formData.marketingConsent
+            })
+            
             try {
                 const countryCodeDigits = formData.countryCode.replace(/\D/g, '')
                 const phoneNumberDigits = formData.phoneNumber.replace(/\D/g, '')
@@ -169,15 +188,34 @@ export default function SignupPage() {
                     role: 'user'
                 })
 
-                toast.success('Welcome to SpykeAI! Check your email to verify.')
+                track(ANALYTICS_EVENTS.AUTH.SIGNUP_SUCCESS, {
+                    ...eventProperties.auth(formData.emailAddress, true),
+                    hasMarketingConsent: formData.marketingConsent
+                })
+                
+                trackFormSubmit({
+                    success: true,
+                    hasMarketingConsent: formData.marketingConsent
+                })
+
+                toast.auth.signupSuccess()
                 router.push('/')
             } catch (error) {
-                toast.error(error.message || 'Registration failed')
+                track(ANALYTICS_EVENTS.AUTH.SIGNUP_FAILED, {
+                    ...eventProperties.auth(formData.emailAddress, false),
+                    error: error.message
+                })
+                
+                trackFormError({
+                    error: error.message
+                })
+                
+                toast.auth.signupError(error.message)
             } finally {
                 setLoading(false)
             }
         },
-        [formData, router, validateForm]
+        [formData, router, validateForm, track, trackFormSubmit, trackFormError]
     )
 
     const passwordStrength = checkPasswordStrength(formData.password)

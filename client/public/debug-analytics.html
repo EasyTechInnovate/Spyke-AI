@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Analytics Debug</title>
+</head>
+<body>
+    <h1>Analytics Debug Tool</h1>
+    
+    <div id="status"></div>
+    
+    <button onclick="checkAnalytics()">Check Analytics Status</button>
+    <button onclick="clearAnalytics()">Clear Analytics Data</button>
+    <button onclick="acceptConsent()">Accept Consent</button>
+    
+    <pre id="output"></pre>
+    
+    <script>
+        function checkAnalytics() {
+            const status = {
+                enabled: localStorage.getItem('analytics_consent'),
+                events: JSON.parse(localStorage.getItem('spyke_analytics') || '[]'),
+                sessionId: sessionStorage.getItem('spyke_session'),
+                userId: localStorage.getItem('userId')
+            };
+            
+            document.getElementById('output').textContent = JSON.stringify(status, null, 2);
+        }
+        
+        function clearAnalytics() {
+            localStorage.removeItem('spyke_analytics');
+            localStorage.removeItem('analytics_consent');
+            sessionStorage.removeItem('spyke_session');
+            alert('Analytics data cleared!');
+            checkAnalytics();
+        }
+        
+        function acceptConsent() {
+            localStorage.setItem('analytics_consent', 'accepted');
+            alert('Analytics consent accepted!');
+            checkAnalytics();
+        }
+        
+        checkAnalytics();
+    </script>
+</body>
+</html>

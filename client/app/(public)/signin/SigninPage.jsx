@@ -1,18 +1,27 @@
 'use client'
 export const dynamic = 'force-dynamic';
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
+import toast from '@/lib/utils/toast'
 import { Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { authAPI } from '@/lib/api/auth'
 import Header from '@/components/shared/layout/Header'
 import Container from '@/components/shared/layout/Container'
+import { useTrackEvent, useTrackForm } from '@/hooks/useTrackEvent'
+import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 
 export default function SignInPage() {
     const router = useRouter()
     const toastShown = useRef(false)
+    const track = useTrackEvent()
+    const { trackFormStart, trackFormSubmit, trackFormError } = useTrackForm('Sign In Form')
+
+    // Track page view
+    useEffect(() => {
+        track(ANALYTICS_EVENTS.AUTH.LOGIN_VIEWED)
+    }, [])
 
     // Form state
     const [loading, setLoading] = useState(false)
@@ -36,6 +45,11 @@ export default function SignInPage() {
         if (loginError) {
             setLoginError('')
         }
+        
+        // Track first interaction with form
+        if (name === 'emailAddress' && value.length === 1) {
+            trackFormStart()
+        }
     }
 
     const handleLogin = async (e) => {
@@ -46,17 +60,23 @@ export default function SignInPage() {
         setLoading(true)
         setLoginError('')
         toastShown.current = false
-        toast.dismiss()
+        toast.dismissAll()
+
+        track(ANALYTICS_EVENTS.AUTH.LOGIN_CLICKED, eventProperties.auth(formData.email))
 
         try {
             const response = await authAPI.login(formData)
 
+            track(ANALYTICS_EVENTS.AUTH.LOGIN_SUCCESS, eventProperties.auth(formData.email, true))
+            
+            trackFormSubmit({
+                method: 'email',
+                success: true
+            })
+
             if (!toastShown.current) {
                 toastShown.current = true
-                toast.success('Login successful! Redirecting...', {
-                    id: 'login-success',
-                    duration: 2000
-                })
+                toast.auth.loginSuccess()
             }
 
             setTimeout(() => {
@@ -69,6 +89,13 @@ export default function SignInPage() {
 
             const errorMessage = err?.response?.data?.message || err?.data?.message || err?.message || 'Login failed'
 
+            track(ANALYTICS_EVENTS.AUTH.LOGIN_FAILED, eventProperties.auth(formData.email, false))
+            
+            trackFormError({
+                method: 'email',
+                error: errorMessage
+            })
+
             setLoginError(errorMessage)
             setLoading(false)
         }
@@ -76,6 +103,7 @@ export default function SignInPage() {
 
     const handleGoogleAuth = () => {
         if (!loading) {
+            track(ANALYTICS_EVENTS.AUTH.LOGIN_CLICKED, { method: 'google' })
             authAPI.googleAuth()
         }
     }
@@ -129,13 +157,20 @@ export default function SignInPage() {
                                                     <button
                                                         type="button"
                                                         onClick={async () => {
+                                                            track('Resend Verification Email Clicked')
                                                             try {
                                                                 await authAPI.resendVerificationEmail({
                                                                     emailAddress: formData.emailAddress
                                                                 })
-                                                                toast.success('Verification email sent! Please check your inbox.')
+                                                                track('Verification Email Resent', {
+                                                                    email: formData.emailAddress
+                                                                })
+                                                                toast.auth.verificationSent()
                                                             } catch (error) {
-                                                                toast.error('Failed to resend email. Please try again.')
+                                                                track('Verification Email Resend Failed', {
+                                                                    error: error.message
+                                                                })
+                                                                toast.auth.loginError('Failed to resend email. Please try again.')
                                                             }
                                                         }}
                                                         className="mt-2 text-[#9ca3af] hover:text-white underline underline-offset-2 text-sm transition-colors"
@@ -181,7 +216,12 @@ export default function SignInPage() {
                                         />
                                         <button
                                             type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
+                                            onClick={() => {
+                                                setShowPassword(!showPassword)
+                                                track('Password Visibility Toggled', {
+                                                    visible: !showPassword
+                                                })
+                                            }}
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9ca3af] hover:text-white transition-colors"
                                             disabled={loading}>
                                             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
