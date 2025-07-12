@@ -1,13 +1,14 @@
 'use client'
 
-import React, { createContext, useContext, useEffect } from 'react'
+import React, { createContext, useContext, useEffect, Suspense } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { analytics } from '@/lib/analytics/simple-core'
 import { setupAutoTracking } from '@/lib/analytics/simple-auto-track'
 
 const AnalyticsContext = createContext(null)
 
-export function AnalyticsProvider({ children, userId, userProperties }) {
+// Internal component that uses search params
+function AnalyticsTracker({ children, userId, userProperties }) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
@@ -24,13 +25,17 @@ export function AnalyticsProvider({ children, userId, userProperties }) {
     }
     
     // Analytics provider initialized
-  }, [])
+  }, [userId, userProperties])
 
   // Track page views on route change
   useEffect(() => {
     analytics.trackPageView('success')
   }, [pathname, searchParams])
 
+  return children
+}
+
+export function AnalyticsProvider({ children, userId, userProperties }) {
   const contextValue = {
     track: (eventName, properties) => {
       // For simplified analytics, we only track clicks
@@ -43,7 +48,11 @@ export function AnalyticsProvider({ children, userId, userProperties }) {
 
   return (
     <AnalyticsContext.Provider value={contextValue}>
-      {children}
+      <Suspense fallback={null}>
+        <AnalyticsTracker userId={userId} userProperties={userProperties}>
+          {children}
+        </AnalyticsTracker>
+      </Suspense>
     </AnalyticsContext.Provider>
   )
 }
