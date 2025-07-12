@@ -305,18 +305,20 @@ class ApiClient {
             const blob = await response.blob()
 
             // Create download link
-            const url = window.URL.createObjectURL(blob)
-            const link = document.createElement('a')
-            link.href = url
-            link.download = filename || 'download'
-            document.body.appendChild(link)
-            link.click()
+            if (typeof window !== 'undefined') {
+                const url = window.URL.createObjectURL(blob)
+                const link = document.createElement('a')
+                link.href = url
+                link.download = filename || 'download'
+                document.body.appendChild(link)
+                link.click()
 
-            // Cleanup
-            setTimeout(() => {
-                document.body.removeChild(link)
-                window.URL.revokeObjectURL(url)
-            }, 100)
+                // Cleanup
+                setTimeout(() => {
+                    document.body.removeChild(link)
+                    window.URL.revokeObjectURL(url)
+                }, 100)
+            }
 
             return { success: true, filename }
         } catch (error) {

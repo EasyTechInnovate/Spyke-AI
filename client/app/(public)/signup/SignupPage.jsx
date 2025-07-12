@@ -48,7 +48,7 @@ export default function SignupPage() {
             }
         }
 
-        if (showCountryDropdown) {
+        if (showCountryDropdown && typeof window !== 'undefined') {
             document.addEventListener('mousedown', handleClickOutside)
             return () => document.removeEventListener('mousedown', handleClickOutside)
         }

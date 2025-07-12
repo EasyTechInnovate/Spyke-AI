@@ -18,22 +18,24 @@ export function useResponsive() {
   })
 
   useEffect(() => {
-    const updateDimensions = () => {
-      const width = window.innerWidth
-      const height = window.innerHeight
-      
-      setDimensions({
-        width,
-        height,
-        isMobile: width < BREAKPOINTS.mobile,
-        isTablet: width >= BREAKPOINTS.mobile && width < BREAKPOINTS.desktop,
-        isDesktop: width >= BREAKPOINTS.desktop
-      })
-    }
+    if (typeof window !== 'undefined') {
+      const updateDimensions = () => {
+        const width = window.innerWidth
+        const height = window.innerHeight
+        
+        setDimensions({
+          width,
+          height,
+          isMobile: width < BREAKPOINTS.mobile,
+          isTablet: width >= BREAKPOINTS.mobile && width < BREAKPOINTS.desktop,
+          isDesktop: width >= BREAKPOINTS.desktop
+        })
+      }
 
-    updateDimensions()
-    window.addEventListener('resize', updateDimensions)
-    return () => window.removeEventListener('resize', updateDimensions)
+      updateDimensions()
+      window.addEventListener('resize', updateDimensions)
+      return () => window.removeEventListener('resize', updateDimensions)
+    }
   }, [])
 
   return dimensions

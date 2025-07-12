@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
 import api from '@/lib/api'
@@ -66,19 +66,21 @@ export function useHeader() {
 
     // Handle scroll
     useEffect(() => {
-        const handleScroll = () => setScrolled(window.scrollY > 50)
-        window.addEventListener('scroll', handleScroll)
-        return () => window.removeEventListener('scroll', handleScroll)
+        if (typeof window !== 'undefined') {
+            const handleScroll = () => setScrolled(window.scrollY > 50)
+            window.addEventListener('scroll', handleScroll)
+            return () => window.removeEventListener('scroll', handleScroll)
+        }
     }, [])
 
     // Close dropdown on outside click
     useEffect(() => {
-        const closeDropdown = (e) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-                setDropdownOpen(false)
+        if (typeof window !== 'undefined' && dropdownOpen) {
+            const closeDropdown = (e) => {
+                if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                    setDropdownOpen(false)
+                }
             }
-        }
-        if (dropdownOpen) {
             document.addEventListener('mousedown', closeDropdown)
             return () => document.removeEventListener('mousedown', closeDropdown)
         }
@@ -91,20 +93,22 @@ export function useHeader() {
 
     // Keyboard shortcuts
     useEffect(() => {
-        const handleKeyDown = (e) => {
-            // Open search with Cmd/Ctrl + K
-            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-                e.preventDefault()
-                setSearchOpen(true)
+        if (typeof window !== 'undefined') {
+            const handleKeyDown = (e) => {
+                // Open search with Cmd/Ctrl + K
+                if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                    e.preventDefault()
+                    setSearchOpen(true)
+                }
+                // Close search with Escape
+                if (e.key === 'Escape' && searchOpen) {
+                    setSearchOpen(false)
+                }
             }
-            // Close search with Escape
-            if (e.key === 'Escape' && searchOpen) {
-                setSearchOpen(false)
-            }
-        }
 
-        document.addEventListener('keydown', handleKeyDown)
-        return () => document.removeEventListener('keydown', handleKeyDown)
+            document.addEventListener('keydown', handleKeyDown)
+            return () => document.removeEventListener('keydown', handleKeyDown)
+        }
     }, [searchOpen])
 
     const handleClearUser = () => {

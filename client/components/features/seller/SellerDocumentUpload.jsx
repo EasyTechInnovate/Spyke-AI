@@ -87,7 +87,9 @@ const DocumentUploadModal = ({ isOpen, onClose, onSuccess }) => {
             formData.append('file', file)
             formData.append('category', documentType)
 
-            const token = localStorage.getItem('sellerAccessToken') || localStorage.getItem('accessToken')
+            const token = typeof window !== 'undefined' 
+                ? (localStorage.getItem('sellerAccessToken') || localStorage.getItem('accessToken'))
+                : null
 
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/v1/upload/file`, {
                 method: 'POST',

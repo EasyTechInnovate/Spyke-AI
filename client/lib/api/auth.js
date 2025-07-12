@@ -134,19 +134,21 @@ export const authAPI = {
             if (data?.tokens?.accessToken) {
                 apiClient.setAuthToken(data.tokens.accessToken)
 
-                const cookieOptions = `path=/; max-age=86400; SameSite=Lax`
-                document.cookie = `authToken=${data.tokens.accessToken}; ${cookieOptions}`
+                if (typeof window !== 'undefined') {
+                    const cookieOptions = `path=/; max-age=86400; SameSite=Lax`
+                    document.cookie = `authToken=${data.tokens.accessToken}; ${cookieOptions}`
 
-                if (data?.roles) {
-                    document.cookie = `roles=${JSON.stringify(data.roles)}; ${cookieOptions}`
-                }
+                    if (data?.roles) {
+                        document.cookie = `roles=${JSON.stringify(data.roles)}; ${cookieOptions}`
+                    }
 
-                localStorage.setItem('authToken', data.tokens.accessToken)
-                localStorage.setItem('refreshToken', data.tokens.refreshToken)
-                localStorage.setItem('user', JSON.stringify(data))
+                    localStorage.setItem('authToken', data.tokens.accessToken)
+                    localStorage.setItem('refreshToken', data.tokens.refreshToken)
+                    localStorage.setItem('user', JSON.stringify(data))
 
-                if (data?.roles) {
-                    localStorage.setItem('roles', JSON.stringify(data.roles))
+                    if (data?.roles) {
+                        localStorage.setItem('roles', JSON.stringify(data.roles))
+                    }
                 }
             }
 
@@ -190,25 +192,27 @@ export const authAPI = {
         // Clear API client token
         apiClient.setAuthToken(null)
 
-        // Clear all localStorage items
-        const authKeys = ['authToken', 'refreshToken', 'user', 'roles', 'loginTime', 'accessToken', 'sellerAccessToken']
-        authKeys.forEach((key) => localStorage.removeItem(key))
+        if (typeof window !== 'undefined') {
+            // Clear all localStorage items
+            const authKeys = ['authToken', 'refreshToken', 'user', 'roles', 'loginTime', 'accessToken', 'sellerAccessToken']
+            authKeys.forEach((key) => localStorage.removeItem(key))
 
-        // Clear all cookies
-        const cookies = ['authToken', 'roles', 'refreshToken']
-        cookies.forEach((name) => {
-            document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax`
-            // Also try with domain
-            document.cookie = `${name}=; path=/; domain=${window.location.hostname}; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax`
-        })
+            // Clear all cookies
+            const cookies = ['authToken', 'roles', 'refreshToken']
+            cookies.forEach((name) => {
+                document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax`
+                // Also try with domain
+                document.cookie = `${name}=; path=/; domain=${window.location.hostname}; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax`
+            })
 
-        // Clear sessionStorage
-        sessionStorage.clear()
+            // Clear sessionStorage
+            sessionStorage.clear()
+        }
     },
 
     // Refresh Token - IMPROVED
     refreshToken: async () => {
-        const refreshToken = localStorage.getItem('refreshToken')
+        const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null
 
         if (!refreshToken) {
             throw new Error('No refresh token available')
@@ -225,14 +229,17 @@ export const authAPI = {
             // Update tokens
             if (data?.tokens?.accessToken) {
                 apiClient.setAuthToken(data.tokens.accessToken)
-                localStorage.setItem('authToken', data.tokens.accessToken)
+                
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('authToken', data.tokens.accessToken)
 
-                // Update cookie
-                const cookieOptions = `path=/; max-age=86400; SameSite=Lax`
-                document.cookie = `authToken=${data.tokens.accessToken}; ${cookieOptions}`
+                    // Update cookie
+                    const cookieOptions = `path=/; max-age=86400; SameSite=Lax`
+                    document.cookie = `authToken=${data.tokens.accessToken}; ${cookieOptions}`
 
-                if (data.tokens.refreshToken) {
-                    localStorage.setItem('refreshToken', data.tokens.refreshToken)
+                    if (data.tokens.refreshToken) {
+                        localStorage.setItem('refreshToken', data.tokens.refreshToken)
+                    }
                 }
             }
 

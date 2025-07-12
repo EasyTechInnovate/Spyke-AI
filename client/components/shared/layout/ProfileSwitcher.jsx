@@ -13,8 +13,10 @@ export default function ProfileSwitcher() {
   const dropdownRef = useRef(null)
 
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem('user') || '{}')
-    setUser(userData)
+    if (typeof window !== 'undefined') {
+      const userData = JSON.parse(localStorage.getItem('user') || '{}')
+      setUser(userData)
+    }
     
     if (pathname?.startsWith('/seller')) {
       setCurrentRole('seller')
@@ -24,14 +26,16 @@ export default function ProfileSwitcher() {
   }, [pathname])
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false)
+    if (typeof window !== 'undefined') {
+      const handleClickOutside = (event) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+          setIsOpen(false)
+        }
       }
-    }
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
   }, [])
 
   const switchRole = (role) => {
@@ -46,8 +50,10 @@ export default function ProfileSwitcher() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('user')
-    localStorage.removeItem('accessToken')
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('user')
+      localStorage.removeItem('accessToken')
+    }
     router.push('/login')
   }
 

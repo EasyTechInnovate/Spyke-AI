@@ -32,9 +32,11 @@ export default function SearchOverlay({ isOpen, onClose }) {
 
     // Load recent searches
     useEffect(() => {
-        const saved = localStorage.getItem('recentSearches')
-        if (saved) {
-            setRecentSearches(JSON.parse(saved))
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('recentSearches')
+            if (saved) {
+                setRecentSearches(JSON.parse(saved))
+            }
         }
     }, [])
 

@@ -28,9 +28,11 @@ export default function HeroSection() {
 
   useEffect(() => {
     setIsClient(true)
-    
-    // Check seller status
-    if (typeof window !== 'undefined') {
+  }, [])
+
+  useEffect(() => {
+    // Only check seller status after client-side hydration
+    if (isClient && typeof window !== 'undefined') {
       try {
         const rolesStr = localStorage.getItem('roles')
         const roles = rolesStr ? JSON.parse(rolesStr) : []
@@ -40,7 +42,7 @@ export default function HeroSection() {
         setIsSeller(false)
       }
     }
-  }, [])
+  }, [isClient])
 
   const handleSearch = useCallback((query) => {
     // Navigate to search results

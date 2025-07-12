@@ -47,15 +47,17 @@ const EnhancedSidebar = ({ currentPath = '/dashboard', sellerName = '' }) => {
             console.error('API logout failed:', err)
         }
 
-        localStorage.removeItem('authToken')
-        localStorage.removeItem('refreshToken')
-        localStorage.removeItem('user')
-        localStorage.removeItem('sellerProfile')
-        sessionStorage.clear()
-
-        toast.success('Logged out successfully')
-
-        window.location.href = '/signin'
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('authToken')
+            localStorage.removeItem('refreshToken')
+            localStorage.removeItem('user')
+            localStorage.removeItem('sellerProfile')
+            sessionStorage.clear()
+            
+            toast.success('Logged out successfully')
+            
+            window.location.href = '/signin'
+        }
     }
 
     return (
