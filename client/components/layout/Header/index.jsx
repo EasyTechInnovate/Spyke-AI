@@ -1,18 +1,42 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { X, Menu } from 'lucide-react'
+import { Users, Package, Heart, MessageSquare, User, Settings, Briefcase, BarChart3, DollarSign, X, Menu } from 'lucide-react'
+import Container from '../Container'
 import { useHeader } from '@/hooks/useHeader'
-import HeaderLogo from './Header/Logo'
-import Navigation from './Header/Navigation'
-import SearchButton from './Header/SearchButton'
-import CartButton from './Header/CartButton'
-import UserDropdown from './Header/UserDropdown'
-import MobileMenu from './Header/MobileMenu'
-import SearchOverlay from './Header/SearchOverlay'
+import HeaderLogo from './Logo'
+import Navigation from './Navigation'
+import SearchButton from './SearchButton'
+import NotificationBell from './NotificationBell'
+import CartButton from './CartButton'
+import UserDropdown from './UserDropdown'
+import MobileMenu from './MobileMenu'
+import SearchOverlay from './SearchOverlay'
 import Link from 'next/link'
-import Container from './Container'
-import { NAVIGATION, SELLER_MENU_ITEMS, USER_MENU_ITEMS } from './Header/const'
+
+const NAVIGATION = [
+    { name: 'Explore', href: '/explore' },
+    { name: 'Categories', href: '/categories' },
+    { name: 'Top Creators', href: '/creators' },
+    { name: 'Hire', href: '/hire', icon: Users }
+]
+
+const USER_MENU_ITEMS = [
+    { name: 'My Purchases', href: '/account/purchases', icon: Package },
+    { name: 'Wishlist', href: '/account/wishlist', icon: Heart },
+    { name: 'Messages', href: '/account/messages', icon: MessageSquare },
+    { name: 'Profile', href: '/account/profile', icon: User },
+    { name: 'Settings', href: '/account/settings', icon: Settings }
+]
+
+const SELLER_MENU_ITEMS = [
+    { name: 'Dashboard', href: '/dashboard', icon: Briefcase },
+    { name: 'My Products', href: '/seller/products', icon: Package },
+    { name: 'Analytics', href: '/seller/analytics', icon: BarChart3 },
+    { name: 'Earnings', href: '/seller/earnings', icon: DollarSign },
+    { name: 'Messages', href: '/seller/messages', icon: MessageSquare },
+    { name: 'Settings', href: '/seller/settings', icon: Settings }
+]
 
 export default function Header() {
     const {
@@ -24,6 +48,8 @@ export default function Header() {
         setDropdownOpen,
         cartCount,
         currentRole,
+        userRoles,
+        notifications,
         searchOpen,
         setSearchOpen,
         dropdownRef,
@@ -62,13 +88,14 @@ export default function Header() {
                             {user && (
                                 <>
                                     {/* Notifications */}
-                                    {/* Add Notication Bell */}
+                                    <NotificationBell count={notifications} />
 
                                     {/* Cart */}
                                     <CartButton count={cartCount} />
                                 </>
                             )}
 
+                            {/* User Menu / Sign In */}
                             {user ? (
                                 <UserDropdown
                                     ref={dropdownRef}
@@ -127,4 +154,3 @@ export default function Header() {
         </>
     )
 }
-

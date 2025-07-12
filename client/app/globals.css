@@ -7,29 +7,7 @@
   --brand-dark: #000000;
 }
 
-@font-face {
-  font-family: 'League Spartan';
-  font-weight: 700;
-  font-display: swap;
-  src: local('League Spartan Bold'),
-       url('/fonts/league-spartan-bold.woff2') format('woff2');
-}
 
-@font-face {
-  font-family: 'Kumbh Sans';
-  font-weight: 400;
-  font-display: swap;
-  src: local('Kumbh Sans Regular'),
-       url('/fonts/kumbh-sans-regular.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Kumbh Sans';
-  font-weight: 500;
-  font-display: swap;
-  src: local('Kumbh Sans Medium'),
-       url('/fonts/kumbh-sans-medium.woff2') format('woff2');
-}
 
 .skip-link {
   position: absolute;
