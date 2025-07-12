@@ -1,34 +1,28 @@
-FROM node:22 AS deps
+# Base image for dependencies
+FROM node:18 AS deps
 WORKDIR /app
 COPY client/package*.json ./
 RUN npm install --force
 
-FROM node:22 AS client-development
+# Client Development Stage
+FROM node:18 AS client-development
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY client ./
+COPY client ./ 
 EXPOSE 5173
-ENV NEXT_TELEMETRY_DISABLED=1
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "dev"]  # ✅ Move to CMD
 
-FROM node:22-alpine AS builder
+# Build the Next.js app
+FROM node:18-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY client ./
+COPY client ./  
+RUN npm run build 
 
-# Accept build arguments
-ARG NEXT_PUBLIC_API_URL=http://localhost:5000
-ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
-
-# Set as environment variables for the build
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
-
-RUN npm run build
-
-FROM node:22-alpine AS client-production
+# Production image with Node.js server
+FROM node:18-alpine AS client-production
 WORKDIR /app
-ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
@@ -36,7 +30,8 @@ COPY --from=builder /app/package.json ./package.json
 EXPOSE 3000
 CMD ["npm", "start"]
 
-FROM node:22-alpine AS client-qa
+# QA Image for testing environment
+FROM node:18-alpine AS client-qa
 WORKDIR /app
 ENV NODE_ENV=qa
 COPY --from=builder /app/public ./public

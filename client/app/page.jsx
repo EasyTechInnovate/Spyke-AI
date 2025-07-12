@@ -1,14 +1,22 @@
 "use client"
+import CuratedUseCases from "@/components/landing/CuratedUseCases"
+import FeatureCards from "@/components/landing/FeaturedCollection"
+import FeaturedCollections from "@/components/landing/FeaturedCollection"
+import FeaturedPrompts from "@/components/landing/FeaturePrompt"
+import HeroSection from "@/components/landing/HeroSection"
+import QuickFilters from "@/components/landing/QuickFilters"
+import Footer from "@/components/layout/Footer"
+import Header from "@/components/layout/Header"
 
-import HeroSection from "@/components/features/landing/HeroSection"
-import PageLayout from "@/components/shared/layout/PageLayout"
-
-export const dynamic = 'force-dynamic'
 
 export default function HomePage() {
   return (
-    <PageLayout>
-      <HeroSection />
-    </PageLayout>
+    <>
+      <Header />
+      <main className="min-h-screen">
+        <HeroSection />
+      </main>
+      <Footer />
+    </>
   )
 }

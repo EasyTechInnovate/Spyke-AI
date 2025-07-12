@@ -16,8 +16,6 @@ export const validateRequest = (schema, target = 'body') => {
                 break;
         }
 
-        console.log(dataToValidate)
-
         const result = schema.safeParse(dataToValidate);
         
 

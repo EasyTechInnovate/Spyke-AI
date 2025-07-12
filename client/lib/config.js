@@ -1,3 +1,4 @@
+import config from '@/config';
 import { 
   Activity,
   Upload
@@ -13,7 +14,7 @@ export const appConfig = {
   },
 
   api: {
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
+    baseURL: config.apiUrl,
     healthCheckInterval: 30000, 
     version: "v1"
   },

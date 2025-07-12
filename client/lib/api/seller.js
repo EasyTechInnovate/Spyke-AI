@@ -7,6 +7,8 @@ export const sellerAPI = {
      */
     createProfile: async (data) => {
         const token = localStorage.getItem('authToken') || localStorage.getItem('accessToken') || localStorage.getItem('sellerAccessToken')
+        console.log('Token found:', !!token)
+        console.log('Sending request with token:', token ? 'Yes' : 'No')
         const response = await apiClient.post('v1/seller/profile', data, {
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -23,20 +25,6 @@ export const sellerAPI = {
     getProfile: async () => {
         const response = await apiClient.get('v1/seller/profile')
         return response.data
-    },
-    
-    acceptCommissionOffer: async () => {
-        const res = await apiClient.post('v1/seller/commission/accept')
-        return res?.data
-    },
-    
-    // Submit counter offer
-    submitCounterOffer: async ({ rate, reason }) => {
-        const res = await apiClient.post('v1/seller/commission/counter-offer', { 
-            rate, 
-            reason 
-        })
-        return res?.data
     },
 
     /**

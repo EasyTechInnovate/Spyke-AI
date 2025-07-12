@@ -1,14 +1,13 @@
-import { safeLocalStorage, safeSessionStorage, safeWindow } from '@/lib/utils/browser'
+import config from '@/config'
 
 class ApiClient {
     constructor() {
-        this.baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+        this.baseURL = config.apiUrl
         this.defaultHeaders = {
             'Content-Type': 'application/json'
         }
         this.isRefreshing = false
         this.refreshSubscribers = []
-        this.authToken = null // Cache token in memory
     }
 
     // Subscribe to token refresh
@@ -24,59 +23,51 @@ class ApiClient {
 
     // Helper method to build full URL
     buildURL(endpoint) {
+        // Remove leading slash if present
         const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint
         return `${this.baseURL}/${cleanEndpoint}`
     }
-
     // Helper method to handle responses
     async handleResponse(response, originalRequest) {
-        // Handle 401 Unauthorized
-        if (response.status === 401) {
+        // Handle 401 Unauthorized - token might be expired
+        if (response.status === 401 && !originalRequest._retry) {
             const error = await response
                 .clone()
                 .json()
                 .catch(() => ({}))
 
-            // Don't redirect if this is a login attempt
+            // Check if this is a seller-specific endpoint
+            const isSellerEndpoint = originalRequest.url.includes('/seller/')
+
+            if (isSellerEndpoint) {
+                console.error('Seller authentication failed:', {
+                    endpoint: originalRequest.url,
+                    hasToken: !!this.getAuthHeaders().Authorization
+                })
+            }
+
             const isLoginAttempt = originalRequest.url.includes('/auth/login')
-            if (isLoginAttempt) {
+            const isUnconfirmed = error?.message?.toLowerCase().includes('not confirmed')
+            const isInvalidCreds = error?.message?.toLowerCase().includes('invalid')
+
+            if (isLoginAttempt && (isUnconfirmed || isInvalidCreds)) {
                 throw {
                     status: response.status,
                     statusText: response.statusText,
-                    message: error.message || 'Invalid credentials',
+                    message: error.message || 'Login failed',
                     data: error,
-                    response: {
-                        status: response.status,
-                        data: error
-                    }
+                    errors: error.errors || {}
                 }
             }
 
-            // For other 401s, clear auth and redirect
-            if (!originalRequest._retry) {
-                originalRequest._retry = true
-
-                // Clear all auth data
-                this.clearAuth()
-
-                // Only redirect if not already on signin page
-                const location = safeWindow.getLocation()
-                if (location.pathname !== '/signin') {
-                    // Store the intended destination
-                    safeSessionStorage.setItem('redirectAfterLogin', location.pathname)
-                    safeWindow.redirect('/signin')
-                }
-            }
-
+            // For other 401 errors
             throw {
                 status: response.status,
                 statusText: response.statusText,
-                message: 'Authentication required',
-                authError: true,
-                response: {
-                    status: response.status,
-                    data: error
-                }
+                message: error.message || 'Authentication required. Please log in.',
+                data: error,
+                errors: error.errors || {},
+                authError: true
             }
         }
 
@@ -86,51 +77,42 @@ class ApiClient {
             throw {
                 status: response.status,
                 statusText: response.statusText,
-                message: error.message || `Request failed with status ${response.status}`,
+                message: error.message || 'An error occurred',
                 data: error,
-                errors: error.errors || {},
-                response: {
-                    status: response.status,
-                    data: error
-                }
+                errors: error.errors || {}
             }
         }
 
-        // Handle successful responses
+        // Handle empty responses
         const text = await response.text()
         return text ? JSON.parse(text) : null
     }
 
     // Create request with retry logic
-    async makeRequest(url, options) {
-        const authHeaders = this.getAuthHeaders()
-        const request = {
-            url,
-            ...options,
-            headers: {
-                ...this.defaultHeaders,
-                ...authHeaders,
-                ...options.headers
-            }
-        }
 
-        try {
-            const response = await fetch(url, request)
-            return this.handleResponse(response, request)
-        } catch (error) {
-            // Ensure error has proper structure
-            if (!error.response) {
-                console.error('Network or parsing error:', error)
-                throw {
-                    status: 0,
-                    message: error.message || 'Network error occurred',
-                    networkError: true,
-                    originalError: error
-                }
-            }
-            throw error
+async makeRequest(url, options) {
+    const authHeaders = this.getAuthHeaders()
+    console.log('Auth headers:', authHeaders) // Add this debug line
+    
+    const request = {
+        url,
+        ...options,
+        headers: {
+            ...this.defaultHeaders,
+            ...authHeaders,  // This should include Authorization
+            ...options.headers
         }
     }
+    
+    console.log('Final request headers:', request.headers) // Add this debug line
+
+    try {
+        const response = await fetch(url, request)
+        return this.handleResponse(response, request)
+    } catch (error) {
+        // ... error handling
+    }
+}
 
     // GET request
     async get(endpoint, options = {}) {
@@ -175,40 +157,34 @@ class ApiClient {
         })
     }
 
-    // Improved auth header management
     getAuthHeaders() {
-        // First check memory cache
-        if (this.authToken) {
-            return { Authorization: `Bearer ${this.authToken}` }
-        }
+        let token = null
 
-        // Then check localStorage
         if (typeof window !== 'undefined') {
-            const token = localStorage.getItem('authToken')
-            if (token) {
-                this.authToken = token // Cache it
-                return { Authorization: `Bearer ${token}` }
+            // Try multiple possible token keys
+            token = localStorage.getItem('authToken') || localStorage.getItem('accessToken') || localStorage.getItem('sellerAccessToken')
+
+            // Debug log in development
+            if (process.env.NODE_ENV === 'development' && !token) {
+                console.warn('No auth token found in localStorage')
             }
         }
 
-        return {}
+        return token ? { Authorization: `Bearer ${token}` } : {}
     }
-
-    // Check if authenticated
     isAuthenticated() {
         const headers = this.getAuthHeaders()
         return !!headers.Authorization
     }
-
-    // Get current token
     getCurrentToken() {
-        return this.authToken || (typeof window !== 'undefined' ? localStorage.getItem('authToken') : null)
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('authToken') || localStorage.getItem('accessToken') || localStorage.getItem('sellerAccessToken')
+        }
+        return null
     }
 
     // Set auth token
     setAuthToken(token) {
-        this.authToken = token // Update memory cache
-
         if (typeof window !== 'undefined') {
             if (token) {
                 localStorage.setItem('authToken', token)
@@ -218,66 +194,28 @@ class ApiClient {
         }
     }
 
-    // Clear all auth data
-    clearAuth() {
-        this.authToken = null
-
-        if (typeof window !== 'undefined') {
-            // Clear all possible auth keys
-            const authKeys = ['authToken', 'refreshToken', 'user', 'roles', 'accessToken', 'sellerAccessToken']
-            authKeys.forEach((key) => localStorage.removeItem(key))
-
-            // Clear auth cookies
-            document.cookie = 'authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT'
-            document.cookie = 'roles=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT'
-
-            // Clear session storage
-            sessionStorage.removeItem('currentUser')
-        }
-    }
-
-    // Logout method
-    async logout() {
-        try {
-            // Try to call logout endpoint if exists
-            await this.post('v1/auth/logout').catch(() => {
-                // Ignore errors - we'll clear local data anyway
-            })
-        } finally {
-            // Always clear local auth data
-            this.clearAuth()
-
-            // Redirect to signin
-            if (typeof window !== 'undefined') {
-                window.location.href = '/signin'
-            }
-        }
-    }
-
     // Upload file
     async upload(endpoint, formData, options = {}) {
-        const url = this.buildURL(endpoint)
-        const authHeaders = this.getAuthHeaders()
-
         try {
-            const response = await fetch(url, {
+            const response = await fetch(this.buildURL(endpoint), {
                 method: 'POST',
                 headers: {
-                    ...authHeaders,
-                    // Don't set Content-Type for FormData
+                    ...this.getAuthHeaders(),
                     ...options.headers
                 },
                 body: formData,
                 ...options
             })
-
             return this.handleResponse(response, {
-                url,
+                url: this.buildURL(endpoint),
                 method: 'POST',
-                headers: authHeaders
+                headers: {
+                    ...this.getAuthHeaders(),
+                    ...options.headers
+                }
             })
         } catch (error) {
-            console.error('Upload error:', error)
+            console.error('API Upload Error:', error)
             throw error
         }
     }
@@ -295,34 +233,28 @@ class ApiClient {
             })
 
             if (!response.ok) {
-                const error = await response.json().catch(() => ({}))
-                throw {
-                    status: response.status,
-                    message: error.message || `Download failed: ${response.statusText}`
-                }
+                throw new Error(`Download failed: ${response.statusText}`)
             }
 
             const blob = await response.blob()
 
             // Create download link
-            if (typeof window !== 'undefined') {
-                const url = window.URL.createObjectURL(blob)
-                const link = document.createElement('a')
-                link.href = url
-                link.download = filename || 'download'
-                document.body.appendChild(link)
-                link.click()
+            const url = window.URL.createObjectURL(blob)
+            const link = document.createElement('a')
+            link.href = url
+            link.download = filename || 'download'
+            document.body.appendChild(link)
+            link.click()
 
-                // Cleanup
-                setTimeout(() => {
-                    document.body.removeChild(link)
-                    window.URL.revokeObjectURL(url)
-                }, 100)
-            }
+            // Cleanup
+            setTimeout(() => {
+                document.body.removeChild(link)
+                window.URL.revokeObjectURL(url)
+            }, 100)
 
             return { success: true, filename }
         } catch (error) {
-            console.error('Download error:', error)
+            console.error('API Download Error:', error)
             throw error
         }
     }
@@ -384,16 +316,7 @@ class ApiClient {
         }
     }
 }
-
-// Create singleton instance
 const apiClient = new ApiClient()
 
-// Only run in browser
-if (typeof window !== 'undefined') {
-    // Make it available globally for debugging
-    window.apiClient = apiClient
-}
-
-// Auth API will be attached after import to avoid circular dependency
-
 export default apiClient
+

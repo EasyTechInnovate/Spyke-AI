@@ -4,8 +4,8 @@ export const dynamic = 'force-dynamic'
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import Container from '@/components/shared/layout/Container'
-import Header from '@/components/shared/layout/Header'
+import Container from '@/components/layout/Container'
+import Header from '@/components/layout/Header'
 import { toast } from 'sonner'
 import api from '@/lib/api'
 import { checkPasswordStrength, countryCodes, validateEmail, validatePhone, formatPhone } from '@/lib/utils/utils'
@@ -48,7 +48,7 @@ export default function SignupPage() {
             }
         }
 
-        if (showCountryDropdown && typeof window !== 'undefined') {
+        if (showCountryDropdown) {
             document.addEventListener('mousedown', handleClickOutside)
             return () => document.removeEventListener('mousedown', handleClickOutside)
         }
@@ -144,6 +144,7 @@ export default function SignupPage() {
         async (e) => {
             e.preventDefault()
 
+            // Mark all fields as touched
             setTouched({
                 emailAddress: true,
                 phoneNumber: true,
@@ -155,13 +156,14 @@ export default function SignupPage() {
 
             setLoading(true)
             try {
+                // Remove + from country code and any non-digits from phone number
                 const countryCodeDigits = formData.countryCode.replace(/\D/g, '')
                 const phoneNumberDigits = formData.phoneNumber.replace(/\D/g, '')
                 const fullPhoneNumber = countryCodeDigits + phoneNumberDigits
 
                 await api.auth.register({
                     emailAddress: formData.emailAddress.toLowerCase().trim(),
-                    phoneNumber: fullPhoneNumber,
+                    phoneNumber: fullPhoneNumber, // Now contains only digits, no + sign
                     password: formData.password,
                     consent: formData.consent,
                     marketingConsent: formData.marketingConsent,

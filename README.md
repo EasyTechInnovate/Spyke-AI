@@ -224,5 +224,4 @@ Each listing includes:
 * Stripe integration
 * CMS integration
 * Database schema
-* Validations
 
