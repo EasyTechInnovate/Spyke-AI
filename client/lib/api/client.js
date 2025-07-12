@@ -1,9 +1,8 @@
-import config from '@/config'
 import { safeLocalStorage, safeSessionStorage, safeWindow } from '@/lib/utils/browser'
 
 class ApiClient {
     constructor() {
-        this.baseURL = config.apiUrl
+        this.baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
         this.defaultHeaders = {
             'Content-Type': 'application/json'
         }

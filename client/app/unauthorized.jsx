@@ -3,8 +3,8 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import Container from '@/components/layout/Container'
-import Header from '@/components/layout/Header'
+import Container from '@/components/shared/layout/Container'
+import Header from '@/components/shared/layout/Header'
 
 export default function UnauthorizedPage() {
     const router = useRouter()

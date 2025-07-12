@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { authAPI } from '@/lib/api/auth'
-import Header from '@/components/layout/Header'
-import Container from '@/components/layout/Container'
+import Header from '@/components/shared/layout/Header'
+import Container from '@/components/shared/layout/Container'
 
 export default function SignInPage() {
     const router = useRouter()

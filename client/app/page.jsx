@@ -1,18 +1,12 @@
 "use client"
 
-import HeroSection from "@/components/landing/HeroSection"
-import Footer from "@/components/layout/Footer"
-import Header from "@/components/layout/Header"
-
+import HeroSection from "@/components/features/landing/HeroSection"
+import PageLayout from "@/components/shared/layout/PageLayout"
 
 export default function HomePage() {
   return (
-    <>
-      <Header />
-      <main className="min-h-screen">
-        <HeroSection />
-      </main>
-      <Footer />
-    </>
+    <PageLayout>
+      <HeroSection />
+    </PageLayout>
   )
 }

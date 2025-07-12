@@ -210,7 +210,7 @@ export default function CommonUsageExamples() {
                     <div className="bg-white rounded-lg p-6 shadow">
                         <pre className="text-sm overflow-x-auto">
                             {`// Import
-import { SpykeLogo, SpykeLogoCompact } from '@/components/SpykeLogo'
+import { SpykeLogo, SpykeLogoCompact } from '@/components/Logo'
 
 // Navbar (48px)
 <SpykeLogo sizePreset="md" priority={true} />
