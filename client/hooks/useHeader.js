@@ -2,15 +2,16 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import toast from '@/lib/utils/toast'
 import api from '@/lib/api'
+import { useCart } from './useCart'
 
 export function useHeader() {
     const router = useRouter()
     const pathname = usePathname()
+    const { cartCount } = useCart()
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [scrolled, setScrolled] = useState(false)
     const [user, setUser] = useState(null)
     const [dropdownOpen, setDropdownOpen] = useState(false)
-    const [cartCount, setCartCount] = useState(0)
     const [currentRole, setCurrentRole] = useState('user')
     const [userRoles, setUserRoles] = useState([])
     const [notifications, setNotifications] = useState(0)
@@ -113,7 +114,6 @@ export function useHeader() {
 
     const handleClearUser = () => {
         setUser(null)
-        setCartCount(0)
         setUserRoles([])
         setNotifications(0)
     }

@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "clean": "./fix-next-build.sh",
+    "clean:dev": "./fix-next-build.sh && npm run dev"
   },
   "dependencies": {
     "@next/bundle-analyzer": "^15.3.5",

@@ -1,14 +1,12 @@
-"use client"
-
-import HeroSection from "@/components/features/landing/HeroSection"
-import PageLayout from "@/components/shared/layout/PageLayout"
-
-export const dynamic = 'force-dynamic'
+import HeroSectionOptimized from '@/components/features/landing/HeroSectionOptimized'
+import FeaturedProducts from '@/components/features/landing/FeaturedProducts'
+import PageLayout from '@/components/shared/layout/PageLayout'
 
 export default function HomePage() {
   return (
     <PageLayout>
-      <HeroSection />
+      <HeroSectionOptimized />
+      <FeaturedProducts />
     </PageLayout>
   )
 }
