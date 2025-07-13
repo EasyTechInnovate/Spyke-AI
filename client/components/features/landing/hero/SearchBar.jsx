@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react'
 import { Search } from 'lucide-react'
 import { motion } from 'framer-motion'
-import GlowingButton from './GlowingButton'
 import PopularTags from './PopularTags'
 
 export default function SearchBar({ popularTags, onSearch }) {
@@ -21,38 +20,35 @@ export default function SearchBar({ popularTags, onSearch }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5, delay: 0.8 }}
-      className="w-full max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl mx-auto mb-6 sm:mb-8 px-4 sm:px-0"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.1 }}
+      className="w-full max-w-2xl mx-auto"
       id="search"
     >
       <div className="relative group">
-        {/* Animated border */}
-        <div className="absolute -inset-1 bg-gradient-to-r from-brand-primary via-green-400 to-brand-primary rounded-xl sm:rounded-2xl opacity-30 blur-md sm:blur-lg group-hover:opacity-50 animate-gradient bg-400 transition duration-300" />
+        {/* Subtle glow effect */}
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-brand-primary/20 to-brand-secondary/20 rounded-2xl opacity-0 group-hover:opacity-100 blur transition duration-500" />
         
-        <div className="relative flex flex-col sm:flex-row items-center bg-black/70 backdrop-blur-xl border border-white/20 rounded-xl sm:rounded-2xl p-1.5 sm:p-2 shadow-2xl hover:border-brand-primary/50 transition-all duration-300">
-          <div className="flex items-center w-full sm:flex-1">
-            <Search className="ml-3 sm:ml-4 h-5 w-5 sm:h-6 sm:w-6 text-gray-400 flex-shrink-0" />
+        <div className="relative flex items-center bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:bg-white/[0.07] hover:border-white/20 transition-all duration-300">
+          <div className="flex items-center flex-1">
+            <Search className="ml-4 md:ml-5 h-5 w-5 text-gray-500" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Search AI prompts..."
-              className="flex-1 px-3 sm:px-4 py-3 sm:py-4 bg-transparent text-white placeholder:text-gray-400 focus:outline-none text-sm sm:text-base lg:text-lg"
+              placeholder="Search AI prompts, tools, or templates..."
+              className="flex-1 px-3 md:px-4 py-3 md:py-4 bg-transparent text-white placeholder:text-gray-500 focus:outline-none text-sm md:text-base font-light"
               aria-label="Search AI prompts"
             />
           </div>
-          <div className="w-full sm:w-auto mt-2 sm:mt-0 px-1.5 sm:px-0">
-            <GlowingButton
-              onClick={handleSearch}
-              primary={true}
-              className="w-full sm:w-auto px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 bg-brand-primary hover:bg-brand-primary/90 text-black font-bold rounded-lg sm:rounded-xl transition-all duration-200 text-sm sm:text-base"
-            >
-              Search
-            </GlowingButton>
-          </div>
+          <button
+            onClick={handleSearch}
+            className="px-4 md:px-6 py-3 md:py-4 bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary font-medium transition-all duration-200 border-l border-white/10 text-sm md:text-base"
+          >
+            Search
+          </button>
         </div>
       </div>
 

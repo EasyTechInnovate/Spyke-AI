@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useMemo } from 'react'
 import { DEFAULT_FILTERS } from '@/data/explore/constants'
 

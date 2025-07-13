@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect, useCallback } from 'react'
 
 const CART_STORAGE_KEY = 'spyke_cart'
@@ -40,7 +42,9 @@ export function useCart() {
         }
       }
     } catch (error) {
-      console.error('Error loading cart:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error loading cart:', error)
+      }
     } finally {
       setLoading(false)
     }
@@ -54,7 +58,9 @@ export function useCart() {
         setLastUpdate(Date.now())
       }
     } catch (error) {
-      console.error('Error saving cart:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error saving cart:', error)
+      }
     }
   }
 

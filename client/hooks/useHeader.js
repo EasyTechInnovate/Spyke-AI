@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import toast from '@/lib/utils/toast'
@@ -41,7 +43,9 @@ export function useHeader() {
                         setCurrentRole('user')
                     }
                 } catch {
-                    console.error('Failed to parse user data')
+                    if (process.env.NODE_ENV === 'development') {
+                        console.error('Failed to parse user data')
+                    }
                     handleClearUser()
                 }
             } else {
@@ -61,7 +65,9 @@ export function useHeader() {
             const response = await api.notifications.getUnreadCount()
             setNotifications(response?.data?.count || 0)
         } catch (err) {
-            console.error('Notifications fetch error:', err)
+            if (process.env.NODE_ENV === 'development') {
+                console.error('Notifications fetch error:', err)
+            }
         }
     }
 
@@ -122,7 +128,9 @@ export function useHeader() {
         try {
             await api.auth.logout()
         } catch (err) {
-            console.error('Logout failed:', err)
+            if (process.env.NODE_ENV === 'development') {
+                console.error('Logout failed:', err)
+            }
         } finally {
             if (typeof window !== 'undefined') {
                 localStorage.removeItem('authToken')
