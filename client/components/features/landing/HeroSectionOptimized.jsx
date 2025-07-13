@@ -7,12 +7,9 @@ import { appConfig } from '@/lib/config'
 import Container from '@/components/shared/layout/Container'
 import Link from 'next/link'
 
-// Lazy load non-critical components
-const SearchBar = dynamic(() => import('./hero/SearchBar'), {
-  loading: () => <div className="h-14 bg-gray-900 rounded-xl animate-pulse" />,
-  ssr: false
-})
+import SearchBar from './hero/SearchBar'
 
+// Only lazy load background effects as they're not critical
 const BackgroundEffects = dynamic(() => import('./hero/BackgroundEffects'), {
   ssr: false
 })
@@ -34,9 +31,17 @@ export default function HeroSectionOptimized() {
   }, [])
 
   return (
-    <section className="relative min-h-[80vh] lg:min-h-[90vh] bg-black overflow-hidden flex items-center">
-      {/* Background Effects - Lazy loaded */}
-      {mounted && <BackgroundEffects />}
+    <section className="relative min-h-[80vh] lg:min-h-[90vh] overflow-hidden flex items-center">
+      {/* Consistent background with featured section */}
+      <div className="absolute inset-0 bg-black">
+        {/* Animated gradient background */}
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-brand-primary/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-brand-secondary/20 rounded-full blur-3xl animate-pulse delay-1000" />
+        </div>
+        {/* Background Effects - Lazy loaded */}
+        {mounted && <BackgroundEffects />}
+      </div>
 
       <Container className="relative z-10 py-20">
         <div className="max-w-5xl mx-auto">

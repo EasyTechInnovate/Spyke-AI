@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "check:syntax": "node scripts/check-syntax.js",
+    "check:all": "npm run lint && npm run check:syntax",
     "clean": "./fix-next-build.sh",
     "clean:dev": "./fix-next-build.sh && npm run dev"
   },
