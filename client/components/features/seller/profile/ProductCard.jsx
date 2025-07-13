@@ -1,6 +1,7 @@
 'use client'
 
 import { Star, Eye, ShoppingCart, Heart } from 'lucide-react'
+import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 
 export default function ProductCard({ product, viewMode = 'grid', onClick }) {
     const {
@@ -28,10 +29,12 @@ export default function ProductCard({ product, viewMode = 'grid', onClick }) {
                     {/* Product Image */}
                     <div className="flex-shrink-0 w-20 h-20 bg-gray-800 rounded-lg overflow-hidden">
                         {images[0] ? (
-                            <img
+                            <OptimizedImage
                                 src={images[0]}
                                 alt={title}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                width={80}
+                                height={80}
+                                className="w-full h-full group-hover:scale-105 transition-transform duration-200"
                             />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center">

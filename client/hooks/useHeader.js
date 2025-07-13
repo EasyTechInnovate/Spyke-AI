@@ -7,7 +7,7 @@ import { useCart } from './useCart'
 export function useHeader() {
     const router = useRouter()
     const pathname = usePathname()
-    const { getCartCount } = useCart()
+    const { cartCount } = useCart()
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [scrolled, setScrolled] = useState(false)
     const [user, setUser] = useState(null)
@@ -157,7 +157,7 @@ export function useHeader() {
         user,
         dropdownOpen,
         setDropdownOpen,
-        cartCount: getCartCount(),
+        cartCount,
         currentRole,
         userRoles,
         notifications,

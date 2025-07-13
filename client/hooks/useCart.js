@@ -50,8 +50,7 @@ export function useCart() {
     try {
       if (typeof window !== 'undefined') {
         localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items))
-        // Trigger storage event for other components
-        window.dispatchEvent(new Event('storage'))
+        // Update lastUpdate to trigger re-renders in components watching cart
         setLastUpdate(Date.now())
       }
     } catch (error) {
@@ -126,6 +125,9 @@ export function useCart() {
     removeFromCart,
     clearCart,
     getCartCount,
-    getCartTotal
+    getCartTotal,
+    cartCount: getCartCount(),
+    cartTotal: getCartTotal(),
+    lastUpdate
   }
 }
