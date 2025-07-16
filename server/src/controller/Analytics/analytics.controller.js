@@ -4,6 +4,14 @@ import responseMessage from '../../constant/responseMessage.js'
 import httpError from '../../util/httpError.js'
 import logger from '../../util/logger.js'
 
+export const self= (req, res, next) => {
+        try {
+            httpResponse(req, res, 200, responseMessage.SERVICE('Analytics Events'))
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    }
+
 export const createAnalyticsEvents = async (req, res, next) => {
   try {
     const { events } = req.body

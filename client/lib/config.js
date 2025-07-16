@@ -1,6 +1,10 @@
 import { 
   Activity,
-  Upload
+  Upload,
+  Users,
+  ShoppingCart,
+  Lock,
+  BarChart3
 } from 'lucide-react';
 
 export const appConfig = {
@@ -36,22 +40,92 @@ export const appConfig = {
       name: 'System Health',
       icon: Activity,
       color: 'from-[#00FF89] to-[#FFC050]',
-      healthEndpoint: '/health',
+      healthEndpoint: '/health/self',
       description: 'Core system monitoring and self-check functionality',
       endpoints: [
-        'Service Self-Check', 
+        'Service Self-Check',
         'General Health Status'
+      ]
+    },
+    {
+      id: 'authentication',
+      name: 'Authentication',
+      icon: Lock,
+      color: 'from-[#FFC050] to-[#00FF89]',
+      healthEndpoint: '/auth/health',
+      description: 'User authentication, registration, and account management',
+      endpoints: [
+        'User Registration',
+        'User Login',
+        'Account Confirmation',
+        'Password Management',
+        'Profile Management',
+        'Token Refresh',
+        'Notifications',
+        'Email Availability Check'
       ]
     },
     {
       id: 'file-upload',
       name: 'File Upload',
-      icon: Upload, 
-      color: 'from-[#FFC050] to-[#00FF89]',
+      icon: Upload,
+      color: 'from-[#00FF89] to-[#FFC050]',
       healthEndpoint: '/upload/health',
       description: 'Upload and manage media/documents in the system',
       endpoints: [
-        'Upload File'
+        'File Upload Service'
+      ]
+    },
+    {
+      id: 'seller',
+      name: 'Seller Management',
+      icon: Users,
+      color: 'from-[#FFC050] to-[#00FF89]',
+      healthEndpoint: '/seller/health',
+      description: 'Seller profile management, verification, and commission handling',
+      endpoints: [
+        'Profile Creation',
+        'Profile Management',
+        'Verification Process',
+        'Commission Management',
+        'Stats & Analytics',
+        'Payout Management',
+        'Public Profile View',
+        'Seller Search',
+        'Admin Operations'
+      ]
+    },
+    {
+      id: 'products',
+      name: 'Product Management',
+      icon: ShoppingCart,
+      color: 'from-[#00FF89] to-[#FFC050]',
+      healthEndpoint: '/products/self',
+      description: 'Product catalog, reviews, and marketplace functionality',
+      endpoints: [
+        'Product CRUD Operations',
+        'Product Discovery',
+        'Product Reviews',
+        'Favorites & Upvotes',
+        'Related Products',
+        'Product Publishing',
+        'Seller Product Management',
+        'Admin Product Management',
+        'Product Verification'
+      ]
+    },
+    {
+      id: 'analytics',
+      name: 'Analytics & Tracking',
+      icon: BarChart3,
+      color: 'from-[#FFC050] to-[#00FF89]',
+      healthEndpoint: '/analytics/health',
+      description: 'Event tracking, analytics, and system monitoring',
+      endpoints: [
+        'Event Tracking',
+        'Analytics Data Retrieval',
+        'Statistics Generation',
+        'Data Management'
       ]
     }
   ],

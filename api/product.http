@@ -1,0 +1,184 @@
+### Product API Testing
+
+@baseUrl = http://localhost:5000/v1
+@authToken = Bearer YOUR_JWT_TOKEN_HERE
+
+### 1. Get All Products (Public)
+GET {{baseUrl}}/products
+Content-Type: application/json
+
+### 2. Get Products with Filters
+GET {{baseUrl}}/products?type=automation&category=lead_generation&industry=saas&page=1&limit=10&sortBy=rating&sortOrder=desc
+Content-Type: application/json
+
+### 3. Get Products with Search
+GET {{baseUrl}}/products?search=chatgpt&minRating=4&verifiedOnly=true
+Content-Type: application/json
+
+### 4. Get Products with Price Filter
+GET {{baseUrl}}/products?priceCategory=under_20&setupTime=instant
+Content-Type: application/json
+
+### 5. Get Single Product by Slug
+GET {{baseUrl}}/products/lead-generation-automation-chatgpt-a1b2c3d4
+Content-Type: application/json
+
+### 6. Get Related Products
+GET {{baseUrl}}/products/673a1b2c3d4e5f6789012345/related?limit=6
+Content-Type: application/json
+
+### 7. Create New Product (Authenticated - Seller/Admin)
+POST {{baseUrl}}/products
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "title": "AI Lead Generation Automation",
+  "shortDescription": "Automate your lead generation process with ChatGPT and Make.com integration",
+  "fullDescription": "This comprehensive automation solution helps businesses generate qualified leads using AI-powered conversations. The system integrates ChatGPT with Make.com to create a seamless lead qualification and follow-up process.",
+  "thumbnail": "https://example.com/thumbnail.jpg",
+  "images": [
+    "https://example.com/image1.jpg",
+    "https://example.com/image2.jpg"
+  ],
+  "previewVideo": "https://example.com/preview.mp4",
+  "type": "automation",
+  "category": "lead_generation",
+  "industry": "saas",
+  "price": 29.99,
+  "originalPrice": 49.99,
+  "toolsUsed": [
+    {
+      "name": "ChatGPT",
+      "logo": "https://example.com/chatgpt-logo.png",
+      "model": "GPT-4",
+      "link": "https://openai.com/chatgpt"
+    },
+    {
+      "name": "Make.com",
+      "logo": "https://example.com/make-logo.png",
+      "link": "https://make.com"
+    }
+  ],
+  "setupTime": "under_1_hour",
+  "targetAudience": "SaaS companies looking to automate their lead generation process",
+  "benefits": [
+    "Reduce manual lead qualification time by 80%",
+    "Increase lead conversion rates by 45%",
+    "24/7 automated lead engagement"
+  ],
+  "useCaseExamples": [
+    "Qualifying leads from website contact forms",
+    "Automated follow-up sequences",
+    "Lead scoring and prioritization"
+  ],
+  "howItWorks": [
+    "Lead submits contact form on your website",
+    "ChatGPT analyzes lead information and asks qualifying questions",
+    "Make.com processes responses and updates CRM",
+    "Qualified leads are automatically routed to sales team"
+  ],
+  "outcome": [
+    "Increased lead quality score by 60%",
+    "Reduced sales cycle time by 30%",
+    "Improved conversion rates"
+  ],
+  "hasRefundPolicy": true,
+  "hasGuarantee": true,
+  "guaranteeText": "30-day money-back guarantee if not satisfied",
+  "faqs": [
+    {
+      "question": "How long does setup take?",
+      "answer": "Setup typically takes 45-60 minutes with our step-by-step guide"
+    },
+    {
+      "question": "Do I need coding skills?",
+      "answer": "No coding required! Our automation uses no-code tools"
+    }
+  ],
+  "tags": ["automation", "lead-generation", "chatgpt", "make", "saas"],
+  "searchKeywords": ["lead generation", "automation", "ai", "chatgpt", "crm"],
+  "currentVersion": "1.0.0"
+}
+
+### 8. Update Product (Authenticated - Owner/Admin)
+PUT {{baseUrl}}/products/673a1b2c3d4e5f6789012345
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "title": "Updated AI Lead Generation Automation",
+  "price": 24.99,
+  "shortDescription": "Enhanced automation solution with improved AI capabilities"
+}
+
+### 9. Add Review to Product (Authenticated)
+POST {{baseUrl}}/products/673a1b2c3d4e5f6789012345/review
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "rating": 5,
+  "comment": "Excellent automation! Saved me hours of manual work and improved our lead quality significantly."
+}
+
+### 10. Toggle Favorite (Authenticated)
+POST {{baseUrl}}/products/673a1b2c3d4e5f6789012345/favorite
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "isFavorited": true
+}
+
+### 11. Toggle Upvote (Authenticated)
+POST {{baseUrl}}/products/673a1b2c3d4e5f6789012345/upvote
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "isUpvoted": true
+}
+
+### 12. Delete Product (Authenticated - Owner/Admin)
+DELETE {{baseUrl}}/products/673a1b2c3d4e5f6789012345
+Authorization: {{authToken}}
+
+### 13. Get All Products - Admin View (Admin Only)
+GET {{baseUrl}}/products/admin/all?page=1&limit=20&status=published
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 14. Verify Product (Admin Only)
+PATCH {{baseUrl}}/products/673a1b2c3d4e5f6789012345/verify
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "isVerified": true,
+  "isTested": true
+}
+
+### 15. Get Products by Seller
+GET {{baseUrl}}/products?sellerId=673a1b2c3d4e5f6789012345&page=1&limit=10
+Content-Type: application/json
+
+### 16. Get Products with Complex Filters
+GET {{baseUrl}}/products?type=prompt&category=content_creation&industry=marketing&priceCategory=20_to_50&setupTime=under_30_mins&minRating=4&verifiedOnly=true&sortBy=popularity&sortOrder=desc&page=1&limit=12
+Content-Type: application/json
+
+### 17. Search Products
+GET {{baseUrl}}/products?search=chatgpt%20prompt&type=prompt&minRating=4
+Content-Type: application/json
+
+### 18. Get Free Products Only
+GET {{baseUrl}}/products?priceCategory=free&sortBy=rating&sortOrder=desc
+Content-Type: application/json
+
+### 19. Get Products by Category
+GET {{baseUrl}}/products?category=ecommerce&sortBy=sales&sortOrder=desc&limit=20
+Content-Type: application/json
+
+### 20. Get Products by Industry
+GET {{baseUrl}}/products?industry=real_estate&type=automation&sortBy=createdAt&sortOrder=desc
+Content-Type: application/json

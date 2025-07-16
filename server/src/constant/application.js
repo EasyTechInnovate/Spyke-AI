@@ -170,3 +170,64 @@ export const ECommissionLimits = {
     DEFAULT_RATE: 15,
     MAX_NEGOTIATION_ROUNDS: 5
 }
+
+export const EProductType = {
+    PROMPT: 'prompt',
+    AUTOMATION: 'automation',
+    AGENT: 'agent',
+    BUNDLE: 'bundle'
+}
+
+export const EProductCategory = {
+    LEAD_GENERATION: 'lead_generation',
+    HIRING: 'hiring',
+    FOLLOW_UPS: 'follow_ups',
+    ECOMMERCE: 'ecommerce',
+    CONTENT_CREATION: 'content_creation',
+    CUSTOMER_SERVICE: 'customer_service',
+    SALES: 'sales',
+    MARKETING: 'marketing',
+    PRODUCTIVITY: 'productivity',
+    ANALYSIS: 'analysis'
+}
+
+export const EProductIndustry = {
+    COACHING: 'coaching',
+    REAL_ESTATE: 'real_estate',
+    ECOMMERCE: 'ecommerce',
+    SAAS: 'saas',
+    LOCAL_BUSINESS: 'local_business',
+    HEALTHCARE: 'healthcare',
+    EDUCATION: 'education',
+    FINANCE: 'finance',
+    TECHNOLOGY: 'technology',
+    CONSULTING: 'consulting'
+}
+
+export const EProductPriceCategory = {
+    FREE: 'free',
+    UNDER_20: 'under_20',
+    TWENTY_TO_FIFTY: '20_to_50',
+    OVER_50: 'over_50'
+}
+
+export const EProductSetupTime = {
+    INSTANT: 'instant',
+    UNDER_30_MINS: 'under_30_mins',
+    UNDER_1_HOUR: 'under_1_hour',
+    OVER_1_HOUR: 'over_1_hour'
+}
+
+export const EProductSortBy = {
+    CREATED_AT: 'createdAt',
+    POPULARITY: 'popularity',
+    RATING: 'rating',
+    PRICE: 'price',
+    SALES: 'sales'
+}
+
+export const EProductStatusNew = {
+    DRAFT: 'draft',
+    PUBLISHED: 'published',
+    ARCHIVED: 'archived'
+}
