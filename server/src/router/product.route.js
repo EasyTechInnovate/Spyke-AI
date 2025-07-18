@@ -10,7 +10,8 @@ import {
   addReviewSchema,
   toggleFavoriteSchema,
   toggleUpvoteSchema,
-  verifyProductSchema
+  verifyProductSchema,
+  updateProductStatusSchema
 } from '../schema/product.schema.js'
 import rateLimiter from '../middleware/rateLimit.js'
 
@@ -95,13 +96,28 @@ router.get(
 )
 
 router.get(
+  '/seller/:id',
+  authenticate,
+  authorize(['seller', 'admin']),
+  productController.getSellerProduct
+)
+
+router.post(
+  '/seller/:id/status',
+  authenticate,
+  authorize(['seller', 'admin']),
+  validateRequest(updateProductStatusSchema),
+  productController.updateProductStatus
+)
+
+router.get(
   '/admin/all',
   authenticate,
   authorize(['admin']),
   productController.getAllProductsAdmin
 )
 
-router.patch(
+router.post(
   '/:id/verify',
   authenticate,
   authorize(['admin']),

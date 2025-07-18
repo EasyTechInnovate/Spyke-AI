@@ -1,8 +1,7 @@
 ### Product API Testing
 
 @baseUrl = http://localhost:5000/v1
-@authToken = Bearer YOUR_JWT_TOKEN_HERE
-
+@authToken = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODY3NTVlNGFjMGJlYjNkYjQ4NjQwZWQiLCJlbWFpbEFkZHJlc3MiOiJhZG1pbkBnbWFpbC5jb20iLCJyb2xlcyI6WyJhZG1pbiJdLCJpYXQiOjE3NTI4MjExNjcsImV4cCI6MTc1MjgyNDc2N30.Hl4pqJRnunGd6secWHc7sseKj8IKgtvidAKDI4aQr8o
 ### 1. Get All Products (Public)
 GET {{baseUrl}}/products
 Content-Type: application/json
@@ -150,7 +149,7 @@ Content-Type: application/json
 Authorization: {{authToken}}
 
 ### 14. Verify Product (Admin Only)
-PATCH {{baseUrl}}/products/673a1b2c3d4e5f6789012345/verify
+POST {{baseUrl}}/products/687949b3608bcf098a52e037/verify
 Content-Type: application/json
 Authorization: {{authToken}}
 
@@ -182,3 +181,45 @@ Content-Type: application/json
 ### 20. Get Products by Industry
 GET {{baseUrl}}/products?industry=real_estate&type=automation&sortBy=createdAt&sortOrder=desc
 Content-Type: application/json
+
+### 21. Get My Products (Seller Only)
+GET {{baseUrl}}/products/seller/my-products?page=1&limit=10&status=draft
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 22. Get Single Seller Product (Seller Only)
+GET {{baseUrl}}/products/seller/687949b3608bcf098a52e037
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 23. Update Product Status (Seller Only)
+POST {{baseUrl}}/products/seller/687949b3608bcf098a52e037/status
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "status": "draft"
+}
+
+### 24. Update Product Status to Published (Seller Only)
+POST {{baseUrl}}/products/seller/687949b3608bcf098a52e037/status
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "status": "published"
+}
+
+### 25. Update Product Status to Archived (Seller Only)
+POST {{baseUrl}}/products/seller/687949b3608bcf098a52e037/status
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "status": "archived"
+}
+
+### 26. Publish Product (Legacy - Use status endpoint instead)
+POST {{baseUrl}}/products/687949b3608bcf098a52e037/publish
+Content-Type: application/json
+Authorization: {{authToken}}

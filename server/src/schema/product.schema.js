@@ -222,3 +222,10 @@ export const getAllProductsAdminSchema = z.object({
   sortBy: z.enum(['createdAt', 'updatedAt', 'title', 'price', 'sales']).optional(),
   sortOrder: z.enum(['asc', 'desc']).optional()
 })
+
+// Schema for updating product status
+export const updateProductStatusSchema = z.object({
+  status: z.enum(Object.values(EProductStatusNew), {
+    errorMap: () => ({ message: 'Status must be one of: draft, published, archived' })
+  })
+})
