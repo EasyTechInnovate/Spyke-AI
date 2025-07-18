@@ -8,34 +8,28 @@ export default function PopularTags({ tags, onTagClick }) {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.5, delay: 1 }}
-      className="flex flex-wrap justify-center gap-1.5 sm:gap-2 mt-3 sm:mt-4"
+      transition={{ duration: 0.4, delay: 0.2 }}
+      className="flex flex-wrap justify-center items-center gap-2 mt-4"
     >
-      <span className="text-gray-400 text-xs sm:text-sm">Popular:</span>
+      <span className="text-gray-500 text-sm">Popular:</span>
       {tags.map((tag, i) => (
         <motion.button
           key={tag}
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           transition={{ 
             duration: 0.3, 
-            delay: 1.1 + i * 0.1,
-            type: "spring",
-            stiffness: 200
+            delay: 0.25 + i * 0.03
           }}
           whileHover={!isMobile ? { 
-            scale: 1.05,
-            boxShadow: "0 0 20px rgba(0,255,137,0.5)"
+            y: -2
           } : {}}
           whileTap={{ scale: 0.95 }}
           onClick={() => onTagClick(tag)}
-          className="relative px-2 sm:px-3 py-0.5 sm:py-1 text-xs sm:text-sm rounded-full overflow-hidden group"
+          className="px-3 py-1 text-sm text-gray-400 hover:text-brand-primary hover:bg-white/5 rounded-full transition-all duration-200"
           aria-label={`Search for ${tag}`}
         >
-          <span className="absolute inset-0 bg-gradient-to-r from-brand-primary/0 via-brand-primary/20 to-brand-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-          <span className="relative z-10 block px-2 sm:px-3 py-0.5 sm:py-1 text-xs sm:text-sm rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:text-brand-primary transition-colors duration-200">
-            {tag}
-          </span>
+          {tag}
         </motion.button>
       ))}
     </motion.div>

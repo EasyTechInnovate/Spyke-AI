@@ -1,105 +1,152 @@
 'use client'
 
+import { motion } from 'framer-motion'
+import { Briefcase, Megaphone, User, TrendingUp, Users, Mail } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
-import Card from '@/components/shared/ui/card'
-import Badge from '@/components/shared/ui/badge'
-import { Briefcase, Target, TrendingUp, Users, Code, Palette } from 'lucide-react'
 import Link from 'next/link'
 
+const useCases = [
+  {
+    id: 'recruiters',
+    role: 'Recruiters',
+    title: 'Streamline Your Hiring Process',
+    description: 'Automate candidate screening, follow-ups, and interview scheduling',
+    icon: Users,
+    benefits: ['Save 10+ hours/week', 'Better candidate experience', '3x faster hiring'],
+    link: '/explore?category=hiring&industry=all',
+    color: 'bg-blue-500'
+  },
+  {
+    id: 'marketers',
+    role: 'Marketers',
+    title: 'Scale Your Marketing Efforts',
+    description: 'Create content, automate campaigns, and analyze performance',
+    icon: Megaphone,
+    benefits: ['50% more content', 'Automated workflows', 'Real-time insights'],
+    link: '/explore?category=marketing&category=content_creation',
+    color: 'bg-purple-500'
+  },
+  {
+    id: 'solopreneurs',
+    role: 'Solopreneurs',
+    title: 'Build Your Business Faster',
+    description: 'All-in-one tools for sales, marketing, and operations',
+    icon: User,
+    benefits: ['One-person powerhouse', 'Automate repetitive tasks', 'Focus on growth'],
+    link: '/explore?industry=local_business&type=bundle',
+    color: 'bg-green-500'
+  },
+  {
+    id: 'sales-teams',
+    role: 'Sales Teams',
+    title: 'Close More Deals',
+    description: 'Lead generation, qualification, and automated follow-ups',
+    icon: TrendingUp,
+    benefits: ['2x conversion rate', 'Never miss a lead', 'Personalized at scale'],
+    link: '/explore?category=sales&category=lead_generation',
+    color: 'bg-orange-500'
+  },
+  {
+    id: 'consultants',
+    role: 'Consultants',
+    title: 'Deliver More Value',
+    description: 'Professional tools for analysis, reporting, and client management',
+    icon: Briefcase,
+    benefits: ['Professional reports', 'Client automation', 'Scale your practice'],
+    link: '/explore?industry=consulting&category=analysis',
+    color: 'bg-indigo-500'
+  },
+  {
+    id: 'customer-success',
+    role: 'Customer Success',
+    title: 'Delight Your Customers',
+    description: 'Automate support, onboarding, and customer engagement',
+    icon: Mail,
+    benefits: ['24/7 support', 'Instant responses', 'Higher satisfaction'],
+    link: '/explore?category=customer_service&category=follow_ups',
+    color: 'bg-pink-500'
+  }
+]
+
 export default function CuratedUseCases() {
-  const useCases = [
-    {
-      role: 'Recruiters',
-      icon: Users,
-      description: 'Screen candidates, write job descriptions, and automate outreach',
-      promptCount: 87,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
-    },
-    {
-      role: 'Marketers',
-      icon: Target,
-      description: 'Create campaigns, generate content ideas, and analyze metrics',
-      promptCount: 156,
-      color: 'text-brand-primary',
-      bgColor: 'bg-brand-primary/10',
-    },
-    {
-      role: 'Solopreneurs',
-      icon: Briefcase,
-      description: 'Build products, manage tasks, and scale your business',
-      promptCount: 123,
-      color: 'text-brand-secondary',
-      bgColor: 'bg-brand-secondary/10',
-    },
-    {
-      role: 'Developers',
-      icon: Code,
-      description: 'Debug code, write documentation, and optimize algorithms',
-      promptCount: 98,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100',
-    },
-    {
-      role: 'Designers',
-      icon: Palette,
-      description: 'Generate concepts, create variations, and get feedback',
-      promptCount: 76,
-      color: 'text-pink-600',
-      bgColor: 'bg-pink-100',
-    },
-    {
-      role: 'Sales Teams',
-      icon: TrendingUp,
-      description: 'Qualify leads, craft pitches, and close deals faster',
-      promptCount: 112,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100',
-    },
-  ]
-
   return (
-    <section className="py-16 md:py-24 bg-white dark:bg-brand-dark">
+    <section className="relative py-20 lg:py-24 bg-gray-950">
       <Container>
-        <div className="text-center mb-12">
-          <Badge variant="secondary" className="mb-4">
-            <Target className="h-3 w-3 mr-1" />
-            Tailored Solutions
-          </Badge>
-          <h2 className="font-league-spartan font-bold text-3xl md:text-5xl text-brand-dark dark:text-white mb-4">
-            Find Prompts for Your Role
-          </h2>
-          <p className="font-kumbh-sans text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Curated AI prompts and tools designed specifically for your profession
-          </p>
-        </div>
+        <div className="max-w-7xl mx-auto">
+          {/* Section Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 font-title">
+              Built for Your Role
+            </h2>
+            <p className="text-lg text-gray-400 max-w-2xl mx-auto font-body">
+              Find AI tools and automations specifically designed for your job
+            </p>
+          </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {useCases.map((useCase) => {
-            const Icon = useCase.icon
-            return (
-              <Link key={useCase.role} href={`/use-cases/${useCase.role.toLowerCase()}`}>
-                <Card className="p-6 h-full group cursor-pointer">
-                  <div className="flex items-start space-x-4">
-                    <div className={`w-12 h-12 ${useCase.bgColor} rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform`}>
-                      <Icon className={`h-6 w-6 ${useCase.color}`} />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-league-spartan font-bold text-xl text-brand-dark dark:text-white mb-2">
-                        {useCase.role}
-                      </h3>
-                      <p className="font-kumbh-sans text-gray-600 dark:text-gray-400 text-sm mb-3">
+          {/* Use Cases Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {useCases.map((useCase, index) => (
+              <motion.div
+                key={useCase.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+              >
+                <Link
+                  href={useCase.link}
+                  className="group block h-full"
+                >
+                  <div className="relative h-full bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-brand-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-brand-primary/10">
+                    {/* Content */}
+                    <div className="p-6 flex flex-col h-full">
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <span className="text-sm font-medium text-brand-primary">
+                            {useCase.role}
+                          </span>
+                          <h3 className="text-xl font-semibold text-white mt-1 font-title">
+                            {useCase.title}
+                          </h3>
+                        </div>
+                        <div className={`w-10 h-10 rounded-lg ${useCase.color} bg-opacity-20 flex items-center justify-center`}>
+                          <useCase.icon className={`w-5 h-5 ${useCase.color.replace('bg-', 'text-')}`} />
+                        </div>
+                      </div>
+                      
+                      {/* Description */}
+                      <p className="text-sm text-gray-400 mb-6 flex-1 font-body">
                         {useCase.description}
                       </p>
-                      <span className="font-kumbh-sans text-sm text-brand-primary font-medium">
-                        {useCase.promptCount} prompts available
-                      </span>
+                      
+                      {/* Benefits */}
+                      <div className="space-y-2 mb-6">
+                        {useCase.benefits.map((benefit, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-brand-primary" />
+                            <span className="text-sm text-gray-300 font-body">{benefit}</span>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {/* CTA */}
+                      <div className="flex items-center text-brand-primary group-hover:text-brand-primary/80 transition-colors">
+                        <span className="text-sm font-medium">Browse tools</span>
+                        <span className="ml-2 transform group-hover:translate-x-1 transition-transform">→</span>
+                      </div>
                     </div>
                   </div>
-                </Card>
-              </Link>
-            )
-          })}
+                </Link>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </Container>
     </section>

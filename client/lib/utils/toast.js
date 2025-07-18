@@ -186,7 +186,7 @@ export const validationToasts = {
 }
 
 // Default export provides the basic toast functions
-export default {
+const toastUtils = {
   success: toastSuccess,
   error: toastError,
   info: toastInfo,
@@ -204,3 +204,5 @@ export default {
   search: searchToasts,
   validation: validationToasts
 }
+
+export default toastUtils

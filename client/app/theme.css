@@ -1,0 +1,8 @@
+/* Tailwind v4 Theme Configuration */
+/* Using CSS custom properties for color definitions */
+:root {
+  /* Brand Colors for Tailwind utilities */
+  --color-brand-primary: #00FF89;
+  --color-brand-secondary: #FFC050;
+  --color-brand-dark: #121212;
+}

@@ -1,30 +1,10 @@
-import { League_Spartan, Kumbh_Sans } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'sonner'
 import { appConfig } from '@/lib/config'
 import Script from 'next/script'
 import { AnalyticsProvider } from '@/providers/AnalyticsProvider'
-import { Analytics } from '@vercel/analytics/react'
-import ConsentBanner from '@/components/analytics/ConsentBanner'
-import AnalyticsDebugPanel from '@/components/analytics/DebugPanel'
-
-const leagueSpartan = League_Spartan({
-    variable: '--font-league-spartan',
-    subsets: ['latin'],
-    weight: ['400', '700', '900'],
-    display: 'swap',
-    preload: true,
-    fallback: ['system-ui', 'arial']
-})
-
-const kumbhSans = Kumbh_Sans({
-    variable: '--font-kumbh-sans',
-    subsets: ['latin'],
-    weight: ['400', '500', '600', '700'],
-    display: 'swap',
-    preload: true,
-    fallback: ['system-ui', 'arial']
-})
+import AnalyticsWrapper from '@/components/analytics/AnalyticsWrapper'
+import { fontVariables } from '@/lib/fonts'
 
 const structuredData = {
     '@context': 'https://schema.org',
@@ -227,7 +207,7 @@ export default function RootLayout({ children }) {
     return (
         <html
             lang="en"
-            className={`${leagueSpartan.variable} ${kumbhSans.variable} scroll-smooth`}>
+            className={`${fontVariables} scroll-smooth`}>
             <head>
                 <meta charSet="utf-8" />
                 <link
@@ -277,23 +257,17 @@ export default function RootLayout({ children }) {
             </head>
 
             <body
-                className={`font-kumbh-sans bg-black text-white antialiased min-h-screen`}
+                className={`font-body bg-brand-dark text-white antialiased min-h-screen`}
                 suppressHydrationWarning={true}>
                 <a
                     href="#main-content"
-                    className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-brand-primary text-black px-4 py-2 rounded-md font-bold z-50">
+                    className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-brand-primary text-brand-primary-text px-4 py-2 rounded-md font-bold z-50">
                     Skip to main content
                 </a>
 
                 <AnalyticsProvider>
                     <main id="main-content">{children}</main>
-                    {process.env.NODE_ENV === 'production' && process.env.VERCEL === '1' && (
-                        <Analytics />
-                    )}
-                    <ConsentBanner />
-                    {process.env.NODE_ENV === 'development' && (
-                        <AnalyticsDebugPanel />
-                    )}
+                    <AnalyticsWrapper />
                 </AnalyticsProvider>
 
                 <Toaster
