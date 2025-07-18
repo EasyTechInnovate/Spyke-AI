@@ -1,13 +1,16 @@
-import { Package2, AlertCircle } from 'lucide-react'
+import { memo, useCallback } from 'react'
+import { FixedSizeGrid as Grid } from 'react-window'
 import ProductCardLite from './ProductCardLite'
-import { memo } from 'react'
+import { Package2, AlertCircle } from 'lucide-react'
 
-const ProductGrid = memo(function ProductGrid({ 
-  products, 
-  viewMode, 
+const VirtualizedProductGrid = memo(function VirtualizedProductGrid({
+  products,
+  viewMode,
   loading,
   error,
-  onClearFilters 
+  onClearFilters,
+  containerHeight = 800,
+  containerWidth,
 }) {
   if (loading) {
     return (
@@ -56,23 +59,48 @@ const ProductGrid = memo(function ProductGrid({
     )
   }
 
-  return (
-    <div className={`
-      grid gap-6
-      ${viewMode === 'grid' 
-        ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3' 
-        : 'grid-cols-1'
-      }
-    `}>
-      {products.map((product) => (
+  // Calculate grid dimensions based on view mode
+  const columnCount = viewMode === 'grid' 
+    ? containerWidth < 768 ? 1 : containerWidth < 1280 ? 2 : 3
+    : 1
+  
+  const columnWidth = Math.floor(containerWidth / columnCount)
+  const rowHeight = viewMode === 'grid' ? 380 : 180
+  const rowCount = Math.ceil(products.length / columnCount)
+
+  const Cell = useCallback(({ columnIndex, rowIndex, style }) => {
+    const index = rowIndex * columnCount + columnIndex
+    if (index >= products.length) return null
+    
+    const product = products[index]
+    
+    return (
+      <div style={{
+        ...style,
+        padding: '12px',
+      }}>
         <ProductCardLite 
-          key={product._id || product.id}
           product={product} 
           viewMode={viewMode}
         />
-      ))}
-    </div>
+      </div>
+    )
+  }, [products, viewMode, columnCount])
+
+  return (
+    <Grid
+      columnCount={columnCount}
+      columnWidth={columnWidth}
+      height={containerHeight}
+      rowCount={rowCount}
+      rowHeight={rowHeight}
+      width={containerWidth}
+      overscanRowCount={2}
+      overscanColumnCount={1}
+    >
+      {Cell}
+    </Grid>
   )
 })
 
-export default ProductGrid
+export default VirtualizedProductGrid

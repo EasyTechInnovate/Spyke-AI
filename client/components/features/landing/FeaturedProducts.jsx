@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, memo, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowRight, Star, Eye, ShoppingCart, CheckCircle, Sparkles } from 'lucide-react'
+import { ArrowRight, Star, Eye, ShoppingCart, CheckCircle, Sparkles, Loader2 } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -11,144 +11,39 @@ import SmoothProductCarousel from './featured/SmoothProductCarousel'
 import { useCart } from '@/hooks/useCart'
 import { useAuth } from '@/hooks/useAuth'
 import toast from '@/lib/utils/toast'
+import { useProducts } from '@/hooks/useProducts'
+const getBadgeForProduct = (product) => {
+  // Determine badge based on product metrics
+  if (product.sales > 100) return 'Bestseller'
+  if (product.views > 1000) return 'Hot'
+  if (product.isVerified && product.isTested) return 'Verified'
+  if (product.averageRating >= 4.8) return 'Top Rated'
+  if (product.createdAt && new Date(product.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) return 'New'
+  return null
+}
 
-// Dummy product data with actual placeholder images
-const FEATURED_PRODUCTS = [
-  {
-    id: 1,
-    title: "Ultimate ChatGPT Prompt Collection",
-    description: "200+ proven prompts for content creation, marketing, and business growth",
-    price: 29.99,
-    originalPrice: 49.99,
-    rating: 4.9,
-    reviews: 156,
-    badge: "Bestseller",
-    category: "AI Prompts",
-    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop",
-    seller: {
-      name: "PromptMaster Pro",
-      verified: true
-    }
-  },
-  {
-    id: 2,
-    title: "AI Automation Toolkit",
-    description: "Complete automation scripts and workflows for business efficiency",
-    price: 79.99,
-    originalPrice: 129.99,
-    rating: 4.8,
-    reviews: 98,
-    badge: "Hot",
-    category: "Tools",
-    image: "https://images.unsplash.com/photo-1563986768494-4dee2763ff3f?w=400&h=300&fit=crop",
-    seller: {
-      name: "AutomateAI",
-      verified: true
-    }
-  },
-  {
-    id: 3,
-    title: "Sales Copy Generator",
-    description: "High-converting sales copy templates powered by AI",
-    price: 49.99,
-    originalPrice: 89.99,
-    rating: 4.7,
-    reviews: 234,
-    badge: "New",
-    category: "Templates",
-    image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=300&fit=crop",
-    seller: {
-      name: "CopyGenius",
-      verified: false
-    }
-  },
-  {
-    id: 4,
-    title: "Content Creation Bundle",
-    description: "Everything you need to create engaging content with AI",
-    price: 99.99,
-    originalPrice: 199.99,
-    rating: 5.0,
-    reviews: 67,
-    badge: "Featured",
-    category: "Bundles",
-    image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=300&fit=crop",
-    seller: {
-      name: "ContentPro",
-      verified: true
-    }
-  },
-  {
-    id: 5,
-    title: "Advanced Midjourney Prompts",
-    description: "Create stunning AI art with our curated prompt collection",
-    price: 39.99,
-    originalPrice: 69.99,
-    rating: 4.9,
-    reviews: 189,
-    badge: "Bestseller",
-    category: "AI Art",
-    image: "https://images.unsplash.com/photo-1686633371045-062339154fc3?w=400&h=300&fit=crop",
-    seller: {
-      name: "ArtPrompts",
-      verified: true
-    }
-  },
-  {
-    id: 6,
-    title: "Business Strategy AI Assistant",
-    description: "AI-powered business planning and strategy tools",
-    price: 89.99,
-    originalPrice: 149.99,
-    rating: 4.6,
-    reviews: 45,
-    badge: "New",
-    category: "Business",
-    image: "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=300&fit=crop",
-    seller: {
-      name: "StrategyAI",
-      verified: false
-    }
-  },
-  {
-    id: 7,
-    title: "Code Generation Toolkit",
-    description: "Generate production-ready code with AI assistance",
-    price: 69.99,
-    originalPrice: 119.99,
-    rating: 4.8,
-    reviews: 267,
-    badge: "Hot",
-    category: "Development",
-    image: "https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=400&h=300&fit=crop",
-    seller: {
-      name: "CodeCraft AI",
-      verified: true
-    }
-  },
-  {
-    id: 8,
-    title: "Marketing Automation Suite",
-    description: "Complete marketing automation with AI-driven insights",
-    price: 129.99,
-    originalPrice: 249.99,
-    rating: 4.9,
-    reviews: 123,
-    badge: "Featured",
-    category: "Marketing",
-    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop",
-    seller: {
-      name: "MarketingPro",
-      verified: true
-    }
+
+const getTypeDisplay = (type) => {
+  const typeMap = {
+    prompt: 'AI Prompt',
+    automation: 'Automation',
+    agent: 'AI Agent',
+    bundle: 'Bundle'
   }
-]
+  return typeMap[type] || type
+}
 
-export default function FeaturedProducts() {
+const FeaturedProducts = memo(function FeaturedProducts() {
   const router = useRouter()
+  const { products, loading, error } = useProducts({
+    sortBy: 'popularity',
+    sortOrder: 'desc',
+    limit: 8,
+    verifiedOnly: 'true'
+  })
 
-  const handleProductClick = (productId) => {
-    router.push(`/products/${productId}`)
+  const handleProductClick = (slug) => {
+    router.push(`/products/${slug}`)
   }
 
   return (
@@ -193,27 +88,52 @@ export default function FeaturedProducts() {
 
           {/* Products Carousel */}
           <div className="mb-16">
-            <SmoothProductCarousel 
-              autoPlay={true} 
-              interval={4000}
-              slidesToShow={4}
-              slidesToScroll={1}
-              gap={24}
-              responsive={[
-                { breakpoint: 1280, settings: { slidesToShow: 3 } },
-                { breakpoint: 768, settings: { slidesToShow: 2 } },
-                { breakpoint: 640, settings: { slidesToShow: 1 } }
-              ]}
-            >
-              {FEATURED_PRODUCTS.map((product, index) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  index={index}
-                  onClick={() => handleProductClick(product.id)}
-                />
-              ))}
-            </SmoothProductCarousel>
+            {loading ? (
+              <div className="flex justify-center items-center h-96">
+                <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <p className="text-gray-400 mb-4">Failed to load products</p>
+                <Link
+                  href="/explore"
+                  className="text-brand-primary hover:text-brand-primary/80 transition-colors"
+                >
+                  Browse all products →
+                </Link>
+              </div>
+            ) : products.length > 0 ? (
+              <SmoothProductCarousel 
+                autoPlay={true} 
+                interval={4000}
+                slidesToShow={4}
+                slidesToScroll={1}
+                gap={24}
+                responsive={[
+                  { breakpoint: 1280, settings: { slidesToShow: 3 } },
+                  { breakpoint: 768, settings: { slidesToShow: 2 } },
+                  { breakpoint: 640, settings: { slidesToShow: 1 } }
+                ]}
+              >
+                {products.map((product) => (
+                  <ProductCard
+                    key={product._id || product.id}
+                    product={product}
+                    onClick={() => handleProductClick(product.slug)}
+                  />
+                ))}
+              </SmoothProductCarousel>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-400 mb-4">No products available</p>
+                <Link
+                  href="/explore"
+                  className="text-brand-primary hover:text-brand-primary/80 transition-colors"
+                >
+                  Check back soon →
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* View All Button */}
@@ -236,9 +156,9 @@ export default function FeaturedProducts() {
       </Container>
     </section>
   )
-}
+})
 
-function ProductCard({ product, index, onClick }) {
+function ProductCard({ product, onClick }) {
   const [imageLoaded, setImageLoaded] = useState(false)
   const { addToCart } = useCart()
   const { requireAuth } = useAuth()
@@ -251,14 +171,19 @@ function ProductCard({ product, index, onClick }) {
         return 'bg-red-500 text-white'
       case 'New':
         return 'bg-[#00FF89] text-brand-primary-text'
-      case 'Featured':
+      case 'Verified':
         return 'bg-brand-primary text-brand-primary-text'
+      case 'Top Rated':
+        return 'bg-purple-500 text-white'
       default:
         return 'bg-gray-500 text-white'
     }
   }
 
-  const discountPercentage = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+  const badge = getBadgeForProduct(product)
+  const discountPercentage = product.originalPrice && product.originalPrice > product.price 
+    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+    : 0
 
   return (
     <div
@@ -275,7 +200,7 @@ function ProductCard({ product, index, onClick }) {
           
           {/* Actual image */}
           <Image
-            src={product.image}
+            src={product.thumbnail || 'https://via.placeholder.com/400x300?text=Product+Image'}
             alt={product.title}
             width={400}
             height={300}
@@ -283,6 +208,7 @@ function ProductCard({ product, index, onClick }) {
               imageLoaded ? 'opacity-100' : 'opacity-0'
             }`}
             onLoad={() => setImageLoaded(true)}
+            onError={() => setImageLoaded(true)}
             loading="lazy"
           />
           
@@ -295,10 +221,10 @@ function ProductCard({ product, index, onClick }) {
           </div>
 
           {/* Badge */}
-          {product.badge && (
+          {badge && (
             <div className="absolute top-3 left-3">
-              <span className={`px-3 py-1 text-xs font-bold rounded-full ${getBadgeColor(product.badge)}`}>
-                {product.badge}
+              <span className={`px-3 py-1 text-xs font-bold rounded-full ${getBadgeColor(badge)}`}>
+                {badge}
               </span>
             </div>
           )}
@@ -318,12 +244,12 @@ function ProductCard({ product, index, onClick }) {
           {/* Category & Rating */}
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-medium text-brand-primary">
-              {product.category}
+              {getTypeDisplay(product.type)}
             </span>
             <div className="flex items-center gap-1">
               <Star className="w-4 h-4 text-yellow-500 fill-current" />
-              <span className="text-sm text-white font-medium">{product.rating}</span>
-              <span className="text-sm text-gray-500">({product.reviews})</span>
+              <span className="text-sm text-white font-medium">{product.averageRating || 0}</span>
+              <span className="text-sm text-gray-500">({product.totalReviews || 0})</span>
             </div>
           </div>
 
@@ -334,7 +260,7 @@ function ProductCard({ product, index, onClick }) {
 
           {/* Description */}
           <p className="text-sm text-gray-400 mb-4 line-clamp-2 flex-1 font-body">
-            {product.description}
+            {product.shortDescription}
           </p>
 
           {/* Bottom Section */}
@@ -342,8 +268,10 @@ function ProductCard({ product, index, onClick }) {
             {/* Seller */}
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-500">by</span>
-              <span className="text-sm text-gray-300">{product.seller.name}</span>
-              {product.seller.verified && (
+              <span className="text-sm text-gray-300">
+                {product.sellerId?.fullName || 'Anonymous Seller'}
+              </span>
+              {product.sellerId?.verification?.status === 'approved' && (
                 <CheckCircle className="w-4 h-4 text-brand-primary" />
               )}
             </div>
@@ -353,9 +281,9 @@ function ProductCard({ product, index, onClick }) {
               <div>
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-bold text-brand-primary">
-                    ${product.price}
+                    {product.price === 0 ? 'Free' : `$${product.price}`}
                   </span>
-                  {product.originalPrice > product.price && (
+                  {product.originalPrice && product.originalPrice > product.price && (
                     <span className="text-sm text-gray-500 line-through">
                       ${product.originalPrice}
                     </span>
@@ -366,10 +294,18 @@ function ProductCard({ product, index, onClick }) {
                 onClick={(e) => {
                   e.stopPropagation()
                   requireAuth(() => {
-                    if (addToCart(product)) {
+                    const cartProduct = {
+                      id: product._id || product.id,
+                      title: product.title,
+                      price: product.price,
+                      thumbnail: product.thumbnail,
+                      shortDescription: product.shortDescription,
+                      type: product.type
+                    }
+                    if (addToCart(cartProduct)) {
                       toast.cart.addedToCart(product.title)
                     }
-                  }, `/products/${product.id}`)
+                  }, `/products/${product.slug}`)
                 }}
                 className="p-2 bg-brand-primary hover:bg-brand-primary/90 rounded-lg transition-colors"
                 aria-label="Add to cart"
@@ -383,3 +319,5 @@ function ProductCard({ product, index, onClick }) {
     </div>
   )
 }
+
+export default FeaturedProducts

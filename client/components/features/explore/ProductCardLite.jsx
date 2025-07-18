@@ -1,21 +1,39 @@
 import { Star, CheckCircle, ShoppingCart, Eye } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useMemo, memo } from 'react'
 
-export default function ProductCardLite({ product, viewMode = 'grid' }) {
+const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'grid' }) {
   const [imageLoaded, setImageLoaded] = useState(false)
-  const discountPercentage = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+  const discountPercentage = useMemo(() => {
+    return product.originalPrice && product.originalPrice > product.price 
+      ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+      : 0
+  }, [product.originalPrice, product.price])
+
+  // Get product URL
+  const productUrl = `/products/${product.slug || product._id}`
+
+  // Get type display name
+  const getTypeDisplay = (type) => {
+    const typeMap = {
+      prompt: 'AI Prompt',
+      automation: 'Automation',
+      agent: 'AI Agent',
+      bundle: 'Bundle'
+    }
+    return typeMap[type] || type
+  }
 
   if (viewMode === 'list') {
     return (
-      <Link href={`/products/${product.id}`}>
+      <Link href={productUrl}>
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 hover:border-brand-primary/50 transition-all duration-300 cursor-pointer">
           <div className="flex gap-6">
             {/* Image */}
             <div className="relative w-48 h-32 bg-gray-800 rounded-xl flex-shrink-0 overflow-hidden">
               <Image
-                src={product.image}
+                src={product.thumbnail || 'https://via.placeholder.com/400x300?text=Product'}
                 alt={product.title}
                 fill
                 className="object-cover"
@@ -31,16 +49,16 @@ export default function ProductCardLite({ product, viewMode = 'grid' }) {
                     {product.title}
                   </h3>
                   <p className="text-gray-400 text-sm line-clamp-2">
-                    {product.description}
+                    {product.shortDescription || ''}
                   </p>
                 </div>
                 
                 {/* Price */}
                 <div className="text-right flex-shrink-0">
                   <div className="text-2xl font-bold text-brand-primary">
-                    ${product.price}
+                    {product.price === 0 ? 'Free' : `$${product.price}`}
                   </div>
-                  {product.originalPrice > product.price && (
+                  {product.originalPrice && product.originalPrice > product.price && (
                     <div className="flex items-center gap-2 text-sm">
                       <span className="text-gray-500 line-through">
                         ${product.originalPrice}
@@ -58,22 +76,22 @@ export default function ProductCardLite({ product, viewMode = 'grid' }) {
                   {/* Rating */}
                   <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                    <span className="text-white font-medium">{product.rating}</span>
-                    <span className="text-gray-500">({product.reviewCount})</span>
+                    <span className="text-white font-medium">{product.averageRating || 0}</span>
+                    <span className="text-gray-500">({product.totalReviews || 0})</span>
                   </div>
 
                   {/* Seller */}
                   <div className="flex items-center gap-2">
                     <span className="text-gray-400">by</span>
-                    <span className="text-gray-300">{product.seller.name}</span>
-                    {product.seller.verified && (
+                    <span className="text-gray-300">{product.sellerId?.fullName || 'Anonymous'}</span>
+                    {product.sellerId?.verification?.status === 'approved' && (
                       <CheckCircle className="w-4 h-4 text-brand-primary" />
                     )}
                   </div>
 
-                  {/* Category */}
+                  {/* Type */}
                   <span className="px-2 py-1 bg-brand-primary/20 text-brand-primary text-xs rounded">
-                    {product.category}
+                    {getTypeDisplay(product.type)}
                   </span>
                 </div>
               </div>
@@ -85,7 +103,7 @@ export default function ProductCardLite({ product, viewMode = 'grid' }) {
   }
 
   return (
-    <Link href={`/products/${product.id}`}>
+    <Link href={productUrl}>
       <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-brand-primary/50 transition-all duration-300 cursor-pointer group h-full">
         {/* Image */}
         <div className="relative h-48 bg-gray-800 overflow-hidden">
@@ -93,7 +111,7 @@ export default function ProductCardLite({ product, viewMode = 'grid' }) {
             <div className="absolute inset-0 bg-gray-800 animate-pulse" />
           )}
           <Image
-            src={product.image}
+            src={product.thumbnail || 'https://via.placeholder.com/400x300?text=Product'}
             alt={product.title}
             fill
             className={`object-cover transition-all duration-300 group-hover:scale-105 ${
@@ -103,9 +121,16 @@ export default function ProductCardLite({ product, viewMode = 'grid' }) {
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
           />
           
-          {product.featured && (
+          {/* Badges */}
+          {product.isVerified && product.isTested && (
             <div className="absolute top-3 left-3 px-3 py-1 bg-brand-primary text-black text-sm font-semibold rounded-full z-10">
-              Featured
+              Verified
+            </div>
+          )}
+          
+          {discountPercentage > 0 && (
+            <div className="absolute top-3 right-3 px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-full z-10">
+              -{discountPercentage}%
             </div>
           )}
           
@@ -124,17 +149,17 @@ export default function ProductCardLite({ product, viewMode = 'grid' }) {
             {product.title}
           </h3>
           <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-            {product.description}
+            {product.shortDescription || ''}
           </p>
 
           {/* Rating and Reviews */}
           <div className="flex items-center gap-2 mb-4">
             <div className="flex items-center gap-1">
               <Star className="w-4 h-4 text-yellow-500 fill-current" />
-              <span className="text-white font-medium">{product.rating}</span>
+              <span className="text-white font-medium">{product.averageRating || 0}</span>
             </div>
             <span className="text-gray-500 text-sm">
-              ({product.reviewCount} reviews)
+              ({product.totalReviews || 0} reviews)
             </span>
             {product.sales > 100 && (
               <>
@@ -149,20 +174,20 @@ export default function ProductCardLite({ product, viewMode = 'grid' }) {
           {/* Seller Info */}
           <div className="flex items-center gap-2 mb-4">
             <div className="w-6 h-6 bg-gray-700 rounded-full" />
-            <span className="text-gray-400 text-sm">{product.seller.name}</span>
-            {product.seller.verified && (
+            <span className="text-gray-400 text-sm">{product.sellerId?.fullName || 'Anonymous'}</span>
+            {product.sellerId?.verification?.status === 'approved' && (
               <CheckCircle className="w-4 h-4 text-brand-primary" />
             )}
           </div>
 
-          {/* Price and Category */}
+          {/* Price and Type */}
           <div className="flex items-end justify-between">
             <div>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-bold text-brand-primary">
-                  ${product.price}
+                  {product.price === 0 ? 'Free' : `$${product.price}`}
                 </span>
-                {product.originalPrice > product.price && (
+                {product.originalPrice && product.originalPrice > product.price && (
                   <span className="text-sm text-gray-500 line-through">
                     ${product.originalPrice}
                   </span>
@@ -175,11 +200,13 @@ export default function ProductCardLite({ product, viewMode = 'grid' }) {
               )}
             </div>
             <span className="px-3 py-1 bg-brand-primary/20 text-brand-primary text-sm rounded-full">
-              {product.category}
+              {getTypeDisplay(product.type)}
             </span>
           </div>
         </div>
       </div>
     </Link>
   )
-}
+})
+
+export default ProductCardLite
