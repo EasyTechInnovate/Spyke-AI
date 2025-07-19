@@ -81,7 +81,14 @@ export default function SignInPage() {
 
             setTimeout(() => {
                 if (typeof window !== 'undefined') {
-                    window.location.href = '/'
+                    // Check if there's a return URL stored
+                    const returnTo = localStorage.getItem('returnTo')
+                    if (returnTo) {
+                        localStorage.removeItem('returnTo')
+                        window.location.href = returnTo
+                    } else {
+                        window.location.href = '/'
+                    }
                 }
             }, 500)
         } catch (err) {

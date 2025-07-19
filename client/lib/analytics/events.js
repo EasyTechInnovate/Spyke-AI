@@ -53,6 +53,15 @@ export const ANALYTICS_EVENTS = {
     CHECKOUT_CLICKED: 'Checkout Clicked',
   },
 
+  EXPLORE: {
+    VIEWED: 'Explore Page Viewed',
+    FILTER_APPLIED: 'Filter Applied',
+    SORT_CHANGED: 'Sort Changed',
+    SEARCH_PERFORMED: 'Explore Search Performed',
+    PRODUCT_CLICKED: 'Product Clicked from Explore',
+    VIEW_MODE_CHANGED: 'View Mode Changed',
+  },
+
   ADMIN: {
     DASHBOARD_VIEWED: 'Admin Dashboard Viewed',
     ANALYTICS_VIEWED: 'Analytics Dashboard Viewed',
@@ -110,6 +119,12 @@ export const eventProperties = {
     productId,
     quantity,
     price,
+    timestamp: new Date().toISOString()
+  }),
+
+  explore: (filters = {}, sortBy = 'featured') => ({
+    filters,
+    sortBy,
     timestamp: new Date().toISOString()
   }),
 

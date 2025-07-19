@@ -8,18 +8,19 @@ export const NAVIGATION = [
 ]
 
 export const USER_MENU_ITEMS = [
-    { name: 'My Purchases', href: '/account/purchases', icon: Package },
-    { name: 'Wishlist', href: '/account/wishlist', icon: Heart },
-    { name: 'Messages', href: '/account/messages', icon: MessageSquare },
-    { name: 'Profile', href: '/account/profile', icon: User },
-    { name: 'Settings', href: '/account/settings', icon: Settings }
+    { name: 'My Purchases', href: '/account/purchases', icon: Package, prefetch: false },
+    { name: 'Wishlist', href: '/account/wishlist', icon: Heart, prefetch: false },
+    { name: 'Messages', href: '/account/messages', icon: MessageSquare, prefetch: false },
+    { name: 'Profile', href: '/account/profile', icon: User, prefetch: false },
+    { name: 'Settings', href: '/account/settings', icon: Settings, prefetch: false }
 ]
 
 export const SELLER_MENU_ITEMS = [
     { name: 'Dashboard', href: '/dashboard', icon: Briefcase },
-    { name: 'My Products', href: '/seller/products', icon: Package },
-    { name: 'Analytics', href: '/seller/analytics', icon: BarChart3 },
-    { name: 'Earnings', href: '/seller/earnings', icon: DollarSign },
-    { name: 'Messages', href: '/seller/messages', icon: MessageSquare },
-    { name: 'Settings', href: '/seller/settings', icon: Settings }
+    { name: 'My Products', href: '/seller/products', icon: Package, prefetch: false },
+    { name: 'Analytics', href: '/seller/analytics', icon: BarChart3, prefetch: false },
+    { name: 'Earnings', href: '/seller/earnings', icon: DollarSign, prefetch: false },
+    { name: 'Messages', href: '/seller/messages', icon: MessageSquare, prefetch: false },
+    { name: 'Profile', href: '/seller/profile', icon: User, prefetch: false },
+    { name: 'Settings', href: '/seller/settings', icon: Settings, prefetch: false }
 ]

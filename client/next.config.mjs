@@ -12,6 +12,16 @@ const nextConfig = {
   // Disable static generation for problematic pages during build
   output: process.env.NODE_ENV === 'production' ? 'standalone' : undefined,
 
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
+      },
+    ],
+  },
+
   modularizeImports: {
     'lucide-react': {
       transform: 'lucide-react/dist/esm/icons/{{member}}',
@@ -24,7 +34,9 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
 
   experimental: {
-    optimizePackageImports: ['lucide-react', 'sonner', '@/components', '@/lib'],
+    optimizePackageImports: ['lucide-react', 'sonner', '@/components', '@/lib', 'framer-motion'],
+    optimizeCss: true,
+    webpackBuildWorker: true,
   },
 
   // ✅ Updated according to Next.js 14+ requirements
@@ -82,7 +94,7 @@ const nextConfig = {
               reuseExistingChunk: true,
             },
             shared: {
-              name(module, chunks) {
+              name(_module, chunks) {
                 return `shared-${crypto
                   .createHash('sha1')
                   .update(chunks.map((c) => c.name).join('_'))

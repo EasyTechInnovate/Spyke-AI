@@ -4,6 +4,7 @@ import healthRoutes from './health.route.js'
 import uploadRoutes from './upload.route.js'
 import sellerRoutes from './seller.route.js'
 import analyticsRoutes from './analytics.route.js'
+import productRoutes from './product.route.js'
 
 const router = Router()
 
@@ -12,5 +13,6 @@ router.use('/health', healthRoutes)
 router.use('/upload', uploadRoutes)
 router.use('/seller', sellerRoutes)
 router.use('/analytics', analyticsRoutes)
+router.use('/products', productRoutes)
 
 export default router

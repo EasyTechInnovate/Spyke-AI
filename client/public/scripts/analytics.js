@@ -11,11 +11,8 @@
         const path = window.location.pathname;
         const referrer = document.referrer || 'direct';
         
-        console.log('[Analytics] Page view:', {
-            path,
-            referrer,
-            timestamp: new Date().toISOString()
-        });
+        // Track page view
+        // In production, this would send data to analytics service
         
     }
     

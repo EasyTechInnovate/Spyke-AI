@@ -62,13 +62,13 @@ export default function Header() {
                             {/* Search Button */}
                             <SearchButton onClick={() => setSearchOpen(true)} />
 
+                            {/* Cart - Always visible */}
+                            <CartButton count={cartCount} />
+
                             {user && (
                                 <>
                                     {/* Notifications */}
                                     {/* Add Notication Bell */}
-
-                                    {/* Cart */}
-                                    <CartButton count={cartCount} />
                                 </>
                             )}
 

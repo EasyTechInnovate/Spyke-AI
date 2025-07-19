@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { 
+  self,
   createAnalyticsEvents, 
   getAnalyticsEvents, 
   getAnalyticsStats,
@@ -17,7 +18,7 @@ import rateLimiter from '../middleware/rateLimit.js'
 
 const router = Router()
 
-// Public route for tracking events (with rate limiting)
+router.route('/health').get(self)
 router.post(
   '/events',
   rateLimiter, // Uses default rate limiting
@@ -25,7 +26,6 @@ router.post(
   createAnalyticsEvents
 )
 
-// Admin routes
 router.get(
   '/events',
   authenticate,

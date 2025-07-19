@@ -12,6 +12,13 @@ import { EUserRole, ESellerVerificationStatus, ECommissionOfferStatus, EPayoutMe
 dayjs.extend(utc)
 
 export default {
+    self: (req, res, next) => {
+        try {
+            httpResponse(req, res, 200, responseMessage.SERVICE('Seller Profile'))
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
     createProfile: async (req, res, next) => {
         try {
             const { authenticatedUser } = req
