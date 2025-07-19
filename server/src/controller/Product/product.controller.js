@@ -146,7 +146,11 @@ export default {
 
             const [products, totalCount] = await Promise.all([
                 Product.find(query)
-                    .populate('sellerId', 'fullName avatar stats.averageRating verification.status')
+                    .populate({
+                        path: 'sellerId',
+                        model: 'SellerProfile',
+                        select: 'fullName avatar stats.averageRating verification.status'
+                    })
                     .sort(sort)
                     .skip(skip)
                     .limit(parseInt(limit))
@@ -180,7 +184,11 @@ export default {
             const { slug } = req.params
 
             const product = await Product.findOne({ slug, status: EProductStatusNew.PUBLISHED })
-                .populate('sellerId', 'fullName avatar bio stats location socialHandles customAutomationServices')
+                .populate({
+                    path: 'sellerId',
+                    model: 'SellerProfile',
+                    select: 'fullName avatar bio stats location socialHandles customAutomationServices'
+                })
                 .populate('reviews.userId', 'name avatar')
                 .lean()
 
@@ -227,7 +235,11 @@ export default {
             }
 
             const updatedProduct = await Product.findByIdAndUpdate(id, updateData, { new: true })
-                .populate('sellerId', 'fullName avatar stats.averageRating verification.status')
+                .populate({
+                    path: 'sellerId',
+                    model: 'SellerProfile',
+                    select: 'fullName avatar stats.averageRating verification.status'
+                })
 
             await notificationService.sendToUser(
                 authenticatedUser.id,
@@ -387,7 +399,11 @@ export default {
                     { type: product.type }
                 ]
             })
-                .populate('sellerId', 'fullName avatar stats.averageRating verification.status')
+                .populate({
+                    path: 'sellerId',
+                    model: 'SellerProfile',
+                    select: 'fullName avatar stats.averageRating verification.status'
+                })
                 .limit(parseInt(limit))
                 .select('-reviews -faqs -versions -howItWorks')
                 .lean()
@@ -420,7 +436,11 @@ export default {
 
             const [products, totalCount] = await Promise.all([
                 Product.find(query)
-                    .populate('sellerId', 'fullName email avatar userId')
+                    .populate({
+                        path: 'sellerId',
+                        model: 'SellerProfile',
+                        select: 'fullName email avatar userId'
+                    })
                     .sort(sort)
                     .skip(skip)
                     .limit(parseInt(limit))
@@ -501,6 +521,10 @@ export default {
                 }
             }
 
+            if (!product.isVerified || !product.isTested) {
+                return httpError(next, new Error('Product must be verified and tested before publishing'), req, 400)
+            }
+
             product.status = EProductStatusNew.PUBLISHED
             await product.save()
 
@@ -562,6 +586,96 @@ export default {
             }
 
             httpResponse(req, res, 200, responseMessage.SUCCESS, responseData)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+
+    getSellerProduct: async (req, res, next) => {
+        try {
+            const { authenticatedUser } = req
+            const { id } = req.params
+
+            const sellerProfile = await sellerProfileModel.findOne({ userId: authenticatedUser._id })
+            if (!sellerProfile) {
+                return httpError(next, new Error(responseMessage.SELLER.PROFILE_NOT_ACTIVE), req, 404)
+            }
+
+            const product = await Product.findOne({ 
+                _id: id, 
+                sellerId: sellerProfile._id 
+            })
+                .populate({
+                    path: 'sellerId',
+                    model: 'SellerProfile',
+                    select: 'fullName avatar bio stats location socialHandles'
+                })
+                .lean()
+
+            if (!product) {
+                return httpError(next, new Error(responseMessage.PRODUCT.NOT_FOUND), req, 404)
+            }
+
+            httpResponse(req, res, 200, responseMessage.SUCCESS, product)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+
+    updateProductStatus: async (req, res, next) => {
+        try {
+            const { authenticatedUser } = req
+            const { id } = req.params
+            const { status } = req.body
+
+            if (!Object.values(EProductStatusNew).includes(status)) {
+                return httpError(next, new Error('Invalid status value'), req, 400)
+            }
+
+            const sellerProfile = await sellerProfileModel.findOne({ userId: authenticatedUser.id })
+            if (!sellerProfile) {
+                return httpError(next, new Error(responseMessage.SELLER.PROFILE_NOT_ACTIVE), req, 404)
+            }
+
+            const product = await Product.findOne({ 
+                _id: id, 
+                sellerId: sellerProfile._id 
+            })
+
+            if (!product) {
+                return httpError(next, new Error(responseMessage.PRODUCT.NOT_FOUND), req, 404)
+            }
+
+            if (product.isVerified && product.isTested && status === EProductStatusNew.DRAFT) {
+                return httpError(next, new Error('Cannot move verified and tested product back to draft'), req, 400)
+            }
+
+            if (status === EProductStatusNew.PUBLISHED && (!product.isVerified || !product.isTested)) {
+                return httpError(next, new Error('Product must be verified and tested before publishing'), req, 400)
+            }
+
+            product.status = status
+            await product.save()
+
+            const statusMessages = {
+                [EProductStatusNew.DRAFT]: 'moved to draft',
+                [EProductStatusNew.PUBLISHED]: 'published successfully',
+                [EProductStatusNew.ARCHIVED]: 'archived'
+            }
+
+            await notificationService.sendToUser(
+                authenticatedUser.id,
+                'Product Status Updated',
+                `Your product "${product.title}" has been ${statusMessages[status]}.`,
+                'info'
+            )
+
+            httpResponse(req, res, 200, responseMessage.PRODUCT.STATUS_UPDATED || 'Status updated successfully', {
+                productId: product._id,
+                title: product.title,
+                status: product.status,
+                updatedAt: product.updatedAt
+            })
         } catch (err) {
             httpError(next, err, req, 500)
         }
