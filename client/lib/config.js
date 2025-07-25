@@ -4,7 +4,9 @@ import {
   Users,
   ShoppingCart,
   Lock,
-  BarChart3
+  BarChart3,
+  Percent,
+  CreditCard
 } from 'lucide-react';
 
 export const appConfig = {
@@ -52,7 +54,7 @@ export const appConfig = {
       name: 'Authentication',
       icon: Lock,
       color: 'from-[#FFC050] to-[#00FF89]',
-      healthEndpoint: '/auth/health',
+      healthEndpoint: '/auth/self',
       description: 'User authentication, registration, and account management',
       endpoints: [
         'User Registration',
@@ -70,7 +72,7 @@ export const appConfig = {
       name: 'File Upload',
       icon: Upload,
       color: 'from-[#00FF89] to-[#FFC050]',
-      healthEndpoint: '/upload/health',
+      healthEndpoint: '/upload/self',
       description: 'Upload and manage media/documents in the system',
       endpoints: [
         'File Upload Service'
@@ -81,7 +83,7 @@ export const appConfig = {
       name: 'Seller Management',
       icon: Users,
       color: 'from-[#FFC050] to-[#00FF89]',
-      healthEndpoint: '/seller/health',
+      healthEndpoint: '/seller/self',
       description: 'Seller profile management, verification, and commission handling',
       endpoints: [
         'Profile Creation',
@@ -119,13 +121,53 @@ export const appConfig = {
       name: 'Analytics & Tracking',
       icon: BarChart3,
       color: 'from-[#FFC050] to-[#00FF89]',
-      healthEndpoint: '/analytics/health',
+      healthEndpoint: '/analytics/self',
       description: 'Event tracking, analytics, and system monitoring',
       endpoints: [
         'Event Tracking',
         'Analytics Data Retrieval',
         'Statistics Generation',
         'Data Management'
+      ]
+    },
+    {
+      id: 'purchase',
+      name: 'Purchase & Cart Management',
+      icon: CreditCard,
+      color: 'from-[#00FF89] to-[#FFC050]',
+      healthEndpoint: '/purchase/self',
+      description: 'Shopping cart, purchase processing, and order management',
+      endpoints: [
+        'Cart Management',
+        'Add/Remove Products',
+        'Cart Totals & Calculations',
+        'Promocode Application',
+        'Purchase Processing',
+        'Purchase History',
+        'Categorized Purchase View',
+        'Premium Content Access',
+        'Multi-seller Transactions',
+        'Order Analytics'
+      ]
+    },
+    {
+      id: 'promocode',
+      name: 'Promocode Management',
+      icon: Percent,
+      color: 'from-[#FFC050] to-[#00FF89]',
+      healthEndpoint: '/promocode/self',
+      description: 'Dynamic promocode creation, validation, and analytics by sellers and admins',
+      endpoints: [
+        'Promocode CRUD Operations',
+        'Seller Promocode Management',
+        'Admin Promocode Management',
+        'Promocode Validation',
+        'Usage Analytics & Stats',
+        'Public Promocode Discovery',
+        'Advanced Targeting (Products/Categories)',
+        'Usage Limits & Restrictions',
+        'Expiry Management',
+        'Discount Calculations'
       ]
     }
   ],

@@ -1,0 +1,307 @@
+### Promocode Management API Testing
+
+@baseUrl = http://localhost:5000/v1
+@authToken = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODZmYWI1ODgyN2U4ZjEyZDFkYzQyY2MiLCJlbWFpbEFkZHJlc3MiOiJ0ZXN0M0BnbWFpbC5jb20iLCJyb2xlcyI6WyJ1c2VyIiwic2VsbGVyIl0sImlhdCI6MTc1MzQ3MzUyNywiZXhwIjoxNzUzNDc3MTI3fQ.08vFp5PxcsQzBL2IAthFSi4baZsl9K8knqSdayeuWNk
+@adminToken = Bearer ADMIN_JWT_TOKEN_HERE
+
+### 1. Get Promocode Service Status
+GET {{baseUrl}}/promocode/self
+Content-Type: application/json
+
+### 2. Get Public Promocodes (No Auth Required)
+GET {{baseUrl}}/promocode/public?page=1&limit=10
+Content-Type: application/json
+
+### 3. Create Promocode as Seller (Percentage Discount)
+POST {{baseUrl}}/promocode
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "code": "SELLER10",
+  "description": "10% discount on all products from this seller",
+  "discountType": "percentage",
+  "discountValue": 10,
+  "maxDiscountAmount": 50,
+  "minimumOrderAmount": 20,
+  "usageLimit": 100,
+  "usageLimitPerUser": 1,
+  "validUntil": "2024-12-31T23:59:59.000Z",
+  "isPublic": true
+}
+
+### 4. Create Promocode as Seller (Fixed Discount)
+POST {{baseUrl}}/promocode
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "code": "SAVE5",
+  "description": "Save $5 on your purchase",
+  "discountType": "fixed",
+  "discountValue": 5,
+  "minimumOrderAmount": 25,
+  "usageLimit": 50,
+  "usageLimitPerUser": 1,
+  "validUntil": "2024-12-31T23:59:59.000Z",
+  "isPublic": true
+}
+
+### 5. Create Category-Specific Promocode
+POST {{baseUrl}}/promocode
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "code": "CONTENT20",
+  "description": "20% off on content creation products",
+  "discountType": "percentage",
+  "discountValue": 20,
+  "applicableCategories": ["content_creation"],
+  "usageLimit": 30,
+  "usageLimitPerUser": 1,
+  "validUntil": "2024-12-31T23:59:59.000Z",
+  "isPublic": true
+}
+
+### 6. Create Product-Specific Promocode
+POST {{baseUrl}}/promocode
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "code": "SPECIAL15",
+  "description": "15% off on selected products",
+  "discountType": "percentage",
+  "discountValue": 15,
+  "applicableProducts": ["REPLACE_WITH_PRODUCT_ID", "REPLACE_WITH_ANOTHER_PRODUCT_ID"],
+  "usageLimit": 20,
+  "usageLimitPerUser": 1,
+  "validUntil": "2024-12-31T23:59:59.000Z",
+  "isPublic": false
+}
+
+### 7. Create Global Promocode as Admin
+POST {{baseUrl}}/promocode
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+{
+  "code": "GLOBAL25",
+  "description": "25% off on all products - Holiday Special",
+  "discountType": "percentage",
+  "discountValue": 25,
+  "maxDiscountAmount": 100,
+  "minimumOrderAmount": 50,
+  "isGlobal": true,
+  "usageLimit": 500,
+  "usageLimitPerUser": 1,
+  "validUntil": "2024-12-31T23:59:59.000Z",
+  "isPublic": true
+}
+
+### 8. Get All Promocodes (Seller View)
+GET {{baseUrl}}/promocode?page=1&limit=10
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 9. Get Active Promocodes Only
+GET {{baseUrl}}/promocode?page=1&limit=10&isActive=true
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 10. Get All Promocodes (Admin View)
+GET {{baseUrl}}/promocode?page=1&limit=20
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 11. Get Promocodes by Creator Type (Admin Only)
+GET {{baseUrl}}/promocode?page=1&limit=10&createdByType=seller
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 12. Get Specific Promocode by ID
+GET {{baseUrl}}/promocode/REPLACE_WITH_PROMOCODE_ID
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 13. Update Promocode
+PUT {{baseUrl}}/promocode/REPLACE_WITH_PROMOCODE_ID
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "description": "Updated description - 10% discount with new terms",
+  "minimumOrderAmount": 30,
+  "usageLimit": 150,
+  "validUntil": "2025-01-31T23:59:59.000Z"
+}
+
+### 14. Toggle Promocode Status (Activate/Deactivate)
+POST {{baseUrl}}/promocode/REPLACE_WITH_PROMOCODE_ID/toggle-status
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 15. Validate Promocode Before Applying
+GET {{baseUrl}}/promocode/validate/SELLER10
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 16. Get Promocode Usage Statistics
+GET {{baseUrl}}/promocode/REPLACE_WITH_PROMOCODE_ID/stats
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 17. Delete Promocode (Only if unused)
+DELETE {{baseUrl}}/promocode/REPLACE_WITH_PROMOCODE_ID
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### --- Error Testing ---
+
+### 18. Try to Create Promocode with Existing Code (Should Fail)
+POST {{baseUrl}}/promocode
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "code": "SELLER10",
+  "description": "This should fail due to duplicate code",
+  "discountType": "percentage",
+  "discountValue": 15,
+  "validUntil": "2024-12-31T23:59:59.000Z"
+}
+
+### 19. Try to Create Promocode with Invalid Discount Value
+POST {{baseUrl}}/promocode
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "code": "INVALID1",
+  "description": "Invalid percentage over 100",
+  "discountType": "percentage",
+  "discountValue": 150,
+  "validUntil": "2024-12-31T23:59:59.000Z"
+}
+
+### 20. Try to Create Promocode with Past Expiry Date
+POST {{baseUrl}}/promocode
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "code": "EXPIRED1",
+  "description": "This should fail due to past expiry date",
+  "discountType": "percentage",
+  "discountValue": 10,
+  "validUntil": "2023-12-31T23:59:59.000Z"
+}
+
+### 21. Try to Create Global Promocode as Seller (Should Fail)
+POST {{baseUrl}}/promocode
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "code": "GLOBALFAIL",
+  "description": "This should fail - seller cannot create global promocodes",
+  "discountType": "percentage",
+  "discountValue": 20,
+  "isGlobal": true,
+  "validUntil": "2024-12-31T23:59:59.000Z"
+}
+
+### 22. Try to Validate Non-existent Promocode
+GET {{baseUrl}}/promocode/validate/NONEXISTENT
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### --- Integration with Cart System ---
+
+### 23. Add Product to Cart
+POST {{baseUrl}}/purchase/cart/add
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "productId": "REPLACE_WITH_PRODUCT_ID"
+}
+
+### 24. Apply Created Promocode to Cart
+POST {{baseUrl}}/purchase/cart/promocode
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "code": "SELLER10"
+}
+
+### 25. Check Cart with Applied Promocode
+GET {{baseUrl}}/purchase/cart
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 26. Create Purchase with Promocode
+POST {{baseUrl}}/purchase/create
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "paymentMethod": "stripe",
+  "paymentReference": "pi_promocode_test_123"
+}
+
+### 27. Check Promocode Usage Stats After Purchase
+GET {{baseUrl}}/promocode/REPLACE_WITH_PROMOCODE_ID/stats
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### --- Bulk Testing Scenario ---
+
+### 28. Create Multiple Promocodes for Testing
+POST {{baseUrl}}/promocode
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "code": "BULK1",
+  "description": "Bulk test promocode 1",
+  "discountType": "percentage",
+  "discountValue": 5,
+  "usageLimit": 1,
+  "usageLimitPerUser": 1,
+  "validUntil": "2024-12-31T23:59:59.000Z"
+}
+
+###
+POST {{baseUrl}}/promocode
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "code": "BULK2",
+  "description": "Bulk test promocode 2",
+  "discountType": "fixed",
+  "discountValue": 3,
+  "usageLimit": 1,
+  "usageLimitPerUser": 1,
+  "validUntil": "2024-12-31T23:59:59.000Z"
+}
+
+### 29. Get All Promocodes After Bulk Creation
+GET {{baseUrl}}/promocode?page=1&limit=20
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### TESTING NOTES:
+# 1. Replace all REPLACE_WITH_* placeholders with actual IDs
+# 2. Update authToken with valid seller JWT
+# 3. Update adminToken with valid admin JWT
+# 4. Ensure your server is running on localhost:5000
+# 5. Test both seller and admin functionality
+# 6. Verify promocode validation and usage tracking
+# 7. Test error scenarios and edge cases
+# 8. Verify integration with cart and purchase system
+# 9. Check that usage limits are properly enforced
+# 10. Verify category and product-specific restrictions

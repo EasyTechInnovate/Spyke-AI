@@ -1,7 +1,7 @@
 ### Product API Testing
 
 @baseUrl = http://localhost:5000/v1
-@authToken = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODY3NTVlNGFjMGJlYjNkYjQ4NjQwZWQiLCJlbWFpbEFkZHJlc3MiOiJhZG1pbkBnbWFpbC5jb20iLCJyb2xlcyI6WyJhZG1pbiJdLCJpYXQiOjE3NTI4MjExNjcsImV4cCI6MTc1MjgyNDc2N30.Hl4pqJRnunGd6secWHc7sseKj8IKgtvidAKDI4aQr8o
+@authToken = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODZmYWI1ODgyN2U4ZjEyZDFkYzQyY2MiLCJlbWFpbEFkZHJlc3MiOiJ0ZXN0M0BnbWFpbC5jb20iLCJyb2xlcyI6WyJ1c2VyIiwic2VsbGVyIl0sImlhdCI6MTc1MzQ3MzUyNywiZXhwIjoxNzUzNDc3MTI3fQ.08vFp5PxcsQzBL2IAthFSi4baZsl9K8knqSdayeuWNk
 ### 1. Get All Products (Public)
 GET {{baseUrl}}/products
 Content-Type: application/json
@@ -97,7 +97,68 @@ Authorization: {{authToken}}
   ],
   "tags": ["automation", "lead-generation", "chatgpt", "make", "saas"],
   "searchKeywords": ["lead generation", "automation", "ai", "chatgpt", "crm"],
-  "currentVersion": "1.0.0"
+  "currentVersion": "1.0.0",
+  "premiumContent": {
+    "automationInstructions": "Complete step-by-step guide to set up the automation in Make.com with detailed screenshots and configuration settings.",
+    "automationFiles": [
+      {
+        "name": "make-blueprint.json",
+        "url": "https://example.com/files/make-blueprint.json",
+        "type": "json"
+      },
+      {
+        "name": "configuration-guide.pdf",
+        "url": "https://example.com/files/config-guide.pdf",
+        "type": "zip"
+      }
+    ],
+    "detailedHowItWorks": [
+      "Import the Make.com blueprint using the provided JSON file",
+      "Configure your ChatGPT API key in the OpenAI module",
+      "Set up webhook endpoints for form submissions",
+      "Connect your CRM system using the provided API configurations",
+      "Test the automation with sample lead data",
+      "Deploy the automation and monitor its performance"
+    ],
+    "configurationExamples": [
+      {
+        "title": "ChatGPT Prompt Configuration",
+        "description": "Optimized prompt for lead qualification",
+        "code": "You are a lead qualification assistant. Analyze the following lead information and ask 2-3 qualifying questions based on our criteria...",
+        "result": "High-quality lead qualification with 85% accuracy"
+      }
+    ],
+    "resultExamples": [
+      {
+        "title": "Lead Qualification Results",
+        "description": "Sample results from the automation",
+        "type": "image",
+        "url": "https://example.com/results/lead-qualification.png"
+      }
+    ],
+    "videoTutorials": [
+      {
+        "title": "Complete Setup Walkthrough",
+        "url": "https://example.com/videos/setup-tutorial.mp4",
+        "duration": "25:30"
+      }
+    ],
+    "supportDocuments": [
+      {
+        "title": "Troubleshooting Guide",
+        "url": "https://example.com/docs/troubleshooting.pdf",
+        "type": "pdf"
+      }
+    ],
+    "bonusContent": [
+      {
+        "title": "Advanced Lead Scoring Template",
+        "description": "Bonus template for advanced lead scoring",
+        "type": "template",
+        "url": "https://example.com/bonus/lead-scoring-template.xlsx"
+      }
+    ]
+  }
 }
 
 ### 8. Update Product (Authenticated - Owner/Admin)
@@ -131,7 +192,7 @@ Authorization: {{authToken}}
 }
 
 ### 11. Toggle Upvote (Authenticated)
-POST {{baseUrl}}/products/673a1b2c3d4e5f6789012345/upvote
+POST {{baseUrl}}/products/687949b3608bcf098a52e037/upvote
 Content-Type: application/json
 Authorization: {{authToken}}
 
@@ -223,3 +284,174 @@ Authorization: {{authToken}}
 POST {{baseUrl}}/products/687949b3608bcf098a52e037/publish
 Content-Type: application/json
 Authorization: {{authToken}}
+
+### 27. Purchase Product
+POST {{baseUrl}}/products/687949b3608bcf098a52e037/purchase
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "paymentMethod": "stripe",
+  "paymentReference": "pi_1234567890"
+}
+
+### 28. Purchase Free Product
+POST {{baseUrl}}/products/687949b3608bcf098a52e037/purchase
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{}
+
+### 29. Get User Purchases
+GET {{baseUrl}}/products/user/purchases?page=1&limit=10
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 30. Get Product Premium Content (After Purchase)
+GET {{baseUrl}}/products/687949b3608bcf098a52e037/access
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 31. Create Product with Premium Content
+POST {{baseUrl}}/products
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "title": "Advanced ChatGPT Prompt for Content Creation",
+  "shortDescription": "Professional-grade prompt for creating high-converting marketing content",
+  "fullDescription": "This advanced ChatGPT prompt helps you create compelling marketing content that converts. Perfect for marketers, copywriters, and business owners.",
+  "thumbnail": "https://example.com/thumbnail-prompt.jpg",
+  "images": [
+    "https://example.com/prompt-example1.jpg",
+    "https://example.com/prompt-results.jpg"
+  ],
+  "type": "prompt",
+  "category": "content_creation",
+  "industry": "marketing",
+  "price": 15.99,
+  "originalPrice": 25.99,
+  "toolsUsed": [
+    {
+      "name": "ChatGPT",
+      "logo": "https://example.com/chatgpt-logo.png",
+      "model": "GPT-4",
+      "link": "https://openai.com/chatgpt"
+    }
+  ],
+  "setupTime": "instant",
+  "targetAudience": "Marketing professionals and content creators",
+  "benefits": [
+    "Create high-converting copy in minutes",
+    "Improve engagement rates by 40%",
+    "Save 5+ hours per week on content creation"
+  ],
+  "useCaseExamples": [
+    "Sales page headlines",
+    "Email marketing campaigns",
+    "Social media captions",
+    "Product descriptions"
+  ],
+  "howItWorks": [
+    "Copy the prompt template",
+    "Customize variables for your business",
+    "Input into ChatGPT",
+    "Refine the generated content"
+  ],
+  "outcome": [
+    "Higher conversion rates",
+    "More engaging content",
+    "Faster content production"
+  ],
+  "hasRefundPolicy": true,
+  "hasGuarantee": true,
+  "guaranteeText": "14-day money-back guarantee",
+  "faqs": [
+    {
+      "question": "Which ChatGPT version works best?",
+      "answer": "Works with GPT-3.5 and GPT-4, but GPT-4 gives better results",
+      "isPremium": false
+    },
+    {
+      "question": "What's the exact prompt structure?",
+      "answer": "The complete prompt structure with all variables is available after purchase",
+      "isPremium": true
+    }
+  ],
+  "tags": ["prompt", "content-creation", "marketing", "chatgpt", "copywriting"],
+  "searchKeywords": ["chatgpt prompt", "content creation", "marketing copy", "copywriting"],
+  "currentVersion": "2.1.0",
+  "premiumContent": {
+    "promptText": "Act as a world-class copywriter with 20+ years of experience. You specialize in creating high-converting marketing content. Your task is to create [CONTENT_TYPE] for [TARGET_AUDIENCE] that [SPECIFIC_GOAL]. Use the following framework: [DETAILED_FRAMEWORK_HERE]...",
+    "promptInstructions": "1. Replace [CONTENT_TYPE] with your desired content (email, ad, landing page, etc.)\n2. Define [TARGET_AUDIENCE] specifically\n3. Set your [SPECIFIC_GOAL] (generate leads, increase sales, etc.)\n4. Use the provided framework variables for best results",
+    "detailedHowItWorks": [
+      "Access the complete prompt template in the premium section",
+      "Study the 15 provided examples with real results",
+      "Customize the 8 framework variables for your specific use case",
+      "Apply the advanced techniques from the bonus guide",
+      "Use the A/B testing variations for optimal results"
+    ],
+    "configurationExamples": [
+      {
+        "title": "E-commerce Product Description",
+        "description": "Configuration for product descriptions that convert",
+        "code": "CONTENT_TYPE: Product description\nTARGET_AUDIENCE: Tech-savvy millennials\nSPECIFIC_GOAL: Increase purchase intent by highlighting unique features",
+        "result": "35% increase in add-to-cart rate"
+      },
+      {
+        "title": "Email Subject Lines",
+        "description": "High-open-rate email subject line configuration",
+        "code": "CONTENT_TYPE: Email subject line\nTARGET_AUDIENCE: SaaS decision makers\nSPECIFIC_GOAL: Achieve 25%+ open rates",
+        "result": "28% average open rate vs 18% industry standard"
+      }
+    ],
+    "resultExamples": [
+      {
+        "title": "Sales Page Results",
+        "description": "Before/after conversion rates using this prompt",
+        "type": "image",
+        "url": "https://example.com/results/sales-page-conversion.png"
+      },
+      {
+        "title": "Email Campaign Performance",
+        "description": "Real campaign metrics from prompt usage",
+        "type": "pdf",
+        "url": "https://example.com/results/email-campaign-metrics.pdf"
+      }
+    ],
+    "supportDocuments": [
+      {
+        "title": "Advanced Copywriting Framework Guide",
+        "url": "https://example.com/docs/copywriting-framework.pdf",
+        "type": "pdf"
+      },
+      {
+        "title": "50 High-Converting Examples",
+        "url": "https://example.com/docs/examples-collection.pdf",
+        "type": "pdf"
+      }
+    ],
+    "bonusContent": [
+      {
+        "title": "A/B Testing Variations Template",
+        "description": "Ready-to-use variations for split testing",
+        "type": "template",
+        "url": "https://example.com/bonus/ab-test-variations.docx"
+      },
+      {
+        "title": "Industry-Specific Prompt Variations",
+        "description": "Customized prompts for 12 different industries",
+        "type": "guide",
+        "url": "https://example.com/bonus/industry-variations.pdf"
+      }
+    ]
+  }
+}
+### Note: Purchase Functionality Moved
+# Cart and purchase operations are now handled in purchase.http
+# Use /purchase endpoints for:
+# - Adding/removing items from cart  
+# - Applying promocodes
+# - Creating purchases
+# - Viewing purchased products
+# - Accessing premium content

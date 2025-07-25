@@ -15,9 +15,72 @@ const versionSchema = z.object({
   price: z.number().min(0, 'Price must be non-negative')
 })
 
+const configurationExampleSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().optional(),
+  code: z.string().optional(),
+  image: z.string().url().optional(),
+  result: z.string().optional()
+})
+
+const resultExampleSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().optional(),
+  type: z.enum(['image', 'video', 'pdf', 'text']),
+  url: z.string().url().optional(),
+  content: z.string().optional()
+})
+
+const automationFileSchema = z.object({
+  name: z.string().min(1, 'File name is required'),
+  url: z.string().url('Must be a valid URL'),
+  type: z.enum(['json', 'csv', 'xml', 'txt', 'zip'])
+})
+
+const agentFileSchema = z.object({
+  name: z.string().min(1, 'File name is required'),
+  url: z.string().url('Must be a valid URL'),
+  type: z.enum(['json', 'py', 'js', 'zip'])
+})
+
+const videoTutorialSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  url: z.string().url('Must be a valid URL'),
+  duration: z.string().optional()
+})
+
+const supportDocumentSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  url: z.string().url('Must be a valid URL'),
+  type: z.enum(['pdf', 'doc', 'txt'])
+})
+
+const bonusContentSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().optional(),
+  type: z.enum(['template', 'guide', 'checklist', 'bonus']),
+  url: z.string().url('Must be a valid URL')
+})
+
+const premiumContentSchema = z.object({
+  promptText: z.string().optional(),
+  promptInstructions: z.string().optional(),
+  automationInstructions: z.string().optional(),
+  automationFiles: z.array(automationFileSchema).optional(),
+  agentConfiguration: z.string().optional(),
+  agentFiles: z.array(agentFileSchema).optional(),
+  detailedHowItWorks: z.array(z.string()).optional(),
+  configurationExamples: z.array(configurationExampleSchema).optional(),
+  resultExamples: z.array(resultExampleSchema).optional(),
+  videoTutorials: z.array(videoTutorialSchema).optional(),
+  supportDocuments: z.array(supportDocumentSchema).optional(),
+  bonusContent: z.array(bonusContentSchema).optional()
+})
+
 const faqSchema = z.object({
   question: z.string().min(1, 'Question is required'),
-  answer: z.string().min(1, 'Answer is required')
+  answer: z.string().min(1, 'Answer is required'),
+  isPremium: z.boolean().optional()
 })
 
 export const createProductSchema = z.object({
@@ -88,7 +151,9 @@ export const createProductSchema = z.object({
   
   versions: z.array(versionSchema).optional(),
   
-  currentVersion: z.string().optional()
+  currentVersion: z.string().optional(),
+  
+  premiumContent: premiumContentSchema.optional()
 })
 
 export const updateProductSchema = z.object({
@@ -154,7 +219,9 @@ export const updateProductSchema = z.object({
   
   versions: z.array(versionSchema).optional(),
   
-  currentVersion: z.string().optional()
+  currentVersion: z.string().optional(),
+  
+  premiumContent: premiumContentSchema.optional()
 })
 
 export const getProductsSchema = z.object({
@@ -228,4 +295,16 @@ export const updateProductStatusSchema = z.object({
   status: z.enum(Object.values(EProductStatusNew), {
     errorMap: () => ({ message: 'Status must be one of: draft, published, archived' })
   })
+})
+
+// Schema for purchasing a product
+export const purchaseProductSchema = z.object({
+  paymentMethod: z.string().optional(),
+  paymentReference: z.string().optional()
+})
+
+// Schema for getting user purchases
+export const getUserPurchasesSchema = z.object({
+  page: z.string().regex(/^\d+$/, 'Page must be a number').optional(),
+  limit: z.string().regex(/^\d+$/, 'Limit must be a number').optional()
 })

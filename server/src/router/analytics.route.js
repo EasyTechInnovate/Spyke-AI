@@ -18,7 +18,7 @@ import rateLimiter from '../middleware/rateLimit.js'
 
 const router = Router()
 
-router.route('/health').get(self)
+router.route('/self').get(self)
 router.post(
   '/events',
   rateLimiter, // Uses default rate limiting

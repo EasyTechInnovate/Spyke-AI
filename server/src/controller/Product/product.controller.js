@@ -6,6 +6,7 @@ import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc.js'
 import Product from '../../model/product.model.js'
 import sellerProfileModel from '../../model/seller.profile.model.js'
+import Purchase from '../../model/purchase.model.js'
 import { notificationService } from '../../util/notification.js'
 import { EProductPriceCategory, EProductStatusNew, EUserRole } from '../../constant/application.js'
 import { v4 as uuidv4 } from 'uuid'
@@ -154,7 +155,7 @@ export default {
                     .sort(sort)
                     .skip(skip)
                     .limit(parseInt(limit))
-                    .select('-reviews -faqs -versions -howItWorks')
+                    .select('-reviews -faqs -versions -howItWorks -premiumContent')
                     .lean(),
                 Product.countDocuments(query)
             ])
@@ -182,6 +183,7 @@ export default {
     getProductBySlug: async (req, res, next) => {
         try {
             const { slug } = req.params
+            const { authenticatedUser } = req
 
             const product = await Product.findOne({ slug, status: EProductStatusNew.PUBLISHED })
                 .populate({
@@ -196,9 +198,50 @@ export default {
                 return httpError(next, new Error(responseMessage.PRODUCT.NOT_FOUND), req, 404)
             }
 
+            // Check if user has purchased the product
+            let hasPurchased = false
+            let isOwner = false
+            
+            if (authenticatedUser) {
+                // Check if user is the seller/owner
+                const sellerProfile = await sellerProfileModel.findOne({ userId: authenticatedUser.id })
+                isOwner = sellerProfile && product.sellerId.toString() === sellerProfile._id.toString()
+                
+                // Check if user has purchased the product
+                if (!isOwner) {
+                    hasPurchased = await Purchase.hasPurchased(authenticatedUser.id, product._id)
+                }
+            }
+
+            // Filter content based on purchase status
+            const responseProduct = { ...product }
+            
+            if (!hasPurchased && !isOwner && !authenticatedUser?.roles?.includes(EUserRole.ADMIN)) {
+                // Hide premium content for non-purchasers
+                delete responseProduct.premiumContent
+                
+                // Filter out premium FAQs
+                if (responseProduct.faqs) {
+                    responseProduct.faqs = responseProduct.faqs.filter(faq => !faq.isPremium)
+                }
+                
+                // Hide detailed reviews (keep only basic ones)
+                if (responseProduct.reviews) {
+                    responseProduct.reviews = responseProduct.reviews.slice(0, 3) // Show only first 3 reviews
+                }
+            }
+            
+            // Add purchase status to response
+            responseProduct.userAccess = {
+                hasPurchased,
+                isOwner,
+                canAccessPremiumContent: hasPurchased || isOwner || authenticatedUser?.roles?.includes(EUserRole.ADMIN)
+            }
+
+            // Increment views
             Product.findByIdAndUpdate(product._id, { $inc: { views: 1 } }).exec()
 
-            httpResponse(req, res, 200, responseMessage.SUCCESS, product)
+            httpResponse(req, res, 200, responseMessage.SUCCESS, responseProduct)
         } catch (err) {
             httpError(next, err, req, 500)
         }
@@ -405,7 +448,7 @@ export default {
                     select: 'fullName avatar stats.averageRating verification.status'
                 })
                 .limit(parseInt(limit))
-                .select('-reviews -faqs -versions -howItWorks')
+                .select('-reviews -faqs -versions -howItWorks -premiumContent')
                 .lean()
 
             httpResponse(req, res, 200, responseMessage.SUCCESS, relatedProducts)
