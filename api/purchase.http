@@ -1,0 +1,221 @@
+### Purchase & Cart API Testing
+
+@baseUrl = http://localhost:5000/v1
+@authToken = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODZmYWI1ODgyN2U4ZjEyZDFkYzQyY2MiLCJlbWFpbEFkZHJlc3MiOiJ0ZXN0M0BnbWFpbC5jb20iLCJyb2xlcyI6WyJ1c2VyIiwic2VsbGVyIl0sImlhdCI6MTc1MzQ3MzUyNywiZXhwIjoxNzUzNDc3MTI3fQ.08vFp5PxcsQzBL2IAthFSi4baZsl9K8knqSdayeuWNk
+
+### 1. Get Purchase Service Status
+GET {{baseUrl}}/purchase/self
+Content-Type: application/json
+
+### 2. Get User Cart
+GET {{baseUrl}}/purchase/cart
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 3. Add Product to Cart
+POST {{baseUrl}}/purchase/cart/add
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "productId": "687949b3608bcf098a52e037"
+}
+
+### 4. Add Multiple Products to Cart
+POST {{baseUrl}}/purchase/cart/add
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "productId": "687949b3608bcf098a52e038"
+}
+
+### 5. Remove Product from Cart
+DELETE {{baseUrl}}/purchase/cart/remove/687949b3608bcf098a52e037
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 6. Apply Promocode to Cart
+POST {{baseUrl}}/purchase/cart/promocode
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "code": "WELCOME10"
+}
+
+### 7. Apply Different Promocode
+POST {{baseUrl}}/purchase/cart/promocode
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "code": "SAVE20"
+}
+
+### 8. Apply Fixed Amount Promocode
+POST {{baseUrl}}/purchase/cart/promocode
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "code": "NEWUSER"
+}
+
+### 9. Apply Black Friday Promocode
+POST {{baseUrl}}/purchase/cart/promocode
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "code": "BLACKFRIDAY"
+}
+
+### 10. Remove Applied Promocode
+DELETE {{baseUrl}}/purchase/cart/promocode
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 11. Create Purchase from Cart (Free Products)
+POST {{baseUrl}}/purchase/create
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "paymentMethod": "free",
+  "paymentReference": "free-access"
+}
+
+### 12. Create Purchase from Cart (Paid Products)
+POST {{baseUrl}}/purchase/create
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "paymentMethod": "stripe",
+  "paymentReference": "pi_1234567890"
+}
+
+### 13. Create Purchase with Manual Payment
+POST {{baseUrl}}/purchase/create
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "paymentMethod": "manual",
+  "paymentReference": "manual-payment-123"
+}
+
+### 14. Clear Cart
+DELETE {{baseUrl}}/purchase/cart/clear
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 15. Get User Purchases (All)
+GET {{baseUrl}}/purchase/my-purchases?page=1&limit=10
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 16. Get User Purchases (Prompts Only)
+GET {{baseUrl}}/purchase/my-purchases?page=1&limit=5&type=prompt
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 17. Get User Purchases (Automations Only)
+GET {{baseUrl}}/purchase/my-purchases?page=1&limit=5&type=automation
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 18. Get User Purchases (Agents Only)
+GET {{baseUrl}}/purchase/my-purchases?page=1&limit=5&type=agent
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 19. Get User Purchases by Type (Card View)
+GET {{baseUrl}}/purchase/my-purchases/by-type
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 20. Get Product Premium Content Access
+GET {{baseUrl}}/purchase/access/687949b3608bcf098a52e037
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 21. Add Multiple Products and Apply Promocode Workflow
+POST {{baseUrl}}/purchase/cart/add
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "productId": "687949b3608bcf098a52e037"
+}
+
+###
+POST {{baseUrl}}/purchase/cart/add
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "productId": "687949b3608bcf098a52e038"
+}
+
+###
+POST {{baseUrl}}/purchase/cart/promocode
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "code": "SAVE20"
+}
+
+###
+GET {{baseUrl}}/purchase/cart
+Content-Type: application/json
+Authorization: {{authToken}}
+
+###
+POST {{baseUrl}}/purchase/create
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "paymentMethod": "stripe",
+  "paymentReference": "pi_workflow_test"
+}
+
+### 22. Test Invalid Promocode
+POST {{baseUrl}}/purchase/cart/promocode
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "code": "INVALID_CODE"
+}
+
+### 23. Test Adding Own Product to Cart (Should Fail)
+POST {{baseUrl}}/purchase/cart/add
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "productId": "YOUR_OWN_PRODUCT_ID"
+}
+
+### 24. Test Adding Already Purchased Product to Cart (Should Fail)
+POST {{baseUrl}}/purchase/cart/add
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "productId": "ALREADY_PURCHASED_PRODUCT_ID"
+}
+
+### 25. Test Empty Cart Purchase (Should Fail)
+POST {{baseUrl}}/purchase/create
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "paymentMethod": "stripe",
+  "paymentReference": "pi_empty_cart_test"
+}

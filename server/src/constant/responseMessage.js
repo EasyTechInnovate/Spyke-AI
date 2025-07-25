@@ -132,7 +132,48 @@ export default {
         BULK_OPERATION_FAILED: (operation) => `Bulk ${operation} operation failed`,
         PRODUCT_NOT_PUBLISHED: 'Product is not published',
         PRODUCT_ARCHIVED: 'Product is archived and cannot be accessed',
-        SIMILAR_PRODUCTS_FOUND: (count) => `Found ${count} similar products`
+        SIMILAR_PRODUCTS_FOUND: (count) => `Found ${count} similar products`,
+        
+        // Purchase related messages
+        PURCHASE_SUCCESSFUL: 'Product purchased successfully',
+        ALREADY_PURCHASED: 'You have already purchased this product',
+        CANNOT_PURCHASE_OWN_PRODUCT: 'You cannot purchase your own product',
+        CANNOT_ADD_OWN_PRODUCT_TO_CART: 'You cannot add your own product to cart',
+        FREE_PRODUCT_ACCESSED: 'Free product access granted successfully',
+        ACCESS_DENIED: 'You do not have access to this premium content',
+        STATUS_UPDATED: 'Product status updated successfully'
+    },
+
+    CART: {
+        ITEM_ADDED: 'Product added to cart successfully',
+        ITEM_REMOVED: 'Product removed from cart successfully',
+        ITEM_ALREADY_IN_CART: 'Product is already in your cart',
+        CLEARED: 'Cart cleared successfully',
+        EMPTY_CART: 'Your cart is empty',
+        NO_VALID_ITEMS: 'No valid items found in cart'
+    },
+
+    PROMOCODE: {
+        APPLIED: 'Promocode applied successfully',
+        REMOVED: 'Promocode removed successfully',
+        INVALID: 'Invalid or expired promocode',
+        VALID: 'Promocode is valid',
+        ALREADY_APPLIED: 'A promocode is already applied',
+        MINIMUM_ORDER_NOT_MET: 'Minimum order amount not met for this promocode',
+        CREATED: 'Promocode created successfully',
+        UPDATED: 'Promocode updated successfully',
+        DELETED: 'Promocode deleted successfully',
+        ACTIVATED: 'Promocode activated successfully',
+        DEACTIVATED: 'Promocode deactivated successfully',
+        NOT_FOUND: 'Promocode not found',
+        CODE_ALREADY_EXISTS: 'A promocode with this code already exists',
+        UNAUTHORIZED_ACCESS: 'You are not authorized to access this promocode',
+        CANNOT_MODIFY_USED_PROMOCODE: 'Cannot modify a promocode that has been used',
+        CANNOT_DELETE_USED_PROMOCODE: 'Cannot delete a promocode that has been used',
+        INVALID_EXPIRY_DATE: 'Expiry date must be in the future',
+        GLOBAL_NOT_ALLOWED_FOR_SELLER: 'Sellers cannot create global promocodes',
+        NOT_APPLICABLE_TO_PRODUCTS: 'Promocode is not applicable to selected products',
+        NOT_APPLICABLE_TO_CATEGORIES: 'Promocode is not applicable to selected product categories'
     },
 
     customMessage: (message) => message

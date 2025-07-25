@@ -5,7 +5,7 @@ export const authAPI = {
     // Health Check
     // Health Check
     checkHealth: async () => {
-        const response = await apiClient.get('v1/auth/health')
+        const response = await apiClient.get('v1/auth/self')
         // Handle wrapped response
         return response?.data || response
     },

@@ -53,12 +53,9 @@ const analyticsEventSchema = new mongoose.Schema(
   }
 )
 
-// Indexes for performance
 analyticsEventSchema.index({ createdAt: -1 })
 analyticsEventSchema.index({ type: 1, createdAt: -1 })
 analyticsEventSchema.index({ userId: 1, createdAt: -1 })
-
-// TTL index to automatically delete old events after 90 days
 analyticsEventSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 })
 
 const AnalyticsEvent = mongoose.model('AnalyticsEvent', analyticsEventSchema)

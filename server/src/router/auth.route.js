@@ -8,7 +8,7 @@ import authorization from '../middleware/authorization.js'
 
 const router = Router()
 
-router.route('/health').get(authenticationController.self)
+router.route('/self').get(authenticationController.self)
 router.route('/register').post(validateRequest(authSchemas.register), authenticationController.register)
 router
     .route('/confirmation/:token')

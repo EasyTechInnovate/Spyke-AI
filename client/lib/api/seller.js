@@ -72,7 +72,7 @@ export const sellerAPI = {
      */
     getPublicProfile: async (sellerId) => {
         const response = await apiClient.get(`v1/seller/public/${sellerId}`)
-        return response.data
+        return response
     },
 
     /**

@@ -4,7 +4,7 @@ import { uploadFiles } from '../middleware/multerHandler.js'
 
 const router = Router()
 
-router.route('/health').get(uploadController.self)
+router.route('/self').get(uploadController.self)
 router.route('/file').post(uploadFiles, uploadController.uploadFile)
 
 export default router

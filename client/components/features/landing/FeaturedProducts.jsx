@@ -38,7 +38,7 @@ const FeaturedProducts = memo(function FeaturedProducts() {
   const { products, loading, error } = useProducts({
     sortBy: 'popularity',
     sortOrder: 'desc',
-    limit: 8,
+    limit: 7,
     verifiedOnly: 'true'
   })
 
@@ -103,26 +103,39 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                 </Link>
               </div>
             ) : products.length > 0 ? (
-              <SmoothProductCarousel 
-                autoPlay={true} 
-                interval={4000}
-                slidesToShow={4}
-                slidesToScroll={1}
-                gap={24}
-                responsive={[
-                  { breakpoint: 1280, settings: { slidesToShow: 3 } },
-                  { breakpoint: 768, settings: { slidesToShow: 2 } },
-                  { breakpoint: 640, settings: { slidesToShow: 1 } }
-                ]}
-              >
-                {products.map((product) => (
-                  <ProductCard
-                    key={product._id || product.id}
-                    product={product}
-                    onClick={() => handleProductClick(product.slug)}
-                  />
-                ))}
-              </SmoothProductCarousel>
+              products.length === 1 ? (
+                // Center single product
+                <div className="flex justify-center">
+                  <div className="w-full max-w-sm">
+                    <ProductCard
+                      product={products[0]}
+                      onClick={() => handleProductClick(products[0].slug)}
+                    />
+                  </div>
+                </div>
+              ) : (
+                // Show carousel for multiple products
+                <SmoothProductCarousel 
+                  autoPlay={true} 
+                  interval={4000}
+                  slidesToShow={Math.min(products.length, 4)}
+                  slidesToScroll={1}
+                  gap={24}
+                  responsive={[
+                    { breakpoint: 1280, settings: { slidesToShow: Math.min(products.length, 3) } },
+                    { breakpoint: 768, settings: { slidesToShow: Math.min(products.length, 2) } },
+                    { breakpoint: 640, settings: { slidesToShow: 1 } }
+                  ]}
+                >
+                  {products.map((product) => (
+                    <ProductCard
+                      key={product._id || product.id}
+                      product={product}
+                      onClick={() => handleProductClick(product.slug)}
+                    />
+                  ))}
+                </SmoothProductCarousel>
+              )
             ) : (
               <div className="text-center py-12">
                 <p className="text-gray-400 mb-4">No products available</p>

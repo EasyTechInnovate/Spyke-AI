@@ -8,6 +8,8 @@ import { EUserRole } from '../constant/application.js'
 
 const router = Router()
 
+router.get('/self', sellerController.self)
+
 // Public routes (no authentication required)
 router.route('/public/:sellerId').get(validateRequest(sellerSchemas.sellerIdParam, 'params'), sellerController.getPublicProfile)
 router.route('/search').get(validateRequest(sellerSchemas.searchSellers, 'query'), sellerController.searchSellers)

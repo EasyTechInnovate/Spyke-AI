@@ -81,13 +81,13 @@ export function useCart() {
           id: Date.now(), // Generate unique ID
           productId: product.id,
           title: product.title,
-          description: product.description,
+          description: product.description || product.shortDescription,
           price: product.price,
           originalPrice: product.originalPrice,
           quantity: 1,
           category: product.category,
           seller: product.seller,
-          image: product.image || '/api/placeholder/150/100'
+          image: product.image || product.thumbnail || '/api/placeholder/150/100'
         }
         return [...prevItems, newItem]
       }
@@ -123,6 +123,10 @@ export function useCart() {
     return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0)
   }
 
+  const isInCart = useCallback((productId) => {
+    return cartItems.some(item => item.productId === productId)
+  }, [cartItems])
+
   return {
     cartItems,
     loading,
@@ -132,6 +136,7 @@ export function useCart() {
     clearCart,
     getCartCount,
     getCartTotal,
+    isInCart,
     cartCount: getCartCount(),
     cartTotal: getCartTotal(),
     lastUpdate
