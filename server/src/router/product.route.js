@@ -11,7 +11,7 @@ import {
   toggleFavoriteSchema,
   toggleUpvoteSchema,
   verifyProductSchema,
-  updateProductStatusSchema
+  updateProductStatusSchema,
 } from '../schema/product.schema.js'
 import rateLimiter from '../middleware/rateLimit.js'
 
@@ -124,5 +124,6 @@ router.post(
   validateRequest(verifyProductSchema),
   productController.verifyProduct
 )
+
 
 export default router

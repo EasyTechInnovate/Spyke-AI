@@ -21,6 +21,38 @@ const toolSchema = new mongoose.Schema(
     { _id: false }
 )
 
+const configurationExampleSchema = new mongoose.Schema(
+    {
+        title: {
+            type: String,
+            required: true
+        },
+        description: String,
+        code: String,
+        image: String,
+        result: String
+    },
+    { _id: false }
+)
+
+const resultExampleSchema = new mongoose.Schema(
+    {
+        title: {
+            type: String,
+            required: true
+        },
+        description: String,
+        type: {
+            type: String,
+            enum: ['image', 'video', 'pdf', 'text'],
+            required: true
+        },
+        url: String,
+        content: String
+    },
+    { _id: false }
+)
+
 const versionSchema = new mongoose.Schema(
     {
         version: {
@@ -136,6 +168,66 @@ const productSchema = new mongoose.Schema(
         howItWorks: [String],
         outcome: [String],
 
+        premiumContent: {
+            promptText: {
+                type: String,
+                default: null
+            },
+            promptInstructions: {
+                type: String,
+                default: null
+            },
+            automationInstructions: {
+                type: String,
+                default: null
+            },
+            automationFiles: [{
+                name: String,
+                url: String,
+                type: {
+                    type: String,
+                    enum: ['json', 'csv', 'xml', 'txt', 'zip']
+                }
+            }],
+            agentConfiguration: {
+                type: String,
+                default: null
+            },
+            agentFiles: [{
+                name: String,
+                url: String,
+                type: {
+                    type: String,
+                    enum: ['json', 'py', 'js', 'zip']
+                }
+            }],
+            detailedHowItWorks: [String],
+            configurationExamples: [configurationExampleSchema],
+            resultExamples: [resultExampleSchema],
+            videoTutorials: [{
+                title: String,
+                url: String,
+                duration: String
+            }],
+            supportDocuments: [{
+                title: String,
+                url: String,
+                type: {
+                    type: String,
+                    enum: ['pdf', 'doc', 'txt']
+                }
+            }],
+            bonusContent: [{
+                title: String,
+                description: String,
+                type: {
+                    type: String,
+                    enum: ['template', 'guide', 'checklist', 'bonus']
+                },
+                url: String
+            }]
+        },
+
         isVerified: {
             type: Boolean,
             default: false
@@ -196,7 +288,11 @@ const productSchema = new mongoose.Schema(
         faqs: [
             {
                 question: String,
-                answer: String
+                answer: String,
+                isPremium: {
+                    type: Boolean,
+                    default: false
+                }
             }
         ],
 

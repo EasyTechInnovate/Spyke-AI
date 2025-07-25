@@ -1,10 +1,10 @@
 @baseUrl = http://localhost:5000/v1
 @contentType = application/json
 
-@userEmailAddress = admin@gmail.com
-@userPassword = Q1e2r3s4
-# @userEmailAddress = test3@gmail.com
-# @userPassword = anand@123ANAND
+# @userEmailAddress = admin@gmail.com
+# @userPassword = Q1e2r3s4
+@userEmailAddress = test3@gmail.com
+@userPassword = anand@123ANAND
 
 @accessToken = YOUR_JWT_TOKEN_HERE
 @token = 70018672-d952-4db8-bb1f-38123945eef4
@@ -12,7 +12,7 @@
 
 ###
 # Check Authentication Service Health
-GET {{baseUrl}}/auth/health
+GET {{baseUrl}}/auth/self
 Content-Type: {{contentType}}
 
 ###
