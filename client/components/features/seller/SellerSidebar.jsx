@@ -13,13 +13,21 @@ import {
     ShoppingCart,
     BarChart3,
     MessageSquare,
-    FileText} from 'lucide-react'
+    FileText,
+    Wallet,
+    LayoutDashboard
+} from 'lucide-react'
 import { logout } from '@/lib/services/logout'
 
 const SellerSidebar = ({ currentPath = '/profile', sellerName = '', sidebarOpen, setSidebarOpen }) => {
 
     const navigationItems = [
-        
+        {
+            id: 'dashboard',
+            label: 'Dashboard',
+            icon: LayoutDashboard,
+            href: '/seller/dashboard'
+        },
         {
             id: 'profile',
             label: 'Profile',
@@ -59,6 +67,14 @@ const SellerSidebar = ({ currentPath = '/profile', sellerName = '', sidebarOpen,
             label: 'Messages',
             icon: MessageSquare,
             href: '/seller/messages',
+            disabled: true,
+            badge: 'Soon'
+        },
+        {
+            id: 'payouts',
+            label: 'Payouts',
+            icon: Wallet,
+            href: '/seller/payouts',
             disabled: true,
             badge: 'Soon'
         },

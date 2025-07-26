@@ -1,8 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import dynamic from 'next/dynamic'
 import { promocodeAPI, sellerAPI } from '@/lib/api'
 import toast from '@/lib/utils/toast'
 import { Button } from '@/components/shared/ui/button'
@@ -37,7 +35,6 @@ import LoadingSpinner from '@/components/shared/ui/LoadingSpinner'
 // Sidebar is now handled by the layout
 
 export default function PromocodesPage() {
-    const router = useRouter()
     const [sellerProfile, setSellerProfile] = useState(null)
     const [promocodes, setPromocodes] = useState([])
     const [loading, setLoading] = useState(true)
