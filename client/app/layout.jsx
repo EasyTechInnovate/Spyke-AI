@@ -5,6 +5,7 @@ import Script from 'next/script'
 import { AnalyticsProvider } from '@/providers/AnalyticsProvider'
 import AnalyticsWrapper from '@/components/analytics/AnalyticsWrapper'
 import { fontVariables } from '@/lib/fonts'
+import WhatsAppButton from '@/components/shared/WhatsAppButton'
 
 const structuredData = {
     '@context': 'https://schema.org',
@@ -268,6 +269,7 @@ export default function RootLayout({ children }) {
                 <AnalyticsProvider>
                     <main id="main-content">{children}</main>
                     <AnalyticsWrapper />
+                    <WhatsAppButton />
                 </AnalyticsProvider>
 
                 <Toaster

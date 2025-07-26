@@ -87,7 +87,7 @@ export default function Header() {
                                 <div className="hidden md:flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
                                     <Link 
                                         href="/signin" 
-                                        className="relative group inline-flex"
+                                        className="relative group inline-flex overflow-hidden rounded-xl"
                                         style={{ zIndex: 10 }}
                                         onClick={() => {
                                             // Clear any stale auth data
@@ -101,8 +101,8 @@ export default function Header() {
                                             }
                                         }}
                                     >
-                                        <div className="absolute -inset-0.5 bg-gradient-to-r from-brand-primary to-green-400 rounded-xl opacity-75 blur transition duration-300 group-hover:opacity-100 pointer-events-none" />
-                                        <span className="relative flex items-center px-5 sm:px-6 py-2.5 sm:py-3 bg-black rounded-xl text-brand-primary font-kumbh-sans font-semibold text-base sm:text-lg transition-all duration-300 hover:text-white">
+                                        <div className="absolute inset-0 bg-gradient-to-r from-brand-primary via-green-400 to-brand-primary bg-[length:200%_100%] animate-gradient-x rounded-xl opacity-100 blur-sm transition-all duration-300 group-hover:blur-md" />
+                                        <span className="relative flex items-center px-5 sm:px-6 py-2.5 sm:py-3 bg-black/90 backdrop-blur-sm rounded-xl text-brand-primary font-kumbh-sans font-semibold text-base sm:text-lg transition-all duration-300 hover:text-white hover:bg-black/80 border border-brand-primary/20 hover:border-brand-primary/40">
                                             Sign In
                                         </span>
                                     </Link>

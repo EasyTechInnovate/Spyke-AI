@@ -187,7 +187,7 @@ export default function SearchOverlay({ isOpen, onClose }) {
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search products, prompts, tools..."
-                                className="w-full pl-12 sm:pl-14 pr-24 sm:pr-28 py-3 sm:py-4 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-brand-primary transition-colors text-base sm:text-lg"
+                                className="w-full pl-12 sm:pl-14 pr-24 sm:pr-28 py-3 sm:py-4 bg-gray-800/50 border-2 border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-brand-primary focus:shadow-[0_0_0_2px_rgba(0,255,137,0.2)] transition-all text-base sm:text-lg"
                             />
 
                             {/* Voice Search Button */}
@@ -218,17 +218,17 @@ export default function SearchOverlay({ isOpen, onClose }) {
                         </div>
 
                         {/* Quick Filters */}
-                        <div className="flex items-center gap-2 mt-4 flex-wrap">
-                            <button className="px-3 py-1.5 bg-brand-primary/20 text-brand-primary rounded-lg text-sm font-medium hover:bg-brand-primary/30 transition-colors">
+                        <div className="flex items-center gap-2 mt-4 overflow-x-auto scrollbar-hide">
+                            <button className="px-3 py-1.5 bg-brand-primary/20 text-brand-primary rounded-lg text-sm font-medium hover:bg-brand-primary/30 transition-colors whitespace-nowrap flex-shrink-0">
                                 All
                             </button>
-                            <button className="px-3 py-1.5 bg-gray-800/50 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700/50 transition-colors">
+                            <button className="px-3 py-1.5 bg-gray-800/50 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700/50 transition-colors whitespace-nowrap flex-shrink-0">
                                 Prompts
                             </button>
-                            <button className="px-3 py-1.5 bg-gray-800/50 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700/50 transition-colors">
+                            <button className="px-3 py-1.5 bg-gray-800/50 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700/50 transition-colors whitespace-nowrap flex-shrink-0">
                                 Tools
                             </button>
-                            <button className="px-3 py-1.5 bg-gray-800/50 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700/50 transition-colors">
+                            <button className="px-3 py-1.5 bg-gray-800/50 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700/50 transition-colors whitespace-nowrap flex-shrink-0">
                                 Templates
                             </button>
                         </div>

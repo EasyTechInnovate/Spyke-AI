@@ -15,7 +15,14 @@ import {
   X,
   CheckCircle,
   AlertCircle,
-  Package
+  Package,
+  Trash2,
+  Heart,
+  ChevronDown,
+  ChevronUp,
+  Info,
+  Clock,
+  Sparkles
 } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
 import Header from '@/components/shared/layout/Header'
@@ -23,6 +30,7 @@ import AuthButton from '@/components/shared/ui/AuthButton'
 import { useAuth } from '@/hooks/useAuth'
 import { useCart } from '@/hooks/useCart'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useTrackEvent } from '@/hooks/useTrackEvent'
 import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 
@@ -41,7 +49,7 @@ export default function CartPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-black">
+            <div className="min-h-screen bg-[#121212]">
                 <Header />
                 <Container>
                     <div className="pt-24 pb-16">
@@ -66,7 +74,7 @@ export default function CartPage() {
     const updateQuantity = (itemId, newQuantity) => {
         if (newQuantity < 1) return
         
-        const item = cartItems.find(i => i.id === itemId)
+        const item = cartItems.find(i => (i._id || i.id || i.productId) === itemId)
         track(ANALYTICS_EVENTS.CART.QUANTITY_UPDATED, {
             ...eventProperties.cart(itemId, newQuantity, item?.price),
             itemTitle: item?.title,
@@ -78,7 +86,7 @@ export default function CartPage() {
     }
 
     const removeItem = (itemId) => {
-        const item = cartItems.find(i => i.id === itemId)
+        const item = cartItems.find(i => (i._id || i.id || i.productId) === itemId)
         track(ANALYTICS_EVENTS.CART.ITEM_REMOVED, {
             ...eventProperties.cart(itemId, item?.quantity, item?.price),
             itemTitle: item?.title
@@ -105,15 +113,13 @@ export default function CartPage() {
             itemsCount: cartItems.length,
             totalAmount: total
         })
-        // Simulate checkout process
-        setTimeout(() => {
-            router.push('/checkout')
-        }, 1000)
+        // Navigate immediately to checkout
+        router.push('/checkout')
     }
 
     if (cartItems.length === 0) {
         return (
-            <div className="min-h-screen bg-black">
+            <div className="min-h-screen bg-[#121212]">
                 <Header />
                 <Container>
                     <div className="pt-24 pb-16">
@@ -125,7 +131,7 @@ export default function CartPage() {
     }
 
     return (
-        <div className="min-h-screen bg-black text-white">
+        <div className="min-h-screen bg-[#121212] text-white">
             <Header />
             
             <main className="pt-24 pb-16">
@@ -137,10 +143,25 @@ export default function CartPage() {
                             animate={{ opacity: 1, y: 0 }}
                             className="mb-8"
                         >
-                            <h1 className="text-3xl lg:text-4xl font-bold mb-2">Shopping Cart</h1>
-                            <p className="text-gray-400">
-                                {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'} in your cart
-                            </p>
+                            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                <div>
+                                    <h1 className="text-3xl lg:text-4xl font-bold mb-2">Shopping Cart</h1>
+                                    <p className="text-gray-400">
+                                        {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'} in your cart
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-4 text-sm">
+                                    <div className="px-4 py-2 bg-[#1f1f1f] rounded-lg border border-gray-800">
+                                        <span className="text-gray-400">Total: </span>
+                                        <span className="text-[#00FF89] font-semibold">${total.toFixed(2)}</span>
+                                    </div>
+                                    {totalSavings > 0 && (
+                                        <div className="px-4 py-2 bg-[#00FF89]/10 text-[#00FF89] rounded-lg border border-[#00FF89]/20">
+                                            You save ${totalSavings.toFixed(2)}!
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </motion.div>
 
                         <div className="grid lg:grid-cols-3 gap-8">
@@ -148,7 +169,7 @@ export default function CartPage() {
                             <div className="lg:col-span-2 space-y-4">
                                 {cartItems.map((item, index) => (
                                     <CartItem
-                                        key={item.id}
+                                        key={item._id || item.id || `cart-item-${index}`}
                                         item={item}
                                         index={index}
                                         onUpdateQuantity={updateQuantity}
@@ -171,6 +192,31 @@ export default function CartPage() {
                                 handleCheckout={handleCheckout}
                             />
                         </div>
+                        
+                        {/* Related Products Suggestion */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 }}
+                            className="mt-12"
+                        >
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                                    <Sparkles className="w-5 h-5 text-[#FFC050]" />
+                                    You might also like
+                                </h3>
+                                <Link href="/explore" className="text-sm text-[#FFC050] hover:underline">
+                                    View all
+                                </Link>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {/* Placeholder for related products */}
+                                <div className="text-center text-gray-500 col-span-full py-8 bg-[#1f1f1f] rounded-xl border border-gray-800">
+                                    <Clock className="w-8 h-8 mx-auto mb-2 text-gray-600" />
+                                    <p className="text-sm">Related products coming soon</p>
+                                </div>
+                            </div>
+                        </motion.div>
 
                         {/* Continue Shopping */}
                         <motion.div
@@ -201,25 +247,28 @@ function EmptyCart() {
             animate={{ opacity: 1, y: 0 }}
             className="max-w-2xl mx-auto text-center"
         >
-            <div className="w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
-                <ShoppingCart className="w-12 h-12 text-gray-500" />
+            <div className="relative w-32 h-32 mx-auto mb-8">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#00FF89]/20 to-transparent rounded-full blur-xl" />
+                <div className="relative w-full h-full bg-[#1f1f1f] rounded-full flex items-center justify-center">
+                    <ShoppingCart className="w-16 h-16 text-gray-500" />
+                </div>
             </div>
             <h1 className="text-3xl font-bold text-white mb-4">Your Cart is Empty</h1>
-            <p className="text-gray-400 mb-8">
-                Looks like you haven't added any items to your cart yet. 
-                Start exploring our marketplace to find amazing AI tools and prompts.
+            <p className="text-gray-400 mb-8 max-w-md mx-auto">
+                Discover amazing AI tools, prompts, and automations to supercharge your workflow. 
+                Start exploring our marketplace now!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                     href="/"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-brand-primary text-black font-semibold rounded-xl hover:bg-brand-primary/90 transition-colors"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#00FF89] text-[#121212] font-semibold rounded-xl hover:bg-[#00FF89]/90 transition-colors"
                 >
                     Explore Products
                     <ArrowRight className="w-5 h-5" />
                 </Link>
                 <Link
                     href="/"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-gray-700 text-gray-300 font-semibold rounded-xl hover:border-gray-600 hover:text-white transition-colors"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-gray-700 text-gray-300 font-semibold rounded-xl hover:border-[#00FF89]/50 hover:text-white transition-colors"
                 >
                     <ArrowLeft className="w-5 h-5" />
                     Back to Home
@@ -241,14 +290,46 @@ function OrderSummary({
     handleApplyPromo, 
     handleCheckout 
 }) {
+    const [isExpanded, setIsExpanded] = useState(true)
+    const { applyPromocode, removePromocode, cartData, loading: promoLoading } = useCart()
+    
+    const handleApplyBackendPromo = async () => {
+        if (!promoCode.trim()) return
+        
+        try {
+            await applyPromocode(promoCode)
+            setPromoApplied(true)
+        } catch (error) {
+            // Fallback to frontend promo logic
+            handleApplyPromo()
+        }
+    }
+    
     return (
         <div className="lg:col-span-1">
             <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-gray-900 border border-gray-800 rounded-2xl p-6 lg:sticky lg:top-8"
+                className="bg-[#1f1f1f] border border-gray-800 rounded-2xl p-6 lg:sticky lg:top-8"
             >
-                <h2 className="text-xl font-semibold mb-6">Order Summary</h2>
+                <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="w-full flex items-center justify-between lg:cursor-default mb-6"
+                >
+                    <h2 className="text-xl font-semibold">Order Summary</h2>
+                    <div className="flex items-center gap-2">
+                        {!isExpanded && (
+                            <span className="lg:hidden text-[#00FF89] font-semibold">
+                                ${total.toFixed(2)}
+                            </span>
+                        )}
+                        <div className="lg:hidden">
+                            {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                        </div>
+                    </div>
+                </button>
+                
+                <div className={`${isExpanded ? 'block' : 'hidden lg:block'}`}>
 
                 {/* Price Breakdown */}
                 <div className="space-y-3 mb-6">
@@ -257,13 +338,13 @@ function OrderSummary({
                         <span>${subtotal.toFixed(2)}</span>
                     </div>
                     {totalSavings > 0 && (
-                        <div className="flex justify-between text-green-400">
+                        <div className="flex justify-between text-[#00FF89]">
                             <span>Total Savings</span>
                             <span>-${totalSavings.toFixed(2)}</span>
                         </div>
                     )}
                     {promoApplied && (
-                        <div className="flex justify-between text-brand-primary">
+                        <div className="flex justify-between text-[#00FF89]">
                             <span>Promo Discount ({(promoDiscount * 100)}%)</span>
                             <span>-${discount.toFixed(2)}</span>
                         </div>
@@ -271,16 +352,24 @@ function OrderSummary({
                     <div className="border-t border-gray-700 pt-3">
                         <div className="flex justify-between text-lg font-semibold">
                             <span>Total</span>
-                            <span className="text-brand-primary">${total.toFixed(2)}</span>
+                            <span className="text-[#00FF89]">${total.toFixed(2)}</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Promo Code */}
                 <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-400 mb-2">
-                        Promo Code
-                    </label>
+                    <div className="flex items-center justify-between mb-2">
+                        <label className="text-sm font-medium text-gray-400">
+                            Promo Code
+                        </label>
+                        <button className="group relative">
+                            <Info className="w-4 h-4 text-gray-500 hover:text-gray-400" />
+                            <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-[#1f1f1f] text-xs text-gray-300 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                Enter a valid promo code to get discount on your order
+                            </div>
+                        </button>
+                    </div>
                     <div className="flex gap-2">
                         <input
                             type="text"
@@ -288,13 +377,14 @@ function OrderSummary({
                             onChange={(e) => setPromoCode(e.target.value)}
                             placeholder="Enter code"
                             disabled={promoApplied}
-                            className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent disabled:opacity-50"
+                            className="flex-1 px-4 py-2 bg-[#1f1f1f] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00FF89] focus:border-transparent disabled:opacity-50"
                         />
                         <button
-                            onClick={handleApplyPromo}
-                            disabled={!promoCode || promoApplied}
-                            className="px-4 py-2 bg-gray-800 border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-700 hover:border-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={handleApplyBackendPromo}
+                            disabled={!promoCode || promoApplied || promoLoading}
+                            className="px-4 py-2 bg-[#1f1f1f] border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800 hover:border-[#00FF89]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
+                            {promoLoading && <div className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />}
                             {promoApplied ? 'Applied' : 'Apply'}
                         </button>
                     </div>
@@ -311,6 +401,7 @@ function OrderSummary({
                     icon={CreditCard}
                     className="w-full mb-4"
                     loadingText="Processing..."
+                    requiresAuth={false}
                 >
                     Proceed to Checkout
                 </AuthButton>
@@ -324,17 +415,18 @@ function OrderSummary({
                 {/* Guarantees */}
                 <div className="mt-6 pt-6 border-t border-gray-700 space-y-2">
                     <div className="flex items-start gap-2 text-sm">
-                        <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                        <CheckCircle className="w-4 h-4 text-[#FFC050] mt-0.5 flex-shrink-0" />
                         <span className="text-gray-400">30-day money-back guarantee</span>
                     </div>
                     <div className="flex items-start gap-2 text-sm">
-                        <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                        <CheckCircle className="w-4 h-4 text-[#FFC050] mt-0.5 flex-shrink-0" />
                         <span className="text-gray-400">Instant download after purchase</span>
                     </div>
                     <div className="flex items-start gap-2 text-sm">
-                        <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                        <CheckCircle className="w-4 h-4 text-[#FFC050] mt-0.5 flex-shrink-0" />
                         <span className="text-gray-400">Lifetime access to all files</span>
                     </div>
+                </div>
                 </div>
             </motion.div>
         </div>
@@ -343,12 +435,13 @@ function OrderSummary({
 
 function CartItem({ item, index, onUpdateQuantity, onRemove }) {
     const router = useRouter()
+    const { isAuthenticated } = useAuth()
     const [removing, setRemoving] = useState(false)
 
     const handleRemove = () => {
         setRemoving(true)
         setTimeout(() => {
-            onRemove(item.id)
+            onRemove(item._id || item.id || item.productId)
         }, 300)
     }
 
@@ -359,14 +452,29 @@ function CartItem({ item, index, onUpdateQuantity, onRemove }) {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: removing ? 0 : 1, x: removing ? -20 : 0 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6"
+            className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6"
         >
             <div className="flex flex-col sm:flex-row gap-4">
                 {/* Product Image */}
-                <div className="w-full sm:w-32 h-24 bg-gradient-to-br from-gray-800 to-gray-700 rounded-lg flex-shrink-0">
-                    <div className="w-full h-full flex items-center justify-center">
-                        <Package className="w-8 h-8 text-gray-600" />
-                    </div>
+                <div className="w-full sm:w-32 h-32 sm:h-24 bg-[#1f1f1f] rounded-lg flex-shrink-0 overflow-hidden group relative">
+                    {item.image || item.thumbnail ? (
+                        <Image
+                            src={item.image || item.thumbnail}
+                            alt={item.title}
+                            width={128}
+                            height={96}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                    ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-[#1f1f1f] to-gray-800 flex items-center justify-center">
+                            <Package className="w-8 h-8 text-gray-600" />
+                        </div>
+                    )}
+                    {discountPercentage > 0 && (
+                        <div className="absolute top-2 right-2 bg-[#FFC050] text-[#121212] text-xs px-2 py-1 rounded-full font-medium">
+                            -{discountPercentage}%
+                        </div>
+                    )}
                 </div>
 
                 {/* Product Details */}
@@ -374,52 +482,71 @@ function CartItem({ item, index, onUpdateQuantity, onRemove }) {
                     <div>
                         <div className="flex items-start justify-between gap-2">
                             <h3 
-                                className="font-semibold text-white hover:text-brand-primary cursor-pointer transition-colors"
+                                className="font-semibold text-white hover:text-[#00FF89] cursor-pointer transition-colors"
                                 onClick={() => router.push(`/products/${item.productId}`)}
                             >
                                 {item.title}
                             </h3>
-                            <button
-                                onClick={handleRemove}
-                                className="text-gray-400 hover:text-red-400 transition-colors p-1"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={() => {/* Save for later */}}
+                                    className="text-gray-400 hover:text-[#00FF89] transition-colors p-1.5 rounded-lg hover:bg-[#1f1f1f]"
+                                    aria-label="Save for later"
+                                >
+                                    <Heart className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={handleRemove}
+                                    className="text-gray-400 hover:text-red-400 transition-colors p-1.5 rounded-lg hover:bg-[#1f1f1f]"
+                                    aria-label="Remove from cart"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
                         <p className="text-sm text-gray-400 line-clamp-2">{item.description}</p>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-4 text-sm">
                         <span className="text-gray-400">
-                            Seller: <span className="text-gray-300">{item.seller.name}</span>
+                            Seller: <span className="text-gray-300">{item.seller?.name || 'Unknown Seller'}</span>
                         </span>
-                        <span className="px-2 py-1 bg-brand-primary/20 text-brand-primary text-xs rounded">
+                        <span className="px-2 py-1 bg-[#00FF89]/20 text-[#00FF89] text-xs rounded">
                             {item.category}
                         </span>
                     </div>
 
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         {/* Quantity Controls */}
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
-                                className="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center transition-colors"
-                            >
-                                <Minus className="w-4 h-4" />
-                            </button>
-                            <span className="w-12 text-center font-medium">{item.quantity}</span>
-                            <button
-                                onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                                className="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center transition-colors"
-                            >
-                                <Plus className="w-4 h-4" />
-                            </button>
-                        </div>
+                        {isAuthenticated ? (
+                            <div className="text-sm text-gray-400">
+                                Quantity: {item.quantity || 1}
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => onUpdateQuantity(item._id || item.id || item.productId, item.quantity - 1)}
+                                    className="w-10 h-10 bg-[#1f1f1f] hover:bg-gray-800 rounded-lg flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={item.quantity <= 1}
+                                    aria-label="Decrease quantity"
+                                >
+                                    <Minus className="w-4 h-4" />
+                                </button>
+                                <span className="w-16 text-center font-medium bg-[#1f1f1f] rounded-lg py-2">{item.quantity}</span>
+                                <button
+                                    onClick={() => onUpdateQuantity(item._id || item.id || item.productId, item.quantity + 1)}
+                                    className="w-10 h-10 bg-[#1f1f1f] hover:bg-gray-700 rounded-lg flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50"
+                                    aria-label="Increase quantity"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                </button>
+                            </div>
+                        )}
 
                         {/* Price */}
                         <div className="text-right">
                             <div className="flex items-center gap-2">
-                                <span className="text-lg font-semibold text-brand-primary">
+                                <span className="text-lg font-semibold text-[#00FF89]">
                                     ${(item.price * item.quantity).toFixed(2)}
                                 </span>
                                 {item.originalPrice > item.price && (
@@ -429,7 +556,7 @@ function CartItem({ item, index, onUpdateQuantity, onRemove }) {
                                 )}
                             </div>
                             {discountPercentage > 0 && (
-                                <span className="text-xs text-green-400">
+                                <span className="text-xs text-[#00FF89]">
                                     Save {discountPercentage}%
                                 </span>
                             )}

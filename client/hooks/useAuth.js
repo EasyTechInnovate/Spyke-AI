@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import { logoutService } from '@/lib/services/logout'
 
 export function useAuth() {
   const [user, setUser] = useState(null)
@@ -58,17 +59,13 @@ export function useAuth() {
     return true
   }
 
-  const logout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('authToken')
-      localStorage.removeItem('refreshToken')
-      localStorage.removeItem('user')
-      localStorage.removeItem('roles')
-      localStorage.removeItem('returnTo')
-    }
+  const logout = async () => {
+    // Update local state immediately
     setUser(null)
     setIsAuthenticated(false)
-    router.push('/')
+    
+    // Use centralized logout service
+    await logoutService.logout()
   }
 
   return {

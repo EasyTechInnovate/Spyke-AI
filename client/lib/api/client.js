@@ -236,22 +236,10 @@ class ApiClient {
         }
     }
 
-    // Logout method
+    // Logout method - Use centralized logout service
     async logout() {
-        try {
-            // Try to call logout endpoint if exists
-            await this.post('v1/auth/logout').catch(() => {
-                // Ignore errors - we'll clear local data anyway
-            })
-        } finally {
-            // Always clear local auth data
-            this.clearAuth()
-
-            // Redirect to signin
-            if (typeof window !== 'undefined') {
-                window.location.href = '/signin'
-            }
-        }
+        const { logoutService } = await import('@/lib/services/logout')
+        return logoutService.logout()
     }
 
     // Upload file

@@ -5,6 +5,8 @@ export { default as sellerAPI } from './seller'
 export { adminAPI } from './admin'
 export { analyticsApi } from './analytics'
 export { default as productsAPI } from './products'
+export { default as cartAPI } from './cart'
+export { default as purchaseAPI } from './purchase'
 // export { default as workflowAPI } from './workflow'
 
 // Default export for backward compatibility with auth attached

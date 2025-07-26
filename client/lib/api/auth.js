@@ -172,20 +172,10 @@ export const authAPI = {
         return response?.data || response
     },
 
-    // Logout - COMPLETE FIX
+    // Logout - Use centralized logout service
     logout: async () => {
-        try {
-            // Try to call backend logout endpoint
-            await apiClient.post('v1/auth/logout').catch(() => {
-                // Ignore backend errors - we'll clear local data anyway
-            })
-        } finally {
-            // Clear all auth data regardless of API response
-            authAPI.clearAllAuthData()
-
-            // Redirect to signin
-            window.location.href = '/signin'
-        }
+        const { logoutService } = await import('@/lib/services/logout')
+        return logoutService.logout()
     },
 
     // Clear all auth data - helper method

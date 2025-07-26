@@ -152,7 +152,7 @@ const productSchema = new mongoose.Schema(
 
         sellerId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Seller',
+            ref: 'SellerProfile',
             required: true
         },
 

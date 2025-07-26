@@ -24,20 +24,20 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
         toast.cart.addedToCart(product.title)
         track(ANALYTICS_EVENTS.CART.ITEM_ADDED, eventProperties.cart(product.id, 1, product.price))
       }
-    }, `/products/${product.id}`)
+    }, `/products/${product.slug || product.id}`)
   }
 
   const handleQuickView = (e) => {
     e.preventDefault()
     e.stopPropagation()
-    router.push(`/products/${product.id}`)
+    router.push(`/products/${product.slug || product.id}`)
   }
 
   const discountPercentage = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
 
   if (viewMode === 'list') {
     return (
-      <Link href={`/products/${product.id}`}>
+      <Link href={`/products/${product.slug || product.id}`}>
         <motion.div
           whileHover={{ scale: 1.01 }}
           className="bg-gray-900 border border-gray-800 rounded-2xl p-6 hover:border-brand-primary/50 transition-all duration-300 cursor-pointer"
