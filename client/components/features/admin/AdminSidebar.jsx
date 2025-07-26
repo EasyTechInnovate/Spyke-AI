@@ -4,7 +4,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { LayoutDashboard, X, LogOut, UserCheck, ChevronDown, Package, TrendingUp, ShieldCheck, Settings } from 'lucide-react'
+import { LayoutDashboard, X, LogOut, UserCheck, ChevronDown, Package, TrendingUp, ShieldCheck, Settings, Tag } from 'lucide-react'
 
 
 export default function AdminSidebar({ sidebarOpen, setSidebarOpen, currentPath }) {
@@ -70,6 +70,12 @@ export default function AdminSidebar({ sidebarOpen, setSidebarOpen, currentPath 
                     href: '/admin/products/featured'
                 }
             ]
+        },
+        {
+            id: 'promocodes',
+            label: 'Promocodes',
+            icon: Tag,
+            href: '/admin/promocodes'
         },
         {
             id: 'analytics',

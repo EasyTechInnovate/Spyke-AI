@@ -38,10 +38,10 @@ export default function CartPage() {
     const router = useRouter()
     const { user } = useAuth()
     const track = useTrackEvent()
-    const { cartItems, loading, updateQuantity: updateCartQuantity, removeFromCart } = useCart()
+    const { cartItems, cartData, loading, updateQuantity: updateCartQuantity, removeFromCart, applyPromocode, removePromocode } = useCart()
     const [promoCode, setPromoCode] = useState('')
-    const [promoApplied, setPromoApplied] = useState(false)
-    const [promoDiscount, setPromoDiscount] = useState(0)
+    const [promoLoading, setPromoLoading] = useState(false)
+    const [promoError, setPromoError] = useState('')
 
     useEffect(() => {
         track(ANALYTICS_EVENTS.CART.VIEWED, eventProperties.cart())
@@ -68,7 +68,21 @@ export default function CartPage() {
     // Calculate totals
     const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
     const totalSavings = cartItems.reduce((sum, item) => sum + ((item.originalPrice - item.price) * item.quantity), 0)
-    const discount = promoApplied ? subtotal * promoDiscount : 0
+    
+    // Calculate discount from promocode
+    const calculateDiscount = () => {
+        if (cartData?.promocode) {
+            const promo = cartData.promocode
+            if (promo.discountType === 'percentage') {
+                return subtotal * (promo.discountValue / 100)
+            } else {
+                return Math.min(promo.discountValue, subtotal)
+            }
+        }
+        return 0
+    }
+    
+    const discount = calculateDiscount()
     const total = subtotal - discount
 
     const updateQuantity = (itemId, newQuantity) => {
@@ -94,16 +108,29 @@ export default function CartPage() {
         removeFromCart(itemId)
     }
 
-    const handleApplyPromo = () => {
-        // Dummy promo code logic
-        if (promoCode.toUpperCase() === 'SAVE10') {
-            setPromoApplied(true)
-            setPromoDiscount(0.1) // 10% discount
-        } else if (promoCode.toUpperCase() === 'SAVE20') {
-            setPromoApplied(true)
-            setPromoDiscount(0.2) // 20% discount
-        } else {
-            alert('Invalid promo code')
+    const handleApplyPromo = async () => {
+        if (!promoCode.trim()) return
+        
+        setPromoLoading(true)
+        setPromoError('')
+        
+        try {
+            await applyPromocode(promoCode.trim())
+            // Clear the input on success
+            setPromoCode('')
+        } catch (error) {
+            setPromoError(error.message || 'Invalid promo code')
+        } finally {
+            setPromoLoading(false)
+        }
+    }
+    
+    const handleRemovePromo = async () => {
+        try {
+            await removePromocode()
+            setPromoError('')
+        } catch (error) {
+            console.error('Error removing promocode:', error)
         }
     }
 
@@ -186,9 +213,11 @@ export default function CartPage() {
                                 total={total}
                                 promoCode={promoCode}
                                 setPromoCode={setPromoCode}
-                                promoApplied={promoApplied}
-                                promoDiscount={promoDiscount}
+                                promocodeData={cartData?.promocode}
+                                promoLoading={promoLoading}
+                                promoError={promoError}
                                 handleApplyPromo={handleApplyPromo}
+                                handleRemovePromo={handleRemovePromo}
                                 handleCheckout={handleCheckout}
                             />
                         </div>
@@ -285,25 +314,14 @@ function OrderSummary({
     total, 
     promoCode, 
     setPromoCode, 
-    promoApplied, 
-    promoDiscount,
-    handleApplyPromo, 
+    promocodeData,
+    promoLoading,
+    promoError,
+    handleApplyPromo,
+    handleRemovePromo, 
     handleCheckout 
 }) {
     const [isExpanded, setIsExpanded] = useState(true)
-    const { applyPromocode, removePromocode, cartData, loading: promoLoading } = useCart()
-    
-    const handleApplyBackendPromo = async () => {
-        if (!promoCode.trim()) return
-        
-        try {
-            await applyPromocode(promoCode)
-            setPromoApplied(true)
-        } catch (error) {
-            // Fallback to frontend promo logic
-            handleApplyPromo()
-        }
-    }
     
     return (
         <div className="lg:col-span-1">
@@ -343,9 +361,14 @@ function OrderSummary({
                             <span>-${totalSavings.toFixed(2)}</span>
                         </div>
                     )}
-                    {promoApplied && (
+                    {promocodeData && (
                         <div className="flex justify-between text-[#00FF89]">
-                            <span>Promo Discount ({(promoDiscount * 100)}%)</span>
+                            <span>
+                                Promo Discount 
+                                {promocodeData.discountType === 'percentage' 
+                                    ? `(${promocodeData.discountValue}%)` 
+                                    : ''}
+                            </span>
                             <span>-${discount.toFixed(2)}</span>
                         </div>
                     )}
@@ -376,21 +399,37 @@ function OrderSummary({
                             value={promoCode}
                             onChange={(e) => setPromoCode(e.target.value)}
                             placeholder="Enter code"
-                            disabled={promoApplied}
+                            disabled={!!promocodeData}
                             className="flex-1 px-4 py-2 bg-[#1f1f1f] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00FF89] focus:border-transparent disabled:opacity-50"
                         />
                         <button
-                            onClick={handleApplyBackendPromo}
-                            disabled={!promoCode || promoApplied || promoLoading}
+                            onClick={handleApplyPromo}
+                            disabled={!promoCode || !!promocodeData || promoLoading}
                             className="px-4 py-2 bg-[#1f1f1f] border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800 hover:border-[#00FF89]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
                             {promoLoading && <div className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />}
-                            {promoApplied ? 'Applied' : 'Apply'}
+                            {promocodeData ? 'Applied' : 'Apply'}
                         </button>
                     </div>
-                    {!promoApplied && (
-                        <p className="text-xs text-gray-500 mt-1">
-                            Try: SAVE10 or SAVE20
+                    {promocodeData && (
+                        <div className="mt-2 p-2 bg-[#00FF89]/10 border border-[#00FF89]/30 rounded-lg">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <CheckCircle className="w-4 h-4 text-[#00FF89]" />
+                                    <span className="text-sm text-[#00FF89] font-medium">{promocodeData.code}</span>
+                                </div>
+                                <button
+                                    onClick={handleRemovePromo}
+                                    className="text-xs text-gray-400 hover:text-red-400 transition-colors"
+                                >
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                    {promoError && (
+                        <p className="text-xs text-red-400 mt-1">
+                            {promoError}
                         </p>
                     )}
                 </div>

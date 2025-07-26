@@ -12,7 +12,7 @@ import {
   Rocket, Info, Download, Lock, RefreshCw,
   Package, Verified, ThumbsUp, Eye,
   FileText, Video, BookOpen, HelpCircle,
-  AlertCircle, Target
+  AlertCircle, Target, Tag, ChevronDown, Copy
 } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
 import Header from '@/components/shared/layout/Header'
@@ -23,6 +23,7 @@ import ErrorBoundary from '@/components/shared/ErrorBoundary'
 import { useAuth } from '@/hooks/useAuth'
 import { useCart } from '@/hooks/useCart'
 import productsAPI from '@/lib/api/products'
+import { promocodeAPI } from '@/lib/api'
 import toast from '@/lib/utils/toast'
 import { cn } from '@/lib/utils'
 
@@ -94,6 +95,8 @@ export default function ProductPage() {
   const [showSellerModal, setShowSellerModal] = useState(false)
   const [expandedFaq, setExpandedFaq] = useState(null)
   const [viewCount, setViewCount] = useState(0)
+  const [availablePromocodes, setAvailablePromocodes] = useState([])
+  const [showPromocodes, setShowPromocodes] = useState(false)
   
   // Refs
   const heroRef = useRef(null)
@@ -151,6 +154,28 @@ export default function ProductPage() {
             if (relatedResponse.success && relatedResponse.data) {
               setRelatedProducts(relatedResponse.data)
             }
+          }
+          
+          // Fetch available promocodes
+          try {
+            const promoResponse = await promocodeAPI.getPublicPromocodes({ 
+              status: 'active',
+              limit: 5 
+            })
+            if (promoResponse?.promocodes) {
+              // Filter promocodes that apply to this product
+              const applicablePromos = promoResponse.promocodes.filter(promo => {
+                // Check if promocode applies to all products
+                if (!promo.applicableProducts || promo.applicableProducts.length === 0) {
+                  return true
+                }
+                // Check if this product is in the applicable list
+                return promo.applicableProducts.includes(response.data._id)
+              })
+              setAvailablePromocodes(applicablePromos)
+            }
+          } catch (error) {
+            console.error('Error fetching promocodes:', error)
           }
         } else {
           setError('Product not found')
@@ -650,6 +675,75 @@ export default function ProductPage() {
                         Secure checkout
                       </div>
                     </div>
+                    
+                    {/* Available Promocodes */}
+                    {availablePromocodes.length > 0 && (
+                      <div className="mb-4">
+                        <button
+                          onClick={() => setShowPromocodes(!showPromocodes)}
+                          className="w-full flex items-center justify-between p-3 bg-[#00FF89]/10 border border-[#00FF89]/30 rounded-lg hover:bg-[#00FF89]/20 transition-all"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Tag className="w-4 h-4 text-[#00FF89]" />
+                            <span className="text-sm font-medium text-[#00FF89]">
+                              {availablePromocodes.length} promo code{availablePromocodes.length > 1 ? 's' : ''} available
+                            </span>
+                          </div>
+                          <ChevronDown className={`w-4 h-4 text-[#00FF89] transition-transform ${showPromocodes ? 'rotate-180' : ''}`} />
+                        </button>
+                        
+                        <AnimatePresence>
+                          {showPromocodes && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="mt-2 space-y-2">
+                                {availablePromocodes.map((promo) => (
+                                  <div
+                                    key={promo._id}
+                                    className="p-3 bg-gray-900/50 border border-gray-800 rounded-lg"
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-mono font-bold text-white">{promo.code}</span>
+                                          <span className="text-xs text-[#00FF89]">
+                                            {promo.discountType === 'percentage' 
+                                              ? `${promo.discountValue}% OFF`
+                                              : `$${promo.discountValue} OFF`
+                                            }
+                                          </span>
+                                        </div>
+                                        {promo.description && (
+                                          <p className="text-xs text-gray-400 mt-1">{promo.description}</p>
+                                        )}
+                                        {promo.minimumOrderAmount && (
+                                          <p className="text-xs text-gray-500 mt-1">
+                                            Min. order: ${promo.minimumOrderAmount}
+                                          </p>
+                                        )}
+                                      </div>
+                                      <button
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(promo.code)
+                                          toast.success(`Code "${promo.code}" copied!`)
+                                        }}
+                                        className="p-2 hover:bg-gray-800 rounded transition-colors"
+                                      >
+                                        <Copy className="w-4 h-4 text-gray-400" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    )}
 
                     {/* CTA Buttons */}
                     <div ref={ctaRef} className="space-y-3">

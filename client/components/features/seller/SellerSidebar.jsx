@@ -15,7 +15,8 @@ import {
     LogOut,
     ChevronLeft,
     ChevronRight,
-    Sparkles
+    Sparkles,
+    Tag
 } from 'lucide-react'
 import { SpykeLogo } from '@/components/Logo'
 import api from '@/lib/api'
@@ -28,6 +29,7 @@ const EnhancedSidebar = ({ currentPath = '/dashboard', sellerName = '' }) => {
     const menuItems = [
         { icon: Home, label: 'Dashboard', path: '/dashboard' },
         { icon: Package, label: 'Products', path: '/products' },
+        { icon: Tag, label: 'Promocodes', path: '/promocodes' },
         { icon: ShoppingCart, label: 'Orders', path: '/orders' },
         { icon: BarChart3, label: 'Analytics', path: '/analytics' },
         { icon: Star, label: 'Reviews', path: '/reviews' },
