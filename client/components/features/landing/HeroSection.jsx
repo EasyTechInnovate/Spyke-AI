@@ -108,7 +108,7 @@ function AnnouncementBanner() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-primary opacity-75"></span>
             <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-brand-primary"></span>
           </span>
-          <span className="text-xs sm:text-sm font-medium">New: AI Agent Arena - Watch AI compete!</span>
+          <span className="text-[11px] sm:text-sm font-medium whitespace-nowrap">New: AI Agent Arena - Watch AI compete!</span>
         </div>
       </div>
     </motion.div>

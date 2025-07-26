@@ -5,9 +5,9 @@ import React from 'react'
 export const LOGO_SIZES = {
     xs: 32,
     sm: 40,
-    md: 48,
-    lg: 156,
-    xl: 64,
+    md: 56,
+    lg: 64,
+    xl: 72,
     '2xl': 80,
     '3xl': 96
 }
@@ -51,7 +51,6 @@ export const SpykeLogo = ({
             {showText && (
                 <div className="flex flex-col justify-center">
                     <h1 className={`${textSize} font-bold ${darkMode ? 'text-white' : 'text-[#121212]'} title-font leading-tight`}>Spyke AI</h1>
-                    <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} hidden sm:block body-font mt-0.5`}>by FutureDesks</p>
                 </div>
             )}
         </div>
@@ -123,7 +122,6 @@ export const SpykeLogoWithSkeleton = ({ size = 40, className = '', showText = tr
                     ) : (
                         <>
                             <h1 className={`${textSize} font-bold text-[#121212] title-font leading-tight`}>Spyke AI</h1>
-                            <p className="text-xs text-gray-500 hidden sm:block body-font mt-0.5">by FutureDesks</p>
                         </>
                     )}
                 </div>

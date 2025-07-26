@@ -1,51 +1,13 @@
 'use client'
 export const dynamic = 'force-dynamic';
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Container from './Container'
-import { Twitter, Linkedin, Github, Youtube, Cookie, X } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { Twitter, Linkedin, Github, Youtube } from 'lucide-react'
 import { useTrackEvent, useTrackClick } from '@/hooks/useTrackEvent'
 import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 
 export default function Footer() {
     const track = useTrackEvent()
-    const [showCookieConsent, setShowCookieConsent] = useState(false)
-
-    useEffect(() => {
-        // Check if user has already accepted cookies
-        if (typeof window !== 'undefined') {
-            const cookieConsent = localStorage.getItem('cookieConsent')
-            if (!cookieConsent) {
-                // Show consent after a small delay for better UX
-                setTimeout(() => {
-                    setShowCookieConsent(true)
-                }, 1000)
-            }
-        }
-    }, [])
-
-    const handleAcceptCookies = () => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('cookieConsent', 'accepted')
-            localStorage.setItem('cookieConsentDate', new Date().toISOString())
-        }
-        track('Cookie Consent', {
-            action: 'accepted'
-        })
-        setShowCookieConsent(false)
-    }
-
-    const handleDeclineCookies = () => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('cookieConsent', 'declined')
-            localStorage.setItem('cookieConsentDate', new Date().toISOString())
-        }
-        track('Cookie Consent', {
-            action: 'declined'
-        })
-        setShowCookieConsent(false)
-    }
 
     // Routes that don't exist yet - disable prefetching to avoid 404 errors
     const nonExistentRoutes = ['/features', '/pricing', '/api', '/roadmap', '/explore', '/categories', '/sellers', '/new', '/blog', '/guides', '/help', '/community', '/about', '/careers', '/contact', '/press']
@@ -176,116 +138,6 @@ export default function Footer() {
                     </div>
                 </Container>
             </footer>
-            <AnimatePresence>
-                {showCookieConsent && (
-                    <motion.div
-                        initial={{ y: 100, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: 100, opacity: 0 }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className="fixed bottom-0 left-0 right-0 z-50 p-4 sm:p-6">
-                        <div className="max-w-7xl mx-auto">
-                            <div className="relative bg-gray-900/95 backdrop-blur-xl border border-gray-700 rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8">
-                                <div className="absolute -inset-1 bg-gradient-to-r from-brand-primary/20 to-transparent rounded-2xl blur-xl opacity-50" />
-
-                                <div className="relative">
-                                    <button
-                                        onClick={() => setShowCookieConsent(false)}
-                                        className="absolute top-0 right-0 p-2 text-gray-400 hover:text-white transition-colors sm:hidden"
-                                        aria-label="Close cookie banner">
-                                        <X className="h-4 w-4" />
-                                    </button>
-
-                                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                                        {/* Content */}
-                                        <div className="flex-1 pr-8 sm:pr-0">
-                                            <div className="flex items-start gap-3 mb-3">
-                                                <div className="p-2 bg-brand-primary/20 rounded-lg flex-shrink-0">
-                                                    <Cookie className="h-5 w-5 sm:h-6 sm:w-6 text-brand-primary" />
-                                                </div>
-                                                <div>
-                                                    <h3 className="font-league-spartan font-semibold text-lg sm:text-xl text-white mb-2">
-                                                        We use cookies 🍪
-                                                    </h3>
-                                                    <p className="font-kumbh-sans text-sm sm:text-base text-gray-300 leading-relaxed">
-                                                        We use cookies to enhance your experience, analyze site traffic, and for marketing purposes.
-                                                        By continuing to use our site, you consent to our use of cookies.
-                                                        <Link
-                                                            href="/cookies"
-                                                            className="text-brand-primary hover:text-white ml-1 underline underline-offset-2 transition-colors">
-                                                            Learn more
-                                                        </Link>
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:flex-shrink-0">
-                                            <motion.button
-                                                whileHover={{ scale: 1.02 }}
-                                                whileTap={{ scale: 0.98 }}
-                                                onClick={handleDeclineCookies}
-                                                className="px-6 py-2.5 font-kumbh-sans font-medium text-sm sm:text-base text-gray-300 bg-white/10 hover:bg-white/20 border border-gray-600 rounded-xl transition-all duration-200 whitespace-nowrap">
-                                                Decline
-                                            </motion.button>
-                                            <motion.button
-                                                whileHover={{ scale: 1.02 }}
-                                                whileTap={{ scale: 0.98 }}
-                                                onClick={handleAcceptCookies}
-                                                className="relative group px-6 py-2.5 font-kumbh-sans font-semibold text-sm sm:text-base text-black bg-brand-primary hover:bg-brand-primary/90 rounded-xl transition-all duration-200 whitespace-nowrap">
-                                                <span className="relative z-10">Accept All</span>
-                                                <div className="absolute inset-0 bg-gradient-to-r from-brand-primary to-green-400 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                            </motion.button>
-                                        </div>
-                                    </div>
-
-                                    <details className="mt-4 group">
-                                        <summary className="cursor-pointer text-sm text-gray-400 hover:text-brand-primary transition-colors font-kumbh-sans">
-                                            Manage cookie preferences
-                                        </summary>
-                                        <div className="mt-4 space-y-3 pl-4">
-                                            <label className="flex items-start gap-3 cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    checked
-                                                    disabled
-                                                    className="mt-0.5 w-4 h-4 rounded border-gray-600 bg-gray-800 text-brand-primary focus:ring-brand-primary"
-                                                />
-                                                <div>
-                                                    <span className="font-medium text-sm text-gray-300">Essential Cookies</span>
-                                                    <p className="text-xs text-gray-500 mt-0.5">Required for the website to function properly</p>
-                                                </div>
-                                            </label>
-                                            <label className="flex items-start gap-3 cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    defaultChecked
-                                                    className="mt-0.5 w-4 h-4 rounded border-gray-600 bg-gray-800 text-brand-primary focus:ring-brand-primary"
-                                                />
-                                                <div>
-                                                    <span className="font-medium text-sm text-gray-300">Analytics Cookies</span>
-                                                    <p className="text-xs text-gray-500 mt-0.5">Help us understand how visitors use our site</p>
-                                                </div>
-                                            </label>
-                                            <label className="flex items-start gap-3 cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    defaultChecked
-                                                    className="mt-0.5 w-4 h-4 rounded border-gray-600 bg-gray-800 text-brand-primary focus:ring-brand-primary"
-                                                />
-                                                <div>
-                                                    <span className="font-medium text-sm text-gray-300">Marketing Cookies</span>
-                                                    <p className="text-xs text-gray-500 mt-0.5">Used to deliver personalized advertisements</p>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    </details>
-                                </div>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </>
     )
 }

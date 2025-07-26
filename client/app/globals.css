@@ -85,6 +85,16 @@ body {
   100% { background-position: 0% 50%; }
 }
 
+.animate-gradient-x {
+  animation: gradient-x 3s ease infinite;
+}
+
+@keyframes gradient-x {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 .bg-400 {
   background-size: 400% 400%;
 }
@@ -533,6 +543,16 @@ input:focus, textarea:focus, select:focus {
 .skeleton {
   animation: skeleton-loading 1.5s infinite ease-in-out;
   border-radius: 0.5rem;
+}
+
+/* Scrollbar Hide Utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
 }
 
 /* Print Styles */

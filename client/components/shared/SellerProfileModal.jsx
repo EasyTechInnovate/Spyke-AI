@@ -192,8 +192,19 @@ export default function SellerProfileModal({
       >
         {/* Header Section - Enhanced Design */}
         <motion.div variants={fadeInUp} className="relative">
-          {/* Background Pattern */}
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/5 via-transparent to-brand-secondary/5 rounded-2xl" />
+          {/* Background Banner */}
+          {sellerData.sellerBanner ? (
+            <div className="absolute inset-0 rounded-2xl overflow-hidden">
+              <img 
+                src={sellerData.sellerBanner} 
+                alt="Profile banner" 
+                className="w-full h-full object-cover opacity-20"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/80 to-transparent" />
+            </div>
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/5 via-transparent to-brand-secondary/5 rounded-2xl" />
+          )}
           
           <div className="relative">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-6">
