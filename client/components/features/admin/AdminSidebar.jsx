@@ -97,7 +97,7 @@ export default function AdminSidebar({ sidebarOpen, setSidebarOpen, currentPath 
             document.cookie = 'authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT'
             document.cookie = 'roles=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT'
         }
-        router.push('/signin')
+        router.push('/')
     }
 
     return (

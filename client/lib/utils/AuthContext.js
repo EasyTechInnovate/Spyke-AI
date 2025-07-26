@@ -46,14 +46,10 @@ export function AuthProvider({ children }) {
         return userData
     }
 
-    const logout = () => {
-        if (typeof window !== 'undefined') {
-            localStorage.removeItem('authToken')
-            localStorage.removeItem('refreshToken')
-            localStorage.removeItem('user')
-        }
+    const logout = async () => {
         setUser(null)
-        router.push('/signin')
+        const { logoutService } = await import('@/lib/services/logout')
+        return logoutService.logout()
     }
 
     const value = {

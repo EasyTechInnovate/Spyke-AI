@@ -44,6 +44,9 @@ export const ANALYTICS_EVENTS = {
     ONBOARDING_COMPLETED: 'Seller Onboarding Completed',
     PROFILE_SUBMITTED: 'Seller Profile Submitted',
   },
+  CHECKOUT:{
+    VIEWED: 'VIEWED'
+  },
 
   CART: {
     VIEWED: 'Cart Viewed',

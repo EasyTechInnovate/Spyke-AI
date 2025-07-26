@@ -102,7 +102,7 @@ export function useHeader() {
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const handleKeyDown = (e) => {
-                // Open search with Cmd/Ctrl + K
+
                 if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
                     e.preventDefault()
                     setSearchOpen(true)
@@ -153,7 +153,7 @@ export function useHeader() {
         if (role === 'seller') {
             router.push('/seller/profile')
         } else {
-            router.push('/account/purchases')
+            router.push('/purchases')
         }
     }
 

@@ -42,21 +42,21 @@ const FeaturedProducts = memo(function FeaturedProducts() {
     verifiedOnly: 'true'
   })
 
-  const handleProductClick = (slug) => {
-    router.push(`/products/${slug}`)
+  const handleProductClick = (product) => {
+    router.push(`/products/${product.slug || product.id || product._id}`)
   }
 
   return (
     <section className="relative overflow-hidden">
       {/* Seamless background transition from hero */}
-      <div className="absolute inset-0 bg-black">
+      <div className="absolute inset-0 bg-[#121212]">
         {/* Animated gradient background */}
         <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-brand-primary/20 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-brand-secondary/20 rounded-full blur-3xl animate-pulse delay-1000" />
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#00FF89]/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#FFC050]/20 rounded-full blur-3xl animate-pulse delay-1000" />
         </div>
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#121212] via-transparent to-[#121212]" />
       </div>
       
       <Container className="relative z-10 py-20 lg:py-24">
@@ -70,9 +70,9 @@ const FeaturedProducts = memo(function FeaturedProducts() {
             className="text-center mb-16"
           >
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-primary/10 border border-brand-primary/20 rounded-full mb-6">
-              <Sparkles className="w-4 h-4 text-brand-primary" />
-              <span className="text-sm font-medium text-brand-primary">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#00FF89]/10 border border-[#00FF89]/20 rounded-full mb-6">
+              <Sparkles className="w-4 h-4 text-[#00FF89]" />
+              <span className="text-sm font-medium text-[#00FF89]">
                 Trending This Week
               </span>
             </div>
@@ -90,14 +90,14 @@ const FeaturedProducts = memo(function FeaturedProducts() {
           <div className="mb-16">
             {loading ? (
               <div className="flex justify-center items-center h-96">
-                <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
+                <Loader2 className="w-8 h-8 text-[#00FF89] animate-spin" />
               </div>
             ) : error ? (
               <div className="text-center py-12">
                 <p className="text-gray-400 mb-4">Failed to load products</p>
                 <Link
                   href="/explore"
-                  className="text-brand-primary hover:text-brand-primary/80 transition-colors"
+                  className="text-[#00FF89] hover:text-[#00FF89]/80 transition-colors"
                 >
                   Browse all products →
                 </Link>
@@ -109,7 +109,7 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                   <div className="w-full max-w-sm">
                     <ProductCard
                       product={products[0]}
-                      onClick={() => handleProductClick(products[0].slug)}
+                      onClick={() => handleProductClick(products[0])}
                     />
                   </div>
                 </div>
@@ -131,7 +131,7 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                     <ProductCard
                       key={product._id || product.id}
                       product={product}
-                      onClick={() => handleProductClick(product.slug)}
+                      onClick={() => handleProductClick(product)}
                     />
                   ))}
                 </SmoothProductCarousel>
@@ -141,7 +141,7 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                 <p className="text-gray-400 mb-4">No products available</p>
                 <Link
                   href="/explore"
-                  className="text-brand-primary hover:text-brand-primary/80 transition-colors"
+                  className="text-[#00FF89] hover:text-[#00FF89]/80 transition-colors"
                 >
                   Check back soon →
                 </Link>

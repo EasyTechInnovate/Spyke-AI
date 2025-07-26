@@ -26,7 +26,7 @@ export default function PopularTags({ tags, onTagClick }) {
           } : {}}
           whileTap={{ scale: 0.95 }}
           onClick={() => onTagClick(tag)}
-          className="px-3 py-1 text-sm text-gray-400 hover:text-brand-primary hover:bg-white/5 rounded-full transition-all duration-200"
+          className="px-3 py-1.5 text-sm text-gray-400 bg-[#1f1f1f] border border-gray-800 hover:text-[#00FF89]/80 hover:bg-[#00FF89]/5 hover:border-[#00FF89]/20 rounded-full transition-all duration-200"
           aria-label={`Search for ${tag}`}
         >
           {tag}

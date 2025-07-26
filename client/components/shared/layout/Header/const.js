@@ -8,7 +8,7 @@ export const NAVIGATION = [
 ]
 
 export const USER_MENU_ITEMS = [
-    { name: 'My Purchases', href: '/account/purchases', icon: Package, prefetch: false },
+    { name: 'My Purchases', href: '/purchases', icon: Package, prefetch: false },
     { name: 'Wishlist', href: '/account/wishlist', icon: Heart, prefetch: false },
     { name: 'Messages', href: '/account/messages', icon: MessageSquare, prefetch: false },
     { name: 'Profile', href: '/account/profile', icon: User, prefetch: false },
