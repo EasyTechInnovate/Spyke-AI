@@ -322,7 +322,19 @@ function OrderSummary({
     handleCheckout 
 }) {
     const [isExpanded, setIsExpanded] = useState(true)
+    const { applyPromocode, removePromocode, cartData, loading: promoLoading } = useCart()
     
+    const handleApplyBackendPromo = async () => {
+        if (!promoCode.trim()) return
+        
+        try {
+            await applyPromocode(promoCode)
+            setPromoApplied(true)
+        } catch (error) {
+            // Fallback to frontend promo logic
+            handleApplyPromo()
+        }
+    }    
     return (
         <div className="lg:col-span-1">
             <motion.div
@@ -361,6 +373,7 @@ function OrderSummary({
                             <span>-${totalSavings.toFixed(2)}</span>
                         </div>
                     )}
+
                     {promocodeData && (
                         <div className="flex justify-between text-[#00FF89]">
                             <span>
@@ -369,6 +382,11 @@ function OrderSummary({
                                     ? `(${promocodeData.discountValue}%)` 
                                     : ''}
                             </span>
+
+                    {promoApplied && (
+                        <div className="flex justify-between text-[#00FF89]">
+                            <span>Promo Discount ({(promoDiscount * 100)}%)</span>
+
                             <span>-${discount.toFixed(2)}</span>
                         </div>
                     )}
@@ -399,6 +417,7 @@ function OrderSummary({
                             value={promoCode}
                             onChange={(e) => setPromoCode(e.target.value)}
                             placeholder="Enter code"
+
                             disabled={!!promocodeData}
                             className="flex-1 px-4 py-2 bg-[#1f1f1f] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00FF89] focus:border-transparent disabled:opacity-50"
                         />
@@ -409,6 +428,16 @@ function OrderSummary({
                         >
                             {promoLoading && <div className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />}
                             {promocodeData ? 'Applied' : 'Apply'}
+                            disabled={promoApplied}
+                            className="flex-1 px-4 py-2 bg-[#1f1f1f] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00FF89] focus:border-transparent disabled:opacity-50"
+                        />
+                        <button
+                            onClick={handleApplyBackendPromo}
+                            disabled={!promoCode || promoApplied || promoLoading}
+                            className="px-4 py-2 bg-[#1f1f1f] border border-gray-700 text-gray-300 rounded-lg hover:bg-gray-800 hover:border-[#00FF89]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                            {promoLoading && <div className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />}
+                            {promoApplied ? 'Applied' : 'Apply'}
                         </button>
                     </div>
                     {promocodeData && (
