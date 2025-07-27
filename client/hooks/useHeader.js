@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import toast from '@/lib/utils/toast'
+import { logout } from '@/lib/services/logout'
 import api from '@/lib/api'
 import { useCart } from './useCart'
 
@@ -125,25 +125,9 @@ export function useHeader() {
     }
 
     const handleLogout = async () => {
-        try {
-            await api.auth.logout()
-        } catch (err) {
-            if (process.env.NODE_ENV === 'development') {
-                console.error('Logout failed:', err)
-            }
-        } finally {
-            if (typeof window !== 'undefined') {
-                localStorage.removeItem('authToken')
-                localStorage.removeItem('refreshToken')
-                localStorage.removeItem('user')
-                localStorage.removeItem('roles')
-            }
-            handleClearUser()
-            setDropdownOpen(false)
-            window.dispatchEvent(new Event('storage'))
-            toast.auth.logoutSuccess()
-            router.push('/')
-        }
+        handleClearUser()
+        setDropdownOpen(false)
+        await logout()
     }
 
     const switchRole = (role) => {

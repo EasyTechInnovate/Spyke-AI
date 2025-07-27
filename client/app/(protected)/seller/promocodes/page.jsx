@@ -34,17 +34,14 @@ import PromocodeStats from '@/components/features/promocode/PromocodeStats'
 import PromocodeDetails from '@/components/features/promocode/PromocodeDetails'
 import LoadingSpinner from '@/components/shared/ui/LoadingSpinner'
 
-const SellerSidebar = dynamic(() => import('@/components/features/seller/SellerSidebar'), {
-    ssr: false,
-    loading: () => <div className="w-64 bg-[#1a1a1a] animate-pulse" />
-})
+// Sidebar is now handled by the layout
 
 export default function PromocodesPage() {
     const router = useRouter()
     const [sellerProfile, setSellerProfile] = useState(null)
     const [promocodes, setPromocodes] = useState([])
     const [loading, setLoading] = useState(true)
-    const [isMobile, setIsMobile] = useState(false)
+    // isMobile state removed - handled by responsive sidebar
     const [searchTerm, setSearchTerm] = useState('')
     const [filterStatus, setFilterStatus] = useState('all')
     const [showForm, setShowForm] = useState(false)
@@ -78,15 +75,7 @@ export default function PromocodesPage() {
         fetchPromocodes()
     }, [pagination.page, filterStatus])
 
-    // Check if mobile
-    useEffect(() => {
-        const checkMobile = () => {
-            setIsMobile(window.innerWidth < 768)
-        }
-        checkMobile()
-        window.addEventListener('resize', checkMobile)
-        return () => window.removeEventListener('resize', checkMobile)
-    }, [])
+    // Mobile check removed - handled by responsive sidebar
 
     // Keyboard shortcuts
     useEffect(() => {
@@ -228,20 +217,8 @@ export default function PromocodesPage() {
     }, 0)
 
     return (
-        <div className="flex min-h-screen bg-[#121212]">
-            {/* Sidebar */}
-            {!isMobile && (
-                <div className="hidden md:block fixed top-0 left-0 h-full w-64 z-40">
-                    <SellerSidebar
-                        currentPath="/promocodes"
-                        sellerName={sellerProfile?.fullName || 'Seller'}
-                    />
-                </div>
-            )}
-            
-            {/* Main Content */}
-            <div className="flex-1 md:ml-64 min-h-screen">
-                <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="w-full text-white">
+            <div className="p-4 sm:p-6 lg:p-8">
                 {/* Header */}
                 <div className="mb-8 relative">
                     <div className="absolute -top-20 -left-20 w-96 h-96 bg-[#00FF89]/5 rounded-full blur-3xl"></div>
@@ -705,7 +682,6 @@ export default function PromocodesPage() {
                     onShowStats={handleDetailsShowStats}
                 />
             )}
-            </div>
         </div>
     )
 }

@@ -2,6 +2,7 @@ import { Star, CheckCircle, ShoppingCart, Eye } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState, useMemo, memo } from 'react'
+import ImagePlaceholder from '@/components/shared/ui/ImagePlaceholder'
 
 const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'grid' }) {
   const [imageLoaded, setImageLoaded] = useState(false)
@@ -32,13 +33,17 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
           <div className="flex gap-6">
             {/* Image */}
             <div className="relative w-48 h-32 bg-gray-800 rounded-xl flex-shrink-0 overflow-hidden">
-              <Image
-                src={product.thumbnail || 'https://via.placeholder.com/400x300?text=Product'}
-                alt={product.title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 192px"
-              />
+              {product.thumbnail ? (
+                <Image
+                  src={product.thumbnail}
+                  alt={product.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 192px"
+                />
+              ) : (
+                <ImagePlaceholder text={product.title} />
+              )}
             </div>
             
             {/* Content */}
@@ -107,19 +112,23 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
       <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-brand-primary/50 transition-all duration-300 cursor-pointer group h-full">
         {/* Image */}
         <div className="relative h-48 bg-gray-800 overflow-hidden">
-          {!imageLoaded && (
+          {!imageLoaded && product.thumbnail && (
             <div className="absolute inset-0 bg-gray-800 animate-pulse" />
           )}
-          <Image
-            src={product.thumbnail || 'https://via.placeholder.com/400x300?text=Product'}
-            alt={product.title}
-            fill
-            className={`object-cover transition-all duration-300 group-hover:scale-105 ${
-              imageLoaded ? 'opacity-100' : 'opacity-0'
-            }`}
-            onLoad={() => setImageLoaded(true)}
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-          />
+          {product.thumbnail ? (
+            <Image
+              src={product.thumbnail}
+              alt={product.title}
+              fill
+              className={`object-cover transition-all duration-300 group-hover:scale-105 ${
+                imageLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
+              onLoad={() => setImageLoaded(true)}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+            />
+          ) : (
+            <ImagePlaceholder text={product.title} className="transition-all duration-300 group-hover:scale-105" />
+          )}
           
           {/* Badges */}
           {product.isVerified && product.isTested && (

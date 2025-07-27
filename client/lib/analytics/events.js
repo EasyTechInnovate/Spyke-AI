@@ -37,12 +37,16 @@ export const ANALYTICS_EVENTS = {
   },
 
   SELLER: {
+    DASHBOARD_VIEWED: 'Seller Dashboard Viewed',
     BECOME_SELLER_VIEWED: 'Become Seller Page Viewed',
     BECOME_SELLER_CLICKED: 'Become Seller Clicked',
     ONBOARDING_STARTED: 'Seller Onboarding Started',
     ONBOARDING_STEP_COMPLETED: 'Seller Onboarding Step Completed',
     ONBOARDING_COMPLETED: 'Seller Onboarding Completed',
     PROFILE_SUBMITTED: 'Seller Profile Submitted',
+    PRODUCT_CREATE_CLICKED: 'Product Create Clicked',
+    PRODUCT_EDIT_CLICKED: 'Product Edit Clicked',
+    PRODUCT_VIEW_CLICKED: 'Product View Clicked',
   },
   CHECKOUT:{
     VIEWED: 'VIEWED'
@@ -94,6 +98,12 @@ export function getEventName(category, action, context = {}) {
 }
 
 export const eventProperties = {
+  page: (pageName, additionalData = {}) => ({
+    pageName,
+    ...additionalData,
+    timestamp: new Date().toISOString()
+  }),
+
   auth: (email, success = true) => ({
     email: email?.replace(/^(.{3}).*@/, '$1***@'), // Partially mask email
     success,

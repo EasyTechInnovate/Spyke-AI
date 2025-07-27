@@ -98,27 +98,27 @@ export default function SellerProductsPage() {
   )
 
   return (
-    <div className="min-h-screen bg-black">
-      {/* Header */}
-      <div className="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <SpykeLogo size={32} showText={false} />
-              <h1 className="text-xl font-semibold text-white">My Products</h1>
+    <div className="min-h-screen bg-[#121212]">
+      {/* Page Header */}
+      <div className="border-b border-gray-800 bg-[#1f1f1f]">
+        <div className="px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-white">My Products</h1>
+              <p className="text-sm text-gray-400 mt-1">Manage your product inventory</p>
             </div>
             
             <div className="flex items-center gap-2">
               <Link
                 href="/seller/products/addjson"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#1f1f1f] text-gray-300 border border-gray-700 rounded-lg hover:bg-gray-800 hover:text-white transition-colors"
               >
                 <FileJson className="w-5 h-5" />
                 <span className="font-medium hidden sm:inline">Import JSON</span>
               </Link>
               <Link
                 href="/seller/products/create"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-brand-primary text-brand-primary-text rounded-lg hover:bg-brand-primary/90 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#00FF89] text-[#121212] rounded-lg hover:bg-[#00FF89]/90 transition-colors font-semibold"
               >
                 <Plus className="w-5 h-5" />
                 <span className="font-medium">Add Product</span>
@@ -129,7 +129,7 @@ export default function SellerProductsPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters and Search */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           {/* Search */}

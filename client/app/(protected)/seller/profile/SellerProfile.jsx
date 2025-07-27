@@ -35,10 +35,7 @@ import { toast } from 'sonner'
 import sellerAPI from '@/lib/api/seller'
 import DocumentUploadModal from '@/components/features/seller/SellerDocumentUpload'
 
-const SellerSidebar = dynamic(() => import('@/components/features/seller/SellerSidebar'), {
-    ssr: false,
-    loading: () => <div className="w-64 bg-[#1a1a1a] animate-pulse" />
-})
+// Sidebar is now handled by the layout
 
 const SellerPageLoader = () => {
     return (
@@ -692,7 +689,7 @@ export default function SellerProfile() {
     const [loading, setLoading] = useState(true)
     const [sellerProfile, setSellerProfile] = useState(null)
     const [stats, setStats] = useState(null)
-    const [isMobile, setIsMobile] = useState(false)
+    // isMobile state removed - handled by responsive sidebar
     const [selectedCurrency, setSelectedCurrency] = useState('USD')
     const [showCounterOfferModal, setShowCounterOfferModal] = useState(false)
     const [processingOffer, setProcessingOffer] = useState(false)
@@ -700,16 +697,7 @@ export default function SellerProfile() {
     const [isApproved, setisApproved] = useState(false)
     const [showDocumentUpload, setShowDocumentUpload] = useState(false)
 
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const checkMobile = () => {
-                setIsMobile(window.innerWidth < 768)
-            }
-            checkMobile()
-            window.addEventListener('resize', checkMobile)
-            return () => window.removeEventListener('resize', checkMobile)
-        }
-    }, [])
+    // Mobile detection removed - handled by responsive sidebar
 
     useEffect(() => {
         fetchSellerData()
@@ -896,23 +884,15 @@ export default function SellerProfile() {
                 />
             </Head>
 
-            <div className="flex min-h-screen bg-[#121212]">
-                {!isMobile && (
-                    <div className="hidden md:block fixed top-0 left-0 h-full w-64 z-40">
-                        <SellerSidebar
-                            currentPath="/profile"
-                            sellerName={sellerProfile?.fullName}
-                        />
-                    </div>
-                )}
+            <div className="w-full">
                 <main
-                    className={`flex-1 h-full overflow-y-auto overflow-x-hidden bg-[#121212] text-white ${!isMobile ? 'ml-64' : ''}`}
+                    className="text-white"
                     role="main">
                     <div className="w-full p-4 sm:p-6 lg:p-8">
                         <header className="mb-6 sm:mb-8">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                 <div>
-                                    <h1 className="text-2xl sm:text-3xl text-white mb-2 font-[var(--font-league-spartan)]">Dashboard</h1>
+                                    <h1 className="text-2xl sm:text-3xl text-white mb-2 font-[var(--font-league-spartan)]">Seller Profile</h1>
                                     <p className="text-sm sm:text-base text-gray-400 font-[var(--font-kumbh-sans)]">
                                         Welcome back, {sellerProfile.fullName}
                                     </p>
@@ -1491,54 +1471,6 @@ export default function SellerProfile() {
                         )}
                     </div>
                 </main>
-                {isMobile && (
-                    <nav className="fixed bottom-0 left-0 right-0 bg-[#1f1f1f] border-t border-gray-800 z-50">
-                        <div className="grid grid-cols-5 gap-1">
-                            <Link
-                                href="/seller/dashboard"
-                                className="flex flex-col items-center py-2 text-[#00FF89]">
-                                <BarChart3 className="w-5 h-5 mb-1" />
-                                <span className="text-xs">Dashboard</span>
-                            </Link>
-                            <Link
-                                href={canAddProducts ? '/seller/products' : '#'}
-                                onClick={(e) => {
-                                    if (!canAddProducts) {
-                                        e.preventDefault()
-                                        toast.error('Complete verification to access products')
-                                    }
-                                }}
-                                className={`flex flex-col items-center py-2 ${canAddProducts ? 'text-gray-400' : 'text-gray-600'}`}>
-                                <Package className="w-5 h-5 mb-1" />
-                                <span className="text-xs">Products</span>
-                            </Link>
-                            <Link
-                                href={canAddProducts ? '/seller/products/new' : '#'}
-                                onClick={(e) => {
-                                    if (!canAddProducts) {
-                                        e.preventDefault()
-                                        toast.error('Complete verification to add products')
-                                    }
-                                }}
-                                className={`flex flex-col items-center py-2 ${canAddProducts ? 'text-gray-400' : 'text-gray-600'}`}>
-                                <Plus className="w-5 h-5 mb-1" />
-                                <span className="text-xs">Add</span>
-                            </Link>
-                            <Link
-                                href="/seller/orders"
-                                className="flex flex-col items-center py-2 text-gray-400">
-                                <ShoppingCart className="w-5 h-5 mb-1" />
-                                <span className="text-xs">Orders</span>
-                            </Link>
-                            <Link
-                                href="/seller/settings"
-                                className="flex flex-col items-center py-2 text-gray-400">
-                                <Settings className="w-5 h-5 mb-1" />
-                                <span className="text-xs">Settings</span>
-                            </Link>
-                        </div>
-                    </nav>
-                )}
             </div>
 
             <CommissionOfferModal

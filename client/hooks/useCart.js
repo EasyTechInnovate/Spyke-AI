@@ -76,6 +76,8 @@ export function useCart() {
           items: transformedItems
         }
         
+        console.log('Cart from API:', cart)
+        console.log('New cart data with promo:', newCartData)
         
         setCartData(newCartData)
         
@@ -292,13 +294,48 @@ export function useCart() {
         toast.success('Promocode applied successfully')
         return result
       } else {
-        // For guests, validate but don't apply
-        const validation = await cartAPI.validatePromocode(code)
-        if (validation.valid) {
-          toast.info('Promocode will be applied at checkout')
+        // For guests, validate and apply to local cart
+        const response = await cartAPI.validatePromocode(code)
+        console.log('Promocode validation response:', response)
+        
+        // Handle different response structures
+        const validation = response.data || response
+        const isValid = validation.valid || validation.isValid || response.success
+        
+        if (isValid) {
+          // Extract promocode data from various possible structures
+          const promocodeData = validation.promocode || validation.promo || validation.data || validation
+          
+          // Try to get discount value from different possible fields
+          let discountValue = promocodeData.discountValue || 
+                             promocodeData.discount || 
+                             promocodeData.value || 
+                             promocodeData.amount || 
+                             0
+          
+          // Try to get discount type from different possible fields
+          let discountType = promocodeData.discountType || 
+                            promocodeData.type || 
+                            (promocodeData.isPercentage ? 'percentage' : 'fixed') ||
+                            'percentage'
+          
+          // Add promocode to guest cart
+          const newCart = {
+            ...cartData,
+            promocode: {
+              code: promocodeData.code || code.toUpperCase(),
+              discountType: discountType,
+              discountValue: Number(discountValue) || 10, // Default to 10 if no value
+              description: promocodeData.description || promocodeData.name || `${discountValue}${discountType === 'percentage' ? '%' : '$'} off`
+            }
+          }
+          console.log('New cart with promocode:', newCart)
+          setCartData(newCart)
+          sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(newCart))
+          toast.success('Promocode applied successfully!')
           return validation
         } else {
-          throw new Error(validation.message || 'Invalid promocode')
+          throw new Error(validation.message || response.message || 'Invalid promocode')
         }
       }
     } catch (error) {
@@ -317,8 +354,11 @@ export function useCart() {
         await loadCart()
         toast.success('Promocode removed')
       } else {
-        // Just update UI for guests
-        setCartData(prev => ({ ...prev, promocode: null }))
+        // Remove from guest cart
+        const newCart = { ...cartData, promocode: null }
+        setCartData(newCart)
+        sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(newCart))
+        toast.success('Promocode removed')
       }
     } catch (error) {
       console.error('Error removing promocode:', error)

@@ -3,12 +3,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { LayoutDashboard, X, LogOut, UserCheck, ChevronDown, Package, TrendingUp, ShieldCheck, Settings, Tag } from 'lucide-react'
+import { logout } from '@/lib/services/logout'
 
 
 export default function AdminSidebar({ sidebarOpen, setSidebarOpen, currentPath }) {
-    const router = useRouter()
     const [expandedMenus, setExpandedMenus] = useState(['sellers'])
 
     const toggleMenu = (menuId) => {
@@ -97,13 +96,8 @@ export default function AdminSidebar({ sidebarOpen, setSidebarOpen, currentPath 
         }
     ]
 
-    const handleLogout = () => {
-        if (typeof window !== 'undefined') {
-            localStorage.clear()
-            document.cookie = 'authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT'
-            document.cookie = 'roles=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT'
-        }
-        router.push('/')
+    const handleLogout = async () => {
+        await logout()
     }
 
     return (

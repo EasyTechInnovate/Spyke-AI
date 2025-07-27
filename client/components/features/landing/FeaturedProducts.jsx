@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import SmoothProductCarousel from './featured/SmoothProductCarousel'
+import ImagePlaceholder from '@/components/shared/ui/ImagePlaceholder'
 import { useCart } from '@/hooks/useCart'
 import { useAuth } from '@/hooks/useAuth'
 import toast from '@/lib/utils/toast'
@@ -174,7 +175,6 @@ const FeaturedProducts = memo(function FeaturedProducts() {
 function ProductCard({ product, onClick }) {
   const [imageLoaded, setImageLoaded] = useState(false)
   const { addToCart } = useCart()
-  const { requireAuth } = useAuth()
 
   const getBadgeColor = (badge) => {
     switch (badge) {
@@ -199,31 +199,41 @@ function ProductCard({ product, onClick }) {
     : 0
 
   return (
-    <div
-      className="group cursor-pointer h-full"
-      onClick={onClick}
-    >
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-brand-primary/50 transition-all duration-200 hover:shadow-xl hover:shadow-brand-primary/10 h-full flex flex-col">
+    <div className="group h-full">
+      <div 
+        className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-brand-primary/50 transition-all duration-200 hover:shadow-xl hover:shadow-brand-primary/10 h-full flex flex-col cursor-pointer"
+        onClick={(e) => {
+          // Don't navigate if clicking on interactive elements
+          if (e.target.closest('button')) {
+            return;
+          }
+          onClick()
+        }}
+      >
         {/* Product Image */}
         <div className="relative aspect-[4/3] bg-gray-800 overflow-hidden">
           {/* Loading skeleton */}
-          {!imageLoaded && (
+          {!imageLoaded && product.thumbnail && (
             <div className="absolute inset-0 bg-gray-800 animate-pulse" />
           )}
           
-          {/* Actual image */}
-          <Image
-            src={product.thumbnail || 'https://via.placeholder.com/400x300?text=Product+Image'}
-            alt={product.title}
-            width={400}
-            height={300}
-            className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-105 ${
-              imageLoaded ? 'opacity-100' : 'opacity-0'
-            }`}
-            onLoad={() => setImageLoaded(true)}
-            onError={() => setImageLoaded(true)}
-            loading="lazy"
-          />
+          {/* Actual image or placeholder */}
+          {product.thumbnail ? (
+            <Image
+              src={product.thumbnail}
+              alt={product.title}
+              width={400}
+              height={300}
+              className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-105 ${
+                imageLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
+              onLoad={() => setImageLoaded(true)}
+              onError={() => setImageLoaded(true)}
+              loading="lazy"
+            />
+          ) : (
+            <ImagePlaceholder text={product.title} className="transition-all duration-300 group-hover:scale-105" />
+          )}
           
           {/* Overlay on hover */}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
@@ -304,21 +314,24 @@ function ProductCard({ product, onClick }) {
                 </div>
               </div>
               <button
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.stopPropagation()
-                  requireAuth(() => {
-                    const cartProduct = {
-                      id: product._id || product.id,
-                      title: product.title,
-                      price: product.price,
-                      thumbnail: product.thumbnail,
-                      shortDescription: product.shortDescription,
-                      type: product.type
-                    }
-                    if (addToCart(cartProduct)) {
-                      toast.cart.addedToCart(product.title)
-                    }
-                  }, `/products/${product.slug}`)
+                  e.preventDefault()
+                  
+                  const cartProduct = {
+                    id: product._id || product.id,
+                    title: product.title,
+                    price: product.price,
+                    thumbnail: product.thumbnail,
+                    shortDescription: product.shortDescription,
+                    type: product.type
+                  }
+                  
+                  try {
+                    await addToCart(cartProduct)
+                  } catch (error) {
+                    console.error('Error adding to cart:', error)
+                  }
                 }}
                 className="p-2 bg-brand-primary hover:bg-brand-primary/90 rounded-lg transition-colors"
                 aria-label="Add to cart"

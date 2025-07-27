@@ -37,13 +37,15 @@ class ApiClient {
                 .json()
                 .catch(() => ({}))
 
-            // Don't redirect if this is a login attempt
+            // Don't redirect if this is a login attempt or cart operation
             const isLoginAttempt = originalRequest.url.includes('/auth/login')
-            if (isLoginAttempt) {
+            const isCartOperation = originalRequest.url.includes('/cart') || originalRequest.url.includes('/purchase/cart')
+            
+            if (isLoginAttempt || isCartOperation) {
                 throw {
                     status: response.status,
                     statusText: response.statusText,
-                    message: error.message || 'Invalid credentials',
+                    message: error.message || (isLoginAttempt ? 'Invalid credentials' : 'Authentication required'),
                     data: error,
                     response: {
                         status: response.status,

@@ -152,54 +152,51 @@ export const metadata = {
 // Enhanced Toaster configuration with improved UX
 const toasterConfig = {
     baseStyle: {
-        background: 'linear-gradient(135deg, rgba(15, 15, 15, 0.98) 0%, rgba(31, 31, 31, 0.98) 100%)',
-        backdropFilter: 'blur(16px)',
-        border: '1px solid rgba(0, 255, 137, 0.2)',
-        borderRadius: '16px',
-        padding: '20px',
-        color: '#ffffff',
-        fontSize: '15px',
+        borderRadius: '12px',
+        padding: '16px',
+        fontSize: '14px',
         fontWeight: '500',
-        lineHeight: '1.4',
-        boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.4), 0 0 30px -5px rgba(0, 255, 137, 0.1)',
-        maxWidth: '420px',
-        minHeight: '60px',
+        lineHeight: '1.5',
+        maxWidth: '380px',
+        minHeight: '56px',
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
         transform: 'translateZ(0)', // Force hardware acceleration
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        position: 'relative',
+        overflow: 'hidden'
     },
     variants: {
         success: {
-            background: 'linear-gradient(135deg, rgba(0, 255, 137, 0.15) 0%, rgba(15, 15, 15, 0.98) 100%)',
-            border: '1px solid rgba(0, 255, 137, 0.5)',
-            boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.4), 0 0 40px -5px rgba(0, 255, 137, 0.25)',
-            animation: 'slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+            background: '#10B981',
+            color: '#ffffff',
+            border: '1px solid #059669',
+            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)'
         },
         error: {
-            background: 'linear-gradient(135deg, rgba(255, 85, 85, 0.15) 0%, rgba(15, 15, 15, 0.98) 100%)',
-            border: '1px solid rgba(255, 85, 85, 0.5)',
-            boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.4), 0 0 40px -5px rgba(255, 85, 85, 0.25)',
-            animation: 'slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+            background: '#EF4444',
+            color: '#ffffff',
+            border: '1px solid #DC2626',
+            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.4)'
         },
         warning: {
-            background: 'linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(15, 15, 15, 0.98) 100%)',
-            border: '1px solid rgba(255, 193, 7, 0.5)',
-            boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.4), 0 0 40px -5px rgba(255, 193, 7, 0.25)',
-            animation: 'slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+            background: '#F59E0B',
+            color: '#ffffff',
+            border: '1px solid #D97706',
+            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.4)'
         },
         info: {
-            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(15, 15, 15, 0.98) 100%)',
-            border: '1px solid rgba(59, 130, 246, 0.5)',
-            boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.4), 0 0 40px -5px rgba(59, 130, 246, 0.25)',
-            animation: 'slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+            background: '#3B82F6',
+            color: '#ffffff',
+            border: '1px solid #2563EB',
+            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)'
         },
         loading: {
-            background: 'linear-gradient(135deg, rgba(0, 255, 137, 0.1) 0%, rgba(15, 15, 15, 0.98) 100%)',
-            border: '1px solid rgba(0, 255, 137, 0.3)',
-            boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.4), 0 0 30px -5px rgba(0, 255, 137, 0.15)',
-            animation: 'slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+            background: '#6B7280',
+            color: '#ffffff',
+            border: '1px solid #4B5563',
+            boxShadow: '0 4px 12px rgba(107, 114, 128, 0.4)'
         }
     }
 }
@@ -278,9 +275,11 @@ export default function RootLayout({ children }) {
                     expand
                     duration={5000}
                     closeButton
-                    gap={16}
+                    gap={12}
                     offset="24px"
                     visibleToasts={4}
+                    pauseWhenPageIsHidden
+                    className="toaster-wrapper"
                     toastOptions={{
                         className: 'font-kumbh-sans',
                         style: toasterConfig.baseStyle,
@@ -290,8 +289,8 @@ export default function RootLayout({ children }) {
                                 ...toasterConfig.variants.success
                             },
                             iconTheme: {
-                                primary: '#00FF89',
-                                secondary: '#0f0f0f'
+                                primary: '#ffffff',
+                                secondary: '#10B981'
                             },
                             duration: 4000
                         },
@@ -301,8 +300,8 @@ export default function RootLayout({ children }) {
                                 ...toasterConfig.variants.error
                             },
                             iconTheme: {
-                                primary: '#ff5555',
-                                secondary: '#0f0f0f'
+                                primary: '#ffffff',
+                                secondary: '#EF4444'
                             },
                             duration: 7000
                         },
@@ -312,8 +311,8 @@ export default function RootLayout({ children }) {
                                 ...toasterConfig.variants.warning
                             },
                             iconTheme: {
-                                primary: '#ffc107',
-                                secondary: '#0f0f0f'
+                                primary: '#ffffff',
+                                secondary: '#F59E0B'
                             },
                             duration: 6000
                         },
@@ -323,8 +322,8 @@ export default function RootLayout({ children }) {
                                 ...toasterConfig.variants.info
                             },
                             iconTheme: {
-                                primary: '#3b82f6',
-                                secondary: '#0f0f0f'
+                                primary: '#ffffff',
+                                secondary: '#3B82F6'
                             },
                             duration: 5000
                         },
@@ -334,8 +333,8 @@ export default function RootLayout({ children }) {
                                 ...toasterConfig.variants.loading
                             },
                             iconTheme: {
-                                primary: '#00FF89',
-                                secondary: '#0f0f0f'
+                                primary: '#ffffff',
+                                secondary: '#6B7280'
                             }
                         }
                     }}

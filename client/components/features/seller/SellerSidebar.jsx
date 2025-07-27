@@ -1,193 +1,238 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
+import React, { useState, useCallback } from 'react'
+import Link from 'next/link'
 import {
-    Home,
     Package,
+    Tag,
+    User,
+    LogOut,
+    Menu,
+    X,
+    Settings,
     ShoppingCart,
     BarChart3,
-    Star,
     MessageSquare,
-    Wallet,
-    Settings,
-    LogOut,
-    ChevronLeft,
-    ChevronRight,
-    Sparkles,
-    Tag
-} from 'lucide-react'
-import { SpykeLogo } from '@/components/Logo'
-import api from '@/lib/api'
+    FileText} from 'lucide-react'
+import { logout } from '@/lib/services/logout'
 
-const EnhancedSidebar = ({ currentPath = '/dashboard', sellerName = '' }) => {
-    const [isCollapsed, setIsCollapsed] = useState(false)
-    const [hoveredItem, setHoveredItem] = useState(null)
-    const router = useRouter()
+const SellerSidebar = ({ currentPath = '/profile', sellerName = '', sidebarOpen, setSidebarOpen }) => {
 
-    const menuItems = [
-        { icon: Home, label: 'Dashboard', path: '/dashboard' },
-        { icon: Package, label: 'Products', path: '/products' },
-        { icon: Tag, label: 'Promocodes', path: '/promocodes' },
-        { icon: ShoppingCart, label: 'Orders', path: '/orders' },
-        { icon: BarChart3, label: 'Analytics', path: '/analytics' },
-        { icon: Star, label: 'Reviews', path: '/reviews' },
-        { icon: MessageSquare, label: 'Messages', path: '/messages', badge: 3 },
-        { icon: Wallet, label: 'Payouts', path: '/payouts' },
-        { icon: Settings, label: 'Settings', path: '/settings' }
+    const navigationItems = [
+        
+        {
+            id: 'profile',
+            label: 'Profile',
+            icon: User,
+            href: '/seller/profile'
+        },
+        {
+            id: 'products',
+            label: 'Products',
+            icon: Package,
+            href: '/seller/products'
+        },
+        {
+            id: 'promocodes',
+            label: 'Promocodes',
+            icon: Tag,
+            href: '/seller/promocodes'
+        },
+        {
+            id: 'orders',
+            label: 'Orders',
+            icon: ShoppingCart,
+            href: '/seller/orders',
+            disabled: true,
+            badge: 'Soon'
+        },
+        {
+            id: 'analytics',
+            label: 'Analytics',
+            icon: BarChart3,
+            href: '/seller/analytics',
+            disabled: true,
+            badge: 'Soon'
+        },
+        {
+            id: 'messages',
+            label: 'Messages',
+            icon: MessageSquare,
+            href: '/seller/messages',
+            disabled: true,
+            badge: 'Soon'
+        },
+        {
+            id: 'reports',
+            label: 'Reports',
+            icon: FileText,
+            href: '/seller/reports',
+            disabled: true,
+            badge: 'Soon'
+        },
+        {
+            id: 'settings',
+            label: 'Settings',
+            icon: Settings,
+            href: '/seller/settings',
+            disabled: true,
+            badge: 'Soon'
+        }
     ]
 
-    const handleLogout = async () => {
-        try {
-            if (api && api.auth && api.auth.logout) {
-                await api.auth.logout()
-            }
-        } catch (err) {}
+    // Use centralized logout
+    const handleLogout = useCallback(async () => {
+        await logout()
+    }, [])
 
-        if (typeof window !== 'undefined') {
-            localStorage.removeItem('authToken')
-            localStorage.removeItem('refreshToken')
-            localStorage.removeItem('user')
-            localStorage.removeItem('sellerProfile')
-            sessionStorage.clear()
+    // Get initials from seller name
+    const getInitials = useCallback((name) => {
+        if (!name) return 'S'
+        return name
+            .split(' ')
+            .map(word => word[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2)
+    }, [])
 
-            toast.success('Logged out successfully')
-
-            window.location.href = '/signin'
-        }
+    // Check if the current path is active
+    const isActive = (href) => {
+        const cleanPath = currentPath.replace('/seller', '')
+        const cleanHref = href.replace('/seller', '')
+        return cleanPath === cleanHref
     }
 
+    // Mobile state management
+    const [mobileOpen, setMobileOpen] = useState(false)
+    const isControlled = setSidebarOpen !== undefined
+    const isOpen = isControlled ? sidebarOpen : mobileOpen
+    const setIsOpen = isControlled ? setSidebarOpen : setMobileOpen
+
     return (
-        <div className={`${isCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 ease-in-out`}>
-            <div className="h-screen bg-[#1a1a1a] border-r border-gray-800 flex flex-col relative">
-                {/* Glow effect */}
-                <div className="absolute top-0 left-0 w-full h-48 bg-gradient-to-b from-[#00FF89]/5 to-transparent pointer-events-none"></div>
+        <>
+            {/* Mobile Menu Button */}
+            <button
+                onClick={() => setIsOpen(true)}
+                className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-[#1a1a1a] rounded-lg shadow-md border border-gray-800 hover:bg-gray-800 transition-colors"
+                aria-label="Toggle menu"
+            >
+                <Menu className="w-5 h-5 text-gray-300" />
+            </button>
 
-                {/* Toggle button */}
-                <button
-                    onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="absolute -right-3 top-8 w-6 h-6 bg-[#1f1f1f] border border-gray-800 rounded-full flex items-center justify-center hover:bg-[#00FF89] hover:border-[#00FF89] group transition-all duration-200 z-10">
-                    {isCollapsed ? (
-                        <ChevronRight className="w-3 h-3 text-[#00FF89] group-hover:text-[#121212]" />
-                    ) : (
-                        <ChevronLeft className="w-3 h-3 text-[#00FF89] group-hover:text-[#121212]" />
-                    )}
-                </button>
+            {/* Mobile Overlay */}
+            <div
+                className={`fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity duration-300 ${
+                    isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                }`}
+                onClick={() => setIsOpen(false)}
+            />
 
-                {/* Logo Section */}
-                <div className="p-6">
-                    <SpykeLogo
-                        size={132}
-                        showText={!isCollapsed}
-                        textSize="text-lg"
-                        className="transition-all duration-300"
-                    />
-                </div>
-
-                {/* User Profile Section */}
-                <div className={`px-6 py-4 border-b border-gray-800 ${isCollapsed ? 'text-center' : ''}`}>
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00FF89] to-[#FFC050] flex items-center justify-center flex-shrink-0">
-                            <span className="text-[#121212] font-bold text-sm">
-                                {sellerName
-                                    ?.split(' ')
-                                    .map((n) => n[0])
-                                    .join('')
-                                    .toUpperCase() || 'S'}
-                            </span>
+            {/* Sidebar */}
+            <aside
+                className={`fixed top-0 left-0 z-50 h-full w-72 md:w-64 bg-[#1a1a1a] border-r border-gray-800 transform transition-transform duration-300 ${
+                    isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                }`}
+                aria-label="Seller navigation sidebar"
+            >
+                {/* Header */}
+                <div className="p-6 border-b border-gray-800">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-xl font-bold text-[#00FF89]">Seller Panel</h2>
+                            <p className="text-xs text-gray-500 mt-1">Manage your store</p>
                         </div>
-                        {!isCollapsed && (
-                            <div className="flex-1 min-w-0">
-                                <h3 className="text-white font-[var(--font-league-spartan)] truncate">{sellerName || 'Seller'}</h3>
-                            </div>
-                        )}
+                        <button
+                            onClick={() => setIsOpen(false)}
+                            className="p-2 text-gray-400 hover:text-white rounded-lg lg:hidden"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
                     </div>
                 </div>
 
-                {/* Navigation Menu */}
-                <nav className="flex-1 px-3 py-4 overflow-y-auto">
-                    <ul className="space-y-1">
-                        {menuItems.map((item) => {
-                            const Icon = item.icon
-                            const isActive = currentPath === item.path
-                            const isHovered = hoveredItem === item.path
+                {/* User Profile Section */}
+                <div className="px-6 py-4 border-b border-gray-800">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00FF89] to-[#FFC050] flex items-center justify-center flex-shrink-0 shadow-md">
+                            <span className="text-[#121212] font-semibold text-sm">
+                                {getInitials(sellerName)}
+                            </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <h3 className="text-white font-medium truncate">
+                                {sellerName || 'Seller'}
+                            </h3>
+                            <p className="text-xs text-gray-400">Premium Account</p>
+                        </div>
+                    </div>
+                </div>
 
-                            return (
-                                <li key={item.path}>
-                                    <a
-                                        href={`/seller${item.path}`}
-                                        className={`
-                                            flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
-                                            ${isActive ? 'bg-[#00FF89] text-[#121212]' : 'text-gray-400 hover:bg-[#00FF89]/10 hover:text-[#00FF89]'}
-                                            ${isCollapsed ? 'justify-center' : ''}
-                                            relative overflow-hidden group
-                                        `}
-                                        onMouseEnter={() => setHoveredItem(item.path)}
-                                        onMouseLeave={() => setHoveredItem(null)}>
-                                        {/* Hover effect */}
-                                        <div
-                                            className={`
-                                                absolute inset-0 bg-gradient-to-r from-[#00FF89]/0 via-[#00FF89]/10 to-[#00FF89]/0
-                                                transform -translate-x-full group-hover:translate-x-full transition-transform duration-700
-                                                ${isActive ? 'hidden' : ''}
-                                            `}></div>
+                {/* Navigation */}
+                <nav className="flex-1 overflow-y-auto px-4 py-6">
+                    {navigationItems.map((item) => {
+                        const Icon = item.icon
+                        const itemIsActive = isActive(item.href)
 
-                                        <Icon className={`w-5 h-5 relative z-10 ${isActive ? 'text-[#121212]' : ''}`} />
-
-                                        {!isCollapsed && (
-                                            <>
-                                                <span
-                                                    className={`
-                                                        font-[var(--font-kumbh-sans)] relative z-10
-                                                        ${isActive ? 'font-semibold' : ''}
-                                                    `}>
-                                                    {item.label}
-                                                </span>
-
-                                                {item.badge && (
-                                                    <span className="ml-auto bg-[#FFC050] text-[#121212] text-xs font-bold px-2 py-0.5 rounded-full">
-                                                        {item.badge}
-                                                    </span>
-                                                )}
-                                            </>
+                        return (
+                            <div key={item.id} className="mb-2">
+                                {item.disabled ? (
+                                    <div
+                                        className="flex items-center justify-between px-4 py-3 rounded-xl text-gray-600 cursor-not-allowed"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <Icon className="w-5 h-5" />
+                                            <span className="font-medium">{item.label}</span>
+                                        </div>
+                                        {item.badge && (
+                                            <span className="px-2 py-1 text-xs bg-[#00FF89]/20 text-[#00FF89] rounded-full">
+                                                {item.badge}
+                                            </span>
                                         )}
-
-                                        {/* Tooltip for collapsed state */}
-                                        {isCollapsed && isHovered && (
-                                            <div className="absolute left-full ml-2 px-2 py-1 bg-[#1f1f1f] text-[#00FF89] text-sm rounded-md whitespace-nowrap z-50 border border-[#00FF89]/20">
-                                                {item.label}
-                                                {item.badge && <span className="ml-2 text-[#FFC050]">({item.badge})</span>}
-                                            </div>
-                                        )}
-                                    </a>
-                                </li>
-                            )
-                        })}
-                    </ul>
+                                    </div>
+                                ) : (
+                                    <Link
+                                        href={item.href}
+                                        onClick={() => setIsOpen(false)}
+                                        className={`flex items-center justify-between px-4 py-3 rounded-xl transition-colors ${
+                                            itemIsActive 
+                                                ? 'bg-[#00FF89] text-[#121212]' 
+                                                : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <Icon className="w-5 h-5" />
+                                            <span className="font-medium">{item.label}</span>
+                                        </div>
+                                    </Link>
+                                )}
+                            </div>
+                        )
+                    })}
                 </nav>
 
-                {/* Logout Button - WORKING VERSION */}
-                <div className="p-3 border-t border-gray-800">
+                {/* Bottom Section */}
+                <div className="p-4 border-t border-gray-800">
+                    {/* Help Section */}
+                    <div className="mb-4 p-3 bg-gradient-to-r from-[#FFC050]/10 to-[#FFC050]/5 rounded-lg border border-[#FFC050]/20">
+                        <p className="text-xs font-medium text-[#FFC050] mb-1">Need help?</p>
+                        <p className="text-xs text-gray-400">Contact support 24/7</p>
+                    </div>
+
+                    {/* Logout Button */}
                     <button
-                        onClick={() => {
-                            handleLogout()
-                        }}
-                        className={`
-                            flex items-center gap-3 w-full px-3 py-2.5 rounded-lg
-                            text-gray-400 hover:bg-red-500/10 hover:text-red-400
-                            transition-all duration-200 cursor-pointer
-                            ${isCollapsed ? 'justify-center' : ''}
-                        `}>
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+                        aria-label="Logout"
+                    >
                         <LogOut className="w-5 h-5" />
-                        {!isCollapsed && <span className="font-[var(--font-kumbh-sans)]">Logout</span>}
+                        <span>Logout</span>
                     </button>
                 </div>
-            </div>
-        </div>
+            </aside>
+        </>
     )
 }
 
-export const SellerSidebar = EnhancedSidebar
-export default EnhancedSidebar
-
+export { SellerSidebar }
+export default SellerSidebar
