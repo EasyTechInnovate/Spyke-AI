@@ -5,15 +5,11 @@ import { ShoppingCart, CreditCard } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 import { useRouter } from 'next/navigation'
 import toast from '@/lib/utils/toast'
-import { useDebugAuth } from '@/hooks/useDebugAuth'
 
 export default function AddToCartButton({ product }) {
   const router = useRouter()
   const { addToCart, isInCart } = useCart()
   const [loading, setLoading] = useState(false)
-  
-  // Debug auth state
-  useDebugAuth()
   
   // Clear any stale auth data on mount
   useEffect(() => {
@@ -23,7 +19,6 @@ export default function AddToCartButton({ product }) {
     
     // If we have roles but no auth token, clear everything
     if (!authToken && roles) {
-      console.log('Clearing stale auth data')
       localStorage.removeItem('roles')
       localStorage.removeItem('user')
       // Clear auth cookies too
@@ -33,13 +28,6 @@ export default function AddToCartButton({ product }) {
   }, [])
   
   const handleAddToCart = useCallback(async () => {
-    console.log('=== ADD TO CART CLICKED ===')
-    console.log('Product:', product?._id || product?.id)
-    console.log('Auth state before:', {
-      token: !!localStorage.getItem('authToken'),
-      roles: localStorage.getItem('roles')
-    })
-    
     if (!product) return
     
     setLoading(true)
@@ -76,13 +64,6 @@ export default function AddToCartButton({ product }) {
   }, [product, addToCart, isInCart])
   
   const handleBuyNow = useCallback(async () => {
-    console.log('=== BUY NOW CLICKED ===')
-    console.log('Product:', product?._id || product?.id)
-    console.log('Auth state before:', {
-      token: !!localStorage.getItem('authToken'),
-      roles: localStorage.getItem('roles')
-    })
-    
     if (!product) return
     
     setLoading(true)

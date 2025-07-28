@@ -4,9 +4,6 @@ import { NextResponse } from 'next/server'
 export function middleware(request) {
   const path = request.nextUrl.pathname
   
-  console.log('=== MIDDLEWARE DEBUG ===')
-  console.log('Path:', path)
-  
   const authToken = request.cookies.get('authToken')
   const rolesCookie = request.cookies.get('roles')  
   let roles = []
@@ -15,9 +12,6 @@ export function middleware(request) {
   } catch (e) {
     // Silent fail
   }
-  
-  console.log('Has authToken:', !!authToken)
-  console.log('Roles:', roles)
   
   const isAuthenticated = !!authToken
   
@@ -63,11 +57,8 @@ export function middleware(request) {
   
   // Check for dashboard redirect with partial auth
   if (path === '/dashboard' && !isAuthenticated) {
-    console.log('Dashboard accessed without auth, redirecting to home')
     return NextResponse.redirect(new URL('/', request.url))
   }
-  
-  console.log('Middleware allowing request to proceed')
   
   return NextResponse.next()
 }

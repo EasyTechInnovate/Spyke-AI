@@ -17,23 +17,13 @@ const cartAPI = {
 
     // Add item to cart
     addToCart: async (productId, quantity = 1) => {
-        console.log('=== CART API - ADD TO CART ===')
-        console.log('Product ID:', productId)
-        console.log('Quantity:', quantity)
-        
         try {
             const response = await apiClient.post('/v1/purchase/cart/add', {
                 productId,
                 quantity
             })
-            console.log('Add to cart response:', response)
             return response.data
         } catch (error) {
-            console.log('Add to cart error:', error)
-            // For 401 errors on cart operations, don't redirect - let the app handle it
-            if (error.status === 401) {
-                console.log('Cart operation requires auth, but not redirecting')
-            }
             throw error
         }
     },

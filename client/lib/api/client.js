@@ -41,11 +41,6 @@ class ApiClient {
             const isLoginAttempt = originalRequest.url.includes('/auth/login')
             const isCartOperation = originalRequest.url.includes('/cart') || originalRequest.url.includes('/purchase/cart')
             
-            console.log('=== API 401 HANDLING ===')
-            console.log('URL:', originalRequest.url)
-            console.log('Is cart operation:', isCartOperation)
-            console.log('Is login attempt:', isLoginAttempt)
-            
             if (isLoginAttempt || isCartOperation) {
                 throw {
                     status: response.status,

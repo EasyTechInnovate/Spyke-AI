@@ -151,19 +151,13 @@ export function useCart() {
 
   // Add to cart
   const addToCart = useCallback(async (product) => {
-    console.log('=== useCart.addToCart ===')
-    console.log('Is authenticated:', isAuthenticated)
-    console.log('Product:', product?.id || product?._id)
-    
     try {
       if (isAuthenticated) {
-        console.log('Using backend cart for authenticated user')
         // Add to backend cart
         await cartAPI.addToCart(product.id || product._id, 1)
         await loadCart()
         toast.success('Added to cart')
       } else {
-        console.log('Using local cart for guest user')
         // Add to guest cart
         const newCart = { ...cartData }
         const existingItem = newCart.items.find(item => 
