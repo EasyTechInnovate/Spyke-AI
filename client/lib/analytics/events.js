@@ -91,7 +91,7 @@ export const ANALYTICS_EVENTS = {
 export function getEventName(category, action, context = {}) {
   const baseEvent = ANALYTICS_EVENTS[category]?.[action]
   if (!baseEvent) {
-    console.warn(`Unknown event: ${category}.${action}`)
+    // Unknown event: ${category}.${action}
     return `${category} ${action}`
   }
   return baseEvent

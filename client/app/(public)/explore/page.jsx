@@ -108,9 +108,9 @@ export default function ExplorePage() {
         if (filters.setupTime && filters.setupTime.length > 0) params.setupTime = filters.setupTime[0]
         if (filters.verifiedOnly) params.verifiedOnly = 'true'
 
-        console.log('Fetching products with params:', params)
+        // Fetching products with params
         const response = await productsAPI.getProducts(params)
-        console.log('API Response:', response)
+        // API Response received
         
         if (response && response.data) {
           // Check if response structure matches what we expect
@@ -119,14 +119,13 @@ export default function ExplorePage() {
           
           setProducts(Array.isArray(productsData) ? productsData : [])
           setTotalItems(paginationData.totalItems || paginationData.total || productsData.length || 0)
-          console.log('Products loaded:', productsData.length)
-          console.log('Response structure:', Object.keys(response.data))
+          // Products loaded successfully
         } else {
-          console.log('No data in response')
+          // No data in response
           setProducts([])
         }
       } catch (error) {
-        console.error('Error fetching products:', error)
+        // Error fetching products
         setApiError(error.message || 'Failed to load products')
         setProducts([])
       } finally {

@@ -175,13 +175,13 @@ export default function ProductPage() {
               setAvailablePromocodes(applicablePromos)
             }
           } catch (error) {
-            console.error('Error fetching promocodes:', error)
+            // Error fetching promocodes
           }
         } else {
           setError('Product not found')
         }
       } catch (err) {
-        console.error('Error fetching product:', err)
+        // Error fetching product
         setError('Failed to load product')
       } finally {
         setLoading(false)
@@ -274,7 +274,7 @@ export default function ProductPage() {
           url
         })
       } catch (err) {
-        console.log('Share cancelled')
+        // Share cancelled
       }
     } else if (navigator.clipboard) {
       navigator.clipboard.writeText(url)
@@ -308,7 +308,7 @@ export default function ProductPage() {
       }
       toast.success('Review submitted successfully!')
     } catch (error) {
-      console.error('Failed to submit review:', error)
+      // Failed to submit review
       throw error
     }
   }, [product?._id, productSlug])
@@ -335,7 +335,7 @@ export default function ProductPage() {
       
       toast.success(newUpvoted ? 'Upvoted!' : 'Removed upvote')
     } catch (error) {
-      console.error('Failed to toggle upvote:', error)
+      // Failed to toggle upvote
       setUpvoted(!newUpvoted)
       toast.error('Failed to update upvote')
     } finally {
@@ -355,7 +355,7 @@ export default function ProductPage() {
     try {
       return isInCart(product._id) || isInCart(product.id)
     } catch (error) {
-      console.error('Error checking cart status:', error)
+      // Error checking cart status
       return false
     }
   }, [mounted, product, isInCart, cartLoading])

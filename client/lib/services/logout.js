@@ -63,7 +63,7 @@ export const logoutService = {
       }
 
     } catch (error) {
-      console.error('Logout error:', error)
+      // Logout error occurred
       // Even if there's an error, clear local data and redirect
       if (typeof window !== 'undefined') {
         localStorage.clear()

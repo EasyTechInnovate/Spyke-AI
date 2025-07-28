@@ -67,10 +67,10 @@ class Analytics {
       this.initialized = true
       
       if (ANALYTICS_CONFIG.debug) {
-        console.log('Analytics initialized')
+        // Analytics initialized
       }
     } catch (error) {
-      console.error('Failed to initialize analytics:', error)
+      // Failed to initialize analytics
     }
   }
 
@@ -96,14 +96,14 @@ class Analytics {
         timestamp: Date.now(),
       })
     } catch (error) {
-      console.error('Failed to identify user:', error)
+      // Failed to identify user
     }
   }
 
   track(eventName, properties) {
     if (!shouldTrackUser()) {
       if (ANALYTICS_CONFIG.debug) {
-        console.log('Analytics tracking disabled by user preference')
+        // Analytics tracking disabled by user preference
       }
       return
     }
@@ -127,7 +127,7 @@ class Analytics {
       // Also track with Vercel Analytics
       vercelTrack(eventName, event.properties)
     } catch (error) {
-      console.error('Failed to track event:', error)
+      // Failed to track event
     }
   }
 
@@ -150,7 +150,7 @@ class Analytics {
 
       this.addToQueue(event)
     } catch (error) {
-      console.error('Failed to track page view:', error)
+      // Failed to track page view
     }
   }
 
@@ -184,7 +184,7 @@ class Analytics {
 
       this.addToQueue(event)
     } catch (error) {
-      console.error('Failed to track click:', error)
+      // Failed to track click
     }
   }
 
@@ -207,7 +207,7 @@ class Analytics {
 
       this.addToQueue(event)
     } catch (error) {
-      console.error('Failed to track form:', error)
+      // Failed to track form
     }
   }
 
@@ -239,7 +239,7 @@ class Analytics {
       // Process errors immediately
       this.processBatch()
     } catch (err) {
-      console.error('Failed to track error:', err)
+      // Failed to track error
     }
   }
 
@@ -247,7 +247,7 @@ class Analytics {
     this.queue.push(event)
     
     if (ANALYTICS_CONFIG.debug) {
-      console.log('Analytics event queued:', event)
+      // Analytics event queued
     }
     
     // Store in local storage
@@ -294,10 +294,10 @@ class Analytics {
       analyticsStorage.removeEvents(eventIds)
       
       if (ANALYTICS_CONFIG.debug) {
-        console.log(`Analytics batch sent: ${events.length} events`)
+        // Analytics batch sent
       }
     } catch (error) {
-      console.error('Failed to send analytics batch:', error)
+      // Failed to send analytics batch
       // Re-add events to queue on failure
       this.queue.unshift(...events)
       this.scheduleBatch()

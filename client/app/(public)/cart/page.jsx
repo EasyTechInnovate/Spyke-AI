@@ -107,7 +107,7 @@ export default function CartPage() {
             await removePromocode()
             setPromoError('')
         } catch (error) {
-            console.error('Error removing promocode:', error)
+            // Error removing promocode
         }
     }, [removePromocode])
 

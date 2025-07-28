@@ -13,7 +13,7 @@ class AnalyticsStorage {
       const events = stored ? JSON.parse(stored) : []
       return [...events, ...this.memoryQueue]
     } catch (error) {
-      console.error('Failed to get analytics events:', error)
+      // Failed to get analytics events
       return this.memoryQueue
     }
   }
@@ -34,7 +34,7 @@ class AnalyticsStorage {
       localStorage.setItem(ANALYTICS_CONFIG.storageKey, JSON.stringify(limitedEvents))
       this.memoryQueue = []
     } catch (error) {
-      console.error('Failed to store analytics event:', error)
+      // Failed to store analytics event
       this.memoryQueue.push(event)
     }
   }
@@ -51,7 +51,7 @@ class AnalyticsStorage {
       localStorage.setItem(ANALYTICS_CONFIG.storageKey, JSON.stringify(remaining))
       this.memoryQueue = []
     } catch (error) {
-      console.error('Failed to remove analytics events:', error)
+      // Failed to remove analytics events
     }
   }
 
@@ -65,7 +65,7 @@ class AnalyticsStorage {
       localStorage.removeItem(ANALYTICS_CONFIG.storageKey)
       this.memoryQueue = []
     } catch (error) {
-      console.error('Failed to clear analytics events:', error)
+      // Failed to clear analytics events
     }
   }
 }

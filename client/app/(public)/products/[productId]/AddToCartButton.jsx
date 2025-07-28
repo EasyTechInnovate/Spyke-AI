@@ -58,7 +58,6 @@ export default function AddToCartButton({ product }) {
         toast.success('Added to cart')
       }
     } catch (error) {
-      console.error('Error adding to cart:', error)
       // Don't show error toast here - useCart already handles it
     } finally {
       setLoading(false)
@@ -97,7 +96,7 @@ export default function AddToCartButton({ product }) {
       // Navigate to checkout
       router.push('/checkout')
     } catch (error) {
-      console.error('Error with buy now:', error)
+      // Error with buy now
       toast.error('Failed to process buy now')
     } finally {
       setLoading(false)

@@ -44,7 +44,7 @@ export function useHeader() {
                     }
                 } catch {
                     if (process.env.NODE_ENV === 'development') {
-                        console.error('Failed to parse user data')
+                        // Failed to parse user data
                     }
                     handleClearUser()
                 }
@@ -66,7 +66,7 @@ export function useHeader() {
             setNotifications(response?.data?.count || 0)
         } catch (err) {
             if (process.env.NODE_ENV === 'development') {
-                console.error('Notifications fetch error:', err)
+                // Notifications fetch error
             }
         }
     }

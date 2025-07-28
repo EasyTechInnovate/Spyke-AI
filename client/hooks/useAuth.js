@@ -34,7 +34,7 @@ export function useAuth() {
         setIsAuthenticated(false)
       }
     } catch (error) {
-      console.error('Auth check failed:', error)
+      // Auth check failed
       setUser(null)
       setIsAuthenticated(false)
     } finally {

@@ -122,7 +122,7 @@ class ApiClient {
         } catch (error) {
             // Ensure error has proper structure
             if (!error.response) {
-                console.error('Network or parsing error:', error)
+                // Network or parsing error
                 throw {
                     status: 0,
                     message: error.message || 'Network error occurred',
@@ -267,7 +267,7 @@ class ApiClient {
                 headers: authHeaders
             })
         } catch (error) {
-            console.error('Upload error:', error)
+            // Upload error
             throw error
         }
     }
@@ -312,7 +312,7 @@ class ApiClient {
 
             return { success: true, filename }
         } catch (error) {
-            console.error('Download error:', error)
+            // Download error
             throw error
         }
     }
@@ -369,7 +369,7 @@ class ApiClient {
 
             return await Promise.all(promises)
         } catch (error) {
-            console.error('Batch request error:', error)
+            // Batch request error
             throw error
         }
     }

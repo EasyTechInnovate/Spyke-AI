@@ -150,7 +150,7 @@ export function setupAutoTracking() {
           }
         })
       } catch (error) {
-        console.error('Failed to setup performance observers:', error)
+        // Failed to setup performance observers
       }
     }
   }

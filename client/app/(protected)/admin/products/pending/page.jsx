@@ -32,7 +32,7 @@ export default function PendingProductsPage() {
   const fetchPendingProducts = async () => {
     try {
       setLoading(true)
-      console.log('Fetching pending products...')
+      // Fetching pending products
       
       const params = {
         page: pagination.currentPage,
@@ -51,7 +51,7 @@ export default function PendingProductsPage() {
         setPagination(response.data.pagination || pagination)
       }
     } catch (error) {
-      console.error('Error fetching products:', error)
+      // Error fetching products
       setError(error.message || 'Failed to load products')
       toast.error('Failed to load products. Please try again.')
       setProducts([])
@@ -66,7 +66,7 @@ export default function PendingProductsPage() {
       toast.success('Product verification status updated')
       fetchPendingProducts()
     } catch (error) {
-      console.error('Error verifying product:', error)
+      // Error verifying product
       toast.error('Failed to update product verification')
     }
   }

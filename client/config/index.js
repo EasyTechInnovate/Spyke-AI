@@ -8,10 +8,9 @@ const config = {
 }
 
 if (typeof window === 'undefined' && process.env.NODE_ENV === 'development') {
-    console.log('Client config loaded (server-side):', {
-        env: config.env,
-        apiConfigured: !!config.apiUrl
-    })
+    // Client config loaded (server-side)
+    // env: config.env
+    // apiConfigured: !!config.apiUrl
 }
 
 export default config

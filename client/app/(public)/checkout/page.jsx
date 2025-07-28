@@ -150,7 +150,7 @@ export default function CheckoutPage() {
       }
       
     } catch (error) {
-      console.error('Checkout error:', error)
+      // Checkout error
       toast.error(error.message || 'Checkout failed. Please try again.')
       track(ANALYTICS_EVENTS.CHECKOUT.FAILED, { error: error.message })
     } finally {

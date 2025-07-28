@@ -27,7 +27,6 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
         track(ANALYTICS_EVENTS.CART.ITEM_ADDED, eventProperties.cart(product.id, 1, product.price))
       }
     } catch (error) {
-      console.error('Error adding to cart:', error)
       // Don't show error toast here - useCart already handles it
     }
   }

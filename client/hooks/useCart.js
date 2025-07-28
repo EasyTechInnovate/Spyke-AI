@@ -76,8 +76,7 @@ export function useCart() {
           items: transformedItems
         }
         
-        console.log('Cart from API:', cart)
-        console.log('New cart data with promo:', newCartData)
+        // Cart loaded from API with promocode data
         
         setCartData(newCartData)
         
@@ -101,7 +100,7 @@ export function useCart() {
         }
       }
     } catch (error) {
-      console.error('Error loading cart:', error)
+      // Error loading cart
       // Fallback to empty cart on error
       setCartData({ items: [], total: 0, promocode: null })
     } finally {
@@ -130,7 +129,7 @@ export function useCart() {
           try {
             await cartAPI.addToCart(item.productId || item.id, item.quantity)
           } catch (error) {
-            console.error('Error syncing item to cart:', error)
+            // Skip failed items during sync
           }
         }
         
@@ -143,7 +142,7 @@ export function useCart() {
         toast.success('Your cart has been synced')
       }
     } catch (error) {
-      console.error('Error syncing guest cart:', error)
+      // Failed to sync guest cart
     } finally {
       isSyncing.current = false
     }
@@ -194,7 +193,7 @@ export function useCart() {
       setLastUpdate(Date.now())
       return true // Indicate success
     } catch (error) {
-      console.error('Error adding to cart:', error)
+      // Error adding to cart
       toast.error(error.message || 'Failed to add to cart')
       return false // Indicate failure
     }
@@ -229,7 +228,7 @@ export function useCart() {
       
       setLastUpdate(Date.now())
     } catch (error) {
-      console.error('Error updating quantity:', error)
+      // Error updating quantity
       toast.error('Failed to update quantity')
     }
   }, [isAuthenticated, cartData])
@@ -260,7 +259,7 @@ export function useCart() {
       setLastUpdate(Date.now())
       return true // Indicate success
     } catch (error) {
-      console.error('Error removing from cart:', error)
+      // Error removing from cart
       toast.error('Failed to remove from cart')
       return false // Indicate failure
     }
@@ -284,7 +283,7 @@ export function useCart() {
       setLastUpdate(Date.now())
       return true // Indicate success
     } catch (error) {
-      console.error('Error clearing cart:', error)
+      // Error clearing cart
       toast.error('Failed to clear cart')
       return false // Indicate failure
     }
@@ -302,7 +301,7 @@ export function useCart() {
       } else {
         // For guests, validate and apply to local cart
         const response = await cartAPI.validatePromocode(code)
-        console.log('Promocode validation response:', response)
+        // Promocode validated
         
         // Handle different response structures
         const validation = response.data || response
@@ -335,7 +334,7 @@ export function useCart() {
               description: promocodeData.description || promocodeData.name || `${discountValue}${discountType === 'percentage' ? '%' : '$'} off`
             }
           }
-          console.log('New cart with promocode:', newCart)
+          // Applied promocode to cart
           setCartData(newCart)
           sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(newCart))
           toast.success('Promocode applied successfully!')
@@ -345,7 +344,7 @@ export function useCart() {
         }
       }
     } catch (error) {
-      console.error('Error applying promocode:', error)
+      // Error applying promocode
       toast.error(error.message || 'Failed to apply promocode')
       throw error
     }
@@ -367,7 +366,7 @@ export function useCart() {
         toast.success('Promocode removed')
       }
     } catch (error) {
-      console.error('Error removing promocode:', error)
+      // Error removing promocode
       toast.error('Failed to remove promocode')
     }
   }, [isAuthenticated])

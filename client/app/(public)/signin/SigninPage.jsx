@@ -92,7 +92,7 @@ export default function SignInPage() {
                 }
             }, 500)
         } catch (err) {
-            console.error('Login error:', err)
+            // Login error
 
             const errorMessage = err?.response?.data?.message || err?.data?.message || err?.message || 'Login failed'
 

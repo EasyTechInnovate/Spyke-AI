@@ -67,7 +67,7 @@ export const authAPI = {
                 password: credentials.password
             })
 
-            console.log('Auth API - Full response:', response)
+            // Auth API - Full response received
 
             // Your API returns a wrapped response: { success, statusCode, message, data }
             // The actual user data and tokens are in response.data
@@ -77,8 +77,7 @@ export const authAPI = {
                 throw new Error('Invalid response structure - no data field')
             }
 
-            console.log('Auth API - User data:', data)
-            console.log('Auth API - Tokens:', data?.tokens)
+            // Auth API - User data and tokens extracted
 
             // Check if we have valid tokens
             if (data?.tokens?.accessToken) {
@@ -111,11 +110,11 @@ export const authAPI = {
                 // Return the user data (not the wrapped response)
                 return data
             } else {
-                console.error('No tokens in data:', data)
+                // No tokens in data
                 throw new Error('Invalid response - no access token received')
             }
         } catch (error) {
-            console.error('Login error:', error)
+            // Login error occurred
             throw error
         }
     },
@@ -155,7 +154,7 @@ export const authAPI = {
 
             return data
         } catch (error) {
-            console.error('Google login error:', error)
+            // Google login error occurred
             throw error
         }
     },
@@ -236,7 +235,7 @@ export const authAPI = {
 
             return data
         } catch (error) {
-            console.error('Token refresh failed:', error)
+            // Token refresh failed
             // If refresh fails, clear auth and redirect
             authAPI.clearAllAuthData()
             window.location.href = '/signin'
@@ -289,7 +288,7 @@ export const authAPI = {
                 const updatedUser = { ...currentUser, ...data }
                 localStorage.setItem('user', JSON.stringify(updatedUser))
             } catch (e) {
-                console.error('Error updating local user data:', e)
+                // Error updating local user data
             }
         }
 
@@ -356,7 +355,7 @@ export const authAPI = {
             const userStr = localStorage.getItem('user')
             return userStr ? JSON.parse(userStr) : null
         } catch (error) {
-            console.error('Error parsing stored user:', error)
+            // Error parsing stored user
             return null
         }
     },
@@ -367,7 +366,7 @@ export const authAPI = {
             const rolesStr = localStorage.getItem('roles')
             return rolesStr ? JSON.parse(rolesStr) : []
         } catch (error) {
-            console.error('Error parsing roles:', error)
+            // Error parsing roles
             return []
         }
     },
@@ -404,7 +403,7 @@ export const authAPI = {
 
             return Date.now() > expiryTime
         } catch (error) {
-            console.error('Error checking token expiry:', error)
+            // Error checking token expiry
             return true
         }
     },
@@ -432,7 +431,7 @@ export const authAPI = {
                     try {
                         await authAPI.refreshToken()
                     } catch (error) {
-                        console.error('Auto refresh failed:', error)
+                        // Auto refresh failed
                         clearInterval(interval)
                     }
                 }
