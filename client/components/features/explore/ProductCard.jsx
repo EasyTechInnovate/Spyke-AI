@@ -19,12 +19,16 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
     e.preventDefault()
     e.stopPropagation()
     
-    const isAuthenticated = requireAuth(() => {
+    try {
+      // Allow both authenticated and guest users to add to cart
       if (addToCart(product)) {
         toast.cart.addedToCart(product.title)
         track(ANALYTICS_EVENTS.CART.ITEM_ADDED, eventProperties.cart(product.id, 1, product.price))
       }
-    }, `/products/${product.slug || product.id}`)
+    } catch (error) {
+      console.error('Error adding to cart:', error)
+      toast.error('Failed to add to cart')
+    }
   }
 
   const handleQuickView = (e) => {

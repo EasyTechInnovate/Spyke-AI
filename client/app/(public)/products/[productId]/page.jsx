@@ -199,16 +199,40 @@ export default function ProductPage() {
   }, [router])
 
   const handleAddToCart = useCallback(async () => {
-    requireAuth(async () => {
-      if (product) {
-        const alreadyInCart = mounted && !cartLoading && isInCart && 
-          (isInCart(product._id) || isInCart(product.id))
-        
-        if (alreadyInCart) {
-          toast.info('Product is already in cart')
-          return
-        }
-        
+    // Allow both authenticated and guest users to add to cart
+    if (product) {
+      const alreadyInCart = mounted && !cartLoading && isInCart && 
+        (isInCart(product._id) || isInCart(product.id))
+      
+      if (alreadyInCart) {
+        toast.info('Product is already in cart')
+        return
+      }
+      
+      const cartProduct = {
+        id: product._id,
+        title: product.title,
+        price: product.price,
+        originalPrice: product.originalPrice,
+        thumbnail: product.thumbnail,
+        seller: product.sellerId,
+        type: product.type,
+        category: product.category,
+        description: product.shortDescription || product.description,
+        image: product.images?.[0]?.url || product.thumbnail
+      }
+      
+      await addToCart(cartProduct)
+    }
+  }, [product, addToCart, mounted, cartLoading, isInCart])
+
+  const handleBuyNow = useCallback(async () => {
+    // Allow both authenticated and guest users to buy now
+    if (product) {
+      const alreadyInCart = mounted && !cartLoading && isInCart && 
+        (isInCart(product._id) || isInCart(product.id))
+      
+      if (!alreadyInCart) {
         const cartProduct = {
           id: product._id,
           title: product.title,
@@ -224,39 +248,13 @@ export default function ProductPage() {
         
         await addToCart(cartProduct)
       }
-    })
-  }, [product, addToCart, requireAuth, mounted, cartLoading, isInCart])
-
-  const handleBuyNow = useCallback(async () => {
-    requireAuth(async () => {
-      if (product) {
-        const alreadyInCart = mounted && !cartLoading && isInCart && 
-          (isInCart(product._id) || isInCart(product.id))
-        
-        if (!alreadyInCart) {
-          const cartProduct = {
-            id: product._id,
-            title: product.title,
-            price: product.price,
-            originalPrice: product.originalPrice,
-            thumbnail: product.thumbnail,
-            seller: product.sellerId,
-            type: product.type,
-            category: product.category,
-            description: product.shortDescription || product.description,
-            image: product.images?.[0]?.url || product.thumbnail
-          }
-          
-          await addToCart(cartProduct)
-        }
-        
-        // Navigate to checkout after adding to cart
-        setTimeout(() => {
-          router.push('/checkout')
-        }, 200)
-      }
-    })
-  }, [product, addToCart, router, requireAuth, mounted, cartLoading, isInCart])
+      
+      // Navigate to checkout after adding to cart
+      setTimeout(() => {
+        router.push('/checkout')
+      }, 200)
+    }
+  }, [product, addToCart, router, mounted, cartLoading, isInCart])
 
   const handleShare = useCallback(async () => {
     if (!mounted) return
