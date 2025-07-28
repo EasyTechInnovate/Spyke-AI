@@ -222,7 +222,10 @@ export default function ProductPage() {
         image: product.images?.[0]?.url || product.thumbnail
       }
       
-      await addToCart(cartProduct)
+      const success = await addToCart(cartProduct)
+      if (success) {
+        toast.success('Added to cart')
+      }
     }
   }, [product, addToCart, mounted, cartLoading, isInCart])
 
@@ -246,13 +249,15 @@ export default function ProductPage() {
           image: product.images?.[0]?.url || product.thumbnail
         }
         
-        await addToCart(cartProduct)
+        const success = await addToCart(cartProduct)
+        if (!success) {
+          // If adding to cart failed, don't navigate
+          return
+        }
       }
       
       // Navigate to checkout after adding to cart
-      setTimeout(() => {
-        router.push('/checkout')
-      }, 200)
+      router.push('/checkout')
     }
   }, [product, addToCart, router, mounted, cartLoading, isInCart])
 

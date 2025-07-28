@@ -53,11 +53,13 @@ export default function AddToCartButton({ product }) {
       }
       
       // Add to cart (works for both authenticated and guest users)
-      await addToCart(cartProduct)
-      toast.success('Added to cart')
+      const success = await addToCart(cartProduct)
+      if (success) {
+        toast.success('Added to cart')
+      }
     } catch (error) {
       console.error('Error adding to cart:', error)
-      toast.error('Failed to add to cart')
+      // Don't show error toast here - useCart already handles it
     } finally {
       setLoading(false)
     }
@@ -85,13 +87,15 @@ export default function AddToCartButton({ product }) {
       const alreadyInCart = isInCart && isInCart(product._id || product.id)
       
       if (!alreadyInCart) {
-        await addToCart(cartProduct)
+        const success = await addToCart(cartProduct)
+        if (!success) {
+          // If adding to cart failed, don't navigate
+          return
+        }
       }
       
       // Navigate to checkout
-      setTimeout(() => {
-        router.push('/checkout')
-      }, 200)
+      router.push('/checkout')
     } catch (error) {
       console.error('Error with buy now:', error)
       toast.error('Failed to process buy now')

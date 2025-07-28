@@ -32,7 +32,7 @@ export function useCart() {
     return true
   })
   const [lastUpdate, setLastUpdate] = useState(Date.now())
-  const { user, isAuthenticated } = useAuth()
+  const { isAuthenticated } = useAuth()
   const isSyncing = useRef(false)
 
   // Load cart on mount and when auth status changes
@@ -156,7 +156,7 @@ export function useCart() {
         // Add to backend cart
         await cartAPI.addToCart(product.id || product._id, 1)
         await loadCart()
-        toast.success('Added to cart')
+        // Don't show toast here - let the caller handle it
       } else {
         // Add to guest cart
         const newCart = { ...cartData }
@@ -188,13 +188,15 @@ export function useCart() {
         
         setCartData(newCart)
         saveGuestCart(newCart)
-        toast.success('Added to cart')
+        // Don't show toast here - let the caller handle it
       }
       
       setLastUpdate(Date.now())
+      return true // Indicate success
     } catch (error) {
       console.error('Error adding to cart:', error)
       toast.error(error.message || 'Failed to add to cart')
+      return false // Indicate failure
     }
   }, [isAuthenticated, cartData])
 
@@ -239,7 +241,7 @@ export function useCart() {
         // Remove from backend
         await cartAPI.removeFromCart(itemId)
         await loadCart()
-        toast.success('Removed from cart')
+        // Don't show toast here - let the caller handle it
       } else {
         // Remove from guest cart
         const newCart = { ...cartData }
@@ -252,13 +254,15 @@ export function useCart() {
         
         setCartData(newCart)
         saveGuestCart(newCart)
-        toast.success('Removed from cart')
+        // Don't show toast here - let the caller handle it
       }
       
       setLastUpdate(Date.now())
+      return true // Indicate success
     } catch (error) {
       console.error('Error removing from cart:', error)
       toast.error('Failed to remove from cart')
+      return false // Indicate failure
     }
   }, [isAuthenticated, cartData])
 
@@ -276,11 +280,13 @@ export function useCart() {
         localStorage.removeItem(GUEST_CART_KEY)
       }
       
-      toast.success('Cart cleared')
+      // Don't show toast here - let the caller handle it
       setLastUpdate(Date.now())
+      return true // Indicate success
     } catch (error) {
       console.error('Error clearing cart:', error)
       toast.error('Failed to clear cart')
+      return false // Indicate failure
     }
   }, [isAuthenticated])
 

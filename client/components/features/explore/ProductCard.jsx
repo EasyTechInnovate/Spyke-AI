@@ -15,19 +15,20 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
   const { requireAuth } = useAuth()
   const track = useTrackEvent()
 
-  const handleAddToCart = (e) => {
+  const handleAddToCart = async (e) => {
     e.preventDefault()
     e.stopPropagation()
     
     try {
       // Allow both authenticated and guest users to add to cart
-      if (addToCart(product)) {
+      const success = await addToCart(product)
+      if (success) {
         toast.cart.addedToCart(product.title)
         track(ANALYTICS_EVENTS.CART.ITEM_ADDED, eventProperties.cart(product.id, 1, product.price))
       }
     } catch (error) {
       console.error('Error adding to cart:', error)
-      toast.error('Failed to add to cart')
+      // Don't show error toast here - useCart already handles it
     }
   }
 
