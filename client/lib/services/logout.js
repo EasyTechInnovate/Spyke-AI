@@ -15,7 +15,7 @@ export const logoutService = {
       // 1. Try to call backend logout endpoint (ignore errors)
       if (typeof window !== 'undefined') {
         try {
-          const token = localStorage.getItem('authToken')
+          const token = localStorage.getItem('authToken');
           if (token) {
             await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/logout`, {
               method: 'POST',
@@ -25,7 +25,7 @@ export const logoutService = {
               }
             }).catch(() => {
               // Ignore backend errors - we'll clear local data anyway
-            })
+            });
           }
         } catch (err) {
           // Ignore backend errors
@@ -35,41 +35,19 @@ export const logoutService = {
       // 2. Clear all authentication data
       if (typeof window !== 'undefined') {
         // Auth tokens and user data
-        localStorage.removeItem('authToken')
-        localStorage.removeItem('refreshToken')
-        localStorage.removeItem('user')
-        localStorage.removeItem('roles')
-        localStorage.removeItem('returnTo')
-        
-        // Cart data
-        localStorage.removeItem('spyke_guest_cart')
-        sessionStorage.removeItem('spyke_cart')
-        
-        // Clear any other app-specific data
-        localStorage.removeItem('selectedAddress')
-        localStorage.removeItem('checkoutData')
-        
-        // Dispatch storage event to notify other tabs/components
-        window.dispatchEvent(new Event('storage'))
+        localStorage.clear();
+
+        // Clear cookies
+        document.cookie = 'authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+        document.cookie = 'refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+        document.cookie = 'user=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+        document.cookie = 'roles=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+
+        // Redirect to signin page
+        window.location.href = '/signin';
       }
-
-      // 3. Show success message
-      toast.success('Logged out successfully')
-
-      // 4. Redirect to home page
-      if (typeof window !== 'undefined') {
-        // Use window.location for a full page refresh to ensure all state is cleared
-        window.location.href = '/'
-      }
-
     } catch (error) {
-      // Logout error occurred
-      // Even if there's an error, clear local data and redirect
-      if (typeof window !== 'undefined') {
-        localStorage.clear()
-        sessionStorage.clear()
-        window.location.href = '/'
-      }
+      console.error('Logout failed:', error);
     }
   },
 

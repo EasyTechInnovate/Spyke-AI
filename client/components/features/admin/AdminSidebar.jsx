@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useState } from 'react'
@@ -97,6 +96,7 @@ export default function AdminSidebar({ sidebarOpen, setSidebarOpen, currentPath 
     ]
 
     const handleLogout = async () => {
+        // Call the centralized logout service
         await logout()
     }
 
@@ -210,7 +210,9 @@ export default function AdminSidebar({ sidebarOpen, setSidebarOpen, currentPath 
                 <div className="p-4 border-t border-gray-800">
                     <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+                        aria-label="Logout"
+                    >
                         <LogOut className="w-5 h-5" />
                         <span>Logout</span>
                     </button>
