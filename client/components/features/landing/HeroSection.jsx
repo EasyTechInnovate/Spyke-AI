@@ -153,7 +153,7 @@ function HeroHeading() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.7 }}
-        className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-brand-primary mb-8 sm:mb-10 md:mb-12 font-medium px-4"
+        className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-brand-primary mb-8 sm:mb-10 md:mb-12 font-league-spartan font-semibold px-4"
       >
         {appConfig?.company?.tagline || 'Where Ideas Meet Intelligence'}
       </motion.p>

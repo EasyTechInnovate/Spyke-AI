@@ -27,7 +27,7 @@ export const SpykeLogo = ({
     return (
         <div className={`flex items-center ${showText ? 'space-x-3' : ''} ${className}`}>
             <div
-                className="relative flex-shrink-0"
+                className="relative flex-shrink-0 flex items-center justify-center"
                 style={{ width: logoSize, height: logoSize }}>
                 <Image
                     src="/logo.svg"
@@ -35,13 +35,13 @@ export const SpykeLogo = ({
                     width={logoSize}
                     height={logoSize}
                     priority={priority}
-                    className="logo-icon object-contain"
+                    className="logo-icon object-contain object-center block"
                     draggable={false}
                     onError={(e) => {
                         // Fallback for missing logo
                         e.currentTarget.style.display = 'none'
                         e.currentTarget.parentElement.innerHTML = `
-              <div class="w-full h-full rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+              <div class="w-full h-full rounded-lg bg-gradient-to-br from-blue-500 to purple-600 flex items-center justify-center text-white font-bold">
                 ${showText ? 'S' : 'SA'}
               </div>
             `
@@ -73,7 +73,7 @@ export const SpykeLogoCompact = ({ size = 32, className = '', darkMode = false, 
                     alt="Spyke AI"
                     width={size}
                     height={size}
-                    className="logo-icon object-contain"
+                    className="logo-icon object-contain object-center block"
                     draggable={false}
                     onError={() => setImageError(true)}
                 />
@@ -107,7 +107,7 @@ export const SpykeLogoWithSkeleton = ({ size = 40, className = '', showText = tr
                     alt="Spyke AI Logo"
                     width={size}
                     height={size}
-                    className={`logo-icon object-contain transition-opacity ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+                    className={`logo-icon object-contain object-center block transition-opacity ${isLoading ? 'opacity-0' : 'opacity-100'}`}
                     onLoad={() => setIsLoading(false)}
                     draggable={false}
                 />

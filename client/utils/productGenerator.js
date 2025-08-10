@@ -156,8 +156,8 @@ function generateTools() {
   return selectedTools.map(name => {
     const tool = { name };
     
-    // Add logo URL
-    tool.logo = `https://via.placeholder.com/40x40?text=${name.charAt(0)}`;
+    // Add logo URL (use Unsplash small image instead of placeholder provider)
+    tool.logo = 'https://images.unsplash.com/photo-1518779578993-ec3579fee39f?auto=format&fit=crop&w=40&h=40&q=60';
     
     // Sometimes add model (for AI tools)
     if (name.includes('GPT') || name.includes('Claude') || name.includes('Gemini')) {

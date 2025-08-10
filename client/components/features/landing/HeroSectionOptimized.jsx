@@ -9,7 +9,6 @@ import Link from 'next/link'
 
 import SearchBar from './hero/SearchBar'
 
-// Only lazy load background effects as they're not critical
 const BackgroundEffects = dynamic(() => import('./hero/BackgroundEffects'), {
   ssr: false
 })
@@ -31,7 +30,7 @@ export default function HeroSectionOptimized() {
   }, [])
 
   return (
-    <section className="relative min-h-[80vh] lg:min-h-[90vh] overflow-hidden flex items-center pt-20">
+    <section className="relative min-h-[80vh] lg:min-h-[90vh] overflow-hidden flex items-center pt-14">{/* was pt-16 */}
       {/* Consistent background with featured section */}
       <div className="absolute inset-0 bg-[#121212]">
         {/* Animated gradient background */}
@@ -43,12 +42,12 @@ export default function HeroSectionOptimized() {
         {mounted && <BackgroundEffects />}
       </div>
 
-      <Container className="relative z-10 py-16 lg:py-20">
+      <Container className="relative z-10 pt-12 pb-16 lg:pt-16 lg:pb-20">{/* was py-16 lg:py-20 */}
         <div className="max-w-5xl mx-auto">
           {/* Main Content */}
           <div className="text-center space-y-8">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#00FF89]/5 border border-[#00FF89]/10 rounded-full mb-2">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#00FF89]/5 border border-[#00FF89]/10 rounded-full">{/* removed mb-2 */}
               <Sparkles className="w-4 h-4 text-[#00FF89]/60" />
               <span className="text-sm font-medium text-[#00FF89]/60">
                 #{appConfig.company.name} - AI Marketplace
@@ -70,7 +69,7 @@ export default function HeroSectionOptimized() {
             </h1>
 
             {/* Subheading */}
-            <p className="text-xl sm:text-2xl text-gray-400 max-w-3xl mx-auto font-inter">
+            <p className="text-xl sm:text-2xl text-gray-400 max-w-3xl mx-auto font-league-spartan font-semibold">
               {appConfig.company.tagline}
             </p>
 
@@ -100,7 +99,7 @@ export default function HeroSectionOptimized() {
               
               <Link
                 href="/become-seller"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-[#1f1f1f] border border-gray-700 text-gray-300 font-semibold rounded-xl hover:bg-[#1f1f1f]/80 hover:border-gray-600 hover:text-white transition-all duration-200"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-[#1f1f1f] border-2 border-[#00FF89] text-white font-semibold rounded-xl hover:bg-[#1f1f1f]/80 hover:ring-2 hover:ring-[#00FF89]/40 transition-all duration-200"
               >
                 Start Selling
               </Link>

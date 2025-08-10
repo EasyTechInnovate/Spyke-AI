@@ -180,21 +180,24 @@ export default function SearchOverlay({ isOpen, onClose }) {
                     {/* Search Header */}
                     <div className="p-4 sm:p-6 border-b border-gray-700">
                         <div className="relative">
-                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 sm:h-6 sm:w-6 text-gray-400" />
+                            {/* Left icon wrapper for perfect vertical alignment */}
+                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                <Search className="h-5 w-5 text-gray-400" />
+                            </div>
                             <input
                                 ref={searchInputRef}
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search products, prompts, tools..."
-                                className="w-full pl-12 sm:pl-14 pr-24 sm:pr-28 py-3 sm:py-4 bg-gray-800/50 border-2 border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-brand-primary focus:shadow-[0_0_0_2px_rgba(0,255,137,0.2)] transition-all text-base sm:text-lg"
+                                className="w-full h-12 sm:h-14 pl-12 sm:pl-14 pr-24 sm:pr-28 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/30 transition-all text-base sm:text-lg"
                             />
 
                             {/* Voice Search Button */}
                             {voiceSupported && (
                                 <button
                                     onClick={handleVoiceSearch}
-                                    className={`absolute right-12 sm:right-14 top-1/2 transform -translate-y-1/2 p-2 rounded-lg transition-all ${
+                                    className={`absolute right-12 sm:right-14 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-all focus:outline-none focus:ring-0 ${
                                         isListening
                                             ? 'text-brand-primary bg-brand-primary/10 animate-pulse'
                                             : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
@@ -211,7 +214,7 @@ export default function SearchOverlay({ isOpen, onClose }) {
                             {/* Close Button */}
                             <button
                                 onClick={onClose}
-                                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-0"
                             >
                                 <X className="h-5 w-5" />
                             </button>
