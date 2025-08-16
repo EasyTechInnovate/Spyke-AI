@@ -48,6 +48,21 @@ export const ANALYTICS_EVENTS = {
     PRODUCT_EDIT_CLICKED: 'Product Edit Clicked',
     PRODUCT_VIEW_CLICKED: 'Product View Clicked',
   },
+
+  COMMISSION: {
+    NEGOTIATION_VIEWED: 'Commission Negotiation Viewed',
+    NEGOTIATION_INITIATED: 'Commission Negotiation Initiated',
+    OFFER_SUBMITTED: 'Commission Offer Submitted',
+    COUNTER_OFFER_SUBMITTED: 'Commission Counter Offer Submitted',
+    NEGOTIATION_ACCEPTED: 'Commission Negotiation Accepted',
+    NEGOTIATION_REJECTED: 'Commission Negotiation Rejected',
+    NEGOTIATION_EXPIRED: 'Commission Negotiation Expired',
+    NEGOTIATION_CANCELLED: 'Commission Negotiation Cancelled',
+    RATE_HISTORY_VIEWED: 'Commission Rate History Viewed',
+    QUICK_ACCEPT_USED: 'Commission Quick Accept Used',
+    AUTO_ACCEPT_SET: 'Commission Auto Accept Set',
+  },
+
   CHECKOUT:{
     VIEWED: 'VIEWED'
   },

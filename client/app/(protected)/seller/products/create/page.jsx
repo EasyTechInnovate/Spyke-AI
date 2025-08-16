@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, ArrowRight, Save, X, Plus, Upload } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Save, X, Plus, Upload, AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { productsAPI } from '@/lib/api'
 import toast from '@/lib/utils/toast'
+import { useSellerProfile } from '@/hooks/useSellerProfile'
 
 // Form Steps
 const FORM_STEPS = [
@@ -135,9 +136,55 @@ const ToolButton = ({ tool, formData, handleInputChange }) => {
 
 export default function CreateProductPage() {
   const router = useRouter()
+  const { data: sellerProfile, loading: profileLoading } = useSellerProfile()
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  
+
+  // Check if seller is fully approved (both verification and commission)
+  const isVerificationApproved = sellerProfile?.verificationStatus === 'approved'
+  const isCommissionAccepted = sellerProfile?.commissionOffer?.status === 'accepted' && sellerProfile?.commissionOffer?.acceptedAt
+  const isFullyApproved = isVerificationApproved && isCommissionAccepted
+
+  // If seller is not fully approved, show restricted access message
+  if (!profileLoading && !isFullyApproved) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="max-w-md w-full mx-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
+            <AlertCircle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-white mb-2">Product Creation Restricted</h2>
+            <p className="text-gray-400 mb-6">
+              You need to complete your seller approval process before you can create products.
+            </p>
+            
+            {!isVerificationApproved && (
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 mb-4">
+                <p className="text-amber-300 text-sm">
+                  ⏳ Your documents are still being reviewed
+                </p>
+              </div>
+            )}
+            
+            {isVerificationApproved && !isCommissionAccepted && (
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-4">
+                <p className="text-blue-300 text-sm">
+                  💼 Please accept the commission offer to complete your approval
+                </p>
+              </div>
+            )}
+            
+            <Link
+              href="/seller/profile"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-brand-primary text-brand-primary-text rounded-lg hover:bg-brand-primary/90 transition-colors font-semibold"
+            >
+              Complete Approval Process
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // Form Data State
   const [formData, setFormData] = useState({
     // Step 1: Basic Information
@@ -292,6 +339,15 @@ export default function CreateProductPage() {
     } else {
       toast.error('Please complete all required fields')
     }
+  }
+
+  // Show loading while checking profile
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary"></div>
+      </div>
+    )
   }
 
   return (

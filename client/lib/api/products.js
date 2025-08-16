@@ -23,6 +23,10 @@ class ProductsAPI {
         return apiClient.get(`v1/products/${slug}`)
     }
     
+    async getProduct(productIdOrSlug) {
+        return apiClient.get(`v1/products/${productIdOrSlug}`)
+    }
+    
     // Get related products
     async getRelatedProducts(productId, limit = 6) {
         return apiClient.get(`v1/products/${productId}/related?limit=${limit}`)

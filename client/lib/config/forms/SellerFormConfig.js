@@ -167,7 +167,7 @@ export const formSteps = [
     id: 3,
     title: 'Details',
     subtitle: 'Final details',
-    fields: ['location', 'socialHandles', 'portfolioLinks', 'payoutInfo']
+    fields: ['location', 'socialHandles', 'portfolioLinks', 'payoutInfo', 'revenueShareAgreement']
   }
 ]
 
@@ -344,9 +344,9 @@ export const formFields = {
         required: true,
         options: [
           { value: 'paypal', label: 'PayPal' },
-          { value: 'stripe', label: 'Stripe (Coming Soon)', disabled: true },
-          { value: 'wise', label: 'Wise (Coming Soon)', disabled: true },
-          { value: 'bank', label: 'Bank Transfer (Coming Soon)', disabled: true }
+          { value: 'stripe', label: 'Stripe' },
+          { value: 'wise', label: 'Wise' },
+          { value: 'bank', label: 'Bank Transfer' }
         ]
       },
       paypalEmail: {
@@ -358,6 +358,92 @@ export const formFields = {
         validation: {
           pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
           message: 'Please enter a valid PayPal email'
+        }
+      },
+      stripeAccountId: {
+        label: 'Stripe Account ID',
+        type: 'text',
+        placeholder: 'acct_XXXXXXXXXXXXXX',
+        required: true,
+        showIf: (formData) => formData.payoutInfo?.method === 'stripe',
+        validation: {
+          pattern: /^acct_[A-Za-z0-9]{8,32}$/,
+          message: 'Enter a valid Stripe account id (e.g. acct_ followed by 8-32 chars)'
+        }
+      },
+      wiseEmail: {
+        label: 'Wise Account Email',
+        type: 'email',
+        placeholder: 'you@domain.com',
+        required: true,
+        showIf: (formData) => formData.payoutInfo?.method === 'wise',
+        validation: {
+          pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+          message: 'Enter a valid email'
+        }
+      },
+      accountHolderName: {
+        label: 'Account Holder Name',
+        type: 'text',
+        required: true,
+        showIf: (formData) => formData.payoutInfo?.method === 'bank',
+        validation: {
+          minLength: 2,
+          message: 'Account holder name required'
+        }
+      },
+      bankName: {
+        label: 'Bank Name',
+        type: 'text',
+        required: true,
+        showIf: (formData) => formData.payoutInfo?.method === 'bank'
+      },
+      accountNumber: {
+        label: 'Account Number / IBAN',
+        type: 'text',
+        required: true,
+        placeholder: 'IBAN or Account Number',
+        showIf: (formData) => formData.payoutInfo?.method === 'bank',
+        validation: {
+          pattern: /^[0-9A-Za-z-]{4,34}$/,
+            message: 'Enter a valid account / IBAN'
+        }
+      },
+      routingNumber: {
+        label: 'Routing Number (if applicable)',
+        type: 'text',
+        required: true,
+        showIf: (formData) => formData.payoutInfo?.method === 'bank',
+        validation: {
+          pattern: /^\d{5,12}$/,
+          message: 'Enter a valid routing number'
+        }
+      },
+      swiftCode: {
+        label: 'SWIFT / BIC Code',
+        type: 'text',
+        required: false,
+        placeholder: '8 or 11 characters',
+        showIf: (formData) => formData.payoutInfo?.method === 'bank',
+        validation: {
+          pattern: /^[A-Z0-9]{8}([A-Z0-9]{3})?$/,
+          message: 'Enter a valid SWIFT/BIC code'
+        }
+      }
+    }
+  },
+  revenueShareAgreement: {
+    label: 'Revenue Share Agreement',
+    type: 'group',
+    required: true,
+    fields: {
+      accepted: {
+        label: 'I have read and accept the Revenue Share Agreement (required)',
+        type: 'checkbox',
+        required: true,
+        validation: {
+          required: true,
+          message: 'You must accept the revenue share agreement to continue'
         }
       }
     }
@@ -386,6 +472,16 @@ export const defaultFormValues = {
   portfolioLinks: [],
   payoutInfo: {
     method: 'paypal',
-    paypalEmail: ''
+    paypalEmail: '',
+    stripeAccountId: '',
+    wiseEmail: '',
+    accountHolderName: '',
+    bankName: '',
+    accountNumber: '',
+    routingNumber: '',
+    swiftCode: ''
+  },
+  revenueShareAgreement: {
+    accepted: false
   }
 }

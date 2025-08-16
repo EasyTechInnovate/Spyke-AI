@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import sellerAPI from '@/lib/api/seller'
+import apiClient from '@/lib/api/client'
 
 const DocumentUploadModal = ({ isOpen, onClose, onSuccess }) => {
     const [documents, setDocuments] = useState({
@@ -87,30 +88,13 @@ const DocumentUploadModal = ({ isOpen, onClose, onSuccess }) => {
             formData.append('file', file)
             formData.append('category', documentType)
 
-            const token = typeof window !== 'undefined' 
-                ? (localStorage.getItem('sellerAccessToken') || localStorage.getItem('accessToken'))
-                : null
+            // Use centralized apiClient to handle auth token (removes auth token key inconsistency)
+            const result = await apiClient.upload('v1/upload/file', formData)
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/v1/upload/file`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                body: formData
-            })
-
-            if (!response.ok) {
-                const error = await response.json()
-                throw new Error(error.message || 'Upload failed')
-            }
-
-            const result = await response.json()
-            
-            if (result.success && result.data) {
+            if (result?.success && result?.data) {
                 return result.data
-            } else {
-                throw new Error('No URL returned from upload')
             }
+            throw new Error(result?.message || 'Upload failed')
         } catch (error) {
             console.error('Upload error:', error)
             throw error
@@ -183,18 +167,19 @@ const DocumentUploadModal = ({ isOpen, onClose, onSuccess }) => {
     }
 
     const handleSubmit = async () => {
-        if (!documents.identityProof || !documents.businessProof || !documents.taxDocument) {
-            toast.error('Please upload all required documents')
+        // Only identityProof is strictly required per backend schema; others optional
+        if (!documents.identityProof) {
+            toast.error('Please upload your identity proof (required)')
             return
         }
 
         try {
             setSubmitting(true)
-            
             const payload = {
                 identityProof: documents.identityProof.url,
-                businessProof: documents.businessProof.url,
-                taxDocument: documents.taxDocument.url
+                // Only include optional documents if provided
+                ...(documents.businessProof && { businessProof: documents.businessProof.url }),
+                ...(documents.taxDocument && { taxDocument: documents.taxDocument.url })
             }
             
             const minimumLoaderTime = new Promise(resolve => setTimeout(resolve, 2000))
@@ -272,6 +257,8 @@ const DocumentUploadModal = ({ isOpen, onClose, onSuccess }) => {
                 <div className="flex-1 overflow-y-auto p-6">
                     <div className="space-y-6">
                         {Object.entries(documentConfig).map(([documentType, config]) => {
+                            // Add optional label for non-required docs
+                            const optional = documentType !== 'identityProof'
                             const Icon = config.icon
                             const document = documents[documentType]
                             const isUploading = uploading[documentType]
@@ -288,7 +275,7 @@ const DocumentUploadModal = ({ isOpen, onClose, onSuccess }) => {
                                         
                                         <div className="flex-1">
                                             <div className="flex items-center justify-between mb-2">
-                                                <h3 className="text-lg font-semibold text-white">{config.title}</h3>
+                                                <h3 className="text-lg font-semibold text-white">{config.title} {optional && <span className="text-xs font-normal text-gray-400 ml-1">(Optional)</span>}</h3>
                                                 {document && (
                                                     <CheckCircle className="w-5 h-5 text-[#00FF89]" />
                                                 )}
@@ -364,6 +351,7 @@ const DocumentUploadModal = ({ isOpen, onClose, onSuccess }) => {
                             <div className="text-sm text-gray-300">
                                 <p className="font-medium text-blue-400 mb-1">Important:</p>
                                 <ul className="space-y-1 text-xs">
+                                    <li>• Identity Proof is required. Business & Tax documents are optional but help speed approval</li>
                                     <li>• Ensure all documents are clear and readable</li>
                                     <li>• Documents should be valid and not expired</li>
                                     <li>• Business name should match across all documents</li>
@@ -378,7 +366,7 @@ const DocumentUploadModal = ({ isOpen, onClose, onSuccess }) => {
                     <div className="flex gap-3">
                         <button
                             onClick={handleSubmit}
-                            disabled={submitting || !documents.identityProof || !documents.businessProof || !documents.taxDocument}
+                            disabled={submitting || !documents.identityProof}
                             className="flex-1 px-6 py-3 bg-[#00FF89] text-[#121212] rounded-lg font-semibold hover:bg-[#00FF89]/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
                         >
                             {submitting ? (

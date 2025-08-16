@@ -6,14 +6,9 @@ export const sellerAPI = {
      * POST v1/seller/profile
      */
     createProfile: async (data) => {
-        const token = localStorage.getItem('authToken') || localStorage.getItem('accessToken') || localStorage.getItem('sellerAccessToken')
-        const response = await apiClient.post('v1/seller/profile', data, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        })
-        return response
+        // Authorization header already handled globally by apiClient
+        const response = await apiClient.post('v1/seller/profile', data)
+        return response?.data || response
     },
 
     /**
@@ -22,11 +17,24 @@ export const sellerAPI = {
      */
     getProfile: async () => {
         const response = await apiClient.get('v1/seller/profile')
-        return response.data
+        // API returns wrapper { success, statusCode, data: { ...profile }}
+        if (response && typeof response === 'object') {
+            if (response.data && typeof response.data === 'object' && response.data.fullName && response.data.email) {
+                return response.data
+            }
+            // In case endpoint later returns profile directly
+            if (response.fullName && response.email) return response
+        }
+        return response
     },
     
     acceptCommissionOffer: async () => {
         const res = await apiClient.post('v1/seller/commission/accept')
+        return res?.data
+    },
+    // Reject commission offer
+    rejectCommissionOffer: async (reason) => {
+        const res = await apiClient.post('v1/seller/commission/reject', { reason })
         return res?.data
     },
     
@@ -94,39 +102,39 @@ export const sellerAPI = {
     },
 
     /**
-     * Get seller products
-     * GET v1/seller/products
+     * Get seller products (maps to existing products route)
+     * GET v1/products/seller/my-products
      */
     getProducts: async (params = {}) => {
         const queryString = new URLSearchParams(params).toString()
-        const response = await apiClient.get(`v1/seller/products${queryString ? `?${queryString}` : ''}`)
+        const response = await apiClient.get(`v1/products/seller/my-products${queryString ? `?${queryString}` : ''}`)
         return response.data
     },
 
     /**
-     * Create new product
-     * POST v1/seller/products
+     * Create new product (seller/admin)
+     * POST v1/products
      */
     createProduct: async (data) => {
-        const response = await apiClient.post('v1/seller/products', data)
+        const response = await apiClient.post('v1/products', data)
         return response.data
     },
 
     /**
-     * Update product
-     * PUT v1/seller/products/:productId
+     * Update product (seller/admin)
+     * PUT v1/products/:productId
      */
     updateProduct: async (productId, data) => {
-        const response = await apiClient.put(`v1/seller/products/${productId}`, data)
+        const response = await apiClient.put(`v1/products/${productId}`, data)
         return response.data
     },
 
     /**
-     * Delete product
-     * DELETE v1/seller/products/:productId
+     * Delete product (seller/admin)
+     * DELETE v1/products/:productId
      */
     deleteProduct: async (productId) => {
-        const response = await apiClient.delete(`v1/seller/products/${productId}`)
+        const response = await apiClient.delete(`v1/products/${productId}`)
         return response.data
     },
 

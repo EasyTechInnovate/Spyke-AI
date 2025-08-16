@@ -235,31 +235,55 @@ export default function BecomeSellerPage() {
                             error={errors.portfolioLinks}
                         />
 
-                        <div className="bg-brand-primary/10 p-6 rounded-lg border border-brand-primary/30">
-                            <h4 className="text-lg font-medium text-white mb-4">Payout Information</h4>
-                            <div className="space-y-4">
-                                <FormSelect
-                                    label={formFields?.payoutInfo?.fields?.method?.label || 'Payout Method'}
-                                    name="payoutInfo.method"
-                                    value={formData?.payoutInfo?.method || ''}
-                                    onChange={handleInputChange}
-                                    options={formFields?.payoutInfo?.fields?.method?.options || []}
-                                    required={formFields?.payoutInfo?.fields?.method?.required}
-                                />
+                        <div className="bg-brand-primary/10 p-6 rounded-lg border border-brand-primary/30 space-y-4">
+                            <h4 className="text-lg font-medium text-white">Payout Information</h4>
+                            <p className="text-sm text-gray-400 -mt-2">Select your preferred payout method and provide required details.</p>
+                            <FormSelect
+                                label={formFields?.payoutInfo?.fields?.method?.label || 'Payout Method'}
+                                name="payoutInfo.method"
+                                value={formData?.payoutInfo?.method || ''}
+                                onChange={handleInputChange}
+                                options={formFields?.payoutInfo?.fields?.method?.options || []}
+                                required={formFields?.payoutInfo?.fields?.method?.required}
+                            />
 
-                                {formData?.payoutInfo?.method === 'paypal' && (
-                                    <FormInput
-                                        label={formFields?.payoutInfo?.fields?.paypalEmail?.label || 'PayPal Email'}
-                                        name="payoutInfo.paypalEmail"
-                                        type="email"
-                                        value={formData?.payoutInfo?.paypalEmail || ''}
-                                        onChange={handleInputChange}
-                                        placeholder={formFields?.payoutInfo?.fields?.paypalEmail?.placeholder || 'Enter your PayPal email'}
-                                        required={formFields?.payoutInfo?.fields?.paypalEmail?.required}
-                                        error={errors['payoutInfo.paypalEmail']}
-                                    />
-                                )}
-                            </div>
+                            {/* Dynamic payout fields */}
+                            {Object.entries(formFields?.payoutInfo?.fields || {})
+                                .filter(([key]) => key !== 'method')
+                                .map(([key, cfg]) => {
+                                    const show = !cfg.showIf || cfg.showIf(formData)
+                                    if (!show) return null
+                                    const fieldName = `payoutInfo.${key}`
+                                    const value = formData?.payoutInfo?.[key] || ''
+                                    const commonProps = {
+                                        key,
+                                        label: cfg.label,
+                                        name: fieldName,
+                                        value,
+                                        onChange: handleInputChange,
+                                        required: cfg.required,
+                                        placeholder: cfg.placeholder,
+                                        error: errors[fieldName]
+                                    }
+                                    // Determine component based on type
+                                    if (cfg.type === 'email' || cfg.type === 'text') {
+                                        return <FormInput type={cfg.type === 'email' ? 'email' : 'text'} {...commonProps} />
+                                    }
+                                    return null
+                                })}
+                        </div>
+
+                        {/* Revenue Share Agreement */}
+                        <div className="bg-gray-800/60 p-5 rounded-lg border border-gray-700 space-y-3">
+                            <h4 className="text-lg font-medium text-white">Revenue Share Agreement</h4>
+                            <p className="text-sm text-gray-400">You must accept the revenue share agreement to create your seller profile. Review the terms carefully before proceeding.</p>
+                            <FormCheckbox
+                                name="revenueShareAgreement.accepted"
+                                checked={formData?.revenueShareAgreement?.accepted || false}
+                                onChange={handleInputChange}
+                                label={formFields?.revenueShareAgreement?.fields?.accepted?.label}
+                                error={errors['revenueShareAgreement.accepted']}
+                            />
                         </div>
                     </>
                 )

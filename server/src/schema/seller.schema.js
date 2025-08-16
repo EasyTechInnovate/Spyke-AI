@@ -386,6 +386,13 @@ const sellerSchemas = {
             .trim()
     }),
 
+    rejectCounterOffer: z.object({
+        reason: z.string()
+            .min(10, 'Rejection reason must be at least 10 characters long')
+            .max(500, 'Rejection reason cannot exceed 500 characters')
+            .trim()
+    }),
+
     sellerIdParam: z.object({
         sellerId: z.string().min(1, 'Seller ID is required')
     })

@@ -4,9 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import toast from '@/lib/utils/toast'
 import sellerAPI from '@/lib/api/seller'
-import apiClient from '@/lib/api/client'
 import { useFormValidation } from './useFormValidation'
-import { formFields, defaultFormValues, formSteps } from '@/lib/config/forms/SellerFormConfig'
+import { formFields, defaultFormValues, formSteps, timezones, countries } from '@/lib/config/forms/SellerFormConfig'
 import { useTrackEvent } from '@/hooks/useTrackEvent'
 import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 
@@ -22,228 +21,187 @@ export function useSellerForm() {
     const [formData, setFormData] = useState(defaultFormValues)
     const [hasStartedForm, setHasStartedForm] = useState(false)
 
-    const {
-        errors,
-        setErrors,
-        validateFields,
-        clearError,
-        isValid
-    } = useFormValidation(formFields, formData)
+    const { errors, setErrors, validateFields, clearError } = useFormValidation(formFields, formData)
 
-    // Initialize form data with user email
+    // Prefill email + paypal
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const user = JSON.parse(localStorage.getItem('user') || '{}')
-            if (user.emailAddress) {
-                setFormData(prev => ({
-                    ...prev,
-                    payoutInfo: {
-                        ...prev.payoutInfo,
-                        paypalEmail: user.emailAddress
-                    }
-                }))
-            }
+        if (typeof window === 'undefined') return
+        const user = JSON.parse(localStorage.getItem('user') || '{}')
+        if (user.emailAddress) {
+            setFormData(prev => ({
+                ...prev,
+                email: prev.email || user.emailAddress,
+                payoutInfo: {
+                    ...prev.payoutInfo,
+                    paypalEmail: prev.payoutInfo.paypalEmail || user.emailAddress
+                }
+            }))
         }
     }, [])
 
-    /**
-     * Handle input change
-     * @param {Event} e - Change event
-     */
-    const handleInputChange = useCallback((e) => {
+    // Auto-detect timezone & country
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+        setFormData(prev => {
+            let changed = false
+            const next = { ...prev }
+            if (!prev.location.timezone) {
+                const detected = Intl.DateTimeFormat().resolvedOptions().timeZone
+                const tzValues = timezones.map(t => t.value)
+                const alias = { 'Etc/UTC': 'UTC', 'Etc/GMT': 'UTC', GMT: 'UTC', 'Asia/Calcutta': 'Asia/Kolkata' }
+                let chosen = null
+                if (detected && tzValues.includes(detected)) chosen = detected
+                else if (detected && alias[detected] && tzValues.includes(alias[detected])) chosen = alias[detected]
+                if (!chosen && detected) {
+                    const now = new Date()
+                    const offsetMinutes = -now.getTimezoneOffset()
+                    const offsetLookup = timezones.reduce((acc, tz) => {
+                        const sign = tz.offset.startsWith('-') ? -1 : 1
+                        const [h, m] = tz.offset.replace('+', '').replace('-', '').split(':').map(Number)
+                        const total = sign * (h * 60 + m)
+                        ;(acc[total] = acc[total] || []).push(tz.value)
+                        return acc
+                    }, {})
+                    if (offsetLookup[offsetMinutes]?.length) chosen = offsetLookup[offsetMinutes][0]
+                }
+                if (chosen) { next.location = { ...next.location, timezone: chosen }; changed = true }
+            }
+            if (!prev.location.country) {
+                const lang = navigator.language || ''
+                const region = (lang.split('-')[1] || '').toUpperCase()
+                const regionMap = { US: 'US/CA', CA: 'US/CA', GB: 'UK', UK: 'UK', IN: 'India', AU: 'Australia', DE: 'Germany', FR: 'France', ES: 'Spain', IT: 'Italy', NL: 'Netherlands', SG: 'Singapore', AE: 'UAE', BR: 'Brazil' }
+                const mapped = regionMap[region]
+                if (mapped && countries.some(c => c.value === mapped)) { next.location = { ...next.location, country: mapped }; changed = true }
+            }
+            return changed ? next : prev
+        })
+    }, [])
+
+    const handleInputChange = useCallback(e => {
         const { name, value, type, checked } = e.target
-        
-        // Track form start on first interaction
         if (!hasStartedForm) {
             track(ANALYTICS_EVENTS.SELLER.ONBOARDING_STARTED, eventProperties.seller('form_started'))
             setHasStartedForm(true)
         }
-
         if (name.includes('.')) {
             const [parent, child] = name.split('.')
             setFormData(prev => ({
                 ...prev,
-                [parent]: {
-                    ...prev[parent],
-                    [child]: value
-                }
+                [parent]: { ...prev[parent], [child]: type === 'checkbox' ? checked : value }
             }))
+            if (errors[`${parent}.${child}`]) clearError(`${parent}.${child}`)
         } else {
-            setFormData(prev => ({
-                ...prev,
-                [name]: type === 'checkbox' ? checked : value
-            }))
-        }
-
-        // Clear error when user starts typing
-        if (errors[name]) {
-            clearError(name)
+            setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
+            if (errors[name]) clearError(name)
         }
     }, [errors, clearError, hasStartedForm, track])
 
-    /**
-     * Handle social handle change
-     * @param {string} platform - Social platform
-     * @param {string} value - Handle value
-     */
     const handleSocialHandleChange = useCallback((platform, value) => {
-        setFormData(prev => ({
-            ...prev,
-            socialHandles: {
-                ...prev.socialHandles,
-                [platform]: value
-            }
-        }))
+        setFormData(prev => ({ ...prev, socialHandles: { ...prev.socialHandles, [platform]: value } }))
     }, [])
 
-    /**
-     * Add tag to array field
-     * @param {string} fieldName - Field name
-     * @param {string} value - Tag value
-     */
     const addTag = useCallback((fieldName, value) => {
-        if (!value.trim() || formData[fieldName].includes(value.trim())) {
-            return
-        }
-
+        if (!value.trim() || formData[fieldName].includes(value.trim())) return
         const field = formFields[fieldName]
         if (field.maxItems && formData[fieldName].length >= field.maxItems) {
             toast.validation.maxItems(fieldName, field.maxItems)
             return
         }
-
-        setFormData(prev => ({
-            ...prev,
-            [fieldName]: [...prev[fieldName], value.trim()]
-        }))
+        setFormData(prev => ({ ...prev, [fieldName]: [...prev[fieldName], value.trim()] }))
     }, [formData])
 
-    /**
-     * Remove tag from array field
-     * @param {string} fieldName - Field name
-     * @param {string} value - Tag value
-     */
     const removeTag = useCallback((fieldName, value) => {
-        setFormData(prev => ({
-            ...prev,
-            [fieldName]: prev[fieldName].filter(item => item !== value)
-        }))
+        setFormData(prev => ({ ...prev, [fieldName]: prev[fieldName].filter(v => v !== value) }))
     }, [])
 
-    /**
-     * Add portfolio link
-     * @param {string} link - Portfolio link
-     */
-    const addPortfolioLink = useCallback((link) => {
+    const addPortfolioLink = useCallback(link => {
         const field = formFields.portfolioLinks
-        if (!link.trim() || formData.portfolioLinks.includes(link.trim())) {
-            return
-        }
-
+        if (!link.trim() || formData.portfolioLinks.includes(link.trim())) return
         if (field.maxItems && formData.portfolioLinks.length >= field.maxItems) {
             toast.validation.maxItems('portfolio links', field.maxItems)
             return
         }
-
-        // Validate URL
         if (field.validation && !field.validation.pattern.test(link.trim())) {
             toast.validation.invalid('URL format')
             return
         }
-
-        setFormData(prev => ({
-            ...prev,
-            portfolioLinks: [...prev.portfolioLinks, link.trim()]
-        }))
+        setFormData(prev => ({ ...prev, portfolioLinks: [...prev.portfolioLinks, link.trim()] }))
     }, [formData])
 
-    /**
-     * Remove portfolio link
-     * @param {string} link - Portfolio link
-     */
-    const removePortfolioLink = useCallback((link) => {
-        setFormData(prev => ({
-            ...prev,
-            portfolioLinks: prev.portfolioLinks.filter(l => l !== link)
-        }))
+    const removePortfolioLink = useCallback(link => {
+        setFormData(prev => ({ ...prev, portfolioLinks: prev.portfolioLinks.filter(l => l !== link) }))
     }, [])
 
-    /**
-     * Validate current step
-     * @param {number} step - Step number
-     * @returns {boolean} Whether step is valid
-     */
-    const validateStep = useCallback((step) => {
+    const validateStep = useCallback(step => {
         const stepConfig = formSteps.find(s => s.id === step)
         if (!stepConfig) return true
-
         const stepErrors = validateFields(stepConfig.fields)
-        
-        // Show validation errors to user
-        if (Object.keys(stepErrors).length > 0) {
-            const firstError = Object.values(stepErrors)[0]
-            toast.error(firstError || 'Please fill in all required fields')
+        if (step === 3 && !formData.revenueShareAgreement?.accepted) {
+            stepErrors['revenueShareAgreement.accepted'] = 'You must accept the revenue share agreement'
         }
-        
+        if (Object.keys(stepErrors).length) {
+            toast.error(Object.values(stepErrors)[0] || 'Please fill required fields')
+        }
         return Object.keys(stepErrors).length === 0
-    }, [validateFields])
+    }, [validateFields, formData.revenueShareAgreement])
 
-    /**
-     * Submit form
-     * @param {Object} data - Form data
-     */
     const handleSubmit = useCallback(async (data) => {
         setLoading(true)
         setSubmitError('')
-        
+        const payoutMethod = data.payoutInfo?.method
+        const payoutInfo = (() => {
+            if (payoutMethod === 'bank') return { method: 'bank', bankDetails: { accountHolderName: data.payoutInfo.accountHolderName?.trim(), accountNumber: data.payoutInfo.accountNumber?.trim(), routingNumber: data.payoutInfo.routingNumber?.trim(), bankName: data.payoutInfo.bankName?.trim(), swiftCode: data.payoutInfo.swiftCode?.trim() || null } }
+            if (payoutMethod === 'paypal') return { method: 'paypal', paypalEmail: data.payoutInfo.paypalEmail?.trim() }
+            if (payoutMethod === 'stripe') return { method: 'stripe', stripeAccountId: data.payoutInfo.stripeAccountId?.trim() }
+            if (payoutMethod === 'wise') return { method: 'wise', wiseEmail: data.payoutInfo.wiseEmail?.trim() }
+            return { method: payoutMethod }
+        })()
+        const payload = {
+            fullName: data.fullName.trim(),
+            email: data.email.trim(),
+            websiteUrl: data.websiteUrl?.trim() || null,
+            bio: data.bio.trim(),
+            niches: data.niches,
+            toolsSpecialization: data.toolsSpecialization,
+            location: { country: data.location.country, timezone: data.location.timezone },
+            sellerBanner: data.sellerBanner?.trim() || null,
+            socialHandles: data.socialHandles,
+            customAutomationServices: !!data.customAutomationServices,
+            portfolioLinks: data.portfolioLinks?.length ? data.portfolioLinks : [],
+            payoutInfo,
+            revenueShareAgreement: { accepted: !!data.revenueShareAgreement?.accepted }
+        }
         track(ANALYTICS_EVENTS.SELLER.PROFILE_SUBMITTED, eventProperties.seller('profile_submitted', {
-            expertise: data.expertise,
-            nichesCount: data.niches?.length || 0,
-            toolsCount: data.tools?.length || 0,
-            hasWebsite: !!data.websiteUrl,
-            hasSocialProfiles: !!(data.socialProfiles?.twitter || data.socialProfiles?.linkedin || data.socialProfiles?.github)
+            nichesCount: payload.niches?.length || 0,
+            toolsCount: payload.toolsSpecialization?.length || 0,
+            payoutMethod: payoutInfo.method,
+            hasWebsite: !!payload.websiteUrl,
+            hasSocialProfiles: !!(payload.socialHandles?.twitter || payload.socialHandles?.linkedin || payload.socialHandles?.instagram || payload.socialHandles?.youtube),
+            acceptedRevenueShare: payload.revenueShareAgreement.accepted
         }))
-
         try {
-            const response = await sellerAPI.createProfile(data)
-
-            if (response.success || response.statusCode === 201) {
-                track(ANALYTICS_EVENTS.SELLER.ONBOARDING_COMPLETED, eventProperties.seller('onboarding_completed', {
-                    sellerId: response.data?.id
-                }))
-                
-                // Update user role in localStorage
+            const response = await sellerAPI.createProfile(payload)
+            const isCreated = !!(response && (response.success === true || response.statusCode === 201 || response.status === 201 || response?.data?.id || response?.data?._id))
+            if (isCreated) {
+                const sellerId = response?.data?.id || response?.data?._id
+                track(ANALYTICS_EVENTS.SELLER.ONBOARDING_COMPLETED, eventProperties.seller('onboarding_completed', { sellerId, payoutMethod: payoutInfo.method }))
                 if (typeof window !== 'undefined') {
                     const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
-                    currentUser.roles = ['user', 'seller']
-                    currentUser.sellerId = response.data?.id
+                    const existingRoles = Array.isArray(currentUser.roles) ? currentUser.roles : []
+                    if (!existingRoles.includes('seller')) existingRoles.push('seller')
+                    currentUser.roles = existingRoles
+                    currentUser.sellerId = sellerId
                     localStorage.setItem('user', JSON.stringify(currentUser))
                 }
-
                 toast.seller.profileCreated()
-                
-                // Log user out after successful seller creation
-                setTimeout(async () => {
-                    try {
-                        await apiClient.logout()
-                    } catch (error) {
-                        // If logout fails, still redirect to signin
-                        if (typeof window !== 'undefined') {
-                            window.location.href = '/signin'
-                        }
-                    }
-                }, 2000)
+                setTimeout(() => router.push('/seller/profile'), 1200)
             } else {
-                throw new Error(response.message || 'Failed to create seller profile')
+                throw new Error(response?.message || 'Failed to create seller profile')
             }
         } catch (error) {
             console.error('API Error:', error)
             const errorMessage = error.message || 'Failed to create seller profile'
-            
-            track(ANALYTICS_EVENTS.ERROR.GENERAL_ERROR, eventProperties.seller('profile_submission_failed', {
-                error: errorMessage
-            }))
-            
+            track(ANALYTICS_EVENTS.ERROR.GENERAL_ERROR, eventProperties.seller('profile_submission_failed', { error: errorMessage, payoutMethod: payoutInfo.method }))
             toast.seller.profileError(errorMessage)
             setSubmitError(errorMessage)
         } finally {

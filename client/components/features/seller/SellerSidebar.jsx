@@ -146,7 +146,7 @@ const SellerSidebar = ({ currentPath = '/profile', sellerName = '', sidebarOpen,
 
             {/* Sidebar */}
             <aside
-                className={`fixed top-0 left-0 z-50 h-full w-72 md:w-64 bg-[#1a1a1a] border-r border-gray-800 transform transition-transform duration-300 ${
+                className={`fixed top-0 left-0 z-50 h-full w-72 md:w-64 bg-[#1a1a1a] border-r border-gray-800 transform transition-transform duration-300 flex flex-col overflow-hidden ${
                     isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                 }`}
                 aria-label="Seller navigation sidebar"

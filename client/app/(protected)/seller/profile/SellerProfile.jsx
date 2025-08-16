@@ -1,1545 +1,962 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import dynamic from 'next/dynamic'
 import Head from 'next/head'
-import {
-    DollarSign,
-    Package,
-    ShoppingCart,
-    Clock,
-    AlertCircle,
-    CheckCircle,
-    Plus,
-    Eye,
-    CreditCard,
-    Settings,
-    Star,
-    TrendingUp,
-    Users,
-    BarChart3,
-    AlertTriangle,
-    Check,
-    X,
-    HelpCircle,
-    FileText,
-    Handshake,
-    Rocket,
-    Building,
-    User,
-    Upload
-} from 'lucide-react'
 import Link from 'next/link'
+import {
+  Plus, Package, ShoppingCart, BarChart3, Users, CreditCard, AlertCircle,
+  FileText, CheckCircle2, XCircle, Loader2, TrendingUp, Star, Clock
+} from 'lucide-react'
 import { toast } from 'sonner'
 import sellerAPI from '@/lib/api/seller'
-import DocumentUploadModal from '@/components/features/seller/SellerDocumentUpload'
+import { leagueSpartan } from '@/lib/fonts'
 
-// Sidebar is now handled by the layout
-
-const SellerPageLoader = () => {
-    return (
-        <div className="fixed inset-0 bg-[#121212] flex items-center justify-center z-50">
-            <div className="flex flex-col items-center">
-                <div className="flex items-end gap-1.5 h-16">
-                    {[...Array(5)].map((_, i) => (
-                        <div
-                            key={i}
-                            className="w-2 bg-[#00FF89] rounded-full animate-pulse"
-                            style={{
-                                height: `${20 + i * 15}%`,
-                                animationDelay: `${i * 100}ms`,
-                                animationDuration: '1.5s'
-                            }}
-                        />
-                    ))}
-                </div>
-
-                <h2 className="text-xltext-[#00FF89] mt-6 font-[var(--font-league-spartan)]">Loading Seller Center</h2>
-                <p className="text-sm text-gray-500 mt-2 font-[var(--font-kumbh-sans)]">Preparing your dashboard...</p>
-            </div>
-        </div>
-    )
+/* ========================= THEME ========================= */
+export const theme = {
+  colors: {
+    brand: {
+      primary: '#00FF89',
+      primaryText: '#121212',
+      secondary: '#FFC050',
+      white: '#FFFFFF',
+      dark: '#121212'
+    },
+    background: { dark: '#121212', card: { dark: '#1f1f1f' } },
+    text: { secondary: { dark: '#9ca3af' } }
+  }
 }
 
-const CommissionNegotiationHistory = ({ commissionOffer, verificationStatus }) => {
-    if (!commissionOffer || verificationStatus !== 'commission_offered') {
-        return null
-    }
-
-    // Build negotiation history based on available data
-    const buildNegotiationHistory = () => {
-        const history = []
-        const currentRound = commissionOffer.negotiationRound || 1
-
-        // For each round, we'll create entries
-        for (let round = 1; round <= currentRound; round++) {
-            // Admin offers are on odd rounds, seller counters on even rounds
-            if (round % 2 === 1) {
-                // Admin offer round
-                const isCurrentOffer = round === currentRound && commissionOffer.lastOfferedBy === 'admin'
-                history.push({
-                    id: `admin-${round}`,
-                    type: 'offer',
-                    by: 'admin',
-                    rate: isCurrentOffer ? commissionOffer.rate : null,
-                    timestamp: isCurrentOffer ? commissionOffer.offeredAt : null,
-                    status: isCurrentOffer ? commissionOffer.status : 'completed',
-                    round: Math.ceil(round / 2),
-                    message: `Admin offer${round > 1 ? ' (revised)' : ''}`
-                })
-            } else {
-                // Seller counter offer round
-                const isCurrentCounter = round === currentRound && commissionOffer.lastOfferedBy === 'seller'
-                const hasCounterOffer = commissionOffer.counterOffer?.rate
-
-                if (hasCounterOffer || isCurrentCounter) {
-                    history.push({
-                        id: `seller-${round}`,
-                        type: 'counter',
-                        by: 'seller',
-                        rate: commissionOffer.counterOffer?.rate,
-                        reason: commissionOffer.counterOffer?.reason,
-                        timestamp: commissionOffer.counterOffer?.submittedAt,
-                        status: commissionOffer.status === 'counter_offered' ? 'pending' : 'completed',
-                        round: Math.ceil(round / 2),
-                        message: 'Your counter offer'
-                    })
-                }
-            }
-        }
-
-        // Add final status if accepted or rejected
-        if (commissionOffer.acceptedAt) {
-            history.push({
-                id: 'accepted',
-                type: 'accepted',
-                by: 'seller',
-                timestamp: commissionOffer.acceptedAt,
-                status: 'accepted',
-                message: 'Offer accepted'
-            })
-        } else if (commissionOffer.rejectedAt) {
-            history.push({
-                id: 'rejected',
-                type: 'rejected',
-                by: 'seller',
-                timestamp: commissionOffer.rejectedAt,
-                reason: commissionOffer.rejectionReason,
-                status: 'rejected',
-                message: 'Offer rejected'
-            })
-        }
-
-        return history
-    }
-
-    const negotiationHistory = buildNegotiationHistory()
-
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'pending':
-                return 'text-yellow-500 bg-yellow-500/20'
-            case 'accepted':
-                return 'text-green-500 bg-green-500/20'
-            case 'rejected':
-                return 'text-red-500 bg-red-500/20'
-            case 'completed':
-                return 'text-gray-400 bg-gray-700/50'
-            default:
-                return 'text-gray-400 bg-gray-700/50'
-        }
-    }
-
-    const getIcon = (item) => {
-        if (item.type === 'accepted') return <Check className="w-4 h-4" />
-        if (item.type === 'rejected') return <X className="w-4 h-4" />
-        if (item.by === 'admin') return <Building className="w-4 h-4" />
-        return <User className="w-4 h-4" />
-    }
-
-    return (
-        <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 h-full flex flex-col">
-            {/* Compact Header */}
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-white">Negotiation History</h3>
-                <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">Round {commissionOffer.negotiationRound}</span>
-            </div>
-
-            {/* Compact Timeline */}
-            <div className="flex-1 space-y-3 overflow-y-auto max-h-[280px]">
-                {negotiationHistory.map((item, index) => (
-                    <div
-                        key={item.id}
-                        className="flex items-start gap-3">
-                        {/* Icon */}
-                        <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${getStatusColor(item.status)}`}>
-                            {getIcon(item)}
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2">
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <p className="text-sm font-medium text-white">{item.message}</p>
-                                        <span
-                                            className={`text-xs px-2 py-0.5 rounded ${item.by === 'admin' ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'
-                                                }`}>
-                                            {item.by === 'admin' ? 'Admin' : 'You'}
-                                        </span>
-                                    </div>
-
-                                    {item.rate && (
-                                        <p className="text-lg font-bold text-[#00FF89] mt-1">
-                                            {item.rate}% <span className="text-xs text-gray-400 font-normal">commission</span>
-                                        </p>
-                                    )}
-
-                                    {item.status === 'pending' && (
-                                        <div className="flex items-center gap-1 mt-1">
-                                            <Clock className="w-3 h-3 text-yellow-500" />
-                                            <span className="text-xs text-yellow-500">Awaiting response</span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {item.timestamp && (
-                                    <span className="text-xs text-gray-500 flex-shrink-0">
-                                        {new Date(item.timestamp).toLocaleDateString('en-US', {
-                                            month: 'short',
-                                            day: 'numeric'
-                                        })}
-                                    </span>
-                                )}
-                            </div>
-
-                            {/* Reason - Compact */}
-                            {item.reason && <div className="mt-2 p-2 bg-[#121212] rounded text-xs text-gray-400 line-clamp-2">{item.reason}</div>}
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Summary - More Compact */}
-            {commissionOffer.status === 'pending' && !commissionOffer.acceptedAt && (
-                <div className="mt-4 pt-4 border-t border-gray-700">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-xs text-gray-500">Current offer</p>
-                            <p className="text-sm font-semibold text-white">{commissionOffer.rate}% commission</p>
-                        </div>
-                        <div className="text-right bg-[#00FF89]/10 px-3 py-2 rounded-lg">
-                            <p className="text-xs text-gray-400">You keep</p>
-                            <p className="text-lg font-bold text-[#00FF89]">{100 - commissionOffer.rate}%</p>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {commissionOffer.acceptedAt && (
-                <div className="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-                    <div className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        <div className="flex-1">
-                            <p className="text-sm font-medium text-green-500">Agreement Finalized</p>
-                            <p className="text-xs text-gray-400">{commissionOffer.rate}% commission rate accepted</p>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
-    )
-}
-
-const CommissionProgressStepper = ({ verificationStatus, commissionStatus, hasCounterOffer, acceptedAt }) => {
-    const getStepStatus = (stepId) => {
-        if (acceptedAt) {
-            if (stepId <= 4) return 'completed'
-            if (stepId === 5) return verificationStatus === 'approved' ? 'completed' : 'active'
-        }
-        switch (stepId) {
-            case 1:
-                return 'completed'
-
-            case 2:
-                if (['under_review', 'commission_offered', 'approved'].includes(verificationStatus)) {
-                    return 'completed'
-                }
-                return 'active'
-
-            case 3:
-                if (verificationStatus === 'commission_offered' && !acceptedAt) {
-                    return 'active'
-                }
-                if (verificationStatus === 'approved' || acceptedAt) {
-                    return 'completed'
-                }
-                return 'pending'
-
-
-            case 4:
-                if (verificationStatus === 'commission_offered' && !acceptedAt) {
-                    return commissionStatus === 'counter_offered' ? 'active' : 'active'
-                }
-                return 'pending'
-
-            case 5:
-                return 'pending'
-
-            default:
-                return 'pending'
-        }
-    }
-
-    const steps = [
-        {
-            id: 1,
-            title: 'Profile Submitted',
-            icon: FileText
-        },
-        {
-            id: 2,
-            title: 'Under Review',
-            icon: Eye
-        },
-        {
-            id: 3,
-            title:
-                verificationStatus === 'commission_offered' || acceptedAt
-                    ? 'Commission Offered'
-                    : 'Document Under Review',
-            icon:
-                verificationStatus === 'commission_offered' || acceptedAt
-                    ? DollarSign
-                    : Eye
-        },
-        {
-            id: 4,
-            title: 'Negotiation',
-            icon: Handshake
-        },
-        {
-            id: 5,
-            title: 'Start Selling',
-            icon: Rocket
-        }
-    ].map((step) => ({
-        ...step,
-        status: getStepStatus(step.id)
-    }))
-
-    const completedSteps = steps.filter((s) => s.status === 'completed').length
-    const activeStep = steps.find((s) => s.status === 'active')
-    const progressPercentage = activeStep ? (steps.indexOf(activeStep) / (steps.length - 1)) * 100 : (completedSteps / (steps.length - 1)) * 100
-
-    return (
-        <div className="w-full max-w-full bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6 mb-6">
-            <h3 className="text-sm font-medium text-gray-400 mb-4">Your Progress</h3>
-
-            {/* Progress Bar */}
-            {/* Show progress bar only on large screens */}
-            <div className="relative mb-6 w-full h-1 hidden lg:block">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gray-700 rounded-full overflow-hidden">
-                    <div
-                        className="h-full bg-[#00FF89] rounded-full transition-all duration-500"
-                        style={{ width: `${Math.min(progressPercentage, 100)}%` }}
-                    />
-                </div>
-            </div>
-
-
-            {/* Step Indicators */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-y-4 gap-x-2">
-                {steps.map((step, index) => {
-                    const Icon = step.icon;
-                    const isCompleted = step.status === "completed";
-                    const isActive = step.status === "active";
-
-                    return (
-                        <div
-                            key={step.id}
-                            className="flex flex-col items-center text-center w-1/5 min-w-[70px] flex-grow">
-                            <div
-                                className={`
-                      w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 mb-1
-                      ${isCompleted
-                                        ? "bg-[#00FF89] text-[#121212]"
-                                        : isActive
-                                            ? "bg-[#00FF89]/20 text-[#00FF89] ring-2 ring-[#00FF89]"
-                                            : "bg-gray-700 text-gray-500"
-                                    }
-                    `}
-                            >
-                                {isCompleted ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
-                            </div>
-                            <p
-                                className={`text-[11px] sm:text-xs font-medium text-center ${isActive
-                                        ? "text-[#00FF89]"
-                                        : isCompleted
-                                            ? "text-gray-300"
-                                            : "text-gray-500"
-                                    }`}
-                            >
-                                {step.title}
-                            </p>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* Current Step Info */}
-            {steps.find((s) => s.status === "active") && (
-                <div className="mt-4 pt-4 border-t border-gray-800">
-                    <p className="text-sm text-gray-400">
-                        <span className="text-[#00FF89] font-medium">Current Step:</span>{" "}
-                        {steps.find((s) => s.status === "active")?.title}
-                        {hasCounterOffer && " - Counter offer submitted"}
-                    </p>
-                </div>
-            )}
-        </div>
-    );
-
-}
-
-const CommissionTooltip = ({ rate }) => {
-    const [showTooltip, setShowTooltip] = useState(false)
-
-    return (
-        <div className="relative inline-block">
-            <button
-                onMouseEnter={() => setShowTooltip(true)}
-                onMouseLeave={() => setShowTooltip(false)}
-                onClick={() => setShowTooltip(!showTooltip)}
-                className="ml-1 text-gray-400 hover:text-gray-300 transition-colors">
-                <HelpCircle className="w-4 h-4" />
-            </button>
-
-            {showTooltip && (
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-3 bg-[#0a0a0a] border border-gray-700 rounded-lg shadow-xl z-50">
-                    <div className="text-xs text-gray-300">
-                        <p className="font-semibold text-white mb-2">How commission works:</p>
-                        <p className="mb-2">The platform takes {rate}% from each sale. For example:</p>
-                        <ul className="space-y-1 text-gray-400">
-                            <li>• $100 sale = You get ${100 - rate}</li>
-                            <li>• $500 sale = You get ${500 - (500 * rate) / 100}</li>
-                            <li>• $1000 sale = You get ${1000 - (1000 * rate) / 100}</li>
-                        </ul>
-                        <p className="mt-2 text-[#00FF89]">This covers payment processing, hosting, support & marketing.</p>
-                    </div>
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
-                        <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-700"></div>
-                    </div>
-                </div>
-            )}
-        </div>
-    )
-}
-
-const MobileCommissionCard = ({ commissionOffer, verificationStatus, onAccept, onCounter, processingOffer }) => {
-    const [swipeOffset, setSwipeOffset] = useState(0)
-    const [startX, setStartX] = useState(0)
-
-    const handleTouchStart = (e) => {
-        setStartX(e.touches[0].clientX)
-    }
-
-    const handleTouchMove = (e) => {
-        const currentX = e.touches[0].clientX
-        const diff = currentX - startX
-        if (Math.abs(diff) > 10) {
-            setSwipeOffset(diff)
-        }
-    }
-
-    const handleTouchEnd = () => {
-        if (swipeOffset > 100) {
-            onAccept()
-        } else if (swipeOffset < -100) {
-            onCounter()
-        }
-        setSwipeOffset(0)
-    }
-
-    if (verificationStatus !== 'commission_offered' || commissionOffer?.status !== 'pending' || commissionOffer?.counterOffer?.rate) {
-        return null
-    }
-
-    return (
-        <div className="md:hidden mb-6">
-            <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4">
-                <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-medium text-gray-400">Commission Offer</h3>
-                    <div className="flex items-center gap-1">
-                        <span className="text-2xl font-bold text-[#00FF89]">{commissionOffer.rate}%</span>
-                        <CommissionTooltip rate={commissionOffer.rate} />
-                    </div>
-                </div>
-
-                <p className="text-xs text-gray-500 mb-4">Swipe right to accept, left to counter</p>
-
-                <div
-                    className="relative overflow-hidden rounded-lg"
-                    onTouchStart={handleTouchStart}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleTouchEnd}>
-                    <div
-                        className={`absolute inset-0 bg-green-500/20 flex items-center justify-start pl-4 transition-opacity rounded-lg ${swipeOffset > 50 ? 'opacity-100' : 'opacity-0'}`}>
-                        <Check className="w-6 h-6 text-green-500" />
-                        <span className="ml-2 text-green-500 font-medium text-sm">Accept</span>
-                    </div>
-                    <div
-                        className={`absolute inset-0 bg-orange-500/20 flex items-center justify-end pr-4 transition-opacity rounded-lg ${swipeOffset < -50 ? 'opacity-100' : 'opacity-0'}`}>
-                        <span className="mr-2 text-orange-500 font-medium text-sm">Counter</span>
-                        <AlertTriangle className="w-6 h-6 text-orange-500" />
-                    </div>
-
-                    <div
-                        className="relative bg-[#0a0a0a] p-4 rounded-lg transition-transform"
-                        style={{ transform: `translateX(${swipeOffset * 0.3}px)` }}>
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="text-center">
-                                <p className="text-xs text-gray-500">You keep</p>
-                                <p className="text-lg font-semibold text-white">{100 - commissionOffer.rate}%</p>
-                            </div>
-                            <div className="text-center">
-                                <p className="text-xs text-gray-500">On $100 sale</p>
-                                <p className="text-lg font-semibold text-white">${100 - commissionOffer.rate}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 mt-3">
-                    <button
-                        onClick={onAccept}
-                        disabled={processingOffer}
-                        className="flex items-center justify-center gap-1 px-3 py-2 bg-[#00FF89] text-[#121212] font-medium rounded-lg disabled:opacity-50 text-sm">
-                        <Check className="w-4 h-4" />
-                        Accept
-                    </button>
-                    <button
-                        onClick={onCounter}
-                        disabled={processingOffer}
-                        className="flex items-center justify-center gap-1 px-3 py-2 bg-[#121212] border border-[#00FF89]/30 text-[#00FF89] font-medium rounded-lg text-sm">
-                        <AlertTriangle className="w-4 h-4" />
-                        Counter
-                    </button>
-                </div>
-            </div>
-        </div>
-    )
-}
-
-const CommissionOfferModal = ({ isOpen, onClose, currentOffer, onSubmit }) => {
-    const [counterRate, setCounterRate] = useState('')
-    const [reason, setReason] = useState('')
-    const [submitting, setSubmitting] = useState(false)
-
-    if (!isOpen) return null
-
-    const handleSubmit = async (e) => {
-        e.preventDefault()
-        if (!counterRate || counterRate < 1 || counterRate > 50) {
-            toast.error('Please enter a valid commission rate between 1% and 50%')
-            return
-        }
-        if (!reason || reason.length < 10) {
-            toast.error('Please provide a reason for your counter offer (minimum 10 characters)')
-            return
-        }
-
-        setSubmitting(true)
-        await onSubmit({ rate: Number(counterRate), reason })
-        setSubmitting(false)
-    }
-
-    return (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-[#1a1a1a] border border-gray-800 rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all">
-                <div className="flex items-center justify-between mb-6">
-                    <div>
-                        <h3 className="text-2xl font-bold text-white font-league-spartan">Counter Offer</h3>
-                        <p className="text-sm text-gray-400 mt-1">Negotiate your commission rate</p>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="p-2 hover:bg-gray-800 rounded-lg transition-colors group">
-                        <X className="w-5 h-5 text-gray-400 group-hover:text-white" />
-                    </button>
-                </div>
-
-                <div className="bg-[#121212] border border-gray-800 rounded-xl p-4 mb-6">
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-400">Current Platform Offer</span>
-                        <span className="text-2xl font-bold text-[#00FF89]">{currentOffer}%</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">The platform will take {currentOffer}% from each sale</p>
-                </div>
-
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-300 mb-3">Your Counter Rate (%)</label>
-                        <div className="relative">
-                            <input
-                                type="number"
-                                min="1"
-                                max="50"
-                                step="0.5"
-                                value={counterRate}
-                                onChange={(e) => setCounterRate(e.target.value)}
-                                className="w-full px-4 py-3 bg-[#0a0a0a] border border-gray-700 rounded-xl text-white text-lg focus:outline-none focus:ring-2 focus:ring-[#00FF89] focus:border-transparent transition-all"
-                                placeholder="Enter your preferred rate"
-                                required
-                            />
-                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                                <span className="text-lg">%</span>
-                            </div>
-                        </div>
-                        <div className="flex items-center justify-between mt-2">
-                            <p className="text-xs text-gray-500">Suggest a commission rate between 1% and 50%</p>
-                            {counterRate && <p className="text-xs text-[#00FF89]">You'll keep {100 - counterRate}% of sales</p>}
-                        </div>
-                    </div>
-
-                    <div className="mb-8">
-                        <label className="block text-sm font-medium text-gray-300 mb-3">Reason for Counter Offer</label>
-                        <div className="relative">
-                            <textarea
-                                value={reason}
-                                onChange={(e) => setReason(e.target.value)}
-                                className="w-full px-4 py-3 bg-[#0a0a0a] border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89] focus:border-transparent resize-none transition-all"
-                                rows="4"
-                                placeholder="Explain why you're requesting this rate..."
-                                required
-                            />
-                            <div className="absolute bottom-3 right-3 text-xs text-gray-500">{reason.length}/10 min</div>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-2">Help us understand your perspective</p>
-                    </div>
-
-                    <div className="flex gap-3">
-                        <button
-                            type="submit"
-                            disabled={submitting}
-                            className="flex-1 px-6 py-3 bg-[#00FF89] text-[#121212] rounded-xl font-semibold hover:bg-[#00FF89]/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]">
-                            {submitting ? (
-                                <span className="flex items-center justify-center gap-2">
-                                    <div className="w-4 h-4 border-2 border-[#121212] border-t-transparent rounded-full animate-spin" />
-                                    Submitting...
-                                </span>
-                            ) : (
-                                'Submit Counter Offer'
-                            )}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            disabled={submitting}
-                            className="flex-1 px-6 py-3 bg-gray-800 text-white rounded-xl font-semibold hover:bg-gray-700 transition-all border border-gray-700">
-                            Cancel
-                        </button>
-                    </div>
-                </form>
-
-                <div className="mt-6 pt-6 border-t border-gray-800">
-                    <div className="flex items-start gap-2">
-                        <AlertCircle className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                        <p className="text-xs text-gray-500">
-                            Your counter offer will be reviewed by our team. We'll notify you once a decision is made.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    )
-}
-
-const StatCard = ({ icon: Icon, value, label, color, trend, loading }) => (
-    <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6 hover:border-[#00FF89]/30 transition-all group">
-        <div className="flex items-center justify-between mb-3 sm:mb-4">
-            <div
-                className={`w-10 h-10 sm:w-12 sm:h-12 ${color}/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${color.replace('/20', '')}`} />
-            </div>
-            {trend && (
-                <div className="flex items-center gap-1 text-xs sm:text-sm text-green-400">
-                    <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span>{trend}%</span>
-                </div>
-            )}
-        </div>
-        {loading ? (
-            <div className="space-y-2">
-                <div className="h-6 sm:h-8 bg-gray-800 rounded animate-pulse" />
-                <div className="h-3 sm:h-4 bg-gray-800 rounded w-2/3 animate-pulse" />
-            </div>
-        ) : (
-            <>
-                <h3 className="text-xl sm:text-2xl font-bold text-white mb-1">{value}</h3>
-                <p className="text-xs sm:text-sm text-gray-400">{label}</p>
-            </>
-        )}
+/* ========================= PRIMITIVES ========================= */
+function Card({ children, className = '', variant = 'elevated', style }) {
+  return (
+    <div
+      className={[
+        'rounded-2xl border border-[#2b2b2b]',
+        variant === 'elevated' ? 'shadow-[0_1px_0_rgba(255,255,255,0.03)]' : '',
+        'bg-[#1f1f1f] transition-all'
+      ].join(' ') + (className ? ` ${className}` : '')}
+      style={{ fontFamily: 'League Spartan, sans-serif', ...style }}
+    >
+      {children}
     </div>
-)
+  )
+}
+const CardHeader = ({ children, className = '' }) => <div className={`px-5 pt-5 ${className}`}>{children}</div>
+const CardContent = ({ children, className = '' }) => <div className={`px-5 pb-5 ${className}`}>{children}</div>
+const CardFooter = ({ children, className = '' }) => <div className={`px-5 pb-5 ${className}`}>{children}</div>
 
-export default function SellerProfile() {
-    const router = useRouter()
-    const [loading, setLoading] = useState(true)
-    const [sellerProfile, setSellerProfile] = useState(null)
-    const [stats, setStats] = useState(null)
-    // isMobile state removed - handled by responsive sidebar
-    const [selectedCurrency, setSelectedCurrency] = useState('USD')
-    const [showCounterOfferModal, setShowCounterOfferModal] = useState(false)
-    const [processingOffer, setProcessingOffer] = useState(false)
-    const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
-    const [isApproved, setisApproved] = useState(false)
-    const [showDocumentUpload, setShowDocumentUpload] = useState(false)
+/* ========================= SHELL ========================= */
+/** Layout uses a 12-col grid with consistent gutters.
+ *  areaA: identity + stats (stacks on mobile)
+ *  areaB: quick actions + main feed
+ *  areaC: right rail (readiness + metrics + payout)
+ */
+function SellerShell({ header, sidebar, statsRow, children, rightRail }) {
+  return (
+    <div className="min-h-screen" style={{ backgroundColor: theme.colors.background.dark, fontFamily: 'League Spartan, sans-serif' }}>
+      {header}
+      <div className="mx-auto w-full max-w-[120rem] px-3 sm:px-6 lg:px-8">
+        {/* TOP ROW: identity + stats aligned on same baseline */}
+        <div className="grid grid-cols-12 gap-3 sm:gap-4 lg:gap-6 pt-6">
+          {sidebar ? <div className="col-span-12 lg:col-span-4">{sidebar}</div> : null}
+          {statsRow ? <div className="col-span-12 lg:col-span-8">{statsRow}</div> : null}
+        </div>
 
-    // Mobile detection removed - handled by responsive sidebar
+        {/* MAIN GRID */}
+        <div className="grid grid-cols-12 gap-3 sm:gap-4 lg:gap-6 py-6">
+          {/* MAIN CONTENT */}
+          <div className="col-span-12 xl:col-span-8 space-y-6">
+            {children}
+          </div>
 
-    useEffect(() => {
-        fetchSellerData()
-    }, [])
-
-    const currencyConfig = {
-        USD: { symbol: '$', rate: 1, position: 'before' },
-        INR: { symbol: '₹', rate: 83, position: 'before' },
-        EUR: { symbol: '€', rate: 0.92, position: 'before' },
-        GBP: { symbol: '£', rate: 0.79, position: 'before' },
-        AUD: { symbol: 'A$', rate: 1.52, position: 'before' },
-        CAD: { symbol: 'C$', rate: 1.36, position: 'before' },
-        SGD: { symbol: 'S$', rate: 1.35, position: 'before' },
-        AED: { symbol: 'AED', rate: 3.67, position: 'after' }
-    }
-
-    const formatCurrency = (amount, currency = selectedCurrency) => {
-        const config = currencyConfig[currency] || currencyConfig.USD
-        const convertedAmount = (amount * config.rate).toFixed(2)
-
-        if (config.position === 'before') {
-            return `${config.symbol}${convertedAmount}`
-        } else {
-            return `${convertedAmount} ${config.symbol}`
-        }
-    }
-
-    const detectCurrencyFromLocation = (location) => {
-        const countryToCurrency = {
-            India: 'INR',
-            'United States': 'USD',
-            'United Kingdom': 'GBP',
-            Australia: 'AUD',
-            Canada: 'CAD',
-            Singapore: 'SGD',
-            UAE: 'AED',
-            Germany: 'EUR',
-            France: 'EUR',
-            Italy: 'EUR',
-            Spain: 'EUR',
-            Netherlands: 'EUR'
-        }
-        return countryToCurrency[location?.country] || 'USD'
-    }
-
-    const fetchSellerData = async () => {
-        try {
-            setLoading(true)
-            const minimumLoadTime = new Promise((resolve) => setTimeout(resolve, 1500))
-            const dataFetch = sellerAPI.getProfile()
-            const [_, response] = await Promise.all([minimumLoadTime, dataFetch])
-
-            if (response) {
-                setSellerProfile(response)
-                setStats(response.stats)
-                setisApproved(response.verification.status === 'approved')
-                const detectedCurrency = detectCurrencyFromLocation(response.location)
-                setSelectedCurrency(detectedCurrency)
-            } else {
-                throw new Error(response.message || 'Failed to load profile')
-            }
-        } catch (error) {
-            if (error.status === 401 || error.authError) {
-                toast.error('Session expired. Please log in again.')
-                router.push('/signin')
-            } else if (error.status === 404) {
-                toast.error('Seller profile not found. Please complete your profile.')
-                router.push('/become-seller')
-            } else {
-                toast.error(error.message || 'Failed to load dashboard data')
-            }
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const handleAcceptOffer = async () => {
-        try {
-            setProcessingOffer(true)
-            const minimumLoaderTime = new Promise((resolve) => setTimeout(resolve, 2000))
-            const apiCall = sellerAPI.acceptCommissionOffer()
-            const [response] = await Promise.all([apiCall, minimumLoaderTime])
-
-            if (response.success) {
-                setProcessingOffer(false)
-                setShowSuccessAnimation(true)
-                setTimeout(() => {
-                    toast.success('Commission offer accepted successfully!')
-                    setShowSuccessAnimation(false)
-                    fetchSellerData()
-                }, 2000)
-            }
-        } catch (error) {
-            toast.error('Failed to accept commission offer')
-            setProcessingOffer(false)
-        }
-    }
-
-    const handleCounterOffer = async ({ rate, reason }) => {
-        try {
-            const response = await sellerAPI.submitCounterOffer({ rate, reason })
-            if (response.success) {
-                toast.success('Counter offer submitted successfully!')
-                setShowCounterOfferModal(false)
-                await fetchSellerData()
-            }
-        } catch (error) {
-            toast.error('Failed to submit counter offer')
-        }
-    }
-
-    const getVerificationBadge = (status) => {
-        const badges = {
-            pending: {
-                color: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30',
-                icon: Clock,
-                text: 'Verification Pending'
-            },
-            under_review: {
-                color: 'bg-blue-500/20 text-blue-500 border-blue-500/30',
-                icon: Eye,
-                text: 'Under Review'
-            },
-            commission_offered: {
-                color: 'bg-[#00FF89]/20 text-[#00FF89] border-[#00FF89]/30',
-                icon: DollarSign,
-                text: 'Commission Offered'
-            },
-            approved: {
-                color: 'bg-green-500/20 text-green-500 border-green-500/30',
-                icon: CheckCircle,
-                text: 'Verified Seller'
-            },
-            rejected: {
-                color: 'bg-red-500/20 text-red-500 border-red-500/30',
-                icon: AlertCircle,
-                text: 'Verification Failed'
-            }
-        }
-        return badges[status] || badges.pending
-    }
-
-    const canAddProducts = sellerProfile?.verification?.status === 'approved' && sellerProfile?.commissionOffer?.acceptedAt
-
-    if (loading) {
-        return <SellerPageLoader />
-    }
-
-    if (!sellerProfile) {
-        return (
-            <div className="min-h-screen bg-[#121212] flex items-center justify-center p-4">
-                <div className="text-center max-w-md">
-                    <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                    <h1 className="text-xl font-semibold text-white mb-2">No Seller Profile Found</h1>
-                    <p className="text-gray-400 mb-4">You need to create a seller profile first.</p>
-                    <Link
-                        href="/become-seller"
-                        className="inline-flex items-center px-6 py-3 bg-[#00FF89] text-[#121212] font-medium rounded-lg hover:bg-[#00FF89]/90 transition-colors">
-                        Create Seller Profile
-                    </Link>
-                </div>
-            </div>
-        )
-    }
-
-    const verificationBadge = getVerificationBadge(sellerProfile.verification?.status)
-    const VerificationIcon = verificationBadge.icon
-
-    return (
-        <>
-            <Head>
-                <title>Seller Dashboard - {sellerProfile.fullName} | Spyke AI</title>
-                <meta
-                    name="description"
-                    content={`Manage your products, track sales, and grow your business on Spyke AI marketplace. ${sellerProfile.bio}`}
-                />
-                <meta
-                    name="viewport"
-                    content="width=device-width, initial-scale=1, maximum-scale=5"
-                />
-                <link
-                    rel="canonical"
-                    href={`https://spyke.ai/seller/profile`}
-                />
-            </Head>
-
-            <div className="w-full">
-                <main
-                    className="text-white"
-                    role="main">
-                    <div className="w-full p-4 sm:p-6 lg:p-8">
-                        <header className="mb-6 sm:mb-8">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                <div>
-                                    <h1 className="text-2xl sm:text-3xl text-white mb-2 font-[var(--font-league-spartan)]">Seller Profile</h1>
-                                    <p className="text-sm sm:text-base text-gray-400 font-[var(--font-kumbh-sans)]">
-                                        Welcome back, {sellerProfile.fullName}
-                                    </p>
-                                </div>
-
-                                <div className="flex flex-wrap items-center gap-3">
-                                    <div className="relative">
-                                        <select
-                                            value={selectedCurrency}
-                                            onChange={(e) => setSelectedCurrency(e?.target.value)}
-                                            className="appearance-none w-full pl-4 pr-10 py-2 bg-[#1a1a1a] border border-gray-800 text-sm text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00FF89] focus:border-[#00FF89] transition-colors">
-                                            <option value="USD">USD ($)</option>
-                                            <option value="INR">INR (₹)</option>
-                                            <option value="EUR">EUR (€)</option>
-                                            <option value="GBP">GBP (£)</option>
-                                            <option value="AUD">AUD (A$)</option>
-                                            <option value="CAD">CAD (C$)</option>
-                                            <option value="SGD">SGD (S$)</option>
-                                            <option value="AED">AED</option>
-                                        </select>
-
-                                        <div className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                                            <svg
-                                                className="w-4 h-4"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth={2}
-                                                viewBox="0 0 24 24">
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    d="M19 9l-7 7-7-7"
-                                                />
-                                            </svg>
-                                        </div>
-                                    </div>
-
-                                    <div
-                                        className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${verificationBadge.color} text-xs sm:text-sm`}>
-                                        <VerificationIcon className="w-4 h-4" />
-                                        <span className="font-medium">{verificationBadge.text}</span>
-                                    </div>
-
-                                    <div className="relative group">
-                                        <Link
-                                            href={canAddProducts ? '/seller/products/new' : '#'}
-                                            onClick={(e) => {
-                                                if (!canAddProducts) {
-                                                    e.preventDefault()
-                                                }
-                                            }}
-                                            className={`flex items-center gap-2 px-4 py-2 font-medium rounded-lg transition-all text-sm sm:text-base ${canAddProducts
-                                                    ? 'bg-[#00FF89] text-[#121212] hover:bg-[#00FF89]/90'
-                                                    : 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                                                }`}
-                                            aria-label="Add new product"
-                                            aria-disabled={!canAddProducts}>
-                                            <Plus className="w-4 h-4" />
-                                            <span className="hidden sm:inline">Add Product</span>
-                                            <span className="sm:hidden">Add</span>
-                                        </Link>
-                                        {!canAddProducts && (
-                                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#0a0a0a] border border-gray-700 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
-                                                <p className="text-xs text-gray-300">
-                                                    {sellerProfile.verification?.status === 'commission_offered' &&
-                                                        !sellerProfile.commissionOffer?.acceptedAt
-                                                        ? 'Accept commission offer to add products'
-                                                        : sellerProfile.verification?.status === 'under_review'
-                                                            ? 'Account under review'
-                                                            : sellerProfile.verification?.status === 'rejected'
-                                                                ? 'Verification required to add products'
-                                                                : sellerProfile.verification?.status === 'approved' &&
-                                                                    !sellerProfile.commissionOffer?.acceptedAt
-                                                                    ? 'Complete commission agreement to add products'
-                                                                    : 'Complete verification to add products'}
-                                                </p>
-                                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
-                                                    <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-700"></div>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </header>
-                        {!isApproved && (
-                            <div>
-                                <MobileCommissionCard
-                                    commissionOffer={sellerProfile.commissionOffer}
-                                    verificationStatus={sellerProfile.verification?.status}
-                                    onAccept={handleAcceptOffer}
-                                    onCounter={() => setShowCounterOfferModal(true)}
-                                    processingOffer={processingOffer}
-                                />
-                                {sellerProfile.verification?.status === 'pending' && (
-                                    <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                                        <div className="flex items-start gap-3">
-                                            <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                                            <div className="flex-1">
-                                                <h3 className="text-yellow-500 font-medium mb-1">Verification Documents Required</h3>
-                                                <p className="text-sm text-gray-300">
-                                                    To complete your verification, please upload the required documents. Your account will be reviewed
-                                                    once all documents are submitted.
-                                                </p>
-                                                <button
-                                                    onClick={() => setShowDocumentUpload(true)}
-                                                    className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-[#121212] font-medium rounded-lg hover:bg-yellow-400 transition-colors">
-                                                    <Upload className="w-4 h-4" />
-                                                    {sellerProfile.verification?.submittedAt ? 'Re-upload Documents' : 'Upload Documents'}
-                                                </button>
-                                                {sellerProfile.verification?.submittedAt && (
-                                                    <p className="text-xs text-gray-400 mt-2">
-                                                        Last submitted: {new Date(sellerProfile.verification.submittedAt).toLocaleDateString()}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                                {sellerProfile.verification?.status === 'under_review' && (
-                                    <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                                        <div className="flex items-start gap-3">
-                                            <Eye className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                                            <div className="flex-1">
-                                                <h3 className="text-blue-500 font-medium mb-1">Documents Under Review</h3>
-                                                <p className="text-sm text-gray-300">
-                                                    Your verification documents are being reviewed. Once approved, you'll receive a commission offer
-                                                    to start selling on our platform.
-                                                </p>
-                                                <div className="mt-3 flex items-center gap-2">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                                                        <span className="text-xs text-gray-400">Awaiting commission offer from admin</span>
-                                                    </div>
-                                                </div>
-                                                {sellerProfile.verification?.submittedAt && (
-                                                    <p className="text-xs text-gray-400 mt-2">
-                                                        Submitted: {new Date(sellerProfile.verification.submittedAt).toLocaleDateString()}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {sellerProfile.verification?.status === 'rejected' && sellerProfile.verification?.rejectionReason && (
-                                    <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3">
-                                        <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                                        <div className="flex-1">
-                                            <h3 className="text-red-500 font-medium mb-1">Verification Failed</h3>
-                                            <p className="text-sm text-gray-300">{sellerProfile.verification.rejectionReason}</p>
-                                            <Link
-                                                href="/seller/verification"
-                                                className="inline-flex items-center gap-2 mt-3 text-sm text-red-400 hover:text-red-300 transition-colors">
-                                                Submit for Verification Again →
-                                            </Link>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {sellerProfile.verification?.status === 'commission_offered' &&
-                                    sellerProfile.commissionOffer?.status === 'pending' &&
-                                    !sellerProfile.commissionOffer?.counterOffer?.rate && (
-                                        <div className="hidden md:block mb-6 bg-[#00FF89]/10 border border-[#00FF89]/30 rounded-xl p-6">
-                                            <div className="flex items-start gap-4">
-                                                <div className="w-12 h-12 bg-[#00FF89]/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                    <DollarSign className="w-6 h-6 text-[#00FF89]" />
-                                                </div>
-                                                <div className="flex-1">
-                                                    <h3 className="text-xl font-semibold text-white mb-2">Commission Offer Received!</h3>
-                                                    <div className="text-gray-300 mb-4">
-                                                        The platform has offered you a commission rate of{' '}
-                                                        <span className="text-2xl font-bold text-[#00FF89]">
-                                                            {sellerProfile.commissionOffer.rate}%
-                                                        </span>
-                                                        <CommissionTooltip rate={sellerProfile.commissionOffer.rate} /> on all your sales.
-                                                    </div>
-                                                    <div className="text-sm text-gray-400 mb-6">
-                                                        This means the platform will take {sellerProfile.commissionOffer.rate}% from each sale you
-                                                        make. You can accept this offer or propose a different rate.
-                                                    </div>
-
-                                                    <div className="flex flex-wrap gap-3">
-                                                        <button
-                                                            onClick={handleAcceptOffer}
-                                                            disabled={processingOffer}
-                                                            className="flex items-center gap-2 px-6 py-3 bg-[#00FF89] text-[#121212] font-medium rounded-lg hover:bg-[#00FF89]/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] min-w-[160px] justify-center">
-                                                            {processingOffer ? (
-                                                                <>
-                                                                    <div className="w-5 h-5 border-2 border-[#121212] border-t-transparent rounded-full animate-spin" />
-                                                                    <span>Accepting...</span>
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <Check className="w-5 h-5" />
-                                                                    <span>Accept Offer</span>
-                                                                </>
-                                                            )}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => setShowCounterOfferModal(true)}
-                                                            disabled={processingOffer}
-                                                            className="flex items-center gap-2 px-6 py-3 bg-[#121212] border border-[#00FF89]/30 text-[#00FF89] font-medium rounded-lg hover:bg-[#00FF89]/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] min-w-[180px] justify-center">
-                                                            <AlertTriangle className="w-5 h-5" />
-                                                            Make Counter Offer
-                                                        </button>
-                                                    </div>
-
-                                                    <p className="text-xs text-gray-500 mt-4">
-                                                        Offered on: {new Date(sellerProfile.commissionOffer.offeredAt).toLocaleDateString()}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                {sellerProfile.commissionOffer?.status === 'counter_offered' && sellerProfile.commissionOffer?.counterOffer?.rate && (
-                                    <div className="mb-6 bg-[#FFC050]/10 border border-[#FFC050]/30 rounded-xl p-6">
-                                        <div className="flex items-start gap-4">
-                                            <div className="w-12 h-12 bg-[#FFC050]/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                <Clock className="w-6 h-6 text-[#FFC050]" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <h3 className="text-xl font-semibold text-white mb-2">Counter Offer Under Review</h3>
-                                                <div className="text-gray-300 mb-3">
-                                                    You have submitted a counter offer of{' '}
-                                                    <span className="text-lg font-bold text-[#FFC050]">
-                                                        {sellerProfile.commissionOffer.counterOffer.rate}%
-                                                    </span>
-                                                    <CommissionTooltip rate={sellerProfile.commissionOffer.counterOffer.rate} /> commission rate
-                                                    (Original offer: {sellerProfile.commissionOffer.rate}%)
-                                                </div>
-                                                <div className="bg-[#121212] border border-gray-800 rounded-lg p-4 mb-4">
-                                                    <p className="text-sm font-medium text-gray-400 mb-1">Your Reason:</p>
-                                                    <p className="text-sm text-gray-300">{sellerProfile.commissionOffer.counterOffer.reason}</p>
-                                                </div>
-                                                <p className="text-xs text-gray-500">
-                                                    Submitted on:{' '}
-                                                    {new Date(sellerProfile.commissionOffer.counterOffer.submittedAt).toLocaleDateString()}
-                                                </p>
-                                                <p className="text-xs text-gray-400 mt-2">
-                                                    Our team is reviewing your counter offer. We'll notify you once a decision is made.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {(sellerProfile.verification?.status === 'commission_offered' ||
-                                    sellerProfile.verification?.status === 'approved' ||
-                                    sellerProfile.verification?.status === 'under_review') && (
-                                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                                            <div className="lg:col-span-3">
-                                                <CommissionProgressStepper
-                                                    verificationStatus={sellerProfile.verification.status}
-                                                    commissionStatus={sellerProfile.commissionOffer?.status}
-                                                    hasCounterOffer={!!sellerProfile.commissionOffer?.counterOffer?.rate}
-                                                    acceptedAt={sellerProfile.commissionOffer?.acceptedAt}
-                                                />
-                                            </div>
-                                            <div className="lg:col-span-1">
-                                                {sellerProfile.verification?.status === 'commission_offered' &&
-                                                    !sellerProfile.commissionOffer?.acceptedAt &&
-                                                    sellerProfile.commissionOffer?.negotiationRound > 1 && (
-                                                        <CommissionNegotiationHistory
-                                                            commissionOffer={sellerProfile.commissionOffer}
-                                                            verificationStatus={sellerProfile.verification?.status}
-                                                        />
-                                                    )}
-                                            </div>
-                                        </div>
-                                    )}
-                            </div>
-                        )}
-
-                        {isApproved && (
-                            <>
-                                <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
-                                    <StatCard
-                                        icon={DollarSign}
-                                        value={formatCurrency(stats?.totalEarnings || 0)}
-                                        label="Total Earnings"
-                                        color="bg-[#00FF89]"
-                                        trend={12.5}
-                                        loading={loading}
-                                    />
-                                    <StatCard
-                                        icon={ShoppingCart}
-                                        value={stats?.totalSales || 0}
-                                        label="Total Sales"
-                                        color="bg-purple-500"
-                                        trend={8.2}
-                                        loading={loading}
-                                    />
-                                    <StatCard
-                                        icon={Package}
-                                        value={stats?.totalProducts || 0}
-                                        label="Total Products"
-                                        color="bg-blue-500"
-                                        loading={loading}
-                                    />
-                                    <StatCard
-                                        icon={Star}
-                                        value={stats?.averageRating?.toFixed(1) || '0.0'}
-                                        label="Average Rating"
-                                        color="bg-[#FFC050]"
-                                        loading={loading}
-                                    />
-                                </section>
-                                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
-                                    <section className="xl:col-span-2 space-y-6">
-                                        {stats?.totalProducts === 0 && (
-                                            <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6 sm:p-8 text-center">
-                                                <Package className="w-12 h-12 sm:w-16 sm:h-16 text-gray-600 mx-auto mb-4" />
-                                                <h2 className="text-xl sm:text-2xl font-semibold text-white mb-2">Start Selling Today!</h2>
-                                                <p className="text-sm sm:text-base text-gray-400 mb-6 max-w-md mx-auto">
-                                                    {canAddProducts
-                                                        ? "You haven't added any products yet. Create your first product and start earning."
-                                                        : sellerProfile.verification?.status === 'commission_offered'
-                                                            ? 'Accept the commission offer to start adding products and begin selling.'
-                                                            : 'Complete your verification to start adding products.'}
-                                                </p>
-                                                {canAddProducts ? (
-                                                    <Link
-                                                        href="/seller/products/new"
-                                                        className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-[#00FF89] text-[#121212] font-medium rounded-lg hover:bg-[#00FF89]/90 transition-colors">
-                                                        <Plus className="w-5 h-5" />
-                                                        Create Your First Product
-                                                    </Link>
-                                                ) : sellerProfile.verification?.status === 'commission_offered' &&
-                                                    !sellerProfile.commissionOffer?.acceptedAt ? (
-                                                    <button
-                                                        onClick={handleAcceptOffer}
-                                                        disabled={processingOffer}
-                                                        className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-[#00FF89] text-[#121212] font-medium rounded-lg hover:bg-[#00FF89]/90 transition-colors disabled:opacity-50">
-                                                        {processingOffer ? (
-                                                            <>
-                                                                <div className="w-5 h-5 border-2 border-[#121212] border-t-transparent rounded-full animate-spin" />
-                                                                <span>Accepting...</span>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <Check className="w-5 h-5" />
-                                                                Accept Commission Offer
-                                                            </>
-                                                        )}
-                                                    </button>
-                                                ) : (
-                                                    <div className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-gray-700 text-gray-400 font-medium rounded-lg cursor-not-allowed">
-                                                        <AlertCircle className="w-5 h-5" />
-                                                        Verification Required
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-                                        <article className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6">
-                                            <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Profile Overview</h2>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                                                <div>
-                                                    <h3 className="text-sm font-medium text-gray-400 mb-3">Business Info</h3>
-                                                    <dl className="space-y-3">
-                                                        <div>
-                                                            <dt className="text-xs text-gray-500">Email</dt>
-                                                            <dd className="text-sm sm:text-base text-white break-all">{sellerProfile.email}</dd>
-                                                        </div>
-                                                        <div>
-                                                            <dt className="text-xs text-gray-500">Website</dt>
-                                                            <dd className="text-sm sm:text-base">
-                                                                {sellerProfile.websiteUrl ? (
-                                                                    <a
-                                                                        href={sellerProfile.websiteUrl}
-                                                                        target="_blank"
-                                                                        rel="noopener noreferrer"
-                                                                        className="text-[#00FF89] hover:text-[#00FF89]/80 break-all">
-                                                                        {sellerProfile.websiteUrl}
-                                                                    </a>
-                                                                ) : (
-                                                                    <span className="text-gray-500">Not provided</span>
-                                                                )}
-                                                            </dd>
-                                                        </div>
-                                                        <div>
-                                                            <dt className="text-xs text-gray-500">Location</dt>
-                                                            <dd className="text-sm sm:text-base text-white">{sellerProfile.location.country}</dd>
-                                                        </div>
-                                                    </dl>
-                                                </div>
-
-                                                <div>
-                                                    <h3 className="text-sm font-medium text-gray-400 mb-3">Expertise</h3>
-                                                    <div className="space-y-3">
-                                                        <div>
-                                                            <p className="text-xs text-gray-500 mb-2">Niches</p>
-                                                            <div className="flex flex-wrap gap-2">
-                                                                {sellerProfile.niches.map((niche, index) => (
-                                                                    <span
-                                                                        key={index}
-                                                                        className="text-xs px-2 py-1 bg-[#00FF89]/20 text-[#00FF89] rounded">
-                                                                        {niche}
-                                                                    </span>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-xs text-gray-500 mb-2">Tools</p>
-                                                            <div className="flex flex-wrap gap-2">
-                                                                {sellerProfile.toolsSpecialization.map((tool, index) => (
-                                                                    <span
-                                                                        key={index}
-                                                                        className="text-xs px-2 py-1 bg-blue-500/20 text-blue-400 rounded">
-                                                                        {tool}
-                                                                    </span>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </article>
-                                        <section className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                                            <div className="relative group">
-                                                <Link
-                                                    href={canAddProducts ? '/seller/products' : '#'}
-                                                    onClick={(e) => {
-                                                        if (!canAddProducts) {
-                                                            e.preventDefault()
-                                                        }
-                                                    }}
-                                                    className={`bg-[#1f1f1f] border border-gray-800 rounded-lg p-4 transition-all text-center group block ${canAddProducts ? 'hover:border-[#00FF89]/50' : 'opacity-60 cursor-not-allowed'}`}>
-                                                    <Package className="w-8 h-8 text-[#00FF89] mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                                                    <span className="text-xs sm:text-sm text-gray-300">Products</span>
-                                                </Link>
-                                                {!canAddProducts && (
-                                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-[#0a0a0a] border border-gray-700 rounded text-xs text-gray-300 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
-                                                        Complete verification first
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <Link
-                                                href="/seller/orders"
-                                                className="bg-[#1f1f1f] border border-gray-800 rounded-lg p-4 hover:border-[#00FF89]/50 transition-all text-center group">
-                                                <ShoppingCart className="w-8 h-8 text-purple-500 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                                                <span className="text-xs sm:text-sm text-gray-300">Orders</span>
-                                            </Link>
-                                            <Link
-                                                href="/seller/analytics"
-                                                className="bg-[#1f1f1f] border border-gray-800 rounded-lg p-4 hover:border-[#00FF89]/50 transition-all text-center group">
-                                                <BarChart3 className="w-8 h-8 text-blue-500 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                                                <span className="text-xs sm:text-sm text-gray-300">Analytics</span>
-                                            </Link>
-                                            <Link
-                                                href="/seller/customers"
-                                                className="bg-[#1f1f1f] border border-gray-800 rounded-lg p-4 hover:border-[#00FF89]/50 transition-all text-center group">
-                                                <Users className="w-8 h-8 text-[#FFC050] mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                                                <span className="text-xs sm:text-sm text-gray-300">Customers</span>
-                                            </Link>
-                                        </section>
-                                    </section>
-
-                                    <aside className="xl:col-span-1 space-y-6">
-                                        {sellerProfile.commissionOffer?.acceptedAt && (
-                                            <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6">
-                                                <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Commission Details</h2>
-                                                <div className="space-y-3">
-                                                    <div>
-                                                        <p className="text-xs sm:text-sm text-gray-400">Commission Rate</p>
-                                                        <p className="text-xl sm:text-2xl font-bold text-[#00FF89]">
-                                                            {sellerProfile.commissionOffer.rate}%
-                                                        </p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-xs sm:text-sm text-gray-400">Accepted On</p>
-                                                        <p className="text-sm text-white">
-                                                            {new Date(sellerProfile.commissionOffer.acceptedAt).toLocaleDateString()}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6">
-                                            <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Payout Settings</h2>
-                                            <div className="space-y-4">
-                                                <div>
-                                                    <p className="text-xs sm:text-sm text-gray-400">Available Balance</p>
-                                                    <p className="text-xl sm:text-2xl font-bold text-[#00FF89]">
-                                                        {formatCurrency(stats?.totalEarnings || 0)}
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs sm:text-sm text-gray-400">Payout Method</p>
-                                                    <div className="flex items-center gap-2">
-                                                        <p className="text-sm text-white capitalize">{sellerProfile.payoutInfo.method}</p>
-                                                        {sellerProfile.payoutInfo.isVerified ? (
-                                                            <span className="flex items-center gap-1 text-xs px-2 py-0.5 bg-green-500/20 text-green-500 rounded-full">
-                                                                <CheckCircle className="w-3 h-3" />
-                                                                Verified
-                                                            </span>
-                                                        ) : (
-                                                            <span className="flex items-center gap-1 text-xs px-2 py-0.5 bg-yellow-500/20 text-yellow-500 rounded-full">
-                                                                <AlertCircle className="w-3 h-3" />
-                                                                Not Verified
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                {sellerProfile.payoutInfo.paypalEmail && (
-                                                    <div>
-                                                        <p className="text-xs sm:text-sm text-gray-400">PayPal Email</p>
-                                                        <p className="text-sm text-white truncate">{sellerProfile.payoutInfo.paypalEmail}</p>
-                                                    </div>
-                                                )}
-                                                <Link
-                                                    href="/seller/payouts"
-                                                    className="inline-flex items-center gap-2 text-sm text-[#00FF89] hover:text-[#00FF89]/80 transition-colors">
-                                                    <CreditCard className="w-4 h-4" />
-                                                    Manage Payouts
-                                                </Link>
-                                            </div>
-                                        </div>
-                                        <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6">
-                                            <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Settings Overview</h2>
-                                            <div className="space-y-3">
-                                                <div className="flex items-center justify-between py-2">
-                                                    <span className="text-sm text-gray-300">Email Notifications</span>
-                                                    <span
-                                                        className={`text-sm font-medium ${sellerProfile.settings.emailNotifications ? 'text-[#00FF89]' : 'text-gray-500'}`}>
-                                                        {sellerProfile.settings.emailNotifications ? 'Enabled' : 'Disabled'}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center justify-between py-2 border-t border-gray-800">
-                                                    <span className="text-sm text-gray-300">Marketing Emails</span>
-                                                    <span
-                                                        className={`text-sm font-medium ${sellerProfile.settings.marketingEmails ? 'text-[#00FF89]' : 'text-gray-500'}`}>
-                                                        {sellerProfile.settings.marketingEmails ? 'Enabled' : 'Disabled'}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center justify-between py-2 border-t border-gray-800">
-                                                    <span className="text-sm text-gray-300">Auto-approve Products</span>
-                                                    <span
-                                                        className={`text-sm font-medium ${sellerProfile.settings.autoApproveProducts ? 'text-[#00FF89]' : 'text-gray-500'}`}>
-                                                        {sellerProfile.settings.autoApproveProducts ? 'Enabled' : 'Disabled'}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <Link
-                                                href="/seller/settings"
-                                                className="inline-flex items-center gap-2 mt-4 text-sm text-[#00FF89] hover:text-[#00FF89]/80 transition-colors">
-                                                <Settings className="w-4 h-4" />
-                                                Manage Settings
-                                            </Link>
-                                        </div>
-                                        <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6">
-                                            <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Performance</h2>
-                                            <div className="space-y-4">
-                                                <div className="flex items-center justify-between">
-                                                    <div>
-                                                        <p className="text-2xl sm:text-3xl font-bold text-white">{stats?.profileViews || 0}</p>
-                                                        <p className="text-xs sm:text-sm text-gray-400">Profile Views</p>
-                                                    </div>
-                                                    <Eye className="w-8 h-8 text-gray-600" />
-                                                </div>
-                                                <div className="pt-4 border-t border-gray-800">
-                                                    <p className="text-xs text-gray-500 mb-2">This Month</p>
-                                                    <div className="flex items-center gap-2">
-                                                        <TrendingUp className="w-4 h-4 text-green-400" />
-                                                        <span className="text-sm text-green-400">+18.2%</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </aside>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </main>
-            </div>
-
-            <CommissionOfferModal
-                isOpen={showCounterOfferModal}
-                onClose={() => setShowCounterOfferModal(false)}
-                currentOffer={sellerProfile?.commissionOffer?.rate}
-                onSubmit={handleCounterOffer}
-            />
-            <DocumentUploadModal
-                isOpen={showDocumentUpload}
-                onClose={() => setShowDocumentUpload(false)}
-                onSuccess={() => {
-                    setShowDocumentUpload(false)
-                    fetchSellerData()
-                }}
-            />
-
-            {showSuccessAnimation && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-[#1a1a1a] border border-[#00FF89]/30 rounded-2xl p-8 max-w-sm w-full mx-4 text-center transform animate-bounce-in">
-                        <div className="w-20 h-20 bg-[#00FF89]/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <CheckCircle className="w-10 h-10 text-[#00FF89]" />
-                        </div>
-                        <h3 className="text-2xl font-bold text-white mb-2">Offer Accepted!</h3>
-                        <p className="text-gray-400">Commission agreement finalized at {sellerProfile.commissionOffer?.rate}%</p>
-                    </div>
-                </div>
-            )}
-
-            <style jsx>{`
-                @keyframes slideIn {
-                    from {
-                        width: 0;
-                    }
-                    to {
-                        width: 100%;
-                    }
-                }
-
-                @keyframes bounce-in {
-                    0% {
-                        opacity: 0;
-                        transform: scale(0.3);
-                    }
-                    50% {
-                        transform: scale(1.05);
-                    }
-                    70% {
-                        transform: scale(0.9);
-                    }
-                    100% {
-                        opacity: 1;
-                        transform: scale(1);
-                    }
-                }
-
-                .animate-bounce-in {
-                    animation: bounce-in 0.6s ease-out;
-                }
-
-                .animation-delay-150 {
-                    animation-delay: 150ms;
-                }
-
-                .animation-delay-300 {
-                    animation-delay: 300ms;
-                }
-            `}</style>
-        </>
-    )
+          {/* RIGHT RAIL */}
+          <div className="col-span-12 xl:col-span-4 space-y-6">
+            {rightRail}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
+/* ========================= SIDEBAR IDENTITY ========================= */
+function SellerIdentity({ seller, verificationApproved }) {
+  return (
+    <Card className="h-full">
+      <CardHeader>
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 rounded-xl"
+               style={{ background: `linear-gradient(135deg, ${theme.colors.brand.primary}, ${theme.colors.brand.secondary})` }}/>
+          <div className="min-w-0">
+            <h3 className="truncate text-lg font-semibold text-white">{seller.fullName}</h3>
+            <p className="truncate text-sm" style={{ color: theme.colors.text.secondary.dark }}>{seller.email}</p>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center justify-between rounded-xl border border-[#2b2b2b] px-3 py-2">
+          <span className="text-sm" style={{ color: theme.colors.text.secondary.dark }}>Verification</span>
+          <div className="flex items-center gap-2">
+            {verificationApproved ? (
+              <>
+                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                <span className="text-sm text-white">Approved</span>
+              </>
+            ) : (
+              <>
+                <AlertCircle className="h-4 w-4 text-amber-400" />
+                <span className="text-sm text-white">Pending</span>
+              </>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+/* ========================= STATS (equal height + perfect align) ========================= */
+function StatTile({ title, value, sub, Icon, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="group h-full w-full rounded-2xl border border-[#2b2b2b] bg-[#1f1f1f] p-5 text-left transition-transform hover:-translate-y-0.5"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm" style={{ color: theme.colors.text.secondary.dark }}>{title}</p>
+          <p className="mt-1 truncate text-2xl font-bold text-white">{value}</p>
+          {sub ? <p className="mt-1 text-xs" style={{ color: theme.colors.text.secondary.dark }}>{sub}</p> : null}
+        </div>
+        <div className="rounded-xl p-3" style={{ backgroundColor: 'rgba(0,255,137,0.12)', color: theme.colors.brand.primary }}>
+          <Icon className="h-5 w-5" />
+        </div>
+      </div>
+    </button>
+  )
+}
+
+function StatsRow({ stats, onStatClick }) {
+  const avg = Number(stats.averageRating || 0)
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 h-full">
+      <StatTile title="Total Earnings" value={stats.formatted.totalEarnings} sub="All time" Icon={CreditCard} onClick={() => onStatClick('earnings')} />
+      <StatTile title="Total Sales" value={String(stats.totalSales)} sub="Orders completed" Icon={ShoppingCart} onClick={() => onStatClick('sales')} />
+      <StatTile title="Active Products" value={String(stats.totalProducts)} sub="Live in store" Icon={Package} onClick={() => onStatClick('products')} />
+      <StatTile title="Avg. Rating" value={avg.toFixed(1)} sub={`${stats.totalReviews} reviews`} Icon={Star} onClick={() => onStatClick('rating')} />
+    </div>
+  )
+}
+
+/* ========================= QUICK ACTIONS (equal tiles) ========================= */
+function QuickActions({ permissions }) {
+  const actions = [
+    { label: 'Products', icon: Package, href: '/seller/products', gradient: `linear-gradient(135deg, ${theme.colors.brand.primary}, #34d399)`, ok: permissions.canAddProducts, sub: 'Manage your products' },
+    { label: 'Orders', icon: ShoppingCart, href: '/seller/orders', gradient: 'linear-gradient(135deg,#a855f7,#ec4899)', ok: permissions.canManageOrders, sub: 'View and manage orders' },
+    { label: 'Analytics', icon: BarChart3, href: '/seller/analytics', gradient: 'linear-gradient(135deg,#3b82f6,#22d3ee)', ok: permissions.canViewAnalytics, sub: 'View detailed analytics' },
+    { label: 'Customers', icon: Users, href: '/seller/customers', gradient: `linear-gradient(135deg, ${theme.colors.brand.secondary}, #fb923c)`, ok: permissions.canViewAnalytics, sub: 'Manage relationships' }
+  ]
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+      {actions.map(a => {
+        const Tile = (
+          <Card key={a.label} className={`h-full ${a.ok ? 'hover:shadow-lg' : 'opacity-60'}`}>
+            <CardContent className="p-5 text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg" style={{ background: a.gradient }}>
+                <a.icon className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="mb-1 font-semibold text-white">{a.label}</h3>
+              <p className="text-xs" style={{ color: theme.colors.text.secondary.dark }}>
+                {a.ok ? a.sub : 'Complete verification first'}
+              </p>
+            </CardContent>
+          </Card>
+        )
+        return a.ok ? (
+          <Link key={a.label} href={a.href} className="block h-full">{Tile}</Link>
+        ) : (
+          <div key={a.label} className="h-full cursor-not-allowed">{Tile}</div>
+        )
+      })}
+    </div>
+  )
+}
+
+/* ========================= BUSINESS READINESS & METRICS ========================= */
+function BusinessReadiness({ permissions, seller }) {
+  const items = [
+    { label: 'Account Verified', done: !!permissions.isApproved },
+    { label: 'Commission Accepted', done: !!permissions.commissionAccepted || !!seller?.commissionOffer?.acceptedAt },
+    { label: 'First Product Added', done: (seller?.stats?.totalProducts ?? 0) > 0 },
+  ]
+  const completed = items.filter(i => i.done).length
+  return (
+    <Card>
+      <CardHeader><h3 className="text-lg font-semibold text-white">Business Readiness</h3></CardHeader>
+      <CardContent className="space-y-3">
+        {items.map(i => (
+          <div key={i.label} className="flex items-center justify-between rounded-xl border border-[#2b2b2b] px-3 py-2">
+            <span className="text-sm text-white">{i.label}</span>
+            {i.done ? <CheckCircle2 className="h-4 w-4 text-emerald-400" /> : <XCircle className="h-4 w-4 text-amber-400" />}
+          </div>
+        ))}
+        <div className="pt-1 text-sm" style={{ color: theme.colors.text.secondary.dark }}>{completed} of {items.length} completed</div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function MetricsCard({ stats }) {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-emerald-400" />
+          <h3 className="text-lg font-semibold text-white">Last 7 days performance</h3>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          {['Impressions','Clicks','CTR','ROAS'].map(k => (
+            <div key={k} className="rounded-xl border border-[#2b2b2b] p-4">
+              <p className="text-xs" style={{ color: theme.colors.text.secondary.dark }}>{k}</p>
+              <p className="mt-1 text-lg font-semibold text-white">{stats.metrics?.[k.toLowerCase()] ?? '—'}</p>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function PayoutInfo({ seller, formatCurrency }) {
+  if (!seller?.payoutInfo) return null
+  return (
+    <Card>
+      <CardHeader><h3 className="text-lg font-semibold text-white">Payout Information</h3></CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="text-sm" style={{ color: theme.colors.text.secondary.dark }}>Available Balance</span>
+          <span className="text-xl font-bold" style={{ color: theme.colors.brand.primary }}>
+            {formatCurrency(seller.stats?.totalEarnings || 0)}
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-sm" style={{ color: theme.colors.text.secondary.dark }}>Method</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm capitalize text-white">{seller.payoutInfo.method}</span>
+            {seller.payoutInfo.isVerified
+              ? <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-400">Verified</span>
+              : <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-400">Pending</span>}
+          </div>
+        </div>
+        {seller.payoutInfo.paypalEmail && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm" style={{ color: theme.colors.text.secondary.dark }}>PayPal</span>
+            <span className="max-w-[12rem] truncate text-sm text-white">{seller.payoutInfo.paypalEmail}</span>
+          </div>
+        )}
+      </CardContent>
+      <CardFooter>
+        <Link href="/seller/payouts"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#00FF8955] px-4 py-2 font-medium"
+              style={{ color: theme.colors.brand.primary }}>
+          <CreditCard className="h-4 w-4" /> Manage Payouts
+        </Link>
+      </CardFooter>
+    </Card>
+  )
+}
+
+/* ========================= VERIFICATION ALERTS ========================= */
+function VerificationAlerts({ approved, seller, onUpload }) {
+  // Hide verification alerts if seller is approved OR in commission negotiation phase
+  const shouldHideAlerts = approved || 
+    seller?.verification?.status === 'commission_offered' ||
+    seller?.verification?.status === 'approved'
+  
+  if (shouldHideAlerts) return null
+  
+  // Show different messages based on verification status
+  const getAlertContent = () => {
+    switch (seller?.verification?.status) {
+      case 'pending':
+        return {
+          title: 'Complete Your Verification',
+          message: 'Upload KYC documents and complete business verification to unlock product listing and analytics.',
+          showUploadButton: true
+        }
+      case 'under_review':
+        return {
+          title: 'Verification Under Review',
+          message: 'Your documents are being reviewed by our team. We\'ll update you within 24-48 hours.',
+          showUploadButton: false
+        }
+      case 'rejected':
+        return {
+          title: 'Verification Rejected',
+          message: seller?.verification?.feedback || 'Your verification was rejected. Please resubmit with correct documents.',
+          showUploadButton: true
+        }
+      default:
+        return {
+          title: 'Complete Your Verification',
+          message: 'Upload KYC documents and complete business verification to unlock product listing and analytics.',
+          showUploadButton: true
+        }
+    }
+  }
+
+  const alertContent = getAlertContent()
+  
+  return (
+    <Card className="border-amber-500/20">
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <AlertCircle className="h-5 w-5 text-amber-400" />
+          <h3 className="text-lg font-semibold text-white">{alertContent.title}</h3>
+        </div>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm" style={{ color: theme.colors.text.secondary.dark }}>
+          {alertContent.message}
+        </p>
+        <div className="flex flex-wrap gap-3">
+          {alertContent.showUploadButton && (
+            <button onClick={onUpload}
+                    className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium"
+                    style={{ backgroundColor: theme.colors.brand.primary, color: theme.colors.brand.primaryText }}>
+              <FileText className="h-4 w-4" /> Upload Documents
+            </button>
+          )}
+          <Link href="/seller/verification" className="text-sm underline text-white">View Requirements</Link>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+/* ========================= COMMISSION NEGOTIATION ========================= */
+const CommissionNegotiation = ({ negotiationState, onAccept, onCounterOffer }) => {
+  const [counterOfferRate, setCounterOfferRate] = useState('')
+  const [counterOfferReason, setCounterOfferReason] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const isWaitingForAdmin = negotiationState?.status === 'counter_offered' && negotiationState?.lastOfferedBy === 'seller'
+  const isWaitingForSeller = negotiationState?.status === 'counter_offered' && negotiationState?.lastOfferedBy === 'admin'
+  const isPendingOffer = negotiationState?.status === 'pending'
+
+  const handleCounterOffer = async () => {
+    if (!counterOfferRate || !counterOfferReason) return
+    
+    setIsSubmitting(true)
+    try {
+      await onCounterOffer(parseFloat(counterOfferRate), counterOfferReason)
+      setCounterOfferRate('')
+      setCounterOfferReason('')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <Card className="border-yellow-500/20 bg-yellow-500/5">
+      <CardContent className="p-6">
+        <div className="flex items-start space-x-3">
+          <div className="flex-shrink-0">
+            <Clock className="h-6 w-6 text-yellow-400" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-medium text-white mb-2">
+              Commission Rate Negotiation
+            </h3>
+            
+            {isWaitingForAdmin ? (
+              <div className="space-y-3">
+                <p className="text-white">
+                  Your counter offer of <span className="font-semibold text-yellow-400">{negotiationState.counterOffer?.rate}%</span> has been submitted.
+                </p>
+                <p className="text-sm" style={{ color: theme.colors.text.secondary.dark }}>
+                  Reason: {negotiationState.counterOffer?.reason}
+                </p>
+                <div className="flex items-center space-x-2 text-yellow-400">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-400"></div>
+                  <span className="text-sm">Waiting for admin response...</span>
+                </div>
+              </div>
+            ) : isWaitingForSeller ? (
+              <div className="space-y-4">
+                <p className="text-white">
+                  Admin has offered a commission rate of <span className="font-semibold text-yellow-400">{negotiationState.currentRate}%</span>
+                </p>
+                <p className="text-sm" style={{ color: theme.colors.text.secondary.dark }}>
+                  Negotiation Round: {negotiationState.negotiationRound}
+                </p>
+                
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => onAccept(negotiationState.currentRate)}
+                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  >
+                    Accept {negotiationState.currentRate}%
+                  </button>
+                  <button
+                    onClick={() => document.getElementById('counter-offer-form').style.display = 'block'}
+                    className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors"
+                  >
+                    Counter Offer
+                  </button>
+                </div>
+
+                <div id="counter-offer-form" className="hidden space-y-3 pt-4 border-t border-yellow-500/20">
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-1">
+                      Your Counter Offer Rate (%)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="50"
+                      step="0.5"
+                      value={counterOfferRate}
+                      onChange={(e) => setCounterOfferRate(e.target.value)}
+                      className="w-full px-3 py-2 border border-[#2b2b2b] bg-[#1f1f1f] text-white rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      placeholder="Enter rate"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-1">
+                      Reason for Counter Offer
+                    </label>
+                    <textarea
+                      value={counterOfferReason}
+                      onChange={(e) => setCounterOfferReason(e.target.value)}
+                      className="w-full px-3 py-2 border border-[#2b2b2b] bg-[#1f1f1f] text-white rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      rows="3"
+                      placeholder="Explain why you're requesting this rate"
+                    />
+                  </div>
+                  
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={handleCounterOffer}
+                      disabled={!counterOfferRate || !counterOfferReason || isSubmitting}
+                      className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isSubmitting ? 'Submitting...' : 'Submit Counter Offer'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        document.getElementById('counter-offer-form').style.display = 'none'
+                        setCounterOfferRate('')
+                        setCounterOfferReason('')
+                      }}
+                      className="px-4 py-2 bg-[#2b2b2b] text-white rounded-md hover:bg-[#404040] transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : isPendingOffer ? (
+              <div className="space-y-3">
+                <p className="text-white">
+                  Your verification is complete. Admin will offer a commission rate soon.
+                </p>
+                <div className="flex items-center space-x-2 text-yellow-400">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-400"></div>
+                  <span className="text-sm">Waiting for commission offer...</span>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-white">
+                  Commission negotiation in progress...
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+/* ========================= UPLOAD MODAL ========================= */
+function DocumentUploadModal({ open, onClose, onSuccess }) {
+  const [uploading, setUploading] = useState(false)
+  const [files, setFiles] = useState({ identityProof: null, businessProof: null, taxDocument: null })
+  if (!open) return null
+
+  const submit = async () => {
+    try {
+      if (!files.identityProof && !files.businessProof && !files.taxDocument) {
+        toast.error('Please select at least one document'); return
+      }
+      setUploading(true)
+      const fd = new FormData()
+      if (files.identityProof) fd.append('identityProof', files.identityProof)
+      if (files.businessProof) fd.append('businessProof', files.businessProof)
+      if (files.taxDocument) fd.append('taxDocument', files.taxDocument)
+      await sellerAPI.submitVerification(fd)
+      toast.success('Documents submitted for verification')
+      onSuccess()
+    } catch (e) {
+      toast.error(e?.message || 'Upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4">
+      <div className="w-full max-w-md rounded-2xl border border-[#2b2b2b] bg-[#1f1f1f] p-6">
+        <h3 className="text-xl font-semibold text-white">Upload Documents</h3>
+        <p className="mt-1 text-sm" style={{ color: theme.colors.text.secondary.dark }}>PAN / GST / Business Proof</p>
+        <div className="mt-4 grid gap-3">
+          {['identityProof','businessProof','taxDocument'].map(key => (
+            <label key={key} className="block text-sm text-white">
+              {key.replace(/([A-Z])/g,' $1')}
+              <input type="file" accept="image/*,application/pdf"
+                     onChange={(e)=>setFiles(f=>({...f,[key]:e.target.files?.[0]||null}))}
+                     className="mt-1 w-full rounded-lg border border-[#2b2b2b] bg-[#1f1f1f] px-3 py-2 text-sm text-white"/>
+            </label>
+          ))}
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <button onClick={onClose} className="rounded-lg border border-[#2b2b2b] px-4 py-2 text-sm text-white">Cancel</button>
+            <button onClick={submit} disabled={uploading}
+                    className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-60"
+                    style={{ backgroundColor: theme.colors.brand.primary, color: theme.colors.brand.primaryText }}>
+              {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+              Upload
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ========================= DATA HOOK (sellerAPI) ========================= */
+function useSellerDashboard() {
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [selectedCurrency, setSelectedCurrency] = useState('INR')
+  const [seller, setSeller] = useState(null)
+  const [stats, setStats] = useState({ totalEarnings: 0, totalSales: 0, totalProducts: 0, averageRating: 0, totalReviews: 0, formatted: { totalEarnings: '₹0' }, metrics: {} })
+  const [permissions, setPermissions] = useState({ isApproved: false, commissionAccepted: false, canAddProducts: false, canManageOrders: false, canViewAnalytics: false })
+  const [negotiationState, setNegotiationState] = useState(null)
+  const [processingOffer, setProcessingOffer] = useState(false)
+
+  const load = useCallback(async () => {
+    try {
+      setLoading(true)
+      const profile = await sellerAPI.getProfile()
+      const d = profile?.data || profile || {}
+      // Fix: Include commission_offered as approved status since verification is complete at that stage
+      const isApproved = d?.verification?.status === 'approved' || d?.verification?.status === 'commission_offered'
+      // Fix: Only check commission offer status, not revenue share agreement
+      const commissionAccepted = d?.commissionOffer?.status === 'accepted'
+
+      setSeller({
+        fullName: d.fullName,
+        email: d.email,
+        bio: d.bio,
+        payoutInfo: {
+          method: d?.payoutInfo?.method || 'bank transfer',
+          paypalEmail: d?.payoutInfo?.paypalEmail || '',
+          isVerified: !!d?.payoutInfo?.isVerified,
+        },
+        commissionOffer: { acceptedAt: d?.commissionOffer?.acceptedAt || null, rate: d?.commissionOffer?.rate ?? 10 },
+        revenueShareAgreement: { accepted: d?.revenueShareAgreement?.accepted ?? false },
+        verification: {
+          status: d?.verification?.status || 'pending',
+          submittedAt: d?.verification?.submittedAt || null,
+          documents: d?.verification?.documents || [],
+          feedback: d?.verification?.feedback || null,
+        },
+        completionPercentage: d?.completionPercentage || 0,
+      })
+
+      setStats({
+        totalEarnings: d?.stats?.totalEarnings ?? 0,
+        totalSales: d?.stats?.totalSales ?? 0,
+        totalProducts: d?.stats?.totalProducts ?? 0,
+        averageRating: d?.stats?.averageRating ?? 0,
+        totalReviews: d?.stats?.totalReviews ?? 0,
+        formatted: {
+          totalEarnings: new Intl.NumberFormat('en-IN', { style: 'currency', currency: selectedCurrency, maximumFractionDigits: 0 })
+            .format(d?.stats?.totalEarnings ?? 0)
+        },
+        metrics: { impressions: '—', clicks: '—', ctr: '—', roas: '—' }
+      })
+
+      setPermissions({
+        isApproved,
+        commissionAccepted,
+        canAddProducts: isApproved && commissionAccepted, // Only allow products after commission is accepted
+        canManageOrders: isApproved && commissionAccepted,
+        canViewAnalytics: isApproved && commissionAccepted
+      })
+
+      // Fix the commission negotiation state logic
+      const hasCommissionOffer = d?.verification?.status === 'commission_offered'
+      const commissionStatus = d?.commissionOffer?.status
+      const commissionAcceptedAt = d?.commissionOffer?.acceptedAt
+      
+      // Show negotiation if there's an offer and it hasn't been accepted yet
+      const shouldShowNegotiation = hasCommissionOffer && !commissionAcceptedAt && commissionStatus !== 'accepted'
+
+      setNegotiationState(shouldShowNegotiation ? {
+        isAccepted: false,
+        currentRate: d?.commissionOffer?.rate || 10,
+        negotiationRound: d?.commissionOffer?.negotiationRound || 1,
+        lastOfferedBy: d?.commissionOffer?.lastOfferedBy || 'admin',
+        status: d?.commissionOffer?.status || 'pending',
+        counterOffer: d?.commissionOffer?.counterOffer || null
+      } : null)
+
+      setError(null)
+    } catch (e) {
+      setError({ message: e?.message || 'Failed to load seller profile' })
+    } finally {
+      setLoading(false)
+    }
+  }, [selectedCurrency])
+
+  useEffect(() => { load() }, [load])
+
+  const formatCurrency = useCallback((amount) => {
+    try {
+      return new Intl.NumberFormat('en-IN', { style: 'currency', currency: selectedCurrency, maximumFractionDigits: 0 }).format(amount)
+    } catch { return `₹${Math.round(amount).toLocaleString('en-IN')}` }
+  }, [selectedCurrency])
+
+  const accept = async () => {
+    try { setProcessingOffer(true); await sellerAPI.acceptCommissionOffer(); toast.success('Offer accepted'); await load(); return true }
+    catch (e) { toast.error(e?.message || 'Accept failed'); return false }
+    finally { setProcessingOffer(false) }
+  }
+  const counter = async ({ rate, reason }) => {
+    try { await sellerAPI.submitCounterOffer({ rate, reason }); return true }
+    catch (e) { toast.error(e?.message || 'Counter failed'); return false }
+  }
+  const reject = async (reason) => {
+    try { await sellerAPI.rejectCommissionOffer(reason || 'Not viable'); toast.message('Offer rejected'); return true }
+    catch (e) { toast.error(e?.message || 'Reject failed'); return false }
+  }
+
+  const refresh = async () => { await load() }
+
+  return {
+    seller, loading, error, stats, selectedCurrency, setSelectedCurrency, formatCurrency,
+    verificationStatus: { isApproved: permissions.isApproved },
+    negotiationState, permissions,
+    handleAcceptOffer: accept, handleCounterOffer: counter, handleRejectOffer: reject,
+    processingOffer, refresh
+  }
+}
+
+/* ========================= CURRENCY ========================= */
+function CurrencySelector({ selectedCurrency, onChange }) {
+  const currencies = useMemo(() => [
+    { code: 'USD', label: 'USD ($)' }, { code: 'INR', label: 'INR (₹)' }, { code: 'EUR', label: 'EUR (€)' },
+    { code: 'GBP', label: 'GBP (£)' }, { code: 'AUD', label: 'AUD (A$)' }, { code: 'CAD', label: 'CAD (C$)' },
+    { code: 'SGD', label: 'SGD (S$)' }, { code: 'AED', label: 'AED' },
+  ], [])
+  return (
+    <div className="relative">
+      <select
+        value={selectedCurrency}
+        onChange={(e)=>onChange(e.target.value)}
+        className="appearance-none border border-[#374151] bg-[#1f1f1f] px-3 py-2 pr-8 text-sm text-white rounded-lg focus:outline-none"
+      >
+        {currencies.map(c => <option key={c.code} value={c.code} className="bg-[#1f1f1f] text-white">{c.label}</option>)}
+      </select>
+      <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">
+        <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+    </div>
+  )
+}
+
+/* ========================= PAGE ========================= */
+export default function SellerProfile() {
+  const router = useRouter()
+  const {
+    seller, loading, error, stats, selectedCurrency, setSelectedCurrency, formatCurrency,
+    verificationStatus, negotiationState, permissions,
+    handleAcceptOffer, handleCounterOffer, handleRejectOffer, processingOffer, refresh
+  } = useSellerDashboard()
+
+  const [showUpload, setShowUpload] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [showCounterOfferModal, setShowCounterOfferModal] = useState(false)
+
+  const onAccept = async () => {
+    const ok = await handleAcceptOffer()
+    if (ok) { setShowSuccess(true); setTimeout(()=>setShowSuccess(false), 1300) }
+  }
+  const onCounter = async (data) => { const ok = await handleCounterOffer(data); if (ok) toast.success('Counter offer submitted') }
+  const onReject = async (reason) => { const ok = await handleRejectOffer(reason); if (ok) toast.success('Offer rejected') }
+
+  const handleStatClick = (k) => {
+    const r = { earnings: '/seller/analytics?tab=earnings', sales: '/seller/orders', products: '/seller/products', rating: '/seller/analytics?tab=reviews' }
+    if (permissions.canViewAnalytics && r[k]) router.push(r[k])
+  }
+
+  const onUploadSuccess = () => {
+    setShowUpload(false)
+    refresh()
+  }
+
+  // Priority logic: Show verification alert first, then commission negotiation
+  const shouldShowVerificationAlert = !verificationStatus.isApproved
+  const shouldShowCommissionNegotiation = !shouldShowVerificationAlert && negotiationState
+
+  if (loading) {
+    return (
+      <div className="min-h-screen" style={{ backgroundColor: theme.colors.background.dark }}>
+        <div className="mx-auto w-full max-w-[120rem] px-3 sm:px-6 lg:px-8 py-10">
+          <div className="grid grid-cols-12 gap-3 sm:gap-4 lg:gap-6">
+            {[...Array(6)].map((_,i)=>(
+              <div key={i} className={`col-span-12 ${i<2?'lg:col-span-6':'lg:col-span-4'} h-28 rounded-2xl animate-pulse`} style={{ background:'rgba(255,255,255,0.06)' }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !seller) {
+    return (
+      <div className="min-h-screen grid place-items-center" style={{ backgroundColor: theme.colors.background.dark }}>
+        <div className="text-center">
+          <AlertCircle className="mx-auto mb-4 h-16 w-16 text-red-500" />
+          <h1 className="mb-2 text-2xl font-bold text-white">{error ? 'Error Loading Profile' : 'No Seller Profile Found'}</h1>
+          <p className="mb-6" style={{ color: theme.colors.text.secondary.dark }}>
+            {error ? error.message : 'You need to create a seller profile first.'}
+          </p>
+          <Link href="/become-seller"
+                className="inline-flex items-center gap-2 rounded-lg px-6 py-3 font-semibold"
+                style={{ backgroundColor: theme.colors.brand.primary, color: theme.colors.brand.primaryText }}>
+            <Plus className="h-5 w-5" /> Create Seller Profile
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  /* --------- HEADER (sticky, compact) --------- */
+  const header = (
+    <div className="sticky top-0 z-40 border-b border-[#374151] backdrop-blur-sm"
+         style={{ backgroundColor: 'rgba(31,31,31,0.85)' }}>
+      <div className="mx-auto flex w-full max-w-[120rem] items-center justify-between px-3 sm:px-6 lg:px-8 py-3">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Welcome back, {seller.fullName}</h1>
+          <p className="text-sm" style={{ color: theme.colors.text.secondary.dark }}>Manage your seller dashboard</p>
+        </div>
+        <div className="flex items-center gap-3 sm:gap-4">
+          <CurrencySelector selectedCurrency={selectedCurrency} onChange={setSelectedCurrency} />
+          <Link href="/seller/products/new"
+                className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium sm:px-4"
+                style={{ backgroundColor: theme.colors.brand.primary, color: theme.colors.brand.primaryText }}>
+            <Plus className="h-4 w-4" /><span className="hidden sm:inline">Add Product</span><span className="sm:hidden">Add</span>
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+
+  /* --------- SIDEBAR + STATS ROW --------- */
+  const sidebar = <SellerIdentity seller={seller} verificationApproved={verificationStatus.isApproved} />
+  const statsRow = <StatsRow stats={stats} onStatClick={handleStatClick} />
+
+  /* --------- MAIN CONTENT --------- */
+  const main = (
+    <>
+      {/* Priority notification display - only show one at a time */}
+      {shouldShowVerificationAlert && (
+        <VerificationAlerts 
+          approved={verificationStatus.isApproved} 
+          seller={seller}
+          onUpload={() => setShowUpload(true)} 
+        />
+      )}
+
+      {shouldShowCommissionNegotiation && (
+        <CommissionNegotiation
+          negotiationState={negotiationState}
+          onAccept={onAccept}
+          onCounterOffer={onCounter}
+        />
+      )}
+
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold text-white">Quick Actions</h2>
+        <QuickActions permissions={permissions} />
+      </section>
+
+      <Card>
+        <CardHeader><h3 className="text-lg font-semibold text-white">Recent Activity</h3></CardHeader>
+        <CardContent>
+          <p className="text-sm" style={{ color: theme.colors.text.secondary.dark }}>
+            Your recent orders, reviews, and payouts will appear here.
+          </p>
+        </CardContent>
+      </Card>
+    </>
+  )
+
+  /* --------- RIGHT RAIL --------- */
+  const rightRail = (
+    <>
+      <BusinessReadiness permissions={permissions} seller={{ commissionOffer: seller.commissionOffer, stats: { totalProducts: stats.totalProducts } }} />
+      <MetricsCard stats={stats} />
+      <PayoutInfo seller={seller} formatCurrency={formatCurrency} />
+    </>
+  )
+
+  return (
+    <div className={`${leagueSpartan.className} min-h-screen bg-[#0a0a0a] text-white`}>
+      <Head>
+        <title>Seller Dashboard - {seller.fullName} | Spyke AI</title>
+        <meta name="description" content={`Manage your AI tools, track sales, and grow your business on Spyke AI marketplace. ${seller.bio || ''}`} />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+        <link rel="canonical" href="https://spyke.ai/seller/profile" />
+      </Head>
+
+      <SellerShell header={header} sidebar={sidebar} statsRow={statsRow} rightRail={rightRail}>
+        {main}
+      </SellerShell>
+
+      <DocumentUploadModal open={showUpload} onClose={()=>setShowUpload(false)} onSuccess={onUploadSuccess} />
+
+      {showCounterOfferModal && (
+        <CounterOfferModal
+          open={showCounterOfferModal}
+          onClose={() => setShowCounterOfferModal(false)}
+          onSubmit={async (data) => {
+            const success = await handleCounterOffer(data)
+            if (success) {
+              setShowCounterOfferModal(false)
+              refresh()
+              toast.success('Counter offer submitted!')
+            }
+          }}
+          currentRate={negotiationState?.currentRate || 10}
+        />
+      )}
+
+      {showSuccess && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm animate-bounce rounded-2xl border border-emerald-500/30 bg-[#1f1f1f] p-8 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/20">
+              <svg className="h-8 w-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l-4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="mb-2 text-xl font-bold text-white">Offer Accepted!</h3>
+            <p className="text-gray-400">You can now start adding products and earning at {negotiationState?.currentRate}% commission</p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ========================= COUNTER OFFER MODAL ========================= */
+function CounterOfferModal({ open, onClose, onSubmit, currentRate }) {
+  const [rate, setRate] = useState('')
+  const [reason, setReason] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  if (!open) return null
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!rate || !reason) {
+      toast.error('Please fill in all fields')
+      return
+    }
+
+    const rateNum = parseFloat(rate)
+    if (isNaN(rateNum) || rateNum < 1 || rateNum > 50) {
+      toast.error('Please enter a valid commission rate between 1% and 50%')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      await onSubmit({ rate: rateNum, reason })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4">
+      <div className="w-full max-w-md rounded-2xl border border-[#2b2b2b] bg-[#1f1f1f] p-6">
+        <h3 className="text-xl font-semibold text-white">Submit Counter Offer</h3>
+        <p className="mt-1 text-sm" style={{ color: theme.colors.text.secondary.dark }}>
+          Current rate: {currentRate}%
+        </p>
+        
+        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">
+              Proposed Commission Rate (%)
+            </label>
+            <input
+              type="number"
+              value={rate}
+              onChange={(e) => setRate(e.target.value)}
+              min="1"
+              max="50"
+              step="0.1"
+              placeholder="e.g., 8.5"
+              className="w-full rounded-lg border border-[#2b2b2b] bg-[#1f1f1f] px-3 py-2 text-white placeholder-gray-400 focus:border-[#00FF89] focus:outline-none"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">
+              Reason for Counter Offer
+            </label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Explain why this rate works better for your business..."
+              rows={3}
+              className="w-full rounded-lg border border-[#2b2b2b] bg-[#1f1f1f] px-3 py-2 text-white placeholder-gray-400 focus:border-[#00FF89] focus:outline-none resize-none"
+              required
+            />
+          </div>
+          
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 rounded-lg border border-[#2b2b2b] px-4 py-2 text-sm text-white hover:bg-[#2b2b2b] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex-1 rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-60 transition-colors"
+              style={{ backgroundColor: theme.colors.brand.primary, color: theme.colors.brand.primaryText }}
+            >
+              {submitting ? 'Submitting...' : 'Submit Offer'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}

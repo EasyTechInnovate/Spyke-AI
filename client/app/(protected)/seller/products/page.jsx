@@ -1,16 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Package, Search, Filter, MoreVertical, Edit2, Trash2, Eye, FileJson, Send, Archive } from 'lucide-react'
+import { Plus, Package, Search, Filter, MoreVertical, Edit2, Trash2, Eye, FileJson, Send, Archive, AlertCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { productsAPI } from '@/lib/api'
 import toast from '@/lib/utils/toast'
 import { SpykeLogo } from '@/components/Logo'
+import { useSellerProfile } from '@/hooks/useSellerProfile'
 
 export default function SellerProductsPage() {
   const router = useRouter()
+  const { data: sellerProfile, loading: profileLoading } = useSellerProfile()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -21,9 +23,56 @@ export default function SellerProductsPage() {
     totalItems: 0
   })
 
+  // Check if seller is fully approved (both verification and commission)
+  const isVerificationApproved = sellerProfile?.verificationStatus === 'approved'
+  const isCommissionAccepted = sellerProfile?.commissionOffer?.status === 'accepted' && sellerProfile?.commissionOffer?.acceptedAt
+  const isFullyApproved = isVerificationApproved && isCommissionAccepted
+
+  // If seller is not fully approved, show restricted access message
+  if (!profileLoading && !isFullyApproved) {
+    return (
+      <div className="min-h-screen bg-[#121212] flex items-center justify-center">
+        <div className="max-w-md w-full mx-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
+            <AlertCircle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-white mb-2">Products Access Restricted</h2>
+            <p className="text-gray-400 mb-6">
+              You need to complete your seller approval process before you can manage products.
+            </p>
+            
+            {!isVerificationApproved && (
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 mb-4">
+                <p className="text-amber-300 text-sm">
+                  ⏳ Your documents are still being reviewed
+                </p>
+              </div>
+            )}
+            
+            {isVerificationApproved && !isCommissionAccepted && (
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-4">
+                <p className="text-blue-300 text-sm">
+                  💼 Please accept the commission offer to complete your approval
+                </p>
+              </div>
+            )}
+            
+            <Link
+              href="/seller/profile"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#00FF89] text-[#121212] rounded-lg hover:bg-[#00FF89]/90 transition-colors font-semibold"
+            >
+              Complete Approval Process
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   useEffect(() => {
-    fetchProducts()
-  }, [filterStatus, pagination.currentPage])
+    if (isFullyApproved) {
+      fetchProducts()
+    }
+  }, [filterStatus, pagination.currentPage, isFullyApproved])
 
   const fetchProducts = async () => {
     try {
@@ -224,7 +273,7 @@ export default function SellerProductsPage() {
                           View
                         </Link>
                         <Link
-                          href={`/seller/products/${product._id}/edit`}
+                          href={`/seller/products/${product.slug}/edit`}
                           className="flex items-center gap-2 px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white"
                         >
                           <Edit2 className="w-4 h-4" />

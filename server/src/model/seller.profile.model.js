@@ -517,4 +517,20 @@ sellerProfileSchema.statics.findByTool = function(tool) {
     })
 }
 
+sellerProfileSchema.methods.rejectCurrentCounterOffer = function(reason) {
+    if (this.commissionOffer.status !== 'counter_offered') {
+        throw new Error('No counter offer to reject')
+    }
+    // Do not change rate; revert status back to pending awaiting seller action
+    this.commissionOffer.status = 'pending'
+    this.commissionOffer.lastOfferedBy = 'admin'
+    this.commissionOffer.rejectionReason = reason
+    // Clear counter offer details
+    this.commissionOffer.counterOffer = {
+        rate: null,
+        reason: null,
+        submittedAt: null
+    }
+}
+
 export default mongoose.model('SellerProfile', sellerProfileSchema)

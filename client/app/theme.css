@@ -5,4 +5,18 @@
   --color-brand-primary: #00FF89;
   --color-brand-secondary: #FFC050;
   --color-brand-dark: #121212;
+  
+  /* Background Colors */
+  --bg-primary: #121212;
+  --bg-surface: #1f1f1f;
+  --bg-card: #1f1f1f;
+  
+  /* Text Colors */
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  
+  /* Brand Colors */
+  --brand-primary: #00FF89;
+  --brand-secondary: #FFC050;
+  --brand-accent: #121212;
 }

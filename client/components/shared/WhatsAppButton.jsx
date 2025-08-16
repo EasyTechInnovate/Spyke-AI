@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react'
 
 export default function WhatsAppButton() {
     const [isVisible, setIsVisible] = useState(false)
-    const phoneNumber = '+971' // Replace with actual number when provided
-    const message = encodeURIComponent('Hello! I need help with SpykeAI.')
     
     useEffect(() => {
         // Show button after a short delay
@@ -15,7 +13,7 @@ export default function WhatsAppButton() {
     
     const handleClick = () => {
         // WhatsApp API URL format
-        const whatsappUrl = `https://wa.me/${phoneNumber.replace(/[^0-9]/g, '')}?text=${message}`
+        const whatsappUrl = 'https://wa.link/7uwiza'
         window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
     }
     

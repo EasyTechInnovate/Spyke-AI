@@ -33,6 +33,4 @@ export const theme = {
       title: 'var(--font-league-spartan)',
       body: 'var(--font-kumbh-sans)',
     }
-  } as const;
-  
-  export type Theme = typeof theme;
+  }
