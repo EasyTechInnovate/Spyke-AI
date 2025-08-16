@@ -344,15 +344,16 @@ const CommissionNegotiation = ({ negotiationState, onAccept, onCounterOffer }) =
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const isWaitingForAdmin = negotiationState?.status === 'counter_offered' && negotiationState?.lastOfferedBy === 'seller'
-  const isWaitingForSeller = negotiationState?.status === 'counter_offered' && negotiationState?.lastOfferedBy === 'admin'
-  const isPendingOffer = negotiationState?.status === 'pending'
+  // Fix: Show commission offer when status is 'pending' AND there's actually a rate offered
+  const hasCommissionOffer = negotiationState?.status === 'pending' && negotiationState?.currentRate && negotiationState?.currentRate > 0
+  const isPendingOffer = negotiationState?.status === 'pending' && (!negotiationState?.currentRate || negotiationState?.currentRate === 0)
 
   const handleCounterOffer = async () => {
     if (!counterOfferRate || !counterOfferReason) return
     
     setIsSubmitting(true)
     try {
-      await onCounterOffer(parseFloat(counterOfferRate), counterOfferReason)
+      await onCounterOffer({ rate: parseFloat(counterOfferRate), reason: counterOfferReason })
       setCounterOfferRate('')
       setCounterOfferReason('')
     } finally {
@@ -385,7 +386,7 @@ const CommissionNegotiation = ({ negotiationState, onAccept, onCounterOffer }) =
                   <span className="text-sm">Waiting for admin response...</span>
                 </div>
               </div>
-            ) : isWaitingForSeller ? (
+            ) : hasCommissionOffer ? (
               <div className="space-y-4">
                 <p className="text-white">
                   Admin has offered a commission rate of <span className="font-semibold text-yellow-400">{negotiationState.currentRate}%</span>
@@ -396,7 +397,7 @@ const CommissionNegotiation = ({ negotiationState, onAccept, onCounterOffer }) =
                 
                 <div className="flex space-x-3">
                   <button
-                    onClick={() => onAccept(negotiationState.currentRate)}
+                    onClick={() => onAccept()}
                     className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
                   >
                     Accept {negotiationState.currentRate}%

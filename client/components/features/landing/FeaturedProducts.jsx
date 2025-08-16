@@ -6,30 +6,13 @@ import { ArrowRight, Star, Eye, ShoppingCart, CheckCircle, Sparkles, Loader2 } f
 import Container from '@/components/shared/layout/Container'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
+import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 import SmoothProductCarousel from './featured/SmoothProductCarousel'
 import { useCart } from '@/hooks/useCart'
 import { useAuth } from '@/hooks/useAuth'
 import toast from '@/lib/utils/toast'
 import { useProducts } from '@/hooks/useProducts'
 import { featuredProductsDummy } from '@/data/featuredProductsDummy'
-
-// Sample Unsplash images to use as fallbacks
-const SAMPLE_IMAGES = [
-  'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1518779578993-ec3579fee39f?auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1526378722484-cc5c51084e88?auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80',
-]
-
-const getSampleImage = (product) => {
-  const key = String(product?._id || product?.id || product?.slug || product?.title || Math.random())
-  let hash = 0
-  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0
-  return SAMPLE_IMAGES[hash % SAMPLE_IMAGES.length]
-}
 
 const getBadgeForProduct = (product) => {
   // Determine badge based on product metrics
@@ -55,10 +38,7 @@ const getTypeDisplay = (type) => {
 const FeaturedProducts = memo(function FeaturedProducts() {
   const router = useRouter()
   
-  // Toggle dummy data automatically if API fails or returns no data
-  const [useDummy, setUseDummy] = useState(false)
-
-  // Prefer featured products
+  // Use only real API data - no dummy fallbacks
   const { products: featuredProducts, loading: loadingFeatured, error: errorFeatured } = useProducts({
     sortBy: 'popularity',
     sortOrder: 'desc',
@@ -67,7 +47,7 @@ const FeaturedProducts = memo(function FeaturedProducts() {
     isFeatured: 'true'
   })
 
-  // Fallback to popular verified products to guarantee at least 4
+  // Fallback to popular verified products
   const { products: popularProducts, loading: loadingPopular, error: errorPopular } = useProducts({
     sortBy: 'popularity',
     sortOrder: 'desc',
@@ -75,55 +55,15 @@ const FeaturedProducts = memo(function FeaturedProducts() {
     verifiedOnly: 'true'
   })
 
-  // Decide when to use dummy data
-  useEffect(() => {
-    // If either request errors and no data arrives, switch to dummy
-    const noFeatured = !featuredProducts || featuredProducts.length === 0
-    const noPopular = !popularProducts || popularProducts.length === 0
-
-    if ((errorFeatured && noFeatured) && (errorPopular && noPopular)) {
-      setUseDummy(true)
-      return
-    }
-
-    // If both finished loading and still nothing, use dummy
-    if (!loadingFeatured && !loadingPopular && (noFeatured && noPopular)) {
-      setUseDummy(true)
-      return
-    }
-  }, [errorFeatured, errorPopular, loadingFeatured, loadingPopular, featuredProducts, popularProducts])
-
-  // Optional: safety timeout if API is hanging too long
-  useEffect(() => {
-    if (useDummy) return
-    const timer = setTimeout(() => {
-      const noFeatured = !featuredProducts || featuredProducts.length === 0
-      const noPopular = !popularProducts || popularProducts.length === 0
-      if ((loadingFeatured || loadingPopular) && (noFeatured && noPopular)) {
-        setUseDummy(true)
-      }
-    }, 6000)
-    return () => clearTimeout(timer)
-  }, [useDummy, loadingFeatured, loadingPopular, featuredProducts, popularProducts])
-
-  // Choose data source (dummy vs API)
-  const sourceFeatured = useMemo(() => (
-    useDummy
-      ? featuredProductsDummy.filter(p => p.isFeatured)
-      : (featuredProducts || [])
-  ), [useDummy, featuredProducts])
-
-  const sourcePopular = useMemo(() => (
-    useDummy
-      ? featuredProductsDummy
-      : (popularProducts || [])
-  ), [useDummy, popularProducts])
+  // Choose real data source only
+  const sourceFeatured = featuredProducts || []
+  const sourcePopular = popularProducts || []
 
   const products = useMemo(() => {
-    // If we already have 4+ featured, use them
+    // If we have featured products, use them
     if ((sourceFeatured?.length || 0) >= 4) return sourceFeatured
 
-    // Otherwise, merge featured with popular to fill up to 4+ items
+    // Otherwise, merge featured with popular
     const mapId = (p) => p._id || p.id || p.slug
     const merged = []
     const seen = new Set()
@@ -145,8 +85,8 @@ const FeaturedProducts = memo(function FeaturedProducts() {
     return merged
   }, [sourceFeatured, sourcePopular])
 
-  const loading = useDummy ? false : (loadingFeatured || (products.length < 4 && loadingPopular))
-  const error = useDummy ? null : ((errorFeatured || errorPopular) && products.length === 0)
+  const loading = loadingFeatured || (products.length < 4 && loadingPopular)
+  const error = (errorFeatured || errorPopular) && products.length === 0
 
   const handleProductClick = (product) => {
     router.push(`/products/${product.slug || product.id || product._id}`)
@@ -279,12 +219,12 @@ const FeaturedProducts = memo(function FeaturedProducts() {
 
 function ProductCard({ product, onClick }) {
   const [imageLoaded, setImageLoaded] = useState(false)
-  const [imgSrc, setImgSrc] = useState(product.thumbnail || getSampleImage(product))
+  const [imgSrc, setImgSrc] = useState(product.thumbnail)
   const { addToCart } = useCart()
 
   useEffect(() => {
     setImageLoaded(false)
-    setImgSrc(product.thumbnail || getSampleImage(product))
+    setImgSrc(product.thumbnail)
   }, [product])
 
   const getBadgeColor = (badge) => {
@@ -329,7 +269,7 @@ function ProductCard({ product, onClick }) {
           )}
           
           {/* Actual image with fallback */}
-          <Image
+          <OptimizedImage
             src={imgSrc}
             alt={product.title}
             width={400}
@@ -339,12 +279,7 @@ function ProductCard({ product, onClick }) {
             }`}
             onLoad={() => setImageLoaded(true)}
             onError={() => {
-              const fallback = getSampleImage(product)
-              if (imgSrc !== fallback) {
-                setImgSrc(fallback)
-              } else {
-                setImageLoaded(true)
-              }
+              setImageLoaded(true)
             }}
             loading="lazy"
           />

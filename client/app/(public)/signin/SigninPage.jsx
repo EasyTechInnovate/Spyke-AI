@@ -283,7 +283,15 @@ export default function SignInPage() {
 
                                             {/* Enhanced password input */}
                                             <div className="space-y-1 sm:space-y-2">
-                                                <label className="block text-xs sm:text-sm font-bold text-gray-300 pl-1">Password</label>
+                                                <div className="flex items-center justify-between">
+                                                    <label className="block text-xs sm:text-sm font-bold text-gray-300 pl-1">Password</label>
+                                                    <Link
+                                                        href="/auth/forgot-password"
+                                                        className="text-xs sm:text-sm text-[#00FF89] hover:text-[#00D4FF] font-medium transition-colors hover:underline"
+                                                        disabled={loading}>
+                                                        Forgot password?
+                                                    </Link>
+                                                </div>
                                                 <div className="relative group">
                                                     <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-gray-400 group-focus-within:text-[#00FF89] transition-colors" />
                                                     <input

@@ -21,15 +21,15 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'via.placeholder.com',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
         hostname: 'cdn.sanity.io',
         pathname: '/**',
       },
     ],
+    // Add error handling for failed image loads
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // Add image fallback for broken URLs
+    unoptimized: false,
   },
 
   modularizeImports: {

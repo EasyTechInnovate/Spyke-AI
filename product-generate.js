@@ -161,7 +161,7 @@ function generateTools() {
     const tool = { name };
     
     // Add logo URL
-    tool.logo = `https://via.placeholder.com/40x40?text=${name.charAt(0)}`;
+    tool.logo = `https://placehold.co/40x40/1f1f1f/808080?text=${name.charAt(0)}`;
     
     // Sometimes add model (for AI tools)
     if (name.includes('GPT') || name.includes('Claude') || name.includes('Gemini')) {

@@ -23,7 +23,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { purchaseAPI } from '@/lib/api'
 import { toast } from 'sonner'
 import Link from 'next/link'
-import Image from 'next/image'
+import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 
 // Product type icons
 const typeIcons = {
@@ -260,7 +260,7 @@ function PurchaseCard({ purchase, onDownload }) {
       {/* Product Image */}
       <div className="aspect-video bg-gradient-to-br from-gray-800 to-gray-700 relative">
         {product.thumbnail ? (
-          <Image
+          <OptimizedImage
             src={product.thumbnail}
             alt={product.title}
             fill

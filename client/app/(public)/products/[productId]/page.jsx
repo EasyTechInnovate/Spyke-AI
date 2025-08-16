@@ -26,6 +26,7 @@ import productsAPI from '@/lib/api/products'
 import { promocodeAPI } from '@/lib/api'
 import toast from '@/lib/utils/toast'
 import { cn } from '@/lib/utils'
+import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 
 // Animation variants
 const fadeInUp = {
@@ -302,16 +303,18 @@ export default function ProductPage() {
   const handleReviewSubmit = useCallback(async (reviewData) => {
     try {
       await productsAPI.addReview(product._id, reviewData)
-      const response = await productsAPI.getProductBySlug(productSlug)
-      if (response.success && response.data) {
-        setProduct(response.data)
-      }
+      // Instead of refetching entire product, just update the reviews count locally
+      setProduct(prevProduct => ({
+        ...prevProduct,
+        totalReviews: (prevProduct.totalReviews || 0) + 1,
+        averageRating: prevProduct.averageRating // Keep existing rating for now
+      }))
       toast.success('Review submitted successfully!')
     } catch (error) {
       // Failed to submit review
       throw error
     }
-  }, [product?._id, productSlug])
+  }, [product?._id])
 
   const handleUpvote = useCallback(async () => {
     if (!isAuthenticated) {
@@ -328,10 +331,13 @@ export default function ProductPage() {
       setUpvoted(newUpvoted)
       await productsAPI.toggleUpvote(product._id, newUpvoted)
       
-      const response = await productsAPI.getProductBySlug(productSlug)
-      if (response.success && response.data) {
-        setProduct(response.data)
-      }
+      // Instead of refetching entire product, just update upvotes locally
+      setProduct(prevProduct => ({
+        ...prevProduct,
+        upvotes: newUpvoted 
+          ? (prevProduct.upvotes || 0) + 1 
+          : Math.max(0, (prevProduct.upvotes || 0) - 1)
+      }))
       
       toast.success(newUpvoted ? 'Upvoted!' : 'Removed upvote')
     } catch (error) {
@@ -341,7 +347,7 @@ export default function ProductPage() {
     } finally {
       setIsUpvoting(false)
     }
-  }, [isAuthenticated, upvoted, product, productSlug, requireAuth, isUpvoting])
+  }, [isAuthenticated, upvoted, product, requireAuth, isUpvoting])
 
   // Computed values
   const discountPercentage = useMemo(() => {
@@ -496,8 +502,8 @@ export default function ProductPage() {
                 >
                   {/* Main Image with Enhanced UI */}
                   <div className="relative aspect-square bg-gray-900 rounded-2xl overflow-hidden group">
-                    <Image
-                      src={product.images?.[selectedImage] || product.thumbnail || '/placeholder.jpg'}
+                    <OptimizedImage
+                      src={product.images?.[selectedImage] || product.thumbnail}
                       alt={product.title}
                       fill
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -506,9 +512,6 @@ export default function ProductPage() {
                       quality={85}
                       placeholder="blur"
                       blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAf/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-                      onError={(e) => {
-                        e.currentTarget.src = '/placeholder.jpg'
-                      }}
                     />
                     
                     {/* Floating Badges */}
@@ -1248,8 +1251,8 @@ export default function ProductPage() {
                     >
                       <div className="bg-gray-900 rounded-xl overflow-hidden border border-gray-800 hover:border-brand-primary/50 transition-all h-full flex flex-col">
                         <div className="aspect-video relative overflow-hidden bg-gray-800">
-                          <Image
-                            src={relatedProduct.thumbnail || '/placeholder.jpg'}
+                          <OptimizedImage
+                            src={relatedProduct.thumbnail}
                             alt={relatedProduct.title}
                             fill
                             className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -1310,8 +1313,8 @@ export default function ProductPage() {
                   <div className="py-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 relative rounded-lg overflow-hidden bg-gray-800 hidden sm:block">
-                        <Image
-                          src={product.thumbnail || '/placeholder.jpg'}
+                        <OptimizedImage
+                          src={product.thumbnail}
                           alt={product.title}
                           fill
                           className="object-cover"

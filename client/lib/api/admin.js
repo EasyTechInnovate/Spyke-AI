@@ -49,6 +49,13 @@ export const adminAPI = {
                 const res = await apiClient.post(`v1/seller/admin/commission/accept-counter/${sellerId}`)
                 return res?.data
             },
+
+            // Admin makes counter offer back to seller
+            counterOffer: async (sellerId, rate) => {
+                const res = await apiClient.post(`v1/seller/admin/commission/counter-offer/${sellerId}`, { rate })
+                return res?.data
+            },
+
             reject: async (sellerId, reason) => {
                 const res = await apiClient.post(`v1/seller/admin/profile/reject/${sellerId}`, {reason})
                 return res?.data

@@ -1,8 +1,8 @@
 import { Star, CheckCircle, ShoppingCart, Eye } from 'lucide-react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useState, useMemo, memo } from 'react'
 import ImagePlaceholder from '@/components/shared/ui/ImagePlaceholder'
+import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 
 const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'grid' }) {
   const [imageLoaded, setImageLoaded] = useState(false)
@@ -34,7 +34,7 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
             {/* Image */}
             <div className="relative w-48 h-32 bg-gray-800 rounded-xl flex-shrink-0 overflow-hidden">
               {product.thumbnail ? (
-                <Image
+                <OptimizedImage
                   src={product.thumbnail}
                   alt={product.title}
                   fill
@@ -116,7 +116,7 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
             <div className="absolute inset-0 bg-gray-800 animate-pulse" />
           )}
           {product.thumbnail ? (
-            <Image
+            <OptimizedImage
               src={product.thumbnail}
               alt={product.title}
               fill

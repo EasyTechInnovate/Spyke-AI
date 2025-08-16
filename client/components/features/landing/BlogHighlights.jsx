@@ -6,51 +6,8 @@ import Container from '@/components/shared/layout/Container'
 import Link from 'next/link'
 import Image from 'next/image'
 
-// Mock blog data - in production, this would come from API/CMS
-const blogPosts = [
-  {
-    id: 1,
-    title: '5 AI Tools You Should Try Today',
-    excerpt: 'Discover the latest AI tools that can transform your workflow and boost productivity by 10x.',
-    image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600&h=400&fit=crop',
-    author: {
-      name: 'Alex Thompson',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop'
-    },
-    readTime: '5 min read',
-    date: 'Dec 15, 2024',
-    category: 'AI Tools',
-    tags: ['ChatGPT', 'Automation', 'Productivity']
-  },
-  {
-    id: 2,
-    title: 'Building Your First AI Agent: A Complete Guide',
-    excerpt: 'Step-by-step tutorial on creating intelligent agents that can handle complex tasks autonomously.',
-    image: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=600&h=400&fit=crop',
-    author: {
-      name: 'Sarah Johnson',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=50&h=50&fit=crop'
-    },
-    readTime: '8 min read',
-    date: 'Dec 12, 2024',
-    category: 'Tutorials',
-    tags: ['AI Agents', 'Development', 'Guide']
-  },
-  {
-    id: 3,
-    title: 'The Future of Work: AI and Automation Trends',
-    excerpt: 'Explore how AI is reshaping industries and what it means for professionals in 2025.',
-    image: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=600&h=400&fit=crop',
-    author: {
-      name: 'Michael Chen',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop'
-    },
-    readTime: '6 min read',
-    date: 'Dec 10, 2024',
-    category: 'Industry Insights',
-    tags: ['Future of Work', 'AI Trends', 'Automation']
-  }
-]
+// Removed dummy blog data - use real blog posts from your CMS/API instead
+const blogPosts = []
 
 export default function BlogHighlights() {
   return (

@@ -251,7 +251,7 @@ export default function EditProductPage() {
     const exists = formData.toolsUsed.some(t => t.name === tool.label)
     handleInputChange('toolsUsed', exists
       ? formData.toolsUsed.filter(t => t.name !== tool.label)
-      : [...formData.toolsUsed, { name: tool.label, logo: `https://via.placeholder.com/40x40?text=${encodeURIComponent(tool.label.charAt(0))}`, model: '', link: '' }])
+      : [...formData.toolsUsed, { name: tool.label, logo: `https://placehold.co/40x40/1f1f1f/808080?text=${encodeURIComponent(tool.label.charAt(0))}`, model: '', link: '' }])
   }
 
   if (loading || !formData) {

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import Image from 'next/image'
+import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 import { Plus, Minus, Package, Trash2, Heart } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { calculateDiscountPercentage, formatCurrency, getItemId } from '../utils'
@@ -104,7 +104,7 @@ function ProductImage({ item, discountPercentage, onClick }) {
             onClick={onClick}
         >
             {item.image || item.thumbnail ? (
-                <Image
+                <OptimizedImage
                     src={item.image || item.thumbnail}
                     alt={item.title}
                     width={128}

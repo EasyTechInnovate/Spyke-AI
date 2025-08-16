@@ -7,6 +7,7 @@ import { productsAPI } from '@/lib/api'
 import toast from '@/lib/utils/toast'
 import Image from 'next/image'
 import Link from 'next/link'
+import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 
 export default function PendingProductsPage() {
   const [products, setProducts] = useState([])
@@ -171,8 +172,8 @@ export default function PendingProductsPage() {
                 <div className="flex gap-6">
                   {/* Product Image */}
                   <div className="relative w-32 h-32 bg-gray-800 rounded-lg overflow-hidden flex-shrink-0">
-                    <Image
-                      src={product.thumbnail || 'https://via.placeholder.com/128x128?text=Product'}
+                    <OptimizedImage
+                      src={product.thumbnail}
                       alt={product.title}
                       fill
                       className="object-cover"

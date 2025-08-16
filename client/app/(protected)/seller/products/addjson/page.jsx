@@ -42,11 +42,11 @@ const SAMPLE_PRODUCT = {
     {
       name: "ChatGPT",
       model: "GPT-4",
-      logo: "https://via.placeholder.com/40x40?text=C"
+      logo: "https://placehold.co/40x40/1f1f1f/808080?text=C"
     },
     {
       name: "Zapier",
-      logo: "https://via.placeholder.com/40x40?text=Z"
+      logo: "https://placehold.co/40x40/1f1f1f/808080?text=Z"
     }
   ],
   setupTime: "under_1_hour",
@@ -344,7 +344,7 @@ export default function AddProductJsonPage() {
                         alt={parsedData.title}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          e.target.src = 'https://via.placeholder.com/800x600?text=Invalid+Image+URL'
+                          e.target.src = 'https://placehold.co/800x600/1f1f1f/808080?text=Invalid+Image+URL'
                         }}
                       />
                     </div>

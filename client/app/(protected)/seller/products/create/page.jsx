@@ -114,7 +114,7 @@ const ToolButton = ({ tool, formData, handleInputChange }) => {
         } else {
           handleInputChange('toolsUsed', [...formData.toolsUsed, { 
             name: tool.label, 
-            logo: `https://via.placeholder.com/40x40?text=${encodeURIComponent(tool.label.charAt(0))}`,
+            logo: `https://placehold.co/40x40/1f1f1f/808080?text=${encodeURIComponent(tool.label.charAt(0))}`,
             model: '',
             link: ''
           }])

@@ -43,7 +43,7 @@ export const authAPI = {
 
     // Account Confirmation
     confirmAccount: async (token, code) => {
-        const response = await apiClient.post(`v1/auth/confirmation/${token}`, { code })
+        const response = await apiClient.get(`v1/auth/confirmation/${token}?code=${code}`)
         return response?.data || response
     },
 

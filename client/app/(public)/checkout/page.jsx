@@ -29,7 +29,7 @@ import { toast } from 'sonner'
 import { useTrackEvent } from '@/hooks/useTrackEvent'
 import { ANALYTICS_EVENTS } from '@/lib/analytics/events'
 import Link from 'next/link'
-import Image from 'next/image'
+import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 
 
 export default function CheckoutPage() {
@@ -182,8 +182,8 @@ export default function CheckoutPage() {
         <Container>
           {/* Progress Steps */}
           <div className="max-w-3xl mx-auto mb-8">
-            <div className="flex items-center justify-between relative">
-              <div className="absolute left-0 right-0 top-5 h-0.5 bg-gray-800">
+            <div className="flex items-center justify-between relative px-4">
+              <div className="absolute left-8 right-8 top-5 h-0.5 bg-gray-800">
                 <div 
                   className="h-full bg-brand-primary transition-all duration-300"
                   style={{ width: `${(step - 1) * 100}%` }}
@@ -194,18 +194,20 @@ export default function CheckoutPage() {
                 { num: 1, label: 'Review Order' },
                 { num: 2, label: 'Payment' }
               ].map((s) => (
-                <div key={s.num} className="relative z-10 flex flex-col items-center">
+                <div key={s.num} className="relative z-10 flex flex-col items-center bg-black px-4">
                   <div className={`
                     w-10 h-10 rounded-full flex items-center justify-center font-semibold
-                    transition-all duration-300
+                    transition-all duration-300 border-2
                     ${step >= s.num 
-                      ? 'bg-brand-primary text-black' 
-                      : 'bg-gray-800 text-gray-400'
+                      ? 'bg-brand-primary text-black border-brand-primary' 
+                      : 'bg-gray-800 text-gray-400 border-gray-600'
                     }
                   `}>
                     {step > s.num ? <CheckCircle className="w-5 h-5" /> : s.num}
                   </div>
-                  <span className="text-xs mt-2 text-gray-400">{s.label}</span>
+                  <span className="text-xs mt-3 text-gray-400 whitespace-nowrap font-medium">
+                    {s.label}
+                  </span>
                 </div>
               ))}
             </div>
@@ -492,7 +494,7 @@ function ReviewStep({ cartItems, total, subtotal, discount, promocode }) {
               <div className="flex items-start gap-4">
                 {item.image && (
                   <div className="w-20 h-20 bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
-                    <Image
+                    <OptimizedImage
                       src={item.image}
                       alt={item.title}
                       width={80}

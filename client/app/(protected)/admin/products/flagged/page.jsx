@@ -124,7 +124,7 @@ export default function FlaggedProductsPage() {
                   {/* Product Image */}
                   <div className="relative w-32 h-32 bg-gray-800 rounded-lg overflow-hidden flex-shrink-0">
                     <Image
-                      src={product.thumbnail || 'https://via.placeholder.com/128x128?text=Product'}
+                      src={product.thumbnail || 'https://placehold.co/128x128/1f1f1f/808080?text=Product'}
                       alt={product.title}
                       fill
                       className="object-cover"

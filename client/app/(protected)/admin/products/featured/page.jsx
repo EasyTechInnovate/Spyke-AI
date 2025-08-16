@@ -5,7 +5,7 @@ import { Package, Search, Star, StarOff, TrendingUp, DollarSign } from 'lucide-r
 import { motion } from 'framer-motion'
 import { productsAPI } from '@/lib/api'
 import toast from '@/lib/utils/toast'
-import Image from 'next/image'
+import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 import Link from 'next/link'
 
 export default function FeaturedProductsPage() {
@@ -124,8 +124,8 @@ export default function FeaturedProductsPage() {
             >
               {/* Product Image */}
               <div className="relative h-48 bg-gray-800">
-                <Image
-                  src={product.thumbnail || 'https://via.placeholder.com/400x300?text=Product'}
+                <OptimizedImage
+                  src={product.thumbnail || 'https://placehold.co/400x300/1f1f1f/808080?text=Product'}
                   alt={product.title}
                   fill
                   className="object-cover"
