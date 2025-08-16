@@ -2,6 +2,7 @@ import app from './app.js';
 import config from './config/config.js';
 import { initRateLimiter } from './config/rateLimiter.js';
 import databaseService from './service/database.service.js';
+import './service/email.service.js';
 import logger from './util/logger.js';
 
 const server = app.listen(config.server.port);

@@ -3,12 +3,12 @@
 
 # @userEmailAddress = admin@gmail.com
 # @userPassword = Q1e2r3s4
-@userEmailAddress = test3@gmail.com
+@userEmailAddress = test@gmail.com
 @userPassword = anand@123ANAND
 
 @accessToken = YOUR_JWT_TOKEN_HERE
-@token = 70018672-d952-4db8-bb1f-38123945eef4
-@code = 348225
+@token = 463101a5-d205-46a1-957d-b51160773444
+@code = 617969
 
 ###
 # Check Authentication Service Health
@@ -34,13 +34,7 @@ Content-Type: {{contentType}}
 
 ###
 # Account Confirmation
-POST {{baseUrl}}/auth/confirmation/{{token}}/?code={{code}}
-Content-Type: {{contentType}}
-
-{
-  "token": "confirmation_token_here",
-  "code": "123456"
-}
+GET {{baseUrl}}/auth/confirmation/{{token}}?code={{code}}
 
 ###
 # User Login
@@ -102,7 +96,7 @@ POST {{baseUrl}}/auth/reset-password
 Content-Type: {{contentType}}
 
 {
-  "token": "922eaeca-4482-4efa-bbd5-16207a2c999f",
+  "token": "37741dde-7884-4d4a-9000-452a21069ae1",
   "newPassword": "newPassword123",
   "confirmPassword": "newPassword123"
 }

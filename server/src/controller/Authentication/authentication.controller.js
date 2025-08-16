@@ -8,6 +8,8 @@ import config from '../../config/config.js'
 import userModel from '../../model/user.model.js'
 import refreshTokenModel from '../../model/refresh.token.model.js'
 import { notificationService } from '../../util/notification.js'
+import emailService from '../../service/email.service.js'
+import emailTemplates from '../../util/email.formatter.js'
 
 dayjs.extend(utc)
 
@@ -86,6 +88,24 @@ export default {
             const newUser = new userModel(userData)
             const savedUser = await newUser.save()
 
+            const confirmationUrl = `${config.client.url}/auth/confirm/${token}?code=${code}`
+            
+            const registrationEmail = emailTemplates.registration({
+                emailAddress: savedUser.emailAddress,
+                confirmationUrl
+            })
+
+            try {
+                await emailService.sendEmail(
+                    savedUser.emailAddress,
+                    registrationEmail.subject,
+                    registrationEmail.text,
+                    registrationEmail.html
+                )
+            } catch (emailError) {
+                console.error('Failed to send registration email:', emailError)
+            }
+
             await notificationService.sendToUser(
                 savedUser._id,
                 'Welcome to Our Platform!',
@@ -140,6 +160,24 @@ export default {
             user.isActive = true
 
             await user.save()
+
+            const dashboardUrl = `${config.client.url}/dashboard`
+            
+            const confirmationEmail = emailTemplates.confirmation({
+                emailAddress: user.emailAddress,
+                dashboardUrl
+            })
+
+            try {
+                await emailService.sendEmail(
+                    user.emailAddress,
+                    confirmationEmail.subject,
+                    confirmationEmail.text,
+                    confirmationEmail.html
+                )
+            } catch (emailError) {
+                console.error('Failed to send confirmation email:', emailError)
+            }
 
             await notificationService.sendToUser(
                 user._id,
@@ -346,6 +384,25 @@ export default {
             user.passwordReset.expiry = resetExpiry
             await user.save()
 
+            const resetUrl = `${config.client.url}/auth/reset-password?token=${resetToken}`
+            
+            const forgotPasswordEmail = emailTemplates.forgotPassword({
+                emailAddress: user.emailAddress,
+                resetUrl,
+                resetToken
+            })
+
+            try {
+                await emailService.sendEmail(
+                    user.emailAddress,
+                    forgotPasswordEmail.subject,
+                    forgotPasswordEmail.text,
+                    forgotPasswordEmail.html
+                )
+            } catch (emailError) {
+                console.error('Failed to send forgot password email:', emailError)
+            }
+
             await notificationService.sendToUser(
                 user._id,
                 'Password Reset Requested',
@@ -378,6 +435,24 @@ export default {
             user.passwordReset.lastResetAt = dayjs().utc().toDate()
 
             await user.save()
+
+            const loginUrl = `${config.client.url}/auth/login`
+            
+            const resetPasswordEmail = emailTemplates.resetPassword({
+                emailAddress: user.emailAddress,
+                loginUrl
+            })
+
+            try {
+                await emailService.sendEmail(
+                    user.emailAddress,
+                    resetPasswordEmail.subject,
+                    resetPasswordEmail.text,
+                    resetPasswordEmail.html
+                )
+            } catch (emailError) {
+                console.error('Failed to send reset password email:', emailError)
+            }
 
             await notificationService.sendToUser(
                 user._id,

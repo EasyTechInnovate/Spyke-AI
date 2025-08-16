@@ -33,7 +33,7 @@
     "nodemailer": "^7.0.4",
     "rate-limiter-flexible": "^7.1.1",
     "razorpay": "^2.9.6",
-    "resend": "^4.6.0",
+    "resend": "^4.8.0",
     "source-map-support": "^0.5.21",
     "uuid": "^11.1.0",
     "winston": "^3.17.0",

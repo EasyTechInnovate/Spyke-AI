@@ -21,6 +21,10 @@ const config = {
             expiresIn: 3600 * 24 * 365
         }
     },
+    email: {
+        from: process.env.EMAIL_FROM || 'noreply@notifications.spykeai.com',
+        key: process.env.RESEND_API_KEY
+    },
     security: {
         corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
         rateLimitWindowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
