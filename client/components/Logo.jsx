@@ -23,30 +23,34 @@ export const SpykeLogo = ({
 }) => {
     // Use preset if provided, otherwise use size
     const logoSize = sizePreset ? LOGO_SIZES[sizePreset] : size
+    const [imageError, setImageError] = React.useState(false)
 
     return (
         <div className={`flex items-center ${showText ? 'space-x-3' : ''} ${className}`}>
             <div
                 className="relative flex-shrink-0 flex items-center justify-center"
                 style={{ width: logoSize, height: logoSize }}>
-                <Image
-                    src="/logo.svg"
-                    alt="Spyke AI Logo"
-                    width={logoSize}
-                    height={logoSize}
-                    priority={priority}
-                    className="logo-icon object-contain object-center block"
-                    draggable={false}
-                    onError={(e) => {
-                        // Fallback for missing logo
-                        e.currentTarget.style.display = 'none'
-                        e.currentTarget.parentElement.innerHTML = `
-              <div class="w-full h-full rounded-lg bg-gradient-to-br from-blue-500 to purple-600 flex items-center justify-center text-white font-bold">
-                ${showText ? 'S' : 'SA'}
-              </div>
-            `
-                    }}
-                />
+                {!imageError ? (
+                    <Image
+                        src="/logo.svg"
+                        alt="Spyke AI Logo"
+                        width={logoSize}
+                        height={logoSize}
+                        priority={priority}
+                        className="logo-icon object-contain object-center block"
+                        draggable={false}
+                        onError={() => {
+                            console.warn('Logo failed to load: /logo.svg')
+                            setImageError(true)
+                        }}
+                        onLoad={() => console.log('Logo loaded successfully: /logo.svg')}
+                    />
+                ) : (
+                    // Improved fallback design
+                    <div className="w-full h-full rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg">
+                        <span className="text-lg">SA</span>
+                    </div>
+                )}
             </div>
             {showText && (
                 <div className="flex flex-col justify-center">

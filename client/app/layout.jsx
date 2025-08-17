@@ -6,6 +6,7 @@ import { AnalyticsProvider } from '@/providers/AnalyticsProvider'
 import AnalyticsWrapper from '@/components/analytics/AnalyticsWrapper'
 import { fontVariables } from '@/lib/fonts'
 import WhatsAppButton from '@/components/shared/WhatsAppButton'
+import Footer from '@/components/shared/layout/Footer'
 
 const structuredData = {
     '@context': 'https://schema.org',
@@ -265,6 +266,7 @@ export default function RootLayout({ children }) {
 
                 <AnalyticsProvider>
                     <main id="main-content">{children}</main>
+                    <Footer />
                     <AnalyticsWrapper />
                     <WhatsAppButton />
                 </AnalyticsProvider>

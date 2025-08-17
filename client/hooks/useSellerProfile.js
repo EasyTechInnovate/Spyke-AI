@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from './useAuth'
-import api from '@/lib/api'
+import sellerAPI from '@/lib/api/seller'
 
 export const useSellerProfile = () => {
   const [data, setData] = useState(null)
@@ -17,8 +17,19 @@ export const useSellerProfile = () => {
 
       try {
         setLoading(true)
-        const response = await api.get('/seller/profile')
-        setData(response.data)
+        const response = await sellerAPI.getProfile()
+        
+        // Transform the raw API response to match the expected structure
+        const transformedData = {
+          ...response,
+          // Map verification status for consistency
+          verificationStatus: response?.verification?.status || 'pending',
+          // Add computed properties for easier access
+          isApproved: response?.verification?.status === 'approved',
+          isCommissionAccepted: response?.commissionOffer?.status === 'accepted' && response?.commissionOffer?.acceptedAt,
+        }
+        
+        setData(transformedData)
         setError(null)
       } catch (err) {
         console.error('Error fetching seller profile:', err)
@@ -37,8 +48,17 @@ export const useSellerProfile = () => {
     
     try {
       setLoading(true)
-      const response = await api.get('/seller/profile')
-      setData(response.data)
+      const response = await sellerAPI.getProfile()
+      
+      // Apply same transformation on refetch
+      const transformedData = {
+        ...response,
+        verificationStatus: response?.verification?.status || 'pending',
+        isApproved: response?.verification?.status === 'approved',
+        isCommissionAccepted: response?.commissionOffer?.status === 'accepted' && response?.commissionOffer?.acceptedAt,
+      }
+      
+      setData(transformedData)
       setError(null)
     } catch (err) {
       console.error('Error refetching seller profile:', err)

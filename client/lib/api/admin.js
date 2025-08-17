@@ -38,7 +38,7 @@ export const adminAPI = {
 
         // Commission Management
         commission: {
-            // Offer commission to seller
+            // Offer commission to seller (also handles admin counter offers)
             offer: async (sellerId, rate) => {
                 const res = await apiClient.post(`v1/seller/admin/commission/offer/${sellerId}`, { rate })
                 return res?.data
@@ -47,12 +47,6 @@ export const adminAPI = {
             // Accept counter offer from seller
             acceptCounter: async (sellerId) => {
                 const res = await apiClient.post(`v1/seller/admin/commission/accept-counter/${sellerId}`)
-                return res?.data
-            },
-
-            // Admin makes counter offer back to seller
-            counterOffer: async (sellerId, rate) => {
-                const res = await apiClient.post(`v1/seller/admin/commission/counter-offer/${sellerId}`, { rate })
                 return res?.data
             },
 

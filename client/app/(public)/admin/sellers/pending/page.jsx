@@ -362,12 +362,20 @@ export default function PendingSellersPage() {
         try {
             const hasCounter = !!selectedSeller?.commissionOffer?.counterOffer?.rate
             const counterRate = selectedSeller?.commissionOffer?.counterOffer?.rate
+
             if (hasCounter && commissionRate === counterRate) {
+                // Accept seller's exact counter offer rate
                 await adminAPI.sellers.commission.acceptCounter(selectedSeller._id)
                 toast.success(`Counter offer accepted (${counterRate}%)`)
             } else {
+                // Use the single offer endpoint - it handles both initial offers and admin counter offers
                 await adminAPI.sellers.commission.offer(selectedSeller._id, commissionRate)
-                toast.success(`Commission offer of ${commissionRate}% sent`)
+
+                if (hasCounter && commissionRate !== counterRate) {
+                    toast.success(`Counter offer of ${commissionRate}% sent to seller`)
+                } else {
+                    toast.success(`Commission offer of ${commissionRate}% sent`)
+                }
             }
             setShowCommissionModal(false)
             setSelectedSeller(null)
@@ -1508,6 +1516,9 @@ function SellerCard({ seller, onStartReview, onOpenCommission, onAcceptCounter, 
         return null
     })()
 
+    // For counter offered status, show both Accept Counter AND Counter Offer buttons
+    const showBothCounterActions = status === 'counter_offered' && hasCounter
+
     return (
         <div className="rounded-xl border border-gray-800 bg-[#171717] overflow-hidden">
             <div className="p-4 sm:p-5">
@@ -1583,9 +1594,30 @@ function SellerCard({ seller, onStartReview, onOpenCommission, onAcceptCounter, 
                             </InfoTip>
                         </div>
 
-                        {/* Row 2: Actions (fixed height). Always reserve space with a placeholder */}
+                        {/* Row 2: Actions (fixed height). Show both buttons for counter offers */}
                         <div className="flex items-center justify-end gap-2 h-10 mt-2">
-                            {primaryAction ? (
+                            {showBothCounterActions ? (
+                                <>
+                                    {/* Accept Counter Button */}
+                                    <ActionPrimary
+                                        onClick={primaryAction.onClick}
+                                        label="Accept"
+                                        sub={`Accept ${seller.commissionOffer.counterOffer.rate}%`}
+                                        icon={CheckCircle}
+                                    />
+                                    {/* Counter Offer Button */}
+                                    <button
+                                        type="button"
+                                        onClick={onOpenCommission}
+                                        className="px-3 py-1.5 bg-[#FFC050] text-[#121212] rounded-lg font-medium text-xs hover:bg-[#FFC050]/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFC050]/60"
+                                        title="Make counter offer">
+                                        <div className="flex items-center gap-1.5">
+                                            <Zap className="w-3.5 h-3.5" />
+                                            <span>Counter</span>
+                                        </div>
+                                    </button>
+                                </>
+                            ) : primaryAction ? (
                                 <ActionPrimary
                                     onClick={primaryAction.onClick}
                                     label={primaryAction.label}

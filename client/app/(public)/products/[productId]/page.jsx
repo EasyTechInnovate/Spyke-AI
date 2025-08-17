@@ -144,16 +144,24 @@ export default function ProductPage() {
         setLoading(true)
         setError(null)
         
+        console.log('Fetching product with slug:', productSlug)
         const response = await productsAPI.getProductBySlug(productSlug)
-        if (response.success && response.data) {
+        console.log('API Response:', response)
+        
+        if (response && response.data) {
           setProduct(response.data)
           setViewCount(response.data.views || 0)
           
           // Fetch related products
           if (response.data._id) {
-            const relatedResponse = await productsAPI.getRelatedProducts(response.data._id, 4)
-            if (relatedResponse.success && relatedResponse.data) {
-              setRelatedProducts(relatedResponse.data)
+            try {
+              const relatedResponse = await productsAPI.getRelatedProducts(response.data._id, 4)
+              if (relatedResponse && relatedResponse.data) {
+                setRelatedProducts(relatedResponse.data)
+              }
+            } catch (relatedError) {
+              console.warn('Failed to fetch related products:', relatedError)
+              // Don't fail the whole page if related products fail
             }
           }
           
@@ -175,15 +183,24 @@ export default function ProductPage() {
               })
               setAvailablePromocodes(applicablePromos)
             }
-          } catch (error) {
-            // Error fetching promocodes
+          } catch (promoError) {
+            console.warn('Failed to fetch promocodes:', promoError)
+            // Don't fail the whole page if promocodes fail
           }
         } else {
+          console.error('No product data in response:', response)
           setError('Product not found')
         }
       } catch (err) {
-        // Error fetching product
-        setError('Failed to load product')
+        console.error('Error fetching product:', err)
+        // Handle different types of errors
+        if (err.status === 404) {
+          setError('Product not found')
+        } else if (err.networkError) {
+          setError('Network error. Please check your connection.')
+        } else {
+          setError(err.message || 'Failed to load product')
+        }
       } finally {
         setLoading(false)
       }
