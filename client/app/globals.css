@@ -46,7 +46,7 @@ html {
 body {
   margin: 0;
   padding: 0;
-  font-family: var(--font-kumbh-sans);
+  font-family: var(--font-league-spartan);
   background-color: #121212;
   color: #ffffff;
 }
@@ -193,11 +193,17 @@ img {
 
 @keyframes shimmer {
   0% {
-    transform: translateX(-100%);
+    background-position: -200px 0;
   }
   100% {
-    transform: translateX(200%);
+    background-position: calc(200px + 100%) 0;
   }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
 }
 
 @keyframes toastPulse {
@@ -267,9 +273,29 @@ img {
 
 /* Focus States */
 :focus-visible {
-  outline: 2px solid var(--brand-primary);
-  outline-offset: 2px;
+  outline: 3px solid rgba(0, 255, 137, 0.95);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px rgba(0, 255, 137, 0.08);
 }
+
+/* Touch target helper: ensure minimum tappable size */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.35rem 0.6rem; /* gentle padding to meet size and maintain layout */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Strong contrast text for small labels (use on badges and tiny captions) */
+.text-contrast-strong {
+  color: #FFFFFF !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+}
+
+/* Make sure decorative SVGs don't leak semantics */
+.icon-decorative { aria-hidden: true; }
 
 /* Line Clamp Utilities */
 .line-clamp-1 {
@@ -715,6 +741,15 @@ input:focus, textarea:focus, select:focus {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;  /* Chrome, Safari and Opera */
+}
+
+/* Hide scrollbar utility for overflow containers */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 /* Print Styles */

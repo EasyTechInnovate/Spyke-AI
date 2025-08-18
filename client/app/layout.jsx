@@ -256,7 +256,7 @@ export default function RootLayout({ children }) {
             </head>
 
             <body
-                className={`font-body bg-brand-dark text-white antialiased min-h-screen`}
+                className={`font-league-spartan bg-brand-dark text-white antialiased min-h-screen`}
                 suppressHydrationWarning={true}>
                 <a
                     href="#main-content"

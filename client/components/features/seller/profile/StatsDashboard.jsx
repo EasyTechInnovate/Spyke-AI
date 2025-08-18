@@ -6,7 +6,7 @@ import { StatCard } from './Cards'
 export function StatsDashboard({ stats, loading, onStatClick }) {
   if (!stats && !loading) {
     return (
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[...Array(4)].map((_, i) => (
           <StatCard key={i} loading={true} />
         ))}
@@ -50,7 +50,7 @@ export function StatsDashboard({ stats, loading, onStatClick }) {
   ]
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {statItems.map((stat) => (
         <StatCard
           key={stat.key}
@@ -70,11 +70,11 @@ export function StatsDashboard({ stats, loading, onStatClick }) {
 export function PerformanceMetrics({ stats, loading }) {
   if (loading) {
     return (
-      <div className="space-y-4 animate-pulse">
-        <div className="h-6 w-32 bg-white/10 rounded"></div>
-        <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-3 sm:space-y-4 animate-pulse">
+        <div className="h-5 sm:h-6 w-24 sm:w-32 bg-white/10 rounded"></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-16 bg-white/10 rounded"></div>
+            <div key={i} className="h-14 sm:h-16 bg-white/10 rounded"></div>
           ))}
         </div>
       </div>
@@ -111,16 +111,16 @@ export function PerformanceMetrics({ stats, loading }) {
   ]
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-[--text-primary]">Performance</h3>
-      <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-3 sm:space-y-4">
+      <h3 className="text-base sm:text-lg font-semibold text-[--text-primary]">Performance</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         {metrics.map((metric, index) => (
-          <div key={index} className="p-3 rounded-lg bg-white/5">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-[--text-secondary]">{metric.label}</span>
-              <metric.icon className="w-3 h-3 text-[--text-secondary]" />
+          <div key={index} className="p-3 sm:p-4 rounded-lg bg-white/5">
+            <div className="flex items-center justify-between mb-1 sm:mb-2">
+              <span className="text-xs sm:text-sm text-[--text-secondary] truncate pr-2">{metric.label}</span>
+              <metric.icon className="w-3 h-3 sm:w-4 sm:h-4 text-[--text-secondary] flex-shrink-0" />
             </div>
-            <div className="text-lg font-bold text-[--text-primary]">{metric.value}</div>
+            <div className="text-base sm:text-lg font-bold text-[--text-primary] truncate">{metric.value}</div>
             {metric.trend && (
               <div className="flex items-center gap-1 mt-1">
                 <span className={`text-xs font-medium ${

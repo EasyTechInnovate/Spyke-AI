@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import FilterSidebar from './FilterSidebar'
+import { PRODUCT_TYPES, INDUSTRIES, SETUP_TIMES } from '@/data/explore/constants'
 
 export default function MobileFilterDrawer({ isOpen, onClose, filters, categories, onFilterChange }) {
   return (
@@ -40,6 +41,9 @@ export default function MobileFilterDrawer({ isOpen, onClose, filters, categorie
               <FilterSidebar
                 filters={filters}
                 categories={categories}
+                productTypes={PRODUCT_TYPES}
+                industries={INDUSTRIES}
+                setupTimes={SETUP_TIMES}
                 onFilterChange={(newFilters) => {
                   onFilterChange(newFilters)
                 }}

@@ -316,7 +316,7 @@ function PurchaseCard({ purchase, onDownload }) {
           </button>
           
           <Link
-            href={`/products/${product._id}`}
+            href={`/products/${product.slug || product._id}`}
             className="flex items-center justify-center px-4 py-2 bg-gray-800 text-gray-300 rounded-xl hover:bg-gray-700 transition-colors"
           >
             <ChevronRight className="w-4 h-4" />

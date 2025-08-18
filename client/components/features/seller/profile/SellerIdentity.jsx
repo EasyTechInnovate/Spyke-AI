@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { User, Settings, Bell, CreditCard, HelpCircle } from 'lucide-react'
 import { Card, CardHeader, CardContent } from './Cards.jsx'
+import { formatLocation } from '@/lib/utils/seller'
 
 export default function SellerIdentity({ seller, verificationStatus }) {
   const [showSettings, setShowSettings] = useState(false)
@@ -73,7 +74,7 @@ export default function SellerIdentity({ seller, verificationStatus }) {
             {seller?.location?.country && (
               <div className="flex justify-between">
                 <span className="text-[--text-secondary]">Location</span>
-                <span className="text-[--text-primary]">{seller.location.country}</span>
+                <span className="text-[--text-primary]">{formatLocation(seller.location)}</span>
               </div>
             )}
             

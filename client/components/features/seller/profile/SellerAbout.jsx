@@ -3,6 +3,20 @@
 import { Clock, Award, Users, Briefcase, Star, CheckCircle } from 'lucide-react'
 
 export default function SellerAbout({ seller }) {
+    // Format member since date
+    const formatMemberSince = (date) => {
+        if (!date) return new Date().getFullYear()
+        
+        const memberDate = new Date(date)
+        if (isNaN(memberDate.getTime())) return new Date().getFullYear()
+        
+        // Return month and year format (e.g., "Jan 2024")
+        return memberDate.toLocaleDateString('en-US', { 
+            month: 'short', 
+            year: 'numeric' 
+        })
+    }
+
     const achievements = [
         {
             icon: Star,
@@ -73,7 +87,7 @@ export default function SellerAbout({ seller }) {
                     </div>
                     <div className="text-center">
                         <p className="text-2xl font-bold text-brand-primary">
-                            {seller?.memberSince || new Date().getFullYear()}
+                            {formatMemberSince(seller?.memberSince)}
                         </p>
                         <p className="text-sm text-gray-400">Member Since</p>
                     </div>

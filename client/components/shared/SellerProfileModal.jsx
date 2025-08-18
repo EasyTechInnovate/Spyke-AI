@@ -100,6 +100,13 @@ export default function SellerProfileModal({
           badges: apiData.badges || [],
           recentProducts: apiData.recentProducts || []
         }
+        // Log a serializable summary of the transformed data
+        console.log('[SellerProfileModal] transformedData summary', {
+          id: transformedData._id,
+          fullName: transformedData.fullName,
+          totalSales: transformedData.stats.totalSales,
+          totalProducts: transformedData.stats.totalProducts
+        })
         
         setSellerData(transformedData)
       } else {
@@ -116,9 +123,7 @@ export default function SellerProfileModal({
 
   const handleVisitProfile = () => {
     if (sellerData?._id) {
-      const profilePath = sellerData.username 
-        ? `/seller/${sellerData.username}`
-        : `/seller/${sellerData._id}`
+      const profilePath = `/profile/${sellerData._id}`
       window.location.href = profilePath
     }
   }
@@ -250,7 +255,7 @@ export default function SellerProfileModal({
                     sellerLevel.color
                   )}>
                     {React.createElement(sellerLevel.icon, { className: "w-3 h-3" })}
-                    {sellerLevel.level} Seller
+                    <span>{sellerLevel.level} Seller</span>
                   </div>
                 </div>
                 

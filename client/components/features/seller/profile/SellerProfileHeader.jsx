@@ -13,6 +13,7 @@ import {
     Globe
 } from 'lucide-react'
 import SocialLinks from './SocialLinks'
+import { formatLocation } from '@/lib/utils/seller'
 
 export default function SellerProfileHeader({ seller, productsCount = 0, reviewsCount = 0 }) {
     const [imageLoaded, setImageLoaded] = useState(false)
@@ -82,10 +83,10 @@ export default function SellerProfileHeader({ seller, productsCount = 0, reviews
                         )}
 
                         <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 text-sm text-gray-400">
-                            {seller?.location?.country && (
+                            {formatLocation(seller?.location) && (
                                 <div className="flex items-center gap-1">
                                     <MapPin className="w-4 h-4" />
-                                    <span>{seller.location.country}</span>
+                                    <span>{formatLocation(seller.location)}</span>
                                 </div>
                             )}
                             

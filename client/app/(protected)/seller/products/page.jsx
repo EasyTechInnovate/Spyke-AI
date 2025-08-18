@@ -142,8 +142,8 @@ export default function SellerProductsPage() {
   }
 
   const filteredProducts = products.filter(product => 
-    product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.shortDescription.toLowerCase().includes(searchQuery.toLowerCase())
+    product?.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product?.shortDescription.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (
@@ -233,17 +233,21 @@ export default function SellerProductsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProducts.map((product) => (
               <motion.div
-                key={product._id}
+                key={product?._id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-all"
+                role="button"
+                tabIndex={0}
+                onClick={() => router.push(`/products/${product?.slug || product?._id || product?.id}`)}
+                onKeyDown={(e) => { if (e.key === 'Enter') router.push(`/products/${product?.slug || product?._id || product?.id}`) }}
+                className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-all cursor-pointer"
               >
                 {/* Product Image */}
                 <div className="aspect-video bg-gray-800 relative">
-                  {product.thumbnail ? (
+                  {product?.thumbnail ? (
                     <img
-                      src={product.thumbnail}
-                      alt={product.title}
+                      src={product?.thumbnail}
+                      alt={product?.title}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -254,7 +258,7 @@ export default function SellerProductsPage() {
                   
                   {/* Status Badge */}
                   <div className="absolute top-3 left-3">
-                    {getStatusBadge(product.status)}
+                    {getStatusBadge(product?.status)}
                   </div>
                   
                   {/* Actions Menu */}
@@ -266,28 +270,28 @@ export default function SellerProductsPage() {
                       
                       <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                         <Link
-                          href={`/products/${product.slug}`}
+                          href={`/products/${product?.slug || product?._id || product?.id}`}
                           className="flex items-center gap-2 px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white"
                         >
                           <Eye className="w-4 h-4" />
                           View
                         </Link>
                         <Link
-                          href={`/seller/products/${product.slug}/edit`}
+                          href={`/seller/products/${product?.slug || product?._id || product?.id}/edit`}
                           className="flex items-center gap-2 px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white"
                         >
                           <Edit2 className="w-4 h-4" />
                           Edit
                         </Link>
                         <button
-                          onClick={() => handlePublishProduct(product._id, product.status)}
+                          onClick={() => handlePublishProduct(product?._id, product?.status)}
                           className={`flex items-center gap-2 px-4 py-2 hover:bg-gray-700 w-full text-left ${
-                            product.status === 'published' 
+                            product?.status === 'published' 
                               ? 'text-orange-400 hover:text-orange-300' 
                               : 'text-green-400 hover:text-green-300'
                           }`}
                         >
-                          {product.status === 'published' ? (
+                          {product?.status === 'published' ? (
                             <>
                               <Archive className="w-4 h-4" />
                               Unpublish
@@ -300,7 +304,7 @@ export default function SellerProductsPage() {
                           )}
                         </button>
                         <button
-                          onClick={() => handleDeleteProduct(product._id)}
+                          onClick={() => handleDeleteProduct(product?._id)}
                           className="flex items-center gap-2 px-4 py-2 text-red-400 hover:bg-gray-700 hover:text-red-300 w-full text-left"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -314,24 +318,24 @@ export default function SellerProductsPage() {
                 {/* Product Info */}
                 <div className="p-4">
                   <h3 className="text-lg font-semibold text-white mb-2 line-clamp-1">
-                    {product.title}
+                    {product?.title}
                   </h3>
                   <p className="text-sm text-gray-400 mb-4 line-clamp-2">
-                    {product.shortDescription}
+                    {product?.shortDescription}
                   </p>
                   
                   {/* Stats */}
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-4">
                       <span className="text-gray-400">
-                        <span className="text-white font-medium">{product.views || 0}</span> views
+                        <span className="text-white font-medium">{product?.views || 0}</span> views
                       </span>
                       <span className="text-gray-400">
-                        <span className="text-white font-medium">{product.sales || 0}</span> sales
+                        <span className="text-white font-medium">{product?.sales || 0}</span> sales
                       </span>
                     </div>
                     <span className="text-brand-primary font-semibold">
-                      ${product.price}
+                      ${product?.price}
                     </span>
                   </div>
                 </div>

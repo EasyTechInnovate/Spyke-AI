@@ -89,7 +89,7 @@ export default function ProductCard({ product, viewMode = 'grid', onClick }) {
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    onClick?.(id)
+                                    onClick?.(product?.slug || product?._id || id)
                                 }}
                                 className="px-4 py-2 bg-brand-primary text-black rounded-lg font-medium hover:bg-brand-primary/90 transition-colors"
                             >
@@ -105,7 +105,7 @@ export default function ProductCard({ product, viewMode = 'grid', onClick }) {
     return (
         <div 
             className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-brand-primary/50 transition-all duration-200 cursor-pointer group"
-            onClick={() => onClick?.(id)}
+            onClick={() => onClick?.(product?.slug || product?._id || id)}
         >
             {/* Product Image */}
             <div className="relative aspect-video bg-gray-800 overflow-hidden">

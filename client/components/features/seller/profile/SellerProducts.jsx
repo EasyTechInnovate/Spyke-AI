@@ -111,10 +111,10 @@ export default function SellerProducts({ products = [], sellerId, onProductClick
             }>
                 {filteredProducts.map((product) => (
                     <ProductCard
-                        key={product.id}
+                        key={product._id || product.id}
                         product={product}
                         viewMode={viewMode}
-                        onClick={() => onProductClick?.(product.id)}
+                        onClick={() => onProductClick?.(product.slug || product._id || product.id)}
                     />
                 ))}
             </div>

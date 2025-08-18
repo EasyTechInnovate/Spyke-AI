@@ -58,8 +58,8 @@ class ProductsAPI {
     }
     
     // Toggle upvote
-    async toggleUpvote(productId, isUpvoted) {
-        return apiClient.post(`v1/products/${productId}/upvote`, { isUpvoted })
+    async toggleUpvote(productId, requestBody) {
+        return apiClient.post(`v1/products/${productId}/upvote`, requestBody)
     }
     
     // Publish product (seller/admin only)

@@ -13,6 +13,9 @@ const nextConfig = {
   output: process.env.NODE_ENV === 'production' ? 'standalone' : undefined,
 
   images: {
+    // Allow all external domains temporarily for development
+    unoptimized: process.env.NODE_ENV === 'development',
+    
     remotePatterns: [
       {
         protocol: 'https',
@@ -44,12 +47,72 @@ const nextConfig = {
         hostname: 'picsum.photos',
         pathname: '/**',
       },
+      // Add localhost for development
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3000',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'localhost',
+        port: '3000',
+        pathname: '/**',
+      },
+      // Add common CDN domains
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+        pathname: '/**',
+      },
+      // Add any other domains you might use
+      {
+        protocol: 'https',
+        hostname: '*.amazonaws.com',
+        pathname: '/**',
+      }
     ],
+    
+    // Fallback domains (legacy configuration for compatibility)
+    domains: [
+      'images.unsplash.com',
+      'cdn.sanity.io', 
+      'images.pexels.com',
+      'placehold.co',
+      'via.placeholder.com',
+      'picsum.photos',
+      'localhost',
+      'res.cloudinary.com',
+      'storage.googleapis.com',
+      'firebasestorage.googleapis.com'
+    ],
+    
+    // Image format optimization
+    formats: ['image/webp', 'image/avif'],
+    
+    // Device sizes for responsive images
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    
+    // Image sizes for different breakpoints
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    
     // Add error handling for failed image loads
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    // Add image fallback for broken URLs
-    unoptimized: false,
+    
+    // Minimize layout shift
+    minimumCacheTTL: 60,
   },
 
   modularizeImports: {

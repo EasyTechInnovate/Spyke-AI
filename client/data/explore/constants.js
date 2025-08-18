@@ -1,26 +1,55 @@
-import { Star, TrendingUp, Clock, DollarSign } from 'lucide-react'
-import { MOCK_PRODUCTS } from './mockProducts'
+import { Star, TrendingUp, Clock, DollarSign, Zap, Timer, Code2 } from 'lucide-react'
 
+// Backend-aligned categories (only what backend actually supports)
 export const CATEGORIES = [
-  { id: 'all', name: 'All Products', count: MOCK_PRODUCTS.length },
-  { id: 'prompts', name: 'Prompts', count: 4 },
-  { id: 'tools', name: 'Tools', count: 3 },
-  { id: 'templates', name: 'Templates', count: 2 }
+  { id: 'all', name: 'All Categories' },
+  { id: 'lead_generation', name: 'Lead Generation' },
+  { id: 'content_creation', name: 'Content Creation' },
+  { id: 'ecommerce', name: 'E-commerce' }
 ]
 
+// Product types from backend (only what backend actually supports)
+export const PRODUCT_TYPES = [
+  { id: 'all', name: 'All Types' },
+  { id: 'automation', name: 'Automation', icon: Zap },
+  { id: 'prompt', name: 'AI Prompts', icon: Code2 },
+  { id: 'template', name: 'Templates', icon: Star }
+]
+
+// Industries from backend (only what backend actually supports)
+export const INDUSTRIES = [
+  { id: 'all', name: 'All Industries' },
+  { id: 'saas', name: 'SaaS' },
+  { id: 'marketing', name: 'Marketing' },
+  { id: 'real_estate', name: 'Real Estate' }
+]
+
+// Setup time options from backend (only what backend actually supports)
+export const SETUP_TIMES = [
+  { id: 'all', name: 'Any Setup Time' },
+  { id: 'instant', name: 'Instant', icon: Zap },
+  { id: 'under_30_mins', name: 'Under 30 mins', icon: Timer },
+  { id: 'under_1_hour', name: 'Under 1 hour', icon: Clock }
+]
+
+// Enhanced sort options aligned with backend
 export const SORT_OPTIONS = [
-  { id: 'featured', name: 'Featured', icon: Star },
-  { id: 'newest', name: 'Newest First', icon: Clock },
-  { id: 'price-low', name: 'Price: Low to High', icon: DollarSign },
-  { id: 'price-high', name: 'Price: High to Low', icon: DollarSign },
-  { id: 'rating', name: 'Highest Rated', icon: Star },
-  { id: 'popular', name: 'Most Popular', icon: TrendingUp }
+  { id: 'newest', name: 'Newest First', icon: Clock, sortBy: 'createdAt', sortOrder: 'desc' },
+  { id: 'popular', name: 'Most Popular', icon: TrendingUp, sortBy: 'popularity', sortOrder: 'desc' },
+  { id: 'rating', name: 'Highest Rated', icon: Star, sortBy: 'rating', sortOrder: 'desc' },
+  { id: 'price-low', name: 'Price: Low to High', icon: DollarSign, sortBy: 'price', sortOrder: 'asc' },
+  { id: 'price-high', name: 'Price: High to Low', icon: DollarSign, sortBy: 'price', sortOrder: 'desc' },
+  { id: 'sales', name: 'Best Selling', icon: TrendingUp, sortBy: 'sales', sortOrder: 'desc' }
 ]
 
 export const ITEMS_PER_PAGE = 12
 
+// Enhanced default filters with new options
 export const DEFAULT_FILTERS = {
   category: 'all',
+  type: 'all',
+  industry: 'all',
+  setupTime: 'all',
   priceRange: [0, 200],
   rating: 0,
   verified: false,
