@@ -37,6 +37,7 @@ export const SpykeLogo = ({
                         width={logoSize}
                         height={logoSize}
                         priority={priority}
+                        unoptimized={true}
                         className="logo-icon object-contain object-center block"
                         draggable={false}
                         onError={() => {
@@ -77,6 +78,7 @@ export const SpykeLogoCompact = ({ size = 32, className = '', darkMode = false, 
                     alt="Spyke AI"
                     width={size}
                     height={size}
+                    unoptimized={true}
                     className="logo-icon object-contain object-center block"
                     draggable={false}
                     onError={() => setImageError(true)}
@@ -111,6 +113,8 @@ export const SpykeLogoWithSkeleton = ({ size = 40, className = '', showText = tr
                     alt="Spyke AI Logo"
                     width={size}
                     height={size}
+                    priority={false}
+                    unoptimized={true}
                     className={`logo-icon object-contain object-center block transition-opacity ${isLoading ? 'opacity-0' : 'opacity-100'}`}
                     onLoad={() => setIsLoading(false)}
                     draggable={false}

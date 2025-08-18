@@ -38,13 +38,10 @@ const getTypeDisplay = (type) => {
 const FeaturedProducts = memo(function FeaturedProducts() {
   const router = useRouter()
   
-  // Use only real API data - no dummy fallbacks
   const { products: featuredProducts, loading: loadingFeatured, error: errorFeatured } = useProducts({
     sortBy: 'popularity',
     sortOrder: 'desc',
     limit: 8,
-    verifiedOnly: 'true',
-    isFeatured: 'true'
   })
 
   // Fallback to popular verified products
