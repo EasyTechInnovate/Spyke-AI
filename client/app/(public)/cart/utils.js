@@ -31,22 +31,21 @@ export const calculateTotalSavings = (items) => {
  * @returns {number} Discount amount
  */
 export const calculatePromoDiscount = (cartData, subtotal) => {
-    // Check for new API structure first
-    if (cartData?.appliedPromocode) {
-        return cartData.appliedPromocode.discountAmount || 0
+    // Unified promocode handling: support both `appliedPromocode` (backend) and `promocode` (guest)
+    const promo = cartData?.appliedPromocode || cartData?.promocode
+    if (!promo) return 0
+
+    // Try multiple possible field names for type/value
+    const discountType = promo.discountType || promo.type || (promo.isPercentage ? 'percentage' : undefined)
+    const rawValue = promo.discountValue ?? promo.discountAmount ?? promo.value ?? promo.amount ?? promo.discount ?? 0
+    const discountValue = Number(rawValue) || 0
+
+    if (discountType === 'percentage') {
+        return subtotal * (discountValue / 100)
     }
-    
-    // Fallback to old structure
-    if (cartData?.promocode) {
-        const promo = cartData.promocode
-        if (promo.discountType === 'percentage') {
-            return subtotal * (promo.discountValue / 100)
-        } else {
-            return Math.min(promo.discountValue, subtotal)
-        }
-    }
-    
-    return 0
+
+    // Fixed amount discount: ensure we don't exceed subtotal
+    return Math.min(discountValue, subtotal)
 }
 
 /**
@@ -57,7 +56,14 @@ export const calculatePromoDiscount = (cartData, subtotal) => {
  * @returns {number} Final total
  */
 export const calculateTotal = (cartData, subtotal, discount) => {
-    return cartData?.finalAmount || (subtotal - discount)
+    // Prefer authoritative finalAmount from backend when present
+    if (typeof cartData?.finalAmount === 'number') {
+        return Math.max(0, Number(cartData.finalAmount))
+    }
+
+    // Compute fallback total and ensure non-negative, rounded to 2 decimals
+    const computed = Math.max(0, subtotal - (Number(discount) || 0))
+    return Math.round(computed * 100) / 100
 }
 
 /**

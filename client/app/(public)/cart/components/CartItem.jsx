@@ -73,17 +73,15 @@ export default function CartItem({ item, index, onUpdateQuantity, onRemove }) {
 
                     {/* Quantity and Price */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        {isAuthenticated ? (
-                            <QuantityDisplay quantity={item.quantity} />
-                        ) : (
-                            <QuantityControls 
-                                quantity={item.quantity}
-                                onIncrease={() => handleQuantityUpdate(1)}
-                                onDecrease={() => handleQuantityUpdate(-1)}
-                                canDecrease={item.quantity > CART_CONFIG.validation.minQuantity}
-                            />
-                        )}
-                        
+                        {/* Show quantity controls for both guests and authenticated users.
+                            For authenticated users this will call the hook which attempts a server update. */}
+                        <QuantityControls 
+                            quantity={item.quantity}
+                            onIncrease={() => handleQuantityUpdate(1)}
+                            onDecrease={() => handleQuantityUpdate(-1)}
+                            canDecrease={item.quantity > CART_CONFIG.validation.minQuantity}
+                        />
+                         
                         <PriceDisplay 
                             subtotal={subtotal}
                             originalSubtotal={originalSubtotal}

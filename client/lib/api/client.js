@@ -117,7 +117,13 @@ class ApiClient {
         }
 
         try {
-            const response = await fetch(url, request)
+            // Ensure cookies are sent for cross-origin auth (server uses httpOnly cookies)
+            const fetchOptions = {
+                ...request,
+                credentials: 'include'
+            }
+
+            const response = await fetch(url, fetchOptions)
             return this.handleResponse(response, request)
         } catch (error) {
             // Ensure error has proper structure
@@ -258,6 +264,7 @@ class ApiClient {
                     ...options.headers
                 },
                 body: formData,
+                credentials: 'include',
                 ...options
             })
 
@@ -281,6 +288,7 @@ class ApiClient {
                     ...this.getAuthHeaders(),
                     ...options.headers
                 },
+                credentials: 'include',
                 ...options
             })
 

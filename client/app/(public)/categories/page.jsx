@@ -1,5 +1,6 @@
 import CategoriesGrid from '@/components/features/explore/CategoriesGrid'
 import { client } from '@/sanity/lib/client'
+import Header from '@/components/shared/layout/Header'
 
 export default async function CategoriesPage() {
   // GROQ query same as existing API route
@@ -22,6 +23,7 @@ export default async function CategoriesPage() {
 
   return (
     <div className="min-h-screen bg-[#121212]">
+      <Header />
       <CategoriesGrid blogCategories={blogCategories} />
     </div>
   )

@@ -81,11 +81,23 @@ export default function SignInPage() {
 
             setTimeout(() => {
                 if (typeof window !== 'undefined') {
-                    // Check if there's a return URL stored
-                    const returnTo = localStorage.getItem('returnTo')
-                    if (returnTo) {
-                        localStorage.removeItem('returnTo')
-                        window.location.href = returnTo
+                    // Prefer sessionStorage key set by API 401 handler, fall back to localStorage
+                    const sessionReturn = sessionStorage.getItem('redirectAfterLogin')
+                    const localReturn = localStorage.getItem('returnTo')
+                    
+                    let destination = '/'
+                    
+                    if (sessionReturn) {
+                        try { sessionStorage.removeItem('redirectAfterLogin') } catch (e) {}
+                        destination = sessionReturn
+                    } else if (localReturn) {
+                        try { localStorage.removeItem('returnTo') } catch (e) {}
+                        destination = localReturn
+                    }
+                    
+                    // Safety: ensure destination is a string and starts with '/'
+                    if (typeof destination === 'string' && destination.startsWith('/')) {
+                        window.location.href = destination
                     } else {
                         window.location.href = '/'
                     }

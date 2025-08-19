@@ -100,8 +100,33 @@ const cartAPI = {
                 paymentReference: paymentDetails.paymentReference || 'manual-payment',
                 ...paymentDetails
             })
-            // The response.data contains the purchase info
-            return response.data
+
+            // Normalize server payload (httpResponse wraps data in `data`)
+            const payload = (response && response.data) ? response.data : response
+
+            // If server returned a purchaseId and it is a paid purchase, auto-complete payment
+            // to simulate payment success (useful for testing workflows).
+            if (payload && payload.purchaseId && payload.finalAmount && payload.finalAmount > 0) {
+                try {
+                    const completion = await apiClient.post('/v1/purchase/complete-payment', {
+                        purchaseId: payload.purchaseId
+                    })
+
+                    // Return the original payload at top-level and include completion details
+                    return {
+                        ...payload,
+                        completed: completion
+                    }
+                } catch (completeErr) {
+                    return {
+                        ...payload,
+                        completedError: completeErr
+                    }
+                }
+            }
+
+            // Return normalized payload (so callers find purchaseId at result.purchaseId)
+            return payload
         } catch (error) {
             throw error
         }

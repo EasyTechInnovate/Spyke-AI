@@ -35,26 +35,14 @@ export function useCart() {
   const { isAuthenticated } = useAuth()
   const isSyncing = useRef(false)
 
-  // Load cart on mount and when auth status changes
-  useEffect(() => {
-    loadCart()
-  }, [isAuthenticated])
-
-  // Sync guest cart to backend when user logs in
-  useEffect(() => {
-    if (isAuthenticated && !isSyncing.current) {
-      syncGuestCartToBackend()
-    }
-  }, [isAuthenticated])
-
   // Load cart based on auth status
-  const loadCart = async () => {
+  const loadCart = useCallback(async () => {
     setLoading(true)
     try {
       if (isAuthenticated) {
         // Load from backend
         const cart = await cartAPI.getCart()
-        
+
         // Transform backend cart items to match frontend structure
         const transformedItems = cart.items?.map(item => ({
           id: item.productId?._id || item.productId?.id,
@@ -70,60 +58,88 @@ export function useCart() {
           image: item.productId?.thumbnail || '',
           addedAt: item.addedAt
         })) || []
-        
+
         const newCartData = {
           ...cart,
           items: transformedItems
         }
-        
-        // Cart loaded from API with promocode data
-        
+
+        // Normalize appliedPromocode from backend (backend is authoritative but may return minimal fields)
+        if (newCartData.appliedPromocode) {
+          const ap = { ...newCartData.appliedPromocode }
+          // Ensure numeric discountAmount exists
+          ap.discountAmount = (ap.discountAmount !== undefined && ap.discountAmount !== null) ? Number(ap.discountAmount) : 0
+
+          // If backend did not specify type, infer 'fixed' when discountAmount is present
+          if (!ap.discountType) {
+            ap.discountType = typeof ap.discountAmount === 'number' ? 'fixed' : undefined
+          }
+
+          // Provide discountValue alias used by frontend helpers
+          if (ap.discountValue === undefined || ap.discountValue === null) {
+            ap.discountValue = ap.discountAmount
+          }
+
+          // Preserve code if present, otherwise null (frontend will handle missing code gracefully)
+          ap.code = ap.code || null
+
+          newCartData.appliedPromocode = ap
+          // Also keep a `promocode` alias for legacy frontend code that reads `cartData.promocode`
+          newCartData.promocode = ap
+        }
+
         setCartData(newCartData)
-        
+
         // Cache in sessionStorage for persistence
-        sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(newCartData))
-        
+        try { sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(newCartData)) } catch (e) {}
+
         // Clear guest cart after successful backend load
-        localStorage.removeItem(GUEST_CART_KEY)
+        try { localStorage.removeItem(GUEST_CART_KEY) } catch (e) {}
       } else {
         // Load from localStorage for guests
-        const savedCart = localStorage.getItem(GUEST_CART_KEY)
+        const savedCart = typeof window !== 'undefined' ? localStorage.getItem(GUEST_CART_KEY) : null
         if (savedCart) {
           const guestCart = JSON.parse(savedCart)
           setCartData(guestCart)
           // Cache in sessionStorage
-          sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(guestCart))
+          try { sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(guestCart)) } catch (e) {}
         } else {
           const emptyCart = { items: [], total: 0, promocode: null }
           setCartData(emptyCart)
-          sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(emptyCart))
+          try { sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(emptyCart)) } catch (e) {}
         }
       }
     } catch (error) {
-      // Error loading cart
-      // Fallback to empty cart on error
+      // Error loading cart - fallback to empty
       setCartData({ items: [], total: 0, promocode: null })
     } finally {
       setLoading(false)
       setLastUpdate(Date.now())
     }
-  }
+  }, [isAuthenticated])
 
   // Save guest cart to localStorage
-  const saveGuestCart = (cart) => {
-    if (!isAuthenticated) {
-      localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cart))
+  const saveGuestCart = useCallback((cart) => {
+    if (!isAuthenticated && typeof window !== 'undefined') {
+      try { localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cart)) } catch (e) {}
+      try { sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart)) } catch (e) {}
     }
-  }
+  }, [isAuthenticated])
 
   // Sync guest cart to backend when user logs in
-  const syncGuestCartToBackend = async () => {
+  const syncGuestCartToBackend = useCallback(async () => {
     isSyncing.current = true
     try {
-      const guestCart = localStorage.getItem(GUEST_CART_KEY)
-      if (guestCart) {
-        const { items } = JSON.parse(guestCart)
-        
+      const guestCartStr = typeof window !== 'undefined' ? localStorage.getItem(GUEST_CART_KEY) : null
+      if (guestCartStr) {
+        let items = []
+        try {
+          const parsed = JSON.parse(guestCartStr)
+          items = parsed.items || []
+        } catch (e) {
+          items = []
+        }
+
         // Add each item to backend cart
         for (const item of items) {
           try {
@@ -132,13 +148,14 @@ export function useCart() {
             // Skip failed items during sync
           }
         }
-        
+
         // Clear guest cart after sync
-        localStorage.removeItem(GUEST_CART_KEY)
-        
+        try { localStorage.removeItem(GUEST_CART_KEY) } catch (e) {}
+        try { sessionStorage.removeItem(CART_STORAGE_KEY) } catch (e) {}
+
         // Reload cart from backend
         await loadCart()
-        
+
         toast.success('Your cart has been synced')
       }
     } catch (error) {
@@ -146,7 +163,19 @@ export function useCart() {
     } finally {
       isSyncing.current = false
     }
-  }
+  }, [loadCart])
+
+  // Load cart on mount and when auth status changes
+  useEffect(() => {
+    loadCart()
+  }, [isAuthenticated, loadCart])
+
+  // Sync guest cart to backend when user logs in
+  useEffect(() => {
+    if (isAuthenticated && !isSyncing.current) {
+      syncGuestCartToBackend()
+    }
+  }, [isAuthenticated, syncGuestCartToBackend])
 
   // Add to cart
   const addToCart = useCallback(async (product) => {
@@ -162,7 +191,7 @@ export function useCart() {
         const existingItem = newCart.items.find(item => 
           (item.productId || item.id) === (product.id || product._id)
         )
-        
+
         if (existingItem) {
           existingItem.quantity += 1
         } else {
@@ -179,25 +208,78 @@ export function useCart() {
             image: product.images?.[0]?.url || product.image
           })
         }
-        
+
         // Update totals
         newCart.total = newCart.items.reduce((sum, item) => 
           sum + (item.price * item.quantity), 0
         )
-        
+
         setCartData(newCart)
         saveGuestCart(newCart)
         // Don't show toast here - let the caller handle it
       }
-      
+
       setLastUpdate(Date.now())
       return true // Indicate success
     } catch (error) {
-      // Error adding to cart
+      // If server responded with unauthorized, fallback to guest cart & redirect to signin.
+      const status = error?.status || error?.statusCode || error?.response?.status
+      if (status === 401) {
+        try {
+          // Convert this add attempt into a guest-cart add so user doesn't lose intent
+          const newCart = { ...cartData }
+          const existingItem = newCart.items.find(item => 
+            (item.productId || item.id) === (product.id || product._id)
+          )
+
+          if (existingItem) {
+            existingItem.quantity += 1
+          } else {
+            newCart.items.push({
+              id: product.id || product._id,
+              productId: product.id || product._id,
+              title: product.title,
+              description: product.description,
+              price: product.price,
+              originalPrice: product.originalPrice || product.price,
+              quantity: 1,
+              category: product.category,
+              seller: product.seller,
+              image: product.images?.[0]?.url || product.image
+            })
+          }
+
+          newCart.total = newCart.items.reduce((sum, item) => 
+            sum + (item.price * item.quantity), 0
+          )
+
+          setCartData(newCart)
+          saveGuestCart(newCart)
+        } catch (e) {
+          // ignore
+        }
+
+        // Friendly ecommerce flow: do NOT force logout/redirect.
+        // Preserve intended return path and prompt user to sign in if they want to persist cart.
+        try {
+          if (typeof window !== 'undefined') {
+            const returnTo = window.location.pathname || '/cart'
+            localStorage.setItem('returnTo', returnTo)
+          }
+
+          toast.success('Item added to your cart. Sign in to save it to your account.')
+        } catch (e) {
+          // ignore toast failures
+        }
+
+        return false
+      }
+
+      // Generic error
       toast.error(error.message || 'Failed to add to cart')
       return false // Indicate failure
     }
-  }, [isAuthenticated, cartData])
+  }, [isAuthenticated, cartData, loadCart, saveGuestCart])
 
   // Update quantity
   const updateQuantity = useCallback(async (itemId, quantity) => {
@@ -205,33 +287,38 @@ export function useCart() {
 
     try {
       if (isAuthenticated) {
-        // Backend doesn't support quantity updates - each product can only be added once
-        toast.error('Quantity updates are not supported. Each product can only be purchased once.')
-        return
+        // Attempt to update quantity on server; backend may not support it.
+        try {
+          await cartAPI.updateQuantity(itemId, quantity)
+          await loadCart()
+        } catch (err) {
+          // If server update fails, reload to get authoritative state and inform user
+          await loadCart()
+          toast.error(err?.message || 'Quantity update failed on server')
+        }
       } else {
         // Update guest cart
         const newCart = { ...cartData }
-        const item = newCart.items.find(item => 
-          (item.productId || item.id) === itemId
+        const item = newCart.items.find(i => 
+          (i.productId || i.id) === itemId
         )
-        
+
         if (item) {
           item.quantity = quantity
-          newCart.total = newCart.items.reduce((sum, item) => 
-            sum + (item.price * item.quantity), 0
+          newCart.total = newCart.items.reduce((sum, it) => 
+            sum + (it.price * it.quantity), 0
           )
-          
+
           setCartData(newCart)
           saveGuestCart(newCart)
         }
       }
-      
+
       setLastUpdate(Date.now())
     } catch (error) {
-      // Error updating quantity
       toast.error('Failed to update quantity')
     }
-  }, [isAuthenticated, cartData])
+  }, [isAuthenticated, cartData, loadCart, saveGuestCart])
 
   // Remove from cart
   const removeFromCart = useCallback(async (itemId) => {
@@ -263,7 +350,7 @@ export function useCart() {
       toast.error('Failed to remove from cart')
       return false // Indicate failure
     }
-  }, [isAuthenticated, cartData])
+  }, [isAuthenticated, cartData, loadCart, saveGuestCart])
 
   // Clear cart
   const clearCart = useCallback(async () => {
@@ -276,7 +363,8 @@ export function useCart() {
         // Clear guest cart
         const emptyCart = { items: [], total: 0, promocode: null }
         setCartData(emptyCart)
-        localStorage.removeItem(GUEST_CART_KEY)
+        try { localStorage.removeItem(GUEST_CART_KEY) } catch (e) {}
+        try { sessionStorage.removeItem(CART_STORAGE_KEY) } catch (e) {}
       }
       
       // Don't show toast here - let the caller handle it
@@ -287,7 +375,7 @@ export function useCart() {
       toast.error('Failed to clear cart')
       return false // Indicate failure
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, loadCart])
 
   // Apply promocode
   const applyPromocode = useCallback(async (code) => {
@@ -336,7 +424,7 @@ export function useCart() {
           }
           // Applied promocode to cart
           setCartData(newCart)
-          sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(newCart))
+          saveGuestCart(newCart)
           toast.success('Promocode applied successfully!')
           return validation
         } else {
@@ -348,7 +436,7 @@ export function useCart() {
       toast.error(error.message || 'Failed to apply promocode')
       throw error
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, cartData, loadCart, saveGuestCart])
 
   // Remove promocode
   const removePromocode = useCallback(async () => {
@@ -362,14 +450,14 @@ export function useCart() {
         // Remove from guest cart
         const newCart = { ...cartData, promocode: null }
         setCartData(newCart)
-        sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify(newCart))
+        saveGuestCart(newCart)
         toast.success('Promocode removed')
       }
     } catch (error) {
       // Error removing promocode
       toast.error('Failed to remove promocode')
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, cartData, loadCart, saveGuestCart])
 
   // Check if item is in cart
   const isInCart = useCallback((productId) => {
@@ -385,19 +473,29 @@ export function useCart() {
 
   // Get cart total
   const getCartTotal = useCallback(() => {
+    // Prefer backend-provided finalAmount when available
+    if (typeof cartData?.finalAmount === 'number') {
+      return Math.max(0, Number(cartData.finalAmount))
+    }
+
     const subtotal = cartData.items.reduce((sum, item) => 
       sum + (item.price * item.quantity), 0
     )
-    
-    // Apply promocode discount if available
-    if (cartData.promocode) {
-      const discount = cartData.promocode.discountType === 'percentage'
-        ? subtotal * (cartData.promocode.discountValue / 100)
-        : cartData.promocode.discountValue
-      
+
+    // Support both appliedPromocode (backend) and promocode (guest/local)
+    const promo = cartData.appliedPromocode || cartData.promocode
+    if (promo) {
+      const discountType = promo.discountType || promo.type || (promo.isPercentage ? 'percentage' : undefined)
+      const rawValue = promo.discountValue ?? promo.discountAmount ?? promo.value ?? promo.amount ?? promo.discount ?? 0
+      const discountValue = Number(rawValue) || 0
+
+      const discount = discountType === 'percentage'
+        ? subtotal * (discountValue / 100)
+        : Math.min(discountValue, subtotal)
+
       return Math.max(0, subtotal - discount)
     }
-    
+
     return subtotal
   }, [cartData])
 

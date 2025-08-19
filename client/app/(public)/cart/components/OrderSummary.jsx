@@ -29,20 +29,53 @@ export default function OrderSummary({
             <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-[#1f1f1f] border border-gray-800 rounded-2xl p-6 lg:sticky lg:top-8"
+                className="bg-[#0f0f10] border border-gray-800 rounded-2xl p-6 lg:sticky lg:top-8"
+                role="region"
+                aria-label="Order summary"
             >
-                {/* Header */}
-                <OrderSummaryHeader
-                    isExpanded={isExpanded}
-                    setIsExpanded={setIsExpanded}
-                    total={total}
-                    promocodeData={promocodeData}
-                />
+                {/* New Header: prominent title, total, and inline promo */}
+                <div className="flex items-start justify-between gap-4 mb-6">
+                    <div className="flex-1">
+                        <h2 className="text-2xl lg:text-3xl font-bold text-white">Order Summary</h2>
+                        <p className="text-sm text-gray-400 mt-1">Review your items and proceed to checkout</p>
+                    </div>
 
-                {/* Content */}
+                    <div className="hidden lg:flex flex-col items-end">
+                        <span className="text-sm text-gray-400">Total</span>
+                        <span className="text-2xl font-extrabold text-[#00FF89]">{formatCurrency(total)}</span>
+                        {promocodeData && (
+                            <span className="text-xs text-gray-400 mt-1">Promo: {promocodeData.code}</span>
+                        )}
+                    </div>
+                </div>
+
+                {/* Inline promo on larger screens, collapses on mobile */}
+                <div className="mb-4">
+                    <div className="flex gap-2">
+                        <input
+                            aria-label="Promo code"
+                            type="text"
+                            value={promoCode}
+                            onChange={(e) => setIsExpanded(true) || setPromoCode(e.target.value)}
+                            placeholder="Have a promo code?"
+                            disabled={!!promocodeData}
+                            className="flex-1 px-4 py-2 bg-[#121212] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00FF89] focus:border-transparent disabled:opacity-50"
+                        />
+                        <button
+                            onClick={handleApplyPromo}
+                            disabled={!promoCode || !!promocodeData || promoLoading}
+                            className="px-4 py-2 bg-[#00FF89] text-black rounded-lg font-semibold hover:bg-[#00FF89]/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                            aria-disabled={!promoCode || !!promocodeData || promoLoading}
+                        >
+                            {promoLoading ? 'Applying...' : promocodeData ? 'Applied' : 'Apply'}
+                        </button>
+                    </div>
+                    {promoError && <p className="text-xs text-red-400 mt-2">{promoError}</p>}
+                </div>
+
+                {/* Content: price breakdown */}
                 {isExpanded && (
                     <>
-                        {/* Price Breakdown */}
                         <PriceBreakdown
                             subtotal={subtotal}
                             totalSavings={totalSavings}
@@ -52,31 +85,29 @@ export default function OrderSummary({
                             onRemovePromo={handleRemovePromo}
                         />
 
-                        {/* Promo Code Input */}
-                        <PromoCodeSection
-                            promoCode={promoCode}
-                            setPromoCode={setPromoCode}
-                            promocodeData={promocodeData}
-                            promoLoading={promoLoading}
-                            promoError={promoError}
-                            onApply={handleApplyPromo}
-                            onRemove={handleRemovePromo}
-                        />
+                        {/* Checkout CTA */}
+                        <div className="mt-4">
+                            <button
+                                onClick={handleCheckout}
+                                className="w-full inline-flex items-center justify-center gap-3 px-5 py-3 bg-[#00FF89] text-black font-bold rounded-xl hover:bg-[#00FF89]/95 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/40"
+                                aria-label="Proceed to checkout"
+                            >
+                                <CreditCard className="w-5 h-5" />
+                                Proceed to Checkout
+                            </button>
+                        </div>
 
-                        {/* Checkout Button */}
-                        <AuthButton
-                            onClick={handleCheckout}
-                            icon={CreditCard}
-                            className="w-full mb-4"
-                            loadingText="Processing..."
-                            requiresAuth={false}
-                        >
-                            Proceed to Checkout
-                        </AuthButton>
+                        {/* Mobile compact total (visible on small screens) */}
+                        <div className="lg:hidden mt-4 flex items-center justify-between">
+                            <div className="text-sm text-gray-400">Total</div>
+                            <div className="text-lg font-extrabold text-[#00FF89]">{formatCurrency(total)}</div>
+                        </div>
 
                         {/* Security & Features */}
-                        <SecurityBadge />
-                        <CheckoutFeatures />
+                        <div className="mt-6 pt-6 border-t border-gray-700">
+                            <SecurityBadge />
+                            <CheckoutFeatures />
+                        </div>
                     </>
                 )}
             </motion.div>

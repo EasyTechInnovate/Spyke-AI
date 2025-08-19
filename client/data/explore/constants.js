@@ -1,11 +1,11 @@
-import { Star, TrendingUp, Clock, DollarSign, Zap, Timer, Code2 } from 'lucide-react'
+import { Star, TrendingUp, Clock, DollarSign, Zap, Timer, Code2, Package } from 'lucide-react'
 
 // Backend-aligned categories (only what backend actually supports)
 export const CATEGORIES = [
-  { id: 'all', name: 'All Categories' },
-  { id: 'lead_generation', name: 'Lead Generation' },
-  { id: 'content_creation', name: 'Content Creation' },
-  { id: 'ecommerce', name: 'E-commerce' }
+  { id: 'all', name: 'All Categories', icon: Package },
+  { id: 'lead_generation', name: 'Lead Generation', icon: Zap },
+  { id: 'content_creation', name: 'Content Creation', icon: Code2 },
+  { id: 'ecommerce', name: 'E-commerce', icon: Package }
 ]
 
 // Product types from backend (only what backend actually supports)

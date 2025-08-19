@@ -41,6 +41,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false)
   const [initialLoad, setInitialLoad] = useState(true)
   const [hasCheckedCart, setHasCheckedCart] = useState(false)
+  const [skipCartRedirect, setSkipCartRedirect] = useState(false)
   const [step, setStep] = useState(1) // 1: Review, 2: Payment
   const [paymentMethod, setPaymentMethod] = useState('manual')
   
@@ -60,13 +61,14 @@ export default function CheckoutPage() {
   useEffect(() => {
     // Add a small delay to ensure cart has fully loaded after auth changes
     const timer = setTimeout(() => {
-      if (hasCheckedCart && !cartLoading && !initialLoad && cartItems.length === 0) {
+      // If skipCartRedirect is set (we're navigating to success), avoid auto-redirect to /cart
+      if (hasCheckedCart && !cartLoading && !initialLoad && !skipCartRedirect && cartItems.length === 0) {
         router.push('/cart')
       }
     }, 500) // 500ms delay to handle auth transitions
 
     return () => clearTimeout(timer)
-  }, [cartItems.length, cartLoading, hasCheckedCart, initialLoad, router])
+  }, [cartItems.length, cartLoading, hasCheckedCart, initialLoad, router, skipCartRedirect])
 
 
   // Calculate totals
@@ -114,19 +116,26 @@ export default function CheckoutPage() {
         }
 
         const result = await cartAPI.createPurchase(purchaseData)
-        
-        // Clear cart on success
-        await clearCart()
-        
+
+        // Defensive purchaseId extraction to handle different response shapes
+        const purchaseId = result?.purchaseId || result?._id || result?.data?.purchaseId || result?.created?.data?.purchaseId || result?.created?.purchaseId || result?.completed?.data?.purchaseId || result?.completed?.purchaseId
+
+        // Prevent the cart-empty effect from redirecting while we navigate to success
+        setSkipCartRedirect(true)
+
         // Track success
         track(ANALYTICS_EVENTS.CHECKOUT.COMPLETED, {
-          orderId: result.purchaseId,
+          orderId: purchaseId,
           total
         })
-        
-        // Redirect to success page
-        router.push(`/checkout/success?orderId=${result.purchaseId}&manual=true`)
-        
+
+        // Redirect to success page BEFORE clearing cart to avoid useEffect auto-redirect to /cart
+        router.push(`/checkout/success?orderId=${purchaseId}&manual=true`)
+
+        // Clear cart on success (do this after navigation to avoid race with local redirect)
+        await clearCart()
+        setSkipCartRedirect(false)
+
       } else if (paymentMethod === 'manual') {
         // Manual payment (current implementation)
         const purchaseData = {
@@ -135,18 +144,25 @@ export default function CheckoutPage() {
         }
 
         const result = await cartAPI.createPurchase(purchaseData)
-        
-        // Clear cart on success
-        await clearCart()
-        
+
+        // Defensive purchaseId extraction
+        const purchaseId = result?.purchaseId || result?._id || result?.data?.purchaseId || result?.created?.data?.purchaseId || result?.created?.purchaseId || result?.completed?.data?.purchaseId || result?.completed?.purchaseId
+
+        // Prevent the cart-empty effect from redirecting while we navigate to success
+        setSkipCartRedirect(true)
+
         // Track success
         track(ANALYTICS_EVENTS.CHECKOUT.COMPLETED, {
-          orderId: result.purchaseId,
+          orderId: purchaseId,
           total
         })
-        
-        // Redirect to success page
-        router.push(`/checkout/success?orderId=${result.purchaseId}&manual=true`)
+
+        // Redirect to success page BEFORE clearing cart to avoid useEffect auto-redirect to /cart
+        router.push(`/checkout/success?orderId=${purchaseId}&manual=true`)
+
+        // Clear cart on success (do this after navigation to avoid race with local redirect)
+        await clearCart()
+        setSkipCartRedirect(false)
       }
       
     } catch (error) {
