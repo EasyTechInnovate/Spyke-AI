@@ -32,19 +32,12 @@ export default function Dashboard() {
     const [userRole, setUserRole] = useState('user') // 'user' or 'seller'
 
     useEffect(() => {
-        // Determine user role from localStorage or API
         if (typeof window !== 'undefined') {
             const user = JSON.parse(localStorage.getItem('user') || '{}')
             const roles = user.roles || []
             const isSeller = roles.includes('seller')
             const detectedRole = isSeller ? 'seller' : 'user'
             setUserRole(detectedRole)
-            
-            if (detectedRole === 'seller') {
-                track(ANALYTICS_EVENTS.SELLER.DASHBOARD_VIEWED, eventProperties.seller('dashboard_view'))
-            } else {
-                track(ANALYTICS_EVENTS.PAGE.VIEW, eventProperties.page('dashboard'))
-            }
         }
     }, [])
 
@@ -144,7 +137,6 @@ export default function Dashboard() {
     }
 
     const handleCreateProduct = () => {
-        track(ANALYTICS_EVENTS.SELLER.PRODUCT_CREATE_CLICKED, eventProperties.seller('product_create'))
         // Navigate to product creation page
         router.push('/seller/products/create')
     }

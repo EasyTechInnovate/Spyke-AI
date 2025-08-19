@@ -113,7 +113,6 @@ export default function Header() {
                             <button
                                 className="md:hidden p-2 sm:p-2.5 text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all"
                                 onClick={() => {
-                                    track(ANALYTICS_EVENTS.NAVIGATION.MOBILE_MENU_TOGGLED, eventProperties.navigation('menu', mobileMenuOpen ? 'close' : 'open'))
                                     setMobileMenuOpen(!mobileMenuOpen)
                                 }}>
                                 {mobileMenuOpen ? <X className="h-5 w-5 sm:h-6 sm:w-6" /> : <Menu className="h-5 w-5 sm:h-6 sm:w-6" />}

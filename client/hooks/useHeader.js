@@ -18,7 +18,7 @@ export function useHeader() {
     const [userRoles, setUserRoles] = useState([])
     const [notifications, setNotifications] = useState(0)
     const [searchOpen, setSearchOpen] = useState(false)
-    
+
     const dropdownRef = useRef(null)
 
     useEffect(() => {
@@ -57,7 +57,6 @@ export function useHeader() {
         window.addEventListener('storage', loadUserFromStorage)
         return () => window.removeEventListener('storage', loadUserFromStorage)
     }, [pathname])
-
 
     // Fetch notifications count
     const fetchNotifications = async () => {
@@ -102,7 +101,6 @@ export function useHeader() {
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const handleKeyDown = (e) => {
-
                 if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
                     e.preventDefault()
                     setSearchOpen(true)

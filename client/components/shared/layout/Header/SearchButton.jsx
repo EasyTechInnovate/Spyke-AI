@@ -8,9 +8,7 @@ export default function SearchButton({ onClick }) {
             onClick={onClick}
         >
             <Search className="h-4 w-4 sm:h-5 sm:w-5" />
-            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                ⌘K
-            </span>
+            
         </button>
     )
 }
