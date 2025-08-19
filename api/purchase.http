@@ -1,7 +1,7 @@
 ### Purchase & Cart API Testing
 
 @baseUrl = http://localhost:5000/v1
-@authToken = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODZmYWI1ODgyN2U4ZjEyZDFkYzQyY2MiLCJlbWFpbEFkZHJlc3MiOiJ0ZXN0M0BnbWFpbC5jb20iLCJyb2xlcyI6WyJ1c2VyIiwic2VsbGVyIl0sImlhdCI6MTc1MzQ3MzUyNywiZXhwIjoxNzUzNDc3MTI3fQ.08vFp5PxcsQzBL2IAthFSi4baZsl9K8knqSdayeuWNk
+@authToken = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE0MTkyY2NmNTlhNTI5MDM1MDg5NzkiLCJlbWFpbEFkZHJlc3MiOiJ0ZXN0QGdtYWlsLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzU1NTg0ODQ5LCJleHAiOjE3NTU1ODg0NDl9.j-KoGyqF2dpP2soX_UbY_IrFLNuXPkjvlMYGi2gB8MQ
 
 ### 1. Get Purchase Service Status
 GET {{baseUrl}}/purchase/self
@@ -18,7 +18,7 @@ Content-Type: application/json
 Authorization: {{authToken}}
 
 {
-  "productId": "687949b3608bcf098a52e037"
+  "productId": "68a143d794fd76d426560501"
 }
 
 ### 4. Add Multiple Products to Cart
@@ -31,7 +31,7 @@ Authorization: {{authToken}}
 }
 
 ### 5. Remove Product from Cart
-DELETE {{baseUrl}}/purchase/cart/remove/687949b3608bcf098a52e037
+DELETE {{baseUrl}}/purchase/cart/remove/68a143d794fd76d426560501
 Content-Type: application/json
 Authorization: {{authToken}}
 
@@ -137,7 +137,7 @@ Content-Type: application/json
 Authorization: {{authToken}}
 
 ### 20. Get Product Premium Content Access
-GET {{baseUrl}}/purchase/access/687949b3608bcf098a52e037
+GET {{baseUrl}}/purchase/access/68a143d794fd76d426560501
 Content-Type: application/json
 Authorization: {{authToken}}
 
@@ -218,4 +218,71 @@ Authorization: {{authToken}}
 {
   "paymentMethod": "stripe",
   "paymentReference": "pi_empty_cart_test"
+}
+
+### 26. Complete Payment (Simulate Payment Success)
+POST {{baseUrl}}/purchase/complete-payment
+Content-Type: application/json
+
+{
+  "purchaseId": "68a41a0ecf59a529035089b0"
+}
+
+### 27. Complete Payment for Different Purchase
+POST {{baseUrl}}/purchase/complete-payment
+Content-Type: application/json
+
+{
+  "purchaseId": "YOUR_PURCHASE_ID_HERE"
+}
+
+### 28. User Confirm Payment (Authenticated)
+POST {{baseUrl}}/purchase/confirm-payment
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "purchaseId": "68a41a0ecf59a529035089b0",
+  "paymentMethod": "credit_card",
+  "transactionId": "manual-cc-123456"
+}
+
+### 29. Complete Purchase Workflow (Create -> Complete Payment)
+POST {{baseUrl}}/purchase/cart/add
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "productId": "68a143d794fd76d426560501"
+}
+
+###
+POST {{baseUrl}}/purchase/create
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "paymentMethod": "credit_card",
+  "paymentReference": "workflow-test"
+}
+
+###
+POST {{baseUrl}}/purchase/complete-payment
+Content-Type: application/json
+
+{
+  "purchaseId": "PURCHASE_ID_FROM_ABOVE_RESPONSE"
+}
+
+### 30. Access Premium Content After Purchase
+GET {{baseUrl}}/purchase/access/68a143d794fd76d426560501
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 31. Test Double Payment Completion (Should Fail)
+POST {{baseUrl}}/purchase/complete-payment
+Content-Type: application/json
+
+{
+  "purchaseId": "ALREADY_COMPLETED_PURCHASE_ID"
 }

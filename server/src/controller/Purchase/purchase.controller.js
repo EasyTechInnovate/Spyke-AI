@@ -364,5 +364,127 @@ export default {
         } catch (err) {
             httpError(next, err, req, 500)
         }
+    },
+
+    completePayment: async (req, res, next) => {
+        try {
+            const { purchaseId } = req.body
+
+            if (!purchaseId) {
+                return httpError(next, new Error('Purchase ID is required'), req, 400)
+            }
+
+            const purchase = await Purchase.findById(purchaseId)
+                .populate('items.productId', 'title type')
+                .populate('userId', 'emailAddress name')
+
+            if (!purchase) {
+                return httpError(next, new Error('Purchase not found'), req, 404)
+            }
+
+            if (purchase.paymentStatus === 'completed') {
+                return httpError(next, new Error('Payment already completed'), req, 409)
+            }
+
+            await purchase.grantAccess()
+            purchase.transactionId = `txn-${Date.now()}`
+            purchase.completedAt = new Date()
+
+            for (const item of purchase.items) {
+                await Product.findByIdAndUpdate(
+                    item.productId._id,
+                    { 
+                        $inc: { sales: 1 },
+                        $set: { updatedAt: new Date() }
+                    }
+                )
+
+                const seller = await sellerProfileModel.findById(item.sellerId)
+                if (seller) {
+                    seller.stats.totalSales += 1
+                    seller.stats.totalEarnings += item.price
+                    await seller.save()
+
+                    await notificationService.sendToUser(
+                        seller.userId,
+                        'New Sale! 💰',
+                        `Your product "${item.productId.title}" was purchased for $${item.price}.`,
+                        'success'
+                    )
+                }
+            }
+
+            await notificationService.sendToUser(
+                purchase.userId._id || purchase.userId,
+                'Purchase Completed!',
+                `Your payment has been processed successfully. You now have access to ${purchase.items.length} product(s).`,
+                'success'
+            )
+
+            const responseData = {
+                purchaseId: purchase._id,
+                orderStatus: purchase.orderStatus,
+                paymentStatus: purchase.paymentStatus,
+                transactionId: purchase.transactionId,
+                completedAt: purchase.completedAt,
+                totalItems: purchase.items.length,
+                finalAmount: purchase.finalAmount,
+                accessGranted: true,
+                products: purchase.items.map(item => ({
+                    productId: item.productId._id,
+                    title: item.productId.title,
+                    type: item.productId.type,
+                    accessGranted: item.accessGranted,
+                    accessGrantedAt: item.accessGrantedAt
+                }))
+            }
+
+            httpResponse(req, res, 200, 'Payment completed successfully and access granted', responseData)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+
+    confirmPayment: async (req, res, next) => {
+        try {
+            const { authenticatedUser } = req
+            const { purchaseId, paymentMethod, transactionId } = req.body
+
+            const purchase = await Purchase.findOne({
+                _id: purchaseId,
+                userId: authenticatedUser.id
+            })
+
+            if (!purchase) {
+                return httpError(next, new Error('Purchase not found or access denied'), req, 404)
+            }
+
+            if (purchase.paymentStatus === 'completed') {
+                return httpError(next, new Error('Payment already completed'), req, 400)
+            }
+
+            await purchase.grantAccess()
+            purchase.paymentMethod = paymentMethod || purchase.paymentMethod
+            purchase.paymentReference = transactionId || `manual-${Date.now()}`
+            
+            await notificationService.sendToUser(
+                authenticatedUser.id,
+                'Access Granted!',
+                'Your purchase has been confirmed and you now have access to premium content.',
+                'success'
+            )
+
+            const responseData = {
+                purchaseId: purchase._id,
+                orderStatus: purchase.orderStatus,
+                paymentStatus: purchase.paymentStatus,
+                accessGranted: true,
+                purchaseDate: purchase.purchaseDate
+            }
+
+            httpResponse(req, res, 200, 'Purchase confirmed and access granted', responseData)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
     }
 }

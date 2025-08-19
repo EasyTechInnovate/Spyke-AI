@@ -81,4 +81,15 @@ router.get(
   purchaseController.getProductAccess
 )
 
+router.post(
+  '/complete-payment',
+  purchaseController.completePayment
+)
+
+router.post(
+  '/confirm-payment',
+  authenticate,
+  purchaseController.confirmPayment
+)
+
 export default router
