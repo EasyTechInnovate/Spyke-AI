@@ -93,6 +93,7 @@ export default {
         DELETED: 'Product deleted successfully',
         PUBLISHED: 'Product published successfully',
         ARCHIVED: 'Product archived successfully',
+        SUBMITTED_FOR_REVIEW: 'Product submitted for review successfully',
         NOT_FOUND: 'Product not found',
         ALREADY_EXISTS: 'Product with this title already exists',
         INVALID_STATUS: 'Invalid product status',

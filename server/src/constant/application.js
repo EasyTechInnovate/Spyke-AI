@@ -226,8 +226,9 @@ export const EProductSortBy = {
     SALES: 'sales'
 }
 
-export const EProductStatusNew = {
+export const EProductStatusNew = Object.freeze({
     DRAFT: 'draft',
+    PENDING_REVIEW: 'pending_review',
     PUBLISHED: 'published',
     ARCHIVED: 'archived'
-}
+})

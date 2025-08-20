@@ -722,5 +722,84 @@ export default {
         } catch (err) {
             httpError(next, err, req, 500)
         }
-    }
+    },
+
+    submitForReview: async (req, res, next) => {
+        try {
+            const { authenticatedUser } = req
+            const { id: productId } = req.params
+            const { message } = req.body
+
+            // Find the product and verify ownership
+            const product = await Product.findById(productId)
+            if (!product) {
+                return httpError(next, new Error(responseMessage.PRODUCT.NOT_FOUND), req, 404)
+            }
+
+            // Verify seller profile ownership
+            const sellerProfile = await sellerProfileModel.findOne({ userId: authenticatedUser.id })
+            if (!sellerProfile) {
+                return httpError(next, new Error(responseMessage.SELLER.PROFILE_NOT_FOUND), req, 404)
+            }
+
+            // Check if user owns this product (unless admin)
+            if (authenticatedUser.role !== EUserRole.ADMIN && !product.sellerId.equals(sellerProfile._id)) {
+                return httpError(next, new Error(responseMessage.PRODUCT.UNAUTHORIZED), req, 403)
+            }
+
+            // Check if product is in draft status
+            if (product.status !== EProductStatusNew.DRAFT) {
+                return httpError(next, new Error('Only draft products can be submitted for review'), req, 400)
+            }
+
+            // Validate required fields for submission
+            const requiredFields = ['title', 'shortDescription', 'fullDescription', 'thumbnail', 'type', 'category', 'industry', 'price', 'setupTime']
+            const missingFields = requiredFields.filter(field => !product[field] && product[field] !== 0)
+            
+            if (missingFields.length > 0) {
+                return httpError(next, new Error(`Missing required fields: ${missingFields.join(', ')}`), req, 422)
+            }
+
+            // Update product status to pending review
+            product.status = EProductStatusNew.PENDING_REVIEW
+            product.submittedAt = dayjs.utc().toDate()
+            if (message) {
+                product.reviewMessage = message
+            }
+
+            await product.save()
+
+            // Notify admin about new submission
+            await notificationService.sendToAdmins(
+                'New Product Submission',
+                `A new product "${product.title}" has been submitted for review by ${sellerProfile.fullName || 'seller'}.`,
+                'info',
+                {
+                    productId: product._id,
+                    sellerId: sellerProfile._id,
+                    action: 'review_product'
+                }
+            )
+
+            // Notify seller about successful submission
+            await notificationService.sendToUser(
+                authenticatedUser.id,
+                'Product Submitted Successfully!',
+                `Your product "${product.title}" has been submitted for admin review. You'll be notified once the review is complete.`,
+                'success'
+            )
+
+            const responseData = {
+                id: product._id,
+                title: product.title,
+                status: product.status,
+                submittedAt: product.submittedAt,
+                message: product.reviewMessage || null
+            }
+
+            httpResponse(req, res, 200, responseMessage.PRODUCT.SUBMITTED_FOR_REVIEW, responseData)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
 }

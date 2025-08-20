@@ -3,7 +3,7 @@
 
 # @userEmailAddress = admin@gmail.com
 # @userPassword = Q1e2r3s4
-@userEmailAddress = test@gmail.com
+@userEmailAddress = anandbuyerone@gmail.com
 @userPassword = anand@123ANAND
 
 @accessToken = YOUR_JWT_TOKEN_HERE

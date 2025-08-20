@@ -308,7 +308,7 @@ Content-Type: application/json
 Authorization: {{authToken}}
 
 ### 30. Get Product Premium Content (After Purchase)
-GET {{baseUrl}}/products/687949b3608bcf098a52e037/access
+GET {{baseUrl}}/products/68a143d794fd76d426560501/access
 Content-Type: application/json
 Authorization: {{authToken}}
 

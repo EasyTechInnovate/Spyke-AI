@@ -139,6 +139,15 @@ export const sellerAPI = {
     },
 
     /**
+     * Submit product for review
+     * POST v1/products/seller/:productId/submit-for-review
+     */
+    submitProductForReview: async (productId) => {
+        const response = await apiClient.post(`v1/products/seller/${productId}/submit-for-review`)
+        return response.data
+    },
+
+    /**
      * Get seller analytics
      * GET v1/seller/analytics
      */

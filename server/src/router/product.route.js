@@ -12,6 +12,7 @@ import {
   toggleUpvoteSchema,
   verifyProductSchema,
   updateProductStatusSchema,
+  submitForReviewSchema,
 } from '../schema/product.schema.js'
 import rateLimiter from '../middleware/rateLimit.js'
 
@@ -86,6 +87,14 @@ router.post(
   authenticate,
   authorize(['seller', 'admin']),
   productController.publishProduct
+)
+
+router.post(
+  '/:id/submit-for-review',
+  authenticate,
+  authorize(['seller', 'admin']),
+  validateRequest(submitForReviewSchema),
+  productController.submitForReview
 )
 
 router.get(

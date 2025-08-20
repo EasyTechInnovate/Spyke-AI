@@ -76,33 +76,55 @@ export const adminAPI = {
         // Get products for moderation
         getPending: async (params = {}) => {
             const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc' } = params
-            const queryParams = new URLSearchParams({ page, limit, sortBy, sortOrder })
+            const queryParams = new URLSearchParams({ 
+                page, 
+                limit, 
+                sortBy, 
+                sortOrder,
+                status: 'pending' // Add status filter for pending products
+            })
 
-            const res = await apiClient.get(`products/admin/pending?${queryParams}`)
+            const res = await apiClient.get(`v1/products/admin/all?${queryParams}`)
+            return res?.data
+        },
+
+        // Get all products (for admin)
+        getAll: async (params = {}) => {
+            const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc', status } = params
+            const queryParams = new URLSearchParams({ page, limit, sortBy, sortOrder })
+            if (status) queryParams.append('status', status)
+
+            const res = await apiClient.get(`v1/products/admin/all?${queryParams}`)
             return res?.data
         },
 
         // Approve product
         approve: async (productId) => {
-            const res = await apiClient.post(`products/admin/approve/${productId}`)
+            const res = await apiClient.post(`v1/products/admin/approve/${productId}`)
             return res?.data
         },
 
         // Reject product
         reject: async (productId, reason) => {
-            const res = await apiClient.post(`products/admin/reject/${productId}`, { reason })
+            const res = await apiClient.post(`v1/products/admin/reject/${productId}`, { reason })
             return res?.data
         },
 
         // Flag product
         flag: async (productId, reason) => {
-            const res = await apiClient.post(`products/admin/flag/${productId}`, { reason })
+            const res = await apiClient.post(`v1/products/admin/flag/${productId}`, { reason })
             return res?.data
         },
 
         // Feature product
         feature: async (productId, featured = true) => {
-            const res = await apiClient.post(`products/admin/feature/${productId}`, { featured })
+            const res = await apiClient.post(`v1/products/admin/feature/${productId}`, { featured })
+            return res?.data
+        },
+
+        // Verify product (admin only)
+        verify: async (productId, verificationData) => {
+            const res = await apiClient.post(`v1/products/${productId}/verify`, verificationData)
             return res?.data
         }
     },
