@@ -27,7 +27,7 @@ export const sellerAPI = {
         }
         return response
     },
-    
+
     acceptCommissionOffer: async () => {
         const res = await apiClient.post('v1/seller/commission/accept')
         return res?.data
@@ -37,12 +37,12 @@ export const sellerAPI = {
         const res = await apiClient.post('v1/seller/commission/reject', { reason })
         return res?.data
     },
-    
+
     // Submit counter offer
     submitCounterOffer: async ({ rate, reason }) => {
-        const res = await apiClient.post('v1/seller/commission/counter-offer', { 
-            rate, 
-            reason 
+        const res = await apiClient.post('v1/seller/commission/counter-offer', {
+            rate,
+            reason
         })
         return res?.data
     },
@@ -140,10 +140,10 @@ export const sellerAPI = {
 
     /**
      * Submit product for review
-     * POST v1/products/seller/:productId/submit-for-review
+     * POST v1/products/:productId/submit-for-review
      */
     submitProductForReview: async (productId) => {
-        const response = await apiClient.post(`v1/products/seller/${productId}/submit-for-review`)
+        const response = await apiClient.post(`v1/products/${productId}/submit-for-review`)
         return response.data
     },
 

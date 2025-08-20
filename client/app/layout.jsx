@@ -2,11 +2,9 @@ import './globals.css'
 import { Toaster } from 'sonner'
 import { appConfig } from '@/lib/config'
 import Script from 'next/script'
-import { AnalyticsProvider } from '@/providers/AnalyticsProvider'
-import AnalyticsWrapper from '@/components/analytics/AnalyticsWrapper'
 import { fontVariables } from '@/lib/fonts'
 import WhatsAppButton from '@/components/shared/WhatsAppButton'
-import Footer from '@/components/shared/layout/Footer'
+import ConditionalFooter from '@/components/shared/layout/ConditionalFooter'
 
 const structuredData = {
     '@context': 'https://schema.org',
@@ -264,12 +262,9 @@ export default function RootLayout({ children }) {
                     Skip to main content
                 </a>
 
-                <AnalyticsProvider>
-                    <main id="main-content">{children}</main>
-                    <Footer />
-                    <AnalyticsWrapper />
-                    <WhatsAppButton />
-                </AnalyticsProvider>
+                <main id="main-content">{children}</main>
+                <ConditionalFooter />
+                <WhatsAppButton />
 
                 <Toaster
                     position="top-right"
@@ -352,3 +347,4 @@ export default function RootLayout({ children }) {
         </html>
     )
 }
+

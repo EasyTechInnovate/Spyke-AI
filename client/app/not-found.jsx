@@ -1,28 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect } from 'react'
 import { ArrowLeft, Home } from 'lucide-react'
 import Header from '@/components/shared/layout/Header'
-import { useTrackEvent } from '@/hooks/useTrackEvent'
 
 export const dynamic = 'force-dynamic'
 
 export default function NotFound() {
-  const track = useTrackEvent()
-  
-  useEffect(() => {
-    // Track 404 page view with the attempted URL
-    if (typeof window !== 'undefined') {
-      const attemptedPath = window.location.pathname
-      track('404 Page Viewed', {
-        attempted_path: attemptedPath,
-        referrer: document.referrer || 'direct',
-        timestamp: new Date().toISOString()
-      })
-    }
-  }, [track])
-
   return (
     <>
       <Header />

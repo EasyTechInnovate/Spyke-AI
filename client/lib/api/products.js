@@ -101,7 +101,7 @@ class ProductsAPI {
     
     // Verify product (admin only)
     async verifyProduct(productId, verificationData) {
-        return apiClient.patch(`v1/products/${productId}/verify`, verificationData)
+        return apiClient.post(`v1/products/${productId}/verify`, verificationData)
     }
 }
 

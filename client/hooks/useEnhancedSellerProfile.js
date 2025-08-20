@@ -3,8 +3,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { sellerAPI, productsAPI } from '@/lib/api'
-import { useTrackEvent } from '@/hooks/useTrackEvent'
-import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 
 export function useEnhancedSellerProfile(sellerId) {
     const [seller, setSeller] = useState(null)
@@ -18,8 +16,6 @@ export function useEnhancedSellerProfile(sellerId) {
         priceRange: 'all',
         sortBy: 'newest'
     })
-
-    const track = useTrackEvent()
 
     const loadSellerData = useCallback(async () => {
         try {
@@ -74,12 +70,6 @@ export function useEnhancedSellerProfile(sellerId) {
             setSeller(transformedSeller)
             setProducts(productsData)
 
-            // Track profile view
-            track(
-                ANALYTICS_EVENTS.SELLER.PROFILE_VIEWED,
-                eventProperties.seller('public_profile_view', { sellerId, sellerName: transformedSeller.fullName })
-            )
-
             // Load similar sellers based on niches
             loadSimilarSellers(transformedSeller.niches?.[0])
         } catch (error) {
@@ -87,7 +77,7 @@ export function useEnhancedSellerProfile(sellerId) {
         } finally {
             setLoading(false)
         }
-    }, [sellerId, track])
+    }, [sellerId])
 
     const loadSimilarSellers = async (primaryNiche) => {
         try {
@@ -103,12 +93,6 @@ export function useEnhancedSellerProfile(sellerId) {
 
     const updateProductFilters = (newFilters) => {
         setProductFilters((prev) => ({ ...prev, ...newFilters }))
-
-        // Track filter usage
-        track(ANALYTICS_EVENTS.SELLER.PRODUCTS_FILTERED, {
-            sellerId,
-            filters: newFilters
-        })
     }
 
     const filteredProducts = products
@@ -172,3 +156,4 @@ function getSellerLevel(totalSales) {
     if (totalSales >= 100) return { level: 'Silver', color: 'text-gray-300', iconName: 'Award' }
     return { level: 'Bronze', color: 'text-orange-400', iconName: 'Shield' }
 }
+

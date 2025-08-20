@@ -226,15 +226,14 @@ function useAdvancedCache() {
     return { get, set, clear }
 }
 
-export default function ExplorePage() {
+function ExplorePageContent() {
+    const searchParams = useSearchParams()
+    const router = useRouter()
+
     // Enhanced hooks
     const { isOnline, connectionSpeed } = useNetworkStatus()
     const { metrics, trackApiCall } = usePerformanceMonitoring()
     const cache = useAdvancedCache()
-
-    // Router and search params
-    const router = useRouter()
-    const searchParams = useSearchParams()
 
     // Refs for cleanup and optimization
     const abortControllerRef = useRef(null)
@@ -685,8 +684,6 @@ export default function ExplorePage() {
         </AnimatePresence>
     )
 
-    // Performance metrics display (dev mode)
-
     // Effect to fetch products when dependencies change
     useEffect(() => {
         let isMounted = true
@@ -803,7 +800,6 @@ export default function ExplorePage() {
                                         <div className="text-center">
                                             <div className="relative">
                                                 <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-brand-primary mx-auto mb-6"></div>
-                                                
                                             </div>
                                             <h3 className="text-xl font-semibold text-white mb-2">Discovering Amazing Products</h3>
                                             <p className="text-gray-400">Finding the perfect tools for you...</p>
@@ -814,71 +810,69 @@ export default function ExplorePage() {
                                         error={{ message: apiError }}
                                         onRetry={handleRetry}
                                     />
+                                ) : // If a specific category is selected, mount CategoryDetailClient which handles filters, pagination and URL-sync
+                                filters.category && filters.category !== 'all' ? (
+                                    <CategoryDetailClient categoryId={filters.category} />
                                 ) : (
-                                    // If a specific category is selected, mount CategoryDetailClient which handles filters, pagination and URL-sync
-                                    (filters.category && filters.category !== 'all') ? (
-                                        <CategoryDetailClient categoryId={filters.category} />
-                                    ) : (
-                                        <>
-                                            {/* Enhanced Products Grid with virtualization support */}
-                                            {useVirtualization && products.length > 50 ? (
-                                                <VirtualizedProductGrid
-                                                    products={products}
-                                                    loading={loading && !initialLoading}
-                                                    error={null}
-                                                    onClearFilters={clearFilters}
-                                                    containerHeight={800}
-                                                    containerWidth={typeof window !== 'undefined' ? window.innerWidth - 400 : 1200}
-                                                />
-                                            ) : (
-                                                <ProductGrid
-                                                    products={products}
-                                                    viewMode={viewMode}
-                                                    loading={loading && !initialLoading}
-                                                    error={null}
-                                                    onClearFilters={clearFilters}
-                                                />
-                                            )}
+                                    <>
+                                        {/* Enhanced Products Grid with virtualization support */}
+                                        {useVirtualization && products.length > 50 ? (
+                                            <VirtualizedProductGrid
+                                                products={products}
+                                                loading={loading && !initialLoading}
+                                                error={null}
+                                                onClearFilters={clearFilters}
+                                                containerHeight={800}
+                                                containerWidth={typeof window !== 'undefined' ? window.innerWidth - 400 : 1200}
+                                            />
+                                        ) : (
+                                            <ProductGrid
+                                                products={products}
+                                                viewMode={viewMode}
+                                                loading={loading && !initialLoading}
+                                                error={null}
+                                                onClearFilters={clearFilters}
+                                            />
+                                        )}
 
-                                            {/* Enhanced Pagination with smart loading */}
-                                            {!loading && !apiError && totalPages > 1 && (
-                                                <motion.div
-                                                    initial={{ opacity: 0, y: 20 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    transition={{ delay: 0.2 }}
-                                                    className="mt-12">
-                                                    <Pagination
-                                                        currentPage={currentPage}
-                                                        totalPages={totalPages}
-                                                        onPageChange={handlePageChange}
-                                                        isLoading={loading}
-                                                        hasNextPage={currentPage < totalPages}
-                                                        hasPrevPage={currentPage > 1}
-                                                    />
-                                                </motion.div>
-                                            )}
+                                        {/* Enhanced Pagination with smart loading */}
+                                        {!loading && !apiError && totalPages > 1 && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: 0.2 }}
+                                                className="mt-12">
+                                                <Pagination
+                                                    currentPage={currentPage}
+                                                    totalPages={totalPages}
+                                                    onPageChange={handlePageChange}
+                                                    isLoading={loading}
+                                                    hasNextPage={currentPage < totalPages}
+                                                    hasPrevPage={currentPage > 1}
+                                                />
+                                            </motion.div>
+                                        )}
 
-                                            {/* Enhanced Results Summary with performance insights */}
-                                            {!loading && !apiError && products.length > 0 && (
-                                                <motion.div
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: 1 }}
-                                                    transition={{ delay: 0.3 }}
-                                                    className="mt-8 text-center space-y-2">
-                                                    <div className="text-gray-400 text-sm">
-                                                        Showing {products.length} of {totalItems.toLocaleString()} products
-                                                        {hasActiveFilters && (
-                                                            <button
-                                                                onClick={clearFilters}
-                                                                className="ml-2 text-brand-primary hover:text-brand-primary/80 underline transition-colors">
-                                                                Clear filters
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </motion.div>
-                                            )}
-                                        </>
-                                    )
+                                        {/* Enhanced Results Summary with performance insights */}
+                                        {!loading && !apiError && products.length > 0 && (
+                                            <motion.div
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                transition={{ delay: 0.3 }}
+                                                className="mt-8 text-center space-y-2">
+                                                <div className="text-gray-400 text-sm">
+                                                    Showing {products.length} of {totalItems.toLocaleString()} products
+                                                    {hasActiveFilters && (
+                                                        <button
+                                                            onClick={clearFilters}
+                                                            className="ml-2 text-brand-primary hover:text-brand-primary/80 underline transition-colors">
+                                                            Clear filters
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </div>
@@ -895,6 +889,31 @@ export default function ExplorePage() {
                 />
             </div>
         </ErrorBoundary>
+    )
+}
+
+// Main export wrapped with Suspense
+export default function ExplorePage() {
+    return (
+        <Suspense
+            fallback={
+                <div className="min-h-screen bg-black text-white">
+                    <Header />
+                    <div className="pt-24 pb-16">
+                        <Container>
+                            <div className="flex items-center justify-center min-h-[60vh]">
+                                <div className="text-center">
+                                    <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-brand-primary mx-auto mb-6"></div>
+                                    <h3 className="text-xl font-semibold text-white mb-2">Loading Explore Page</h3>
+                                    <p className="text-gray-400">Setting up your browsing experience...</p>
+                                </div>
+                            </div>
+                        </Container>
+                    </div>
+                </div>
+            }>
+            <ExplorePageContent />
+        </Suspense>
     )
 }
 

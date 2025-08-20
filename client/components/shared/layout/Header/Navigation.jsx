@@ -1,44 +1,55 @@
+'use client'
+
+import React, { useRef } from 'react'
 import Link from 'next/link'
-import { Users, TrendingUp } from 'lucide-react'
-import { useTrackClick } from '@/hooks/useTrackEvent'
+import { motion } from 'framer-motion'
 
-const NAVIGATION_ITEMS = [
-    { name: 'Explore', href: '/explore', prefetch: false },
-    { name: 'Categories', href: '/categories', prefetch: false },
-    { name: 'Top Creators', href: '/creators', prefetch: false },
-    { name: 'Hire', href: '/hire', prefetch: false, icon: Users }
-]
+export default function Navigation() {
+    const navRef = useRef(null)
 
-export default function Navigation({ showBecomeSeller, searchOpen }) {
-    const trackNavClick = useTrackClick('Navigation Click')
-    const trackBecomeSellerClick = useTrackClick('Become Seller Click', { source: 'header' })
-    
     return (
-        <nav className={`hidden lg:flex items-center space-x-4 xl:space-x-6 2xl:space-x-8 transition-all duration-300 ${
-            searchOpen ? 'opacity-0 invisible' : 'opacity-100 visible'
-        }`}>
-            {NAVIGATION_ITEMS.map((item) => (
+        <nav
+            ref={navRef}
+            className="flex items-center space-x-1 sm:space-x-2">
+            <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}>
                 <Link
-                    key={item.name}
-                    href={item.href}
-                    prefetch={item.prefetch !== false}
-                    onClick={() => trackNavClick({ item: item.name, href: item.href })}
-                    className="group flex items-center gap-2 font-kumbh-sans font-medium text-base xl:text-lg text-gray-300 hover:text-brand-primary transition-all duration-300"
-                >
-                    {item.icon && <item.icon className="h-4 w-4 xl:h-5 xl:w-5 opacity-70 group-hover:opacity-100" />}
-                    <span>{item.name}</span>
+                    href="/explore"
+                    className="nav-link px-3 py-2 text-sm font-medium text-gray-700 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-gray-100">
+                    Explore
                 </Link>
-            ))}
-            {showBecomeSeller && (
+            </motion.div>
+
+            <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}>
                 <Link
-                    href="/become-seller"
-                    onClick={trackBecomeSellerClick}
-                    className="group flex items-center gap-2 font-kumbh-sans font-medium text-base xl:text-lg text-brand-primary hover:text-white transition-all duration-300"
-                >
-                    <TrendingUp className="h-4 w-4 xl:h-5 xl:w-5 opacity-70 group-hover:opacity-100" />
-                    <span>Become a seller</span>
+                    href="/sellers"
+                    className="nav-link px-3 py-2 text-sm font-medium text-gray-700 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-gray-100">
+                    Sellers
                 </Link>
-            )}
+            </motion.div>
+
+            <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}>
+                <Link
+                    href="/categories"
+                    className="nav-link px-3 py-2 text-sm font-medium text-gray-700 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-gray-100">
+                    Categories
+                </Link>
+            </motion.div>
+
+            <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}>
+                <Link
+                    href="/how-it-works"
+                    className="nav-link px-3 py-2 text-sm font-medium text-gray-700 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-gray-100">
+                    How It Works
+                </Link>
+            </motion.div>
         </nav>
     )
 }

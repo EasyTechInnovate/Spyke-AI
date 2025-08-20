@@ -29,9 +29,24 @@ export default function SellerLayout({ children }) {
             />
             
             {/* Main Content */}
-            <main className="flex-1 min-h-screen lg:ml-64">
-                {children}
-            </main>
+            <div className="flex-1 lg:ml-64 flex flex-col min-h-screen">
+                <main className="flex-1 p-6">
+                    {children}
+                </main>
+                
+                {/* Footer with proper sidebar spacing */}
+                <footer className="bg-black text-white border-t border-gray-800 mt-auto">
+                    <div className="px-6 py-8">
+                        <div className="max-w-6xl mx-auto">
+                            <div className="text-center">
+                                <p className="text-sm text-gray-400">
+                                    © {new Date().getFullYear()} Spyke AI. All rights reserved.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
         </div>
     )
 }

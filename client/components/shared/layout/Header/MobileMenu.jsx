@@ -1,24 +1,20 @@
 import Link from 'next/link'
 import { X, Menu, TrendingUp, ShoppingCart, LogOut, Store, User } from 'lucide-react'
 import UserAvatar, { getDisplayName, getInitials } from './UserAvatar'
-import { useTrackEvent } from '@/hooks/useTrackEvent'
-import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 
-export default function MobileMenu({ 
-    isOpen, 
-    onClose, 
-    user, 
-    cartCount, 
-    currentRole, 
+export default function MobileMenu({
+    isOpen,
+    onClose,
+    user,
+    cartCount,
+    currentRole,
     isSeller,
     navigation,
     menuItems,
     showBecomeSeller,
     onSwitchRole,
-    onLogout 
+    onLogout
 }) {
-    const track = useTrackEvent()
-    
     if (!isOpen) return null
 
     return (
@@ -31,24 +27,20 @@ export default function MobileMenu({
                         href={item.href}
                         className="flex items-center gap-2 font-kumbh-sans font-medium text-base sm:text-lg text-gray-300 hover:text-brand-primary px-4 py-3 hover:bg-white/5 transition-all"
                         onClick={() => {
-                            track(ANALYTICS_EVENTS.NAVIGATION.MOBILE_MENU_ITEM_CLICKED, eventProperties.navigation(item.name, 'main_navigation'))
                             onClose()
-                        }}
-                    >
+                        }}>
                         {item.icon && <item.icon className="h-5 w-5 opacity-70" />}
                         <span>{item.name}</span>
                     </Link>
                 ))}
-                
+
                 {showBecomeSeller && (
                     <Link
                         href="/become-seller"
                         className="flex items-center gap-2 font-kumbh-sans font-medium text-base sm:text-lg text-brand-primary px-4 py-3 hover:bg-white/5 transition-all"
                         onClick={() => {
-                            track('Mobile Become Seller Click')
                             onClose()
-                        }}
-                    >
+                        }}>
                         <TrendingUp className="h-5 w-5 opacity-70" />
                         <span>Become a seller</span>
                     </Link>
@@ -59,14 +51,15 @@ export default function MobileMenu({
                         <div className="border-t border-gray-700 mt-4">
                             {/* User Info */}
                             <div className="flex items-center gap-3 px-4 py-4">
-                                <UserAvatar user={user} size="lg" />
+                                <UserAvatar
+                                    user={user}
+                                    size="lg"
+                                />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm sm:text-base font-medium text-white truncate">
                                         {getDisplayName(user.name, user.emailAddress || user.email)}
                                     </p>
-                                    <p className="text-xs sm:text-sm text-gray-400 truncate">
-                                        {user.emailAddress || user.email}
-                                    </p>
+                                    <p className="text-xs sm:text-sm text-gray-400 truncate">{user.emailAddress || user.email}</p>
                                 </div>
                             </div>
 
@@ -81,11 +74,8 @@ export default function MobileMenu({
                                                 onClose()
                                             }}
                                             className={`flex flex-col items-center justify-center gap-1 px-3 py-3 sm:py-4 rounded-lg transition-all ${
-                                                currentRole === 'user'
-                                                    ? 'bg-brand-primary text-black font-medium'
-                                                    : 'bg-gray-800/50 text-gray-300'
-                                            }`}
-                                        >
+                                                currentRole === 'user' ? 'bg-brand-primary text-black font-medium' : 'bg-gray-800/50 text-gray-300'
+                                            }`}>
                                             <User className="w-5 h-5" />
                                             <span className="text-xs sm:text-sm font-medium">Buyer</span>
                                         </button>
@@ -95,11 +85,8 @@ export default function MobileMenu({
                                                 onClose()
                                             }}
                                             className={`flex flex-col items-center justify-center gap-1 px-3 py-3 sm:py-4 rounded-lg transition-all ${
-                                                currentRole === 'seller'
-                                                    ? 'bg-brand-primary text-black font-medium'
-                                                    : 'bg-gray-800/50 text-gray-300'
-                                            }`}
-                                        >
+                                                currentRole === 'seller' ? 'bg-brand-primary text-black font-medium' : 'bg-gray-800/50 text-gray-300'
+                                            }`}>
                                             <Store className="w-5 h-5" />
                                             <span className="text-xs sm:text-sm font-medium">Seller</span>
                                         </button>
@@ -112,12 +99,8 @@ export default function MobileMenu({
                                 href="/cart"
                                 className="flex items-center gap-2 font-kumbh-sans font-medium text-base sm:text-lg text-gray-300 px-4 py-3 hover:bg-white/5 transition-all"
                                 onClick={() => {
-                                    track('Mobile Cart Click', {
-                                        cartCount
-                                    })
                                     onClose()
-                                }}
-                            >
+                                }}>
                                 <ShoppingCart className="h-5 w-5 opacity-70" />
                                 <span>Cart {cartCount > 0 && `(${cartCount})`}</span>
                             </Link>
@@ -129,13 +112,8 @@ export default function MobileMenu({
                                     href={item.href}
                                     className="flex items-center gap-2 font-kumbh-sans font-medium text-base sm:text-lg text-gray-300 px-4 py-3 hover:bg-white/5 transition-all"
                                     onClick={() => {
-                                        track(ANALYTICS_EVENTS.NAVIGATION.MOBILE_MENU_ITEM_CLICKED, {
-                                            ...eventProperties.navigation(item.name, 'user_menu'),
-                                            role: currentRole
-                                        })
                                         onClose()
-                                    }}
-                                >
+                                    }}>
                                     <item.icon className="h-5 w-5 opacity-70" />
                                     <span>{item.name}</span>
                                 </Link>
@@ -146,12 +124,8 @@ export default function MobileMenu({
                                     href="/become-seller"
                                     className="flex items-center gap-2 font-kumbh-sans font-medium text-base sm:text-lg text-brand-primary px-4 py-3 hover:bg-white/5 transition-all"
                                     onClick={() => {
-                                        track('Mobile Become Seller Click', {
-                                            source: 'mobile_menu'
-                                        })
                                         onClose()
-                                    }}
-                                >
+                                    }}>
                                     <Store className="h-5 w-5" />
                                     <span>Become a Seller</span>
                                 </Link>
@@ -161,12 +135,10 @@ export default function MobileMenu({
                             <div className="mt-4 px-4 pb-4 border-t border-gray-700 pt-4">
                                 <button
                                     onClick={() => {
-                                        track('Mobile Logout Click')
                                         onLogout()
                                         onClose()
                                     }}
-                                    className="w-full flex items-center justify-center gap-2 font-kumbh-sans font-medium text-base sm:text-lg text-red-400 bg-red-500/10 rounded-lg py-3 hover:bg-red-500/20 transition-all"
-                                >
+                                    className="w-full flex items-center justify-center gap-2 font-kumbh-sans font-medium text-base sm:text-lg text-red-400 bg-red-500/10 rounded-lg py-3 hover:bg-red-500/20 transition-all">
                                     <LogOut className="h-5 w-5" />
                                     <span>Log out</span>
                                 </button>
@@ -178,8 +150,7 @@ export default function MobileMenu({
                         <Link
                             href="/signin"
                             className="block font-kumbh-sans font-medium text-base sm:text-lg text-gray-300 hover:text-brand-primary py-2 transition-colors"
-                            onClick={onClose}
-                        >
+                            onClick={onClose}>
                             Sign In
                         </Link>
                     </div>

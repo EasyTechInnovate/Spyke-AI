@@ -4,30 +4,11 @@ import React, { useEffect } from 'react'
 import { Check } from 'lucide-react'
 import Header from '@/components/shared/layout/Header'
 import Container from '@/components/shared/layout/Container'
-import { useTrackEvent } from '@/hooks/useTrackEvent'
-import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
-import {
-    MultiStepForm,
-    FormInput,
-    FormTextArea,
-    FormSelect,
-    FormTagInput,
-    FormCheckbox,
-    FormSearchableSelect
-} from '@/components/shared/forms'
+import { MultiStepForm, FormInput, FormTextArea, FormSelect, FormTagInput, FormCheckbox, FormSearchableSelect } from '@/components/shared/forms'
 import { useSellerForm } from '@/hooks/forms/useSellerForm'
-import { 
-    formSteps, 
-    formFields, 
-    countries, 
-    timezones,
-    popularNiches,
-    popularTools 
-} from '@/lib/config/forms/SellerFormConfig'
+import { formSteps, formFields, countries, timezones, popularNiches, popularTools } from '@/lib/config/forms/SellerFormConfig'
 
 export default function BecomeSellerPage() {
-    const track = useTrackEvent()
-    
     const {
         formData,
         errors,
@@ -42,11 +23,6 @@ export default function BecomeSellerPage() {
         validateStep,
         handleSubmit
     } = useSellerForm()
-    
-    // Track page view
-    useEffect(() => {
-        track(ANALYTICS_EVENTS.SELLER.BECOME_SELLER_VIEWED, eventProperties.seller('page_view'))
-    }, [])
 
     const renderStepContent = ({ currentStep }) => {
         switch (currentStep) {
@@ -182,7 +158,7 @@ export default function BecomeSellerPage() {
                                 name="location.timezone"
                                 value={formData?.location?.timezone || ''}
                                 onChange={handleInputChange}
-                                options={timezones.map(tz => ({
+                                options={timezones.map((tz) => ({
                                     value: tz.value,
                                     label: tz.label,
                                     description: tz.offset
@@ -267,7 +243,12 @@ export default function BecomeSellerPage() {
                                     }
                                     // Determine component based on type
                                     if (cfg.type === 'email' || cfg.type === 'text') {
-                                        return <FormInput type={cfg.type === 'email' ? 'email' : 'text'} {...commonProps} />
+                                        return (
+                                            <FormInput
+                                                type={cfg.type === 'email' ? 'email' : 'text'}
+                                                {...commonProps}
+                                            />
+                                        )
                                     }
                                     return null
                                 })}
@@ -276,7 +257,10 @@ export default function BecomeSellerPage() {
                         {/* Revenue Share Agreement */}
                         <div className="bg-gray-800/60 p-5 rounded-lg border border-gray-700 space-y-3">
                             <h4 className="text-lg font-medium text-white">Revenue Share Agreement</h4>
-                            <p className="text-sm text-gray-400">You must accept the revenue share agreement to create your seller profile. Review the terms carefully before proceeding.</p>
+                            <p className="text-sm text-gray-400">
+                                You must accept the revenue share agreement to create your seller profile. Review the terms carefully before
+                                proceeding.
+                            </p>
                             <FormCheckbox
                                 name="revenueShareAgreement.accepted"
                                 checked={formData?.revenueShareAgreement?.accepted || false}
@@ -290,18 +274,6 @@ export default function BecomeSellerPage() {
 
             default:
                 return null
-        }
-    }
-
-    // Track step completion
-    const handleStepChange = (newStep) => {
-        // Track when moving forward (completing a step)
-        if (newStep > 1) {
-            track(ANALYTICS_EVENTS.SELLER.ONBOARDING_STEP_COMPLETED, eventProperties.seller('step_completed', {
-                completedStep: newStep - 1,
-                currentStep: newStep,
-                stepTitle: formSteps[newStep - 2]?.title
-            }))
         }
     }
 
@@ -352,11 +324,9 @@ export default function BecomeSellerPage() {
                         loading={loading}
                         submitError={submitError}
                         validateStep={validateStep}
-                        onStepChange={handleStepChange}
                         submitButtonText="Create Seller Profile"
                         submitButtonIcon={<Check className="w-5 h-5" />}
-                        compactStepIndicator={false}
-                    >
+                        compactStepIndicator={false}>
                         {renderStepContent}
                     </MultiStepForm>
                 </Container>

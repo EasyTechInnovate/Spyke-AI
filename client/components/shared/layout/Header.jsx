@@ -13,8 +13,6 @@ import SearchOverlay from './Header/SearchOverlay'
 import Link from 'next/link'
 import Container from './Container'
 import { NAVIGATION, SELLER_MENU_ITEMS, USER_MENU_ITEMS } from './Header/const'
-import { useTrackEvent } from '@/hooks/useTrackEvent'
-import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 
 export default function Header() {
     const {
@@ -34,8 +32,7 @@ export default function Header() {
         isSeller,
         showBecomeSeller
     } = useHeader()
-    
-    const track = useTrackEvent()
+
     const menuItems = currentRole === 'seller' && isSeller ? SELLER_MENU_ITEMS : USER_MENU_ITEMS
 
     return (
@@ -85,22 +82,21 @@ export default function Header() {
                                 />
                             ) : (
                                 <div className="hidden md:flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
-                                    <Link 
-                                        href="/signin" 
+                                    <Link
+                                        href="/signin"
                                         className="relative group inline-flex overflow-hidden rounded-xl"
                                         style={{ zIndex: 10 }}
                                         onClick={() => {
                                             // Clear any stale auth data
                                             if (typeof window !== 'undefined') {
-                                                localStorage.removeItem('authToken');
-                                                localStorage.removeItem('user');
-                                                localStorage.removeItem('roles');
+                                                localStorage.removeItem('authToken')
+                                                localStorage.removeItem('user')
+                                                localStorage.removeItem('roles')
                                                 // Clear cookies too
-                                                document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-                                                document.cookie = 'roles=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                                                document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+                                                document.cookie = 'roles=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
                                             }
-                                        }}
-                                    >
+                                        }}>
                                         <div className="absolute inset-0 bg-gradient-to-r from-brand-primary via-green-400 to-brand-primary bg-[length:200%_100%] animate-gradient-x rounded-xl opacity-100 blur-sm transition-all duration-300 group-hover:blur-md" />
                                         <span className="relative flex items-center px-5 sm:px-6 py-2.5 sm:py-3 bg-black/90 backdrop-blur-sm rounded-xl text-brand-primary font-kumbh-sans font-semibold text-base sm:text-lg transition-all duration-300 hover:text-white hover:bg-black/80 border border-brand-primary/20 hover:border-brand-primary/40">
                                             Sign In

@@ -9,19 +9,10 @@ import { Eye, EyeOff, AlertCircle, Mail, Lock, ArrowRight, Sparkles, Shield, Zap
 import { authAPI } from '@/lib/api/auth'
 import Header from '@/components/shared/layout/Header'
 import Container from '@/components/shared/layout/Container'
-import { useTrackEvent, useTrackForm } from '@/hooks/useTrackEvent'
-import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 
 export default function SignInPage() {
     const router = useRouter()
     const toastShown = useRef(false)
-    const track = useTrackEvent()
-    const { trackFormStart, trackFormSubmit, trackFormError } = useTrackForm('Sign In Form')
-
-    // Track page view
-    useEffect(() => {
-        track(ANALYTICS_EVENTS.AUTH.LOGIN_VIEWED)
-    }, [])
 
     // Form state
     const [loading, setLoading] = useState(false)
@@ -45,11 +36,6 @@ export default function SignInPage() {
         if (loginError) {
             setLoginError('')
         }
-
-        // Track first interaction with form
-        if (name === 'emailAddress' && value.length === 1) {
-            trackFormStart()
-        }
     }
 
     const handleLogin = async (e) => {
@@ -62,17 +48,8 @@ export default function SignInPage() {
         toastShown.current = false
         toast.dismissAll()
 
-        track(ANALYTICS_EVENTS.AUTH.LOGIN_CLICKED, eventProperties.auth(formData.email))
-
         try {
             const response = await authAPI.login(formData)
-
-            track(ANALYTICS_EVENTS.AUTH.LOGIN_SUCCESS, eventProperties.auth(formData.email, true))
-
-            trackFormSubmit({
-                method: 'email',
-                success: true
-            })
 
             if (!toastShown.current) {
                 toastShown.current = true
@@ -105,15 +82,7 @@ export default function SignInPage() {
             }, 500)
         } catch (err) {
             // Login error
-
             const errorMessage = err?.response?.data?.message || err?.data?.message || err?.message || 'Login failed'
-
-            track(ANALYTICS_EVENTS.AUTH.LOGIN_FAILED, eventProperties.auth(formData.email, false))
-
-            trackFormError({
-                method: 'email',
-                error: errorMessage
-            })
 
             setLoginError(errorMessage)
             setLoading(false)
@@ -122,7 +91,6 @@ export default function SignInPage() {
 
     const handleGoogleAuth = () => {
         if (!loading) {
-            track(ANALYTICS_EVENTS.AUTH.LOGIN_CLICKED, { method: 'google' })
             authAPI.googleAuth()
         }
     }
@@ -246,19 +214,12 @@ export default function SignInPage() {
                                                                     <button
                                                                         type="button"
                                                                         onClick={async () => {
-                                                                            track('Resend Verification Email Clicked')
                                                                             try {
                                                                                 await authAPI.resendVerificationEmail({
                                                                                     emailAddress: formData.emailAddress
                                                                                 })
-                                                                                track('Verification Email Resent', {
-                                                                                    email: formData.emailAddress
-                                                                                })
                                                                                 toast.auth.verificationSent()
                                                                             } catch (error) {
-                                                                                track('Verification Email Resend Failed', {
-                                                                                    error: error.message
-                                                                                })
                                                                                 toast.auth.loginError('Failed to resend email. Please try again.')
                                                                             }
                                                                         }}
@@ -321,9 +282,6 @@ export default function SignInPage() {
                                                         type="button"
                                                         onClick={() => {
                                                             setShowPassword(!showPassword)
-                                                            track('Password Visibility Toggled', {
-                                                                visible: !showPassword
-                                                            })
                                                         }}
                                                         className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#00FF89] transition-colors p-1"
                                                         disabled={loading}>

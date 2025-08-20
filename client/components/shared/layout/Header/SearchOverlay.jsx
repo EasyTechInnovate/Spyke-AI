@@ -4,12 +4,9 @@ import { Search, X, Mic, Package, Tag, History, TrendingUp as TrendingUpIcon, Ch
 import { useRouter } from 'next/navigation'
 import toast from '@/lib/utils/toast'
 import api from '@/lib/api'
-import { useTrackEvent } from '@/hooks/useTrackEvent'
-import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 
 export default function SearchOverlay({ isOpen, onClose }) {
     const router = useRouter()
-    const track = useTrackEvent()
     const [searchQuery, setSearchQuery] = useState('')
     const [searchResults, setSearchResults] = useState({ products: [], categories: [] })
     const [isSearching, setIsSearching] = useState(false)
@@ -20,11 +17,8 @@ export default function SearchOverlay({ isOpen, onClose }) {
 
     // Focus input when opened
     useEffect(() => {
-        if (isOpen) {
-            track(ANALYTICS_EVENTS.SEARCH.OPENED)
-            if (searchInputRef.current) {
-                searchInputRef.current.focus()
-            }
+        if (isOpen && searchInputRef.current) {
+            searchInputRef.current.focus()
         }
     }, [isOpen])
 
@@ -70,10 +64,6 @@ export default function SearchOverlay({ isOpen, onClose }) {
             setSearchQuery(transcript)
             setIsListening(false)
             toast.search.voiceSuccess(transcript)
-            track('Voice Search Completed', {
-                transcript,
-                transcriptLength: transcript.length
-            })
         }
 
         recognition.onerror = (event) => {
@@ -95,7 +85,6 @@ export default function SearchOverlay({ isOpen, onClose }) {
             recognition.stop()
         } else {
             recognition.start()
-            track('Voice Search Started')
         }
     }
 
@@ -107,18 +96,12 @@ export default function SearchOverlay({ isOpen, onClose }) {
         }
 
         setIsSearching(true)
-        track(ANALYTICS_EVENTS.SEARCH.QUERY_ENTERED, eventProperties.search(query))
-        
+
         try {
             const response = await api.search.query(query)
             setSearchResults(response.data)
-            
         } catch (error) {
             console.error('Search error:', error)
-            track('Search Failed', {
-                query,
-                error: error.message
-            })
             toast.search.searchError()
         } finally {
             setIsSearching(false)
@@ -140,13 +123,6 @@ export default function SearchOverlay({ isOpen, onClose }) {
         const updatedRecent = [item.title, ...recentSearches.filter((s) => s !== item.title)].slice(0, 5)
         setRecentSearches(updatedRecent)
         localStorage.setItem('recentSearches', JSON.stringify(updatedRecent))
-
-        track(ANALYTICS_EVENTS.SEARCH.RESULT_CLICKED, {
-            ...eventProperties.search(searchQuery, 1),
-            resultType: 'product',
-            resultId: item.id,
-            resultTitle: item.title
-        })
 
         // Navigate to product
         router.push(`/product/${item.id}`)
@@ -174,8 +150,7 @@ export default function SearchOverlay({ isOpen, onClose }) {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -20 }}
                 transition={{ duration: 0.2 }}
-                className="fixed top-0 left-0 right-0 z-[101] w-full max-w-4xl mx-auto p-4 sm:p-6 md:p-8"
-            >
+                className="fixed top-0 left-0 right-0 z-[101] w-full max-w-4xl mx-auto p-4 sm:p-6 md:p-8">
                 <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700 rounded-2xl shadow-2xl overflow-hidden">
                     {/* Search Header */}
                     <div className="p-4 sm:p-6 border-b border-gray-700">
@@ -202,20 +177,16 @@ export default function SearchOverlay({ isOpen, onClose }) {
                                             ? 'text-brand-primary bg-brand-primary/10 animate-pulse'
                                             : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
                                     }`}
-                                    title={isListening ? 'Stop listening' : 'Search by voice'}
-                                >
+                                    title={isListening ? 'Stop listening' : 'Search by voice'}>
                                     <Mic className="h-5 w-5" />
-                                    {isListening && (
-                                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                                    )}
+                                    {isListening && <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
                                 </button>
                             )}
 
                             {/* Close Button */}
                             <button
                                 onClick={onClose}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-0"
-                            >
+                                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-0">
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
@@ -238,7 +209,7 @@ export default function SearchOverlay({ isOpen, onClose }) {
                     </div>
 
                     {/* Search Results */}
-                    <SearchResults 
+                    <SearchResults
                         isSearching={isSearching}
                         searchQuery={searchQuery}
                         searchResults={searchResults}
@@ -251,6 +222,7 @@ export default function SearchOverlay({ isOpen, onClose }) {
         </>
     )
 }
+
 function SearchResults({ isSearching, searchQuery, searchResults, recentSearches, onSearchSelect, setSearchQuery }) {
     if (isSearching) {
         return (
@@ -258,8 +230,7 @@ function SearchResults({ isSearching, searchQuery, searchResults, recentSearches
                 <div className="inline-flex items-center gap-2 text-gray-400">
                     <motion.div
                         animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                    >
+                        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
                         <Search className="h-5 w-5" />
                     </motion.div>
                     <span>Searching...</span>
@@ -282,8 +253,7 @@ function SearchResults({ isSearching, searchQuery, searchResults, recentSearches
                             <button
                                 key={product.id}
                                 onClick={() => onSearchSelect(product)}
-                                className="w-full p-3 sm:p-4 bg-gray-800/30 hover:bg-gray-800/50 rounded-xl transition-all duration-200 group"
-                            >
+                                className="w-full p-3 sm:p-4 bg-gray-800/30 hover:bg-gray-800/50 rounded-xl transition-all duration-200 group">
                                 <div className="flex items-start gap-3 sm:gap-4">
                                     <img
                                         src={product.image}
@@ -291,9 +261,7 @@ function SearchResults({ isSearching, searchQuery, searchResults, recentSearches
                                         className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover bg-gray-700"
                                     />
                                     <div className="flex-1 text-left">
-                                        <h4 className="font-medium text-white group-hover:text-brand-primary transition-colors">
-                                            {product.title}
-                                        </h4>
+                                        <h4 className="font-medium text-white group-hover:text-brand-primary transition-colors">{product.title}</h4>
                                         <p className="text-sm text-gray-400 mt-1 line-clamp-1">{product.description}</p>
                                         <div className="flex items-center gap-4 mt-2 text-xs">
                                             <span className="text-brand-primary font-semibold">${product.price}</span>
@@ -342,8 +310,7 @@ function SearchResults({ isSearching, searchQuery, searchResults, recentSearches
                                 <button
                                     key={index}
                                     onClick={() => setSearchQuery(search)}
-                                    className="w-full text-left px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors text-sm"
-                                >
+                                    className="w-full text-left px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors text-sm">
                                     {search}
                                 </button>
                             ))}
@@ -362,8 +329,7 @@ function SearchResults({ isSearching, searchQuery, searchResults, recentSearches
                             <button
                                 key={index}
                                 onClick={() => setSearchQuery(trend)}
-                                className="w-full text-left px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors text-sm"
-                            >
+                                className="w-full text-left px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors text-sm">
                                 {trend}
                             </button>
                         ))}

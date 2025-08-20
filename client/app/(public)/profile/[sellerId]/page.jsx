@@ -12,8 +12,6 @@ import SellerAbout from '@/components/features/seller/profile/SellerAbout'
 import SellerReviews from '@/components/features/seller/profile/SellerReviews'
 import ContactWidget from '@/components/features/seller/profile/ContactWidget'
 import { useEnhancedSellerProfile } from '@/hooks/useEnhancedSellerProfile'
-import { useTrackEvent } from '@/hooks/useTrackEvent'
-import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 import toast from '@/lib/utils/toast'
 import { MessageCircle, Star, Users, Sparkles } from 'lucide-react'
 import { formatLocation } from '@/lib/utils/seller'
@@ -21,7 +19,6 @@ import { formatLocation } from '@/lib/utils/seller'
 export default function PublicSellerProfile() {
     const params = useParams()
     const sellerId = params.sellerId
-    const track = useTrackEvent()
 
     const [activeTab, setActiveTab] = useState('products')
     const [isContactWidgetOpen, setIsContactWidgetOpen] = useState(false)
@@ -30,18 +27,15 @@ export default function PublicSellerProfile() {
 
     const handleTabChange = (tab) => {
         setActiveTab(tab)
-        track(ANALYTICS_EVENTS.SELLER.PROFILE_TAB_CLICKED, eventProperties.seller('profile_tab', { sellerId, tab }))
     }
 
     const handleProductClick = (productId) => {
-        track(ANALYTICS_EVENTS.SELLER.PRODUCT_CLICKED, eventProperties.seller('product_click', { sellerId, productId }))
         // Navigate to product page in the same tab
         window.location.href = `/products/${productId}`
     }
 
     const handleContactClick = () => {
         setIsContactWidgetOpen(true)
-        track(ANALYTICS_EVENTS.SELLER.CONTACT_CLICKED, eventProperties.seller('contact_click', { sellerId }))
     }
 
     if (loading) {

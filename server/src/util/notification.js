@@ -1,4 +1,5 @@
-import userModel from "../model/user.model.js"
+import userModel from '../model/user.model.js'
+import mongoose from 'mongoose'
 
 export const notificationService = {
     sendToUser: async (userId, title, message, type = 'info', expiresAt = null) => {
@@ -38,6 +39,32 @@ export const notificationService = {
             return true
         } catch (error) {
             console.error('Failed to send role notification:', error)
+            return false
+        }
+    },
+
+    sendToAdmins: async (title, message, type = 'info', expiresAt = null) => {
+        try {
+            await userModel.updateMany(
+                { roles: 'admin' },
+                {
+                    $push: {
+                        notifications: {
+                            _id: new mongoose.Types.ObjectId(),
+                            title,
+                            message,
+                            type,
+                            isRead: false,
+                            readAt: null,
+                            createdAt: new Date(),
+                            expiresAt
+                        }
+                    }
+                }
+            )
+            return true
+        } catch (error) {
+            console.error('Failed to send admin notification:', error)
             return false
         }
     },

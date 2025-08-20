@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useCart } from '@/hooks/useCart'
 import { useAuth } from '@/hooks/useAuth'
 import toast from '@/lib/utils/toast'
-import { useTrackEvent } from '@/hooks/useTrackEvent'
 import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 
@@ -13,7 +12,6 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
   const router = useRouter()
   const { addToCart } = useCart()
   const { requireAuth } = useAuth()
-  const track = useTrackEvent()
 
   const handleAddToCart = async (e) => {
     e.preventDefault()

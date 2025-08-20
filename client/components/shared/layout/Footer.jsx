@@ -1,17 +1,30 @@
 'use client'
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import Container from './Container'
 import { Twitter, Linkedin, Github, Youtube } from 'lucide-react'
-import { useTrackEvent, useTrackClick } from '@/hooks/useTrackEvent'
-import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 
 export default function Footer() {
-    const track = useTrackEvent()
-
     // Routes that don't exist yet - disable prefetching to avoid 404 errors
-    const nonExistentRoutes = ['/features', '/pricing', '/api', '/roadmap', '/explore', '/categories', '/sellers', '/new', '/blog', '/guides', '/help', '/community', '/about', '/careers', '/contact', '/press']
-    
+    const nonExistentRoutes = [
+        '/features',
+        '/pricing',
+        '/api',
+        '/roadmap',
+        '/explore',
+        '/categories',
+        '/sellers',
+        '/new',
+        '/blog',
+        '/guides',
+        '/help',
+        '/community',
+        '/about',
+        '/careers',
+        '/contact',
+        '/press'
+    ]
+
     const footerLinks = {
         Product: [
             { name: 'Features', href: '/features', prefetch: false },
@@ -68,10 +81,6 @@ export default function Footer() {
                                             <a
                                                 key={social.name}
                                                 href={social.href}
-                                                onClick={() => track('Social Link Clicked', {
-                                                    platform: social.name,
-                                                    href: social.href
-                                                })}
                                                 className="p-2 text-gray-400 hover:text-brand-primary bg-white/5 hover:bg-brand-primary/10 rounded-lg transition-all duration-300"
                                                 aria-label={social.name}>
                                                 <Icon className="h-5 w-5" />
@@ -91,7 +100,6 @@ export default function Footer() {
                                                 <Link
                                                     href={link.href}
                                                     prefetch={link.prefetch !== false}
-                                                    onClick={() => track(ANALYTICS_EVENTS.NAVIGATION.FOOTER_LINK_CLICKED, eventProperties.navigation(link.name, category))}
                                                     className="font-kumbh-sans text-sm text-gray-400 hover:text-brand-primary transition-colors">
                                                     {link.name}
                                                 </Link>
@@ -107,28 +115,16 @@ export default function Footer() {
                                 <div className="flex flex-wrap justify-center gap-6 text-sm">
                                     <Link
                                         href="/terms"
-                                        onClick={() => track('Footer Legal Link Clicked', {
-                                            page: 'Terms of Service',
-                                            href: '/terms'
-                                        })}
                                         className="font-kumbh-sans text-gray-400 hover:text-brand-primary transition-colors">
                                         Terms of Service
                                     </Link>
                                     <Link
                                         href="/privacy"
-                                        onClick={() => track('Footer Legal Link Clicked', {
-                                            page: 'Privacy Policy',
-                                            href: '/privacy'
-                                        })}
                                         className="font-kumbh-sans text-gray-400 hover:text-brand-primary transition-colors">
                                         Privacy Policy
                                     </Link>
                                     <Link
                                         href="/cookies"
-                                        onClick={() => track('Footer Legal Link Clicked', {
-                                            page: 'Cookie Policy',
-                                            href: '/cookies'
-                                        })}
                                         className="font-kumbh-sans text-gray-400 hover:text-brand-primary transition-colors">
                                         Cookie Policy
                                     </Link>
@@ -141,3 +137,4 @@ export default function Footer() {
         </>
     )
 }
+

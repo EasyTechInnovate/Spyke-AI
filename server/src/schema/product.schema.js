@@ -298,13 +298,11 @@ export const updateProductStatusSchema = z.object({
 })
 
 // Schema for submitting products for review
-export const submitForReviewSchema = {
-    body: z.object({
-        message: z.string().optional().refine((val) => !val || val.trim().length > 0, {
-            message: "Message cannot be empty if provided"
-        })
+export const submitForReviewSchema = z.object({
+    message: z.string().optional().refine((val) => !val || val.trim().length > 0, {
+        message: "Message cannot be empty if provided"
     })
-}
+})
 
 // Schema for purchasing a product
 export const purchaseProductSchema = z.object({

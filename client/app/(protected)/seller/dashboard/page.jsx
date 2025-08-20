@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { DollarSign, Package, Plus, Star, ShoppingCart, CreditCard, Settings } from 'lucide-react'
-import { useTrackEvent } from '@/hooks/useTrackEvent'
-import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 import { toast } from 'sonner'
 import sellerAPI from '@/lib/api/seller'
 import DocumentUploadModal from '@/components/features/seller/SellerDocumentUpload'
@@ -28,7 +26,8 @@ const StatCard = ({ icon: Icon, value, label, color, trend, loading }) => {
     return (
         <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 sm:p-6 hover:border-[#00FF89]/30 transition-all group">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 ${color}/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                <div
+                    className={`w-10 h-10 sm:w-12 sm:h-12 ${color}/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>
                     <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${getIconColor(color)}`} />
                 </div>
                 {trend ? (
@@ -44,7 +43,6 @@ const StatCard = ({ icon: Icon, value, label, color, trend, loading }) => {
 }
 
 export default function SellerDashboard() {
-    const track = useTrackEvent()
     const [loading, setLoading] = useState(true)
     const [stats, setStats] = useState(null)
     const [products, setProducts] = useState([])
@@ -55,7 +53,6 @@ export default function SellerDashboard() {
     const [topProducts, setTopProducts] = useState([])
 
     useEffect(() => {
-        track(ANALYTICS_EVENTS.SELLER.DASHBOARD_VIEWED, eventProperties.seller('dashboard_view'))
         loadSellerProfile()
         loadStatsAndMetrics()
         loadProducts()
@@ -349,3 +346,4 @@ export default function SellerDashboard() {
         </div>
     )
 }
+
