@@ -40,7 +40,7 @@ class ApiClient {
             // Don't redirect if this is a login attempt or cart operation
             const isLoginAttempt = originalRequest.url.includes('/auth/login')
             const isCartOperation = originalRequest.url.includes('/cart') || originalRequest.url.includes('/purchase/cart')
-            
+
             if (isLoginAttempt || isCartOperation) {
                 throw {
                     status: response.status,
@@ -235,8 +235,10 @@ class ApiClient {
             const authKeys = ['authToken', 'refreshToken', 'user', 'roles', 'accessToken', 'sellerAccessToken']
             authKeys.forEach((key) => localStorage.removeItem(key))
 
-            // Clear auth cookies
+            // Clear auth cookies - including accessToken that backend expects
+            document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT'
             document.cookie = 'authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT'
+            document.cookie = 'refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT'
             document.cookie = 'roles=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT'
 
             // Clear session storage
@@ -395,3 +397,4 @@ if (typeof window !== 'undefined') {
 // Auth API will be attached after import to avoid circular dependency
 
 export default apiClient
+

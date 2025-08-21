@@ -37,7 +37,8 @@ import {
     Target,
     Tag,
     ChevronDown,
-    Copy
+    Copy,
+    Crown
 } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
 import Header from '@/components/shared/layout/Header'
@@ -127,6 +128,36 @@ export default function ProductPage() {
     // Refs
     const heroRef = useRef(null)
     const ctaRef = useRef(null)
+
+    // Computed values - moved before handlers that use them
+    const discountPercentage = useMemo(() => {
+        if (!product || product.originalPrice <= product.price) return 0
+        return Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+    }, [product])
+
+    const inCart = useMemo(() => {
+        if (!mounted || !product || !isInCart || cartLoading) return false
+
+        try {
+            return isInCart(product._id) || isInCart(product.id)
+        } catch (error) {
+            // Error checking cart status
+            return false
+        }
+    }, [mounted, product, isInCart, cartLoading])
+
+    const savingsAmount = useMemo(() => {
+        if (!product || !product.originalPrice) return 0
+        return product.originalPrice - product.price
+    }, [product])
+
+    const hasPurchased = useMemo(() => {
+        return product?.userAccess?.hasPurchased || false
+    }, [product])
+
+    const isOwner = useMemo(() => {
+        return product?.userAccess?.isOwner || false
+    }, [product])
 
     // Handle hydration
     useEffect(() => {
@@ -234,12 +265,23 @@ export default function ProductPage() {
         }
     }, [productSlug])
 
-    // Handlers
+    // Handlers - now after computed values are defined
     const handleBack = useCallback(() => {
         router.back()
     }, [router])
 
     const handleAddToCart = useCallback(async () => {
+        // Don't allow adding to cart if already purchased
+        if (hasPurchased) {
+            toast.info('You already own this product')
+            return
+        }
+
+        if (isOwner) {
+            toast.info("You can't add your own product to cart")
+            return
+        }
+
         // Allow both authenticated and guest users to add to cart
         if (product) {
             const alreadyInCart = mounted && !cartLoading && isInCart && (isInCart(product._id) || isInCart(product.id))
@@ -269,9 +311,20 @@ export default function ProductPage() {
                 toast.success('Added to cart')
             }
         }
-    }, [product, addToCart, mounted, cartLoading, isInCart])
+    }, [product, addToCart, mounted, cartLoading, isInCart, hasPurchased, isOwner])
 
     const handleBuyNow = useCallback(async () => {
+        // Don't allow buying if already purchased
+        if (hasPurchased) {
+            toast.info('You already own this product')
+            return
+        }
+
+        if (isOwner) {
+            toast.info("You can't purchase your own product")
+            return
+        }
+
         // Allow both authenticated and guest users to buy now
         if (product) {
             const alreadyInCart = mounted && !cartLoading && isInCart && (isInCart(product._id) || isInCart(product.id))
@@ -302,7 +355,7 @@ export default function ProductPage() {
             // Navigate to checkout after adding to cart
             router.push('/checkout')
         }
-    }, [product, addToCart, router, mounted, cartLoading, isInCart])
+    }, [product, addToCart, router, mounted, cartLoading, isInCart, hasPurchased, isOwner])
 
     const handleShare = useCallback(async () => {
         if (!mounted) return
@@ -395,27 +448,20 @@ export default function ProductPage() {
         }
     }, [isAuthenticated, upvoted, product, requireAuth, isUpvoting])
 
-    // Computed values
-    const discountPercentage = useMemo(() => {
-        if (!product || product.originalPrice <= product.price) return 0
-        return Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-    }, [product])
-
-    const inCart = useMemo(() => {
-        if (!mounted || !product || !isInCart || cartLoading) return false
+    const handleDownload = useCallback(async () => {
+        if (!hasPurchased) {
+            toast.error('You need to purchase this product first')
+            return
+        }
 
         try {
-            return isInCart(product._id) || isInCart(product.id)
+            // Navigate to purchases page or implement download logic
+            router.push('/purchases')
+            toast.success('Redirected to your purchases')
         } catch (error) {
-            // Error checking cart status
-            return false
+            toast.error('Failed to access downloads')
         }
-    }, [mounted, product, isInCart, cartLoading])
-
-    const savingsAmount = useMemo(() => {
-        if (!product || !product.originalPrice) return 0
-        return product.originalPrice - product.price
-    }, [product])
+    }, [hasPurchased, router])
 
     // Loading state with better skeleton
     if (loading) {
@@ -645,6 +691,59 @@ export default function ProductPage() {
                                     initial={{ opacity: 0, x: 50 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     className="space-y-6">
+                                    
+                                    {/* Already Bought Banner */}
+                                    {hasPurchased && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-xl p-4 backdrop-blur-sm">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
+                                                    <Crown className="w-5 h-5 text-green-400" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h3 className="font-semibold text-green-400 mb-1">Already Purchased</h3>
+                                                    <p className="text-sm text-green-300/80">
+                                                        You own this product. Access it from your purchases.
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    onClick={handleDownload}
+                                                    className="px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium">
+                                                    <Download className="w-4 h-4" />
+                                                    Access
+                                                </button>
+                                            </div>
+                                        </motion.div>
+                                    )}
+
+                                    {/* Owner Badge */}
+                                    {isOwner && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-500/30 rounded-xl p-4 backdrop-blur-sm">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center">
+                                                    <Verified className="w-5 h-5 text-purple-400" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h3 className="font-semibold text-purple-400 mb-1">Your Product</h3>
+                                                    <p className="text-sm text-purple-300/80">
+                                                        This is your product. Manage it from your seller dashboard.
+                                                    </p>
+                                                </div>
+                                                <Link
+                                                    href="/seller/products"
+                                                    className="px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium">
+                                                    <Eye className="w-4 h-4" />
+                                                    Manage
+                                                </Link>
+                                            </div>
+                                        </motion.div>
+                                    )}
+
                                     {/* Title & Category */}
                                     <div>
                                         <div className="flex items-center gap-2 mb-3">
@@ -796,36 +895,65 @@ export default function ProductPage() {
                                         <div
                                             ref={ctaRef}
                                             className="space-y-3">
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <button
-                                                    onClick={handleBuyNow}
-                                                    className="py-2.5 px-5 bg-brand-primary hover:bg-brand-primary/90 text-brand-primary-text font-semibold rounded-lg transition-all shadow-sm hover:shadow-md text-sm flex items-center justify-center gap-2"
-                                                    aria-label={`Buy ${product.title} now for $${product.price}`}>
-                                                    <Zap className="w-4 h-4" />
-                                                    Buy Now
-                                                </button>
-                                                <button
-                                                    onClick={handleAddToCart}
-                                                    disabled={inCart}
-                                                    className={cn(
-                                                        'py-2.5 px-4 font-medium rounded-lg transition-all border flex items-center justify-center gap-2 text-sm',
-                                                        inCart
-                                                            ? 'bg-gray-800/50 text-gray-400 cursor-not-allowed border-gray-700'
-                                                            : 'bg-transparent hover:bg-gray-800/50 text-white border-gray-700 hover:border-gray-600'
-                                                    )}>
-                                                    {inCart ? (
-                                                        <>
-                                                            <CheckCircle className="w-4 h-4" />
-                                                            In Cart
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <ShoppingCart className="w-4 h-4" />
-                                                            Add to Cart
-                                                        </>
-                                                    )}
-                                                </button>
-                                            </div>
+                                            {hasPurchased ? (
+                                                // Show only access button for purchased products - no buy/cart buttons
+                                                <div className="space-y-3">
+                                                    <button
+                                                        onClick={handleDownload}
+                                                        className="w-full py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2">
+                                                        <Download className="w-5 h-5" />
+                                                        Access Your Product
+                                                    </button>
+                                                    <p className="text-center text-sm text-gray-400">
+                                                        You already own this product
+                                                    </p>
+                                                </div>
+                                            ) : isOwner ? (
+                                                // Show only manage button for product owners - no buy/cart buttons
+                                                <div className="space-y-3">
+                                                    <Link
+                                                        href="/seller/products"
+                                                        className="w-full py-3 px-6 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2">
+                                                        <Eye className="w-5 h-5" />
+                                                        Manage Your Product
+                                                    </Link>
+                                                    <p className="text-center text-sm text-gray-400">
+                                                        This is your product
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                // Show buy/cart buttons for non-purchased products
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <button
+                                                        onClick={handleBuyNow}
+                                                        className="py-2.5 px-5 bg-brand-primary hover:bg-brand-primary/90 text-brand-primary-text font-semibold rounded-lg transition-all shadow-sm hover:shadow-md text-sm flex items-center justify-center gap-2"
+                                                        aria-label={`Buy ${product.title} now for $${product.price}`}>
+                                                        <Zap className="w-4 h-4" />
+                                                        Buy Now
+                                                    </button>
+                                                    <button
+                                                        onClick={handleAddToCart}
+                                                        disabled={inCart}
+                                                        className={cn(
+                                                            'py-2.5 px-4 font-medium rounded-lg transition-all border flex items-center justify-center gap-2 text-sm',
+                                                            inCart
+                                                                ? 'bg-gray-800/50 text-gray-400 cursor-not-allowed border-gray-700'
+                                                                : 'bg-transparent hover:bg-gray-800/50 text-white border-gray-700 hover:border-gray-600'
+                                                        )}>
+                                                        {inCart ? (
+                                                            <>
+                                                                <CheckCircle className="w-4 h-4" />
+                                                                In Cart
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <ShoppingCart className="w-4 h-4" />
+                                                                Add to Cart
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            )}
 
                                             <div className="flex gap-2">
                                                 <button
@@ -1347,20 +1475,36 @@ export default function ProductPage() {
                                         </div>
 
                                         <div className="flex items-center gap-3">
-                                            <button
-                                                onClick={handleBuyNow}
-                                                className="px-6 py-3 bg-brand-primary hover:bg-brand-primary/90 text-brand-primary-text font-semibold rounded-xl transition-all shadow-lg shadow-brand-primary/20">
-                                                Buy Now
-                                            </button>
-                                            <button
-                                                onClick={handleAddToCart}
-                                                disabled={inCart}
-                                                className={cn(
-                                                    'p-3 rounded-xl transition-colors',
-                                                    inCart ? 'bg-gray-800 text-gray-500' : 'bg-gray-800 hover:bg-gray-700 text-white'
-                                                )}>
-                                                <ShoppingCart className="w-5 h-5" />
-                                            </button>
+                                            {hasPurchased ? (
+                                                <button
+                                                    onClick={handleDownload}
+                                                    className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold rounded-xl transition-all shadow-lg">
+                                                    <Download className="w-5 h-5" />
+                                                </button>
+                                            ) : isOwner ? (
+                                                <Link
+                                                    href="/seller/products"
+                                                    className="px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-semibold rounded-xl transition-all shadow-lg">
+                                                    Manage
+                                                </Link>
+                                            ) : (
+                                                <>
+                                                    <button
+                                                        onClick={handleBuyNow}
+                                                        className="px-6 py-3 bg-brand-primary hover:bg-brand-primary/90 text-brand-primary-text font-semibold rounded-xl transition-all shadow-lg shadow-brand-primary/20">
+                                                        Buy Now
+                                                    </button>
+                                                    <button
+                                                        onClick={handleAddToCart}
+                                                        disabled={inCart}
+                                                        className={cn(
+                                                            'p-3 rounded-xl transition-colors',
+                                                            inCart ? 'bg-gray-800 text-gray-500' : 'bg-gray-800 hover:bg-gray-700 text-white'
+                                                        )}>
+                                                        <ShoppingCart className="w-5 h-5" />
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </Container>

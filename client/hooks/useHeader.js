@@ -2,73 +2,59 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { logout } from '@/lib/services/logout'
-import api from '@/lib/api'
+import { useAuth } from './useAuth'
 import { useCart } from './useCart'
 
 export function useHeader() {
     const router = useRouter()
     const pathname = usePathname()
+    const { user, isAuthenticated, logout, getUserRoles, hasRole } = useAuth()
     const { cartCount } = useCart()
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [scrolled, setScrolled] = useState(false)
-    const [user, setUser] = useState(null)
     const [dropdownOpen, setDropdownOpen] = useState(false)
     const [currentRole, setCurrentRole] = useState('user')
-    const [userRoles, setUserRoles] = useState([])
     const [notifications, setNotifications] = useState(0)
     const [searchOpen, setSearchOpen] = useState(false)
 
     const dropdownRef = useRef(null)
 
+    // Get user roles from centralized auth
+    const userRoles = getUserRoles()
+
+    // Set current role based on pathname
     useEffect(() => {
-        const loadUserFromStorage = () => {
-            if (typeof window === 'undefined') return
-
-            const token = localStorage.getItem('authToken')
-            const userStr = localStorage.getItem('user')
-            const rolesStr = localStorage.getItem('roles')
-
-            if (token && userStr) {
-                try {
-                    const parsed = JSON.parse(userStr)
-                    setUser(parsed)
-
-                    const roles = rolesStr ? JSON.parse(rolesStr) : []
-                    setUserRoles(roles)
-
-                    if (pathname?.startsWith('/seller') || pathname?.startsWith('/dashboard')) {
-                        setCurrentRole('seller')
-                    } else {
-                        setCurrentRole('user')
-                    }
-                } catch {
-                    if (process.env.NODE_ENV === 'development') {
-                        // Failed to parse user data
-                    }
-                    handleClearUser()
-                }
-            } else {
-                handleClearUser()
-            }
+        if (pathname?.startsWith('/seller') || pathname?.startsWith('/dashboard')) {
+            setCurrentRole('seller')
+        } else {
+            setCurrentRole('user')
         }
-
-        loadUserFromStorage()
-        window.addEventListener('storage', loadUserFromStorage)
-        return () => window.removeEventListener('storage', loadUserFromStorage)
     }, [pathname])
 
     // Fetch notifications count
     const fetchNotifications = async () => {
+        if (!isAuthenticated) return
+
         try {
-            const response = await api.notifications.getUnreadCount()
-            setNotifications(response?.data?.count || 0)
+            const { authAPI } = await import('@/lib/api/auth')
+            const response = await authAPI.getNotifications({ limit: 1 })
+            setNotifications(response?.unreadCount || 0)
         } catch (err) {
+            // Silent fail for notifications
             if (process.env.NODE_ENV === 'development') {
-                // Notifications fetch error
+                console.warn('Failed to fetch notifications:', err)
             }
         }
     }
+
+    // Load notifications when user is authenticated
+    useEffect(() => {
+        if (isAuthenticated && user) {
+            fetchNotifications()
+        } else {
+            setNotifications(0)
+        }
+    }, [isAuthenticated, user])
 
     // Handle scroll
     useEffect(() => {
@@ -116,16 +102,10 @@ export function useHeader() {
         }
     }, [searchOpen])
 
-    const handleClearUser = () => {
-        setUser(null)
-        setUserRoles([])
-        setNotifications(0)
-    }
-
     const handleLogout = async () => {
-        handleClearUser()
         setDropdownOpen(false)
         await logout()
+        // Auth service handles the rest (toasts, redirect, cleanup)
     }
 
     const switchRole = (role) => {
@@ -157,7 +137,9 @@ export function useHeader() {
         handleLogout,
         switchRole,
         fetchNotifications,
-        isSeller: userRoles.includes('seller'),
-        showBecomeSeller: !userRoles.includes('seller') && currentRole === 'user'
+        isAuthenticated,
+        isSeller: hasRole('seller'),
+        showBecomeSeller: !hasRole('seller') && currentRole === 'user'
     }
 }
+

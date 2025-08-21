@@ -14,8 +14,12 @@ export const authAPI = {
         const { accessToken, refreshToken } = data.tokens
 
         apiClient.setAuthToken(accessToken)
-        const cookieOptions = 'path=/; max-age=86400; SameSite=Lax'
-        safeCookie.set('authToken', accessToken, cookieOptions)
+        const cookieOptions = 'path=/; max-age=86400; SameSite=strict; secure=' + (window.location.protocol === 'https:')
+        
+        // Set cookies with names matching backend expectations
+        safeCookie.set('accessToken', accessToken, cookieOptions)
+        safeCookie.set('authToken', accessToken, cookieOptions) // Keep for compatibility
+        if (refreshToken) safeCookie.set('refreshToken', refreshToken, cookieOptions)
         if (data?.roles) safeCookie.set('roles', JSON.stringify(data.roles), cookieOptions)
 
         // Local storage (single canonical keys)
@@ -163,6 +167,13 @@ export const authAPI = {
     sendBulkNotification: async (bulkData) => {
         const response = await apiClient.post('v1/auth/notifications/send-bulk', bulkData)
         return response?.data || response
+    },
+
+    // Note: resendVerificationEmail endpoint doesn't exist on backend
+    // Using confirmation resend if needed, or handle via register flow
+    resendVerificationEmail: async (data) => {
+        // This endpoint doesn't exist on backend - remove or implement on backend first
+        throw new Error('Resend verification endpoint not implemented on backend')
     },
 
     isAuthenticated: () => {

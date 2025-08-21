@@ -22,20 +22,20 @@ export default function WhatsAppButton() {
     return (
         <button
             onClick={handleClick}
-            className="fixed bottom-6 right-6 z-50 group animate-fadeIn"
+            className="fixed bottom-20 right-6 z-40 group animate-fadeIn"
             aria-label="Contact us on WhatsApp"
         >
             {/* Animated green light effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-green-500 via-brand-primary to-green-500 bg-[length:200%_100%] animate-gradient-x rounded-full opacity-75 blur-lg group-hover:opacity-100 transition-opacity" />
             
             {/* Button container */}
-            <div className="relative bg-green-500 hover:bg-green-600 text-white rounded-full p-4 shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-300">
+            <div className="relative bg-green-500 hover:bg-green-600 text-white rounded-full p-3 shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-300">
                 {/* Pulse effect */}
                 <span className="absolute inset-0 rounded-full bg-green-400 animate-ping opacity-25" />
                 
                 {/* WhatsApp SVG Icon */}
                 <svg 
-                    className="w-6 h-6 relative z-10" 
+                    className="w-5 h-5 relative z-10" 
                     fill="currentColor" 
                     viewBox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg"

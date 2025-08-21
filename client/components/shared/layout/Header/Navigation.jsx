@@ -16,7 +16,7 @@ export default function Navigation() {
                 whileTap={{ scale: 0.95 }}>
                 <Link
                     href="/explore"
-                    className="nav-link px-3 py-2 text-sm font-medium text-gray-700 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-gray-100">
+                    className="nav-link px-3 py-2 text-base font-medium text-white/80 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-white/10">
                     Explore
                 </Link>
             </motion.div>
@@ -26,7 +26,7 @@ export default function Navigation() {
                 whileTap={{ scale: 0.95 }}>
                 <Link
                     href="/sellers"
-                    className="nav-link px-3 py-2 text-sm font-medium text-gray-700 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-gray-100">
+                    className="nav-link px-3 py-2 text-base font-medium text-white/80 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-white/10">
                     Sellers
                 </Link>
             </motion.div>
@@ -36,7 +36,7 @@ export default function Navigation() {
                 whileTap={{ scale: 0.95 }}>
                 <Link
                     href="/categories"
-                    className="nav-link px-3 py-2 text-sm font-medium text-gray-700 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-gray-100">
+                    className="nav-link px-3 py-2 text-base font-medium text-white/80 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-white/10">
                     Categories
                 </Link>
             </motion.div>
@@ -46,7 +46,7 @@ export default function Navigation() {
                 whileTap={{ scale: 0.95 }}>
                 <Link
                     href="/how-it-works"
-                    className="nav-link px-3 py-2 text-sm font-medium text-gray-700 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-gray-100">
+                    className="nav-link px-3 py-2 text-base font-medium text-white/80 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-white/10">
                     How It Works
                 </Link>
             </motion.div>

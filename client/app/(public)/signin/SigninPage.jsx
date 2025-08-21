@@ -1,22 +1,18 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import toast from '@/lib/utils/toast'
 import { Eye, EyeOff, AlertCircle, Mail, Lock, ArrowRight, Sparkles, Shield, Zap } from 'lucide-react'
-import { authAPI } from '@/lib/api/auth'
+import { useAuth } from '@/hooks/useAuth'
 import Header from '@/components/shared/layout/Header'
 import Container from '@/components/shared/layout/Container'
 
 export default function SignInPage() {
-    const router = useRouter()
-    const toastShown = useRef(false)
+    const { login, authService } = useAuth()
 
     // Form state
     const [loading, setLoading] = useState(false)
-    const [touched, setTouched] = useState({})
     const [showPassword, setShowPassword] = useState(false)
     const [loginError, setLoginError] = useState('')
     const [formData, setFormData] = useState({
@@ -24,12 +20,7 @@ export default function SignInPage() {
         password: ''
     })
 
-    // Handlers
-    const handleBlur = (e) => {
-        const { name } = e.target
-        setTouched((prev) => ({ ...prev, [name]: true }))
-    }
-
+    // Clear error when user types
     const handleChange = (e) => {
         const { name, value } = e.target
         setFormData({ ...formData, [name]: value })
@@ -40,58 +31,38 @@ export default function SignInPage() {
 
     const handleLogin = async (e) => {
         e.preventDefault()
-
         if (loading) return
 
         setLoading(true)
         setLoginError('')
-        toastShown.current = false
-        toast.dismissAll()
 
         try {
-            const response = await authAPI.login(formData)
-
-            if (!toastShown.current) {
-                toastShown.current = true
-                toast.auth.loginSuccess()
-            }
-
-            setTimeout(() => {
-                if (typeof window !== 'undefined') {
-                    // Prefer sessionStorage key set by API 401 handler, fall back to localStorage
-                    const sessionReturn = sessionStorage.getItem('redirectAfterLogin')
-                    const localReturn = localStorage.getItem('returnTo')
-                    
-                    let destination = '/'
-                    
-                    if (sessionReturn) {
-                        try { sessionStorage.removeItem('redirectAfterLogin') } catch (e) {}
-                        destination = sessionReturn
-                    } else if (localReturn) {
-                        try { localStorage.removeItem('returnTo') } catch (e) {}
-                        destination = localReturn
-                    }
-                    
-                    // Safety: ensure destination is a string and starts with '/'
-                    if (typeof destination === 'string' && destination.startsWith('/')) {
-                        window.location.href = destination
-                    } else {
-                        window.location.href = '/'
-                    }
-                }
-            }, 500)
-        } catch (err) {
-            // Login error
-            const errorMessage = err?.response?.data?.message || err?.data?.message || err?.message || 'Login failed'
-
+            await login(formData)
+            // Auth service handles toast and redirect
+        } catch (error) {
+            const errorMessage = error?.message || error?.data?.message || 'Login failed. Please try again.'
             setLoginError(errorMessage)
+        } finally {
             setLoading(false)
         }
     }
 
     const handleGoogleAuth = () => {
         if (!loading) {
-            authAPI.googleAuth()
+            // Use auth API directly for Google auth (no toast needed as it redirects)
+            import('@/lib/api/auth').then(({ authAPI }) => {
+                authAPI.googleAuth()
+            })
+        }
+    }
+
+    const handleResendVerification = async () => {
+        try {
+            // Since /resend-verification doesn't exist on backend, 
+            // inform user to re-register or contact support
+            authService.showToast('verification', toast.info, '📧 Please re-register with your email or contact support for verification help.')
+        } catch (error) {
+            authService.handleAuthError(error, 'resend verification')
         }
     }
 
@@ -213,16 +184,7 @@ export default function SignInPage() {
                                                                     </p>
                                                                     <button
                                                                         type="button"
-                                                                        onClick={async () => {
-                                                                            try {
-                                                                                await authAPI.resendVerificationEmail({
-                                                                                    emailAddress: formData.emailAddress
-                                                                                })
-                                                                                toast.auth.verificationSent()
-                                                                            } catch (error) {
-                                                                                toast.auth.loginError('Failed to resend email. Please try again.')
-                                                                            }
-                                                                        }}
+                                                                        onClick={handleResendVerification}
                                                                         className="inline-flex items-center gap-1 text-red-200 hover:text-white font-medium text-xs sm:text-sm transition-colors hover:underline"
                                                                         disabled={loading || !formData.emailAddress}>
                                                                         <Mail className="w-3 h-3 flex-shrink-0" />
@@ -235,7 +197,7 @@ export default function SignInPage() {
                                                 </div>
                                             )}
 
-                                            {/* Enhanced email input */}
+                                            {/* Email input */}
                                             <div className="space-y-1 sm:space-y-2">
                                                 <label className="block text-xs sm:text-sm font-bold text-gray-300 pl-1">Email Address</label>
                                                 <div className="relative group">
@@ -245,7 +207,6 @@ export default function SignInPage() {
                                                         name="emailAddress"
                                                         value={formData.emailAddress}
                                                         onChange={handleChange}
-                                                        onBlur={handleBlur}
                                                         className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 bg-[#121212]/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-[#00FF89]/50 transition-all duration-200 text-sm sm:text-base font-medium"
                                                         placeholder="you@example.com"
                                                         required
@@ -254,14 +215,13 @@ export default function SignInPage() {
                                                 </div>
                                             </div>
 
-                                            {/* Enhanced password input */}
+                                            {/* Password input */}
                                             <div className="space-y-1 sm:space-y-2">
                                                 <div className="flex items-center justify-between">
                                                     <label className="block text-xs sm:text-sm font-bold text-gray-300 pl-1">Password</label>
                                                     <Link
                                                         href="/auth/forgot-password"
-                                                        className="text-xs sm:text-sm text-[#00FF89] hover:text-[#00D4FF] font-medium transition-colors hover:underline"
-                                                        disabled={loading}>
+                                                        className="text-xs sm:text-sm text-[#00FF89] hover:text-[#00D4FF] font-medium transition-colors hover:underline">
                                                         Forgot password?
                                                     </Link>
                                                 </div>
@@ -272,7 +232,6 @@ export default function SignInPage() {
                                                         name="password"
                                                         value={formData.password}
                                                         onChange={handleChange}
-                                                        onBlur={handleBlur}
                                                         placeholder="Enter your password"
                                                         className="w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-3 sm:py-4 bg-[#121212]/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-[#00FF89]/50 transition-all duration-200 text-sm sm:text-base font-medium"
                                                         required
@@ -280,9 +239,7 @@ export default function SignInPage() {
                                                     />
                                                     <button
                                                         type="button"
-                                                        onClick={() => {
-                                                            setShowPassword(!showPassword)
-                                                        }}
+                                                        onClick={() => setShowPassword(!showPassword)}
                                                         className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#00FF89] transition-colors p-1"
                                                         disabled={loading}>
                                                         {showPassword ? (
@@ -294,7 +251,7 @@ export default function SignInPage() {
                                                 </div>
                                             </div>
 
-                                            {/* Enhanced submit button */}
+                                            {/* Submit button */}
                                             <button
                                                 type="submit"
                                                 disabled={loading}
@@ -316,7 +273,7 @@ export default function SignInPage() {
                                                 )}
                                             </button>
 
-                                            {/* Enhanced divider */}
+                                            {/* Divider */}
                                             <div className="relative my-4 sm:my-6">
                                                 <div className="absolute inset-0 flex items-center">
                                                     <div className="w-full border-t border-gray-700" />
@@ -326,7 +283,7 @@ export default function SignInPage() {
                                                 </div>
                                             </div>
 
-                                            {/* Enhanced Google OAuth button */}
+                                            {/* Google OAuth button */}
                                             <button
                                                 type="button"
                                                 onClick={handleGoogleAuth}
@@ -361,7 +318,7 @@ export default function SignInPage() {
                                             </button>
                                         </form>
 
-                                        {/* Enhanced sign up link */}
+                                        {/* Sign up link */}
                                         <div className="mt-6 sm:mt-8 text-center">
                                             <p className="text-gray-400 text-sm sm:text-base font-semibold">
                                                 New to SpykeAI?{' '}

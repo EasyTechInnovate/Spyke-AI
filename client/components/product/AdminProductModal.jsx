@@ -31,7 +31,7 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
     const [verificationNotes, setVerificationNotes] = useState('')
     const [rejectionReason, setRejectionReason] = useState('')
     const [loading, setLoading] = useState(false)
-    const [showRejectForm, setShowRejectForm] = useState(false)
+    const [showRejectModal, setShowRejectModal] = useState(false)
 
     if (!isOpen || !product) return null
 
@@ -61,12 +61,30 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
 
             toast.success(`Product ${action}d successfully`)
             onProductUpdate?.(product._id, updateData)
+            
+            if (action === 'reject') {
+                setShowRejectModal(false)
+                setRejectionReason('')
+            }
+            
             onClose()
         } catch (error) {
             toast.error(`Failed to ${action} product`)
         } finally {
             setLoading(false)
         }
+    }
+
+    const handleRejectClick = () => {
+        setShowRejectModal(true)
+    }
+
+    const handleRejectSubmit = () => {
+        if (!rejectionReason.trim()) {
+            toast.error('Please provide a reason for rejection')
+            return
+        }
+        handleQuickAction('reject', rejectionReason)
     }
 
     const getUrgencyIndicator = () => {
@@ -198,36 +216,12 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
                                 )}
 
                                 <button
-                                    onClick={() => setShowRejectForm(!showRejectForm)}
+                                    onClick={handleRejectClick}
+                                    disabled={loading}
                                     className="w-full flex items-center gap-2 px-3 py-2 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/30 transition-colors text-sm">
                                     <XCircle className="w-4 h-4" />
                                     Reject
                                 </button>
-
-                                {showRejectForm && (
-                                    <div className="mt-3 p-3 bg-gray-800 rounded-lg border border-gray-700">
-                                        <textarea
-                                            value={rejectionReason}
-                                            onChange={(e) => setRejectionReason(e.target.value)}
-                                            placeholder="Reason for rejection..."
-                                            className="w-full p-2 bg-gray-700 rounded text-sm text-white placeholder-gray-400 resize-none"
-                                            rows={3}
-                                        />
-                                        <div className="flex gap-2 mt-2">
-                                            <button
-                                                onClick={() => handleQuickAction('reject', rejectionReason)}
-                                                disabled={!rejectionReason.trim() || loading}
-                                                className="flex-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs disabled:opacity-50">
-                                                Submit
-                                            </button>
-                                            <button
-                                                onClick={() => setShowRejectForm(false)}
-                                                className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-xs">
-                                                Cancel
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         </div>
 
@@ -295,210 +289,74 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
                                     </div>
                                 </div>
                             )}
-
-                            {activeTab === 'content' && (
-                                <div className="space-y-6">
-                                    <div className="bg-yellow-500/10 border border-yellow-500/20 p-4 rounded-lg">
-                                        <div className="flex items-center gap-2 text-yellow-400 mb-2">
-                                            <AlertTriangle className="w-5 h-5" />
-                                            <span className="font-medium">Content Review Checklist</span>
-                                        </div>
-                                        <ul className="text-sm text-gray-300 space-y-1">
-                                            <li>• Check for inappropriate content</li>
-                                            <li>• Verify product claims and accuracy</li>
-                                            <li>• Ensure proper categorization</li>
-                                            <li>• Review pricing appropriateness</li>
-                                        </ul>
-                                    </div>
-
-                                    {/* Tools Used */}
-                                    {product.toolsUsed?.length > 0 && (
-                                        <div className="bg-gray-800/30 p-6 rounded-lg">
-                                            <h3 className="text-lg font-semibold text-white mb-4">Tools Used</h3>
-                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                                {product.toolsUsed.map((tool, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className="bg-gray-800/50 p-3 rounded-lg">
-                                                        <div className="font-medium text-white">{tool.name}</div>
-                                                        {tool.model && <div className="text-sm text-gray-400">{tool.model}</div>}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Benefits */}
-                                    {product.benefits?.length > 0 && (
-                                        <div className="bg-gray-800/30 p-6 rounded-lg">
-                                            <h3 className="text-lg font-semibold text-white mb-4">Benefits</h3>
-                                            <ul className="space-y-2">
-                                                {product.benefits.map((benefit, index) => (
-                                                    <li
-                                                        key={index}
-                                                        className="flex items-start gap-2 text-gray-300">
-                                                        <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                                                        {benefit}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {activeTab === 'technical' && (
-                                <div className="space-y-6">
-                                    <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-lg">
-                                        <div className="flex items-center gap-2 text-blue-400 mb-2">
-                                            <TestTube className="w-5 h-5" />
-                                            <span className="font-medium">Technical Review Checklist</span>
-                                        </div>
-                                        <ul className="text-sm text-gray-300 space-y-1">
-                                            <li>• Test all downloadable files</li>
-                                            <li>• Verify automation scripts work</li>
-                                            <li>• Check premium content accessibility</li>
-                                            <li>• Validate technical specifications</li>
-                                        </ul>
-                                    </div>
-
-                                    {/* Setup Time */}
-                                    <div className="bg-gray-800/30 p-6 rounded-lg">
-                                        <h3 className="text-lg font-semibold text-white mb-4">Technical Details</h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="text-gray-400 text-sm">Setup Time</label>
-                                                <div className="text-white font-medium">{product.setupTime}</div>
-                                            </div>
-                                            <div>
-                                                <label className="text-gray-400 text-sm">Target Audience</label>
-                                                <div className="text-white font-medium">{product.targetAudience || 'Not specified'}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Premium Content */}
-                                    {product.premiumContent && (
-                                        <div className="bg-gray-800/30 p-6 rounded-lg">
-                                            <h3 className="text-lg font-semibold text-white mb-4">Premium Content</h3>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                                <div>
-                                                    <label className="text-gray-400">Prompt Text</label>
-                                                    <div className="text-gray-300">
-                                                        {product.premiumContent.promptText ? 'Available' : 'Not provided'}
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <label className="text-gray-400">Automation Files</label>
-                                                    <div className="text-gray-300">{product.premiumContent.automationFiles?.length || 0} files</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {activeTab === 'seller' && (
-                                <div className="space-y-6">
-                                    <div className="bg-gray-800/30 p-6 rounded-lg">
-                                        <h3 className="text-lg font-semibold text-white mb-4">Seller Information</h3>
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-16 h-16 bg-gradient-to-br from-brand-primary to-purple-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
-                                                {product.sellerId?.fullName?.charAt(0) || 'S'}
-                                            </div>
-                                            <div>
-                                                <div className="text-white font-semibold">{product.sellerId?.fullName || 'Unknown Seller'}</div>
-                                                <div className="text-gray-400">{product.sellerId?.email || 'No email'}</div>
-                                                <div className="text-sm text-gray-500">
-                                                    Member since{' '}
-                                                    {product.sellerId?.createdAt ? new Date(product.sellerId.createdAt).getFullYear() : 'Unknown'}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Seller Stats */}
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div className="bg-gray-800/50 p-4 rounded-lg">
-                                            <div className="text-gray-400 text-sm">Total Products</div>
-                                            <div className="text-2xl font-bold text-white">{product.sellerId?.stats?.totalProducts || 0}</div>
-                                        </div>
-                                        <div className="bg-gray-800/50 p-4 rounded-lg">
-                                            <div className="text-gray-400 text-sm">Total Sales</div>
-                                            <div className="text-2xl font-bold text-white">{product.sellerId?.stats?.totalSales || 0}</div>
-                                        </div>
-                                        <div className="bg-gray-800/50 p-4 rounded-lg">
-                                            <div className="text-gray-400 text-sm">Average Rating</div>
-                                            <div className="text-2xl font-bold text-white">{product.sellerId?.stats?.averageRating || 0}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {activeTab === 'history' && (
-                                <div className="space-y-6">
-                                    <div className="bg-gray-800/30 p-6 rounded-lg">
-                                        <h3 className="text-lg font-semibold text-white mb-4">Product Timeline</h3>
-                                        <div className="space-y-4">
-                                            <div className="flex items-start gap-3">
-                                                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                                                    <Package className="w-4 h-4 text-white" />
-                                                </div>
-                                                <div>
-                                                    <div className="text-white font-medium">Product Created</div>
-                                                    <div className="text-gray-400 text-sm">{new Date(product.createdAt).toLocaleString()}</div>
-                                                </div>
-                                            </div>
-
-                                            {product.isVerified && (
-                                                <div className="flex items-start gap-3">
-                                                    <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
-                                                        <Shield className="w-4 h-4 text-white" />
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-white font-medium">Product Verified</div>
-                                                        <div className="text-gray-400 text-sm">Verified by admin</div>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {product.isTested && (
-                                                <div className="flex items-start gap-3">
-                                                    <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                                                        <TestTube className="w-4 h-4 text-white" />
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-white font-medium">Product Tested</div>
-                                                        <div className="text-gray-400 text-sm">Tested by admin</div>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Admin Notes */}
-                                    <div className="bg-gray-800/30 p-6 rounded-lg">
-                                        <h3 className="text-lg font-semibold text-white mb-4">Add Admin Notes</h3>
-                                        <textarea
-                                            value={verificationNotes}
-                                            onChange={(e) => setVerificationNotes(e.target.value)}
-                                            placeholder="Add notes about this product review..."
-                                            className="w-full p-4 bg-gray-800 rounded-lg text-white placeholder-gray-400 resize-none border border-gray-700 focus:border-brand-primary focus:outline-none"
-                                            rows={4}
-                                        />
-                                        <button
-                                            onClick={() => handleQuickAction('approve', verificationNotes)}
-                                            disabled={loading}
-                                            className="mt-3 px-6 py-2 bg-brand-primary hover:bg-brand-primary/80 text-white rounded-lg transition-colors">
-                                            Save Notes & Approve
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     </div>
                 </motion.div>
             </div>
+
+            {/* Reject Modal */}
+            {showRejectModal && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className="bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md mx-4 border border-gray-700">
+                        <div className="p-6">
+                            <div className="flex items-start gap-3 mb-4">
+                                <div className="p-2 bg-red-500/10 rounded-lg">
+                                    <XCircle className="w-5 h-5 text-red-500" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-white">Reject Product</h3>
+                                    <p className="text-sm text-gray-400 mt-1">
+                                        This will reject "{product.title}" and notify the seller.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="bg-gray-800/30 p-4 rounded-lg mb-4">
+                                <div className="text-sm text-gray-400 mb-2">Product</div>
+                                <div className="text-white font-medium">{product.title}</div>
+                                <div className="text-sm text-gray-500">
+                                    by {product.sellerId?.fullName || 'Unknown Seller'}
+                                </div>
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-400 mb-2">
+                                    Reason for rejection <span className="text-red-400">*</span>
+                                </label>
+                                <textarea
+                                    value={rejectionReason}
+                                    onChange={(e) => setRejectionReason(e.target.value)}
+                                    placeholder="Provide a clear reason for rejection that will be sent to the seller..."
+                                    className="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-red-500 focus:outline-none resize-none"
+                                    rows={4}
+                                />
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={handleRejectSubmit}
+                                    disabled={!rejectionReason.trim() || loading}
+                                    className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                    {loading ? 'Rejecting...' : 'Reject Product'}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowRejectModal(false)
+                                        setRejectionReason('')
+                                    }}
+                                    disabled={loading}
+                                    className="px-4 py-2 bg-gray-700 text-white rounded-lg font-medium hover:bg-gray-600 transition-colors">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
         </AnimatePresence>
     )
 }
