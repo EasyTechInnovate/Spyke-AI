@@ -51,15 +51,15 @@
   --ds-font-weight-bold: 700;
   --ds-font-weight-extrabold: 800;
   
-  /* Font Sizes - REDUCED for magnification fix */
-  --ds-font-size-xs: 0.625rem;   /* 10px - reduced from 12px */
-  --ds-font-size-sm: 0.75rem;    /* 12px - reduced from 14px */
-  --ds-font-size-base: 0.875rem; /* 14px - reduced from 16px */
-  --ds-font-size-lg: 1rem;       /* 16px - reduced from 18px */
-  --ds-font-size-xl: 1.125rem;   /* 18px - reduced from 20px */
-  --ds-font-size-2xl: 1.25rem;   /* 20px - reduced from 24px */
-  --ds-font-size-3xl: 1.5rem;    /* 24px - reduced from 30px */
-  --ds-font-size-4xl: 1.875rem;  /* 30px - reduced from 36px */
+  /* Font Sizes - Updated by 2px (0.125rem) from previous values */
+  --ds-font-size-xs: 0.875rem;   /* 14px - increased from 10px (0.625rem) */
+  --ds-font-size-sm: 1rem;       /* 16px - increased from 12px (0.75rem) */
+  --ds-font-size-base: 1.125rem; /* 18px - increased from 14px (0.875rem) */
+  --ds-font-size-lg: 1.25rem;    /* 20px - increased from 16px (1rem) */
+  --ds-font-size-xl: 1.375rem;   /* 22px - increased from 18px (1.125rem) */
+  --ds-font-size-2xl: 1.625rem;  /* 26px - increased from 20px (1.25rem) */
+  --ds-font-size-3xl: 2rem;      /* 32px - increased from 24px (1.5rem) */
+  --ds-font-size-4xl: 2.375rem;  /* 38px - increased from 30px (1.875rem) */
   
   /* Line Heights */
   --ds-line-height-tight: 1.25;
@@ -302,7 +302,7 @@ body {
 }
 
 .ds-heading--hero {
-  font-size: clamp(1.125rem, 3vw, 1.75rem); /* Further reduced - was 1.5rem to 2.5rem */
+  font-size: clamp(1.375rem, 3vw, 2rem); /* Increased from clamp(1.125rem, 3vw, 1.75rem) */
   line-height: var(--ds-line-height-tight);
   letter-spacing: var(--ds-letter-spacing-tight);
   font-weight: var(--ds-font-weight-bold);
@@ -310,7 +310,7 @@ body {
 }
 
 .ds-heading--subhero {
-  font-size: clamp(0.875rem, 2vw, 1rem); /* Further reduced - was 1rem to 1.125rem */
+  font-size: clamp(1.125rem, 2vw, 1.25rem); /* Increased from clamp(0.875rem, 2vw, 1rem) */
   line-height: var(--ds-line-height-normal);
   letter-spacing: var(--ds-letter-spacing-normal);
   font-weight: var(--ds-font-weight-semibold);
@@ -408,13 +408,13 @@ body {
 }
 
 .ds-stats-card .ds-heading {
-  font-size: clamp(1rem, 2.5vw, 1.375rem); /* Further reduced - was 1.25rem to 1.75rem */
+  font-size: clamp(1.25rem, 2.5vw, 1.625rem); /* Increased from clamp(1rem, 2.5vw, 1.375rem) */
   font-weight: var(--ds-font-weight-bold);
   font-family: var(--ds-font-family-title);
 }
 
 .ds-stats-card .ds-text {
-  font-size: var(--ds-font-size-xs); /* Reduced from sm to xs */
+  font-size: var(--ds-font-size-sm); /* Increased from xs to sm */
   color: var(--ds-text-secondary-dark);
 }
 
@@ -524,15 +524,15 @@ body {
   }
   
   .ds-heading--hero {
-    font-size: clamp(1.25rem, 4vw, 2rem);
+    font-size: clamp(1.5rem, 4vw, 2.25rem); /* Increased from clamp(1.25rem, 4vw, 2rem) */
   }
   
   .ds-heading--subhero {
-    font-size: clamp(0.875rem, 2vw, 1rem);
+    font-size: clamp(1.125rem, 2vw, 1.25rem); /* Increased from clamp(0.875rem, 2vw, 1rem) */
   }
   
   .ds-stats-card .ds-heading {
-    font-size: clamp(1rem, 2.5vw, 1.5rem);
+    font-size: clamp(1.25rem, 2.5vw, 1.75rem); /* Increased from clamp(1rem, 2.5vw, 1.5rem) */
   }
 }
 
@@ -555,78 +555,78 @@ body {
 
 .seller-profile-container,
 .seller-profile-container * {
-  font-size: 14px !important;
+  font-size: 16px !important; /* Increased from 14px */
 }
 
 .seller-profile-container h1 {
-  font-size: 22px !important;
+  font-size: 24px !important; /* Increased from 22px */
 }
 
 .seller-profile-container h2 {
-  font-size: 18px !important;
+  font-size: 20px !important; /* Increased from 18px */
 }
 
 .seller-profile-container h3 {
-  font-size: 16px !important;
+  font-size: 18px !important; /* Increased from 16px */
 }
 
 .seller-profile-container .text-xl,
 .seller-profile-container .text-2xl {
-  font-size: 18px !important; 
+  font-size: 20px !important; /* Increased from 18px */
 }
 
 .seller-profile-container .text-lg {
-  font-size: 16px !important; 
+  font-size: 18px !important; /* Increased from 16px */
 }
 
 .seller-profile-container .text-sm {
-  font-size: 13px !important; 
+  font-size: 15px !important; /* Increased from 13px */
 }
 
 .seller-profile-container .text-xs {
-  font-size: 12px !important; 
+  font-size: 14px !important; /* Increased from 12px */
 }
 
 .seller-profile-container [class*="ds-heading"] {
-  font-size: 16px !important; 
+  font-size: 18px !important; /* Increased from 16px */
 }
 
 .seller-profile-container [class*="font-bold"] {
-  font-size: 16px !important; 
+  font-size: 18px !important; /* Increased from 16px */
 }
 
 /* Icon sizes - slightly larger */
 .seller-profile-container svg {
-  width: 18px !important; 
-  height: 18px !important;
+  width: 20px !important; /* Increased from 18px */
+  height: 20px !important; /* Increased from 18px */
 }
 
 .seller-profile-container .h-4,
 .seller-profile-container .w-4 {
-  height: 16px !important; 
-  width: 16px !important;
+  height: 18px !important; /* Increased from 16px */
+  width: 18px !important; /* Increased from 16px */
 }
 
 .seller-profile-container .h-5,
 .seller-profile-container .w-5 {
-  height: 18px !important; 
-  width: 18px !important;
+  height: 20px !important; /* Increased from 18px */
+  width: 20px !important; /* Increased from 18px */
 }
 
 .seller-profile-container .h-6,
 .seller-profile-container .w-6 {
-  height: 20px !important; 
-  width: 20px !important;
+  height: 22px !important; /* Increased from 20px */
+  width: 22px !important; /* Increased from 20px */
 }
 
 /* Button text */
 .seller-profile-container button {
-  font-size: 14px !important; 
+  font-size: 16px !important; /* Increased from 14px */
 }
 
 .seller-profile-container .ds-stats-card [class*="ds-heading"],
 .seller-profile-container .grid .text-white[class*="font-"] {
-  font-size: 18px !important; /* Stats numbers larger */
+  font-size: 20px !important; /* Increased from 18px - Stats numbers larger */
   font-weight: 700 !important;
 }
 

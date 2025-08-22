@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import Container from './Container'
-import { Twitter, Linkedin, Github, Youtube } from 'lucide-react'
+import { Twitter, Linkedin, Github, Youtube, Facebook } from 'lucide-react'
 
 export default function Footer() {
     // Routes that don't exist yet - disable prefetching to avoid 404 errors
@@ -53,10 +53,11 @@ export default function Footer() {
     }
 
     const socialLinks = [
-        { name: 'Twitter', icon: Twitter, href: '#' },
-        { name: 'LinkedIn', icon: Linkedin, href: '#' },
-        { name: 'GitHub', icon: Github, href: '#' },
-        { name: 'YouTube', icon: Youtube, href: '#' }
+        { name: 'Twitter', icon: Twitter, href: 'https://x.com/spykeai' },
+        { name: 'LinkedIn', icon: Linkedin, href: 'https://www.linkedin.com/company/spykeai/' },
+        { name: 'Facebook', icon: Facebook, href: 'https://www.facebook.com/Spykeai/' },
+        { name: 'YouTube', icon: Youtube, href: 'https://www.youtube.com/@SpykeAITech' },
+        { name: 'Instagram', icon: Youtube, href: 'https://www.instagram.com/spykeai/' }
     ]
 
     return (

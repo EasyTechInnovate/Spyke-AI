@@ -196,7 +196,8 @@ export function useCart() {
         // Add to backend cart
         await cartAPI.addToCart(product.id || product._id, 1)
         await loadCart()
-        // Don't show toast here - let the caller handle it
+        showMessage('Added to cart successfully!', 'success')
+        return true
       } else {
         // Add to guest cart
         const newCart = { ...cartData }
@@ -228,13 +229,22 @@ export function useCart() {
 
         setCartData(newCart)
         saveGuestCart(newCart)
-        // Don't show toast here - let the caller handle it
+        showMessage('Added to cart successfully!', 'success')
+        return true
+      }
+    } catch (error) {
+      let errorMessage = 'Failed to add to cart'
+      if (error?.message) {
+        errorMessage = error.message
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message
+      } else if (error?.data?.message) {
+        errorMessage = error.data.message
+      } else if (typeof error === 'string') {
+        errorMessage = error
       }
 
-      setLastUpdate(Date.now())
-      return true // Indicate success
-    } catch (error) {
-      // If server responded with unauthorized, fallback to guest cart & redirect to signin.
+      // If server responded with unauthorized, fallback to guest cart
       const status = error?.status || error?.statusCode || error?.response?.status
       if (status === 401) {
         try {
@@ -284,13 +294,17 @@ export function useCart() {
           // ignore toast failures
         }
 
-        return false
+        return true // Return true since item was added to guest cart
       }
 
-      // Generic error
-      showMessage(error.message || 'Failed to add to cart', 'error')
+      // Show the actual error message from the API
+      console.log('🚨 Showing error message:', errorMessage);
+      showMessage(errorMessage, 'error')
       return false // Indicate failure
     }
+
+    // Update lastUpdate to trigger UI refresh
+    setLastUpdate(Date.now())
   }, [isAuthenticated, cartData, loadCart, saveGuestCart])
 
   // Update quantity
