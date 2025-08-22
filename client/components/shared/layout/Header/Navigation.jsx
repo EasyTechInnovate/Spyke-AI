@@ -10,7 +10,7 @@ export default function Navigation() {
     return (
         <nav
             ref={navRef}
-            className="flex items-center space-x-1 sm:space-x-2">
+            className="hidden md:flex items-center space-x-1 sm:space-x-2">
             <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}>
