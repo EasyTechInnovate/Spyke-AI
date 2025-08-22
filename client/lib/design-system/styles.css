@@ -51,15 +51,15 @@
   --ds-font-weight-bold: 700;
   --ds-font-weight-extrabold: 800;
   
-  /* Font Sizes */
-  --ds-font-size-xs: 0.75rem;
-  --ds-font-size-sm: 0.875rem;
-  --ds-font-size-base: 1rem;
-  --ds-font-size-lg: 1.125rem;
-  --ds-font-size-xl: 1.25rem;
-  --ds-font-size-2xl: 1.5rem;
-  --ds-font-size-3xl: 1.875rem;
-  --ds-font-size-4xl: 2.25rem;
+  /* Font Sizes - REDUCED for magnification fix */
+  --ds-font-size-xs: 0.625rem;   /* 10px - reduced from 12px */
+  --ds-font-size-sm: 0.75rem;    /* 12px - reduced from 14px */
+  --ds-font-size-base: 0.875rem; /* 14px - reduced from 16px */
+  --ds-font-size-lg: 1rem;       /* 16px - reduced from 18px */
+  --ds-font-size-xl: 1.125rem;   /* 18px - reduced from 20px */
+  --ds-font-size-2xl: 1.25rem;   /* 20px - reduced from 24px */
+  --ds-font-size-3xl: 1.5rem;    /* 24px - reduced from 30px */
+  --ds-font-size-4xl: 1.875rem;  /* 30px - reduced from 36px */
   
   /* Line Heights */
   --ds-line-height-tight: 1.25;
@@ -74,19 +74,19 @@
   --ds-letter-spacing-wide: 0.025em;
   
   /* Spacing Tokens */
-  --ds-spacing-1: 0.25rem;
-  --ds-spacing-2: 0.5rem;
-  --ds-spacing-3: 0.75rem;
-  --ds-spacing-4: 1rem;
-  --ds-spacing-5: 1.25rem;
-  --ds-spacing-6: 1.5rem;
-  --ds-spacing-8: 2rem;
-  --ds-spacing-10: 2.5rem;
-  --ds-spacing-12: 3rem;
-  --ds-spacing-16: 4rem;
-  --ds-spacing-20: 5rem;
-  --ds-spacing-24: 6rem;
-  --ds-spacing-32: 8rem;
+  --ds-spacing-1: 0.25rem;   /* 4px */
+  --ds-spacing-2: 0.5rem;    /* 8px */
+  --ds-spacing-3: 0.75rem;   /* 12px */
+  --ds-spacing-4: 1rem;      /* 16px */
+  --ds-spacing-5: 1.25rem;   /* 20px */
+  --ds-spacing-6: 1.5rem;    /* 24px */
+  --ds-spacing-8: 2rem;      /* 32px */
+  --ds-spacing-10: 2.5rem;   /* 40px */
+  --ds-spacing-12: 3rem;     /* 48px */
+  --ds-spacing-16: 4rem;     /* 64px */
+  --ds-spacing-20: 5rem;     /* 80px */
+  --ds-spacing-24: 6rem;     /* 96px */
+  --ds-spacing-32: 8rem;     /* 128px */
   
   /* Component Tokens - Using brand colors */
   --ds-hero-padding-mobile: 4rem;
@@ -128,6 +128,105 @@
   --ds-z-toast: 1700;
 }
 
+/* Global aggressive magnification fix */
+* {
+  zoom: 1 !important;
+  transform: scale(1) !important;
+  -webkit-text-size-adjust: 100% !important;
+  -moz-text-size-adjust: 100% !important;
+  text-size-adjust: 100% !important;
+}
+
+html {
+  font-size: 14px !important; /* Reduce base font size from 16px to 14px */
+  zoom: 1 !important;
+  transform: scale(1) !important;
+}
+
+body {
+  font-size: 0.875rem !important; /* 14px base */
+  zoom: 1 !important;
+  transform: scale(1) !important;
+}
+
+/* Normalization and Base Styles */
+.ds-normalize {
+  /* Reset browser zoom effects and ensure consistent base sizing */
+  zoom: 1;
+  transform: scale(1);
+  transform-origin: top left;
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  
+  /* Consistent box sizing */
+  box-sizing: border-box;
+  
+  /* Prevent font boosting on mobile */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  
+  /* Ensure proper font scaling */
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.ds-card-normalize {
+  /* Apply normalization specifically to cards to fix magnification */
+  zoom: 1 !important;
+  transform: scale(1) !important;
+  -webkit-transform: scale(1) !important;
+  -moz-transform: scale(1) !important;
+  -ms-transform: scale(1) !important;
+  
+  /* Reset any inherited scaling */
+  font-size: 1rem;
+  line-height: 1.5;
+  
+  /* Ensure consistent text rendering */
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  
+  /* Fix potential magnification from browser zoom */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Apply normalization to all card content */
+.ds-card-normalize *,
+.ds-card-normalize *::before,
+.ds-card-normalize *::after {
+  box-sizing: border-box;
+  zoom: 1;
+}
+
+/* Specific fixes for text elements within cards */
+.ds-card-normalize .ds-heading {
+  font-size: inherit;
+  line-height: inherit;
+  zoom: 1;
+  transform: none;
+}
+
+.ds-card-normalize .ds-text {
+  font-size: inherit;
+  line-height: inherit;
+  zoom: 1;
+  transform: none;
+}
+
+/* Fix icon sizing within cards */
+.ds-card-normalize svg,
+.ds-card-normalize img {
+  max-width: 100%;
+  height: auto;
+  zoom: 1;
+  transform: none;
+}
+
 /* Global Design System Styles - Using theme.js colors */
 .ds-button {
   font-family: var(--ds-font-family-body);
@@ -145,20 +244,26 @@
   user-select: none;
   position: relative;
   overflow: hidden;
+  
+  /* Add normalization to buttons */
+  zoom: 1;
+  transform: scale(1);
+  font-size: var(--ds-font-size-base);
 }
 
 .ds-button:hover {
-  transform: translateY(-1px);
+  transform: translateY(-1px) scale(1);
   box-shadow: var(--ds-shadow-md);
 }
 
 .ds-button:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--ds-brand-primary);
+  transform: scale(1);
 }
 
 .ds-button:active {
-  transform: translateY(0px);
+  transform: translateY(0px) scale(1);
 }
 
 .ds-button--primary {
@@ -191,28 +296,41 @@
 .ds-heading {
   margin: 0;
   color: inherit;
+  /* Add consistent scaling */
+  zoom: 1;
+  transform: scale(1);
 }
 
 .ds-heading--hero {
-  font-size: clamp(1.875rem, 6vw, 3.5rem);
+  font-size: clamp(1.125rem, 3vw, 1.75rem); /* Further reduced - was 1.5rem to 2.5rem */
   line-height: var(--ds-line-height-tight);
   letter-spacing: var(--ds-letter-spacing-tight);
   font-weight: var(--ds-font-weight-bold);
   font-family: var(--ds-font-family-title);
 }
 
+.ds-heading--subhero {
+  font-size: clamp(0.875rem, 2vw, 1rem); /* Further reduced - was 1rem to 1.125rem */
+  line-height: var(--ds-line-height-normal);
+  letter-spacing: var(--ds-letter-spacing-normal);
+  font-weight: var(--ds-font-weight-semibold);
+  font-family: var(--ds-font-family-title);
+}
+
 .ds-text {
   margin: 0;
   color: inherit;
+  /* Add consistent scaling */
+  zoom: 1;
+  transform: scale(1);
 }
 
-.ds-text--subhero {
-  font-size: clamp(1rem, 3vw, 1.25rem);
-  line-height: var(--ds-line-height-relaxed);
-  letter-spacing: var(--ds-letter-spacing-normal);
-  font-weight: var(--ds-font-weight-medium);
-  font-family: var(--ds-font-family-body);
-}
+.ds-text--xs { font-size: var(--ds-font-size-xs); }
+.ds-text--sm { font-size: var(--ds-font-size-sm); }
+.ds-text--base { font-size: var(--ds-font-size-base); }
+.ds-text--lg { font-size: var(--ds-font-size-lg); }
+.ds-text--xl { font-size: var(--ds-font-size-xl); }
+.ds-text--2xl { font-size: var(--ds-font-size-2xl); }
 
 .ds-container {
   width: 100%;
@@ -253,6 +371,17 @@
 .ds-card {
   border-radius: var(--ds-radius-2xl);
   border: 1px solid var(--ds-background-elevated);
+  
+  /* Apply card normalization by default */
+  zoom: 1;
+  transform: scale(1);
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  
+  /* Ensure consistent sizing */
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
 .ds-card--default {
@@ -264,11 +393,65 @@
   box-shadow: var(--ds-shadow-lg);
 }
 
+/* Stats card specific normalization */
+.ds-stats-card {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ds-spacing-3);
+  
+  /* Normalize stats cards specifically */
+  zoom: 1;
+  transform: scale(1);
+  font-size: 1rem;
+}
+
+.ds-stats-card .ds-heading {
+  font-size: clamp(1rem, 2.5vw, 1.375rem); /* Further reduced - was 1.25rem to 1.75rem */
+  font-weight: var(--ds-font-weight-bold);
+  font-family: var(--ds-font-family-title);
+}
+
+.ds-stats-card .ds-text {
+  font-size: var(--ds-font-size-xs); /* Reduced from sm to xs */
+  color: var(--ds-text-secondary-dark);
+}
+
+/* Badge normalization */
+.ds-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ds-spacing-2);
+  border-radius: var(--ds-radius-xl);
+  font-family: var(--ds-font-family-body);
+  font-weight: var(--ds-font-weight-medium);
+  
+  /* Normalize badges */
+  zoom: 1;
+  transform: scale(1);
+  font-size: var(--ds-font-size-sm);
+}
+
+.ds-badge--small {
+  padding: var(--ds-spacing-1) var(--ds-spacing-3);
+  font-size: var(--ds-font-size-xs);
+}
+
+.ds-badge--medium {
+  padding: var(--ds-spacing-2) var(--ds-spacing-4);
+  font-size: var(--ds-font-size-sm);
+}
+
 /* Loading States - Using theme colors */
 .ds-skeleton {
   background-color: var(--ds-background-elevated);
   border-radius: var(--ds-radius-md);
   animation: ds-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  
+  /* Normalize loading states */
+  zoom: 1;
+  transform: scale(1);
 }
 
 .ds-spinner {
@@ -278,6 +461,10 @@
   border-top-color: var(--ds-brand-primary);
   border-radius: 50%;
   animation: ds-spin 1s linear infinite;
+  
+  /* Normalize spinner */
+  zoom: 1;
+  transform: scale(1);
 }
 
 /* Animations */
@@ -323,7 +510,32 @@
   }
 }
 
-/* High Contrast Mode - Using theme colors */
+/* Mobile-specific fixes for zoom issues */
+@media screen and (max-width: 768px) {
+  .ds-card-normalize,
+  .ds-card,
+  .ds-stats-card {
+    /* Force consistent scaling on mobile */
+    -webkit-text-size-adjust: 100% !important;
+    -moz-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
+    zoom: 1 !important;
+    transform: scale(1) !important;
+  }
+  
+  .ds-heading--hero {
+    font-size: clamp(1.25rem, 4vw, 2rem);
+  }
+  
+  .ds-heading--subhero {
+    font-size: clamp(0.875rem, 2vw, 1rem);
+  }
+  
+  .ds-stats-card .ds-heading {
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+  }
+}
+
 @media (prefers-contrast: high) {
   .ds-button--primary {
     border: 2px solid var(--ds-brand-white);
@@ -339,4 +551,100 @@
     color: var(--ds-brand-white) !important;
     text-shadow: 1px 1px 2px var(--ds-brand-dark);
   }
+}
+
+.seller-profile-container,
+.seller-profile-container * {
+  font-size: 14px !important;
+}
+
+.seller-profile-container h1 {
+  font-size: 22px !important;
+}
+
+.seller-profile-container h2 {
+  font-size: 18px !important;
+}
+
+.seller-profile-container h3 {
+  font-size: 16px !important;
+}
+
+.seller-profile-container .text-xl,
+.seller-profile-container .text-2xl {
+  font-size: 18px !important; 
+}
+
+.seller-profile-container .text-lg {
+  font-size: 16px !important; 
+}
+
+.seller-profile-container .text-sm {
+  font-size: 13px !important; 
+}
+
+.seller-profile-container .text-xs {
+  font-size: 12px !important; 
+}
+
+.seller-profile-container [class*="ds-heading"] {
+  font-size: 16px !important; 
+}
+
+.seller-profile-container [class*="font-bold"] {
+  font-size: 16px !important; 
+}
+
+/* Icon sizes - slightly larger */
+.seller-profile-container svg {
+  width: 18px !important; 
+  height: 18px !important;
+}
+
+.seller-profile-container .h-4,
+.seller-profile-container .w-4 {
+  height: 16px !important; 
+  width: 16px !important;
+}
+
+.seller-profile-container .h-5,
+.seller-profile-container .w-5 {
+  height: 18px !important; 
+  width: 18px !important;
+}
+
+.seller-profile-container .h-6,
+.seller-profile-container .w-6 {
+  height: 20px !important; 
+  width: 20px !important;
+}
+
+/* Button text */
+.seller-profile-container button {
+  font-size: 14px !important; 
+}
+
+.seller-profile-container .ds-stats-card [class*="ds-heading"],
+.seller-profile-container .grid .text-white[class*="font-"] {
+  font-size: 18px !important; /* Stats numbers larger */
+  font-weight: 700 !important;
+}
+
+/* Padding adjustments for slightly larger text */
+.seller-profile-container .px-3 {
+  padding-left: 10px !important; /* Increased from 8px to 10px */
+  padding-right: 10px !important;
+}
+
+.seller-profile-container .py-2 {
+  padding-top: 8px !important; /* Increased from 6px to 8px */
+  padding-bottom: 8px !important;
+}
+
+.seller-profile-container .p-5 {
+  padding: 18px !important; /* Increased from 16px to 18px */
+}
+
+.seller-profile-container .p-6 {
+  padding: 20px !important; /* Increased from 18px to 20px */
 }

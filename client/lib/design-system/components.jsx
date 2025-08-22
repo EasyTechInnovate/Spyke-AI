@@ -38,7 +38,7 @@ export const DSButton = ({
   return (
     <button
       style={baseStyles}
-      className={`ds-button ds-button--${variant} ds-button--${size} ${loading ? 'ds-button--loading' : ''} ${className}`}
+      className={`ds-button ds-button--${variant} ds-button--${size} ds-normalize ${loading ? 'ds-button--loading' : ''} ${className}`}
       disabled={loading}
       {...props}
     >
@@ -321,7 +321,7 @@ export const DSStatsCard = ({
   }
 
   const valueStyles = {
-    fontSize: 'clamp(1.5rem, 4vw, 2rem)',
+    fontSize: 'clamp(1rem, 2.5vw, 1.375rem)', // Further reduced to match CSS
     fontWeight: getToken('typography.fontWeight.bold'),
     fontFamily: getToken('typography.fontFamily.title'),
     color: getToken('colors.brand.white'),
@@ -329,7 +329,7 @@ export const DSStatsCard = ({
   }
 
   const labelStyles = {
-    fontSize: getToken('typography.fontSize.sm'),
+    fontSize: getToken('typography.fontSize.xs'), // Reduced from sm to xs
     color: getToken('colors.text.secondary.dark'),
     fontFamily: getToken('typography.fontFamily.body'),
     margin: 0
@@ -338,11 +338,11 @@ export const DSStatsCard = ({
   return (
     <div
       style={styles}
-      className={`ds-stats-card ds-stats-card--${variant} ${className}`}
+      className={`ds-stats-card ds-stats-card--${variant} ds-card-normalize ${className}`}
       {...props}
     >
       <div style={iconStyles}>
-        {Icon && <Icon size={24} style={{ color: getToken('colors.brand.primary') }} />}
+        {Icon && <Icon size={18} style={{ color: getToken('colors.brand.primary') }} />}
       </div>
       <div style={valueStyles}>{value}</div>
       <div style={labelStyles}>{label}</div>

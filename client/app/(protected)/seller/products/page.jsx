@@ -39,19 +39,6 @@ const BRAND = '#00FF89'
 const AMBER = '#FFC050'
 
 function formatDate(date) {
-    // Inline notification state
-    const [notification, setNotification] = useState(null)
-
-    // Show inline notification messages  
-    const showMessage = (message, type = 'info') => {
-        setNotification({ message, type })
-        // Auto-dismiss after 5 seconds
-        setTimeout(() => setNotification(null), 5000)
-    }
-
-    // Clear notification
-    const clearNotification = () => setNotification(null)
-
     if (!date) return 'N/A'
     const d = new Date(date)
     const now = new Date()
@@ -96,6 +83,19 @@ const statusConfig = {
 export default function SellerProductsPage() {
     const router = useRouter()
     const { data: sellerProfile, loading: profileLoading } = useSellerProfile()
+    // Inline notification state - moved to component level
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
     const [products, setProducts] = useState([])
     const [loading, setLoading] = useState(true)
     const [tabSwitching, setTabSwitching] = useState(false)
