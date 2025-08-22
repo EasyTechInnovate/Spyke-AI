@@ -183,7 +183,7 @@ export default function SellerDashboard() {
                             <VerificationBadge status={sellerProfile?.verification?.status} />
                             <div className="relative group">
                                 <Link
-                                    href={canAddProducts ? '/seller/products/new' : '#'}
+                                    href={canAddProducts ? '/seller/products/create' : '#'}
                                     onClick={(e) => {
                                         if (!canAddProducts) e.preventDefault()
                                     }}

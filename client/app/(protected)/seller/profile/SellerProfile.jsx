@@ -786,7 +786,7 @@ export default function SellerProfile() {
         </div>
         <div className="flex items-center gap-3 sm:gap-4">
           <CurrencySelector selectedCurrency={selectedCurrency} onChange={setSelectedCurrency} />
-          <Link href="/seller/products/new"
+          <Link href="/seller/products/create"
                 className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium sm:px-4"
                 style={{ backgroundColor: theme.colors.brand.primary, color: theme.colors.brand.primaryText }}>
             <Plus className="h-4 w-4" /><span className="hidden sm:inline">Add Product</span><span className="sm:hidden">Add</span>
