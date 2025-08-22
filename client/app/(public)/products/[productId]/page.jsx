@@ -1203,7 +1203,561 @@ export default function ProductPage() {
                                 </div>
                             </div>
 
-                            {/* ...existing tab content sections remain the same but with DS components... */}
+                            {/* Tab Content - Complete Implementation with Design System */}
+                            <AnimatePresence mode="wait">
+                                {activeTab === 'overview' && (
+                                    <motion.div
+                                        key="overview"
+                                        variants={fadeInUp}
+                                        initial="initial"
+                                        animate="animate"
+                                        exit="exit"
+                                    >
+                                        <div className="grid md:grid-cols-2 gap-8">
+                                            {/* Description Card */}
+                                            <div 
+                                                className="backdrop-blur-sm rounded-xl p-6 border"
+                                                style={{ 
+                                                    backgroundColor: DESIGN_TOKENS.colors.background.card.dark,
+                                                    borderColor: DESIGN_TOKENS.colors.background.elevated 
+                                                }}
+                                            >
+                                                <DSHeading level={3} className="mb-4">
+                                                    <DSStack direction="row" gap="2" align="center">
+                                                        <BookOpen className="w-5 h-5" style={{ color: DESIGN_TOKENS.colors.brand.primary }} />
+                                                        <span style={{ color: DESIGN_TOKENS.colors.text.primary.dark }}>About This Product</span>
+                                                    </DSStack>
+                                                </DSHeading>
+                                                <DSText 
+                                                    className="leading-relaxed whitespace-pre-wrap"
+                                                    style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}
+                                                >
+                                                    {product.fullDescription || product.shortDescription}
+                                                </DSText>
+                                            </div>
+
+                                            {/* Key Benefits */}
+                                            {product.benefits && product.benefits.length > 0 && (
+                                                <div 
+                                                    className="backdrop-blur-sm rounded-xl p-6 border"
+                                                    style={{ 
+                                                        backgroundColor: DESIGN_TOKENS.colors.background.card.dark,
+                                                        borderColor: DESIGN_TOKENS.colors.background.elevated 
+                                                    }}
+                                                >
+                                                    <DSHeading level={3} className="mb-4">
+                                                        <DSStack direction="row" gap="2" align="center">
+                                                            <Target className="w-5 h-5" style={{ color: DESIGN_TOKENS.colors.brand.primary }} />
+                                                            <span style={{ color: DESIGN_TOKENS.colors.text.primary.dark }}>Key Benefits</span>
+                                                        </DSStack>
+                                                    </DSHeading>
+                                                    <DSStack gap="3">
+                                                        {product.benefits.slice(0, 5).map((benefit, index) => (
+                                                            <DSStack key={index} direction="row" gap="3" align="flex-start">
+                                                                <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                                                                <DSText style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
+                                                                    {benefit}
+                                                                </DSText>
+                                                            </DSStack>
+                                                        ))}
+                                                    </DSStack>
+                                                </div>
+                                            )}
+
+                                            {/* What's Included */}
+                                            <div 
+                                                className="backdrop-blur-sm rounded-xl p-6 border"
+                                                style={{ 
+                                                    backgroundColor: DESIGN_TOKENS.colors.background.card.dark,
+                                                    borderColor: DESIGN_TOKENS.colors.background.elevated 
+                                                }}
+                                            >
+                                                <DSHeading level={3} className="mb-4">
+                                                    <DSStack direction="row" gap="2" align="center">
+                                                        <Package className="w-5 h-5" style={{ color: DESIGN_TOKENS.colors.brand.primary }} />
+                                                        <span style={{ color: DESIGN_TOKENS.colors.text.primary.dark }}>What's Included</span>
+                                                    </DSStack>
+                                                </DSHeading>
+                                                <DSStack gap="2">
+                                                    {[
+                                                        { icon: Download, text: "Instant digital download" },
+                                                        { icon: FileText, text: "Documentation & guides" },
+                                                        { icon: RefreshCw, text: "Free lifetime updates" },
+                                                        { icon: MessageSquare, text: "24/7 customer support" }
+                                                    ].map((item, index) => (
+                                                        <DSStack key={index} direction="row" gap="2" align="center">
+                                                            <item.icon className="w-4 h-4" style={{ color: DESIGN_TOKENS.colors.text.muted.dark }} />
+                                                            <DSText style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
+                                                                {item.text}
+                                                            </DSText>
+                                                        </DSStack>
+                                                    ))}
+                                                </DSStack>
+                                            </div>
+
+                                            {/* Product Details */}
+                                            <div 
+                                                className="backdrop-blur-sm rounded-xl p-6 border"
+                                                style={{ 
+                                                    backgroundColor: DESIGN_TOKENS.colors.background.card.dark,
+                                                    borderColor: DESIGN_TOKENS.colors.background.elevated 
+                                                }}
+                                            >
+                                                <DSHeading level={3} className="mb-4">
+                                                    <DSStack direction="row" gap="2" align="center">
+                                                        <Info className="w-5 h-5" style={{ color: DESIGN_TOKENS.colors.brand.primary }} />
+                                                        <span style={{ color: DESIGN_TOKENS.colors.text.primary.dark }}>Product Details</span>
+                                                    </DSStack>
+                                                </DSHeading>
+                                                <DSStack gap="3">
+                                                    {[
+                                                        { label: "Category", value: product.category?.replace('_', ' ') },
+                                                        { label: "Type", value: product.type },
+                                                        { label: "Version", value: product.currentVersion || '1.0.0' },
+                                                        { label: "Last Updated", value: new Date(product.updatedAt).toLocaleDateString() },
+                                                        { label: "File Size", value: product.fileSize || '< 10MB' }
+                                                    ].map((detail, index) => (
+                                                        <DSStack key={index} direction="row" justify="space-between">
+                                                            <DSText style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
+                                                                {detail.label}
+                                                            </DSText>
+                                                            <DSText 
+                                                                className="capitalize"
+                                                                style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}
+                                                            >
+                                                                {detail.value}
+                                                            </DSText>
+                                                        </DSStack>
+                                                    ))}
+                                                </DSStack>
+                                            </div>
+                                        </div>
+
+                                        {/* Tags */}
+                                        {product.tags && product.tags.length > 0 && (
+                                            <div className="mt-8">
+                                                <DSHeading level={3} className="mb-4" style={{ color: DESIGN_TOKENS.colors.text.primary.dark }}>
+                                                    Related Tags
+                                                </DSHeading>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {product.tags.map((tag, index) => (
+                                                        <Link
+                                                            key={index}
+                                                            href={`/explore?tag=${encodeURIComponent(tag)}`}
+                                                        >
+                                                            <DSBadge variant="secondary" size="medium" className="hover:opacity-80 transition-opacity">
+                                                                #{tag}
+                                                            </DSBadge>
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                )}
+
+                                {activeTab === 'features' && (
+                                    <motion.div
+                                        key="features"
+                                        variants={stagger}
+                                        initial="initial"
+                                        animate="animate"
+                                        exit="exit"
+                                        className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+                                    >
+                                        {product.features?.map((feature, index) => (
+                                            <motion.div
+                                                key={index}
+                                                variants={scaleIn}
+                                                className="backdrop-blur-sm rounded-xl p-6 border transition-all group hover:shadow-lg"
+                                                style={{ 
+                                                    backgroundColor: DESIGN_TOKENS.colors.background.card.dark,
+                                                    borderColor: DESIGN_TOKENS.colors.background.elevated 
+                                                }}
+                                            >
+                                                <div 
+                                                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors"
+                                                    style={{ 
+                                                        backgroundColor: `${DESIGN_TOKENS.colors.brand.primary}10`
+                                                    }}
+                                                >
+                                                    <Sparkles className="w-6 h-6" style={{ color: DESIGN_TOKENS.colors.brand.primary }} />
+                                                </div>
+                                                <DSHeading level={4} className="mb-2" style={{ color: DESIGN_TOKENS.colors.text.primary.dark }}>
+                                                    {typeof feature === 'string' ? feature : feature.title}
+                                                </DSHeading>
+                                                {typeof feature !== 'string' && feature.description && (
+                                                    <DSText size="sm" style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
+                                                        {feature.description}
+                                                    </DSText>
+                                                )}
+                                            </motion.div>
+                                        )) || (
+                                            <div className="col-span-full text-center py-12">
+                                                <DSText style={{ color: DESIGN_TOKENS.colors.text.muted.dark }}>
+                                                    No features listed yet.
+                                                </DSText>
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                )}
+
+                                {activeTab === 'howitworks' && (
+                                    <motion.div
+                                        key="howitworks"
+                                        variants={fadeInUp}
+                                        initial="initial"
+                                        animate="animate"
+                                        exit="exit"
+                                        className="max-w-3xl"
+                                    >
+                                        {product.howItWorks && product.howItWorks.length > 0 ? (
+                                            <div className="relative">
+                                                {/* Timeline */}
+                                                <div 
+                                                    className="absolute left-6 top-0 bottom-0 w-0.5 opacity-50"
+                                                    style={{
+                                                        background: `linear-gradient(to bottom, ${DESIGN_TOKENS.colors.brand.primary}, ${DESIGN_TOKENS.colors.brand.primary}50, transparent)`
+                                                    }}
+                                                />
+
+                                                <DSStack gap="6">
+                                                    {product.howItWorks.map((step, index) => (
+                                                        <motion.div
+                                                            key={index}
+                                                            initial={{ opacity: 0, x: -20 }}
+                                                            animate={{ opacity: 1, x: 0 }}
+                                                            transition={{ delay: index * 0.1 }}
+                                                        >
+                                                            <DSStack direction="row" gap="4">
+                                                                {/* Step Number */}
+                                                                <div className="relative z-10">
+                                                                    <div 
+                                                                        className="w-12 h-12 rounded-full flex items-center justify-center font-bold shadow-lg"
+                                                                        style={{
+                                                                            background: `linear-gradient(135deg, ${DESIGN_TOKENS.colors.brand.primary}, ${DESIGN_TOKENS.colors.brand.secondary})`,
+                                                                            color: DESIGN_TOKENS.colors.brand.primaryText
+                                                                        }}
+                                                                    >
+                                                                        {index + 1}
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Step Content */}
+                                                                <div 
+                                                                    className="flex-1 backdrop-blur-sm rounded-xl p-5 border"
+                                                                    style={{ 
+                                                                        backgroundColor: DESIGN_TOKENS.colors.background.card.dark,
+                                                                        borderColor: DESIGN_TOKENS.colors.background.elevated 
+                                                                    }}
+                                                                >
+                                                                    <DSHeading level={4} className="mb-2" style={{ color: DESIGN_TOKENS.colors.text.primary.dark }}>
+                                                                        Step {index + 1}
+                                                                    </DSHeading>
+                                                                    <DSText style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
+                                                                        {step}
+                                                                    </DSText>
+                                                                </div>
+                                                            </DSStack>
+                                                        </motion.div>
+                                                    ))}
+                                                </DSStack>
+                                            </div>
+                                        ) : (
+                                            <div className="text-center py-12">
+                                                <DSText style={{ color: DESIGN_TOKENS.colors.text.muted.dark }}>
+                                                    No process information available yet.
+                                                </DSText>
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                )}
+
+                                {activeTab === 'reviews' && (
+                                    <motion.div
+                                        key="reviews"
+                                        variants={fadeInUp}
+                                        initial="initial"
+                                        animate="animate"
+                                        exit="exit"
+                                    >
+                                        {/* Quick Review for authenticated users */}
+                                        {isAuthenticated && (
+                                            <QuickReview
+                                                productId={product._id}
+                                                onReviewSubmit={handleReviewSubmit}
+                                                className="mb-8"
+                                            />
+                                        )}
+
+                                        {/* Reviews List */}
+                                        <ReviewsList
+                                            reviews={product.reviews || []}
+                                            totalReviews={product.totalReviews || 0}
+                                            averageRating={product.averageRating || 0}
+                                            reviewStats={product.reviewStats || {}}
+                                        />
+                                    </motion.div>
+                                )}
+
+                                {activeTab === 'faq' && (
+                                    <motion.div
+                                        key="faq"
+                                        variants={stagger}
+                                        initial="initial"
+                                        animate="animate"
+                                        exit="exit"
+                                        className="max-w-3xl space-y-4"
+                                    >
+                                        {product.faqs && product.faqs.length > 0 ? (
+                                            product.faqs.map((faq, index) => (
+                                                <motion.div
+                                                    key={index}
+                                                    variants={fadeInUp}
+                                                    className="backdrop-blur-sm rounded-xl border overflow-hidden"
+                                                    style={{ 
+                                                        backgroundColor: DESIGN_TOKENS.colors.background.card.dark,
+                                                        borderColor: DESIGN_TOKENS.colors.background.elevated 
+                                                    }}
+                                                >
+                                                    <button
+                                                        onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
+                                                        className="w-full p-6 text-left flex items-start justify-between gap-4 hover:opacity-80 transition-opacity"
+                                                    >
+                                                        <DSStack direction="row" gap="3" align="flex-start" className="flex-1">
+                                                            <HelpCircle 
+                                                                className="w-5 h-5 flex-shrink-0 mt-0.5" 
+                                                                style={{ color: DESIGN_TOKENS.colors.brand.primary }} 
+                                                            />
+                                                            <DSHeading level={4} style={{ color: DESIGN_TOKENS.colors.text.primary.dark }}>
+                                                                {faq.question}
+                                                            </DSHeading>
+                                                        </DSStack>
+                                                        <ChevronRight
+                                                            className={cn(
+                                                                'w-5 h-5 transition-transform',
+                                                                expandedFaq === index && 'rotate-90'
+                                                            )}
+                                                            style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}
+                                                        />
+                                                    </button>
+                                                    <AnimatePresence>
+                                                        {expandedFaq === index && (
+                                                            <motion.div
+                                                                initial={{ height: 0, opacity: 0 }}
+                                                                animate={{ height: 'auto', opacity: 1 }}
+                                                                exit={{ height: 0, opacity: 0 }}
+                                                                transition={{ duration: 0.2 }}
+                                                                className="px-6 pb-6"
+                                                            >
+                                                                <DSText 
+                                                                    className="pl-8"
+                                                                    style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}
+                                                                >
+                                                                    {faq.answer}
+                                                                </DSText>
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
+                                                </motion.div>
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-12">
+                                                <DSText style={{ color: DESIGN_TOKENS.colors.text.muted.dark }}>
+                                                    No FAQs available yet.
+                                                </DSText>
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* Related Products Section */}
+                            {relatedProducts.length > 0 && (
+                                <div className="mt-16">
+                                    <DSStack direction="row" justify="space-between" align="center" className="mb-8">
+                                        <DSHeading level={2} style={{ color: DESIGN_TOKENS.colors.text.primary.dark }}>
+                                            You Might Also Like
+                                        </DSHeading>
+                                        <Link
+                                            href={`/explore?category=${product.category}`}
+                                            className="transition-colors hover:underline flex items-center gap-1"
+                                            style={{ color: DESIGN_TOKENS.colors.brand.primary }}
+                                        >
+                                            View More
+                                            <ChevronRight className="w-4 h-4" />
+                                        </Link>
+                                    </DSStack>
+
+                                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                        {relatedProducts.map((relatedProduct) => (
+                                            <motion.div
+                                                key={relatedProduct._id}
+                                                initial={{ opacity: 0, y: 20 }}
+                                                whileInView={{ opacity: 1, y: 0 }}
+                                                viewport={{ once: true }}
+                                                whileHover={{ y: -5 }}
+                                                className="group cursor-pointer"
+                                                onClick={() => router.push(`/products/${relatedProduct.slug}`)}
+                                            >
+                                                <div 
+                                                    className="rounded-xl overflow-hidden border transition-all h-full flex flex-col hover:shadow-lg"
+                                                    style={{ 
+                                                        backgroundColor: DESIGN_TOKENS.colors.background.card.dark,
+                                                        borderColor: DESIGN_TOKENS.colors.background.elevated 
+                                                    }}
+                                                >
+                                                    <div className="aspect-video relative overflow-hidden" style={{ backgroundColor: DESIGN_TOKENS.colors.background.elevated }}>
+                                                        <OptimizedImage
+                                                            src={relatedProduct.thumbnail}
+                                                            alt={relatedProduct.title}
+                                                            fill
+                                                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                                                            quality={75}
+                                                            loading="lazy"
+                                                        />
+                                                        {relatedProduct.discountPercentage > 0 && (
+                                                            <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
+                                                                -{relatedProduct.discountPercentage}%
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="p-4 flex-1 flex flex-col">
+                                                        <DSHeading 
+                                                            level={3} 
+                                                            className="mb-2 line-clamp-2 group-hover:opacity-80 transition-opacity"
+                                                            style={{ color: DESIGN_TOKENS.colors.text.primary.dark }}
+                                                        >
+                                                            {relatedProduct.title}
+                                                        </DSHeading>
+                                                        <DSText 
+                                                            size="sm" 
+                                                            className="mb-3 line-clamp-2 flex-1"
+                                                            style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}
+                                                        >
+                                                            {relatedProduct.shortDescription}
+                                                        </DSText>
+                                                        <DSStack direction="row" justify="space-between" align="center">
+                                                            <div>
+                                                                <DSText size="xl" className="font-bold" style={{ color: DESIGN_TOKENS.colors.brand.primary }}>
+                                                                    ${relatedProduct.price}
+                                                                </DSText>
+                                                                {relatedProduct.originalPrice > relatedProduct.price && (
+                                                                    <DSText 
+                                                                        size="sm" 
+                                                                        className="line-through ml-2"
+                                                                        style={{ color: DESIGN_TOKENS.colors.text.muted.dark }}
+                                                                    >
+                                                                        ${relatedProduct.originalPrice}
+                                                                    </DSText>
+                                                                )}
+                                                            </div>
+                                                            <DSStack direction="row" gap="1" align="center">
+                                                                <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                                                                <DSText size="sm" style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
+                                                                    {relatedProduct.averageRating?.toFixed(1) || '0.0'}
+                                                                </DSText>
+                                                            </DSStack>
+                                                        </DSStack>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Sticky Purchase Bar */}
+                            <AnimatePresence>
+                                {mounted && showStickyBar && (
+                                    <motion.div
+                                        initial={{ y: 100 }}
+                                        animate={{ y: 0 }}
+                                        exit={{ y: 100 }}
+                                        className="fixed bottom-0 left-0 right-0 backdrop-blur-lg border-t z-40 shadow-2xl"
+                                        style={{ 
+                                            backgroundColor: `${DESIGN_TOKENS.colors.background.card.dark}95`,
+                                            borderColor: DESIGN_TOKENS.colors.background.elevated 
+                                        }}
+                                    >
+                                        <DSContainer maxWidth="hero" padding="responsive">
+                                            <div className="py-4">
+                                                <DSStack direction="row" justify="space-between" align="center" gap="4">
+                                                    <DSStack direction="row" gap="4" align="center">
+                                                        <div className="w-12 h-12 relative rounded-lg overflow-hidden hidden sm:block" style={{ backgroundColor: DESIGN_TOKENS.colors.background.elevated }}>
+                                                            <OptimizedImage
+                                                                src={product.thumbnail}
+                                                                alt={product.title}
+                                                                fill
+                                                                className="object-cover"
+                                                                sizes="48px"
+                                                                quality={75}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <DSHeading level={3} className="line-clamp-1" style={{ color: DESIGN_TOKENS.colors.text.primary.dark }}>
+                                                                {product.title}
+                                                            </DSHeading>
+                                                            <DSStack direction="row" gap="3" align="center">
+                                                                <DSText size="2xl" className="font-bold" style={{ color: DESIGN_TOKENS.colors.brand.primary }}>
+                                                                    ${product.price}
+                                                                </DSText>
+                                                                {product.originalPrice > product.price && (
+                                                                    <DSText size="sm" className="line-through" style={{ color: DESIGN_TOKENS.colors.text.muted.dark }}>
+                                                                        ${product.originalPrice}
+                                                                    </DSText>
+                                                                )}
+                                                                {product.averageRating > 0 && (
+                                                                    <DSStack direction="row" gap="1" align="center">
+                                                                        <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                                                                        <DSText size="sm" style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
+                                                                            {product.averageRating.toFixed(1)}
+                                                                        </DSText>
+                                                                    </DSStack>
+                                                                )}
+                                                            </DSStack>
+                                                        </div>
+                                                    </DSStack>
+
+                                                    <DSStack direction="row" gap="3" align="center">
+                                                        {hasPurchased ? (
+                                                            <DSButton
+                                                                variant="primary"
+                                                                onClick={handleDownload}
+                                                            >
+                                                                <Download className="w-5 h-5" />
+                                                            </DSButton>
+                                                        ) : isOwner ? (
+                                                            <Link href="/seller/products">
+                                                                <DSButton variant="primary">
+                                                                    Manage
+                                                                </DSButton>
+                                                            </Link>
+                                                        ) : (
+                                                            <>
+                                                                <DSButton
+                                                                    variant="primary"
+                                                                    onClick={handleBuyNow}
+                                                                >
+                                                                    Buy Now
+                                                                </DSButton>
+                                                                <DSButton
+                                                                    variant="secondary"
+                                                                    onClick={handleAddToCart}
+                                                                    disabled={inCart}
+                                                                >
+                                                                    <ShoppingCart className="w-5 h-5" />
+                                                                </DSButton>
+                                                            </>
+                                                        )}
+                                                    </DSStack>
+                                                </DSStack>
+                                            </div>
+                                        </DSContainer>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </DSContainer>
                     </section>
                 </main>
