@@ -8,7 +8,21 @@ import toast from '@/lib/utils/toast'
 import Image from 'next/image'
 import Link from 'next/link'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function FlaggedProductsPage() {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -39,7 +53,7 @@ export default function FlaggedProductsPage() {
       }
     } catch (error) {
       console.error('Error fetching products:', error)
-      toast.error('Failed to load flagged products')
+      showMessage('Failed to load flagged products', 'error')
     } finally {
       setLoading(false)
     }
@@ -48,11 +62,11 @@ export default function FlaggedProductsPage() {
   const handleResolveFlag = async (productId) => {
     try {
       // In a real app, you'd have an API endpoint to resolve flags
-      toast.success('Flag resolved successfully')
+      showMessage('Flag resolved successfully', 'success')
       fetchFlaggedProducts()
     } catch (error) {
       console.error('Error resolving flag:', error)
-      toast.error('Failed to resolve flag')
+      showMessage('Failed to resolve flag', 'error')
     }
   }
 
@@ -60,11 +74,11 @@ export default function FlaggedProductsPage() {
     if (window.confirm('Are you sure you want to archive this product?')) {
       try {
         await productsAPI.updateProduct(productId, { status: 'archived' })
-        toast.success('Product archived successfully')
+        showMessage('Product archived successfully', 'success')
         fetchFlaggedProducts()
       } catch (error) {
         console.error('Error archiving product:', error)
-        toast.error('Failed to archive product')
+        showMessage('Failed to archive product', 'error')
       }
     }
   }
@@ -76,6 +90,16 @@ export default function FlaggedProductsPage() {
 
   return (
     <div className="space-y-6">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
       {/* Header */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
         <div className="flex items-center justify-between mb-2">

@@ -276,6 +276,17 @@ userSchema.methods.markNotificationAsRead = function(notificationId) {
     }
 }
 
+// Mark all notifications as read
+userSchema.methods.markAllNotificationsAsRead = function() {
+    const now = new Date()
+    this.notifications.forEach(notification => {
+        if (!notification.isRead) {
+            notification.isRead = true
+            notification.readAt = now
+        }
+    })
+}
+
 userSchema.methods.updateLoginInfo = function(ip) {
     this.loginInfo.lastLogin = dayjs().utc().toDate()
     this.loginInfo.loginCount += 1

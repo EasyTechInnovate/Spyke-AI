@@ -8,7 +8,21 @@ import toast from '@/lib/utils/toast'
 import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 import Link from 'next/link'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function FeaturedProductsPage() {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -40,7 +54,7 @@ export default function FeaturedProductsPage() {
       }
     } catch (error) {
       console.error('Error fetching products:', error)
-      toast.error('Failed to load products')
+      showMessage('Failed to load products', 'error')
     } finally {
       setLoading(false)
     }
@@ -51,11 +65,11 @@ export default function FeaturedProductsPage() {
       await productsAPI.updateProduct(productId, { 
         isFeatured: !currentFeaturedStatus 
       })
-      toast.success(currentFeaturedStatus ? 'Product removed from featured' : 'Product marked as featured')
+      showMessage(currentFeaturedStatus ? 'Product removed from featured' : 'Product marked as featured', 'success')
       fetchProducts()
     } catch (error) {
       console.error('Error updating product:', error)
-      toast.error('Failed to update product')
+      showMessage('Failed to update product', 'error')
     }
   }
 
@@ -66,6 +80,16 @@ export default function FeaturedProductsPage() {
 
   return (
     <div className="space-y-6">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
       {/* Header */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
         <div className="flex items-center justify-between mb-2">

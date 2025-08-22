@@ -2,8 +2,8 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useMemo, useCallback, useRef, useId } from 'react'
-import { toast } from 'sonner'
 import { adminAPI } from '@/lib/api/admin'
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 import {
     Users,
     RefreshCw,
@@ -54,6 +54,19 @@ function formatDate(date) {
 }
 
 export default function ActiveSellersPage() {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
     const [sellers, setSellers] = useState([])
     const [loading, setLoading] = useState(true)
     const [tabSwitching, setTabSwitching] = useState(false)
@@ -183,7 +196,7 @@ export default function ActiveSellersPage() {
                 setTotalPages(serverPagination?.totalPages || 1)
             } catch (e) {
                 console.error(e)
-                toast.error('Failed to fetch active sellers')
+                showMessage('Failed to fetch active sellers', 'error')
                 setSellers([])
                 setPagination({})
                 setTotalPages(1)
@@ -318,18 +331,18 @@ export default function ActiveSellersPage() {
                 case 'export':
                     const sellersData = filteredSellers.filter((s) => selectedSellers.has(s._id))
                     exportSellersData(sellersData)
-                    toast.success('Sellers data exported')
+                    showMessage('Sellers data exported', 'success')
                     break
                 case 'suspend':
                     // TODO: Implement suspension logic
-                    toast.info('Suspension feature coming soon')
+                    showMessage('Suspension feature coming soon', 'info')
                     break
                 default:
                     break
             }
             setSelectedSellers(new Set())
         } catch {
-            toast.error('Bulk action failed')
+            showMessage('Bulk action failed', 'error')
         } finally {
             setActionLoading(false)
         }
@@ -359,6 +372,16 @@ export default function ActiveSellersPage() {
 
     return (
         <div className="space-y-6">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
             {/* Header */}
             <div className="relative overflow-hidden rounded-2xl border border-gray-800 bg-[#141414]">
                 <div
@@ -776,7 +799,7 @@ export default function ActiveSellersPage() {
                                     onClick={() => {
                                         setShowEditModal(false)
                                         setSelectedSeller(null)
-                                        toast.info('Profile editing feature coming soon')
+                                        showMessage('Profile editing feature coming soon', 'info')
                                     }}
                                     className="px-4 py-2 bg-[#00FF89] text-[#121212] rounded-lg font-medium hover:bg-[#00FF89]/90 transition-colors">
                                     Got it

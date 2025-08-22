@@ -31,6 +31,6 @@ export const theme = {
     },
     fonts: {
       title: 'var(--font-league-spartan)',
-      body: 'var(--font-kumbh-sans)',
+      body: 'var(--font-league-spartan)', // Changed to League Spartan
     }
   }

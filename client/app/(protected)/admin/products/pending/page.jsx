@@ -46,6 +46,7 @@ import Link from 'next/link'
 import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 import AdminProductModal from '@/components/product/AdminProductModal'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 const BRAND = '#00FF89'
 const AMBER = '#FFC050'
 
@@ -137,6 +138,19 @@ export default function PendingProductsPage() {
         { value: 'price', label: 'Price' },
         { value: 'sellerId.fullName', label: 'Seller Name' }
     ]
+
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
 
     useEffect(() => {
         fetchPendingProducts()
@@ -236,7 +250,7 @@ export default function PendingProductsPage() {
             }
         } catch (error) {
             setError(error.message || 'Failed to load products')
-            toast.error('Failed to load products. Please try again.')
+            showMessage('Failed to load products. Please try again.', 'error')
             setProducts([])
         } finally {
             setLoading(false)
@@ -279,7 +293,7 @@ export default function PendingProductsPage() {
             if (notes) updateData.adminNotes = notes
 
             await productsAPI.verifyProduct(productId, updateData)
-            toast.success(`Product ${action}ed successfully`)
+            showMessage(`Product ${action}ed successfully`, 'success')
             fetchPendingProducts()
             setSelectedProducts((prev) => {
                 const newSet = new Set(prev)
@@ -287,7 +301,7 @@ export default function PendingProductsPage() {
                 return newSet
             })
         } catch (error) {
-            toast.error(`Failed to ${action} product`)
+            showMessage(`Failed to ${action} product`, 'error')
         } finally {
             setActionLoading(false)
         }
@@ -295,7 +309,7 @@ export default function PendingProductsPage() {
 
     const handleBulkAction = async (action) => {
         if (selectedProducts.size === 0) {
-            toast.error('Please select products first')
+            showMessage('Please select products first', 'error')
             return
         }
 
@@ -304,10 +318,10 @@ export default function PendingProductsPage() {
             const promises = [...selectedProducts].map((productId) => handleProductAction(productId, action, `Bulk ${action}`))
 
             await Promise.all(promises)
-            toast.success(`${selectedProducts.size} products updated successfully`)
+            showMessage(`${selectedProducts.size} products updated successfully`, 'success')
             setSelectedProducts(new Set())
         } catch (error) {
-            toast.error('Failed to update products')
+            showMessage('Failed to update products', 'error')
         } finally {
             setBulkActionLoading(false)
         }
@@ -386,6 +400,16 @@ export default function PendingProductsPage() {
 
     return (
         <div className="space-y-4 sm:space-y-6">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
             {/* Header */}
             <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-gray-800 bg-[#141414]">
                 <div

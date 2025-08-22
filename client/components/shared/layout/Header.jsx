@@ -7,6 +7,7 @@ import HeaderLogo from './Header/Logo'
 import Navigation from './Header/Navigation'
 import SearchButton from './Header/SearchButton'
 import CartButton from './Header/CartButton'
+import SimpleNotificationBell from '../notifications/SimpleNotificationBell'
 import UserDropdown from './Header/UserDropdown'
 import MobileMenu from './Header/MobileMenu'
 import SearchOverlay from './Header/SearchOverlay'
@@ -65,7 +66,7 @@ export default function Header() {
                             {user && (
                                 <>
                                     {/* Notifications */}
-                                    {/* Add Notication Bell */}
+                                    <SimpleNotificationBell />
                                 </>
                             )}
 

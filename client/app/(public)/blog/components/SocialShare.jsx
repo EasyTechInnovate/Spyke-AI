@@ -3,9 +3,21 @@
 import { useState } from 'react'
 import { Share2, Twitter, Linkedin, Facebook, Copy, Check } from 'lucide-react'
 import { Button } from '@/components/shared/ui/button'
-import { toast } from 'sonner'
-
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function SocialShare({ post }) {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
   const [copied, setCopied] = useState(false)
   const [showOptions, setShowOptions] = useState(false)
 
@@ -23,11 +35,11 @@ export default function SocialShare({ post }) {
     try {
       await navigator.clipboard.writeText(currentUrl)
       setCopied(true)
-      toast.success('Link copied to clipboard!')
+      showMessage('Link copied to clipboard!', 'success')
       setTimeout(() => setCopied(false), 2000)
     } catch (error) {
       console.error('Failed to copy:', error)
-      toast.error('Failed to copy link')
+      showMessage('Failed to copy link', 'error')
     }
   }
 
@@ -38,6 +50,16 @@ export default function SocialShare({ post }) {
 
   return (
     <div className="relative">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
       <Button
         variant="ghost"
         onClick={() => setShowOptions(!showOptions)}

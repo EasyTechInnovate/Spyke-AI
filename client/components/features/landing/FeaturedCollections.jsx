@@ -1,9 +1,11 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { TrendingUp, Award, Zap, Package } from 'lucide-react'
-import Container from '@/components/shared/layout/Container'
+import { TrendingUp, Award, Zap, Package, ArrowRight, Sparkles } from 'lucide-react'
 import Link from 'next/link'
+
+const BRAND = '#00FF89'
+const AMBER = '#FFC050'
 
 const collections = [
   {
@@ -11,7 +13,9 @@ const collections = [
     title: 'Top Sales Agents',
     description: 'AI-powered sales automation tools that convert',
     icon: TrendingUp,
-    color: 'from-blue-500 to-cyan-500',
+    color: BRAND,
+    bgColor: 'rgba(0, 255, 137, 0.1)',
+    borderColor: 'rgba(0, 255, 137, 0.2)',
     link: '/explore?type=agent&category=sales&sortBy=sales',
     stats: '500+ sales'
   },
@@ -20,7 +24,9 @@ const collections = [
     title: 'Trending Prompts',
     description: 'Most popular prompts this week',
     icon: Award,
-    color: 'from-purple-500 to-pink-500',
+    color: '#8B5CF6',
+    bgColor: 'rgba(139, 92, 246, 0.1)',
+    borderColor: 'rgba(139, 92, 246, 0.2)',
     link: '/explore?type=prompt&sortBy=popularity',
     stats: '1k+ uses'
   },
@@ -29,7 +35,9 @@ const collections = [
     title: 'Productivity Hacks',
     description: 'Save hours with these automation tools',
     icon: Zap,
-    color: 'from-orange-500 to-red-500',
+    color: AMBER,
+    bgColor: 'rgba(255, 192, 80, 0.1)',
+    borderColor: 'rgba(255, 192, 80, 0.2)',
     link: '/explore?category=productivity&sortBy=rating',
     stats: '4.8+ rating'
   },
@@ -38,7 +46,9 @@ const collections = [
     title: 'Starter Bundles',
     description: 'Complete packages for beginners',
     icon: Package,
-    color: 'from-green-500 to-emerald-500',
+    color: '#00AFFF',
+    bgColor: 'rgba(0, 175, 255, 0.1)',
+    borderColor: 'rgba(0, 175, 255, 0.2)',
     link: '/explore?type=bundle&priceCategory=under_20',
     stats: 'Under $20'
   }
@@ -46,8 +56,19 @@ const collections = [
 
 export default function FeaturedCollections() {
   return (
-    <section className="relative py-20 lg:py-24 bg-black">
-      <Container>
+    <section className="relative overflow-hidden bg-[#0f0f0f]">
+      {/* Background with theme consistency */}
+      <div className="absolute inset-0">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(800px 400px at 30% 0%, rgba(0,255,137,.03), transparent), radial-gradient(600px 300px at 70% 100%, rgba(255,192,80,.03), transparent)'
+          }}
+        />
+      </div>
+
+      <div className="relative z-10 px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
           <motion.div
@@ -55,57 +76,94 @@ export default function FeaturedCollections() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 font-title">
+            className="text-center mb-12 sm:mb-16">
+            
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-[#00FF89]/10 border border-[#00FF89]/20 rounded-full mb-4 sm:mb-6">
+              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-[#00FF89]" />
+              <span className="text-xs sm:text-sm font-medium text-[#00FF89]">
+                Curated Collections
+              </span>
+            </div>
+            
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-3 sm:mb-4">
               Featured Collections
             </h2>
-            <p className="text-lg text-gray-400 max-w-2xl mx-auto font-body">
+            
+            <p className="text-base sm:text-lg text-gray-400 max-w-2xl mx-auto">
               Curated collections to help you find the perfect AI tools
             </p>
           </motion.div>
 
           {/* Collections Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             {collections.map((collection, index) => (
               <motion.div
                 key={collection.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
+                transition={{ duration: 0.5, delay: index * 0.1 }}>
+                
                 <Link
                   href={collection.link}
-                  className="group block h-full"
-                >
-                  <div className="relative h-full bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-gray-700 transition-all duration-300 hover:transform hover:scale-[1.02]">
+                  className="group block h-full">
+                  
+                  <div className="relative h-full bg-[#171717] border border-gray-800 rounded-xl sm:rounded-2xl overflow-hidden hover:border-gray-700 transition-all duration-300 hover:transform hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20">
+                    
                     {/* Gradient Background */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${collection.color} opacity-10 group-hover:opacity-20 transition-opacity`} />
+                    <div 
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      style={{ backgroundColor: collection.bgColor }}
+                    />
+                    
+                    {/* Border Glow Effect */}
+                    <div 
+                      className="absolute inset-0 border border-transparent group-hover:border-opacity-50 rounded-xl sm:rounded-2xl transition-all duration-300"
+                      style={{ borderColor: collection.borderColor }}
+                    />
                     
                     {/* Content */}
-                    <div className="relative p-6 flex flex-col h-full">
+                    <div className="relative p-4 sm:p-6 flex flex-col h-full min-h-[200px] sm:min-h-[220px]">
                       {/* Icon */}
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${collection.color} flex items-center justify-center mb-4`}>
-                        <collection.icon className="w-6 h-6 text-white" />
+                      <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl mb-3 sm:mb-4 overflow-hidden">
+                        <div 
+                          className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity"
+                          style={{ backgroundColor: collection.color }}
+                        />
+                        <div 
+                          className="absolute inset-0 border border-opacity-20 rounded-lg sm:rounded-xl"
+                          style={{ borderColor: collection.color }}
+                        />
+                        <div className="relative w-full h-full flex items-center justify-center">
+                          <collection.icon 
+                            className="w-5 h-5 sm:w-6 sm:h-6" 
+                            style={{ color: collection.color }}
+                          />
+                        </div>
                       </div>
                       
                       {/* Title & Description */}
-                      <h3 className="text-xl font-semibold text-white mb-2 font-title">
-                        {collection.title}
-                      </h3>
-                      <p className="text-sm text-gray-400 mb-4 flex-1 font-body">
-                        {collection.description}
-                      </p>
+                      <div className="flex-1 mb-4">
+                        <h3 className="text-lg sm:text-xl font-semibold text-white mb-2 group-hover:text-gray-100 transition-colors">
+                          {collection.title}
+                        </h3>
+                        <p className="text-sm sm:text-base text-gray-400 leading-relaxed group-hover:text-gray-300 transition-colors">
+                          {collection.description}
+                        </p>
+                      </div>
                       
-                      {/* Stats */}
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-brand-primary">
+                      {/* Bottom Section */}
+                      <div className="flex items-center justify-between pt-2 border-t border-gray-800/50 group-hover:border-gray-700 transition-colors">
+                        <span 
+                          className="text-sm sm:text-base font-medium"
+                          style={{ color: collection.color }}>
                           {collection.stats}
                         </span>
-                        <span className="text-sm text-gray-500 group-hover:text-gray-400 transition-colors">
-                          View all →
-                        </span>
+                        <div className="flex items-center gap-1 text-gray-500 group-hover:text-gray-400 transition-colors">
+                          <span className="text-xs sm:text-sm">View all</span>
+                          <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-0.5 transition-transform" />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -114,7 +172,7 @@ export default function FeaturedCollections() {
             ))}
           </div>
         </div>
-      </Container>
+      </div>
     </section>
   )
 }

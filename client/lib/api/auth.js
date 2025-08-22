@@ -87,21 +87,16 @@ export const authAPI = {
     },
 
     logout: async () => {
+        // Use the emergency logout service immediately
         const { logoutService } = await import('@/lib/services/logout')
         return logoutService.logout()
     },
 
     clearAllAuthData: () => {
-        apiClient.setAuthToken(null)
+        // Use the emergency logout service for consistency
         if (typeof window !== 'undefined') {
-            const authKeys = ['authToken', 'refreshToken', 'user', 'roles', 'loginTime']
-            authKeys.forEach((key) => localStorage.removeItem(key))
-            const cookies = ['authToken', 'roles', 'refreshToken']
-            cookies.forEach((name) => {
-                document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax`
-                document.cookie = `${name}=; path=/; domain=${window.location.hostname}; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax`
-            })
-            sessionStorage.clear()
+            const { logoutService } = require('@/lib/services/logout')
+            logoutService.forceLocalClear()
         }
     },
 
@@ -156,6 +151,11 @@ export const authAPI = {
 
     markNotificationAsRead: async (notificationId) => {
         const response = await apiClient.post('v1/auth/notifications/read', { notificationId })
+        return response?.data || response
+    },
+
+    markAllNotificationsRead: async () => {
+        const response = await apiClient.post('v1/auth/notifications/read-all')
         return response?.data || response
     },
 

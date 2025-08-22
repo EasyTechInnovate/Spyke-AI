@@ -15,6 +15,7 @@ import toast from '@/lib/utils/toast'
 import { sellerAPI } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 // Animation variants
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -43,6 +44,19 @@ export default function SellerProfileModal({
   sellerName,
   sellerData: initialData = null
 }) {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
   const [loading, setLoading] = useState(!initialData)
   const [sellerData, setSellerData] = useState(initialData)
   const [error, setError] = useState(null)
@@ -115,7 +129,7 @@ export default function SellerProfileModal({
     } catch (error) {
       console.error('Failed to fetch seller data:', error)
       setError(error.response?.data?.message || error.message || 'Failed to load seller profile')
-      toast.error('Unable to load seller profile')
+      showMessage('Unable to load seller profile', 'error')
     } finally {
       setLoading(false)
     }
@@ -146,6 +160,16 @@ export default function SellerProfileModal({
     if (loading) {
       return (
         <div className="flex flex-col items-center justify-center py-20 space-y-4">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
           <div className="relative">
             <Loader2 className="w-12 h-12 animate-spin text-brand-primary" />
             <div className="absolute inset-0 w-12 h-12 animate-ping text-brand-primary/20">

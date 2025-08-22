@@ -8,6 +8,7 @@ import { BarChart3, DollarSign, Package, Users, TrendingUp, Plus, Eye, Edit, Mes
 import toast from '@/lib/utils/toast'
 import sellerAPI from '@/lib/api/seller'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function Dashboard() {
     const router = useRouter()
     const [loading, setLoading] = useState(true)

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { DollarSign, Package, Plus, Star, ShoppingCart, CreditCard, Settings } from 'lucide-react'
-import { toast } from 'sonner'
 import sellerAPI from '@/lib/api/seller'
 import DocumentUploadModal from '@/components/features/seller/SellerDocumentUpload'
 import VerificationBadge from '@/components/features/seller/shared/VerificationBadge'
@@ -13,6 +12,7 @@ import TopProductsPanel from '@/components/features/seller/dashboard/TopProducts
 import FunnelMiniChart from '@/components/features/seller/dashboard/FunnelMiniChart'
 import CurrencySelector from '@/components/features/seller/dashboard/CurrencySelector'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 // ✅ Fixed StatCard component
 const StatCard = ({ icon: Icon, value, label, color, trend, loading }) => {
     const getIconColor = (colorClass) => {

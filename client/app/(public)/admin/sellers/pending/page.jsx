@@ -2,8 +2,8 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useMemo, useCallback, useRef, useId } from 'react'
-import { toast } from 'sonner'
 import { adminAPI } from '@/lib/api/admin'
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 import {
     Users,
     RefreshCw,
@@ -88,6 +88,19 @@ const statusConfig = {
 }
 
 export default function PendingSellersPage() {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
     const [sellers, setSellers] = useState([])
     const [loading, setLoading] = useState(true)
     const [tabSwitching, setTabSwitching] = useState(false)
@@ -251,7 +264,7 @@ export default function PendingSellersPage() {
                 }
             } catch (e) {
                 console.error(e)
-                toast.error('Failed to fetch sellers')
+                showMessage('Failed to fetch sellers', 'error')
                 setSellers([])
                 setPagination({})
                 setTotalPages(1)
@@ -325,7 +338,7 @@ export default function PendingSellersPage() {
             switch (action) {
                 case 'approve':
                     await Promise.all([...selectedSellers].map((id) => adminAPI.sellers.commission.offer(id, 15)))
-                    toast.success(`${selectedSellers.size} sellers approved`)
+                    showMessage(`${selectedSellers.size} sellers approved`, 'success')
                     break
                 case 'reject':
                     // Open bulk reject modal
@@ -336,13 +349,13 @@ export default function PendingSellersPage() {
                     // Export selected sellers data
                     const sellersData = filteredSellers.filter((s) => selectedSellers.has(s._id))
                     exportSellersData(sellersData)
-                    toast.success('Sellers data exported')
+                    showMessage('Sellers data exported', 'success')
                     break
             }
             setSelectedSellers(new Set())
             fetchList()
         } catch {
-            toast.error('Bulk action failed')
+            showMessage('Bulk action failed', 'error')
         } finally {
             setActionLoading(false)
         }
@@ -350,12 +363,12 @@ export default function PendingSellersPage() {
 
     // Actions (same behavior you had)
     const handleStartReview = async () => {
-        toast.message('Start review', { description: 'This action will be available soon.' })
+        showMessage('Start review - This action will be available soon.', 'info')
     }
     const handleSubmitCommission = async () => {
         if (!selectedSeller) return
         if (Number.isNaN(commissionRate) || commissionRate < 1 || commissionRate > 50) {
-            toast.error('Commission must be between 1% and 50%')
+            showMessage('Commission must be between 1% and 50%', 'error')
             return
         }
         setActionLoading(true)
@@ -366,22 +379,22 @@ export default function PendingSellersPage() {
             if (hasCounter && commissionRate === counterRate) {
                 // Accept seller's exact counter offer rate
                 await adminAPI.sellers.commission.acceptCounter(selectedSeller._id)
-                toast.success(`Counter offer accepted (${counterRate}%)`)
+                showMessage(`Counter offer accepted (${counterRate}%)`, 'success')
             } else {
                 // Use the single offer endpoint - it handles both initial offers and admin counter offers
                 await adminAPI.sellers.commission.offer(selectedSeller._id, commissionRate)
 
                 if (hasCounter && commissionRate !== counterRate) {
-                    toast.success(`Counter offer of ${commissionRate}% sent to seller`)
+                    showMessage(`Counter offer of ${commissionRate}% sent to seller`, 'success')
                 } else {
-                    toast.success(`Commission offer of ${commissionRate}% sent`)
+                    showMessage(`Commission offer of ${commissionRate}% sent`, 'success')
                 }
             }
             setShowCommissionModal(false)
             setSelectedSeller(null)
             fetchList()
         } catch {
-            toast.error('Failed to submit commission decision')
+            showMessage('Failed to submit commission decision', 'error')
         } finally {
             setActionLoading(false)
         }
@@ -390,23 +403,23 @@ export default function PendingSellersPage() {
         setActionLoading(true)
         try {
             await adminAPI.sellers.commission.acceptCounter(sellerId)
-            toast.success(`Counter offer of ${rate}% accepted`)
+            showMessage(`Counter offer of ${rate}% accepted`, 'success')
             fetchList()
         } catch {
-            toast.error('Failed to accept counter offer')
+            showMessage('Failed to accept counter offer', 'error')
         } finally {
             setActionLoading(false)
         }
     }
     const handleResendOffer = async (seller) => {
-        if (!seller?.commissionOffer?.rate) return toast.info('No previous offer to resend')
+        if (!seller?.commissionOffer?.rate) return showMessage('No previous offer to resend', 'info')
         setActionLoading(true)
         try {
             await adminAPI.sellers.commission.offer(seller._id, seller.commissionOffer.rate)
-            toast.success('Offer resent')
+            showMessage('Offer resent', 'success')
             fetchList()
         } catch {
-            toast.error('Failed to resend offer')
+            showMessage('Failed to resend offer', 'error')
         } finally {
             setActionLoading(false)
         }
@@ -416,13 +429,13 @@ export default function PendingSellersPage() {
         setActionLoading(true)
         try {
             await adminAPI.sellers.profile.reject(selectedSeller._id, rejectReason.trim())
-            toast.success('Application rejected')
+            showMessage('Application rejected', 'success')
             setShowRejectAppModal(false)
             setSelectedSeller(null)
             setRejectReason('')
             fetchList()
         } catch {
-            toast.error('Failed to reject application')
+            showMessage('Failed to reject application', 'error')
         } finally {
             setActionLoading(false)
         }
@@ -476,6 +489,16 @@ export default function PendingSellersPage() {
 
     return (
         <div className="space-y-6">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
             {/* Header */}
             <div className="relative overflow-hidden rounded-2xl border border-gray-800 bg-[#141414]">
                 <div
@@ -1483,15 +1506,15 @@ function Modal({ onClose, children }) {
 }
 function openDocs(seller) {
     const docs = seller?.verification?.documents
-    if (!docs) return toast.info('No documents uploaded yet')
+    if (!docs) return showMessage('No documents uploaded yet', 'info')
     const firstDoc = docs.identityProof || docs.businessProof || docs.taxDocument
-    firstDoc ? window.open(firstDoc, '_blank', 'noopener,noreferrer') : toast.info('No documents available')
+    firstDoc ? window.open(firstDoc, '_blank', 'noopener,noreferrer') : showMessage('No documents available', 'info')
 }
 function openProfile(seller) {
     try {
         window.open(`/admin/sellers/${seller._id}`, '_blank', 'noopener,noreferrer')
     } catch {
-        toast.message('Profile', { description: 'Profile page coming soon.' })
+        showMessage('Profile page coming soon.', 'info')
     }
 }
 

@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from './useAuth'
 import { useCart } from './useCart'
+import { logoutService } from '@/lib/services/logout'
+
 
 export function useHeader() {
     const router = useRouter()
@@ -104,8 +106,13 @@ export function useHeader() {
 
     const handleLogout = async () => {
         setDropdownOpen(false)
-        await logout()
-        // Auth service handles the rest (toasts, redirect, cleanup)
+
+        try {
+            await logoutService.logout()
+        } catch (error) {
+            console.error('Header logout error:', error)
+            logoutService.forceLogout()
+        }
     }
 
     const switchRole = (role) => {

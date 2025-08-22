@@ -34,7 +34,6 @@
     "react-icons": "^5.5.0",
     "react-window": "^1.8.11",
     "sanity": "^4.2.0",
-    "sonner": "^2.0.5",
     "styled-components": "^6.1.19",
     "swr": "^2.3.4",
     "tailwind-merge": "^3.3.1",

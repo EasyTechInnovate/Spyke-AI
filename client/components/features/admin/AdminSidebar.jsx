@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { LayoutDashboard, X, LogOut, UserCheck, ChevronDown, Package, TrendingUp, ShieldCheck, Settings, Tag, Pin, PinOff } from 'lucide-react'
-import { logout } from '@/lib/services/logout'
+import { logoutService } from '@/lib/services/logout'
 import adminAPI from '@/lib/api/admin' // or: import { adminAPI } from '@/lib/api/admin'
 
 /* ===== Theme ===== */
@@ -154,7 +154,7 @@ export default function AdminSidebar({ sidebarOpen, setSidebarOpen, currentPath 
     )
 
     const handleLogout = async () => {
-        await logout()
+        await logoutService.logout()
     }
 
     /* UI bits */

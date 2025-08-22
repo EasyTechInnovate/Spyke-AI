@@ -1,0 +1,82 @@
+/* Mobile-first responsive utilities for hero section */
+
+/* Touch-friendly interactive elements */
+.hero-touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Improved text readability on mobile */
+.hero-text-mobile {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Prevent horizontal scrolling on mobile */
+.hero-container {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Better mobile spacing */
+.hero-spacing-mobile {
+  padding-left: clamp(1rem, 4vw, 2rem);
+  padding-right: clamp(1rem, 4vw, 2rem);
+}
+
+/* Responsive font scaling */
+.hero-heading {
+  font-size: clamp(2rem, 8vw, 4rem);
+  line-height: 1.1;
+}
+
+.hero-subheading {
+  font-size: clamp(1rem, 4vw, 1.25rem);
+  line-height: 1.5;
+}
+
+/* Better mobile search bar */
+.hero-search-mobile {
+  width: 100%;
+  max-width: none;
+}
+
+/* Mobile-optimized CTA buttons */
+.hero-cta-mobile {
+  width: 100%;
+  justify-content: center;
+}
+
+@media (min-width: 640px) {
+  .hero-cta-mobile {
+    width: auto;
+  }
+  
+  .hero-search-mobile {
+    max-width: 48rem;
+  }
+}
+
+/* Improved mobile stats layout */
+.hero-stats-mobile {
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .hero-stats-mobile {
+    gap: 2rem;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .hero-text-contrast {
+    color: white;
+    background-color: black;
+  }
+  
+  .hero-border-contrast {
+    border-color: white;
+  }
+}

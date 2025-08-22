@@ -6,8 +6,7 @@ import { Shield, CreditCard, CheckCircle, ChevronDown, ChevronUp, Info, Copy } f
 import AuthButton from '@/components/shared/ui/AuthButton'
 import { formatCurrency, formatPromoDisplay } from '../utils'
 import { CHECKOUT_FEATURES } from '../constants'
-import { toast } from 'sonner'
-
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function OrderSummary({
     subtotal,
     totalSavings,
@@ -22,10 +21,33 @@ export default function OrderSummary({
     handleRemovePromo,
     handleCheckout
 }) {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
     const [isExpanded, setIsExpanded] = useState(true)
 
     return (
         <div className="lg:col-span-1">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
             <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -201,7 +223,7 @@ function PromoDiscountRow({ promocodeData, discount, onRemove }) {
     const handleCopy = () => {
         navigator.clipboard.writeText(promocodeData.code)
         setCopied(true)
-        toast.success('Promo code copied!')
+        showMessage('Promo code copied!', 'success')
         setTimeout(() => setCopied(false), 2000)
     }
     
@@ -322,7 +344,7 @@ function PromoCodeSuccess({ promocodeData, onRemove }) {
     const handleCopy = () => {
         navigator.clipboard.writeText(promocodeData.code)
         setCopied(true)
-        toast.success('Promo code copied!')
+        showMessage('Promo code copied!', 'success')
         setTimeout(() => setCopied(false), 2000)
     }
     

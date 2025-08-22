@@ -23,11 +23,11 @@ import Container from '@/components/shared/layout/Container'
 import Header from '@/components/shared/layout/Header'
 import { useAuth } from '@/hooks/useAuth'
 import { purchaseAPI } from '@/lib/api'
-import { toast } from 'sonner'
 import Link from 'next/link'
 import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 import ImagePlaceholder from '@/components/shared/ui/ImagePlaceholder'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 // Product type icons
 const typeIcons = {
     prompt: FileText,
@@ -45,6 +45,19 @@ const typeColors = {
 }
 
 export default function PurchasesPage() {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
     const { user } = useAuth()
     const [purchases, setPurchases] = useState([])
     const [loading, setLoading] = useState(true)
@@ -75,7 +88,7 @@ export default function PurchasesPage() {
             setPagination(response.pagination)
         } catch (error) {
             console.error('Error loading purchases:', error)
-            toast.error('Failed to load purchases')
+            showMessage('Failed to load purchases', 'error')
         } finally {
             setLoading(false)
         }
@@ -98,11 +111,11 @@ export default function PurchasesPage() {
             toast.loading('Preparing download...')
             setTimeout(() => {
                 toast.dismiss()
-                toast.success(`Downloaded: ${product.title}`)
+                showMessage('Downloaded: ${product.title}', 'success')
             }, 1000)
         } catch (error) {
             toast.dismiss()
-            toast.error('Download failed. Please try again.')
+            showMessage('Download failed. Please try again.', 'error')
         }
     }
 
@@ -138,7 +151,7 @@ export default function PurchasesPage() {
     }
 
     const handleBulkDownload = () => {
-        if (selected.size === 0) return toast('No items selected')
+        if (selected.size === 0) return showMessage('No items selected')
         const items = purchases.filter((p) => selected.has(p.purchaseId))
         items.forEach((p) => handleDownload(p.product))
     }
@@ -146,6 +159,16 @@ export default function PurchasesPage() {
     if (loading && purchases.length === 0) {
         return (
             <div className="min-h-screen bg-[#121212]">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
                 <Header />
                 <Container>
                     <div className="flex items-center justify-center min-h-[60vh]">

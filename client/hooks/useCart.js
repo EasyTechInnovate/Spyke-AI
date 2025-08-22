@@ -3,12 +3,24 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { cartAPI } from '@/lib/api'
 import { useAuth } from './useAuth'
-import { toast } from 'sonner'
-
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 const CART_STORAGE_KEY = 'spyke_cart'
 const GUEST_CART_KEY = 'spyke_guest_cart'
 
 export function useCart() {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
   const [cartData, setCartData] = useState(() => {
     // Initialize with data from sessionStorage for better persistence
     if (typeof window !== 'undefined') {
@@ -156,7 +168,7 @@ export function useCart() {
         // Reload cart from backend
         await loadCart()
 
-        toast.success('Your cart has been synced')
+        showMessage('Your cart has been synced', 'success')
       }
     } catch (error) {
       // Failed to sync guest cart
@@ -267,7 +279,7 @@ export function useCart() {
             localStorage.setItem('returnTo', returnTo)
           }
 
-          toast.success('Item added to your cart. Sign in to save it to your account.')
+          showMessage('Item added to your cart. Sign in to save it to your account.', 'success')
         } catch (e) {
           // ignore toast failures
         }
@@ -276,7 +288,7 @@ export function useCart() {
       }
 
       // Generic error
-      toast.error(error.message || 'Failed to add to cart')
+      showMessage(error.message || 'Failed to add to cart', 'error')
       return false // Indicate failure
     }
   }, [isAuthenticated, cartData, loadCart, saveGuestCart])
@@ -294,7 +306,7 @@ export function useCart() {
         } catch (err) {
           // If server update fails, reload to get authoritative state and inform user
           await loadCart()
-          toast.error(err?.message || 'Quantity update failed on server')
+          showMessage(err?.message || 'Quantity update failed on server', 'error')
         }
       } else {
         // Update guest cart
@@ -316,7 +328,7 @@ export function useCart() {
 
       setLastUpdate(Date.now())
     } catch (error) {
-      toast.error('Failed to update quantity')
+      showMessage('Failed to update quantity', 'error')
     }
   }, [isAuthenticated, cartData, loadCart, saveGuestCart])
 
@@ -347,7 +359,7 @@ export function useCart() {
       return true // Indicate success
     } catch (error) {
       // Error removing from cart
-      toast.error('Failed to remove from cart')
+      showMessage('Failed to remove from cart', 'error')
       return false // Indicate failure
     }
   }, [isAuthenticated, cartData, loadCart, saveGuestCart])
@@ -372,7 +384,7 @@ export function useCart() {
       return true // Indicate success
     } catch (error) {
       // Error clearing cart
-      toast.error('Failed to clear cart')
+      showMessage('Failed to clear cart', 'error')
       return false // Indicate failure
     }
   }, [isAuthenticated, loadCart])
@@ -384,7 +396,7 @@ export function useCart() {
         // Apply on backend
         const result = await cartAPI.applyPromocode(code)
         await loadCart()
-        toast.success('Promocode applied successfully')
+        showMessage('Promocode applied successfully', 'success')
         return result
       } else {
         // For guests, validate and apply to local cart
@@ -425,7 +437,7 @@ export function useCart() {
           // Applied promocode to cart
           setCartData(newCart)
           saveGuestCart(newCart)
-          toast.success('Promocode applied successfully!')
+          showMessage('Promocode applied successfully!', 'success')
           return validation
         } else {
           throw new Error(validation.message || response.message || 'Invalid promocode')
@@ -433,7 +445,7 @@ export function useCart() {
       }
     } catch (error) {
       // Error applying promocode
-      toast.error(error.message || 'Failed to apply promocode')
+      showMessage(error.message || 'Failed to apply promocode', 'error')
       throw error
     }
   }, [isAuthenticated, cartData, loadCart, saveGuestCart])
@@ -445,17 +457,17 @@ export function useCart() {
         // Remove from backend
         await cartAPI.removePromocode()
         await loadCart()
-        toast.success('Promocode removed')
+        showMessage('Promocode removed', 'success')
       } else {
         // Remove from guest cart
         const newCart = { ...cartData, promocode: null }
         setCartData(newCart)
         saveGuestCart(newCart)
-        toast.success('Promocode removed')
+        showMessage('Promocode removed', 'success')
       }
     } catch (error) {
       // Error removing promocode
-      toast.error('Failed to remove promocode')
+      showMessage('Failed to remove promocode', 'error')
     }
   }, [isAuthenticated, cartData, loadCart, saveGuestCart])
 

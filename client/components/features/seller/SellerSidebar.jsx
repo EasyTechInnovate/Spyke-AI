@@ -17,7 +17,7 @@ import {
     Wallet,
     LayoutDashboard
 } from 'lucide-react'
-import { logout } from '@/lib/services/logout'
+import { logoutService } from '@/lib/services/logout'
 
 const SellerSidebar = ({ currentPath = '/profile', sellerName = '', sidebarOpen, setSidebarOpen }) => {
 
@@ -98,7 +98,7 @@ const SellerSidebar = ({ currentPath = '/profile', sellerName = '', sidebarOpen,
 
     // Use centralized logout
     const handleLogout = useCallback(async () => {
-        await logout()
+        await logoutService.logout()
     }, [])
 
     // Get initials from seller name

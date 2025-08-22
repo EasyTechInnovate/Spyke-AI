@@ -6,7 +6,6 @@ import dynamic from 'next/dynamic'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ErrorBoundary } from 'react-error-boundary'
 import { debounce } from '@/utils/debounce'
-import Container from '@/components/shared/layout/Container'
 import Header from '@/components/shared/layout/Header'
 import ExploreHeader from '@/components/features/explore/ExploreHeader'
 import ExploreControls from '@/components/features/explore/ExploreControls'
@@ -16,7 +15,12 @@ import Pagination from '@/components/features/explore/Pagination'
 import { productsAPI } from '@/lib/api'
 import { CATEGORIES, PRODUCT_TYPES, INDUSTRIES, SETUP_TIMES, ITEMS_PER_PAGE, DEFAULT_FILTERS, SORT_OPTIONS } from '@/data/explore/constants'
 import toast from '@/lib/utils/toast'
-import { AlertTriangle, RefreshCw, Wifi, WifiOff, Clock } from 'lucide-react'
+import { AlertTriangle, RefreshCw, Wifi, WifiOff, Clock, Loader2 } from 'lucide-react'
+
+// Import Design System Components
+import { DSContainer, DSStack, DSHeading, DSText, DSButton, DSLoadingState } from '@/lib/design-system'
+
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 
 // Dynamic imports with proper loading states and error boundaries
 const FilterSidebar = dynamic(() => import('@/components/features/explore/FilterSidebar'), {
@@ -39,25 +43,12 @@ const CategoryDetailClient = dynamic(() => import('@/components/features/explore
 // Enhanced Loading skeleton components
 function FilterSidebarSkeleton() {
     return (
-        <div className="w-72 bg-gray-900/50 border border-gray-800 rounded-2xl p-6 sticky top-8 backdrop-blur-xl">
-            <div className="animate-pulse space-y-6">
-                <div className="h-6 bg-gradient-to-r from-gray-800 to-gray-700 rounded w-24 shimmer" />
-                {[...Array(5)].map((_, i) => (
-                    <div
-                        key={i}
-                        className="space-y-3">
-                        <div className="h-4 bg-gradient-to-r from-gray-800 to-gray-700 rounded w-32 shimmer" />
-                        <div className="space-y-2">
-                            {[...Array(3)].map((_, j) => (
-                                <div
-                                    key={j}
-                                    className="h-4 bg-gradient-to-r from-gray-800 to-gray-700 rounded w-full shimmer"
-                                />
-                            ))}
-                        </div>
-                    </div>
-                ))}
-            </div>
+        <div className="w-72 bg-[#171717] border border-gray-800 rounded-xl p-6 sticky top-8">
+            <DSLoadingState
+                type="skeleton"
+                height="300px"
+                className="w-full"
+            />
         </div>
     )
 }
@@ -68,15 +59,36 @@ function ProductGridSkeleton() {
             {[...Array(12)].map((_, i) => (
                 <div
                     key={i}
-                    className="bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden animate-pulse backdrop-blur-xl">
-                    <div className="aspect-[4/3] bg-gradient-to-br from-gray-800 to-gray-700 shimmer" />
-                    <div className="p-5 space-y-3">
-                        <div className="h-5 bg-gradient-to-r from-gray-800 to-gray-700 rounded shimmer" />
-                        <div className="h-4 bg-gradient-to-r from-gray-800 to-gray-700 rounded w-3/4 shimmer" />
-                        <div className="flex justify-between items-center">
-                            <div className="h-6 bg-gradient-to-r from-gray-800 to-gray-700 rounded w-20 shimmer" />
-                            <div className="h-4 bg-gradient-to-r from-gray-800 to-gray-700 rounded w-16 shimmer" />
-                        </div>
+                    className="bg-[#171717] border border-gray-800 rounded-xl overflow-hidden">
+                    <DSLoadingState
+                        type="skeleton"
+                        height="200px"
+                    />
+                    <div className="p-4 space-y-3">
+                        <DSLoadingState
+                            type="skeleton"
+                            height="20px"
+                        />
+                        <DSLoadingState
+                            type="skeleton"
+                            height="16px"
+                            width="75%"
+                        />
+                        <DSStack
+                            direction="row"
+                            justify="between"
+                            align="center">
+                            <DSLoadingState
+                                type="skeleton"
+                                height="20px"
+                                width="60px"
+                            />
+                            <DSLoadingState
+                                type="skeleton"
+                                height="16px"
+                                width="50px"
+                            />
+                        </DSStack>
                     </div>
                 </div>
             ))}
@@ -104,29 +116,52 @@ function ExploreErrorBoundary({ error, resetErrorBoundary, onRetry }) {
 
     return (
         <div className="min-h-[60vh] flex items-center justify-center">
-            <div className="text-center max-w-md mx-auto p-8 bg-gray-900/50 border border-gray-800 rounded-2xl backdrop-blur-xl">
+            <div className="text-center max-w-md mx-auto">
                 <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ duration: 0.3 }}>
-                    <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-white mb-2">Something went wrong</h3>
-                    <p className="text-gray-400 mb-6">{getErrorMessage()}</p>
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                        <button
-                            onClick={onRetry || resetErrorBoundary}
-                            className="px-6 py-3 bg-brand-primary text-black font-semibold rounded-xl hover:bg-brand-primary/90 transition-all duration-200 flex items-center gap-2">
-                            <RefreshCw className="w-4 h-4" />
-                            Try Again
-                        </button>
-                        {getErrorType() === 'chunk-error' && (
-                            <button
-                                onClick={() => window.location.reload()}
-                                className="px-6 py-3 bg-gray-800 text-white font-semibold rounded-xl hover:bg-gray-700 transition-all duration-200">
-                                Reload Page
-                            </button>
-                        )}
-                    </div>
+                    <DSStack
+                        gap="large"
+                        direction="column"
+                        align="center">
+                        <div className="w-16 h-16 bg-red-500/10 rounded-xl flex items-center justify-center">
+                            <AlertTriangle className="w-8 h-8 text-red-500" />
+                        </div>
+
+                        <DSStack
+                            gap="small"
+                            direction="column"
+                            align="center">
+                            <DSHeading
+                                level={3}
+                                size="lg">
+                                <span style={{ color: 'white' }}>Something went wrong</span>
+                            </DSHeading>
+                            <DSText style={{ color: '#9ca3af', textAlign: 'center' }}>{getErrorMessage()}</DSText>
+                        </DSStack>
+
+                        <DSStack
+                            gap="small"
+                            direction="row">
+                            <DSButton
+                                variant="primary"
+                                size="medium"
+                                onClick={onRetry || resetErrorBoundary}>
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                Try Again
+                            </DSButton>
+
+                            {getErrorType() === 'chunk-error' && (
+                                <DSButton
+                                    variant="secondary"
+                                    size="medium"
+                                    onClick={() => window.location.reload()}>
+                                    Reload Page
+                                </DSButton>
+                            )}
+                        </DSStack>
+                    </DSStack>
                 </motion.div>
             </div>
         </div>
@@ -384,7 +419,7 @@ function ExplorePageContent() {
                 }
 
                 if (connectionSpeed === 'slow-2g' && !forceRefresh) {
-                    toast.info('Slow connection detected. Loading may take longer.')
+                    showMessage('Slow connection detected. Loading may take longer.', 'info')
                 }
 
                 // Build API params with validation
@@ -518,7 +553,7 @@ function ExplorePageContent() {
 
                     // Show success toast for retries
                     if (isRetry) {
-                        toast.success('Products loaded successfully!')
+                        showMessage('Products loaded successfully!', 'success')
                     }
 
                     // Enable virtualization for large datasets
@@ -567,9 +602,9 @@ function ExplorePageContent() {
                         fetchProducts(true)
                     }, delay)
 
-                    toast.info(`Retrying in ${Math.ceil(delay / 1000)} seconds...`)
+                    showMessage('Retrying in ${Math.ceil(delay / 1000)} seconds...', 'info')
                 } else {
-                    toast.error(errorMessage)
+                    showMessage(errorMessage, 'error')
                 }
 
                 // Log error for monitoring (in production, send to error tracking service)
@@ -744,9 +779,16 @@ function ExplorePageContent() {
                 <NetworkIndicator />
 
                 <main className="pt-24 pb-16">
-                    <Container>
+                    <DSContainer>
                         {/* Enhanced Page Header with real-time stats */}
-                        <Suspense fallback={<div className="h-20 animate-pulse bg-gray-900 rounded" />}>
+                        <Suspense
+                            fallback={
+                                <DSLoadingState
+                                    type="skeleton"
+                                    height="80px"
+                                    className="mb-8"
+                                />
+                            }>
                             <ExploreHeader />
                         </Suspense>
 
@@ -796,15 +838,12 @@ function ExplorePageContent() {
                                 className="flex-1 min-w-0"
                                 id="products-section">
                                 {initialLoading ? (
-                                    <div className="flex items-center justify-center min-h-[60vh]">
-                                        <div className="text-center">
-                                            <div className="relative">
-                                                <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-brand-primary mx-auto mb-6"></div>
-                                            </div>
-                                            <h3 className="text-xl font-semibold text-white mb-2">Discovering Amazing Products</h3>
-                                            <p className="text-gray-400">Finding the perfect tools for you...</p>
-                                        </div>
-                                    </div>
+                                    <DSLoadingState
+                                        icon={Loader2}
+                                        message="Discovering Amazing Products"
+                                        description="Finding the perfect tools for you..."
+                                        className="min-h-[60vh]"
+                                    />
                                 ) : apiError && products.length === 0 ? (
                                     <ExploreErrorBoundary
                                         error={{ message: apiError }}
@@ -859,24 +898,32 @@ function ExplorePageContent() {
                                                 initial={{ opacity: 0 }}
                                                 animate={{ opacity: 1 }}
                                                 transition={{ delay: 0.3 }}
-                                                className="mt-8 text-center space-y-2">
-                                                <div className="text-gray-400 text-sm">
-                                                    Showing {products.length} of {totalItems.toLocaleString()} products
+                                                className="mt-8 text-center">
+                                                <DSStack
+                                                    gap="small"
+                                                    direction="column"
+                                                    align="center">
+                                                    <DSText
+                                                        size="sm"
+                                                        style={{ color: '#9ca3af' }}>
+                                                        Showing {products.length} of {totalItems.toLocaleString()} products
+                                                    </DSText>
                                                     {hasActiveFilters && (
-                                                        <button
-                                                            onClick={clearFilters}
-                                                            className="ml-2 text-brand-primary hover:text-brand-primary/80 underline transition-colors">
+                                                        <DSButton
+                                                            variant="secondary"
+                                                            size="small"
+                                                            onClick={clearFilters}>
                                                             Clear filters
-                                                        </button>
+                                                        </DSButton>
                                                     )}
-                                                </div>
+                                                </DSStack>
                                             </motion.div>
                                         )}
                                     </>
                                 )}
                             </div>
                         </div>
-                    </Container>
+                    </DSContainer>
                 </main>
 
                 {/* Enhanced Mobile Filter Drawer */}
@@ -900,15 +947,14 @@ export default function ExplorePage() {
                 <div className="min-h-screen bg-black text-white">
                     <Header />
                     <div className="pt-24 pb-16">
-                        <Container>
-                            <div className="flex items-center justify-center min-h-[60vh]">
-                                <div className="text-center">
-                                    <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-brand-primary mx-auto mb-6"></div>
-                                    <h3 className="text-xl font-semibold text-white mb-2">Loading Explore Page</h3>
-                                    <p className="text-gray-400">Setting up your browsing experience...</p>
-                                </div>
-                            </div>
-                        </Container>
+                        <DSContainer>
+                            <DSLoadingState
+                                icon={Loader2}
+                                message="Loading Explore Page"
+                                description="Setting up your browsing experience..."
+                                className="min-h-[60vh]"
+                            />
+                        </DSContainer>
                     </div>
                 </div>
             }>

@@ -3,9 +3,21 @@
 import { useState } from 'react'
 import { Mail, Send, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/shared/ui/button'
-import { toast } from 'sonner'
-
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function NewsletterCTA({ blogPostSlug }) {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
   const [email, setEmail] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubscribed, setIsSubscribed] = useState(false)
@@ -33,14 +45,14 @@ export default function NewsletterCTA({ blogPostSlug }) {
 
       if (response.ok) {
         setIsSubscribed(true)
-        toast.success('Successfully subscribed! Check your email for confirmation.')
+        showMessage('Successfully subscribed! Check your email for confirmation.', 'success')
         setEmail('')
       } else {
-        toast.error(data.error || 'Something went wrong. Please try again.')
+        showMessage(data.error || 'Something went wrong. Please try again.', 'error')
       }
     } catch (error) {
       console.error('Error subscribing:', error)
-      toast.error('Failed to subscribe. Please try again.')
+      showMessage('Failed to subscribe. Please try again.', 'error')
     } finally {
       setIsSubmitting(false)
     }
@@ -49,6 +61,16 @@ export default function NewsletterCTA({ blogPostSlug }) {
   if (isSubscribed) {
     return (
       <div className="bg-gradient-to-r from-brand-primary/10 to-brand-secondary/10 rounded-2xl p-8 border border-brand-primary/20">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
         <div className="text-center">
           <div className="w-16 h-16 bg-brand-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-8 h-8 text-brand-primary" />

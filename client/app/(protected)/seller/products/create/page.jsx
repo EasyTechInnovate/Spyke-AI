@@ -20,7 +20,21 @@ import Step4Premium from '@/components/product/create/steps/Step4Premium'
 import Step5MediaPrice from '@/components/product/create/steps/Step5MediaPrice'
 import Step6Launch from '@/components/product/create/steps/Step6Launch'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function CreateProductPage() {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
     const router = useRouter()
     const { data: sellerProfile, loading: profileLoading } = useSellerProfile()
     const [currentStep, setCurrentStep] = useState(1)
@@ -255,12 +269,12 @@ export default function CreateProductPage() {
             }
             const response = await productsAPI.createProduct(productData)
             if (response.data) {
-                toast.success('Product created successfully!')
+                showMessage('Product created successfully!', 'success')
                 router.push('/seller/products')
             }
         } catch (error) {
             console.error('Error creating product:', error)
-            toast.error(error.message || 'Failed to create product')
+            showMessage(error.message || 'Failed to create product', 'error')
         } finally {
             setIsSubmitting(false)
         }
@@ -300,7 +314,7 @@ export default function CreateProductPage() {
                 default:
                     break
             }
-            if (missingFields.length) toast.error(`Please complete: ${missingFields.join(', ')}`)
+            if (missingFields.length) showMessage(`Please complete: ${missingFields.join(', ', 'error')}`)
         }
     }
 
@@ -308,6 +322,16 @@ export default function CreateProductPage() {
     if (profileLoading) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
                 <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}

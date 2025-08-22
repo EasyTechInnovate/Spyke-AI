@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Save, X, Plus, Upload, Loader2, RefreshCcw, Trash2 } from 'lucide-react'
 import { productsAPI } from '@/lib/api'
 import toast from '@/lib/utils/toast'
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 import {
   FORM_STEPS,
   PRODUCT_TYPES,
@@ -34,6 +35,19 @@ const ToolButton = ({ tool, selected, onToggle }) => (
 )
 
 export default function EditProductPage() {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
   const { productId } = useParams()
   const router = useRouter()
 
@@ -136,7 +150,7 @@ export default function EditProductPage() {
       setFormData(populated)
     } catch (e) {
       console.error(e)
-      toast.error(e.message || 'Failed to load product')
+      showMessage(e.message || 'Failed to load product', 'error')
       router.push('/seller/products')
     } finally {
       setLoading(false)
@@ -201,7 +215,7 @@ export default function EditProductPage() {
 
   const goToStep = (step) => {
     if (step < currentStep || validateStep(currentStep)) setCurrentStep(step)
-    else toast.error('Please complete all required fields')
+    else showMessage('Please complete all required fields', 'error')
   }
 
   const handleSave = async () => {
@@ -210,11 +224,11 @@ export default function EditProductPage() {
       setSaving(true)
       const payload = preparePayload(formData)
       await productsAPI.updateProduct(productId, payload)
-      toast.success('Product updated')
+      showMessage('Product updated', 'success')
       setOriginalData(formData)
     } catch (e) {
       console.error(e)
-      toast.error(e.message || 'Update failed')
+      showMessage(e.message || 'Update failed', 'error')
     } finally {
       setSaving(false)
     }
@@ -229,7 +243,7 @@ export default function EditProductPage() {
     if (!originalData) return
     if (isDirty && !confirm('Discard unsaved changes?')) return
     setFormData(originalData)
-    toast.success('Reverted changes')
+    showMessage('Reverted changes', 'success')
   }
 
   const handleDelete = async () => {
@@ -237,11 +251,11 @@ export default function EditProductPage() {
     try {
       setDeleting(true)
       await productsAPI.deleteProduct(productId)
-      toast.success('Product deleted')
+      showMessage('Product deleted', 'success')
       router.push('/seller/products')
     } catch (e) {
       console.error(e)
-      toast.error('Delete failed')
+      showMessage('Delete failed', 'error')
     } finally {
       setDeleting(false)
     }
@@ -257,6 +271,16 @@ export default function EditProductPage() {
   if (loading || !formData) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
         <div className="flex flex-col items-center gap-4 text-gray-400">
           <Loader2 className="w-8 h-8 animate-spin" />
           <p>Loading product...</p>

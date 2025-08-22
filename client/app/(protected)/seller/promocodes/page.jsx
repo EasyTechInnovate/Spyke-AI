@@ -32,9 +32,23 @@ import PromocodeStats from '@/components/features/promocode/PromocodeStats'
 import PromocodeDetails from '@/components/features/promocode/PromocodeDetails'
 import LoadingSpinner from '@/components/shared/ui/LoadingSpinner'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 // Sidebar is now handled by the layout
 
 export default function PromocodesPage() {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
     const [sellerProfile, setSellerProfile] = useState(null)
     const [promocodes, setPromocodes] = useState([])
     const [loading, setLoading] = useState(true)
@@ -110,7 +124,7 @@ export default function PromocodesPage() {
                 totalPages: response.totalPages || 0
             })
         } catch (error) {
-            toast.error('Failed to fetch promocodes')
+            showMessage('Failed to fetch promocodes', 'error')
             console.error('Error fetching promocodes:', error)
         } finally {
             setLoading(false)
@@ -133,10 +147,10 @@ export default function PromocodesPage() {
 
         try {
             await promocodeAPI.deletePromocode(promocodeId)
-            toast.success('Promocode deleted successfully')
+            showMessage('Promocode deleted successfully', 'success')
             fetchPromocodes()
         } catch (error) {
-            toast.error('Failed to delete promocode')
+            showMessage('Failed to delete promocode', 'error')
             console.error('Error deleting promocode:', error)
         }
     }
@@ -144,10 +158,10 @@ export default function PromocodesPage() {
     const handleToggleStatus = async (promocodeId, currentStatus) => {
         try {
             await promocodeAPI.togglePromocodeStatus(promocodeId)
-            toast.success(`Promocode ${currentStatus ? 'deactivated' : 'activated'} successfully`)
+            showMessage(`Promocode ${currentStatus ? 'deactivated' : 'activated'} successfully`, 'success')
             fetchPromocodes()
         } catch (error) {
-            toast.error('Failed to update promocode status')
+            showMessage('Failed to update promocode status', 'error')
             console.error('Error toggling status:', error)
         }
     }
@@ -160,7 +174,7 @@ export default function PromocodesPage() {
     const copyToClipboard = (code) => {
         navigator.clipboard.writeText(code)
         setCopiedCode(code)
-        toast.success(`Code "${code}" copied to clipboard!`)
+        showMessage(`Code "${code}" copied to clipboard!`, 'success')
         setTimeout(() => setCopiedCode(null), 2000)
     }
 
@@ -215,6 +229,16 @@ export default function PromocodesPage() {
 
     return (
         <div className="w-full text-white">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
             <div className="p-4 sm:p-6 lg:p-8">
                 {/* Header */}
                 <div className="mb-8 relative">

@@ -7,6 +7,7 @@ import Modal from '@/components/shared/ui/Modal'
 import { cn } from '@/lib/utils'
 import toast from '@/lib/utils/toast'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 // Star rating descriptions
 const ratingDescriptions = {
   1: 'Poor',
@@ -23,6 +24,19 @@ export default function WriteReviewModalV2({
   productId,
   onReviewSubmit 
 }) {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
   const [rating, setRating] = useState(0)
   const [hoveredRating, setHoveredRating] = useState(0)
   const [comment, setComment] = useState('')
@@ -57,7 +71,7 @@ export default function WriteReviewModalV2({
     }
     
     if (!comment.trim() || comment.trim().length < 10) {
-      toast.error('Please write at least 10 characters')
+      showMessage('Please write at least 10 characters', 'error')
       return
     }
     
@@ -84,7 +98,7 @@ export default function WriteReviewModalV2({
     } catch (error) {
       // Show the actual error message from API
       const errorMessage = error.message || error.response?.data?.message || 'Failed to submit review'
-      toast.error(errorMessage)
+      showMessage(errorMessage, 'error')
     } finally {
       setIsSubmitting(false)
     }
@@ -124,6 +138,16 @@ export default function WriteReviewModalV2({
       className="max-w-md"
       showCloseButton={false}
     >
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
       <form onSubmit={handleSubmit} className="relative flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between mb-4 sm:mb-6">

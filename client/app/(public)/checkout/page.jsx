@@ -25,11 +25,24 @@ import Container from '@/components/shared/layout/Container'
 import Header from '@/components/shared/layout/Header'
 import { useCart } from '@/hooks/useCart'
 import { cartAPI } from '@/lib/api'
-import { toast } from 'sonner'
 import Link from 'next/link'
 import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function CheckoutPage() {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
     const router = useRouter()
     const { cartItems, cartData, loading: cartLoading, clearCart } = useCart()
 
@@ -87,7 +100,7 @@ export default function CheckoutPage() {
             // Handle different payment methods
             if (paymentMethod === 'stripe') {
                 // For Stripe integration (future implementation)
-                toast.info('Stripe payment integration coming soon. Using manual payment for now.')
+                showMessage('Stripe payment integration coming soon. Using manual payment for now.', 'info')
 
                 // Create purchase with manual payment for now
                 const purchaseData = {
@@ -147,7 +160,7 @@ export default function CheckoutPage() {
             }
         } catch (error) {
             // Checkout error
-            toast.error(error.message || 'Checkout failed. Please try again.')
+            showMessage(error.message || 'Checkout failed. Please try again.', 'error')
         } finally {
             setLoading(false)
         }
@@ -156,6 +169,16 @@ export default function CheckoutPage() {
     if (cartLoading || !hasCheckedCart) {
         return (
             <div className="min-h-screen bg-black">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
                 <Header />
                 <Container>
                     <div className="flex items-center justify-center min-h-[60vh]">

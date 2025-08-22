@@ -6,6 +6,7 @@ import { Star, X, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import toast from '@/lib/utils/toast'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function OneClickReview({ 
   productId,
   productTitle,
@@ -13,6 +14,19 @@ export default function OneClickReview({
   onClose,
   className 
 }) {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
   const [rating, setRating] = useState(0)
   const [hoveredRating, setHoveredRating] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -31,11 +45,11 @@ export default function OneClickReview({
           comment: 'Excellent product!',
           title: 'Excellent!'
         })
-        toast.success('Thanks for your 5-star review!')
+        showMessage('Thanks for your 5-star review!', 'success')
         onClose?.()
       } catch (error) {
         const errorMessage = error.message || error.response?.data?.message || 'Failed to submit review'
-        toast.error(errorMessage)
+        showMessage(errorMessage, 'error')
       } finally {
         setIsSubmitting(false)
       }
@@ -55,11 +69,11 @@ export default function OneClickReview({
         comment: comment.trim() || `${rating}-star rating`,
         title: comment.trim().slice(0, 50) || `${rating} stars`
       })
-      toast.success('Review submitted!')
+      showMessage('Review submitted!', 'success')
       onClose?.()
     } catch (error) {
       const errorMessage = error.message || error.response?.data?.message || 'Failed to submit review'
-      toast.error(errorMessage)
+      showMessage(errorMessage, 'error')
     } finally {
       setIsSubmitting(false)
     }
@@ -75,6 +89,16 @@ export default function OneClickReview({
         className
       )}
     >
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
       <div className="flex items-start justify-between mb-4">
         <div>
           <h3 className="text-lg font-semibold text-white mb-1">Quick Review</h3>

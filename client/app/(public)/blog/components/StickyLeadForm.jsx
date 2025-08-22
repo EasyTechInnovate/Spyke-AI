@@ -3,9 +3,21 @@
 import { useState } from 'react'
 import { X, Send, User, Mail, Phone, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/shared/ui/button'
-import { toast } from 'sonner'
-
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function StickyLeadForm({ blogPostSlug }) {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
   const [isOpen, setIsOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
@@ -40,16 +52,16 @@ export default function StickyLeadForm({ blogPostSlug }) {
       })
 
       if (response.ok) {
-        toast.success('Thank you! We\'ll be in touch soon.')
+        showMessage('Thank you! We\'ll be in touch soon.', 'success')
         setFormData({ name: '', email: '', phone: '', description: '' })
         setIsOpen(false)
       } else {
         const error = await response.json()
-        toast.error(error.error || 'Something went wrong. Please try again.')
+        showMessage(error.error || 'Something went wrong. Please try again.', 'error')
       }
     } catch (error) {
       console.error('Error submitting form:', error)
-      toast.error('Failed to submit. Please try again.')
+      showMessage('Failed to submit. Please try again.', 'error')
     } finally {
       setIsSubmitting(false)
     }
@@ -57,6 +69,16 @@ export default function StickyLeadForm({ blogPostSlug }) {
 
   return (
     <>
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
       {/* Trigger Button */}
       {!isOpen && (
         <div className="fixed right-6 top-1/2 transform -translate-y-1/2 z-50">

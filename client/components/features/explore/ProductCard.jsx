@@ -8,6 +8,15 @@ import toast from '@/lib/utils/toast'
 import { ANALYTICS_EVENTS, eventProperties } from '@/lib/analytics/events'
 import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 
+// Import Design System Components
+import {
+  DSStack,
+  DSHeading,
+  DSText,
+  DSButton,
+  DSBadge
+} from '@/lib/design-system'
+
 export default function ProductCard({ product, viewMode = 'grid' }) {
   const router = useRouter()
   const { addToCart } = useCart()
@@ -18,7 +27,6 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
     e.stopPropagation()
     
     try {
-      // Allow both authenticated and guest users to add to cart
       const success = await addToCart(product)
       if (success) {
         toast.cart.addedToCart(product.title)
@@ -36,211 +44,251 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
   }
 
   const discountPercentage = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+  
+  const formatPrice = (price) => {
+    if (price === 0) return 'Free'
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(price)
+  }
 
   if (viewMode === 'list') {
     return (
       <Link href={`/products/${product.slug || product.id}`}>
         <motion.div
           whileHover={{ scale: 1.01 }}
-          className="bg-gray-900 border border-gray-800 rounded-2xl p-6 hover:border-brand-primary/50 transition-all duration-300 cursor-pointer"
-        >
-          <div className="flex gap-6">
+          className="bg-[#171717] border border-gray-800 rounded-xl p-6 hover:border-[#00FF89]/50 transition-all duration-200 cursor-pointer group">
+          
+          <DSStack direction="row" gap="medium" align="start">
             {/* Image */}
-            <div className="relative w-48 h-32 bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl flex-shrink-0 overflow-hidden">
+            <div className="relative w-48 h-32 bg-gray-800 rounded-lg flex-shrink-0 overflow-hidden">
               <OptimizedImage
-                src={product.image}
+                src={product.image || product.thumbnail}
                 alt={product.title}
                 fill
-                className="object-cover"
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
                 sizes="(max-width: 768px) 100vw, 192px"
               />
+              
+              {/* Discount Badge */}
+              {discountPercentage > 0 && (
+                <div className="absolute top-2 right-2">
+                  <DSBadge variant="error" size="small">
+                    -{discountPercentage}%
+                  </DSBadge>
+                </div>
+              )}
             </div>
             
             {/* Content */}
-            <div className="flex-1">
-              <div className="flex items-start justify-between gap-4 mb-3">
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-1 line-clamp-1">
-                    {product.title}
-                  </h3>
-                  <p className="text-gray-400 text-sm line-clamp-2">
-                    {product.description}
-                  </p>
-                </div>
+            <DSStack direction="column" gap="small" className="flex-1">
+              <DSStack direction="row" justify="between" align="start">
+                <DSStack direction="column" gap="small" className="flex-1">
+                  <DSHeading level={3} size="lg" className="group-hover:text-[#00FF89] transition-colors">
+                    <span style={{ color: 'white' }}>{product.title}</span>
+                  </DSHeading>
+                  
+                  <DSText size="sm" style={{ color: '#9ca3af' }} className="line-clamp-2">
+                    {product.description || product.shortDescription}
+                  </DSText>
+                </DSStack>
                 
                 {/* Price */}
-                <div className="text-right flex-shrink-0">
-                  <div className="text-2xl font-bold text-brand-primary">
-                    ${product.price}
-                  </div>
-                  {product.originalPrice > product.price && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-gray-500 line-through">
-                        ${product.originalPrice}
-                      </span>
-                      <span className="text-green-400">
-                        -{discountPercentage}%
-                      </span>
-                    </div>
+                <DSStack direction="column" align="end" className="flex-shrink-0">
+                  <DSText size="xl" style={{ color: '#00FF89', fontWeight: 700 }}>
+                    {formatPrice(product.price)}
+                  </DSText>
+                  {product.originalPrice && product.originalPrice > product.price && (
+                    <DSStack direction="row" gap="small" align="center">
+                      <DSText size="sm" style={{ color: '#6b7280', textDecoration: 'line-through' }}>
+                        {formatPrice(product.originalPrice)}
+                      </DSText>
+                    </DSStack>
                   )}
-                </div>
-              </div>
+                </DSStack>
+              </DSStack>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 text-sm">
+              <DSStack direction="row" justify="between" align="center">
+                <DSStack direction="row" gap="medium" align="center">
                   {/* Rating */}
-                  <div className="flex items-center gap-1">
+                  <DSStack direction="row" gap="xsmall" align="center">
                     <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                    <span className="text-white font-medium">{product.rating}</span>
-                    <span className="text-gray-500">({product.reviewCount})</span>
-                  </div>
+                    <DSText size="sm" style={{ color: 'white', fontWeight: 500 }}>
+                      {(product.rating || product.averageRating || 0).toFixed(1)}
+                    </DSText>
+                    <DSText size="sm" style={{ color: '#6b7280' }}>
+                      ({product.reviewCount || product.totalReviews || 0})
+                    </DSText>
+                  </DSStack>
 
                   {/* Seller */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-400">by</span>
-                    <span className="text-gray-300">{product.seller.name}</span>
-                    {product.seller.verified && (
-                      <CheckCircle className="w-4 h-4 text-brand-primary" />
+                  <DSStack direction="row" gap="small" align="center">
+                    <DSText size="sm" style={{ color: '#6b7280' }}>by</DSText>
+                    <DSText size="sm" style={{ color: '#d1d5db' }}>
+                      {product.seller?.name || product.sellerId?.fullName || 'Anonymous'}
+                    </DSText>
+                    {(product.seller?.verified || product.sellerId?.verification?.status === 'approved') && (
+                      <CheckCircle className="w-4 h-4 text-[#00FF89]" />
                     )}
-                  </div>
+                  </DSStack>
 
                   {/* Category */}
-                  <span className="px-2 py-1 bg-brand-primary/20 text-brand-primary text-xs rounded">
-                    {product.category}
-                  </span>
-                </div>
+                  <DSBadge variant="primary" size="small">
+                    {product.category || product.type}
+                  </DSBadge>
+                </DSStack>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleQuickView}
-                    className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
-                  >
+                <DSStack direction="row" gap="small">
+                  <DSButton
+                    variant="secondary"
+                    size="small"
+                    onClick={handleQuickView}>
                     <Eye className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={handleAddToCart}
-                    className="px-4 py-2 bg-brand-primary text-brand-primary-text font-semibold rounded-lg hover:bg-brand-primary/90 transition-colors flex items-center gap-2"
-                  >
-                    <ShoppingCart className="w-4 h-4" />
+                  </DSButton>
+                  
+                  <DSButton
+                    variant="primary"
+                    size="small"
+                    onClick={handleAddToCart}>
+                    <ShoppingCart className="w-4 h-4 mr-2" />
                     Add to Cart
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+                  </DSButton>
+                </DSStack>
+              </DSStack>
+            </DSStack>
+          </DSStack>
         </motion.div>
       </Link>
     )
   }
 
   return (
-    <Link href={`/products/${product.id}`}>
+    <Link href={`/products/${product.slug || product.id}`}>
       <motion.div
-        whileHover={{ y: -4 }}
-        className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-brand-primary/50 transition-all duration-300 cursor-pointer group"
-      >
+        whileHover={{ y: -2 }}
+        className="bg-[#171717] border border-gray-800 rounded-xl overflow-hidden hover:border-[#00FF89]/50 transition-all duration-200 cursor-pointer group h-full flex flex-col">
+        
         {/* Image */}
-        <div className="relative h-48 bg-gradient-to-br from-gray-800 to-gray-700 overflow-hidden">
+        <div className="relative aspect-[3/2] bg-gray-800 overflow-hidden">
           <OptimizedImage
-            src={product.image}
+            src={product.image || product.thumbnail}
             alt={product.title}
             fill
-            className="object-cover"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
-          {product.featured && (
-            <div className="absolute top-3 left-3 px-3 py-1 bg-brand-primary text-black text-sm font-semibold rounded-full z-10">
-              Featured
+          
+          {/* Featured Badge */}
+          {(product.featured || product.isFeatured) && (
+            <div className="absolute top-2 left-2">
+              <DSBadge variant="primary" size="small">
+                Featured
+              </DSBadge>
+            </div>
+          )}
+          
+          {/* Discount Badge */}
+          {discountPercentage > 0 && !product.featured && (
+            <div className="absolute top-2 right-2">
+              <DSBadge variant="error" size="small">
+                -{discountPercentage}%
+              </DSBadge>
             </div>
           )}
           
           {/* Quick Actions Overlay */}
-          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
-            <button
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all duration-200 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
+            <DSButton
+              variant="secondary"
+              size="small"
               onClick={handleQuickView}
-              className="p-3 bg-white/10 backdrop-blur-sm hover:bg-white/20 rounded-full transition-colors"
-            >
-              <Eye className="w-5 h-5 text-white" />
-            </button>
-            <button
-              onClick={handleAddToCart}
-              className="p-3 bg-brand-primary hover:bg-brand-primary/90 rounded-full transition-colors"
-            >
-              <ShoppingCart className="w-5 h-5 text-brand-primary-text" />
-            </button>
+              className="!bg-white/10 !backdrop-blur-sm hover:!bg-white/20">
+              <Eye className="w-4 h-4" />
+            </DSButton>
+            
+            <DSButton
+              variant="primary"
+              size="small"
+              onClick={handleAddToCart}>
+              <ShoppingCart className="w-4 h-4" />
+            </DSButton>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-5">
-          {/* Title and Description */}
-          <h3 className="text-lg font-semibold text-white mb-2 line-clamp-1 group-hover:text-brand-primary transition-colors">
-            {product.title}
-          </h3>
-          <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-            {product.description}
-          </p>
+        <div className="p-4 flex-1 flex flex-col">
+          <DSStack direction="column" gap="small" className="h-full">
+            {/* Type Badge */}
+            <DSStack direction="row" justify="between" align="center">
+              <DSText size="sm" style={{ color: '#00FF89', fontWeight: 600 }}>
+                {product.category || product.type || 'Product'}
+              </DSText>
+              
+              <DSStack direction="row" gap="xsmall" align="center">
+                <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                <DSText size="sm" style={{ color: 'white', fontWeight: 500 }}>
+                  {(product.rating || product.averageRating || 0).toFixed(1)}
+                </DSText>
+                <DSText size="sm" style={{ color: '#6b7280' }}>
+                  ({product.reviewCount || product.totalReviews || 0})
+                </DSText>
+              </DSStack>
+            </DSStack>
 
-          {/* Rating and Reviews */}
-          <div className="flex items-center gap-2 mb-4">
-            <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 text-yellow-500 fill-current" />
-              <span className="text-white font-medium">{product.rating}</span>
-            </div>
-            <span className="text-gray-500 text-sm">
-              ({product.reviewCount} reviews)
-            </span>
-            {product.sales > 100 && (
-              <>
-                <span className="text-gray-600">•</span>
-                <span className="text-gray-400 text-sm">
-                  {product.sales.toLocaleString()} sales
-                </span>
-              </>
-            )}
-          </div>
+            {/* Title */}
+            <DSHeading level={3} size="base" className="line-clamp-2 group-hover:text-[#00FF89] transition-colors">
+              <span style={{ color: 'white' }}>{product.title}</span>
+            </DSHeading>
 
-          {/* Seller Info */}
-          <div className="flex items-center gap-2 mb-4">
-            <div className="relative w-6 h-6 bg-gray-700 rounded-full overflow-hidden">
-              <OptimizedImage
-                src={product.seller.avatar}
-                alt={product.seller.name}
-                fill
-                className="object-cover"
-                sizes="24px"
-              />
-            </div>
-            <span className="text-gray-400 text-sm">{product.seller.name}</span>
-            {product.seller.verified && (
-              <CheckCircle className="w-4 h-4 text-brand-primary" />
-            )}
-          </div>
+            {/* Description */}
+            <DSText size="sm" style={{ color: '#9ca3af' }} className="line-clamp-2 flex-1">
+              {product.description || product.shortDescription}
+            </DSText>
 
-          {/* Price and Category */}
-          <div className="flex items-end justify-between">
-            <div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-brand-primary">
-                  ${product.price}
-                </span>
-                {product.originalPrice > product.price && (
-                  <span className="text-sm text-gray-500 line-through">
-                    ${product.originalPrice}
-                  </span>
-                )}
+            {/* Seller Info */}
+            <DSStack direction="row" gap="small" align="center">
+              <div className="relative w-6 h-6 bg-gray-700 rounded-full overflow-hidden flex-shrink-0">
+                <OptimizedImage
+                  src={product.seller?.avatar || product.sellerId?.avatar || '/logo-icon.svg'}
+                  alt={product.seller?.name || 'Seller'}
+                  fill
+                  className="object-cover"
+                  sizes="24px"
+                />
               </div>
-              {discountPercentage > 0 && (
-                <span className="text-sm text-green-400">
-                  Save {discountPercentage}%
-                </span>
+              
+              <DSText size="sm" style={{ color: '#9ca3af' }} className="truncate">
+                {product.seller?.name || product.sellerId?.fullName || 'Anonymous Seller'}
+              </DSText>
+              
+              {(product.seller?.verified || product.sellerId?.verification?.status === 'approved') && (
+                <CheckCircle className="w-4 h-4 text-[#00FF89] flex-shrink-0" />
               )}
-            </div>
-            <span className="px-3 py-1 bg-brand-primary/20 text-brand-primary text-sm rounded-full">
-              {product.category}
-            </span>
-          </div>
+            </DSStack>
+
+            {/* Price */}
+            <DSStack direction="row" justify="between" align="center" className="mt-2">
+              <DSStack direction="row" gap="small" align="baseline">
+                <DSText size="lg" style={{ color: '#00FF89', fontWeight: 700 }}>
+                  {formatPrice(product.price)}
+                </DSText>
+                {product.originalPrice && product.originalPrice > product.price && (
+                  <DSText size="sm" style={{ color: '#6b7280', textDecoration: 'line-through' }}>
+                    {formatPrice(product.originalPrice)}
+                  </DSText>
+                )}
+              </DSStack>
+
+              {/* Sales count or category badge */}
+              {product.sales > 100 && (
+                <DSText size="xs" style={{ color: '#9ca3af' }}>
+                  {product.sales.toLocaleString()} sales
+                </DSText>
+              )}
+            </DSStack>
+          </DSStack>
         </div>
       </motion.div>
     </Link>

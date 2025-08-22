@@ -6,11 +6,25 @@ import { Star, Send, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import toast from '@/lib/utils/toast'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function QuickReview({ 
   productId,
   onReviewSubmit,
   className 
 }) {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
   const [rating, setRating] = useState(0)
   const [comment, setComment] = useState('')
   const [isExpanded, setIsExpanded] = useState(false)
@@ -39,7 +53,7 @@ export default function QuickReview({
       })
       
       // Success animation then reset
-      toast.success('Thanks for your review!')
+      showMessage('Thanks for your review!', 'success')
       setTimeout(() => {
         setRating(0)
         setComment('')
@@ -48,7 +62,7 @@ export default function QuickReview({
     } catch (error) {
       // Show the actual error message from API
       const errorMessage = error.message || error.response?.data?.message || 'Failed to submit review'
-      toast.error(errorMessage)
+      showMessage(errorMessage, 'error')
     } finally {
       setIsSubmitting(false)
     }
@@ -72,6 +86,16 @@ export default function QuickReview({
         backgroundColor: isExpanded ? 'rgb(17 24 39)' : 'rgb(17 24 39 / 0.5)'
       }}
     >
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
       <form onSubmit={handleSubmit}>
         {/* Minimal header */}
         <div className="flex items-center justify-between gap-4">

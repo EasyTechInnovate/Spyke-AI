@@ -7,7 +7,21 @@ import Card from '@/components/shared/ui/card'
 import { X, TrendingUp, Users, DollarSign, Calendar, BarChart2, Percent } from 'lucide-react'
 import LoadingSpinner from '@/components/shared/ui/LoadingSpinner'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function PromocodeStats({ promocode, onClose }) {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
     const [loading, setLoading] = useState(true)
     const [stats, setStats] = useState(null)
 
@@ -21,7 +35,7 @@ export default function PromocodeStats({ promocode, onClose }) {
             const response = await promocodeAPI.getPromocodeStats(promocode._id)
             setStats(response.stats || response)
         } catch (error) {
-            toast.error('Failed to fetch promocode statistics')
+            showMessage('Failed to fetch promocode statistics', 'error')
             console.error('Error fetching stats:', error)
         } finally {
             setLoading(false)
@@ -41,6 +55,16 @@ export default function PromocodeStats({ promocode, onClose }) {
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
             <div className="w-full max-w-2xl bg-[#1f1f1f] border border-gray-800 rounded-xl overflow-hidden">
                 <div className="p-6 overflow-y-auto max-h-[calc(90vh-2rem)]">
                     <div className="flex justify-between items-center mb-6">

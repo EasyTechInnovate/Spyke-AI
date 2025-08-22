@@ -4,6 +4,7 @@ import { useState } from 'react'
 import toastUtils from '@/lib/utils/toast'
 import Container from '@/components/shared/layout/Container'
 import Header from '@/components/shared/layout/Header'
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 import { 
     CheckCircle, 
     AlertCircle, 

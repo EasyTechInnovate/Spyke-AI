@@ -1,7 +1,9 @@
+'use client'
+
 import { motion } from 'framer-motion'
 import { useResponsive } from '@/hooks/useResponsive'
 
-export default function FloatingParticles() {
+function FloatingParticles() {
   const { width, height, isMobile, isTablet } = useResponsive()
   
   const particleCount = isMobile ? 10 : isTablet ? 15 : 20
@@ -36,3 +38,6 @@ export default function FloatingParticles() {
     </div>
   )
 }
+
+export { FloatingParticles }
+export default FloatingParticles

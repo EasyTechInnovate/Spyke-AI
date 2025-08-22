@@ -9,7 +9,21 @@ import { Lock, ArrowRight, ArrowLeft, CheckCircle, AlertCircle, Loader2, Eye, Ey
 import { authAPI } from '@/lib/api/auth'
 import toast from '@/lib/utils/toast'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function ResetPasswordPage({ token }) {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
@@ -22,7 +36,7 @@ export default function ResetPasswordPage({ token }) {
 
     useEffect(() => {
         if (!token) {
-            toast.error('Invalid reset link. Please try requesting a new password reset.')
+            showMessage('Invalid reset link. Please try requesting a new password reset.', 'error')
             router.push('/auth/forgot-password')
             return
         }
@@ -139,7 +153,7 @@ export default function ResetPasswordPage({ token }) {
             console.log('Reset password success result:', result)
 
             setSuccess(true)
-            toast.success('Password reset successfully! You can now sign in with your new password.')
+            showMessage('Password reset successfully! You can now sign in with your new password.', 'success')
 
             setTimeout(() => {
                 router.push('/signin')
@@ -152,13 +166,13 @@ export default function ResetPasswordPage({ token }) {
             const errorMessage = err?.response?.data?.message || err?.data?.message || err?.message || 'Failed to reset password'
 
             if (errorMessage.toLowerCase().includes('expired') || errorMessage.toLowerCase().includes('invalid')) {
-                toast.error('This reset link has expired or is invalid. Please request a new password reset.')
+                showMessage('This reset link has expired or is invalid. Please request a new password reset.', 'error')
                 setTimeout(() => {
                     router.push('/auth/forgot-password')
                 }, 2000)
             } else {
                 setErrors({ form: errorMessage })
-                toast.error(errorMessage)
+                showMessage(errorMessage, 'error')
             }
         } finally {
             setLoading(false)
@@ -187,6 +201,16 @@ export default function ResetPasswordPage({ token }) {
     if (success) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#121212] to-[#1a1a1a] relative overflow-hidden font-league-spartan">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
                 <div className="absolute inset-0 overflow-hidden">
                     <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-[#00FF89]/20 to-[#00D4FF]/20 rounded-full blur-3xl animate-pulse opacity-60" />
                     <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-r from-[#FF6B6B]/15 to-[#4ECDC4]/15 rounded-full blur-3xl animate-pulse opacity-40" />

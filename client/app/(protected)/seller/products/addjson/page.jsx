@@ -9,6 +9,7 @@ import { productsAPI } from '@/lib/api'
 import toast from '@/lib/utils/toast'
 import { generateProduct } from '@/utils/productGenerator'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 // Sample product JSON template
 const SAMPLE_PRODUCT = {
   title: "AI-Powered Lead Generation System",
@@ -79,6 +80,19 @@ const SAMPLE_PRODUCT = {
 }
 
 export default function AddProductJsonPage() {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
   const router = useRouter()
   const [jsonInput, setJsonInput] = useState('')
   const [isValidJson, setIsValidJson] = useState(null)
@@ -126,7 +140,7 @@ export default function AddProductJsonPage() {
   // Handle form submission
   const handleSubmit = async () => {
     if (!parsedData || validationErrors.length > 0) {
-      toast.error('Please fix validation errors before submitting')
+      showMessage('Please fix validation errors before submitting', 'error')
       return
     }
 
@@ -161,17 +175,17 @@ export default function AddProductJsonPage() {
       const response = await productsAPI.createProduct(productData)
       
       if (response.data) {
-        toast.success('Product created successfully!')
+        showMessage('Product created successfully!', 'success')
         router.push('/seller/products')
       }
     } catch (error) {
       console.error('Error creating product:', error)
       if (error.errors && Array.isArray(error.errors)) {
         error.errors.forEach(err => {
-          toast.error(`${err.field}: ${err.message}`)
+          showMessage('${err.field}: ${err.message}', 'error')
         })
       } else {
-        toast.error(error.message || 'Failed to create product')
+        showMessage(error.message || 'Failed to create product', 'error')
       }
     } finally {
       setIsSubmitting(false)
@@ -181,7 +195,7 @@ export default function AddProductJsonPage() {
   // Copy sample JSON to clipboard
   const copySampleJson = () => {
     navigator.clipboard.writeText(JSON.stringify(SAMPLE_PRODUCT, null, 2))
-    toast.success('Sample JSON copied to clipboard!')
+    showMessage('Sample JSON copied to clipboard!', 'success')
   }
 
   // Load sample JSON
@@ -197,11 +211,21 @@ export default function AddProductJsonPage() {
     const randomJson = JSON.stringify(randomProduct, null, 2)
     setJsonInput(randomJson)
     validateJson(randomJson)
-    toast.success('Random product generated!')
+    showMessage('Random product generated!', 'success')
   }
 
   return (
     <div className="min-h-screen bg-black">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
       {/* Header */}
       <div className="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

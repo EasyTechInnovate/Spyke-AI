@@ -6,7 +6,21 @@ import { useCart } from '@/hooks/useCart'
 import { useRouter } from 'next/navigation'
 import toast from '@/lib/utils/toast'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function AddToCartButton({ product }) {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
   const router = useRouter()
   const { addToCart, isInCart } = useCart()
   const [loading, setLoading] = useState(false)
@@ -48,14 +62,14 @@ export default function AddToCartButton({ product }) {
       // Check if already in cart
       const alreadyInCart = isInCart && isInCart(product._id || product.id)
       if (alreadyInCart) {
-        toast.info('Product is already in cart')
+        showMessage('Product is already in cart', 'info')
         return
       }
       
       // Add to cart (works for both authenticated and guest users)
       const success = await addToCart(cartProduct)
       if (success) {
-        toast.success('Added to cart')
+        showMessage('Added to cart', 'success')
       }
     } catch (error) {
       // Don't show error toast here - useCart already handles it
@@ -97,7 +111,7 @@ export default function AddToCartButton({ product }) {
       router.push('/checkout')
     } catch (error) {
       // Error with buy now
-      toast.error('Failed to process buy now')
+      showMessage('Failed to process buy now', 'error')
     } finally {
       setLoading(false)
     }
@@ -105,6 +119,16 @@ export default function AddToCartButton({ product }) {
   
   return (
     <div className="flex gap-4">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
       <button
         onClick={handleAddToCart}
         disabled={loading}

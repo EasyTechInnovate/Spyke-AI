@@ -16,6 +16,7 @@ import toast from '@/lib/utils/toast'
 import { MessageCircle, Star, Users, Sparkles } from 'lucide-react'
 import { formatLocation } from '@/lib/utils/seller'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function PublicSellerProfile() {
     const params = useParams()
     const sellerId = params.sellerId

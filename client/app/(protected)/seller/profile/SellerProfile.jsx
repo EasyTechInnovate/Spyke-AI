@@ -8,10 +8,10 @@ import {
   Plus, Package, ShoppingCart, BarChart3, Users, CreditCard, AlertCircle,
   FileText, CheckCircle2, XCircle, Loader2, TrendingUp, Star, Clock
 } from 'lucide-react'
-import { toast } from 'sonner'
 import sellerAPI from '@/lib/api/seller'
 import { leagueSpartan } from '@/lib/fonts'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 /* ========================= THEME ========================= */
 export const theme = {
   colors: {
@@ -29,6 +29,19 @@ export const theme = {
 
 /* ========================= PRIMITIVES ========================= */
 function Card({ children, className = '', variant = 'elevated', style }) {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
   return (
     <div
       className={[
@@ -38,6 +51,16 @@ function Card({ children, className = '', variant = 'elevated', style }) {
       ].join(' ') + (className ? ` ${className}` : '')}
       style={{ fontFamily: 'League Spartan, sans-serif', ...style }}
     >
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
       {children}
     </div>
   )
@@ -494,7 +517,7 @@ function DocumentUploadModal({ open, onClose, onSuccess }) {
   const submit = async () => {
     try {
       if (!files.identityProof && !files.businessProof && !files.taxDocument) {
-        toast.error('Please select at least one document'); return
+        showMessage('Please select at least one document', 'error'); return
       }
       setUploading(true)
       const fd = new FormData()
@@ -502,10 +525,10 @@ function DocumentUploadModal({ open, onClose, onSuccess }) {
       if (files.businessProof) fd.append('businessProof', files.businessProof)
       if (files.taxDocument) fd.append('taxDocument', files.taxDocument)
       await sellerAPI.submitVerification(fd)
-      toast.success('Documents submitted for verification')
+      showMessage('Documents submitted for verification', 'success')
       onSuccess()
     } catch (e) {
-      toast.error(e?.message || 'Upload failed')
+      showMessage(e?.message || 'Upload failed', 'error')
     } finally {
       setUploading(false)
     }
@@ -636,17 +659,17 @@ function useSellerDashboard() {
   }, [selectedCurrency])
 
   const accept = async () => {
-    try { setProcessingOffer(true); await sellerAPI.acceptCommissionOffer(); toast.success('Offer accepted'); await load(); return true }
-    catch (e) { toast.error(e?.message || 'Accept failed'); return false }
+    try { setProcessingOffer(true); await sellerAPI.acceptCommissionOffer(); showMessage('Offer accepted', 'success'); await load(); return true }
+    catch (e) { showMessage(e?.message || 'Accept failed', 'error'); return false }
     finally { setProcessingOffer(false) }
   }
   const counter = async ({ rate, reason }) => {
     try { await sellerAPI.submitCounterOffer({ rate, reason }); return true }
-    catch (e) { toast.error(e?.message || 'Counter failed'); return false }
+    catch (e) { showMessage(e?.message || 'Counter failed', 'error'); return false }
   }
   const reject = async (reason) => {
     try { await sellerAPI.rejectCommissionOffer(reason || 'Not viable'); toast.message('Offer rejected'); return true }
-    catch (e) { toast.error(e?.message || 'Reject failed'); return false }
+    catch (e) { showMessage(e?.message || 'Reject failed', 'error'); return false }
   }
 
   const refresh = async () => { await load() }
@@ -702,8 +725,8 @@ export default function SellerProfile() {
     const ok = await handleAcceptOffer()
     if (ok) { setShowSuccess(true); setTimeout(()=>setShowSuccess(false), 1300) }
   }
-  const onCounter = async (data) => { const ok = await handleCounterOffer(data); if (ok) toast.success('Counter offer submitted') }
-  const onReject = async (reason) => { const ok = await handleRejectOffer(reason); if (ok) toast.success('Offer rejected') }
+  const onCounter = async (data) => { const ok = await handleCounterOffer(data); if (ok) showMessage('Counter offer submitted', 'success') }
+  const onReject = async (reason) => { const ok = await handleRejectOffer(reason); if (ok) showMessage('Offer rejected', 'success') }
 
   const handleStatClick = (k) => {
     const r = { earnings: '/seller/analytics?tab=earnings', sales: '/seller/orders', products: '/seller/products', rating: '/seller/analytics?tab=reviews' }
@@ -846,7 +869,7 @@ export default function SellerProfile() {
             if (success) {
               setShowCounterOfferModal(false)
               refresh()
-              toast.success('Counter offer submitted!')
+              showMessage('Counter offer submitted!', 'success')
             }
           }}
           currentRate={negotiationState?.currentRate || 10}
@@ -881,13 +904,13 @@ function CounterOfferModal({ open, onClose, onSubmit, currentRate }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!rate || !reason) {
-      toast.error('Please fill in all fields')
+      showMessage('Please fill in all fields', 'error')
       return
     }
 
     const rateNum = parseFloat(rate)
     if (isNaN(rateNum) || rateNum < 1 || rateNum > 50) {
-      toast.error('Please enter a valid commission rate between 1% and 50%')
+      showMessage('Please enter a valid commission rate between 1% and 50%', 'error')
       return
     }
 

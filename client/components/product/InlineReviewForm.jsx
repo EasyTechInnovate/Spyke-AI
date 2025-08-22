@@ -6,12 +6,26 @@ import { Star, Send, Loader2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import toast from '@/lib/utils/toast'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function InlineReviewForm({ 
   productId,
   onReviewSubmit,
   onCancel,
   className
 }) {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
   const [rating, setRating] = useState(0)
   const [comment, setComment] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -34,11 +48,11 @@ export default function InlineReviewForm({
       // Reset form
       setRating(0)
       setComment('')
-      toast.success('Review submitted!')
+      showMessage('Review submitted!', 'success')
     } catch (error) {
       // Show the actual error message from API
       const errorMessage = error.message || error.response?.data?.message || 'Failed to submit review'
-      toast.error(errorMessage)
+      showMessage(errorMessage, 'error')
     } finally {
       setIsSubmitting(false)
     }
@@ -55,6 +69,16 @@ export default function InlineReviewForm({
       )}
       onSubmit={handleSubmit}
     >
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
       <div className="flex items-center justify-between mb-3 sm:mb-4">
         <h3 className="font-medium text-white text-sm sm:text-base">Write a Review</h3>
         {onCancel && (

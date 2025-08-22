@@ -7,11 +7,25 @@ import sellerAPI from '@/lib/api/seller'
 import { useFormValidation } from './useFormValidation'
 import { formFields, defaultFormValues, formSteps, timezones, countries } from '@/lib/config/forms/SellerFormConfig'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 /**
  * Custom hook for seller form management
  * @returns {Object} Form management utilities
  */
 export function useSellerForm() {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [submitError, setSubmitError] = useState('')
@@ -167,7 +181,7 @@ export function useSellerForm() {
                 stepErrors['revenueShareAgreement.accepted'] = 'You must accept the revenue share agreement'
             }
             if (Object.keys(stepErrors).length) {
-                toast.error(Object.values(stepErrors)[0] || 'Please fill required fields')
+                showMessage(Object.values(stepErrors, 'error')[0] || 'Please fill required fields')
             }
             return Object.keys(stepErrors).length === 0
         },

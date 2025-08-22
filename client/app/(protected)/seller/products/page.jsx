@@ -34,10 +34,24 @@ import toast from '@/lib/utils/toast'
 import { useSellerProfile } from '@/hooks/useSellerProfile'
 import ConfirmationModal from '@/components/shared/ui/ConfirmationModal'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 const BRAND = '#00FF89'
 const AMBER = '#FFC050'
 
 function formatDate(date) {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
     if (!date) return 'N/A'
     const d = new Date(date)
     const now = new Date()
@@ -218,7 +232,7 @@ export default function SellerProductsPage() {
                 }
             } catch (error) {
                 console.error('Error fetching products:', error)
-                toast.error('Failed to load products')
+                showMessage('Failed to load products', 'error')
                 setProducts([])
                 setPagination({ currentPage: 1, totalPages: 1, totalItems: 0 })
             } finally {
@@ -298,26 +312,26 @@ export default function SellerProductsPage() {
                             return Promise.resolve()
                         })
                     )
-                    toast.success(`${selectedProducts.size} products published`)
+                    showMessage('${selectedProducts.size} products published', 'success')
                     break
                 case 'archive':
                     await Promise.all([...selectedProducts].map((id) => productsAPI.updateProduct(id, { status: 'archived' })))
-                    toast.success(`${selectedProducts.size} products archived`)
+                    showMessage('${selectedProducts.size} products archived', 'success')
                     break
                 case 'delete':
                     await Promise.all([...selectedProducts].map((id) => productsAPI.deleteProduct(id)))
-                    toast.success(`${selectedProducts.size} products deleted`)
+                    showMessage('${selectedProducts.size} products deleted', 'success')
                     break
                 case 'export':
                     exportProductsData(filteredProducts.filter((p) => selectedProducts.has(p._id)))
-                    toast.success('Products data exported')
+                    showMessage('Products data exported', 'success')
                     break
             }
             setSelectedProducts(new Set())
             fetchProducts()
         } catch (error) {
             console.error('Bulk action failed:', error)
-            toast.error('Bulk action failed')
+            showMessage('Bulk action failed', 'error')
         } finally {
             setActionLoading(false)
         }
@@ -364,12 +378,12 @@ export default function SellerProductsPage() {
                 try {
                     setConfirmModal((prev) => ({ ...prev, loading: true }))
                     await productsAPI.deleteProduct(productId)
-                    toast.success('Product deleted successfully')
+                    showMessage('Product deleted successfully', 'success')
                     fetchProducts()
                     setConfirmModal((prev) => ({ ...prev, isOpen: false, loading: false }))
                 } catch (error) {
                     console.error('Error deleting product:', error)
-                    toast.error('Failed to delete product')
+                    showMessage('Failed to delete product', 'error')
                     setConfirmModal((prev) => ({ ...prev, loading: false }))
                 }
             }
@@ -385,21 +399,21 @@ export default function SellerProductsPage() {
                     if (!product.isVerified) missing.push('admin verification')
                     if (!product.isTested) missing.push('admin testing')
                     message += missing.join(' and ')
-                    toast.error(message)
+                    showMessage(message, 'error')
                     return
                 }
             }
 
             const newStatus = currentStatus === 'published' ? 'draft' : 'published'
             await productsAPI.updateProduct(productId, { status: newStatus })
-            toast.success(`Product ${newStatus === 'published' ? 'published' : 'unpublished'} successfully`)
+            showMessage(`Product ${newStatus === 'published' ? 'published' : 'unpublished'} successfully`, 'success')
             fetchProducts()
         } catch (error) {
             console.error('Error updating product status:', error)
             if (error.message?.includes('verified') || error.message?.includes('tested')) {
-                toast.error(error.message)
+                showMessage(error.message, 'error')
             } else {
-                toast.error('Failed to update product status')
+                showMessage('Failed to update product status', 'error')
             }
         }
     }
@@ -416,13 +430,13 @@ export default function SellerProductsPage() {
                 try {
                     setConfirmModal((prev) => ({ ...prev, loading: true }))
                     await sellerAPI.submitProductForReview(productId)
-                    toast.success('Product submitted for review successfully! Admins will be notified.')
+                    showMessage('Product submitted for review successfully! Admins will be notified.', 'success')
                     fetchProducts()
                     setConfirmModal((prev) => ({ ...prev, isOpen: false, loading: false }))
                 } catch (error) {
                     console.error('Error submitting product for review:', error)
                     const errorMessage = error.response?.data?.message || error.message || 'Failed to submit product for review'
-                    toast.error(errorMessage)
+                    showMessage(errorMessage, 'error')
                     setConfirmModal((prev) => ({ ...prev, loading: false }))
                 }
             }
@@ -434,6 +448,16 @@ export default function SellerProductsPage() {
     if (showRestricted) {
         return (
             <div className="min-h-screen bg-[#121212] flex items-center justify-center">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
                 <div className="max-w-md w-full mx-4">
                     <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
                         <AlertCircle className="w-16 h-16 text-amber-500 mx-auto mb-4" />

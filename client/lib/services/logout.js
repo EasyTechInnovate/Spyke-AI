@@ -1,156 +1,168 @@
 'use client'
 
 /**
- * Centralized logout service that clears all application data
- * and redirects to home page
+ * EMERGENCY LOGOUT FIX - Comprehensive data clearing
  */
 export const logoutService = {
     /**
-     * Perform complete logout - clear all stored data and redirect
+     * Perform complete logout - AGGRESSIVE DATA CLEARING
      */
     async logout() {
+        console.log('🚨 EMERGENCY LOGOUT INITIATED')
+        
         try {
-            // 1. Try to call backend logout endpoint (ignore errors)
             if (typeof window !== 'undefined') {
-                try {
-                    const token = localStorage.getItem('authToken')
-                    if (token) {
-                        // Construct API URL more safely
-                        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-                        const logoutUrl = `${apiUrl}/v1/auth/logout`
+                // 1. IMMEDIATELY clear all auth state to prevent race conditions
+                this.forceLocalClear()
 
-                        console.log('Calling logout URL:', logoutUrl) // Debug log
+                // 2. Try backend logout (don't wait for it)
+                this.attemptBackendLogout().catch(() => {
+                    console.log('Backend logout failed, continuing with local cleanup')
+                })
 
-                        await fetch(logoutUrl, {
-                            method: 'POST',
-                            headers: {
-                                Authorization: `Bearer ${token}`,
-                                'Content-Type': 'application/json'
-                            },
-                            credentials: 'include' // Important for cookies
-                        }).catch((err) => {
-                            console.log('Logout API call failed (ignoring):', err.message)
-                            // Ignore backend errors - we'll clear local data anyway
-                        })
-                    }
-                } catch (err) {
-                    console.log('Error during backend logout (ignoring):', err.message)
-                    // Continue with local cleanup even if backend fails
-                }
-
-                // 2. Clear all localStorage data
-                this.clearStorageData()
-
-                // 3. Clear any cookies
-                this.clearCookies()
-
-                // 4. Clear any session storage
-                this.clearSessionStorage()
-
-                // 5. Redirect to home page
-                window.location.href = '/'
+                // 3. Force window reload to clear any cached state
+                setTimeout(() => {
+                    window.location.href = '/signin'
+                    // Force page reload to clear all cached state
+                    setTimeout(() => window.location.reload(), 100)
+                }, 100)
             }
         } catch (error) {
-            console.error('Critical error during logout:', error)
-            // Even if something goes wrong, force redirect to home
-            if (typeof window !== 'undefined') {
-                window.location.href = '/'
-            }
+            console.error('Critical logout error:', error)
+            this.forceLogout()
         }
     },
 
     /**
-     * Clear all localStorage items
+     * IMMEDIATE local data clearing - no async operations
      */
-    clearStorageData() {
+    forceLocalClear() {
         try {
-            const itemsToRemove = [
-                'authToken',
-                'refreshToken',
-                'user',
-                'userProfile',
-                'cart',
-                'wishlist',
-                'recentViews',
-                'preferences',
-                'notifications',
-                'tempData'
+            // AGGRESSIVE localStorage clearing
+            const allPossibleKeys = [
+                'authToken', 'accessToken', 'refreshToken', 'user', 'roles', 
+                'userProfile', 'cart', 'wishlist', 'recentViews', 'preferences',
+                'notifications', 'tempData', 'loginTime', 'currentUser', 
+                'sellerAccessToken', 'returnTo', 'redirectAfterLogin'
             ]
 
-            itemsToRemove.forEach(item => {
-                localStorage.removeItem(item)
+            allPossibleKeys.forEach(key => {
+                localStorage.removeItem(key)
             })
 
-            // Also clear any items that start with our app prefix
-            const appPrefix = 'spyke_'
+            // Clear ALL items starting with common prefixes
+            const prefixes = ['auth_', 'user_', 'spyke_', 'token_']
             Object.keys(localStorage).forEach(key => {
-                if (key.startsWith(appPrefix)) {
+                if (prefixes.some(prefix => key.startsWith(prefix))) {
                     localStorage.removeItem(key)
                 }
             })
 
-            console.log('LocalStorage cleared successfully')
-        } catch (error) {
-            console.error('Error clearing localStorage:', error)
-        }
-    },
+            // AGGRESSIVE cookie clearing with multiple paths and domains
+            this.nukeAllCookies()
 
-    /**
-     * Clear session storage
-     */
-    clearSessionStorage() {
-        try {
+            // Clear session storage
             sessionStorage.clear()
-            console.log('SessionStorage cleared successfully')
+
+            console.log('✅ All local data forcefully cleared')
         } catch (error) {
-            console.error('Error clearing sessionStorage:', error)
+            console.error('Error in force clear:', error)
+            // Try to clear localStorage entirely as last resort
+            try {
+                localStorage.clear()
+            } catch (e) {
+                console.error('Even localStorage.clear() failed:', e)
+            }
         }
     },
 
     /**
-     * Clear relevant cookies
+     * NUCLEAR OPTION - Clear all possible cookie combinations
      */
-    clearCookies() {
-        try {
-            const cookiesToClear = [
-                'authToken',
-                'refreshToken',
-                'session',
-                'user_session',
-                'cart_id',
-                'preferences'
-            ]
+    nukeAllCookies() {
+        const cookieNames = [
+            'authToken', 'accessToken', 'refreshToken', 'roles', 
+            'session', 'user_session', 'cart_id', 'preferences'
+        ]
 
-            cookiesToClear.forEach(cookieName => {
-                // Clear cookie for current domain
-                document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
-                // Clear cookie for parent domain
-                document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`
+        const domains = [
+            '', // Current domain
+            window.location.hostname,
+            '.' + window.location.hostname
+        ]
+
+        const paths = ['/', '/v1', '/api/v1', '/api']
+
+        cookieNames.forEach(cookieName => {
+            domains.forEach(domain => {
+                paths.forEach(path => {
+                    // Try multiple expiration dates to be sure
+                    const expirationDates = [
+                        'Thu, 01 Jan 1970 00:00:00 GMT',
+                        'Thu, 01 Jan 1970 00:00:01 GMT',
+                        'Wed, 31 Dec 1969 23:59:59 GMT'
+                    ]
+
+                    expirationDates.forEach(expires => {
+                        if (domain) {
+                            document.cookie = `${cookieName}=; expires=${expires}; path=${path}; domain=${domain}; SameSite=None; Secure`
+                            document.cookie = `${cookieName}=; expires=${expires}; path=${path}; domain=${domain}; SameSite=Lax`
+                            document.cookie = `${cookieName}=; expires=${expires}; path=${path}; domain=${domain}; SameSite=Strict`
+                        } else {
+                            document.cookie = `${cookieName}=; expires=${expires}; path=${path}; SameSite=None; Secure`
+                            document.cookie = `${cookieName}=; expires=${expires}; path=${path}; SameSite=Lax`
+                            document.cookie = `${cookieName}=; expires=${expires}; path=${path}; SameSite=Strict`
+                        }
+                    })
+                })
             })
+        })
 
-            console.log('Cookies cleared successfully')
+        console.log('🧨 All cookies nuked from orbit')
+    },
+
+    /**
+     * Attempt backend logout without blocking
+     */
+    async attemptBackendLogout() {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('accessToken')
+        if (!token) return
+
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+        const controller = new AbortController()
+        
+        // Timeout after 2 seconds
+        setTimeout(() => controller.abort(), 2000)
+
+        try {
+            await fetch(`${apiUrl}/v1/auth/logout`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                signal: controller.signal
+            })
+            console.log('✅ Backend logout successful')
         } catch (error) {
-            console.error('Error clearing cookies:', error)
+            console.log('⚠️ Backend logout failed (ignoring):', error.message)
         }
     },
 
     /**
-     * Quick logout without backend call (for emergency situations)
+     * Emergency force logout
      */
     forceLogout() {
+        console.log('🆘 FORCE LOGOUT ACTIVATED')
         try {
-            if (typeof window !== 'undefined') {
-                this.clearStorageData()
-                this.clearCookies()
-                this.clearSessionStorage()
-                window.location.href = '/'
-            }
+            this.forceLocalClear()
+            window.location.href = '/signin'
+            setTimeout(() => window.location.reload(), 50)
         } catch (error) {
-            console.error('Error during force logout:', error)
-            // Last resort - just redirect
-            if (typeof window !== 'undefined') {
-                window.location.href = '/'
-            }
+            console.error('Even force logout failed:', error)
+            // Absolute last resort
+            window.location.href = '/signin?force=1'
         }
     }
 }

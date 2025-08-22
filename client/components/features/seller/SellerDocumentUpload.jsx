@@ -10,10 +10,10 @@ import {
     Building,
     Receipt
 } from 'lucide-react'
-import { toast } from 'sonner'
 import sellerAPI from '@/lib/api/seller'
 import apiClient from '@/lib/api/client'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 const DocumentUploadModal = ({ isOpen, onClose, onSuccess }) => {
     const [documents, setDocuments] = useState({
         identityProof: null,
@@ -108,13 +108,13 @@ const DocumentUploadModal = ({ isOpen, onClose, onSuccess }) => {
         const config = documentConfig[documentType]
         
         if (file.size > config.maxSize * 1024 * 1024) {
-            toast.error(`File size must be less than ${config.maxSize}MB`)
+            showMessage('File size must be less than ${config.maxSize}MB', 'error')
             return
         }
 
         const fileExtension = `.${file.name.split('.').pop().toLowerCase()}`
         if (!config.acceptedFormats.includes(fileExtension)) {
-            toast.error('Invalid file format. Please upload PDF, JPG, or PNG files.')
+            showMessage('Invalid file format. Please upload PDF, JPG, or PNG files.', 'error')
             return
         }
 
@@ -149,9 +149,9 @@ const DocumentUploadModal = ({ isOpen, onClose, onSuccess }) => {
                 }
             }))
             
-            toast.success(`${config.title} uploaded successfully`)
+            showMessage('${config.title} uploaded successfully', 'success')
         } catch (error) {
-            toast.error(`Failed to upload ${config.title}: ${error.message}`)
+            showMessage('Failed to upload ${config.title}: ${error.message}', 'error')
             console.error(error)
         } finally {
             setUploading(prev => ({ ...prev, [documentType]: false }))
@@ -169,7 +169,7 @@ const DocumentUploadModal = ({ isOpen, onClose, onSuccess }) => {
     const handleSubmit = async () => {
         // Only identityProof is strictly required per backend schema; others optional
         if (!documents.identityProof) {
-            toast.error('Please upload your identity proof (required)')
+            showMessage('Please upload your identity proof (required)', 'error')
             return
         }
 
@@ -189,7 +189,7 @@ const DocumentUploadModal = ({ isOpen, onClose, onSuccess }) => {
             
             if (response && (response.success === true || response.verificationStatus === 'under_review')) {
                 const message = response.message || 'Profile submitted for verification successfully'
-                toast.success(message)
+                showMessage(message, 'success')
                 
                 setDocuments({
                     identityProof: null,
@@ -205,7 +205,7 @@ const DocumentUploadModal = ({ isOpen, onClose, onSuccess }) => {
             } else if (response && response.success === false) {
                 throw new Error(response.message || 'Submission failed')
             } else {
-                toast.success('Profile submitted for verification successfully')
+                showMessage('Profile submitted for verification successfully', 'success')
                 
                 setDocuments({
                     identityProof: null,
@@ -220,7 +220,7 @@ const DocumentUploadModal = ({ isOpen, onClose, onSuccess }) => {
                 handleClose()
             }
         } catch (error) {
-            toast.error(error.message || 'Failed to submit documents. Please try again.')
+            showMessage(error.message || 'Failed to submit documents. Please try again.', 'error')
             console.error('Submission error:', error)
         } finally {
             setSubmitting(false)

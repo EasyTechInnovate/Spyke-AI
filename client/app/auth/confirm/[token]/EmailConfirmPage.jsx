@@ -9,7 +9,21 @@ import { CheckCircle, XCircle, Loader2, ArrowRight, Mail, Shield, Sparkles } fro
 import { authAPI } from '@/lib/api/auth'
 import toast from '@/lib/utils/toast'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function EmailConfirmPage({ token, code }) {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
     const router = useRouter()
     const [status, setStatus] = useState('loading') // 'loading', 'success', 'error', 'redirecting'
     const [countdown, setCountdown] = useState(10)
@@ -28,7 +42,7 @@ export default function EmailConfirmPage({ token, code }) {
                 await authAPI.confirmAccount(token, code)
 
                 setStatus('success')
-                toast.success('Email confirmed successfully! Redirecting to login...')
+                showMessage('Email confirmed successfully! Redirecting to login...', 'success')
 
                 // Start countdown
                 const countdownInterval = setInterval(() => {
@@ -48,7 +62,7 @@ export default function EmailConfirmPage({ token, code }) {
                 setStatus('error')
                 const message = error?.response?.data?.message || error?.data?.message || error?.message || 'Failed to confirm email'
                 setErrorMessage(message)
-                toast.error(message)
+                showMessage(message, 'error')
             }
         }
 
@@ -104,6 +118,16 @@ export default function EmailConfirmPage({ token, code }) {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#121212] to-[#1a1a1a] relative overflow-hidden font-league-spartan">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
             {/* Animated background effects */}
             <div className="absolute inset-0 overflow-hidden">
                 {/* Primary gradient orbs */}

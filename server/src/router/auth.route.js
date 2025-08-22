@@ -28,8 +28,8 @@ router.route('/update-profile').put(authentication, validateRequest(authSchemas.
 router.route('/check-email').post(validateRequest(authSchemas.checkEmailAvailability), authenticationController.checkEmailAvailability)
 router.route('/notifications').get(authentication, validateRequest(authSchemas.getNotifications, 'query'), authenticationController.getNotifications)
 router.route('/notifications/read').post(authentication, validateRequest(authSchemas.markNotificationRead), authenticationController.markNotificationRead)
+router.route('/notifications/read-all').post(authentication, authenticationController.markAllNotificationsRead)
 router.route('/notifications/send').post(authentication, authorization([EUserRole.ADMIN]), validateRequest(authSchemas.sendNotification), authenticationController.sendNotification)
 router.route('/notifications/send-bulk').post(authentication, authorization([EUserRole.ADMIN]), validateRequest(authSchemas.sendBulkNotification), authenticationController.sendBulkNotification)
-
 
 export default router

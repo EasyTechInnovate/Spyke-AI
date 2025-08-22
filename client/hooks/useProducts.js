@@ -5,6 +5,7 @@ import useSWR from 'swr'
 import { productsAPI } from '@/lib/api'
 import toast from '@/lib/utils/toast'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 // SWR fetcher function
 const fetcher = async (key) => {
     const [endpoint, params] = Array.isArray(key) ? key : [key, {}]
@@ -14,6 +15,19 @@ const fetcher = async (key) => {
 
 // Hook for fetching products with filters
 export function useProducts(initialFilters = {}) {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
     const [filters, setFilters] = useState({
         page: 1,
         limit: 12,
@@ -113,11 +127,11 @@ export function useProductActions() {
         try {
             setLoading(true)
             await productsAPI.toggleFavorite(productId, isFavorited)
-            toast.success(isFavorited ? 'Added to favorites' : 'Removed from favorites')
+            showMessage(isFavorited ? 'Added to favorites' : 'Removed from favorites', 'success')
             return true
         } catch (err) {
             console.error('Error toggling favorite:', err)
-            toast.error('Failed to update favorite status')
+            showMessage('Failed to update favorite status', 'error')
             return false
         } finally {
             setLoading(false)
@@ -128,11 +142,11 @@ export function useProductActions() {
         try {
             setLoading(true)
             await productsAPI.toggleUpvote(productId, isUpvoted)
-            toast.success(isUpvoted ? 'Upvoted' : 'Removed upvote')
+            showMessage(isUpvoted ? 'Upvoted' : 'Removed upvote', 'success')
             return true
         } catch (err) {
             console.error('Error toggling upvote:', err)
-            toast.error('Failed to update upvote')
+            showMessage('Failed to update upvote', 'error')
             return false
         } finally {
             setLoading(false)
@@ -143,11 +157,11 @@ export function useProductActions() {
         try {
             setLoading(true)
             await productsAPI.addReview(productId, reviewData)
-            toast.success('Review added successfully')
+            showMessage('Review added successfully', 'success')
             return true
         } catch (err) {
             console.error('Error adding review:', err)
-            toast.error(err.message || 'Failed to add review')
+            showMessage(err.message || 'Failed to add review', 'error')
             return false
         } finally {
             setLoading(false)

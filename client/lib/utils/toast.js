@@ -1,208 +1,128 @@
-import { toast as sonnerToast } from 'sonner'
+// Deprecated: Toast utilities - replaced with inline notifications
+// This file is kept for compatibility but should not be used in new code
+// Use InlineNotification component and showMessage function instead
 
-/**
- * Enhanced toast utility with better UX and consistent styling
- * Built on top of Sonner with custom enhancements
- */
+console.warn('toast.js is deprecated - use InlineNotification component instead')
 
-const DEFAULT_DURATION = 5000 // 5 seconds
-const ERROR_DURATION = 8000 // 8 seconds for errors
-const SUCCESS_DURATION = 4000 // 4 seconds for success
-
-/**
- * Enhanced success toast
- * @param {string} message - The message to display
- * @param {Object} options - Additional options
- */
+// Legacy compatibility - these functions now do nothing
 export const toastSuccess = (message, options = {}) => {
-  return sonnerToast.success(message, {
-    duration: SUCCESS_DURATION,
-    ...options
-  })
+    console.log('SUCCESS:', message)
+    return null
 }
 
-/**
- * Enhanced error toast
- * @param {string} message - The message to display  
- * @param {Object} options - Additional options
- */
 export const toastError = (message, options = {}) => {
-  return sonnerToast.error(message, {
-    duration: ERROR_DURATION,
-    ...options
-  })
+    console.error('ERROR:', message)
+    return null
 }
 
-/**
- * Enhanced info toast
- * @param {string} message - The message to display
- * @param {Object} options - Additional options
- */
 export const toastInfo = (message, options = {}) => {
-  return sonnerToast.info(message, {
-    duration: DEFAULT_DURATION,
-    ...options
-  })
+    console.log('INFO:', message)
+    return null
 }
 
-/**
- * Enhanced warning toast
- * @param {string} message - The message to display
- * @param {Object} options - Additional options
- */
 export const toastWarning = (message, options = {}) => {
-  return sonnerToast.warning(message, {
-    duration: DEFAULT_DURATION,
-    ...options
-  })
+    console.warn('WARNING:', message)
+    return null
 }
 
-/**
- * Loading toast that can be updated
- * @param {string} message - The loading message
- * @param {Object} options - Additional options
- */
 export const toastLoading = (message, options = {}) => {
-  return sonnerToast.loading(message, {
-    duration: Infinity, // Loading toasts should persist until dismissed
-    ...options
-  })
+    console.log('LOADING:', message)
+    return null
 }
 
-/**
- * Promise toast that automatically handles states
- * @param {Promise} promise - The promise to track
- * @param {Object} messages - Messages for different states
- */
 export const toastPromise = (promise, messages = {}) => {
-  const defaultMessages = {
-    loading: 'Processing...',
-    success: 'Success!',
-    error: 'Something went wrong'
-  }
-  
-  return sonnerToast.promise(promise, {
-    loading: messages.loading || defaultMessages.loading,
-    success: (data) => {
-      return messages.success || defaultMessages.success
-    },
-    error: (error) => {
-      return messages.error || error?.message || defaultMessages.error
-    }
-  })
+    console.log('PROMISE:', messages)
+    return promise
 }
 
-/**
- * Custom toast with full control
- * @param {string} message - The message to display
- * @param {Object} options - Toast options
- */
 export const toastCustom = (message, options = {}) => {
-  return sonnerToast(message, {
-    duration: DEFAULT_DURATION,
-    ...options
-  })
+    console.log('CUSTOM:', message)
+    return null
 }
 
-/**
- * Dismiss a specific toast
- * @param {string|number} toastId - The toast ID to dismiss
- */
 export const toastDismiss = (toastId) => {
-  return sonnerToast.dismiss(toastId)
+    console.log('DISMISS:', toastId)
+    return null
 }
 
-/**
- * Dismiss all toasts
- */
 export const toastDismissAll = () => {
-  return sonnerToast.dismiss()
+    console.log('DISMISS ALL')
+    return null
 }
 
-/**
- * Authentication related toasts
- */
+// Legacy toast groups - now just console logging
 export const authToasts = {
-  loginSuccess: (userName) => toastSuccess(`Welcome back${userName ? `, ${userName}` : ''}!`),
-  logoutSuccess: () => toastSuccess('Logged out successfully'),
-  loginError: (error) => toastError(error || 'Login failed. Please check your credentials.'),
-  signupSuccess: () => toastSuccess('Welcome to SpykeAI! Check your email to verify your account.'),
-  signupError: (error) => toastError(error || 'Registration failed. Please try again.'),
-  verificationSent: () => toastInfo('Verification email sent. Please check your inbox.'),
-  passwordResetSent: () => toastInfo('Password reset link sent to your email.'),
-  sessionExpired: () => toastWarning('Your session has expired. Please log in again.')
+    loginSuccess: (userName) => console.log('LOGIN SUCCESS:', userName),
+    logoutSuccess: () => console.log('LOGOUT SUCCESS'),
+    loginError: (error) => console.error('LOGIN ERROR:', error),
+    signupSuccess: () => console.log('SIGNUP SUCCESS'),
+    signupError: (error) => console.error('SIGNUP ERROR:', error),
+    verificationSent: () => console.log('VERIFICATION SENT'),
+    passwordResetSent: () => console.log('PASSWORD RESET SENT'),
+    sessionExpired: () => console.warn('SESSION EXPIRED')
 }
 
-/**
- * Seller related toasts
- */
 export const sellerToasts = {
-  profileCreated: () => toastSuccess('🎉 Welcome to our seller community! Your profile has been created.'),
-  profileUpdated: () => toastSuccess('Profile updated successfully!'),
-  profileError: (error) => toastError(error || 'Failed to update profile. Please try again.'),
-  documentUploaded: () => toastSuccess('Document uploaded successfully!'),
-  documentError: (error) => toastError(error || 'Failed to upload document. Please try again.'),
-  verificationSubmitted: () => toastSuccess('Verification documents submitted for review!'),
-  approved: () => toastSuccess('🎉 Congratulations! Your seller account has been approved.'),
-  rejected: (reason) => toastError(`Your seller application was rejected. ${reason || 'Please contact support for details.'}`)
+    productCreated: () => console.log('PRODUCT CREATED'),
+    productUpdated: () => console.log('PRODUCT UPDATED'),
+    productError: (error) => console.error('PRODUCT ERROR:', error),
+    profileCreated: () => console.log('PROFILE CREATED'),
+    profileUpdated: () => console.log('PROFILE UPDATED'),
+    profileError: (error) => console.error('PROFILE ERROR:', error),
+    documentUploaded: () => console.log('DOCUMENT UPLOADED'),
+    documentError: (error) => console.error('DOCUMENT ERROR:', error),
+    verificationSubmitted: () => console.log('VERIFICATION SUBMITTED'),
+    approved: () => console.log('APPROVED'),
+    rejected: (reason) => console.error('REJECTED:', reason)
 }
 
-/**
- * General operation toasts
- */
 export const operationToasts = {
-  saved: () => toastSuccess('Changes saved successfully!'),
-  deleted: () => toastSuccess('Deleted successfully!'),
-  copied: () => toastSuccess('Copied to clipboard!'),
-  uploaded: () => toastSuccess('File uploaded successfully!'),
-  downloadStarted: () => toastInfo('Download started...'),
-  networkError: () => toastError('Network error. Please check your connection and try again.'),
-  genericError: (error) => toastError(error || 'Something went wrong. Please try again.')
+    saved: () => console.log('SAVED'),
+    deleted: () => console.log('DELETED'),
+    copied: () => console.log('COPIED'),
+    uploaded: () => console.log('UPLOADED'),
+    downloadStarted: () => console.log('DOWNLOAD STARTED'),
+    networkError: () => console.error('NETWORK ERROR'),
+    genericError: (error) => console.error('GENERIC ERROR:', error)
 }
 
-/**
- * Search related toasts
- */
 export const searchToasts = {
-  noResults: (query) => toastInfo(`No results found for "${query}"`),
-  voiceNotSupported: () => toastError('Voice search is not supported in your browser'),
-  voiceListening: () => toastInfo('Listening... Speak now'),
-  voiceSuccess: (transcript) => toastSuccess(`Searching for: "${transcript}"`),
-  voiceNoSpeech: () => toastError('No speech detected. Please try again.'),
-  voiceAccessDenied: () => toastError('Microphone access denied.'),
-  voiceError: (error) => toastError(`Voice search error: ${error}`),
-  searchError: () => toastError('Search failed. Please try again.')
+    noResults: (query) => console.log('NO RESULTS:', query),
+    voiceNotSupported: () => console.error('VOICE NOT SUPPORTED'),
+    voiceListening: () => console.log('VOICE LISTENING'),
+    voiceSuccess: (transcript) => console.log('VOICE SUCCESS:', transcript),
+    voiceNoSpeech: () => console.error('VOICE NO SPEECH'),
+    voiceAccessDenied: () => console.error('VOICE ACCESS DENIED'),
+    voiceError: (error) => console.error('VOICE ERROR:', error),
+    searchError: () => console.error('SEARCH ERROR')
 }
 
-/**
- * Form validation toasts
- */
 export const validationToasts = {
-  required: (field) => toastError(`${field} is required`),
-  invalid: (field) => toastError(`Please enter a valid ${field}`),
-  tooShort: (field, min) => toastError(`${field} must be at least ${min} characters`),
-  tooLong: (field, max) => toastError(`${field} must be less than ${max} characters`),
-  maxItems: (field, max) => toastError(`Maximum ${max} ${field} allowed`)
+    required: (field) => console.error('REQUIRED:', field),
+    invalid: (field) => console.error('INVALID:', field),
+    tooShort: (field, min) => console.error('TOO SHORT:', field, min),
+    tooLong: (field, max) => console.error('TOO LONG:', field, max),
+    maxItems: (field, max) => console.error('MAX ITEMS:', field, max)
 }
 
-// Default export provides the basic toast functions
+// Default export for backwards compatibility
 const toastUtils = {
-  success: toastSuccess,
-  error: toastError,
-  info: toastInfo,
-  warning: toastWarning,
-  loading: toastLoading,
-  promise: toastPromise,
-  custom: toastCustom,
-  dismiss: toastDismiss,
-  dismissAll: toastDismissAll,
-  
-  // Grouped toasts for specific features
-  auth: authToasts,
-  seller: sellerToasts,
-  operation: operationToasts,
-  search: searchToasts,
-  validation: validationToasts
+    success: toastSuccess,
+    error: toastError,
+    info: toastInfo,
+    warning: toastWarning,
+    loading: toastLoading,
+    promise: toastPromise,
+    custom: toastCustom,
+    dismiss: toastDismiss,
+    dismissAll: toastDismissAll,
+    
+    // Grouped toasts
+    auth: authToasts,
+    seller: sellerToasts,
+    operation: operationToasts,
+    search: searchToasts,
+    validation: validationToasts
 }
 
 export default toastUtils

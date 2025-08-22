@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import toast from '@/lib/utils/toast'
 import api from '@/lib/api'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function SearchOverlay({ isOpen, onClose }) {
     const router = useRouter()
     const [searchQuery, setSearchQuery] = useState('')

@@ -6,6 +6,7 @@ import Modal from '@/components/shared/ui/Modal'
 import { cn } from '@/lib/utils'
 import toast from '@/lib/utils/toast'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function WriteReviewModal({ 
   isOpen, 
   onClose, 
@@ -13,6 +14,19 @@ export default function WriteReviewModal({
   productId,
   onReviewSubmit 
 }) {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
   const [rating, setRating] = useState(0)
   const [hoveredRating, setHoveredRating] = useState(0)
   const [title, setTitle] = useState('')
@@ -25,17 +39,17 @@ export default function WriteReviewModal({
     e.preventDefault()
     
     if (rating === 0) {
-      toast.error('Please select a rating')
+      showMessage('Please select a rating', 'error')
       return
     }
     
     if (!title.trim()) {
-      toast.error('Please add a title for your review')
+      showMessage('Please add a title for your review', 'error')
       return
     }
     
     if (!review.trim() || review.length < 20) {
-      toast.error('Please write at least 20 characters for your review')
+      showMessage('Please write at least 20 characters for your review', 'error')
       return
     }
     
@@ -58,10 +72,10 @@ export default function WriteReviewModal({
       setImages([])
       setRecommend(true)
       
-      toast.success('Review submitted successfully!')
+      showMessage('Review submitted successfully!', 'success')
       onClose()
     } catch (error) {
-      toast.error('Failed to submit review. Please try again.')
+      showMessage('Failed to submit review. Please try again.', 'error')
     } finally {
       setIsSubmitting(false)
     }
@@ -71,18 +85,18 @@ export default function WriteReviewModal({
     const files = Array.from(e.target.files || [])
     const validFiles = files.filter(file => {
       if (!file.type.startsWith('image/')) {
-        toast.error(`${file.name} is not an image file`)
+        showMessage('${file.name} is not an image file', 'error')
         return false
       }
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        toast.error(`${file.name} is too large (max 5MB)`)
+        showMessage('${file.name} is too large (max 5MB)', 'error')
         return false
       }
       return true
     })
     
     if (images.length + validFiles.length > 5) {
-      toast.error('Maximum 5 images allowed')
+      showMessage('Maximum 5 images allowed', 'error')
       return
     }
     
@@ -109,6 +123,16 @@ export default function WriteReviewModal({
       title="Write a Review"
       size="md"
     >
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Product Name */}
         <div>

@@ -11,7 +11,21 @@ import FormInput from '@/components/shared/forms/FormInput'
 import FormSelect from '@/components/shared/forms/FormSelect'
 import FormTextArea from '@/components/shared/forms/FormTextArea'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function PromocodeForm({ promocode, onClose }) {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
     const isEditing = !!promocode
     const [loading, setLoading] = useState(false)
     const [loadingProducts, setLoadingProducts] = useState(false)
@@ -77,7 +91,7 @@ export default function PromocodeForm({ promocode, onClose }) {
             setSellerProducts(products)
         } catch (error) {
             console.error('Error fetching products:', error)
-            toast.error('Failed to load your products')
+            showMessage('Failed to load your products', 'error')
         } finally {
             setLoadingProducts(false)
         }
@@ -203,18 +217,18 @@ export default function PromocodeForm({ promocode, onClose }) {
 
             if (isEditing) {
                 await promocodeAPI.updatePromocode(promocode._id, payload)
-                toast.success('Promocode updated successfully')
+                showMessage('Promocode updated successfully', 'success')
             } else {
                 await promocodeAPI.createPromocode(payload)
-                toast.success('Promocode created successfully')
+                showMessage('Promocode created successfully', 'success')
             }
 
             onClose(true) // true indicates data should be refreshed
         } catch (error) {
             if (error.response?.data?.message) {
-                toast.error(error.response.data.message)
+                showMessage(error.response.data.message, 'error')
             } else {
-                toast.error(isEditing ? 'Failed to update promocode' : 'Failed to create promocode')
+                showMessage(isEditing ? 'Failed to update promocode' : 'Failed to create promocode', 'error')
             }
             console.error('Error saving promocode:', error)
         } finally {
@@ -224,6 +238,16 @@ export default function PromocodeForm({ promocode, onClose }) {
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
             <div className="w-full max-w-3xl max-h-[90vh] bg-[#1f1f1f] border border-gray-800 rounded-xl overflow-hidden">
                 <div className="p-6 overflow-y-auto max-h-[calc(90vh-2rem)]">
                     <div className="flex justify-between items-center mb-6">

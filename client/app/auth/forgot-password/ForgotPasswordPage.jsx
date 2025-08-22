@@ -10,7 +10,21 @@ import { authAPI } from '@/lib/api/auth'
 import toast from '@/lib/utils/toast'
 import { validateEmail } from '@/lib/utils/utils'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function ForgotPasswordPage() {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [emailSent, setEmailSent] = useState(false)
@@ -58,12 +72,12 @@ export default function ForgotPasswordPage() {
             await authAPI.forgotPassword(email)
 
             setEmailSent(true)
-            toast.success('Password reset email sent! Check your inbox.')
+            showMessage('Password reset email sent! Check your inbox.', 'success')
         } catch (err) {
             const errorMessage = err?.response?.data?.message || err?.data?.message || err?.message || 'Failed to send reset email'
 
             setError(errorMessage)
-            toast.error(errorMessage)
+            showMessage(errorMessage, 'error')
         } finally {
             setLoading(false)
         }
@@ -75,11 +89,11 @@ export default function ForgotPasswordPage() {
 
         try {
             await authAPI.forgotPassword(email)
-            toast.success('Password reset email sent again! Check your inbox.')
+            showMessage('Password reset email sent again! Check your inbox.', 'success')
         } catch (err) {
             const errorMessage = err?.response?.data?.message || err?.data?.message || err?.message || 'Failed to resend email'
             setError(errorMessage)
-            toast.error(errorMessage)
+            showMessage(errorMessage, 'error')
         } finally {
             setLoading(false)
         }
@@ -87,6 +101,16 @@ export default function ForgotPasswordPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#121212] to-[#1a1a1a] relative overflow-hidden font-league-spartan">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
             {/* Animated background effects */}
             <div className="absolute inset-0 overflow-hidden">
                 {/* Primary gradient orbs */}

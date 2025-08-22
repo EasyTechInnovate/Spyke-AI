@@ -25,7 +25,21 @@ import PromocodeForm from '@/components/features/promocode/PromocodeForm'
 import PromocodeStats from '@/components/features/promocode/PromocodeStats'
 import LoadingSpinner from '@/components/shared/ui/LoadingSpinner'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function AdminPromocodesPage() {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
     const router = useRouter()
     const [promocodes, setPromocodes] = useState([])
     const [loading, setLoading] = useState(true)
@@ -64,7 +78,7 @@ export default function AdminPromocodesPage() {
                 totalPages: response.totalPages || 0
             })
         } catch (error) {
-            toast.error('Failed to fetch promocodes')
+            showMessage('Failed to fetch promocodes', 'error')
             console.error('Error fetching promocodes:', error)
         } finally {
             setLoading(false)
@@ -87,10 +101,10 @@ export default function AdminPromocodesPage() {
 
         try {
             await promocodeAPI.deletePromocode(promocodeId)
-            toast.success('Promocode deleted successfully')
+            showMessage('Promocode deleted successfully', 'success')
             fetchPromocodes()
         } catch (error) {
-            toast.error('Failed to delete promocode')
+            showMessage('Failed to delete promocode', 'error')
             console.error('Error deleting promocode:', error)
         }
     }
@@ -98,10 +112,10 @@ export default function AdminPromocodesPage() {
     const handleToggleStatus = async (promocodeId) => {
         try {
             await promocodeAPI.togglePromocodeStatus(promocodeId)
-            toast.success('Promocode status updated')
+            showMessage('Promocode status updated', 'success')
             fetchPromocodes()
         } catch (error) {
-            toast.error('Failed to update promocode status')
+            showMessage('Failed to update promocode status', 'error')
             console.error('Error toggling status:', error)
         }
     }
@@ -113,7 +127,7 @@ export default function AdminPromocodesPage() {
 
     const copyToClipboard = (code) => {
         navigator.clipboard.writeText(code)
-        toast.success('Code copied to clipboard')
+        showMessage('Code copied to clipboard', 'success')
     }
 
     const handleFormClose = (refreshData = false) => {
@@ -151,11 +165,21 @@ export default function AdminPromocodesPage() {
         a.download = `promocodes-${new Date().toISOString().split('T')[0]}.csv`
         a.click()
         window.URL.revokeObjectURL(url)
-        toast.success('Promocodes exported successfully')
+        showMessage('Promocodes exported successfully', 'success')
     }
 
     return (
         <div className="container mx-auto px-4 py-8">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
             <div className="mb-8">
                 <h1 className="text-3xl font-bold mb-2">Promocode Management (Admin)</h1>
                 <p className="text-gray-600">Manage all promotional codes across the platform</p>

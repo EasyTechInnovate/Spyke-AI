@@ -26,6 +26,7 @@ import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 import { productsAPI } from '@/lib/api'
 import toast from '@/lib/utils/toast'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
     const [activeTab, setActiveTab] = useState('overview')
     const [verificationNotes, setVerificationNotes] = useState('')
@@ -59,7 +60,7 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
 
             await productsAPI.verifyProduct(product._id, updateData)
 
-            toast.success(`Product ${action}d successfully`)
+            showMessage('Product ${action}d successfully', 'success')
             onProductUpdate?.(product._id, updateData)
             
             if (action === 'reject') {
@@ -69,7 +70,7 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
             
             onClose()
         } catch (error) {
-            toast.error(`Failed to ${action} product`)
+            showMessage('Failed to ${action} product', 'error')
         } finally {
             setLoading(false)
         }
@@ -81,7 +82,7 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
 
     const handleRejectSubmit = () => {
         if (!rejectionReason.trim()) {
-            toast.error('Please provide a reason for rejection')
+            showMessage('Please provide a reason for rejection', 'error')
             return
         }
         handleQuickAction('reject', rejectionReason)

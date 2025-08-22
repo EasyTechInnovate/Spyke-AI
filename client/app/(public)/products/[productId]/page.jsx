@@ -54,6 +54,7 @@ import toast from '@/lib/utils/toast'
 import { cn } from '@/lib/utils'
 import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 // Animation variants
 const fadeInUp = {
     initial: { opacity: 0, y: 20 },
@@ -100,6 +101,19 @@ const productTypeBadges = {
 }
 
 export default function ProductPage() {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
     const params = useParams()
     const router = useRouter()
     const productSlug = params.productId
@@ -273,12 +287,12 @@ export default function ProductPage() {
     const handleAddToCart = useCallback(async () => {
         // Don't allow adding to cart if already purchased
         if (hasPurchased) {
-            toast.info('You already own this product')
+            showMessage('You already own this product', 'info')
             return
         }
 
         if (isOwner) {
-            toast.info("You can't add your own product to cart")
+            showMessage("You can't add your own product to cart", 'info')
             return
         }
 
@@ -287,7 +301,7 @@ export default function ProductPage() {
             const alreadyInCart = mounted && !cartLoading && isInCart && (isInCart(product._id) || isInCart(product.id))
 
             if (alreadyInCart) {
-                toast.info('Product is already in cart')
+                showMessage('Product is already in cart', 'info')
                 return
             }
 
@@ -308,7 +322,7 @@ export default function ProductPage() {
 
             const success = await addToCart(cartProduct)
             if (success) {
-                toast.success('Added to cart')
+                showMessage('Added to cart', 'success')
             }
         }
     }, [product, addToCart, mounted, cartLoading, isInCart, hasPurchased, isOwner])
@@ -316,12 +330,12 @@ export default function ProductPage() {
     const handleBuyNow = useCallback(async () => {
         // Don't allow buying if already purchased
         if (hasPurchased) {
-            toast.info('You already own this product')
+            showMessage('You already own this product', 'info')
             return
         }
 
         if (isOwner) {
-            toast.info("You can't purchase your own product")
+            showMessage("You can't purchase your own product", 'info')
             return
         }
 
@@ -376,7 +390,7 @@ export default function ProductPage() {
             navigator.clipboard.writeText(url)
             setShowCopied(true)
             setTimeout(() => setShowCopied(false), 2000)
-            toast.success('Link copied to clipboard!')
+            showMessage('Link copied to clipboard!', 'success')
         }
     }, [mounted, product])
 
@@ -391,7 +405,7 @@ export default function ProductPage() {
             await productsAPI.toggleFavorite(product._id, !liked)
         } catch (error) {
             setLiked(liked)
-            toast.error('Failed to update favorite')
+            showMessage('Failed to update favorite', 'error')
         }
     }, [isAuthenticated, liked, product, requireAuth])
 
@@ -405,7 +419,7 @@ export default function ProductPage() {
                     totalReviews: (prevProduct.totalReviews || 0) + 1,
                     averageRating: prevProduct.averageRating // Keep existing rating for now
                 }))
-                toast.success('Review submitted successfully!')
+                showMessage('Review submitted successfully!', 'success')
             } catch (error) {
                 // Failed to submit review
                 throw error
@@ -438,11 +452,11 @@ export default function ProductPage() {
                     : Math.max(0, (prevProduct.upvotes || 0) - 1)
             }))
             
-            toast.success(newUpvoted ? 'Upvoted!' : 'Removed upvote')
+            showMessage(newUpvoted ? 'Upvoted!' : 'Removed upvote', 'success')
         } catch (error) {
             // Failed to toggle upvote
             setUpvoted(!newUpvoted)
-            toast.error('Failed to update upvote')
+            showMessage('Failed to update upvote', 'error')
         } finally {
             setIsUpvoting(false)
         }
@@ -450,16 +464,16 @@ export default function ProductPage() {
 
     const handleDownload = useCallback(async () => {
         if (!hasPurchased) {
-            toast.error('You need to purchase this product first')
+            showMessage('You need to purchase this product first', 'error')
             return
         }
 
         try {
             // Navigate to purchases page or implement download logic
             router.push('/purchases')
-            toast.success('Redirected to your purchases')
+            showMessage('Redirected to your purchases', 'success')
         } catch (error) {
-            toast.error('Failed to access downloads')
+            showMessage('Failed to access downloads', 'error')
         }
     }, [hasPurchased, router])
 
@@ -467,6 +481,16 @@ export default function ProductPage() {
     if (loading) {
         return (
             <div className="min-h-screen bg-black">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
                 <Header />
                 <Container>
                     <div className="pt-20 pb-4 border-b border-gray-900">
@@ -876,7 +900,7 @@ export default function ProductPage() {
                                                                             <button
                                                                                 onClick={() => {
                                                                                     navigator.clipboard.writeText(promo.code)
-                                                                                    toast.success(`Code "${promo.code}" copied!`)
+                                                                                    showMessage(`Code "${promo.code}" copied!`, 'success')
                                                                                 }}
                                                                                 className="p-2 hover:bg-gray-800 rounded transition-colors">
                                                                                 <Copy className="w-4 h-4 text-gray-400" />

@@ -5,6 +5,7 @@ import { promocodeAPI } from '@/lib/api'
 import toast from '@/lib/utils/toast'
 import Card from '@/components/shared/ui/card'
 import Badge from '@/components/shared/ui/badge'
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 import { 
     X, 
     Edit, 
@@ -23,12 +24,25 @@ import {
 } from 'lucide-react'
 
 export default function PromocodeDetails({ promocode, onClose, onEdit, onDelete, onShowStats }) {
+    // Inline notification state
+    const [notification, setNotification] = useState(null)
+
+    // Show inline notification messages  
+    const showMessage = (message, type = 'info') => {
+        setNotification({ message, type })
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => setNotification(null), 5000)
+    }
+
+    // Clear notification
+    const clearNotification = () => setNotification(null)
+
     const [copiedCode, setCopiedCode] = useState(false)
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(promocode.code)
         setCopiedCode(true)
-        toast.success(`Code "${promocode.code}" copied to clipboard!`)
+        showMessage(`Code "${promocode.code}" copied to clipboard!`, 'success')
         setTimeout(() => setCopiedCode(false), 2000)
     }
 
@@ -52,6 +66,16 @@ export default function PromocodeDetails({ promocode, onClose, onEdit, onDelete,
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
+            {/* Inline Notification */}
+            {notification && (
+                <InlineNotification
+                    type={notification.type}
+                    message={notification.message}
+                    onDismiss={clearNotification}
+                />
+            )}
+
+            
             <div className="w-full max-w-2xl bg-[#1f1f1f] border border-gray-800 rounded-xl overflow-hidden">
                 <div className="p-6">
                     {/* Header */}

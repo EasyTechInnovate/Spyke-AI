@@ -630,6 +630,29 @@ export default {
             httpError(next, err, req, 500)
         }
     },
+    markAllNotificationsRead: async (req, res, next) => {
+        try {
+            const { authenticatedUser } = req
+
+            const user = await userModel.findById(authenticatedUser.id)
+            if (!user) {
+                return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('User')), req, 404)
+            }
+
+            const unreadCount = user.notifications.filter(n => !n.isRead).length
+            
+            user.markAllNotificationsAsRead()
+            await user.save()
+
+            httpResponse(req, res, 200, responseMessage.UPDATED, {
+                markedAsRead: unreadCount,
+                totalNotifications: user.notifications.length,
+                unreadCount: 0
+            })
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
     sendNotification: async (req, res, next) => {
         try {
             const { userId, title, message, type = 'info', expiresAt } = req.body
