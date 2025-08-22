@@ -1,7 +1,5 @@
 'use client'
 
-import { toast } from 'sonner'
-
 /**
  * Centralized logout service that clears all application data
  * and redirects to home page
@@ -36,62 +34,124 @@ export const logoutService = {
                         })
                     }
                 } catch (err) {
-                    console.log('Logout attempt failed (ignoring):', err)
-                    // Ignore backend errors
+                    console.log('Error during backend logout (ignoring):', err.message)
+                    // Continue with local cleanup even if backend fails
                 }
-            }
 
-            // 2. Clear all authentication data
-            this.clearAllData()
+                // 2. Clear all localStorage data
+                this.clearStorageData()
 
-            // 3. Redirect to signin page
-            if (typeof window !== 'undefined') {
-                window.location.href = '/signin'
+                // 3. Clear any cookies
+                this.clearCookies()
+
+                // 4. Clear any session storage
+                this.clearSessionStorage()
+
+                // 5. Redirect to home page
+                window.location.href = '/'
             }
         } catch (error) {
-            console.error('Logout failed:', error)
-            // Still clear data even if logout fails
-            this.clearAllData()
+            console.error('Critical error during logout:', error)
+            // Even if something goes wrong, force redirect to home
             if (typeof window !== 'undefined') {
-                window.location.href = '/signin'
+                window.location.href = '/'
             }
         }
     },
 
     /**
-     * Clear all stored data without redirecting
-     * Useful for clearing data in specific scenarios
+     * Clear all localStorage items
      */
-    clearAllData() {
-        if (typeof window !== 'undefined') {
-            // Auth tokens and user data
-            localStorage.removeItem('authToken')
-            localStorage.removeItem('refreshToken')
-            localStorage.removeItem('user')
-            localStorage.removeItem('roles')
-            localStorage.removeItem('returnTo')
+    clearStorageData() {
+        try {
+            const itemsToRemove = [
+                'authToken',
+                'refreshToken',
+                'user',
+                'userProfile',
+                'cart',
+                'wishlist',
+                'recentViews',
+                'preferences',
+                'notifications',
+                'tempData'
+            ]
 
-            // Cart data
-            localStorage.removeItem('spyke_guest_cart')
-            sessionStorage.removeItem('spyke_cart')
+            itemsToRemove.forEach(item => {
+                localStorage.removeItem(item)
+            })
 
-            // Clear any other app-specific data
-            localStorage.removeItem('selectedAddress')
-            localStorage.removeItem('checkoutData')
+            // Also clear any items that start with our app prefix
+            const appPrefix = 'spyke_'
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith(appPrefix)) {
+                    localStorage.removeItem(key)
+                }
+            })
 
-            // Clear cookies - including the accessToken that backend expects
-            document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT'
-            document.cookie = 'authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT'
-            document.cookie = 'refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT'
-            document.cookie = 'user=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT'
-            document.cookie = 'roles=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT'
+            console.log('LocalStorage cleared successfully')
+        } catch (error) {
+            console.error('Error clearing localStorage:', error)
+        }
+    },
 
-            // Dispatch storage event
-            window.dispatchEvent(new Event('storage'))
+    /**
+     * Clear session storage
+     */
+    clearSessionStorage() {
+        try {
+            sessionStorage.clear()
+            console.log('SessionStorage cleared successfully')
+        } catch (error) {
+            console.error('Error clearing sessionStorage:', error)
+        }
+    },
+
+    /**
+     * Clear relevant cookies
+     */
+    clearCookies() {
+        try {
+            const cookiesToClear = [
+                'authToken',
+                'refreshToken',
+                'session',
+                'user_session',
+                'cart_id',
+                'preferences'
+            ]
+
+            cookiesToClear.forEach(cookieName => {
+                // Clear cookie for current domain
+                document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+                // Clear cookie for parent domain
+                document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`
+            })
+
+            console.log('Cookies cleared successfully')
+        } catch (error) {
+            console.error('Error clearing cookies:', error)
+        }
+    },
+
+    /**
+     * Quick logout without backend call (for emergency situations)
+     */
+    forceLogout() {
+        try {
+            if (typeof window !== 'undefined') {
+                this.clearStorageData()
+                this.clearCookies()
+                this.clearSessionStorage()
+                window.location.href = '/'
+            }
+        } catch (error) {
+            console.error('Error during force logout:', error)
+            // Last resort - just redirect
+            if (typeof window !== 'undefined') {
+                window.location.href = '/'
+            }
         }
     }
 }
-
-// Export default logout function for convenience
-export const logout = logoutService.logout
 

@@ -5,6 +5,23 @@ import { useRouter } from 'next/navigation'
 import { authAPI } from '@/lib/api/auth'
 import { getUserRole, hasRole } from './auth'
 
+// Helper function to determine redirect path based on user role
+const getRedirectPath = (userData) => {
+    if (!userData) return '/signin'
+    
+    const role = getUserRole(userData)
+    switch (role) {
+        case 'admin':
+            return '/admin/dashboard'
+        case 'seller':
+            return '/seller/dashboard'
+        case 'moderator':
+            return '/moderator/dashboard'
+        default:
+            return '/explore'
+    }
+}
+
 const AuthContext = createContext({})
 
 export const useAuth = () => {
@@ -47,7 +64,17 @@ export function AuthProvider({ children }) {
     }
 
     const logout = async () => {
+        // Clear user state immediately
         setUser(null)
+        
+        // Clear localStorage immediately to prevent race conditions
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('user')
+            localStorage.removeItem('authToken')
+            localStorage.removeItem('refreshToken')
+        }
+        
+        // Then call the logout service
         const { logoutService } = await import('@/lib/services/logout')
         return logoutService.logout()
     }
