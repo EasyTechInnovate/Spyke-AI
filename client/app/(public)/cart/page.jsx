@@ -103,7 +103,7 @@ export default function CartPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#121212] text-white">
+        <div className="min-h-screen bg-gradient-to-br from-[#0A0A0A] via-[#121212] to-[#1A1A1A] text-white">
             <Header />
 
             <main className="pt-24 pb-16">
@@ -164,18 +164,20 @@ function CartHeader({ itemCount, total, totalSavings }) {
             className="mb-8">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl lg:text-4xl font-bold mb-2">Shopping Cart</h1>
+                    <h1 className="text-3xl lg:text-4xl font-bold mb-2 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                        Shopping Cart
+                    </h1>
                     <p className="text-gray-400">
                         {itemCount} {itemCount === 1 ? 'item' : 'items'} in your cart
                     </p>
                 </div>
                 <div className="flex items-center gap-4 text-sm">
-                    <div className="px-4 py-2 bg-[#1f1f1f] rounded-lg border border-gray-800">
+                    <div className="px-4 py-2 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 shadow-lg">
                         <span className="text-gray-400">Total: </span>
-                        <span className="text-[#00FF89] font-semibold">{formatCurrency(total)}</span>
+                        <span className="text-brand-primary font-semibold">{formatCurrency(total)}</span>
                     </div>
                     {totalSavings > 0 && (
-                        <div className="px-4 py-2 bg-[#00FF89]/10 text-[#00FF89] rounded-lg border border-[#00FF89]/20">
+                        <div className="px-4 py-2 bg-brand-primary/10 text-brand-primary rounded-lg border border-brand-primary/20 backdrop-blur-sm shadow-lg">
                             You save {formatCurrency(totalSavings)}!
                         </div>
                     )}
@@ -194,17 +196,17 @@ function RelatedProductsSection() {
             className="mt-12">
             <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-semibold text-white flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-[#FFC050]" />
+                    <Sparkles className="w-5 h-5 text-brand-accent" />
                     You might also like
                 </h3>
                 <Link
                     href="/explore"
-                    className="text-sm text-[#FFC050] hover:underline">
+                    className="text-sm text-brand-accent hover:text-brand-accent/80 transition-colors">
                     View all
                 </Link>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center text-gray-500 col-span-full py-8 bg-[#1f1f1f] rounded-xl border border-gray-800">
+                <div className="text-center text-gray-500 col-span-full py-8 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 shadow-lg">
                     <Clock className="w-8 h-8 mx-auto mb-2 text-gray-600" />
                     <p className="text-sm">Related products coming soon</p>
                 </div>

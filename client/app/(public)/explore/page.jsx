@@ -284,6 +284,7 @@ function ExplorePageContent() {
     const [apiError, setApiError] = useState(null)
     const [retryCount, setRetryCount] = useState(0)
     const [lastUpdateTime, setLastUpdateTime] = useState(Date.now())
+    const [productCounts, setProductCounts] = useState({}) // New state for filter counts
 
     // Enhanced filter and UI state
     const [filters, setFilters] = useState(() => {
@@ -329,7 +330,7 @@ function ExplorePageContent() {
         }
         return 'grid'
     })
-    const [showFilters, setShowFilters] = useState(false)
+    const [showFilters, setShowFilters] = useState(true)
     const [showMobileFilters, setShowMobileFilters] = useState(false)
     const [currentPage, setCurrentPage] = useState(() => {
         const page = parseInt(searchParams.get('page')) || 1
@@ -622,6 +623,42 @@ function ExplorePageContent() {
         [currentPage, sortBy, filters, isOnline, connectionSpeed, retryCount, cache, trackApiCall]
     )
 
+    // Enhanced API call to fetch filter counts
+    const fetchFilterCounts = useCallback(async () => {
+        try {
+            // Build filter params for counting
+            const countParams = {
+                // Include current filters except the ones we're counting
+                ...(filters.search && { search: filters.search }),
+                ...(filters.rating > 0 && { minRating: filters.rating }),
+                ...(filters.verifiedOnly && { verifiedOnly: 'true' })
+            }
+
+            const response = await productsAPI.getFilterCounts(countParams)
+
+            if (response?.data) {
+                setProductCounts(response.data)
+            }
+        } catch (error) {
+            console.warn('Error fetching filter counts:', error)
+            // Set default counts if API fails
+            setProductCounts({
+                productTypes: {},
+                categories: {},
+                industries: {},
+                setupTimes: {},
+                priceRanges: {},
+                ratings: {},
+                verified: 0
+            })
+        }
+    }, [filters.search, filters.rating, filters.verifiedOnly])
+
+    // Fetch filter counts when filters change
+    useEffect(() => {
+        fetchFilterCounts()
+    }, [fetchFilterCounts])
+
     // Computed values with enhanced logic
     const totalPages = useMemo(() => {
         const pages = Math.ceil(totalItems / ITEMS_PER_PAGE)
@@ -827,6 +864,7 @@ function ExplorePageContent() {
                                             productTypes={PRODUCT_TYPES}
                                             industries={INDUSTRIES}
                                             setupTimes={SETUP_TIMES}
+                                            productCounts={productCounts}
                                             onFilterChange={handleFilterChange}
                                         />
                                     </motion.div>

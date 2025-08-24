@@ -37,6 +37,41 @@ const stagger = {
   }
 }
 
+// Helper function to safely convert any value to string
+const safeToString = (value) => {
+  if (value === null || value === undefined) return ''
+  if (typeof value === 'string') return value
+  if (typeof value === 'object') {
+    // If it's an object, extract meaningful string values
+    if (value.country) return value.country
+    if (value.timezone) return value.timezone
+    if (value.name) return value.name
+    return ''
+  }
+  return String(value)
+}
+
+// Safe data processing
+const getSafeSellerData = (data) => {
+  if (!data) return null
+  
+  return {
+    ...data,
+    fullName: safeToString(data.fullName) || 'Unknown Seller',
+    username: safeToString(data.username) || 'user',
+    bio: safeToString(data.bio) || '',
+    location: safeToString(data.location) || '',
+    timezone: safeToString(data.timezone) || '',
+    website: safeToString(data.website) || '',
+    email: safeToString(data.email) || '',
+    stats: {
+      ...data.stats,
+      responseTime: safeToString(data.stats?.responseTime) || 'N/A',
+      responseRate: safeToString(data.stats?.responseRate) || 'N/A'
+    }
+  }
+}
+
 export default function SellerProfileModal({ 
   isOpen, 
   onClose, 
@@ -69,7 +104,8 @@ export default function SellerProfileModal({
         setError(null)
         fetchSellerData()
       } else {
-        setSellerData(initialData)
+        const transformedInitialData = getSafeSellerData(initialData)
+        setSellerData(transformedInitialData)
       }
     }
   }, [isOpen, sellerId, initialData])
@@ -83,13 +119,13 @@ export default function SellerProfileModal({
       
       if (response && response.success && response.data) {
         const apiData = response.data
-        const transformedData = {
+        const transformedData = getSafeSellerData({
           _id: apiData.id || apiData._id,
           fullName: apiData.fullName || sellerName || 'Unknown Seller',
           username: apiData.username || apiData.id,
           avatar: apiData.avatar,
           bio: apiData.bio || '',
-          location: apiData.location?.country || '',
+          location: apiData.location,
           timezone: apiData.location?.timezone || '',
           website: apiData.website || '',
           email: apiData.email || '',
@@ -113,13 +149,6 @@ export default function SellerProfileModal({
           },
           badges: apiData.badges || [],
           recentProducts: apiData.recentProducts || []
-        }
-        // Log a serializable summary of the transformed data
-        console.log('[SellerProfileModal] transformedData summary', {
-          id: transformedData._id,
-          fullName: transformedData.fullName,
-          totalSales: transformedData.stats.totalSales,
-          totalProducts: transformedData.stats.totalProducts
         })
         
         setSellerData(transformedData)
@@ -287,7 +316,7 @@ export default function SellerProfileModal({
                 
                 {/* Location and Meta Info */}
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-sm">
-                  {sellerData.location && (
+                  {sellerData.location && typeof sellerData.location === 'string' && (
                     <div className="flex items-center gap-1.5 text-gray-400">
                       <MapPin className="w-4 h-4" />
                       {sellerData.location}

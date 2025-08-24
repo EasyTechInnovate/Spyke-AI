@@ -9,7 +9,10 @@ import './styles.css'
 export const DS_VERSION = '1.0.0'
 export const DS_NAME = 'Spyke AI Design System'
 
-// Quick access to common tokens
+// Re-export Button specifically for easy access
+export { Button } from './components/Button'
+
+// Quick access to common tokens (keeping for backward compatibility)
 export const colors = {
   primary: '#00FF89',
   primaryText: '#121212',

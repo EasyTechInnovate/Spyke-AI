@@ -24,22 +24,18 @@ export default function SearchBar({ popularTags = [], onSearch }) {
         setIsSearching(true)
 
         try {
-            // Use the correct products API method with search parameter
             const response = await productsAPI.getProducts({
                 search: searchQuery.trim(),
                 limit: 5
             })
 
-            // Handle both possible response structures
+            // The server returns: { message: "success", data: { products: [...], pagination: {...} } }
+            // Extract products from the correct path
             let products = []
-            if (response?.data?.products) {
+            if (response?.data?.products && Array.isArray(response.data.products)) {
                 products = response.data.products
-            } else if (response?.products) {
+            } else if (response?.products && Array.isArray(response.products)) {
                 products = response.products
-            } else if (Array.isArray(response?.data)) {
-                products = response.data
-            } else if (Array.isArray(response)) {
-                products = response
             }
 
             setSearchResults({ products })
@@ -120,7 +116,7 @@ export default function SearchBar({ popularTags = [], onSearch }) {
 
     return (
         <div
-            className="w-full max-w-4xl mx-auto space-y-4"
+            className="w-full max-w-4xl mx-auto space-y-4 relative"
             id="main-search"
             ref={searchContainerRef}>
             {/* Main Search Input */}
@@ -221,11 +217,14 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                 <AnimatePresence>
                     {showResults && (
                         <motion.div
-                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
                             transition={{ duration: 0.2 }}
-                            className="absolute top-full left-0 right-0 mt-2 bg-[#1f1f1f] backdrop-blur-xl border border-gray-700 rounded-2xl overflow-hidden z-50 max-h-96 overflow-y-auto shadow-2xl">
+                            className="absolute top-full left-0 right-0 mt-2 z-[999] bg-[#1f1f1f]/98 backdrop-blur-xl border border-gray-700 rounded-2xl overflow-hidden max-h-80 overflow-y-auto shadow-2xl"
+                            style={{
+                                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05)'
+                            }}>
                             {isSearching ? (
                                 <div className="p-6 text-center">
                                     <div className="inline-flex items-center gap-2 text-gray-400">
@@ -328,6 +327,9 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                     )}
                 </AnimatePresence>
             </motion.form>
+
+            {/* Add margin when dropdown is shown to push content down */}
+            <div className={showResults ? "h-80" : "h-0"} />
 
             {/* Enhanced Popular Tags - Centered */}
             <AnimatePresence>

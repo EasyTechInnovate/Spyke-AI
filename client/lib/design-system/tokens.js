@@ -192,43 +192,54 @@ export const getToken = (path) => {
 export const COMPONENT_VARIANTS = {
     button: {
         primary: {
-            background: DESIGN_TOKENS.colors.brand.primary,
-            color: DESIGN_TOKENS.colors.brand.primaryText,
+            background: '#00FF89',
+            color: '#121212',
             hover: {
-                background: DESIGN_TOKENS.colors.brand.primary,
+                background: '#00FF89',
                 opacity: 0.9
             },
             focus: {
-                ring: DESIGN_TOKENS.colors.brand.primary
+                ring: '#00FF89'
             }
         },
         secondary: {
-            background: DESIGN_TOKENS.colors.background.card.dark,
-            color: DESIGN_TOKENS.colors.brand.white,
-            border: DESIGN_TOKENS.colors.brand.primary,
+            background: '#2a2a2a',
+            color: '#FFFFFF',
+            border: '#00FF89',
             hover: {
-                background: DESIGN_TOKENS.colors.background.elevated
+                background: '#333333'
             },
             focus: {
-                ring: DESIGN_TOKENS.colors.brand.primary
+                ring: '#00FF89'
+            }
+        },
+        ghost: {
+            background: 'transparent',
+            color: '#FFFFFF',
+            border: 'transparent',
+            hover: {
+                background: '#2a2a2a'
+            },
+            focus: {
+                ring: '#00FF89'
             }
         }
     },
 
     text: {
         hero: {
-            fontSize: 'clamp(2rem, 6vw, 3.75rem)', // Increased from clamp(1.875rem, 6vw, 3.5rem)
-            lineHeight: DESIGN_TOKENS.typography.lineHeight.tight,
-            letterSpacing: DESIGN_TOKENS.typography.letterSpacing.tight,
-            fontWeight: DESIGN_TOKENS.typography.fontWeight.bold,
-            fontFamily: DESIGN_TOKENS.typography.fontFamily.title
+            fontSize: 'clamp(2rem, 6vw, 3.75rem)',
+            lineHeight: '1.25',
+            letterSpacing: '-0.025em',
+            fontWeight: '700',
+            fontFamily: 'var(--font-league-spartan)'
         },
         subhero: {
-            fontSize: 'clamp(1.125rem, 3vw, 1.375rem)', // Increased from clamp(1rem, 3vw, 1.25rem)
-            lineHeight: DESIGN_TOKENS.typography.lineHeight.relaxed,
-            letterSpacing: DESIGN_TOKENS.typography.letterSpacing.normal,
-            fontWeight: DESIGN_TOKENS.typography.fontWeight.medium,
-            fontFamily: DESIGN_TOKENS.typography.fontFamily.body
+            fontSize: 'clamp(1.125rem, 3vw, 1.375rem)',
+            lineHeight: '1.625',
+            letterSpacing: '0em',
+            fontWeight: '500',
+            fontFamily: 'var(--font-league-spartan)'
         }
     }
 }

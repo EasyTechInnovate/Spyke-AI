@@ -306,8 +306,13 @@ function ProductCard({ product, onClick }) {
                         onLoad={() => setImageLoaded(true)}
                         onError={(e) => {
                             setImageLoaded(true)
-                            // Fallback to a placeholder
-                            e.target.src = `https://placehold.co/300x200/171717/9ca3af?text=${encodeURIComponent(product.title.charAt(0))}`
+                            // Fallback to a placeholder - check if target exists
+                            if (e?.target) {
+                                e.target.src = `https://placehold.co/300x200/171717/9ca3af?text=${encodeURIComponent(product.title.charAt(0))}`
+                            } else {
+                                // Fallback: update state instead
+                                setImgSrc(`https://placehold.co/300x200/171717/9ca3af?text=${encodeURIComponent(product.title.charAt(0))}`)
+                            }
                         }}
                         loading="lazy"
                     />

@@ -151,7 +151,7 @@ export default function SearchOverlay({ isOpen, onClose }) {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -20 }}
                 transition={{ duration: 0.2 }}
-                className="fixed top-0 left-0 right-0 z-[101] w-full max-w-4xl mx-auto p-4 sm:p-6 md:p-8">
+                className="fixed top-16 sm:top-20 left-0 right-0 z-[101] w-full max-w-4xl mx-auto p-4 sm:p-6 md:p-8">
                 <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700 rounded-2xl shadow-2xl overflow-hidden">
                     {/* Search Header */}
                     <div className="p-4 sm:p-6 border-b border-gray-700">

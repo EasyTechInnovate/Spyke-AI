@@ -1,5 +1,4 @@
 :root {
-  /* Brand Colors - Following theme.js structure */
   --ds-brand-primary: #00FF89;
   --ds-brand-primary-text: #121212;
   --ds-brand-dark: #121212;
@@ -9,41 +8,32 @@
   --ds-brand-white: #FFFFFF;
   --ds-brand-white-text: #FFC050;
   
-  /* Background Colors */
   --ds-background-light: #FFFFFF;
   --ds-background-dark: #121212;
   --ds-background-card-light: #FFFFFF;
   --ds-background-card-dark: #1f1f1f;
-  
-  /* Extended Background Shades for Design System */
   --ds-background-elevated: #2a2a2a;
   --ds-background-subtle: #151515;
   --ds-background-muted: #0f0f0f;
   
-  /* Text Colors */
   --ds-text-primary-light: #121212;
   --ds-text-primary-dark: #00FF89;
   --ds-text-secondary-light: #6b7280;
   --ds-text-secondary-dark: #9ca3af;
-  
-  /* Extended Text Colors for Design System */
   --ds-text-muted: #6b7280;
   --ds-text-subtle: #9ca3af;
   --ds-text-disabled: #4b5563;
   --ds-text-inverse: #FFFFFF;
   
-  /* Semantic Colors */
   --ds-color-success: #10b981;
   --ds-color-warning: #f59e0b;
   --ds-color-error: #ef4444;
   --ds-color-info: #3b82f6;
   
-  /* Typography Tokens - Following theme.js fonts */
   --ds-font-family-title: var(--font-league-spartan);
   --ds-font-family-body: var(--font-league-spartan);
   --ds-font-family-mono: 'JetBrains Mono', 'Fira Code', monospace;
   
-  /* Font Weights */
   --ds-font-weight-light: 300;
   --ds-font-weight-normal: 400;
   --ds-font-weight-medium: 500;
@@ -51,44 +41,39 @@
   --ds-font-weight-bold: 700;
   --ds-font-weight-extrabold: 800;
   
-  /* Font Sizes - Updated by 2px (0.125rem) from previous values */
-  --ds-font-size-xs: 0.875rem;   /* 14px - increased from 10px (0.625rem) */
-  --ds-font-size-sm: 1rem;       /* 16px - increased from 12px (0.75rem) */
-  --ds-font-size-base: 1.125rem; /* 18px - increased from 14px (0.875rem) */
-  --ds-font-size-lg: 1.25rem;    /* 20px - increased from 16px (1rem) */
-  --ds-font-size-xl: 1.375rem;   /* 22px - increased from 18px (1.125rem) */
-  --ds-font-size-2xl: 1.625rem;  /* 26px - increased from 20px (1.25rem) */
-  --ds-font-size-3xl: 2rem;      /* 32px - increased from 24px (1.5rem) */
-  --ds-font-size-4xl: 2.375rem;  /* 38px - increased from 30px (1.875rem) */
+  --ds-font-size-xs: 1.0625rem;
+  --ds-font-size-sm: 1.1875rem;
+  --ds-font-size-base: 1.3125rem;
+  --ds-font-size-lg: 1.4375rem;
+  --ds-font-size-xl: 1.5625rem;
+  --ds-font-size-2xl: 1.8125rem;
+  --ds-font-size-3xl: 2.1875rem;
+  --ds-font-size-4xl: 2.5625rem;
   
-  /* Line Heights */
   --ds-line-height-tight: 1.25;
   --ds-line-height-snug: 1.375;
   --ds-line-height-normal: 1.5;
   --ds-line-height-relaxed: 1.625;
   --ds-line-height-loose: 2;
   
-  /* Letter Spacing */
   --ds-letter-spacing-tight: -0.025em;
   --ds-letter-spacing-normal: 0em;
   --ds-letter-spacing-wide: 0.025em;
   
-  /* Spacing Tokens */
-  --ds-spacing-1: 0.25rem;   /* 4px */
-  --ds-spacing-2: 0.5rem;    /* 8px */
-  --ds-spacing-3: 0.75rem;   /* 12px */
-  --ds-spacing-4: 1rem;      /* 16px */
-  --ds-spacing-5: 1.25rem;   /* 20px */
-  --ds-spacing-6: 1.5rem;    /* 24px */
-  --ds-spacing-8: 2rem;      /* 32px */
-  --ds-spacing-10: 2.5rem;   /* 40px */
-  --ds-spacing-12: 3rem;     /* 48px */
-  --ds-spacing-16: 4rem;     /* 64px */
-  --ds-spacing-20: 5rem;     /* 80px */
-  --ds-spacing-24: 6rem;     /* 96px */
-  --ds-spacing-32: 8rem;     /* 128px */
+  --ds-spacing-1: 0.25rem;
+  --ds-spacing-2: 0.5rem;
+  --ds-spacing-3: 0.75rem;
+  --ds-spacing-4: 1rem;
+  --ds-spacing-5: 1.25rem;
+  --ds-spacing-6: 1.5rem;
+  --ds-spacing-8: 2rem;
+  --ds-spacing-10: 2.5rem;
+  --ds-spacing-12: 3rem;
+  --ds-spacing-16: 4rem;
+  --ds-spacing-20: 5rem;
+  --ds-spacing-24: 6rem;
+  --ds-spacing-32: 8rem;
   
-  /* Component Tokens - Using brand colors */
   --ds-hero-padding-mobile: 4rem;
   --ds-hero-padding-tablet: 5rem;
   --ds-hero-padding-desktop: 6rem;
@@ -97,38 +82,43 @@
   --ds-hero-gap-large: 3rem;
   --ds-hero-max-width: 80rem;
   
-  --ds-button-height-medium: 3rem;
-  --ds-button-padding-medium: 1.5rem;
-  --ds-input-height-large: 4rem;
+  --ds-button-height-medium: 3.5rem;
+  --ds-button-padding-medium: 1.75rem;
+  --ds-input-height-large: 4.5rem;
   
-  /* Border Radius */
-  --ds-radius-md: 0.375rem;
-  --ds-radius-lg: 0.5rem;
-  --ds-radius-xl: 0.75rem;
-  --ds-radius-2xl: 1rem;
-  --ds-radius-3xl: 1.5rem;
+  --ds-radius-sm: 0.375rem;
+  --ds-radius-md: 0.5rem;
+  --ds-radius-lg: 0.75rem;
+  --ds-radius-xl: 1rem;
+  --ds-radius-2xl: 1.25rem;
+  --ds-radius-3xl: 1.75rem;
   
-  /* Shadows */
   --ds-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --ds-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --ds-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --ds-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
   --ds-shadow-glow: 0 0 20px rgb(0 255 137 / 0.3);
   
-  /* Animation */
   --ds-duration-fast: 150ms;
   --ds-duration-normal: 300ms;
   --ds-duration-slow: 500ms;
   --ds-easing-ease-out: cubic-bezier(0, 0, 0.2, 1);
   --ds-easing-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   
-  /* Z-index */
   --ds-z-dropdown: 1000;
   --ds-z-modal: 1400;
   --ds-z-toast: 1700;
+
+  --ds-color-primary: #00FF89;
+  --ds-color-primary-text: #121212;
+  --ds-color-secondary: #FFC050;
+  --ds-color-dark: #121212;
+  --ds-color-white: #FFFFFF;
+  
+  --ds-font-title: var(--font-league-spartan);
+  --ds-font-body: var(--font-kumbh-sans);
 }
 
-/* Global aggressive magnification fix */
 * {
   zoom: 1 !important;
   transform: scale(1) !important;
@@ -138,64 +128,48 @@
 }
 
 html {
-  font-size: 14px !important; /* Reduce base font size from 16px to 14px */
+  font-size: 17px !important;
   zoom: 1 !important;
   transform: scale(1) !important;
 }
 
 body {
-  font-size: 0.875rem !important; /* 14px base */
+  font-size: 1.0625rem !important;
   zoom: 1 !important;
   transform: scale(1) !important;
 }
 
-/* Normalization and Base Styles */
 .ds-normalize {
-  /* Reset browser zoom effects and ensure consistent base sizing */
   zoom: 1;
   transform: scale(1);
   transform-origin: top left;
   -webkit-text-size-adjust: 100%;
   -moz-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  
-  /* Consistent box sizing */
   box-sizing: border-box;
-  
-  /* Prevent font boosting on mobile */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  
-  /* Ensure proper font scaling */
-  font-size: 1rem;
+  font-size: 1.0625rem;
   line-height: 1.5;
 }
 
 .ds-card-normalize {
-  /* Apply normalization specifically to cards to fix magnification */
   zoom: 1 !important;
   transform: scale(1) !important;
   -webkit-transform: scale(1) !important;
   -moz-transform: scale(1) !important;
   -ms-transform: scale(1) !important;
-  
-  /* Reset any inherited scaling */
-  font-size: 1rem;
+  font-size: 1.0625rem;
   line-height: 1.5;
-  
-  /* Ensure consistent text rendering */
   -webkit-text-size-adjust: 100%;
   -moz-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  
-  /* Fix potential magnification from browser zoom */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
-/* Apply normalization to all card content */
 .ds-card-normalize *,
 .ds-card-normalize *::before,
 .ds-card-normalize *::after {
@@ -203,7 +177,6 @@ body {
   zoom: 1;
 }
 
-/* Specific fixes for text elements within cards */
 .ds-card-normalize .ds-heading {
   font-size: inherit;
   line-height: inherit;
@@ -218,7 +191,6 @@ body {
   transform: none;
 }
 
-/* Fix icon sizing within cards */
 .ds-card-normalize svg,
 .ds-card-normalize img {
   max-width: 100%;
@@ -227,7 +199,6 @@ body {
   transform: none;
 }
 
-/* Global Design System Styles - Using theme.js colors */
 .ds-button {
   font-family: var(--ds-font-family-body);
   font-weight: var(--ds-font-weight-semibold);
@@ -244,11 +215,10 @@ body {
   user-select: none;
   position: relative;
   overflow: hidden;
-  
-  /* Add normalization to buttons */
   zoom: 1;
   transform: scale(1);
   font-size: var(--ds-font-size-base);
+  box-sizing: border-box;
 }
 
 .ds-button:hover {
@@ -257,7 +227,8 @@ body {
 }
 
 .ds-button:focus-visible {
-  outline: none;
+  outline: 2px solid var(--ds-color-primary, #00FF89);
+  outline-offset: 2px;
   box-shadow: 0 0 0 2px var(--ds-brand-primary);
   transform: scale(1);
 }
@@ -296,13 +267,12 @@ body {
 .ds-heading {
   margin: 0;
   color: inherit;
-  /* Add consistent scaling */
   zoom: 1;
   transform: scale(1);
 }
 
 .ds-heading--hero {
-  font-size: clamp(1.375rem, 3vw, 2rem); /* Increased from clamp(1.125rem, 3vw, 1.75rem) */
+  font-size: clamp(1.5625rem, 3vw, 2.1875rem);
   line-height: var(--ds-line-height-tight);
   letter-spacing: var(--ds-letter-spacing-tight);
   font-weight: var(--ds-font-weight-bold);
@@ -310,7 +280,7 @@ body {
 }
 
 .ds-heading--subhero {
-  font-size: clamp(1.125rem, 2vw, 1.25rem); /* Increased from clamp(0.875rem, 2vw, 1rem) */
+  font-size: clamp(1.3125rem, 2vw, 1.4375rem);
   line-height: var(--ds-line-height-normal);
   letter-spacing: var(--ds-letter-spacing-normal);
   font-weight: var(--ds-font-weight-semibold);
@@ -320,7 +290,6 @@ body {
 .ds-text {
   margin: 0;
   color: inherit;
-  /* Add consistent scaling */
   zoom: 1;
   transform: scale(1);
 }
@@ -371,16 +340,12 @@ body {
 .ds-card {
   border-radius: var(--ds-radius-2xl);
   border: 1px solid var(--ds-background-elevated);
-  
-  /* Apply card normalization by default */
   zoom: 1;
   transform: scale(1);
   -webkit-text-size-adjust: 100%;
   -moz-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  
-  /* Ensure consistent sizing */
-  font-size: 1rem;
+  font-size: 1.0625rem;
   line-height: 1.5;
 }
 
@@ -393,32 +358,28 @@ body {
   box-shadow: var(--ds-shadow-lg);
 }
 
-/* Stats card specific normalization */
 .ds-stats-card {
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--ds-spacing-3);
-  
-  /* Normalize stats cards specifically */
   zoom: 1;
   transform: scale(1);
-  font-size: 1rem;
+  font-size: 1.0625rem;
 }
 
 .ds-stats-card .ds-heading {
-  font-size: clamp(1.25rem, 2.5vw, 1.625rem); /* Increased from clamp(1rem, 2.5vw, 1.375rem) */
+  font-size: clamp(1.4375rem, 2.5vw, 1.8125rem);
   font-weight: var(--ds-font-weight-bold);
   font-family: var(--ds-font-family-title);
 }
 
 .ds-stats-card .ds-text {
-  font-size: var(--ds-font-size-sm); /* Increased from xs to sm */
+  font-size: var(--ds-font-size-sm);
   color: var(--ds-text-secondary-dark);
 }
 
-/* Badge normalization */
 .ds-badge {
   display: inline-flex;
   align-items: center;
@@ -426,8 +387,6 @@ body {
   border-radius: var(--ds-radius-xl);
   font-family: var(--ds-font-family-body);
   font-weight: var(--ds-font-weight-medium);
-  
-  /* Normalize badges */
   zoom: 1;
   transform: scale(1);
   font-size: var(--ds-font-size-sm);
@@ -443,13 +402,10 @@ body {
   font-size: var(--ds-font-size-sm);
 }
 
-/* Loading States - Using theme colors */
 .ds-skeleton {
   background-color: var(--ds-background-elevated);
   border-radius: var(--ds-radius-md);
   animation: ds-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  
-  /* Normalize loading states */
   zoom: 1;
   transform: scale(1);
 }
@@ -461,13 +417,10 @@ body {
   border-top-color: var(--ds-brand-primary);
   border-radius: 50%;
   animation: ds-spin 1s linear infinite;
-  
-  /* Normalize spinner */
   zoom: 1;
   transform: scale(1);
 }
 
-/* Animations */
 @keyframes ds-pulse {
   0%, 100% {
     opacity: 1;
@@ -483,20 +436,17 @@ body {
   }
 }
 
-/* Responsive Typography Utilities */
 .ds-text-mobile {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
-/* Focus Management */
 .ds-focus-visible:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--ds-brand-primary);
 }
 
-/* Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
   .ds-button,
   .ds-skeleton,
@@ -510,12 +460,10 @@ body {
   }
 }
 
-/* Mobile-specific fixes for zoom issues */
 @media screen and (max-width: 768px) {
   .ds-card-normalize,
   .ds-card,
   .ds-stats-card {
-    /* Force consistent scaling on mobile */
     -webkit-text-size-adjust: 100% !important;
     -moz-text-size-adjust: 100% !important;
     text-size-adjust: 100% !important;
@@ -524,15 +472,15 @@ body {
   }
   
   .ds-heading--hero {
-    font-size: clamp(1.5rem, 4vw, 2.25rem); /* Increased from clamp(1.25rem, 4vw, 2rem) */
+    font-size: clamp(1.6875rem, 4vw, 2.4375rem);
   }
   
   .ds-heading--subhero {
-    font-size: clamp(1.125rem, 2vw, 1.25rem); /* Increased from clamp(0.875rem, 2vw, 1rem) */
+    font-size: clamp(1.3125rem, 2vw, 1.4375rem);
   }
   
   .ds-stats-card .ds-heading {
-    font-size: clamp(1.25rem, 2.5vw, 1.75rem); /* Increased from clamp(1rem, 2.5vw, 1.5rem) */
+    font-size: clamp(1.4375rem, 2.5vw, 1.9375rem);
   }
 }
 
@@ -555,96 +503,93 @@ body {
 
 .seller-profile-container,
 .seller-profile-container * {
-  font-size: 16px !important; /* Increased from 14px */
+  font-size: 19px !important;
 }
 
 .seller-profile-container h1 {
-  font-size: 24px !important; /* Increased from 22px */
+  font-size: 27px !important;
 }
 
 .seller-profile-container h2 {
-  font-size: 20px !important; /* Increased from 18px */
+  font-size: 23px !important;
 }
 
 .seller-profile-container h3 {
-  font-size: 18px !important; /* Increased from 16px */
+  font-size: 21px !important;
 }
 
 .seller-profile-container .text-xl,
 .seller-profile-container .text-2xl {
-  font-size: 20px !important; /* Increased from 18px */
+  font-size: 23px !important;
 }
 
 .seller-profile-container .text-lg {
-  font-size: 18px !important; /* Increased from 16px */
+  font-size: 21px !important;
 }
 
 .seller-profile-container .text-sm {
-  font-size: 15px !important; /* Increased from 13px */
+  font-size: 18px !important;
 }
 
 .seller-profile-container .text-xs {
-  font-size: 14px !important; /* Increased from 12px */
+  font-size: 17px !important;
 }
 
 .seller-profile-container [class*="ds-heading"] {
-  font-size: 18px !important; /* Increased from 16px */
+  font-size: 21px !important;
 }
 
 .seller-profile-container [class*="font-bold"] {
-  font-size: 18px !important; /* Increased from 16px */
+  font-size: 21px !important;
 }
 
-/* Icon sizes - slightly larger */
 .seller-profile-container svg {
-  width: 20px !important; /* Increased from 18px */
-  height: 20px !important; /* Increased from 18px */
+  width: 23px !important;
+  height: 23px !important;
 }
 
 .seller-profile-container .h-4,
 .seller-profile-container .w-4 {
-  height: 18px !important; /* Increased from 16px */
-  width: 18px !important; /* Increased from 16px */
+  height: 21px !important;
+  width: 21px !important;
 }
 
 .seller-profile-container .h-5,
 .seller-profile-container .w-5 {
-  height: 20px !important; /* Increased from 18px */
-  width: 20px !important; /* Increased from 18px */
+  height: 23px !important;
+  width: 23px !important;
 }
 
 .seller-profile-container .h-6,
 .seller-profile-container .w-6 {
-  height: 22px !important; /* Increased from 20px */
-  width: 22px !important; /* Increased from 20px */
+  height: 25px !important;
+  width: 25px !important;
 }
 
-/* Button text */
 .seller-profile-container button {
-  font-size: 16px !important; /* Increased from 14px */
+  font-size: 19px !important;
 }
 
 .seller-profile-container .ds-stats-card [class*="ds-heading"],
 .seller-profile-container .grid .text-white[class*="font-"] {
-  font-size: 20px !important; /* Increased from 18px - Stats numbers larger */
+  font-size: 23px !important;
   font-weight: 700 !important;
 }
 
-/* Padding adjustments for slightly larger text */
 .seller-profile-container .px-3 {
-  padding-left: 10px !important; /* Increased from 8px to 10px */
-  padding-right: 10px !important;
+  padding-left: 13px !important;
+  padding-right: 13px !important;
 }
 
 .seller-profile-container .py-2 {
-  padding-top: 8px !important; /* Increased from 6px to 8px */
-  padding-bottom: 8px !important;
+  padding-top: 11px !important;
+  padding-bottom: 11px !important;
 }
 
 .seller-profile-container .p-5 {
-  padding: 18px !important; /* Increased from 16px to 18px */
+  padding: 21px !important;
 }
 
 .seller-profile-container .p-6 {
-  padding: 20px !important; /* Increased from 18px to 20px */
+  padding: 23px !important;
 }

@@ -103,6 +103,23 @@ class ProductsAPI {
     async verifyProduct(productId, verificationData) {
         return apiClient.post(`v1/products/${productId}/verify`, verificationData)
     }
+
+    // Get filter counts for the explore page
+    async getFilterCounts(params = {}) {
+        const queryParams = new URLSearchParams()
+        
+        // Add filter parameters that don't affect the counts we're fetching
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '' && value !== 'all') {
+                queryParams.append(key, value)
+            }
+        })
+        
+        const queryString = queryParams.toString()
+        const endpoint = queryString ? `v1/products/filter-counts?${queryString}` : 'v1/products/filter-counts'
+        
+        return apiClient.get(endpoint)
+    }
 }
 
 // Create singleton instance
