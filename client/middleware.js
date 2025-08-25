@@ -20,7 +20,7 @@ export function middleware(request) {
     const isAuthenticated = !!(accessToken || authToken)
 
     const isAdminRoute = path.startsWith('/admin')
-    const isSellerRoute = path.startsWith('/seller')
+    const isSellerRoute = path.startsWith('/seller/') // Fixed: Added trailing slash
     const isProtectedRoute = path.startsWith('/protected')
     const isAuthRoute = path === '/signin' || path === '/signup'
     const isHomePage = path === '/'
@@ -70,6 +70,6 @@ export function middleware(request) {
 export const config = {
     matcher: [
         // Match all paths except static files and api routes
-        '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*|test-cart).*)'
+        '/((?!api|_next/static|_next/image|favicon.ico|.*\\.svg|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.ico|.*\\.webp|.*\\.woff|.*\\.woff2|.*\\.ttf|.*\\.otf|.*\\.eot|.*\\.css|.*\\.js|.*\\.json|.*\\.xml|.*\\.txt|test-cart).*)'
     ]
 }

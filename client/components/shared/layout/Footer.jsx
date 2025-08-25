@@ -2,29 +2,10 @@
 export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import Container from './Container'
-import { Twitter, Linkedin, Github, Youtube, Facebook } from 'lucide-react'
+import { SpykeLogo } from '@/components/Logo'
+import { Twitter, Linkedin, Github, Youtube, Facebook, Instagram } from 'lucide-react'
 
 export default function Footer() {
-    // Routes that don't exist yet - disable prefetching to avoid 404 errors
-    const nonExistentRoutes = [
-        '/features',
-        '/pricing',
-        '/api',
-        '/roadmap',
-        '/explore',
-        '/categories',
-        '/sellers',
-        '/new',
-        '/blog',
-        '/guides',
-        '/help',
-        '/community',
-        '/about',
-        '/careers',
-        '/contact',
-        '/press'
-    ]
-
     const footerLinks = {
         Product: [
             { name: 'Features', href: '/features', prefetch: false },
@@ -45,9 +26,9 @@ export default function Footer() {
             { name: 'Community', href: '/community', prefetch: false }
         ],
         Company: [
-            { name: 'About', href: '/about', prefetch: false },
+            { name: 'About Us', href: '/aboutus', prefetch: true },
+            { name: 'Contact Us', href: '/contactus', prefetch: true },
             { name: 'Careers', href: '/careers', prefetch: false },
-            { name: 'Contact', href: '/contact', prefetch: false },
             { name: 'Press Kit', href: '/press', prefetch: false }
         ]
     }
@@ -57,20 +38,26 @@ export default function Footer() {
         { name: 'LinkedIn', icon: Linkedin, href: 'https://www.linkedin.com/company/spykeai/' },
         { name: 'Facebook', icon: Facebook, href: 'https://www.facebook.com/Spykeai/' },
         { name: 'YouTube', icon: Youtube, href: 'https://www.youtube.com/@SpykeAITech' },
-        { name: 'Instagram', icon: Youtube, href: 'https://www.instagram.com/spykeai/' }
+        { name: 'Instagram', icon: Instagram, href: 'https://www.instagram.com/spykeai/' }
     ]
 
     return (
         <>
             <footer className="bg-black text-white border-t border-gray-800">
                 <Container>
-                    <div className="py-12 md:py-16">
-                        <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-12">
+                    <div className="py-6 md:py-8">
+                        <div className="grid grid-cols-2 md:grid-cols-6 gap-6 mb-6">
                             <div className="col-span-2">
                                 <Link
                                     href="/"
-                                    className="flex items-center space-x-2 mb-4">
-                                    <span className="font-league-spartan font-bold text-2xl text-brand-primary">Spyke AI</span>
+                                    className="flex items-center mb-4">
+                                    <SpykeLogo
+                                        sizePreset="lg"
+                                        showText={false}
+                                        darkMode={true}
+                                        priority={false}
+                                        className="hover:scale-105 transition-transform duration-300"
+                                    />
                                 </Link>
                                 <p className="font-kumbh-sans text-gray-400 mb-6 max-w-xs">
                                     The premium marketplace for AI prompts, automation tools, and digital solutions.
@@ -82,6 +69,8 @@ export default function Footer() {
                                             <a
                                                 key={social.name}
                                                 href={social.href}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
                                                 className="p-2 text-gray-400 hover:text-brand-primary bg-white/5 hover:bg-brand-primary/10 rounded-lg transition-all duration-300"
                                                 aria-label={social.name}>
                                                 <Icon className="h-5 w-5" />
@@ -110,24 +99,51 @@ export default function Footer() {
                                 </div>
                             ))}
                         </div>
-                        <div className="pt-8 border-t border-gray-800">
+                        <div className="pt-4 border-t border-gray-800">
                             <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
                                 <p className="font-kumbh-sans text-sm text-gray-400">© {new Date().getFullYear()} Spyke AI. All rights reserved.</p>
                                 <div className="flex flex-wrap justify-center gap-6 text-sm">
                                     <Link
                                         href="/terms"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                         className="font-kumbh-sans text-gray-400 hover:text-brand-primary transition-colors">
-                                        Terms of Service
+                                        Terms & Conditions
                                     </Link>
                                     <Link
-                                        href="/privacy"
+                                        href="/privacy-policy"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                         className="font-kumbh-sans text-gray-400 hover:text-brand-primary transition-colors">
                                         Privacy Policy
                                     </Link>
                                     <Link
-                                        href="/cookies"
+                                        href="/refund-policy"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                         className="font-kumbh-sans text-gray-400 hover:text-brand-primary transition-colors">
-                                        Cookie Policy
+                                        Refund Policy
+                                    </Link>
+                                    <Link
+                                        href="/seller-agreement"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="font-kumbh-sans text-gray-400 hover:text-brand-primary transition-colors">
+                                        Seller Agreement
+                                    </Link>
+                                    <Link
+                                        href="/promotion-policy"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="font-kumbh-sans text-gray-400 hover:text-brand-primary transition-colors">
+                                        Promotion Policy
+                                    </Link>
+                                    <Link
+                                        href="/payment-policy"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="font-kumbh-sans text-gray-400 hover:text-brand-primary transition-colors">
+                                        Payment Policy
                                     </Link>
                                 </div>
                             </div>
