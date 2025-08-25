@@ -322,7 +322,7 @@ export default function ProductSpecs({ product }) {
                         <div className="text-sm text-gray-400">Success Rate</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-400 mb-1">< 2s</div>
+                        <div className="text-2xl font-bold text-blue-400 mb-1"> 2s</div>
                         <div className="text-sm text-gray-400">Avg. Response</div>
                     </div>
                     <div className="text-center">

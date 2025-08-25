@@ -129,7 +129,7 @@ const UserDropdown = forwardRef(({ user, currentRole, isSeller, dropdownOpen, se
                                     </div>
                                     <span className="font-medium">Log out</span>
                                 </div>
-                                <span className="text-xs text-gray-500">⌘Q</span>
+                                
                             </button>
                         </div>
                     </motion.div>

@@ -15,7 +15,8 @@ import {
     CheckCircle,
     Clock,
     Shield,
-    Tag
+    Tag,
+    Star
 } from 'lucide-react'
 
 import { DESIGN_TOKENS, DSHeading, DSText, DSStack, DSBadge } from '@/lib/design-system'
@@ -35,253 +36,214 @@ export default function ProductOverview({ product }) {
             initial="initial"
             animate="animate"
             exit="exit"
-            className="max-w-5xl mx-auto">
+            className="max-w-4xl mx-auto space-y-8">
             
-            {/* Optimized Single-Row Layout - No Overflow */}
-            <div className="space-y-4">
+            {/* Main Description - Minimalist */}
+            <div className="text-center space-y-4">
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-[#00FF89]/10 border border-[#00FF89]/20 flex items-center justify-center">
+                    <BookOpen className="w-8 h-8 text-[#00FF89]" />
+                </div>
                 
-                {/* Main Description - Enhanced Typography */}
-                <div
-                    className="backdrop-blur-sm rounded-xl p-5 border transition-all hover:shadow-md"
-                    style={{
-                        backgroundColor: DESIGN_TOKENS.colors.background.card.dark,
-                        borderColor: '#00FF8940'
-                    }}>
-                    <div className="flex items-start gap-4">
-                        <div 
-                            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform hover:scale-105"
-                            style={{ backgroundColor: '#00FF89' }}>
-                            <BookOpen className="w-5 h-5 text-black" />
-                        </div>
-                        <div className="flex-1 min-w-0">
+                <DSHeading 
+                    level={2} 
+                    className="font-bold"
+                    style={{ color: '#00FF89', fontSize: '2rem' }}>
+                    About This Product
+                </DSHeading>
+                
+                <DSText
+                    className="text-lg leading-relaxed max-w-3xl mx-auto"
+                    style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
+                    {product.fullDescription || product.shortDescription}
+                </DSText>
+            </div>
+
+            {/* Key Information Grid - Clean & Minimal */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                {/* Benefits Section */}
+                {product.benefits && product.benefits.length > 0 && (
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-[#00FF89]/10 flex items-center justify-center">
+                                <Star className="w-4 h-4 text-[#00FF89]" />
+                            </div>
                             <DSHeading 
                                 level={3} 
-                                className="mb-3 font-bold tracking-tight" 
-                                style={{ 
-                                    color: '#00FF89', 
-                                    fontSize: '1.25rem',
-                                    lineHeight: '1.3'
-                                }}>
-                                About This Product
-                            </DSHeading>
-                            <DSText
-                                className="leading-relaxed text-pretty"
-                                style={{ 
-                                    color: DESIGN_TOKENS.colors.text.secondary.dark, 
-                                    fontSize: '0.9rem', 
-                                    lineHeight: '1.6'
-                                }}>
-                                {(product.fullDescription || product.shortDescription)?.slice(0, 280)}
-                                {(product.fullDescription || product.shortDescription)?.length > 280 ? '...' : ''}
-                            </DSText>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Enhanced Three-Column Grid - Responsive & No Overflow */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    
-                    {/* Benefits - Enhanced */}
-                    {product.benefits && product.benefits.length > 0 && (
-                        <div
-                            className="backdrop-blur-sm rounded-xl p-4 border transition-all hover:shadow-md hover:-translate-y-1"
-                            style={{
-                                backgroundColor: DESIGN_TOKENS.colors.background.card.dark,
-                                borderColor: '#FFC05040'
-                            }}>
-                            <div className="flex items-center gap-3 mb-4">
-                                <div 
-                                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform hover:scale-110"
-                                    style={{ backgroundColor: '#FFC050' }}>
-                                    <Target className="w-4 h-4 text-white" />
-                                </div>
-                                <DSHeading 
-                                    level={4} 
-                                    className="font-bold tracking-tight"
-                                    style={{ 
-                                        color: '#FFC050', 
-                                        fontSize: '1rem',
-                                        lineHeight: '1.2'
-                                    }}>
-                                    Key Benefits
-                                </DSHeading>
-                            </div>
-                            <div className="space-y-2.5 max-h-32 overflow-y-auto scrollbar-thin">
-                                {product.benefits.slice(0, 4).map((benefit, index) => (
-                                    <div key={index} className="flex items-start gap-2.5">
-                                        <CheckCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: '#00FF89' }} />
-                                        <DSText 
-                                            className="text-sm leading-tight text-pretty"
-                                            style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
-                                            {benefit.slice(0, 70)}{benefit.length > 70 ? '...' : ''}
-                                        </DSText>
-                                    </div>
-                                ))}
-                                {product.benefits.length > 4 && (
-                                    <DSText 
-                                        className="text-xs text-center pt-2 font-medium" 
-                                        style={{ color: '#FFC050' }}>
-                                        +{product.benefits.length - 4} more benefits
-                                    </DSText>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* What's Included - Enhanced */}
-                    <div
-                        className="backdrop-blur-sm rounded-xl p-4 border transition-all hover:shadow-md hover:-translate-y-1"
-                        style={{
-                            backgroundColor: DESIGN_TOKENS.colors.background.card.dark,
-                            borderColor: '#00FF8940'
-                        }}>
-                        <div className="flex items-center gap-3 mb-4">
-                            <div 
-                                className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform hover:scale-110"
-                                style={{ backgroundColor: '#00FF89' }}>
-                                <Package className="w-4 h-4 text-black" />
-                            </div>
-                            <DSHeading 
-                                level={4} 
-                                className="font-bold tracking-tight"
-                                style={{ 
-                                    color: '#00FF89', 
-                                    fontSize: '1rem',
-                                    lineHeight: '1.2'
-                                }}>
-                                What's Included
-                            </DSHeading>
-                        </div>
-                        <div className="space-y-3">
-                            {[
-                                { icon: Download, text: 'Instant Download', color: '#00FF89' },
-                                { icon: FileText, text: 'Full Documentation', color: '#FFC050' },
-                                { icon: RefreshCw, text: 'Free Updates', color: '#00FF89' },
-                                { icon: MessageSquare, text: '24/7 Support', color: '#FFC050' }
-                            ].map((item, index) => (
-                                <div key={index} className="flex items-center gap-3 group">
-                                    <div 
-                                        className="w-6 h-6 rounded-md flex items-center justify-center transition-all group-hover:scale-110"
-                                        style={{ backgroundColor: `${item.color}20` }}>
-                                        <item.icon className="w-3.5 h-3.5" style={{ color: item.color }} />
-                                    </div>
-                                    <DSText 
-                                        className="text-sm font-medium group-hover:translate-x-0.5 transition-transform" 
-                                        style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
-                                        {item.text}
-                                    </DSText>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Product Details - Enhanced */}
-                    <div
-                        className="backdrop-blur-sm rounded-xl p-4 border transition-all hover:shadow-md hover:-translate-y-1"
-                        style={{
-                            backgroundColor: DESIGN_TOKENS.colors.background.card.dark,
-                            borderColor: '#FFC05040'
-                        }}>
-                        <div className="flex items-center gap-3 mb-4">
-                            <div 
-                                className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform hover:scale-110"
-                                style={{ backgroundColor: '#FFC050' }}>
-                                <Info className="w-4 h-4 text-white" />
-                            </div>
-                            <DSHeading 
-                                level={4} 
-                                className="font-bold tracking-tight"
-                                style={{ 
-                                    color: '#FFC050', 
-                                    fontSize: '1rem',
-                                    lineHeight: '1.2'
-                                }}>
-                                Product Details
+                                className="font-semibold"
+                                style={{ color: '#00FF89', fontSize: '1.25rem' }}>
+                                Key Benefits
                             </DSHeading>
                         </div>
                         
-                        <div className="space-y-3">
-                            {[
-                                { 
-                                    label: 'Category', 
-                                    value: product.category?.replace('_', ' ').charAt(0).toUpperCase() + 
-                                           product.category?.slice(1).replace('_', ' '),
-                                    icon: Target,
-                                    color: '#00FF89'
-                                },
-                                { 
-                                    label: 'Version', 
-                                    value: product.currentVersion || '1.0.0',
-                                    icon: Shield,
-                                    color: '#FFC050'
-                                },
-                                { 
-                                    label: 'Last Updated', 
-                                    value: new Date(product.updatedAt).toLocaleDateString('en-US', {
-                                        month: 'short',
-                                        day: 'numeric',
-                                        year: 'numeric'
-                                    }),
-                                    icon: Clock,
-                                    color: '#00FF89'
-                                }
-                            ].map((detail, index) => (
-                                <div key={index} className="flex items-center justify-between group">
-                                    <div className="flex items-center gap-2">
-                                        <detail.icon className="w-3.5 h-3.5" style={{ color: detail.color }} />
-                                        <DSText 
-                                            className="text-sm font-medium" 
-                                            style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
-                                            {detail.label}
-                                        </DSText>
+                        <div className="space-y-4">
+                            {product.benefits.map((benefit, index) => (
+                                <motion.div
+                                    key={index}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: index * 0.1 }}
+                                    className="flex items-start gap-3 group">
+                                    <div className="w-6 h-6 rounded-full bg-[#00FF89]/10 flex items-center justify-center flex-shrink-0 mt-1">
+                                        <CheckCircle className="w-3 h-3 text-[#00FF89]" />
                                     </div>
                                     <DSText 
-                                        className="text-sm font-bold group-hover:scale-105 transition-transform" 
-                                        style={{ color: detail.color }}>
-                                        {detail.value}
+                                        className="text-sm leading-relaxed group-hover:text-white transition-colors"
+                                        style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
+                                        {benefit}
                                     </DSText>
-                                </div>
+                                </motion.div>
                             ))}
                         </div>
+                    </div>
+                )}
 
-                        {/* Enhanced Compact Tags */}
-                        {product.tags?.length > 0 && (
-                            <div className="mt-4 pt-4 border-t border-opacity-20" style={{ borderColor: '#FFC050' }}>
-                                <DSText 
-                                    className="text-xs font-medium mb-2" 
-                                    style={{ color: DESIGN_TOKENS.colors.text.muted.dark }}>
-                                    Tags
-                                </DSText>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {product.tags.slice(0, 3).map((tag, index) => (
-                                        <span
-                                            key={index}
-                                            className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium transition-all hover:scale-105"
-                                            style={{
-                                                backgroundColor: '#FFC05020',
-                                                color: '#FFC050',
-                                                border: '1px solid #FFC05030'
-                                            }}>
-                                            <Tag className="w-2.5 h-2.5 mr-1" />
-                                            {tag.slice(0, 8)}
-                                        </span>
-                                    ))}
-                                    {product.tags.length > 3 && (
-                                        <span
-                                            className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium"
-                                            style={{
-                                                backgroundColor: '#FFC05015',
-                                                color: '#FFC050'
-                                            }}>
-                                            +{product.tags.length - 3}
-                                        </span>
-                                    )}
+                {/* Product Details */}
+                <div className="space-y-6">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-[#00FF89]/10 flex items-center justify-center">
+                            <Info className="w-4 h-4 text-[#00FF89]" />
+                        </div>
+                        <DSHeading 
+                            level={3} 
+                            className="font-semibold"
+                            style={{ color: '#00FF89', fontSize: '1.25rem' }}>
+                            Details
+                        </DSHeading>
+                    </div>
+                    
+                    <div className="space-y-4">
+                        {[
+                            { 
+                                label: 'Category', 
+                                value: product.category?.replace('_', ' ').charAt(0).toUpperCase() + 
+                                       product.category?.slice(1).replace('_', ' '),
+                                icon: Target
+                            },
+                            { 
+                                label: 'Type', 
+                                value: product.type?.charAt(0).toUpperCase() + product.type?.slice(1),
+                                icon: Package
+                            },
+                            { 
+                                label: 'Version', 
+                                value: product.currentVersion || '1.0.0',
+                                icon: Shield
+                            },
+                            { 
+                                label: 'Last Updated', 
+                                value: new Date(product.updatedAt).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                }),
+                                icon: Clock
+                            }
+                        ].map((detail, index) => (
+                            <motion.div 
+                                key={index} 
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: index * 0.1 + 0.2 }}
+                                className="flex items-center justify-between py-3 border-b border-gray-800/50 last:border-b-0 group">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-6 h-6 rounded-lg bg-[#00FF89]/10 flex items-center justify-center">
+                                        <detail.icon className="w-3 h-3 text-[#00FF89]" />
+                                    </div>
+                                    <DSText 
+                                        className="text-sm font-medium"
+                                        style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
+                                        {detail.label}
+                                    </DSText>
                                 </div>
-                            </div>
-                        )}
+                                <DSText 
+                                    className="text-sm font-semibold group-hover:text-[#00FF89] transition-colors"
+                                    style={{ color: DESIGN_TOKENS.colors.text.primary.dark }}>
+                                    {detail.value}
+                                </DSText>
+                            </motion.div>
+                        ))}
                     </div>
                 </div>
             </div>
+
+            {/* What's Included - Full Width */}
+            <div className="space-y-6">
+                <div className="text-center">
+                    <div className="w-12 h-12 mx-auto rounded-xl bg-[#00FF89]/10 border border-[#00FF89]/20 flex items-center justify-center mb-4">
+                        <Package className="w-6 h-6 text-[#00FF89]" />
+                    </div>
+                    <DSHeading 
+                        level={3} 
+                        className="font-semibold"
+                        style={{ color: '#00FF89', fontSize: '1.5rem' }}>
+                        What You Get
+                    </DSHeading>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {[
+                        { icon: Download, text: 'Instant Download', desc: 'Get immediate access' },
+                        { icon: FileText, text: 'Documentation', desc: 'Complete setup guide' },
+                        { icon: RefreshCw, text: 'Free Updates', desc: 'Lifetime improvements' },
+                        { icon: MessageSquare, text: '24/7 Support', desc: 'Always here to help' }
+                    ].map((item, index) => (
+                        <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.1 + 0.3 }}
+                            className="text-center space-y-3 p-6 rounded-xl border border-gray-800/50 hover:border-[#00FF89]/30 transition-all group hover:bg-[#00FF89]/5">
+                            <div className="w-12 h-12 mx-auto rounded-xl bg-[#00FF89]/10 flex items-center justify-center group-hover:bg-[#00FF89]/20 transition-colors">
+                                <item.icon className="w-6 h-6 text-[#00FF89]" />
+                            </div>
+                            <div>
+                                <DSText 
+                                    className="font-semibold mb-1"
+                                    style={{ color: DESIGN_TOKENS.colors.text.primary.dark }}>
+                                    {item.text}
+                                </DSText>
+                                <DSText 
+                                    className="text-sm"
+                                    style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
+                                    {item.desc}
+                                </DSText>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Tags - Minimalist */}
+            {product.tags?.length > 0 && (
+                <div className="space-y-4">
+                    <div className="text-center">
+                        <DSHeading 
+                            level={4} 
+                            className="font-medium"
+                            style={{ color: '#00FF89', fontSize: '1.125rem' }}>
+                            Related Topics
+                        </DSHeading>
+                    </div>
+                    
+                    <div className="flex flex-wrap justify-center gap-3">
+                        {product.tags.map((tag, index) => (
+                            <Link
+                                key={index}
+                                href={`/explore?tag=${encodeURIComponent(tag)}`}>
+                                <motion.span
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: index * 0.05 }}
+                                    className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium border border-[#00FF89]/20 hover:border-[#00FF89]/50 hover:bg-[#00FF89]/10 transition-all cursor-pointer"
+                                    style={{ color: '#00FF89' }}>
+                                    #{tag}
+                                </motion.span>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
         </motion.div>
     )
 }
