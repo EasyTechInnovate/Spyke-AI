@@ -5,8 +5,6 @@ import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Heart, Share2, ShoppingCart, Download, ThumbsUp, BookOpen, Sparkles, Play, HelpCircle, BarChart3, Package } from 'lucide-react'
 import Link from 'next/link'
-
-// Hooks and utilities
 import { useAuth } from '@/hooks/useAuth'
 import { useCart } from '@/hooks/useCart'
 import { productsAPI, promocodeAPI } from '@/lib/api'
@@ -20,9 +18,7 @@ import { Header } from '@/components/shared/layout'
 import { ErrorBoundary } from 'next/dist/client/components/error-boundary'
 import ProductBreadcrumb from '@/components/product/ProductBreadcrumb'
 import ProductHero from '@/components/product/ProductHero'
-import SellerProfileModal from '@/components/shared/SellerProfileModal'
 
-// Tab configuration with icons and descriptions
 const PRODUCT_TABS = [
     {
         id: 'overview',
@@ -127,7 +123,6 @@ export default function ProductPage() {
     const [isUpvoting, setIsUpvoting] = useState(false)
     const [showCopied, setShowCopied] = useState(false)
     const [showStickyBar, setShowStickyBar] = useState(false)
-    const [showSellerModal, setShowSellerModal] = useState(false)
 
     // Tab state
     const [activeTab, setActiveTab] = useState('overview')
@@ -588,305 +583,29 @@ export default function ProductPage() {
                     {/* Breadcrumb Navigation */}
                     <ProductBreadcrumb product={product} />
 
-                    {/* Product Hero Section - Restore Purchase Section */}
-                    <section className="relative">
-                        <DSContainer
-                            maxWidth="hero"
-                            padding="responsive"
-                            className="relative z-10">
-                            <div className="py-4 lg:py-8">
-                                {/* Mobile Layout */}
-                                <div className="lg:hidden space-y-6">
-                                    <ProductHero
-                                        product={product}
-                                        selectedImage={selectedImage}
-                                        setSelectedImage={setSelectedImage}
-                                        liked={liked}
-                                        upvoted={upvoted}
-                                        isUpvoting={isUpvoting}
-                                        showCopied={showCopied}
-                                        hasPurchased={hasPurchased}
-                                        isOwner={isOwner}
-                                        inCart={inCart}
-                                        discountPercentage={discountPercentage}
-                                        savingsAmount={savingsAmount}
-                                        onAddToCart={handleAddToCart}
-                                        onBuyNow={handleBuyNow}
-                                        onLike={handleLike}
-                                        onUpvote={handleUpvote}
-                                        onDownload={handleDownload}
-                                        onShare={handleShare}
-                                        ctaRef={ctaRef}
-                                    />
-                                </div>
-
-                                {/* Desktop Layout - 3 Column Grid */}
-                                <div className="hidden lg:grid lg:grid-cols-12 gap-8">
-                                    {/* Left: Product Images - 5 columns (smaller) */}
-                                    <div className="lg:col-span-5">
-                                        <div className="space-y-4">
-                                            {/* Main Image */}
-                                            <div className="aspect-square bg-gray-900 rounded-2xl overflow-hidden border border-gray-700/50">
-                                                {product?.images && product.images.length > 0 ? (
-                                                    <img
-                                                        src={product.images[selectedImage] || product.thumbnail}
-                                                        alt={product.title}
-                                                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                                                    />
-                                                ) : product?.thumbnail ? (
-                                                    <img
-                                                        src={product.thumbnail}
-                                                        alt={product.title}
-                                                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full bg-gradient-to-br from-[#00FF89]/20 to-[#FFC050]/20 flex items-center justify-center">
-                                                        <Package className="w-16 h-16 text-[#00FF89]" />
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Thumbnail Gallery */}
-                                            {product?.images && product.images.length > 1 && (
-                                                <div className="grid grid-cols-4 gap-2">
-                                                    {product.images.slice(0, 4).map((image, index) => (
-                                                        <button
-                                                            key={index}
-                                                            onClick={() => setSelectedImage(index)}
-                                                            className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                                                                selectedImage === index
-                                                                    ? 'border-[#00FF89] ring-2 ring-[#00FF89]/30'
-                                                                    : 'border-gray-700/50 hover:border-gray-600/50'
-                                                            }`}>
-                                                            <img
-                                                                src={image}
-                                                                alt={`${product.title} - Image ${index + 1}`}
-                                                                className="w-full h-full object-cover"
-                                                            />
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Right: Product Info & Purchase - 7 columns (larger) */}
-                                    <div className="lg:col-span-7 space-y-6">
-                                        {/* Product Header */}
-                                        <div className="space-y-4">
-                                            {/* Category & Badges */}
-                                            <div className="flex items-center gap-3 flex-wrap">
-                                                <span className="text-xs font-medium text-gray-300 uppercase tracking-wide">
-                                                    {product?.category?.replace('_', ' ')} • {product?.type}
-                                                </span>
-                                                {product?.isVerified && (
-                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-900/30 text-blue-300 border border-blue-800/50">
-                                                        🔒 Verified
-                                                    </span>
-                                                )}
-                                                {discountPercentage > 0 && (
-                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-900/30 text-red-300 border border-red-800/50">
-                                                        {discountPercentage}% OFF
-                                                    </span>
-                                                )}
-                                            </div>
-
-                                            {/* Title */}
-                                            <DSHeading
-                                                level={1}
-                                                className="text-3xl lg:text-4xl font-bold leading-tight"
-                                                style={{ color: DESIGN_TOKENS.colors.text.primary.dark }}>
-                                                {product?.title}
-                                            </DSHeading>
-
-                                            {/* Description */}
-                                            <DSText
-                                                className="text-lg leading-relaxed"
-                                                style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
-                                                {product?.shortDescription}
-                                            </DSText>
-                                        </div>
-
-                                        {/* PURCHASE SECTION - Prominent */}
-                                        <div
-                                            className="bg-gradient-to-br from-gray-900/50 to-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl"
-                                            ref={ctaRef}>
-                                            {/* Pricing - Fixed to Same Line */}
-                                            <div className="flex items-center gap-4 mb-6">
-                                                <div className="relative">
-                                                    <div
-                                                        className="text-4xl font-black tracking-tight"
-                                                        style={{ color: '#00FF89', textShadow: '0 0 20px rgba(0, 255, 137, 0.3)' }}>
-                                                        ${Math.round(product?.price || 0)}
-                                                    </div>
-                                                    <div
-                                                        className="absolute inset-0 -z-10 rounded-lg blur-xl opacity-20"
-                                                        style={{ backgroundColor: '#00FF89' }}
-                                                    />
-                                                </div>
-                                                {product?.originalPrice && product?.originalPrice > product?.price && (
-                                                    <>
-                                                        <div className="text-lg text-gray-400 line-through">${Math.round(product.originalPrice)}</div>
-                                                        <div className="px-2 py-1 bg-[#FF9900]/20 text-[#FF9900] border border-[#FF9900]/50 text-xs font-medium rounded whitespace-nowrap">
-                                                            Save ${Math.round(savingsAmount)}
-                                                        </div>
-                                                    </>
-                                                )}
-                                            </div>
-
-                                            {/* What's Included */}
-                                            <div className="mb-6 p-4 bg-blue-900/10 rounded-lg border border-blue-800/20">
-                                                <div className="text-sm font-medium text-blue-300 mb-3 flex items-center gap-2">
-                                                    <Package className="w-4 h-4" />
-                                                    What's Included:
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <div className="flex items-center gap-2 text-sm text-gray-300">
-                                                        <span className="text-green-400">✓</span>
-                                                        Instant Digital Delivery
-                                                    </div>
-                                                    <div className="flex items-center gap-2 text-sm text-gray-300">
-                                                        <span className="text-green-400">✓</span>
-                                                        Full Documentation & Setup Guide
-                                                    </div>
-                                                    <div className="flex items-center gap-2 text-sm text-gray-300">
-                                                        <span className="text-green-400">✓</span>
-                                                        24/7 Setup Support
-                                                    </div>
-                                                    <div className="flex items-center gap-2 text-sm text-gray-300">
-                                                        <span className="text-green-400">✓</span>
-                                                        Free Updates & Improvements
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Purchase Buttons */}
-                                            <div className="space-y-3">
-                                                {hasPurchased ? (
-                                                    <DSButton
-                                                        variant="primary"
-                                                        onClick={handleDownload}
-                                                        className="w-full py-4 text-lg font-semibold">
-                                                        <Download className="w-5 h-5" />
-                                                        Access Your Product
-                                                    </DSButton>
-                                                ) : isOwner ? (
-                                                    <Link href="/seller/products">
-                                                        <DSButton
-                                                            variant="primary"
-                                                            className="w-full py-4 text-lg font-semibold">
-                                                            Manage Product
-                                                        </DSButton>
-                                                    </Link>
-                                                ) : (
-                                                    <>
-                                                        <DSButton
-                                                            variant="primary"
-                                                            onClick={handleBuyNow}
-                                                            className="w-full py-4 text-lg font-semibold">
-                                                            Buy Now - Get Instant Access
-                                                        </DSButton>
-                                                        <DSButton
-                                                            variant="secondary"
-                                                            onClick={handleAddToCart}
-                                                            disabled={inCart}
-                                                            className="w-full py-3">
-                                                            <ShoppingCart className="w-4 h-4" />
-                                                            {inCart ? 'Already in Cart' : 'Add to Cart'}
-                                                        </DSButton>
-                                                    </>
-                                                )}
-                                            </div>
-
-                                            {/* Trust Indicators */}
-                                            <div className="mt-4 pt-4 border-t border-gray-700/50">
-                                                <div className="flex items-center justify-center gap-6 text-sm text-gray-400">
-                                                    <div className="flex items-center gap-1">
-                                                        <span className="text-green-400">🛡️</span>
-                                                        30-day guarantee
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <span className="text-blue-400">⚡</span>
-                                                        Instant download
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <span className="text-purple-400">💬</span>
-                                                        24/7 support
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Stats */}
-                                        <div className="grid grid-cols-4 gap-4 py-4 bg-gray-900/30 rounded-xl border border-gray-700/50">
-                                            <div className="text-center">
-                                                <div className="text-xl font-bold text-[#00FF89]">{product?.averageRating?.toFixed(1) || '5.0'}</div>
-                                                <div className="text-xs text-gray-400">Rating</div>
-                                            </div>
-                                            <div className="text-center">
-                                                <div className="text-xl font-bold text-[#FFC050]">{product?.sales || 0}</div>
-                                                <div className="text-xs text-gray-400">Sales</div>
-                                            </div>
-                                            <div className="text-center">
-                                                <div className="text-xl font-bold text-[#00FF89]">{product?.views || 0}</div>
-                                                <div className="text-xs text-gray-400">Views</div>
-                                            </div>
-                                            <div className="text-center">
-                                                <div className="text-xl font-bold text-[#FFC050]">{product?.upvotes || 0}</div>
-                                                <div className="text-xs text-gray-400">Upvotes</div>
-                                            </div>
-                                        </div>
-
-                                        {/* Seller Info */}
-                                        <div className="flex items-center gap-4 p-4 bg-gray-900/30 rounded-xl border border-gray-700/50">
-                                            <div className="w-12 h-12 bg-gradient-to-r from-[#00FF89] to-[#FFC050] rounded-full flex items-center justify-center text-black text-lg font-bold">
-                                                {product?.sellerId?.fullName?.[0] || 'S'}
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="font-semibold text-white">{product?.sellerId?.fullName || 'Anonymous Seller'}</div>
-                                                <div className="text-sm text-gray-400">
-                                                    {product?.sellerId?.stats?.totalProducts || 0} products •{' '}
-                                                    {product?.sellerId?.stats?.totalSales || 0} sales
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={() => setShowSellerModal(true)}
-                                                className="px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg text-sm text-gray-300 transition-colors">
-                                                View Profile
-                                            </button>
-                                        </div>
-
-                                        {/* Social Actions */}
-                                        <div className="flex items-center justify-center gap-6 py-4 border-t border-gray-700/50">
-                                            <button
-                                                onClick={handleUpvote}
-                                                disabled={isUpvoting}
-                                                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-800/50 rounded-lg transition-colors">
-                                                <ThumbsUp className={`w-5 h-5 ${upvoted ? 'text-[#00FF89]' : 'text-gray-400'}`} />
-                                                <span className="text-sm text-gray-300">{product?.upvotes || 0}</span>
-                                            </button>
-                                            <button
-                                                onClick={handleLike}
-                                                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-800/50 rounded-lg transition-colors">
-                                                <Heart className={`w-5 h-5 ${liked ? 'text-red-400 fill-current' : 'text-gray-400'}`} />
-                                                <span className="text-sm text-gray-300">{product?.favorites || 0}</span>
-                                            </button>
-                                            <button
-                                                onClick={handleShare}
-                                                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-800/50 rounded-lg transition-colors relative">
-                                                <Share2 className="w-5 h-5 text-gray-400" />
-                                                <span className="text-sm text-gray-300">Share</span>
-                                                {showCopied && (
-                                                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-xs rounded whitespace-nowrap">
-                                                        Copied!
-                                                    </span>
-                                                )}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </DSContainer>
+                    {/* Product Hero Section - Use ProductHero component for all screen sizes */}
+                    <section className="relative -mt-4">
+                        <ProductHero
+                            product={product}
+                            selectedImage={selectedImage}
+                            setSelectedImage={setSelectedImage}
+                            liked={liked}
+                            upvoted={upvoted}
+                            isUpvoting={isUpvoting}
+                            showCopied={showCopied}
+                            hasPurchased={hasPurchased}
+                            isOwner={isOwner}
+                            inCart={inCart}
+                            discountPercentage={discountPercentage}
+                            savingsAmount={savingsAmount}
+                            onAddToCart={handleAddToCart}
+                            onBuyNow={handleBuyNow}
+                            onLike={handleLike}
+                            onUpvote={handleUpvote}
+                            onDownload={handleDownload}
+                            onShare={handleShare}
+                            ctaRef={ctaRef}
+                        />
                     </section>
 
                     {/* Vertical Tabs Section */}
@@ -894,33 +613,32 @@ export default function ProductPage() {
                         <DSContainer
                             maxWidth="hero"
                             padding="responsive">
-                            {/* Mobile: Horizontal Tabs */}
+                            
+                            {/* Mobile: Simple Tab Navigation */}
                             <div className="lg:hidden mb-8">
-                                <div className="bg-gradient-to-r from-gray-900/50 to-gray-800/30 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50">
-                                    <div className="flex overflow-x-auto gap-2 pb-2">
-                                        {PRODUCT_TABS.map((tab) => {
-                                            const IconComponent = tab.icon
-                                            const isActive = activeTab === tab.id
+                                <div className="flex overflow-x-auto gap-2 pb-2 mb-8">
+                                    {PRODUCT_TABS.map((tab) => {
+                                        const IconComponent = tab.icon
+                                        const isActive = activeTab === tab.id
 
-                                            return (
-                                                <button
-                                                    key={tab.id}
-                                                    onClick={() => setActiveTab(tab.id)}
-                                                    className={`flex items-center gap-2 px-4 py-3 rounded-lg whitespace-nowrap transition-all ${
-                                                        isActive
-                                                            ? 'bg-[#00FF89] text-black font-semibold'
-                                                            : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
-                                                    }`}>
-                                                    <IconComponent className="w-4 h-4" />
-                                                    <span className="text-sm">{tab.label}</span>
-                                                </button>
-                                            )
-                                        })}
-                                    </div>
+                                        return (
+                                            <button
+                                                key={tab.id}
+                                                onClick={() => setActiveTab(tab.id)}
+                                                className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
+                                                    isActive
+                                                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                                                        : 'bg-gray-100 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
+                                                }`}>
+                                                <IconComponent className="w-4 h-4" />
+                                                <span className="text-sm font-medium">{tab.label}</span>
+                                            </button>
+                                        )
+                                    })}
                                 </div>
 
                                 {/* Mobile Content */}
-                                <div className="bg-gradient-to-br from-gray-900/30 to-gray-800/20 backdrop-blur-sm rounded-2xl border border-gray-700/50 shadow-xl overflow-hidden">
+                                <div className="bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
                                     <AnimatePresence mode="wait">
                                         <motion.div
                                             key={activeTab}
@@ -936,18 +654,15 @@ export default function ProductPage() {
                                                 if (!ComponentToRender) {
                                                     return (
                                                         <div className="text-center py-12">
-                                                            <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gray-800/50 flex items-center justify-center">
+                                                            <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                                                                 <Package className="w-6 h-6 text-gray-400" />
                                                             </div>
-                                                            <DSHeading
-                                                                level={4}
-                                                                className="mb-2 font-semibold"
-                                                                style={{ color: DESIGN_TOKENS.colors.text.primary.dark }}>
+                                                            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                                                                 Content Coming Soon
-                                                            </DSHeading>
-                                                            <DSText style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
+                                                            </h3>
+                                                            <p className="text-gray-600 dark:text-gray-400">
                                                                 This section will be available soon.
-                                                            </DSText>
+                                                            </p>
                                                         </div>
                                                     )
                                                 }
@@ -959,99 +674,72 @@ export default function ProductPage() {
                                 </div>
                             </div>
 
-                            {/* Desktop: Vertical Tabs Layout */}
-                            <div className="hidden lg:flex gap-8">
-                                {/* Vertical Tab Navigation */}
-                                <div className="w-80 flex-shrink-0">
-                                    <div className="sticky top-24">
-                                        <div className="bg-gradient-to-br from-gray-900/50 to-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 shadow-xl">
-                                            <DSHeading
-                                                level={4}
-                                                className="mb-6 font-bold text-center"
-                                                style={{ color: '#00FF89', fontSize: '1.25rem' }}>
-                                                Product Details
-                                            </DSHeading>
+                            {/* Desktop: Clean Side-by-Side Layout */}
+                            <div className="hidden lg:flex gap-12">
+                                {/* Simple Tab Navigation */}
+                                <div className="w-64 flex-shrink-0">
+                                    <div className="sticky top-24 space-y-2">
+                                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-6">
+                                            Product Information
+                                        </h3>
+                                        
+                                        <nav className="space-y-1">
+                                            {PRODUCT_TABS.map((tab) => {
+                                                const IconComponent = tab.icon
+                                                const isActive = activeTab === tab.id
 
-                                            <nav className="space-y-2">
-                                                {PRODUCT_TABS.map((tab) => {
-                                                    const IconComponent = tab.icon
-                                                    const isActive = activeTab === tab.id
-
-                                                    return (
-                                                        <motion.button
-                                                            key={tab.id}
-                                                            onClick={() => setActiveTab(tab.id)}
-                                                            whileHover={{ scale: 1.02 }}
-                                                            whileTap={{ scale: 0.98 }}
-                                                            className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all duration-300 text-left group ${
-                                                                isActive
-                                                                    ? 'bg-gradient-to-r from-[#00FF89]/20 to-[#FFC050]/20 border-2 border-[#00FF89]/50 shadow-lg'
-                                                                    : 'bg-gray-800/30 border border-gray-700/50 hover:bg-gray-700/40 hover:border-gray-600/50'
-                                                            }`}>
-                                                            <div
-                                                                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
-                                                                    isActive
-                                                                        ? 'bg-[#00FF89] text-black shadow-lg'
-                                                                        : 'bg-gray-700/50 text-gray-300 group-hover:bg-gray-600/50'
-                                                                }`}>
-                                                                <IconComponent className="w-5 h-5" />
+                                                return (
+                                                    <button
+                                                        key={tab.id}
+                                                        onClick={() => setActiveTab(tab.id)}
+                                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left ${
+                                                            isActive
+                                                                ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                                                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-white'
+                                                        }`}>
+                                                        <IconComponent className="w-5 h-5" />
+                                                        <div>
+                                                            <div className="font-medium text-sm">
+                                                                {tab.label}
                                                             </div>
-
-                                                            <div className="flex-1 min-w-0">
-                                                                <div
-                                                                    className={`font-semibold text-sm transition-colors ${
-                                                                        isActive ? 'text-[#00FF89]' : 'text-gray-200 group-hover:text-white'
-                                                                    }`}>
-                                                                    {tab.label}
-                                                                </div>
-                                                                <div
-                                                                    className={`text-xs mt-0.5 transition-colors ${
-                                                                        isActive ? 'text-gray-300' : 'text-gray-500 group-hover:text-gray-400'
-                                                                    }`}>
-                                                                    {tab.description}
-                                                                </div>
+                                                            <div className="text-xs opacity-75 mt-0.5">
+                                                                {tab.description}
                                                             </div>
+                                                        </div>
+                                                    </button>
+                                                )
+                                            })}
+                                        </nav>
 
-                                                            {isActive && (
-                                                                <motion.div
-                                                                    layoutId="activeTabIndicator"
-                                                                    className="w-1 h-8 bg-[#00FF89] rounded-full shadow-lg"
-                                                                />
-                                                            )}
-                                                        </motion.button>
-                                                    )
-                                                })}
-                                            </nav>
-
-                                            {/* Tab Content Stats */}
-                                            <div className="mt-6 pt-6 border-t border-gray-700/50">
-                                                <div className="text-center space-y-2">
-                                                    <DSText className="text-xs font-medium text-gray-400">Product Information</DSText>
-                                                    <div className="flex items-center justify-center gap-4">
-                                                        <div className="text-center">
-                                                            <div className="text-lg font-bold text-[#00FF89]">
-                                                                {product?.averageRating?.toFixed(1) || '5.0'}
-                                                            </div>
-                                                            <div className="text-xs text-gray-500">Rating</div>
-                                                        </div>
-                                                        <div className="text-center">
-                                                            <div className="text-lg font-bold text-[#FFC050]">{product?.views || 0}</div>
-                                                            <div className="text-xs text-gray-500">Views</div>
-                                                        </div>
-                                                        <div className="text-center">
-                                                            <div className="text-lg font-bold text-[#00FF89]">{product?.sales || 0}</div>
-                                                            <div className="text-xs text-gray-500">Sales</div>
-                                                        </div>
+                                        {/* Simple Stats */}
+                                        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                                            <div className="grid grid-cols-1 gap-3">
+                                                <div className="text-center py-2">
+                                                    <div className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">
+                                                        {product?.averageRating?.toFixed(1) || '5.0'}
                                                     </div>
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">Rating</div>
+                                                </div>
+                                                <div className="text-center py-2">
+                                                    <div className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                                                        {product?.views || 0}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">Views</div>
+                                                </div>
+                                                <div className="text-center py-2">
+                                                    <div className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">
+                                                        {product?.sales || 0}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">Sales</div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Tab Content Area */}
+                                {/* Clean Content Area */}
                                 <div className="flex-1 min-w-0">
-                                    <div className="bg-gradient-to-br from-gray-900/30 to-gray-800/20 backdrop-blur-sm rounded-2xl border border-gray-700/50 shadow-xl overflow-hidden">
+                                    <div className="bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
                                         <AnimatePresence mode="wait">
                                             <motion.div
                                                 key={activeTab}
@@ -1067,18 +755,15 @@ export default function ProductPage() {
                                                     if (!ComponentToRender) {
                                                         return (
                                                             <div className="text-center py-12">
-                                                                <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gray-800/50 flex items-center justify-center">
+                                                                <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                                                                     <Package className="w-6 h-6 text-gray-400" />
                                                                 </div>
-                                                                <DSHeading
-                                                                    level={4}
-                                                                    className="mb-2 font-semibold"
-                                                                    style={{ color: DESIGN_TOKENS.colors.text.primary.dark }}>
+                                                                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                                                                     Content Coming Soon
-                                                                </DSHeading>
-                                                                <DSText style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
+                                                                </h3>
+                                                                <p className="text-gray-600 dark:text-gray-400">
                                                                     This section will be available soon.
-                                                                </DSText>
+                                                                </p>
                                                             </div>
                                                         )
                                                     }
@@ -1093,15 +778,6 @@ export default function ProductPage() {
                         </DSContainer>
                     </section>
                 </main>
-
-                {/* Seller Profile Modal */}
-                <SellerProfileModal
-                    isOpen={showSellerModal}
-                    onClose={() => setShowSellerModal(false)}
-                    sellerId={product?.sellerId?._id || product?.sellerId?.id || product?.sellerId}
-                    sellerName={product?.sellerId?.fullName || product?.sellerName}
-                    sellerData={product?.sellerId ? getSafeSellerData(product.sellerId) : null}
-                />
 
                 {/* Sticky Purchase Bar */}
                 <AnimatePresence>
@@ -1174,50 +850,8 @@ export default function ProductPage() {
                         </motion.div>
                     )}
                 </AnimatePresence>
-
-                {/* Mobile Tab Content */}
-                <div className="lg:hidden">
-                    <div className="bg-gradient-to-br from-gray-900/30 to-gray-800/20 backdrop-blur-sm rounded-2xl border border-gray-700/50 shadow-xl overflow-hidden mx-4">
-                        <AnimatePresence mode="wait">
-                            <motion.div
-                                key={activeTab}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 0.3, ease: 'easeInOut' }}
-                                className="p-6">
-                                {(() => {
-                                    const activeTabConfig = PRODUCT_TABS.find((tab) => tab.id === activeTab)
-                                    const ComponentToRender = activeTabConfig?.component
-
-                                    if (!ComponentToRender) {
-                                        return (
-                                            <div className="text-center py-12">
-                                                <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gray-800/50 flex items-center justify-center">
-                                                    <Package className="w-6 h-6 text-gray-400" />
-                                                </div>
-                                                <DSHeading
-                                                    level={4}
-                                                    className="mb-2 font-semibold"
-                                                    style={{ color: DESIGN_TOKENS.colors.text.primary.dark }}>
-                                                    Content Coming Soon
-                                                </DSHeading>
-                                                <DSText style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
-                                                    This section will be available soon.
-                                                </DSText>
-                                            </div>
-                                        )
-                                    }
-
-                                    return <ComponentToRender product={product} />
-                                })()}
-                            </motion.div>
-                        </AnimatePresence>
-                    </div>
-                </div>
             </div>
         </ErrorBoundary>
     )
 }
-
 

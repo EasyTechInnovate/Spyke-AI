@@ -60,6 +60,9 @@ export const DSHeading = ({
   const Tag = `h${level}`
   const variantConfig = COMPONENT_VARIANTS.text[variant] || {}
   
+  // Check if className contains color-related classes
+  const hasColorClass = className.includes('text-') || className.includes('color-')
+  
   const styles = {
     fontSize: variantConfig.fontSize || getToken('typography.fontSize.4xl'),
     lineHeight: variantConfig.lineHeight || getToken('typography.lineHeight.tight'),
@@ -67,7 +70,8 @@ export const DSHeading = ({
     fontWeight: variantConfig.fontWeight || getToken('typography.fontWeight.bold'),
     fontFamily: variantConfig.fontFamily || getToken('typography.fontFamily.title'),
     margin: 0,
-    color: 'inherit'
+    // Only set color to inherit if no color class is provided
+    ...(hasColorClass ? {} : { color: 'inherit' })
   }
 
   return (

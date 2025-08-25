@@ -77,15 +77,8 @@ function BackgroundEffects() {
 
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         
-        // Add subtle background gradient
-        const gradient = ctx.createRadialGradient(
-          canvas.width / 2, canvas.height / 2, 0,
-          canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height)
-        )
-        gradient.addColorStop(0, 'rgba(0, 15, 30, 0.1)')
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.05)')
-        ctx.fillStyle = gradient
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        // Remove the blue background gradient - keep canvas transparent
+        // No background gradient applied to keep it transparent
 
         particlesRef.current.forEach((particle, index) => {
           // Update position with mouse interaction
@@ -138,13 +131,13 @@ function BackgroundEffects() {
           ctx.globalAlpha = particle.opacity
 
           if (particle.type === 'glow') {
-            // Glowing effect
+            // Glowing effect - using green tones instead of blue
             const gradient = ctx.createRadialGradient(
               particle.x, particle.y, 0,
               particle.x, particle.y, pulseSize * 2
             )
-            gradient.addColorStop(0, particle.color)
-            gradient.addColorStop(0.5, particle.color.replace(/[\d\.]+\)$/g, '0.05)'))
+            gradient.addColorStop(0, 'rgba(0, 255, 137, 0.3)')
+            gradient.addColorStop(0.5, 'rgba(0, 255, 137, 0.05)')
             gradient.addColorStop(1, 'transparent')
             ctx.fillStyle = gradient
             ctx.beginPath()
@@ -157,7 +150,7 @@ function BackgroundEffects() {
           ctx.arc(particle.x, particle.y, pulseSize, 0, Math.PI * 2)
           ctx.fill()
 
-          // Connect nearby particles (reduced distance for performance)
+          // Connect nearby particles (reduced distance for performance) - using green instead of blue
           particlesRef.current.slice(index + 1).forEach(otherParticle => {
             const distance = Math.sqrt(
               Math.pow(particle.x - otherParticle.x, 2) + 
@@ -167,7 +160,7 @@ function BackgroundEffects() {
             if (distance < 80) {
               const lineOpacity = (80 - distance) / 80 * 0.2
               ctx.globalAlpha = lineOpacity
-              ctx.strokeStyle = `rgba(100, 200, 255, ${lineOpacity})`
+              ctx.strokeStyle = `rgba(0, 255, 137, ${lineOpacity})`
               ctx.lineWidth = 0.5
               ctx.beginPath()
               ctx.moveTo(particle.x, particle.y)
@@ -204,21 +197,18 @@ function BackgroundEffects() {
   
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none">
-      {/* Enhanced gradient overlays */}
-      <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black" />
-      <div className="absolute inset-0 bg-gradient-to-t from-transparent via-brand-primary/3 to-transparent" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-purple-500/2 to-transparent" />
+      {/* Remove all gradient overlays - keep background completely transparent */}
       
       {/* Animated canvas */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 mix-blend-screen opacity-60"
+        className="absolute inset-0 mix-blend-screen opacity-10"
         style={{ willChange: 'auto' }}
       />
 
-      {/* Floating geometric shapes with fixed classes */}
+      {/* Floating geometric shapes with fixed classes - reduced opacity */}
       <div className="absolute inset-0 overflow-hidden">
-        {[...Array(6)].map((_, i) => (
+        {[...Array(3)].map((_, i) => (
           <motion.div
             key={i}
             className="absolute"
@@ -239,72 +229,16 @@ function BackgroundEffects() {
             }}
           >
             <div
-              className={`${shapeClasses[i % shapeClasses.length]} border border-brand-primary/8 rounded-full blur-sm opacity-40`}
+              className={`${shapeClasses[i % shapeClasses.length]} border border-gray-200/5 rounded-full blur-sm opacity-5`}
               style={{
-                background: `linear-gradient(45deg, transparent, rgba(100, 200, 255, 0.05))`,
+                background: `transparent`,
               }}
             />
           </motion.div>
         ))}
       </div>
 
-      {/* Enhanced light beams */}
-      <div className="absolute inset-0">
-        <motion.div
-          className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-brand-primary/15 via-transparent to-transparent transform -rotate-12 opacity-50"
-          animate={{
-            opacity: [0.2, 0.5, 0.2],
-            scaleY: [1, 1.1, 1],
-          }}
-          transition={{
-            duration: 6,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-        <motion.div
-          className="absolute top-0 right-1/3 w-px h-full bg-gradient-to-b from-purple-400/10 via-transparent to-transparent transform rotate-12 opacity-50"
-          animate={{
-            opacity: [0.1, 0.4, 0.1],
-            scaleY: [1, 1.2, 1],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 2
-          }}
-        />
-      </div>
-
-      {/* Pulsing orbs with fixed positioning */}
-      <div className="absolute inset-0 overflow-hidden">
-        {[...Array(3)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute rounded-full blur-xl opacity-30"
-            style={{
-              left: `${25 + i * 25}%`,
-              top: `${30 + i * 15}%`,
-              width: '150px',
-              height: '150px',
-              background: `radial-gradient(circle, rgba(100, 200, 255, 0.08) 0%, transparent 70%)`,
-            }}
-            animate={{
-              scale: [1, 1.1, 1],
-              opacity: [0.2, 0.4, 0.2],
-              x: [0, 15, 0],
-              y: [0, -10, 0],
-            }}
-            transition={{
-              duration: 10 + i * 2,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: i * 3
-            }}
-          />
-        ))}
-      </div>
+      {/* Remove all light beams to eliminate blue tints */}
     </div>
   )
 }

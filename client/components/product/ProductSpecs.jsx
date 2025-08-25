@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import React from 'react'
+import { motion } from 'framer-motion'
 import { 
     Cpu, 
     Zap, 
@@ -13,236 +13,105 @@ import {
     Shield,
     Layers,
     Sparkles,
-    ChevronRight,
     Info,
-    CheckCircle,
-    AlertTriangle,
-    Rocket
+    Eye,
+    Heart,
+    ThumbsUp,
+    Package,
+    Users,
+    Calendar
 } from 'lucide-react'
 
-const specIcons = {
-    performance: Zap,
-    accuracy: Target,
-    speed: Rocket,
-    compatibility: Shield,
-    complexity: Layers,
-    features: Sparkles,
-    rating: Star,
-    usage: TrendingUp,
-    data: Database,
-    processing: Cpu,
-    time: Clock,
-    default: Info
-}
-
-const specColors = {
-    performance: 'from-yellow-500/20 to-orange-500/20 border-yellow-500/30',
-    accuracy: 'from-green-500/20 to-emerald-500/20 border-green-500/30',
-    speed: 'from-blue-500/20 to-cyan-500/20 border-blue-500/30',
-    compatibility: 'from-purple-500/20 to-pink-500/20 border-purple-500/30',
-    complexity: 'from-red-500/20 to-orange-500/20 border-red-500/30',
-    features: 'from-indigo-500/20 to-purple-500/20 border-indigo-500/30',
-    rating: 'from-amber-500/20 to-yellow-500/20 border-amber-500/30',
-    usage: 'from-cyan-500/20 to-blue-500/20 border-cyan-500/30',
-    data: 'from-gray-500/20 to-slate-500/20 border-gray-500/30',
-    processing: 'from-emerald-500/20 to-teal-500/20 border-emerald-500/30',
-    time: 'from-pink-500/20 to-rose-500/20 border-pink-500/30',
-    default: 'from-gray-500/20 to-gray-600/20 border-gray-500/30'
-}
-
 export default function ProductSpecs({ product }) {
-    const [selectedSpec, setSelectedSpec] = useState(null)
-    const [hoveredSpec, setHoveredSpec] = useState(null)
+    if (!product) return null
 
-    // Enhanced specs with detailed information
+    // Build specs from actual API data
     const specs = [
         {
-            id: 'type',
             label: 'Product Type',
-            value: product?.type || 'AI Tool',
-            type: 'features',
-            description: 'Category and classification of this AI product',
-            details: `This is a ${product?.type || 'AI Tool'} designed for enhanced productivity and automation.`
+            value: product.type?.charAt(0).toUpperCase() + product.type?.slice(1) || 'AI Tool',
+            icon: Sparkles
         },
         {
-            id: 'performance',
-            label: 'Performance Score',
-            value: '9.5/10',
-            type: 'performance',
-            description: 'Overall performance rating based on user feedback',
-            details: 'High-performance AI system with optimized algorithms for maximum efficiency.'
+            label: 'Category',
+            value: product.category?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Not specified',
+            icon: Layers
         },
         {
-            id: 'accuracy',
-            label: 'Accuracy Rate',
-            value: '98.5%',
-            type: 'accuracy',
-            description: 'Success rate in delivering expected results',
-            details: 'Consistently delivers accurate results with minimal error rates.'
+            label: 'Industry',
+            value: product.industry?.toUpperCase() || 'General',
+            icon: Target
         },
         {
-            id: 'speed',
-            label: 'Processing Speed',
-            value: '< 2s',
-            type: 'speed',
-            description: 'Average response time for processing requests',
-            details: 'Lightning-fast processing with sub-2 second response times.'
+            label: 'Setup Time',
+            value: product.setupTime?.replace('_', ' ') || 'Not specified',
+            icon: Clock
         },
         {
-            id: 'compatibility',
-            label: 'Platform Support',
-            value: 'Universal',
-            type: 'compatibility',
-            description: 'Compatible platforms and integrations',
-            details: 'Works seamlessly across all major platforms and systems.'
+            label: 'Current Version',
+            value: `v${product.currentVersion}` || 'v1.0.0',
+            icon: Package
         },
         {
-            id: 'complexity',
-            label: 'Complexity Level',
-            value: product?.difficulty || 'Intermediate',
-            type: 'complexity',
-            description: 'Required skill level for optimal usage',
-            details: 'Designed for users with intermediate technical knowledge.'
+            label: 'Views',
+            value: product.views?.toLocaleString() || '0',
+            icon: Eye
         },
         {
-            id: 'features',
-            label: 'Key Features',
-            value: `${product?.features?.length || 5}+ Features`,
-            type: 'features',
-            description: 'Number of included features and capabilities',
-            details: 'Comprehensive feature set covering all essential use cases.'
+            label: 'Sales',
+            value: product.sales?.toLocaleString() || '0',
+            icon: TrendingUp
         },
         {
-            id: 'rating',
             label: 'User Rating',
-            value: `${product?.rating || 4.8}/5.0`,
-            type: 'rating',
-            description: 'Average user satisfaction rating',
-            details: 'Highly rated by users for quality and effectiveness.'
+            value: product.averageRating > 0 ? `${product.averageRating}/5.0` : 'New Product',
+            icon: Star
         }
     ]
 
     return (
-        <div className="space-y-8">
+        <div className="max-w-3xl mx-auto space-y-8">
+            
             {/* Header */}
-            <div className="text-center">
-                <motion.h2 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                    className="text-3xl font-bold text-white mb-4"
-                >
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center space-y-3">
+                
+                <h2 className="text-xl font-medium text-[#121212] dark:text-[#00FF89]">
                     Technical Specifications
-                </motion.h2>
-                <motion.p 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.1 }}
-                    className="text-gray-400 text-lg max-w-2xl mx-auto"
-                >
+                </h2>
+                
+                <p className="text-base text-[#6b7280] dark:text-[#9ca3af]">
                     Detailed technical information and performance metrics
-                </motion.p>
-            </div>
+                </p>
+            </motion.div>
 
-            {/* Specs Grid - Bento Layout */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Specs Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {specs.map((spec, index) => {
-                    const IconComponent = specIcons[spec.type] || specIcons.default
-                    const colorClass = specColors[spec.type] || specColors.default
-                    const isSelected = selectedSpec === spec.id
-                    const isHovered = hoveredSpec === spec.id
-
+                    const IconComponent = spec.icon
+                    
                     return (
                         <motion.div
-                            key={spec.id}
+                            key={index}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: index * 0.1 }}
-                            className={`relative group cursor-pointer ${
-                                index === 0 || index === 3 ? 'md:col-span-2' : ''
-                            }`}
-                            onMouseEnter={() => setHoveredSpec(spec.id)}
-                            onMouseLeave={() => setHoveredSpec(null)}
-                            onClick={() => setSelectedSpec(isSelected ? null : spec.id)}
-                        >
-                            <div className={`
-                                relative p-6 rounded-2xl border backdrop-blur-xl transition-all duration-500
-                                bg-gradient-to-br ${colorClass}
-                                ${isHovered ? 'transform scale-105 shadow-2xl' : 'shadow-lg'}
-                                ${isSelected ? 'ring-2 ring-white/30' : ''}
-                            `}>
-                                {/* Background Pattern */}
-                                <div className="absolute inset-0 rounded-2xl overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl transform translate-x-16 -translate-y-16" />
-                                    <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full blur-2xl transform -translate-x-10 translate-y-10" />
+                            transition={{ delay: index * 0.1 + 0.1 }}
+                            className="bg-gray-50 dark:bg-[#1f1f1f] rounded-lg p-6 hover:bg-gray-100 dark:hover:bg-[#1f1f1f]/80 transition-colors">
+                            
+                            <div className="flex items-start gap-4">
+                                <div className="flex-shrink-0 w-10 h-10 bg-[#00FF89]/10 rounded-lg flex items-center justify-center">
+                                    <IconComponent className="w-5 h-5 text-[#00FF89]" />
                                 </div>
-
-                                {/* Content */}
-                                <div className="relative z-10">
-                                    {/* Header */}
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 rounded-xl bg-white/10 backdrop-blur">
-                                                <IconComponent className="w-5 h-5 text-white" />
-                                            </div>
-                                            <h3 className="font-semibold text-white text-sm">
-                                                {spec.label}
-                                            </h3>
-                                        </div>
-                                        <motion.div
-                                            animate={{ rotate: isHovered ? 90 : 0 }}
-                                            transition={{ duration: 0.3 }}
-                                        >
-                                            <ChevronRight className="w-4 h-4 text-white/60" />
-                                        </motion.div>
-                                    </div>
-
-                                    {/* Value */}
-                                    <div className="mb-3">
-                                        <div className="text-2xl font-bold text-white mb-1">
-                                            {spec.value}
-                                        </div>
-                                        <p className="text-sm text-white/70 leading-relaxed">
-                                            {spec.description}
-                                        </p>
-                                    </div>
-
-                                    {/* Progress Bar for Performance Metrics */}
-                                    {(spec.type === 'performance' || spec.type === 'accuracy') && (
-                                        <div className="mt-4">
-                                            <div className="flex justify-between text-xs text-white/60 mb-2">
-                                                <span>Performance</span>
-                                                <span>{spec.value}</span>
-                                            </div>
-                                            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                                                <motion.div
-                                                    initial={{ width: 0 }}
-                                                    animate={{ width: `${parseFloat(spec.value) * 10}%` }}
-                                                    transition={{ duration: 1, delay: index * 0.1 }}
-                                                    className="h-full bg-gradient-to-r from-green-400 to-blue-500 rounded-full"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Hover Overlay */}
-                                    <AnimatePresence>
-                                        {isHovered && (
-                                            <motion.div
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                exit={{ opacity: 0 }}
-                                                className="absolute inset-0 bg-white/5 rounded-2xl backdrop-blur-sm flex items-center justify-center"
-                                            >
-                                                <div className="text-center p-4">
-                                                    <Info className="w-8 h-8 text-white/80 mx-auto mb-2" />
-                                                    <p className="text-sm text-white/90 font-medium">
-                                                        Click for details
-                                                    </p>
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
+                                
+                                <div className="flex-1">
+                                    <h3 className="font-medium text-[#121212] dark:text-[#00FF89] mb-1">
+                                        {spec.label}
+                                    </h3>
+                                    <p className="text-lg font-semibold text-[#00FF89]">
+                                        {spec.value}
+                                    </p>
                                 </div>
                             </div>
                         </motion.div>
@@ -250,91 +119,137 @@ export default function ProductSpecs({ product }) {
                 })}
             </div>
 
-            {/* Detailed View Modal */}
-            <AnimatePresence>
-                {selectedSpec && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-                        onClick={() => setSelectedSpec(null)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 max-w-md w-full border border-white/10 shadow-2xl"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            {(() => {
-                                const spec = specs.find(s => s.id === selectedSpec)
-                                const IconComponent = specIcons[spec?.type] || specIcons.default
-                                const colorClass = specColors[spec?.type] || specColors.default
-
-                                return (
-                                    <div className="text-center">
-                                        <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${colorClass} mb-6`}>
-                                            <IconComponent className="w-8 h-8 text-white" />
+            {/* Tools & Technologies */}
+            {product.toolsUsed && product.toolsUsed.length > 0 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.9 }}
+                    className="space-y-4">
+                    
+                    <h3 className="text-lg font-medium text-[#121212] dark:text-[#00FF89]">
+                        Technologies Used
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {product.toolsUsed.map((tool, index) => (
+                            <motion.div
+                                key={index}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.1 * index + 1.0 }}
+                                className="bg-gray-50 dark:bg-[#1f1f1f] rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-[#1f1f1f]/80 transition-colors">
+                                
+                                <div className="flex items-center gap-3">
+                                    <img 
+                                        src={tool.logo} 
+                                        alt={tool.name}
+                                        className="w-8 h-8 object-contain"
+                                        onError={(e) => {
+                                            e.target.style.display = 'none'
+                                        }}
+                                    />
+                                    <div>
+                                        <div className="font-medium text-[#121212] dark:text-[#00FF89] text-sm">
+                                            {tool.name}
                                         </div>
-                                        
-                                        <h3 className="text-2xl font-bold text-white mb-2">
-                                            {spec?.label}
-                                        </h3>
-                                        
-                                        <div className="text-3xl font-bold text-white mb-4">
-                                            {spec?.value}
-                                        </div>
-                                        
-                                        <p className="text-gray-300 leading-relaxed mb-6">
-                                            {spec?.details}
-                                        </p>
-
-                                        <div className="flex items-center justify-center gap-2 text-green-400 mb-6">
-                                            <CheckCircle className="w-5 h-5" />
-                                            <span className="text-sm font-medium">Verified Specification</span>
-                                        </div>
-
-                                        <button
-                                            onClick={() => setSelectedSpec(null)}
-                                            className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-white font-medium transition-colors"
-                                        >
-                                            Close Details
-                                        </button>
+                                        {tool.model && (
+                                            <div className="text-xs text-[#6b7280] dark:text-[#9ca3af]">
+                                                {tool.model}
+                                            </div>
+                                        )}
                                     </div>
-                                )
-                            })()}
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </motion.div>
+            )}
 
-            {/* Summary Stats */}
+            {/* Performance Summary */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.8 }}
-                className="bg-gradient-to-r from-gray-900/60 to-gray-800/60 rounded-2xl p-6 border border-white/10 backdrop-blur-xl"
-            >
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    <div className="text-center">
-                        <div className="text-2xl font-bold text-green-400 mb-1">98.5%</div>
-                        <div className="text-sm text-gray-400">Success Rate</div>
-                    </div>
-                    <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-400 mb-1"> 2s</div>
-                        <div className="text-sm text-gray-400">Avg. Response</div>
-                    </div>
-                    <div className="text-center">
-                        <div className="text-2xl font-bold text-purple-400 mb-1">24/7</div>
-                        <div className="text-sm text-gray-400">Availability</div>
-                    </div>
-                    <div className="text-center">
-                        <div className="text-2xl font-bold text-yellow-400 mb-1">99.9%</div>
-                        <div className="text-sm text-gray-400">Uptime</div>
+                transition={{ delay: 1.2 }}
+                className="bg-[#00FF89]/5 dark:bg-[#00FF89]/10 rounded-lg p-6 border border-[#00FF89]/20 dark:border-[#00FF89]/30">
+                
+                <div className="text-center space-y-4">
+                    <h3 className="text-lg font-medium text-[#121212] dark:text-[#00FF89]">
+                        Product Statistics
+                    </h3>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="text-center">
+                            <div className="text-xl font-bold text-[#00FF89]">{product.views || 0}</div>
+                            <div className="text-sm text-[#6b7280] dark:text-[#9ca3af]">Views</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-xl font-bold text-[#00FF89]">{product.sales || 0}</div>
+                            <div className="text-sm text-[#6b7280] dark:text-[#9ca3af]">Sales</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-xl font-bold text-[#00FF89]">{product.upvotes || 0}</div>
+                            <div className="text-sm text-[#6b7280] dark:text-[#9ca3af]">Upvotes</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-xl font-bold text-[#00FF89]">{product.favorites || 0}</div>
+                            <div className="text-sm text-[#6b7280] dark:text-[#9ca3af]">Favorites</div>
+                        </div>
                     </div>
                 </div>
             </motion.div>
+
+            {/* Additional Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                {/* Verification Status */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.3 }}
+                    className={`p-4 rounded-lg border ${
+                        product.isVerified 
+                            ? 'bg-[#00FF89]/5 dark:bg-[#00FF89]/10 border-[#00FF89]/20 dark:border-[#00FF89]/30'
+                            : 'bg-gray-50 dark:bg-[#1f1f1f] border-gray-200 dark:border-gray-700'
+                    }`}>
+                    
+                    <div className="flex items-center gap-3">
+                        <Shield className={`w-5 h-5 ${product.isVerified ? 'text-[#00FF89]' : 'text-[#6b7280] dark:text-[#9ca3af]'}`} />
+                        <div>
+                            <div className="font-medium text-[#121212] dark:text-[#00FF89] text-sm">
+                                Verification Status
+                            </div>
+                            <div className="text-sm text-[#6b7280] dark:text-[#9ca3af]">
+                                {product.isVerified ? 'Verified Product' : 'Pending Verification'}
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* Testing Status */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.4 }}
+                    className={`p-4 rounded-lg border ${
+                        product.isTested 
+                            ? 'bg-[#00FF89]/5 dark:bg-[#00FF89]/10 border-[#00FF89]/20 dark:border-[#00FF89]/30'
+                            : 'bg-gray-50 dark:bg-[#1f1f1f] border-gray-200 dark:border-gray-700'
+                    }`}>
+                    
+                    <div className="flex items-center gap-3">
+                        <Zap className={`w-5 h-5 ${product.isTested ? 'text-[#00FF89]' : 'text-[#6b7280] dark:text-[#9ca3af]'}`} />
+                        <div>
+                            <div className="font-medium text-[#121212] dark:text-[#00FF89] text-sm">
+                                Testing Status
+                            </div>
+                            <div className="text-sm text-[#6b7280] dark:text-[#9ca3af]">
+                                {product.isTested ? 'Fully Tested' : 'Testing in Progress'}
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+            </div>
         </div>
     )
 }

@@ -4,20 +4,12 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { Sparkles, Zap, Star, Rocket, Shield, Target, CheckCircle, ArrowRight } from 'lucide-react'
 
-import { DESIGN_TOKENS, DSHeading, DSText } from '@/lib/design-system'
-
 const stagger = {
     animate: {
         transition: {
             staggerChildren: 0.05
         }
     }
-}
-
-const scaleIn = {
-    initial: { scale: 0.95, opacity: 0 },
-    animate: { scale: 1, opacity: 1 },
-    exit: { scale: 0.95, opacity: 0 }
 }
 
 const fadeInUp = {
@@ -30,34 +22,32 @@ const fadeInUp = {
 const featureIcons = [Sparkles, Zap, Star, Rocket, Shield, Target]
 
 export default function ProductFeatures({ product }) {
-    if (!product?.features || product.features.length === 0) {
+    // Use real benefits data from API instead of features
+    const features = product?.benefits || []
+
+    if (features.length === 0) {
         return (
             <div className="text-center py-8">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="max-w-md mx-auto">
-                    <div 
-                        className="w-12 h-12 mx-auto mb-4 rounded-xl flex items-center justify-center border"
-                        style={{ 
-                            backgroundColor: '#00FF8920',
-                            borderColor: '#00FF8940'
-                        }}>
-                        <Star className="w-6 h-6" style={{ color: '#00FF89' }} />
+                    <div className="w-12 h-12 mx-auto mb-4 bg-[#00FF89]/10 rounded-xl flex items-center justify-center border border-[#00FF89]/20">
+                        <Star className="w-6 h-6 text-[#00FF89]" />
                     </div>
-                    <DSHeading level={4} className="mb-3 font-bold" style={{ color: '#00FF89', fontSize: '1.2rem' }}>
+                    <h4 className="text-lg font-medium text-[#121212] dark:text-[#00FF89] mb-3">
                         Features Coming Soon
-                    </DSHeading>
-                    <DSText style={{ color: DESIGN_TOKENS.colors.text.secondary.dark, fontSize: '0.9rem', lineHeight: '1.5' }}>
+                    </h4>
+                    <p className="text-[#6b7280] dark:text-[#9ca3af] text-sm leading-relaxed">
                         Key features and highlights will be available when ready.
-                    </DSText>
+                    </p>
                 </motion.div>
             </div>
         )
     }
 
-    // Limit to 6 features to prevent overflow - organized in responsive grid
-    const features = product.features.slice(0, 6)
+    // Limit to 6 features to prevent overflow
+    const displayFeatures = features.slice(0, 6)
 
     return (
         <motion.div
@@ -65,127 +55,66 @@ export default function ProductFeatures({ product }) {
             initial="initial"
             animate="animate"
             exit="exit"
-            className="max-w-6xl mx-auto">
+            className="max-w-3xl mx-auto space-y-8">
             
-            {/* Enhanced Header with Better Typography */}
-            <div className="text-center mb-8">
-                <div className="flex items-center justify-center gap-3 mb-4">
-                    <div 
-                        className="w-10 h-10 rounded-xl flex items-center justify-center"
-                        style={{ backgroundColor: '#00FF89' }}>
-                        <Star className="w-5 h-5 text-black" />
-                    </div>
-                    <DSHeading 
-                        level={3} 
-                        className="font-bold tracking-tight"
-                        style={{ 
-                            color: '#00FF89', 
-                            fontSize: '1.5rem',
-                            lineHeight: '1.3'
-                        }}>
-                        Key Features
-                    </DSHeading>
-                </div>
-                <DSText 
-                    className="max-w-2xl mx-auto text-pretty"
-                    style={{ 
-                        color: DESIGN_TOKENS.colors.text.secondary.dark,
-                        fontSize: '0.95rem',
-                        lineHeight: '1.6'
-                    }}>
-                    Discover what makes this product stand out with these carefully crafted features
-                </DSText>
-            </div>
+            {/* Header */}
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center space-y-3">
+                
+                <h2 className="text-xl font-medium text-[#121212] dark:text-[#00FF89]">
+                    Key Benefits
+                </h2>
+                
+                <p className="text-base text-[#6b7280] dark:text-[#9ca3af]">
+                    Discover what makes {product?.title || 'this product'} stand out
+                </p>
+            </motion.div>
 
-            {/* Optimized Responsive Grid - No Overflow */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {features.map((feature, index) => {
-                    const isEven = index % 2 === 0
-                    const accentColor = isEven ? '#00FF89' : '#FFC050'
+            {/* Features Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {displayFeatures.map((feature, index) => {
+                    const IconComponent = featureIcons[index % featureIcons.length]
                     
                     return (
                         <motion.div
                             key={index}
                             variants={fadeInUp}
                             whileHover={{ 
-                                y: -8,
+                                y: -4,
                                 transition: { type: "spring", stiffness: 300, damping: 20 }
                             }}
-                            className="group backdrop-blur-sm rounded-xl p-5 border transition-all hover:shadow-lg"
-                            style={{
-                                backgroundColor: DESIGN_TOKENS.colors.background.card.dark,
-                                borderColor: `${accentColor}40`
-                            }}>
+                            className="group bg-gray-50 dark:bg-[#1f1f1f] rounded-lg p-6 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-[#1f1f1f]/80 transition-all hover:shadow-lg hover:border-[#00FF89]/20">
                             
-                            {/* Enhanced Feature Icon */}
-                            <div className="flex items-start gap-4 mb-4">
-                                <div 
-                                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all group-hover:scale-110"
-                                    style={{ 
-                                        backgroundColor: `${accentColor}20`,
-                                        border: `2px solid ${accentColor}30`
-                                    }}>
-                                    <Star className="w-5 h-5" style={{ color: accentColor }} />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <DSHeading
-                                        level={4}
-                                        className="mb-2 font-bold tracking-tight group-hover:translate-x-0.5 transition-transform"
-                                        style={{ 
-                                            color: accentColor, 
-                                            fontSize: '1.1rem',
-                                            lineHeight: '1.3'
-                                        }}>
-                                        {feature.name || `Feature ${index + 1}`}
-                                    </DSHeading>
-                                </div>
-                            </div>
-
-                            {/* Enhanced Feature Description - No Overflow */}
-                            <DSText
-                                className="leading-relaxed text-pretty mb-4"
-                                style={{ 
-                                    color: DESIGN_TOKENS.colors.text.secondary.dark, 
-                                    fontSize: '0.875rem',
-                                    lineHeight: '1.6'
-                                }}>
-                                {(feature.description || feature)?.slice(0, 120)}
-                                {(feature.description || feature)?.length > 120 ? '...' : ''}
-                            </DSText>
-
-                            {/* Enhanced Interactive Elements */}
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div 
-                                        className="w-6 h-6 rounded-md flex items-center justify-center transition-all group-hover:scale-110"
-                                        style={{ backgroundColor: `${accentColor}15` }}>
-                                        <CheckCircle className="w-3.5 h-3.5" style={{ color: accentColor }} />
-                                    </div>
-                                    <DSText 
-                                        className="text-xs font-semibold"
-                                        style={{ color: accentColor }}>
-                                        Available
-                                    </DSText>
+                            {/* Feature Icon & Content */}
+                            <div className="flex items-start gap-4">
+                                <div className="flex-shrink-0 w-10 h-10 bg-[#00FF89]/10 rounded-lg flex items-center justify-center transition-all group-hover:scale-110 group-hover:bg-[#00FF89]/20">
+                                    <IconComponent className="w-5 h-5 text-[#00FF89]" />
                                 </div>
                                 
-                                <button 
-                                    className="opacity-0 group-hover:opacity-100 transition-all p-1.5 rounded-lg hover:scale-110"
-                                    style={{ backgroundColor: `${accentColor}15` }}>
-                                    <ArrowRight className="w-3.5 h-3.5" style={{ color: accentColor }} />
-                                </button>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h3 className="font-medium text-[#121212] dark:text-[#00FF89] text-base leading-tight">
+                                            Benefit {index + 1}
+                                        </h3>
+                                        <CheckCircle className="w-4 h-4 text-[#00FF89] opacity-60 group-hover:opacity-100 transition-opacity" />
+                                    </div>
+                                    
+                                    <p className="text-[#6b7280] dark:text-[#9ca3af] text-sm leading-relaxed">
+                                        {feature}
+                                    </p>
+                                </div>
                             </div>
 
-                            {/* Enhanced Subtle Progress Bar */}
-                            <div className="mt-4 pt-3 border-t border-opacity-20" style={{ borderColor: accentColor }}>
-                                <div 
-                                    className="h-1 rounded-full overflow-hidden"
-                                    style={{ backgroundColor: `${accentColor}15` }}>
+                            {/* Subtle Progress Indicator */}
+                            <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                <div className="h-1 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
                                     <motion.div
                                         initial={{ width: 0 }}
                                         animate={{ width: '100%' }}
                                         transition={{ delay: index * 0.1 + 0.5, duration: 0.8, ease: "easeInOut" }}
-                                        className="h-full rounded-full"
-                                        style={{ backgroundColor: accentColor }}
+                                        className="h-full bg-[#00FF89] rounded-full"
                                     />
                                 </div>
                             </div>
@@ -194,30 +123,48 @@ export default function ProductFeatures({ product }) {
                 })}
             </div>
 
-            {/* Show More Indicator - No Overflow */}
-            {product.features.length > 6 && (
-                <div className="mt-8 text-center">
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.8 }}
-                        className="inline-flex items-center gap-3 px-4 py-3 rounded-xl border"
-                        style={{
-                            backgroundColor: '#00FF8915',
-                            borderColor: '#00FF8940'
-                        }}>
-                        <div 
-                            className="w-6 h-6 rounded-lg flex items-center justify-center"
-                            style={{ backgroundColor: '#00FF89' }}>
-                            <Star className="w-3.5 h-3.5 text-black" />
+            {/* Show More Indicator */}
+            {features.length > 6 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8 }}
+                    className="text-center">
+                    
+                    <div className="inline-flex items-center gap-3 px-4 py-3 bg-[#00FF89]/5 dark:bg-[#00FF89]/10 rounded-lg border border-[#00FF89]/20 dark:border-[#00FF89]/30">
+                        <div className="w-6 h-6 bg-[#00FF89] rounded-lg flex items-center justify-center">
+                            <Star className="w-3.5 h-3.5 text-[#121212]" />
                         </div>
-                        <DSText 
-                            className="font-semibold"
-                            style={{ color: '#00FF89', fontSize: '0.9rem' }}>
-                            +{product.features.length - 6} more features available
-                        </DSText>
-                    </motion.div>
-                </div>
+                        <span className="font-medium text-[#00FF89] text-sm">
+                            +{features.length - 6} more benefits available
+                        </span>
+                    </div>
+                </motion.div>
+            )}
+
+            {/* Additional Use Cases Section */}
+            {product?.useCaseExamples && product.useCaseExamples.length > 0 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.0 }}
+                    className="bg-[#00FF89]/5 dark:bg-[#00FF89]/10 rounded-lg p-6 border border-[#00FF89]/20 dark:border-[#00FF89]/30">
+                    
+                    <h3 className="text-lg font-medium text-[#121212] dark:text-[#00FF89] mb-4">
+                        Perfect For
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {product.useCaseExamples.slice(0, 4).map((useCase, index) => (
+                            <div key={index} className="flex items-center gap-3">
+                                <ArrowRight className="w-4 h-4 text-[#00FF89] flex-shrink-0" />
+                                <span className="text-[#6b7280] dark:text-[#9ca3af] text-sm">
+                                    {useCase}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </motion.div>
             )}
         </motion.div>
     )

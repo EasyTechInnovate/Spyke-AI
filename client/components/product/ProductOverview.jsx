@@ -2,248 +2,192 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import Link from 'next/link'
-import { 
-    BookOpen, 
-    Target, 
-    Package, 
-    Info, 
-    Download, 
-    FileText, 
-    RefreshCw, 
-    MessageSquare,
-    CheckCircle,
-    Clock,
-    Shield,
-    Tag,
-    Star
-} from 'lucide-react'
-
-import { DESIGN_TOKENS, DSHeading, DSText, DSStack, DSBadge } from '@/lib/design-system'
-
-const fadeInUp = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 }
-}
+import { Check } from 'lucide-react'
 
 export default function ProductOverview({ product }) {
     if (!product) return null
 
     return (
-        <motion.div
-            variants={fadeInUp}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="max-w-4xl mx-auto space-y-8">
+        <div className="max-w-3xl mx-auto space-y-8">
             
-            {/* Main Description - Minimalist */}
-            <div className="text-center space-y-4">
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-[#00FF89]/10 border border-[#00FF89]/20 flex items-center justify-center">
-                    <BookOpen className="w-8 h-8 text-[#00FF89]" />
+            {/* Header */}
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center space-y-3">
+                
+                <h2 className="text-xl font-medium text-[#121212] dark:text-[#00FF89]">
+                    Product Overview
+                </h2>
+                
+                <p className="text-base text-[#6b7280] dark:text-[#9ca3af]">
+                    Everything you need to know about this product
+                </p>
+            </motion.div>
+
+            {/* Main Description */}
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="prose prose-gray dark:prose-invert max-w-none">
+                
+                <div className="text-lg leading-relaxed text-[#6b7280] dark:text-[#9ca3af] whitespace-pre-line">
+                    {product.fullDescription || product.shortDescription || 'No description available.'}
                 </div>
-                
-                <DSHeading 
-                    level={2} 
-                    className="font-bold"
-                    style={{ color: '#00FF89', fontSize: '2rem' }}>
-                    About This Product
-                </DSHeading>
-                
-                <DSText
-                    className="text-lg leading-relaxed max-w-3xl mx-auto"
-                    style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
-                    {product.fullDescription || product.shortDescription}
-                </DSText>
-            </div>
+            </motion.div>
 
-            {/* Key Information Grid - Clean & Minimal */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                
-                {/* Benefits Section */}
-                {product.benefits && product.benefits.length > 0 && (
-                    <div className="space-y-6">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-[#00FF89]/10 flex items-center justify-center">
-                                <Star className="w-4 h-4 text-[#00FF89]" />
-                            </div>
-                            <DSHeading 
-                                level={3} 
-                                className="font-semibold"
-                                style={{ color: '#00FF89', fontSize: '1.25rem' }}>
-                                Key Benefits
-                            </DSHeading>
-                        </div>
-                        
-                        <div className="space-y-4">
-                            {product.benefits.map((benefit, index) => (
-                                <motion.div
-                                    key={index}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: index * 0.1 }}
-                                    className="flex items-start gap-3 group">
-                                    <div className="w-6 h-6 rounded-full bg-[#00FF89]/10 flex items-center justify-center flex-shrink-0 mt-1">
-                                        <CheckCircle className="w-3 h-3 text-[#00FF89]" />
-                                    </div>
-                                    <DSText 
-                                        className="text-sm leading-relaxed group-hover:text-white transition-colors"
-                                        style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
-                                        {benefit}
-                                    </DSText>
-                                </motion.div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* Product Details */}
-                <div className="space-y-6">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-[#00FF89]/10 flex items-center justify-center">
-                            <Info className="w-4 h-4 text-[#00FF89]" />
-                        </div>
-                        <DSHeading 
-                            level={3} 
-                            className="font-semibold"
-                            style={{ color: '#00FF89', fontSize: '1.25rem' }}>
-                            Details
-                        </DSHeading>
-                    </div>
+            {/* Benefits Section */}
+            {product.benefits && product.benefits.length > 0 && (
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="space-y-4">
                     
-                    <div className="space-y-4">
-                        {[
-                            { 
-                                label: 'Category', 
-                                value: product.category?.replace('_', ' ').charAt(0).toUpperCase() + 
-                                       product.category?.slice(1).replace('_', ' '),
-                                icon: Target
-                            },
-                            { 
-                                label: 'Type', 
-                                value: product.type?.charAt(0).toUpperCase() + product.type?.slice(1),
-                                icon: Package
-                            },
-                            { 
-                                label: 'Version', 
-                                value: product.currentVersion || '1.0.0',
-                                icon: Shield
-                            },
-                            { 
-                                label: 'Last Updated', 
-                                value: new Date(product.updatedAt).toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    day: 'numeric',
-                                    year: 'numeric'
-                                }),
-                                icon: Clock
-                            }
-                        ].map((detail, index) => (
-                            <motion.div 
-                                key={index} 
+                    <h3 className="text-lg font-medium text-[#121212] dark:text-[#00FF89] mb-6">
+                        Key Benefits
+                    </h3>
+                    
+                    <div className="grid gap-3">
+                        {product.benefits.map((benefit, index) => (
+                            <motion.div
+                                key={index}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: index * 0.1 + 0.2 }}
-                                className="flex items-center justify-between py-3 border-b border-gray-800/50 last:border-b-0 group">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-6 h-6 rounded-lg bg-[#00FF89]/10 flex items-center justify-center">
-                                        <detail.icon className="w-3 h-3 text-[#00FF89]" />
-                                    </div>
-                                    <DSText 
-                                        className="text-sm font-medium"
-                                        style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
-                                        {detail.label}
-                                    </DSText>
+                                transition={{ delay: 0.1 * index + 0.3 }}
+                                className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-[#1f1f1f] rounded-lg">
+                                
+                                <div className="flex-shrink-0 w-5 h-5 bg-[#00FF89] rounded-full flex items-center justify-center mt-0.5">
+                                    <Check className="w-3 h-3 text-[#121212]" />
                                 </div>
-                                <DSText 
-                                    className="text-sm font-semibold group-hover:text-[#00FF89] transition-colors"
-                                    style={{ color: DESIGN_TOKENS.colors.text.primary.dark }}>
-                                    {detail.value}
-                                </DSText>
+                                
+                                <span className="text-[#6b7280] dark:text-[#9ca3af] leading-relaxed">
+                                    {benefit}
+                                </span>
                             </motion.div>
                         ))}
                     </div>
-                </div>
-            </div>
+                </motion.div>
+            )}
 
-            {/* What's Included - Full Width */}
-            <div className="space-y-6">
-                <div className="text-center">
-                    <div className="w-12 h-12 mx-auto rounded-xl bg-[#00FF89]/10 border border-[#00FF89]/20 flex items-center justify-center mb-4">
-                        <Package className="w-6 h-6 text-[#00FF89]" />
-                    </div>
-                    <DSHeading 
-                        level={3} 
-                        className="font-semibold"
-                        style={{ color: '#00FF89', fontSize: '1.5rem' }}>
-                        What You Get
-                    </DSHeading>
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {[
-                        { icon: Download, text: 'Instant Download', desc: 'Get immediate access' },
-                        { icon: FileText, text: 'Documentation', desc: 'Complete setup guide' },
-                        { icon: RefreshCw, text: 'Free Updates', desc: 'Lifetime improvements' },
-                        { icon: MessageSquare, text: '24/7 Support', desc: 'Always here to help' }
-                    ].map((item, index) => (
-                        <motion.div
-                            key={index}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.1 + 0.3 }}
-                            className="text-center space-y-3 p-6 rounded-xl border border-gray-800/50 hover:border-[#00FF89]/30 transition-all group hover:bg-[#00FF89]/5">
-                            <div className="w-12 h-12 mx-auto rounded-xl bg-[#00FF89]/10 flex items-center justify-center group-hover:bg-[#00FF89]/20 transition-colors">
-                                <item.icon className="w-6 h-6 text-[#00FF89]" />
-                            </div>
-                            <div>
-                                <DSText 
-                                    className="font-semibold mb-1"
-                                    style={{ color: DESIGN_TOKENS.colors.text.primary.dark }}>
-                                    {item.text}
-                                </DSText>
-                                <DSText 
-                                    className="text-sm"
-                                    style={{ color: DESIGN_TOKENS.colors.text.secondary.dark }}>
-                                    {item.desc}
-                                </DSText>
-                            </div>
-                        </motion.div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Tags - Minimalist */}
-            {product.tags?.length > 0 && (
-                <div className="space-y-4">
-                    <div className="text-center">
-                        <DSHeading 
-                            level={4} 
-                            className="font-medium"
-                            style={{ color: '#00FF89', fontSize: '1.125rem' }}>
-                            Related Topics
-                        </DSHeading>
-                    </div>
+            {/* Use Case Examples */}
+            {product.useCaseExamples && product.useCaseExamples.length > 0 && (
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="space-y-4">
                     
-                    <div className="flex flex-wrap justify-center gap-3">
-                        {product.tags.map((tag, index) => (
-                            <Link
+                    <h3 className="text-lg font-medium text-[#121212] dark:text-[#00FF89] mb-6">
+                        Use Cases
+                    </h3>
+                    
+                    <div className="grid gap-3">
+                        {product.useCaseExamples.map((useCase, index) => (
+                            <motion.div
                                 key={index}
-                                href={`/explore?tag=${encodeURIComponent(tag)}`}>
-                                <motion.span
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ delay: index * 0.05 }}
-                                    className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium border border-[#00FF89]/20 hover:border-[#00FF89]/50 hover:bg-[#00FF89]/10 transition-all cursor-pointer"
-                                    style={{ color: '#00FF89' }}>
-                                    #{tag}
-                                </motion.span>
-                            </Link>
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.1 * index + 0.5 }}
+                                className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-[#1f1f1f] rounded-lg">
+                                
+                                <div className="flex-shrink-0 w-5 h-5 bg-[#00FF89] rounded-full flex items-center justify-center mt-0.5">
+                                    <Check className="w-3 h-3 text-[#121212]" />
+                                </div>
+                                
+                                <span className="text-[#6b7280] dark:text-[#9ca3af] leading-relaxed">
+                                    {useCase}
+                                </span>
+                            </motion.div>
                         ))}
                     </div>
-                </div>
+                </motion.div>
             )}
-        </motion.div>
+
+            {/* What's Included */}
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="bg-[#00FF89]/5 dark:bg-[#00FF89]/10 rounded-lg p-6 border border-[#00FF89]/20 dark:border-[#00FF89]/30">
+                
+                <h3 className="text-lg font-medium text-[#121212] dark:text-[#00FF89] mb-4">
+                    What's Included
+                </h3>
+                
+                <div className="grid gap-3">
+                    <div className="flex items-center gap-3">
+                        <Check className="w-4 h-4 text-[#00FF89]" />
+                        <span className="text-[#6b7280] dark:text-[#9ca3af]">Complete automation setup</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <Check className="w-4 h-4 text-[#00FF89]" />
+                        <span className="text-[#6b7280] dark:text-[#9ca3af]">Step-by-step implementation guide</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <Check className="w-4 h-4 text-[#00FF89]" />
+                        <span className="text-[#6b7280] dark:text-[#9ca3af]">24/7 customer support</span>
+                    </div>
+                    {product.hasGuarantee && (
+                        <div className="flex items-center gap-3">
+                            <Check className="w-4 h-4 text-[#00FF89]" />
+                            <span className="text-[#6b7280] dark:text-[#9ca3af]">
+                                {product.guaranteeText || '30-day money-back guarantee'}
+                            </span>
+                        </div>
+                    )}
+                    <div className="flex items-center gap-3">
+                        <Check className="w-4 h-4 text-[#00FF89]" />
+                        <span className="text-[#6b7280] dark:text-[#9ca3af]">Lifetime updates (v{product.currentVersion})</span>
+                    </div>
+                </div>
+            </motion.div>
+
+            {/* Tools Used */}
+            {product.toolsUsed && product.toolsUsed.length > 0 && (
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.7 }}
+                    className="space-y-4">
+                    
+                    <h3 className="text-lg font-medium text-[#121212] dark:text-[#00FF89] mb-6">
+                        Tools & Technologies
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {product.toolsUsed.map((tool, index) => (
+                            <motion.div
+                                key={index}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.1 * index + 0.8 }}
+                                className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-[#1f1f1f] rounded-lg hover:bg-gray-100 dark:hover:bg-[#1f1f1f]/80 transition-colors">
+                                
+                                <img 
+                                    src={tool.logo} 
+                                    alt={tool.name}
+                                    className="w-8 h-8 object-contain"
+                                    onError={(e) => {
+                                        e.target.style.display = 'none'
+                                    }}
+                                />
+                                <div>
+                                    <div className="font-medium text-[#121212] dark:text-[#00FF89] text-sm">
+                                        {tool.name}
+                                    </div>
+                                    {tool.model && (
+                                        <div className="text-xs text-[#6b7280] dark:text-[#9ca3af]">
+                                            {tool.model}
+                                        </div>
+                                    )}
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </motion.div>
+            )}
+        </div>
     )
 }
