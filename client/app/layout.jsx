@@ -7,6 +7,9 @@ import WhatsAppButton from '@/components/shared/WhatsAppButton'
 import ConditionalFooter from '@/components/shared/layout/ConditionalFooter'
 import ConditionalHeader from '@/components/shared/layout/ConditionalHeader'
 // import NotificationProvider from '@/components/shared/notifications/NotificationProvider'
+import { Inter } from 'next/font/google'
+
+const inter = Inter({ subsets: ['latin'] })
 
 const structuredData = {
     '@context': 'https://schema.org',
@@ -147,6 +150,13 @@ export const metadata = {
             url: 'https://spykeai.com',
             should_fallback: true
         }
+    },
+    icons: {
+        icon: [
+            { url: '/favicon.ico', sizes: 'any' },
+            { url: '/logo-icon.svg', type: 'image/svg+xml' }
+        ],
+        apple: '/apple-icon.png'
     }
 }
 
@@ -173,7 +183,7 @@ export default function RootLayout({ children }) {
                 />
                 <link
                     rel="mask-icon"
-                    href="/safari-pinned-tab.svg"
+                    href="/logo-icon.svg"
                     color="#00FF89"
                 />
 

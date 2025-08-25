@@ -25,7 +25,7 @@ export default function Navigation() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}>
                 <Link
-                    href="/sellers"
+                    href="/creators"
                     className="nav-link px-3 py-2 text-base font-medium text-white/80 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-white/10">
                     Sellers
                 </Link>

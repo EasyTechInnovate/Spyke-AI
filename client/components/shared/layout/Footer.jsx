@@ -22,14 +22,12 @@ export default function Footer() {
         Resources: [
             { name: 'Blog', href: '/blog', prefetch: false },
             { name: 'Guides', href: '/guides', prefetch: false },
-            { name: 'Help Center', href: '/help', prefetch: false },
-            { name: 'Community', href: '/community', prefetch: false }
         ],
         Company: [
             { name: 'About Us', href: '/aboutus', prefetch: true },
             { name: 'Contact Us', href: '/contactus', prefetch: true },
-            { name: 'Careers', href: '/careers', prefetch: false },
-            { name: 'Press Kit', href: '/press', prefetch: false }
+            { name: 'Terms and Services', href: '/terms', prefetch: false },
+            { name: 'Privacy Policy', href: '/privacy-policy', prefetch: false }
         ]
     }
 

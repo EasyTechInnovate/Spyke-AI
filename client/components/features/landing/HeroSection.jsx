@@ -167,25 +167,31 @@ function CTAButtons({ isSeller }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 1.2 }}
-      className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-10 sm:mb-12 md:mb-16 px-4 sm:px-0"
+      className="flex flex-col sm:flex-row gap-4 justify-center items-stretch sm:items-center mb-10 sm:mb-12 md:mb-16 px-4 sm:px-6 max-w-sm sm:max-w-none mx-auto"
     >
+      {/* Primary Button - Explore Marketplace */}
       <GlowingButton
         href="/explore"
         prefetch={false}
         primary={true}
-        className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-brand-primary hover:bg-brand-primary/90 text-black rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base lg:text-lg transition-all duration-200 group"
+        className="w-full sm:w-auto min-h-[56px] inline-flex items-center justify-center px-8 py-4 bg-brand-primary hover:bg-brand-primary/90 text-black rounded-2xl font-bold text-base transition-all duration-200 group min-w-[280px] sm:min-w-[240px]"
       >
-        Explore Marketplace
-        <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
+        <span className="flex items-center justify-center gap-2 whitespace-nowrap">
+          Explore Marketplace
+          <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+        </span>
       </GlowingButton>
 
+      {/* Secondary Button - Start Selling */}
       {!isSeller && (
         <GlowingButton
           href="/become-seller"
-          className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-white/10 backdrop-blur-sm border-2 border-white/30 text-white font-bold rounded-xl sm:rounded-2xl transition-all duration-200 hover:bg-white/20 hover:border-white/40 text-sm sm:text-base lg:text-lg"
+          className="w-full sm:w-auto min-h-[56px] inline-flex items-center justify-center px-8 py-4 bg-transparent backdrop-blur-sm border-2 border-brand-primary/60 text-white font-bold rounded-2xl transition-all duration-200 hover:bg-brand-primary/10 hover:border-brand-primary text-base min-w-[280px] sm:min-w-[240px]"
         >
-          Become a Seller
-          <TrendingUp className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+          <span className="flex items-center justify-center gap-2 whitespace-nowrap">
+            Start Selling
+            <TrendingUp className="h-5 w-5" />
+          </span>
         </GlowingButton>
       )}
     </motion.div>

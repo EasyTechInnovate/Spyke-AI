@@ -3,13 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Search, X, Mic, Package, Tag, History, TrendingUp as TrendingUpIcon, ChevronRight, Star } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import toast from '@/lib/utils/toast'
-import api from '@/lib/api'
+import productsAPI from '@/lib/api/products'
 
-import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function SearchOverlay({ isOpen, onClose }) {
     const router = useRouter()
     const [searchQuery, setSearchQuery] = useState('')
-    const [searchResults, setSearchResults] = useState({ products: [], categories: [] })
+    const [searchResults, setSearchResults] = useState({ products: [] })
     const [isSearching, setIsSearching] = useState(false)
     const [recentSearches, setRecentSearches] = useState([])
     const [isListening, setIsListening] = useState(false)
@@ -89,46 +88,86 @@ export default function SearchOverlay({ isOpen, onClose }) {
         }
     }
 
-    // Perform search
+    // Perform search using the same API as home page
     const performSearch = async (query) => {
         if (!query.trim()) {
-            setSearchResults({ products: [], categories: [] })
+            setSearchResults({ products: [] })
             return
         }
 
         setIsSearching(true)
 
         try {
-            const response = await api.search.query(query)
-            setSearchResults(response.data)
+            const response = await productsAPI.getProducts({
+                search: query.trim(),
+                limit: 5
+            })
+
+            // Extract products from the correct path (same as home page)
+            let products = []
+            if (response?.data?.products && Array.isArray(response.data.products)) {
+                products = response.data.products
+            } else if (response?.products && Array.isArray(response.products)) {
+                products = response.products
+            }
+
+            setSearchResults({ products })
         } catch (error) {
             console.error('Search error:', error)
-            toast.search.searchError()
+            setSearchResults({ products: [] })
         } finally {
             setIsSearching(false)
         }
     }
 
-    // Debounced search
+    // Debounced search - only search when query length > 2
     useEffect(() => {
-        const timer = setTimeout(() => {
-            performSearch(searchQuery)
-        }, 300)
+        if (searchQuery.trim().length > 2) {
+            const timer = setTimeout(() => {
+                performSearch(searchQuery)
+            }, 300)
 
-        return () => clearTimeout(timer)
+            return () => clearTimeout(timer)
+        } else {
+            setSearchResults({ products: [] })
+        }
     }, [searchQuery])
 
-    // Handle search selection
-    const handleSearchSelect = (item) => {
+    // Handle search submission (navigate to explore page)
+    const handleSearchSubmit = (e) => {
+        if (e) e.preventDefault()
+        if (searchQuery.trim()) {
+            // Save to recent searches
+            const updatedRecent = [searchQuery.trim(), ...recentSearches.filter((s) => s !== searchQuery.trim())].slice(0, 5)
+            setRecentSearches(updatedRecent)
+            localStorage.setItem('recentSearches', JSON.stringify(updatedRecent))
+
+            // Navigate to explore page with search (same as home page)
+            router.push(`/explore?search=${encodeURIComponent(searchQuery.trim())}`)
+            onClose()
+            setSearchQuery('')
+        }
+    }
+
+    // Handle product click (navigate to product page)
+    const handleProductClick = (product) => {
         // Save to recent searches
-        const updatedRecent = [item.title, ...recentSearches.filter((s) => s !== item.title)].slice(0, 5)
+        const updatedRecent = [product.title, ...recentSearches.filter((s) => s !== product.title)].slice(0, 5)
         setRecentSearches(updatedRecent)
         localStorage.setItem('recentSearches', JSON.stringify(updatedRecent))
 
-        // Navigate to product
-        router.push(`/product/${item.id}`)
+        // Use slug if available, otherwise fallback to id (same as home page)
+        const identifier = product.slug || product.id || product._id
+        router.push(`/products/${identifier}`)
         onClose()
         setSearchQuery('')
+    }
+
+    // Handle recent search click
+    const handleRecentSearchClick = (search) => {
+        setSearchQuery(search)
+        // Trigger search immediately
+        performSearch(search)
     }
 
     if (!isOpen) return null
@@ -155,7 +194,7 @@ export default function SearchOverlay({ isOpen, onClose }) {
                 <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700 rounded-2xl shadow-2xl overflow-hidden">
                     {/* Search Header */}
                     <div className="p-4 sm:p-6 border-b border-gray-700">
-                        <div className="relative">
+                        <form onSubmit={handleSearchSubmit} className="relative">
                             {/* Left icon wrapper for perfect vertical alignment */}
                             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                                 <Search className="h-5 w-5 text-gray-400" />
@@ -172,6 +211,7 @@ export default function SearchOverlay({ isOpen, onClose }) {
                             {/* Voice Search Button */}
                             {voiceSupported && (
                                 <button
+                                    type="button"
                                     onClick={handleVoiceSearch}
                                     className={`absolute right-12 sm:right-14 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-all focus:outline-none focus:ring-0 ${
                                         isListening
@@ -186,25 +226,34 @@ export default function SearchOverlay({ isOpen, onClose }) {
 
                             {/* Close Button */}
                             <button
+                                type="button"
                                 onClick={onClose}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-0">
                                 <X className="h-5 w-5" />
                             </button>
-                        </div>
+                        </form>
 
                         {/* Quick Filters */}
                         <div className="flex items-center gap-2 mt-4 overflow-x-auto scrollbar-hide">
-                            <button className="px-3 py-1.5 bg-brand-primary/20 text-brand-primary rounded-lg text-sm font-medium hover:bg-brand-primary/30 transition-colors whitespace-nowrap flex-shrink-0">
-                                All
+                            <button 
+                                onClick={() => setSearchQuery('AI prompts')}
+                                className="px-3 py-1.5 bg-brand-primary/20 text-brand-primary rounded-lg text-sm font-medium hover:bg-brand-primary/30 transition-colors whitespace-nowrap flex-shrink-0">
+                                AI Prompts
                             </button>
-                            <button className="px-3 py-1.5 bg-gray-800/50 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700/50 transition-colors whitespace-nowrap flex-shrink-0">
-                                Prompts
+                            <button 
+                                onClick={() => setSearchQuery('automation tools')}
+                                className="px-3 py-1.5 bg-gray-800/50 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700/50 transition-colors whitespace-nowrap flex-shrink-0">
+                                Automation
                             </button>
-                            <button className="px-3 py-1.5 bg-gray-800/50 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700/50 transition-colors whitespace-nowrap flex-shrink-0">
-                                Tools
-                            </button>
-                            <button className="px-3 py-1.5 bg-gray-800/50 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700/50 transition-colors whitespace-nowrap flex-shrink-0">
+                            <button 
+                                onClick={() => setSearchQuery('templates')}
+                                className="px-3 py-1.5 bg-gray-800/50 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700/50 transition-colors whitespace-nowrap flex-shrink-0">
                                 Templates
+                            </button>
+                            <button 
+                                onClick={() => setSearchQuery('scripts')}
+                                className="px-3 py-1.5 bg-gray-800/50 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700/50 transition-colors whitespace-nowrap flex-shrink-0">
+                                Scripts
                             </button>
                         </div>
                     </div>
@@ -215,8 +264,9 @@ export default function SearchOverlay({ isOpen, onClose }) {
                         searchQuery={searchQuery}
                         searchResults={searchResults}
                         recentSearches={recentSearches}
-                        onSearchSelect={handleSearchSelect}
-                        setSearchQuery={setSearchQuery}
+                        onProductClick={handleProductClick}
+                        onRecentSearchClick={handleRecentSearchClick}
+                        onSearchSubmit={handleSearchSubmit}
                     />
                 </div>
             </motion.div>
@@ -224,7 +274,7 @@ export default function SearchOverlay({ isOpen, onClose }) {
     )
 }
 
-function SearchResults({ isSearching, searchQuery, searchResults, recentSearches, onSearchSelect, setSearchQuery }) {
+function SearchResults({ isSearching, searchQuery, searchResults, recentSearches, onProductClick, onRecentSearchClick, onSearchSubmit }) {
     if (isSearching) {
         return (
             <div className="p-8 text-center">
@@ -240,6 +290,7 @@ function SearchResults({ isSearching, searchQuery, searchResults, recentSearches
         )
     }
 
+    // Show products if we have search query and results
     if (searchQuery && searchResults.products?.length > 0) {
         return (
             <div className="max-h-[60vh] overflow-y-auto">
@@ -247,49 +298,70 @@ function SearchResults({ isSearching, searchQuery, searchResults, recentSearches
                 <div className="p-4 sm:p-6">
                     <h3 className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
                         <Package className="h-4 w-4" />
-                        Products
+                        Products ({searchResults.products.length} found)
                     </h3>
                     <div className="space-y-2">
                         {searchResults.products.map((product) => (
-                            <button
-                                key={product.id}
-                                onClick={() => onSearchSelect(product)}
+                            <motion.button
+                                key={product.id || product._id}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                onClick={() => onProductClick(product)}
                                 className="w-full p-3 sm:p-4 bg-gray-800/30 hover:bg-gray-800/50 rounded-xl transition-all duration-200 group">
                                 <div className="flex items-start gap-3 sm:gap-4">
-                                    <img
-                                        src={product.image}
-                                        alt={product.title}
-                                        className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover bg-gray-700"
-                                    />
+                                    {product.image && (
+                                        <img
+                                            src={product.image}
+                                            alt={product.title}
+                                            className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover bg-gray-700"
+                                        />
+                                    )}
                                     <div className="flex-1 text-left">
                                         <h4 className="font-medium text-white group-hover:text-brand-primary transition-colors">{product.title}</h4>
-                                        <p className="text-sm text-gray-400 mt-1 line-clamp-1">{product.description}</p>
+                                        <p className="text-sm text-gray-400 mt-1 line-clamp-1">{product.shortDescription || product.description}</p>
                                         <div className="flex items-center gap-4 mt-2 text-xs">
                                             <span className="text-brand-primary font-semibold">${product.price}</span>
-                                            <span className="flex items-center gap-1 text-yellow-500">
-                                                <Star className="h-3 w-3 fill-current" />
-                                                {product.rating}
-                                            </span>
-                                            <span className="text-gray-500">{product.sales} sales</span>
+                                            {product.averageRating > 0 && (
+                                                <span className="flex items-center gap-1 text-yellow-500">
+                                                    <Star className="h-3 w-3 fill-current" />
+                                                    {product.averageRating.toFixed(1)}
+                                                </span>
+                                            )}
+                                            {product.sales > 0 && <span className="text-gray-500">{product.sales} sales</span>}
                                         </div>
                                     </div>
                                     <ChevronRight className="h-5 w-5 text-gray-500 group-hover:text-brand-primary transition-colors flex-shrink-0" />
                                 </div>
-                            </button>
+                            </motion.button>
                         ))}
                     </div>
+
+                    {/* View All Results Button */}
+                    <motion.button
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        onClick={() => onSearchSubmit()}
+                        className="w-full mt-4 p-3 bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary rounded-xl transition-all duration-200 font-medium">
+                        View all results for "{searchQuery}"
+                    </motion.button>
                 </div>
             </div>
         )
     }
 
-    if (searchQuery && searchResults.products?.length === 0) {
+    // Show no results if we searched but found nothing
+    if (searchQuery && searchQuery.length > 2 && searchResults.products?.length === 0) {
         return (
             <div className="p-8 text-center">
                 <div className="text-gray-400">
                     <Search className="h-12 w-12 mx-auto mb-3 opacity-50" />
                     <p className="text-lg font-medium mb-1">No results found</p>
-                    <p className="text-sm">Try searching with different keywords</p>
+                    <p className="text-sm mb-4">Try searching with different keywords</p>
+                    <button
+                        onClick={() => onSearchSubmit()}
+                        className="text-brand-primary hover:text-brand-primary/80 font-medium">
+                        Search in all products
+                    </button>
                 </div>
             </div>
         )
@@ -310,7 +382,7 @@ function SearchResults({ isSearching, searchQuery, searchResults, recentSearches
                             {recentSearches.map((search, index) => (
                                 <button
                                     key={index}
-                                    onClick={() => setSearchQuery(search)}
+                                    onClick={() => onRecentSearchClick(search)}
                                     className="w-full text-left px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors text-sm">
                                     {search}
                                 </button>
@@ -326,10 +398,10 @@ function SearchResults({ isSearching, searchQuery, searchResults, recentSearches
                         Trending Now
                     </h3>
                     <div className="space-y-2">
-                        {['AI Writing Assistant', 'Social Media Templates', 'Email Marketing'].map((trend, index) => (
+                        {['AI Writing Assistant', 'Social Media Templates', 'Email Marketing', 'Automation Scripts', 'ChatGPT Prompts'].map((trend, index) => (
                             <button
                                 key={index}
-                                onClick={() => setSearchQuery(trend)}
+                                onClick={() => onRecentSearchClick(trend)}
                                 className="w-full text-left px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors text-sm">
                                 {trend}
                             </button>

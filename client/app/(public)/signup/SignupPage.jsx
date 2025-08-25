@@ -5,10 +5,26 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/shared/layout/Header'
-import toast from '@/lib/utils/toast'
 import api from '@/lib/api'
 import { checkPasswordStrength, countryCodes, validateEmail, validatePhone, formatPhone } from '@/lib/utils/utils'
-import { Eye, EyeOff, Mail, Lock, Phone, ArrowRight, Sparkles, Shield, Zap, Users, CheckCircle, Globe, ChevronDown, Loader } from 'lucide-react'
+import {
+    Eye,
+    EyeOff,
+    Mail,
+    Lock,
+    Phone,
+    ArrowRight,
+    Sparkles,
+    Shield,
+    Zap,
+    Users,
+    CheckCircle,
+    Globe,
+    ChevronDown,
+    Loader,
+    X,
+    AlertCircle
+} from 'lucide-react'
 
 export const debounce = (func, wait) => {
     let timeout
@@ -18,6 +34,71 @@ export const debounce = (func, wait) => {
     }
 }
 
+// Custom Toast Component
+function Toast({ message, type = 'success', onClose, show }) {
+    const [isVisible, setIsVisible] = useState(show)
+
+    useEffect(() => {
+        setIsVisible(show)
+        if (show) {
+            const timer = setTimeout(
+                () => {
+                    setIsVisible(false)
+                    setTimeout(onClose, 300) // Wait for exit animation
+                },
+                type === 'success' ? 8000 : 5000
+            )
+            return () => clearTimeout(timer)
+        }
+    }, [show, type, onClose])
+
+    if (!show) return null
+
+    const styles = {
+        success: {
+            bg: 'bg-green-900/90',
+            border: 'border-green-500/50',
+            text: 'text-green-100',
+            icon: CheckCircle,
+            iconColor: 'text-green-400'
+        },
+        error: {
+            bg: 'bg-red-900/90',
+            border: 'border-red-500/50',
+            text: 'text-red-100',
+            icon: AlertCircle,
+            iconColor: 'text-red-400'
+        }
+    }
+
+    const style = styles[type] || styles.success
+    const Icon = style.icon
+
+    return (
+        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[60] w-full max-w-md px-4">
+            <div
+                className={`
+                ${isVisible ? 'animate-in slide-in-from-top-2' : 'animate-out slide-out-to-top-2'} 
+                ${style.bg} ${style.border} ${style.text} 
+                backdrop-blur-xl border rounded-xl p-4 shadow-2xl
+            `}>
+                <div className="flex items-start gap-3">
+                    <Icon className={`w-5 h-5 ${style.iconColor} flex-shrink-0 mt-0.5`} />
+                    <p className="text-sm font-medium flex-1 leading-relaxed">{message}</p>
+                    <button
+                        onClick={() => {
+                            setIsVisible(false)
+                            setTimeout(onClose, 300)
+                        }}
+                        className="text-white/70 hover:text-white transition-colors p-1 flex-shrink-0 -mt-1">
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 export default function SignupPage() {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
@@ -25,6 +106,9 @@ export default function SignupPage() {
     const [emailChecking, setEmailChecking] = useState(false)
     const [emailAvailable, setEmailAvailable] = useState(true)
     const [showCountryDropdown, setShowCountryDropdown] = useState(false)
+
+    // Toast state
+    const [toast, setToast] = useState({ show: false, message: '', type: 'success' })
 
     const [formData, setFormData] = useState({
         emailAddress: '',
@@ -40,6 +124,16 @@ export default function SignupPage() {
 
     const emailCheckRef = useRef(null)
     const dropdownRef = useRef(null)
+
+    // Show toast messages
+    const showToast = (message, type = 'success') => {
+        setToast({ show: true, message, type })
+    }
+
+    // Clear toast
+    const clearToast = () => {
+        setToast({ show: false, message: '', type: 'success' })
+    }
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -175,7 +269,7 @@ export default function SignupPage() {
                 const phoneNumberDigits = formData.phoneNumber.replace(/\D/g, '')
                 const fullPhoneNumber = countryCodeDigits + phoneNumberDigits
 
-                await api.auth.register({
+                const response = await api.auth.register({
                     emailAddress: formData.emailAddress.toLowerCase().trim(),
                     phoneNumber: fullPhoneNumber,
                     password: formData.password,
@@ -185,10 +279,28 @@ export default function SignupPage() {
                     role: 'user'
                 })
 
-                toast.auth.signupSuccess()
-                router.push('/')
+                // Check if registration was successful - handle different response structures
+                if (response && (
+                    response.success === true || 
+                    response.statusCode === 201 || 
+                    (response.id && response.emailAddress) // Direct data response
+                )) {
+                    // Show email verification toast
+                    showToast(
+                        'Account created successfully! Please check your email to verify your account before signing in.',
+                        'success'
+                    )
+                    
+                    // Redirect to signin page after showing the toast
+                    setTimeout(() => {
+                        router.push('/signin?message=verify-email')
+                    }, 3000)
+                } else {
+                    throw new Error(response?.message || 'Registration failed')
+                }
             } catch (error) {
-                toast.auth.signupError(error.message)
+                const errorMessage = error?.response?.data?.message || error?.message || 'Registration failed. Please try again.'
+                showToast(errorMessage, 'error')
             } finally {
                 setLoading(false)
             }
@@ -200,7 +312,7 @@ export default function SignupPage() {
     const selectedCountry = countryCodes.find((c) => c.code === formData.countryCode) || countryCodes[0]
 
     return (
-        <div className="h-screen bg-[#121212] relative overflow-hidden font-league-spartan">
+        <div className="min-h-screen bg-[#121212] relative overflow-hidden font-league-spartan">
             {/* Background Effects */}
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900/50 to-black" />
@@ -218,7 +330,7 @@ export default function SignupPage() {
 
             <Header />
 
-            <main className="relative h-screen flex pt-16">
+            <main className="relative min-h-screen flex flex-col lg:flex-row pt-20">
                 {/* Left side - Branding & Benefits */}
                 <div className="hidden lg:flex lg:w-1/2 flex-col justify-center px-8 xl:px-12">
                     <div className="max-w-xl">
@@ -275,7 +387,7 @@ export default function SignupPage() {
                 </div>
 
                 {/* Right side - Signup Form */}
-                <div className="w-full lg:w-1/2 flex items-center justify-center px-4 sm:px-6 lg:px-8 xl:px-12 py-4">
+                <div className="w-full lg:w-1/2 flex items-center justify-center px-4 sm:px-6 lg:px-8 xl:px-12 py-8">
                     <div className="w-full max-w-md">
                         {/* Mobile header */}
                         <div className="text-center lg:hidden mb-6">
@@ -353,9 +465,9 @@ export default function SignupPage() {
 
                                                 {showCountryDropdown && (
                                                     <div className="absolute z-50 mt-1 w-64 bg-[#1a1a1a] border border-gray-700 rounded-xl shadow-2xl max-h-40 overflow-y-auto">
-                                                        {countryCodes.map(({ code, country, flag }) => (
+                                                        {countryCodes.map(({ code, country, flag }, index) => (
                                                             <button
-                                                                key={code}
+                                                                key={`${code}-${country}-${index}`}
                                                                 type="button"
                                                                 onClick={() => {
                                                                     setFormData((prev) => ({
@@ -582,7 +694,7 @@ export default function SignupPage() {
                         </div>
 
                         {/* Trust indicators */}
-                        <div className="mt-4 grid grid-cols-3 gap-2 max-w-md mx-auto">
+                        <div className="mt-6 grid grid-cols-3 gap-2 max-w-md mx-auto">
                             <div className="flex flex-col items-center gap-1 p-2 bg-[#1a1a1a]/30 rounded-lg backdrop-blur-sm">
                                 <Shield className="w-3 h-3 text-[#00FF89]" />
                                 <span className="text-xs text-gray-400 font-medium text-center">SSL Secured</span>
@@ -599,6 +711,14 @@ export default function SignupPage() {
                     </div>
                 </div>
             </main>
+
+            {/* Toast Notification */}
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                onClose={clearToast}
+                show={toast.show}
+            />
         </div>
     )
 }
