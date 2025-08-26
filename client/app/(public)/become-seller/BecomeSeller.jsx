@@ -4,7 +4,7 @@ import React, { useEffect } from 'react'
 import { Check } from 'lucide-react'
 import Header from '@/components/shared/layout/Header'
 import Container from '@/components/shared/layout/Container'
-import { MultiStepForm, FormInput, FormTextArea, FormSelect, FormTagInput, FormCheckbox, FormSearchableSelect } from '@/components/shared/forms'
+import { MultiStepForm, FormInput, FormTextArea, FormSelect, FormTagInput, FormCheckbox, FormSearchableSelect, ImageUpload } from '@/components/shared/forms'
 import { useSellerForm } from '@/hooks/forms/useSellerForm'
 import { formSteps, formFields, countries, timezones, popularNiches, popularTools } from '@/lib/config/forms/SellerFormConfig'
 
@@ -81,16 +81,22 @@ export default function BecomeSellerPage() {
                             error={errors.bio}
                         />
 
-                        <FormInput
+                        <ImageUpload
                             label={formFields.sellerBanner.label}
-                            name="sellerBanner"
-                            type={formFields.sellerBanner.type}
                             value={formData.sellerBanner}
-                            onChange={handleInputChange}
-                            placeholder={formFields.sellerBanner.placeholder}
-                            helperText={formFields.sellerBanner.helperText}
+                            onChange={(e) => handleInputChange({
+                                target: {
+                                    name: 'sellerBanner',
+                                    value: e.target.value
+                                }
+                            })}
+                            category="seller-banners"
                             required={formFields.sellerBanner.required}
                             error={errors.sellerBanner}
+                            helperText={formFields.sellerBanner.helperText}
+                            placeholder="Upload banner image or enter URL"
+                            maxSize={10}
+                            acceptedFormats={['.jpg', '.jpeg', '.png', '.webp']}
                         />
                     </>
                 )

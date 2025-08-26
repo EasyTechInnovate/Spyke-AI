@@ -228,10 +228,20 @@ export function useSellerForm() {
 
             try {
                 const response = await sellerAPI.createProfile(payload)
+                
+                // Updated success detection - check for 201 status or success message
                 const isCreated = !!(
-                    response &&
-                    (response.success === true || response.statusCode === 201 || response.status === 201 || response?.data?.id || response?.data?._id)
+                    response && (
+                        response.success === true || 
+                        response.statusCode === 201 || 
+                        response.status === 201 || 
+                        response?.data?.id || 
+                        response?.data?._id ||
+                        (response.message && response.message.includes('created')) ||
+                        (response.message && response.message.includes('Created'))
+                    )
                 )
+                
                 if (isCreated) {
                     const sellerId = response?.data?.id || response?.data?._id
                     if (typeof window !== 'undefined') {
@@ -242,8 +252,9 @@ export function useSellerForm() {
                         currentUser.sellerId = sellerId
                         localStorage.setItem('user', JSON.stringify(currentUser))
                     }
-                    toast.seller.profileCreated()
-                    setTimeout(() => router.push('/seller/profile'), 1200)
+                    
+                    // Redirect to success page instead of profile
+                    router.push('/seller/success')
                 } else {
                     throw new Error(response?.message || 'Failed to create seller profile')
                 }

@@ -91,7 +91,7 @@ export default function PendingSellersPage() {
     // Inline notification state
     const [notification, setNotification] = useState(null)
 
-    // Show inline notification messages  
+    // Show inline notification messages
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
         // Auto-dismiss after 5 seconds
@@ -360,11 +360,25 @@ export default function PendingSellersPage() {
             setActionLoading(false)
         }
     }
+    const handleStartReview = async (sellerId) => {
+        // sellerId should already be a string at this point
+        if (!sellerId) return
 
-    // Actions (same behavior you had)
-    const handleStartReview = async () => {
-        showMessage('Start review - This action will be available soon.', 'info')
+        setActionLoading(true)
+        try {
+            await adminAPI.sellers.profile.startReview(sellerId)
+
+            showMessage('Review started successfully!', 'success')
+            fetchList()
+        } catch (err) {
+            console.error('Failed to start review:', err)
+            const message = err?.response?.data?.message || err?.message || 'Failed to start review'
+            showMessage(message, 'error')
+        } finally {
+            setActionLoading(false)
+        }
     }
+
     const handleSubmitCommission = async () => {
         if (!selectedSeller) return
         if (Number.isNaN(commissionRate) || commissionRate < 1 || commissionRate > 50) {
@@ -411,11 +425,14 @@ export default function PendingSellersPage() {
             setActionLoading(false)
         }
     }
-    const handleResendOffer = async (seller) => {
+    const handleResendOffer = async (sellerId) => {
+        // Find the seller object to get the commission rate
+        const seller = sellers.find(s => s._id === sellerId)
         if (!seller?.commissionOffer?.rate) return showMessage('No previous offer to resend', 'info')
+        
         setActionLoading(true)
         try {
-            await adminAPI.sellers.commission.offer(seller._id, seller.commissionOffer.rate)
+            await adminAPI.sellers.commission.offer(sellerId, seller.commissionOffer.rate)
             showMessage('Offer resent', 'success')
             fetchList()
         } catch {
@@ -498,7 +515,6 @@ export default function PendingSellersPage() {
                 />
             )}
 
-            
             {/* Header */}
             <div className="relative overflow-hidden rounded-2xl border border-gray-800 bg-[#141414]">
                 <div
@@ -842,8 +858,8 @@ export default function PendingSellersPage() {
                                     setCommissionRate(seller?.commissionOffer?.rate || 15)
                                     setShowCommissionModal(true)
                                 }}
-                                onAcceptCounter={() => handleAcceptCounterOffer(seller._id, seller?.commissionOffer?.counterOffer?.rate)}
-                                onResendOffer={() => handleResendOffer(seller)}
+                                onAcceptCounter={(sellerId, rate) => handleAcceptCounterOffer(sellerId, rate)}
+                                onResendOffer={(sellerId) => handleResendOffer(sellerId)}
                                 onReject={() => {
                                     setSelectedSeller(seller)
                                     setShowRejectAppModal(true)
@@ -1523,18 +1539,24 @@ function SellerCard({ seller, onStartReview, onOpenCommission, onAcceptCounter, 
     const cfg = statusConfig[status] || statusConfig.pending
 
     const hasCounter = !!seller?.commissionOffer?.counterOffer
+    
+    // Create handlers that properly extract sellerId
+    const handleStartReview = () => onStartReview(seller._id)
+    const handleAcceptCounter = () => onAcceptCounter(seller._id, seller?.commissionOffer?.counterOffer?.rate)
+    const handleResendOffer = () => onResendOffer(seller._id)
+    
     const primaryAction = (() => {
         if (status === 'pending') {
-            return { label: 'Start Review', icon: Eye, onClick: onStartReview }
+            return { label: 'Start Review', icon: Eye, onClick: handleStartReview }
         }
         if (status === 'under_review') {
             return { label: 'Offer Commission', icon: DollarSign, onClick: onOpenCommission }
         }
         if (status === 'commission_offered' && !hasCounter) {
-            return { label: 'Resend Offer', icon: RefreshCw, onClick: onResendOffer }
+            return { label: 'Resend Offer', icon: RefreshCw, onClick: handleResendOffer }
         }
         if (status === 'counter_offered' && hasCounter) {
-            return { label: 'Accept Counter', icon: CheckCircle, onClick: onAcceptCounter }
+            return { label: 'Accept Counter', icon: CheckCircle, onClick: handleAcceptCounter }
         }
         return null
     })()
@@ -1623,7 +1645,7 @@ function SellerCard({ seller, onStartReview, onOpenCommission, onAcceptCounter, 
                                 <>
                                     {/* Accept Counter Button */}
                                     <ActionPrimary
-                                        onClick={primaryAction.onClick}
+                                        onClick={handleAcceptCounter}
                                         label="Accept"
                                         sub={`Accept ${seller.commissionOffer.counterOffer.rate}%`}
                                         icon={CheckCircle}
@@ -1729,4 +1751,6 @@ function LegendBannerAlways({ statusConfig }) {
         </div>
     )
 }
+
+
 

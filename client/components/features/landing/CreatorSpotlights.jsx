@@ -168,7 +168,7 @@ export default function CreatorSpotlights() {
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: 0.2 }}
                             className="text-center mt-8 sm:mt-12">
-                            <Link href="/sellers">
+                            <Link href="/creators">
                                 <DSButton variant="primary" size="large" className="group">
                                     <span>Browse All Creators</span>
                                     <span className="group-hover:translate-x-1 transition-transform">→</span>

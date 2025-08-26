@@ -63,6 +63,12 @@ export const adminAPI = {
                 return res?.data
             },
 
+            // Start review for a pending seller profile
+            startReview: async (sellerId) => {
+                const res = await apiClient.post(`v1/seller/admin/profile/start-review/${sellerId}`)
+                return res?.data
+            },
+
             // Approve seller profile (if you have this endpoint)
             approve: async (sellerId) => {
                 const res = await apiClient.post(`seller/admin/profile/approve/${sellerId}`)

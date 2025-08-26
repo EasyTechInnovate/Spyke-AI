@@ -109,7 +109,7 @@ export default function ProductSpecs({ product }) {
                                     <h3 className="font-medium text-[#121212] dark:text-[#00FF89] mb-1">
                                         {spec.label}
                                     </h3>
-                                    <p className="text-lg font-semibold text-[#00FF89]">
+                                    <p className="text-lg font-semibold text-[#6b7280] dark:text-[#9ca3af]">
                                         {spec.value}
                                     </p>
                                 </div>
