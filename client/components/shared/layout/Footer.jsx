@@ -8,10 +8,9 @@ import { Twitter, Linkedin, Github, Youtube, Facebook, Instagram } from 'lucide-
 export default function Footer() {
     const footerLinks = {
         Product: [
-            { name: 'Features', href: '/features', prefetch: false },
             { name: 'Pricing', href: '/pricing', prefetch: false },
-            { name: 'API Access', href: '/api', prefetch: false },
-            { name: 'Roadmap', href: '/roadmap', prefetch: false }
+            { name: 'Promotion Policy', href: '/promotion-policy', prefetch: false },
+            { name: 'Refund & Return Policy', href: '/refund-policy', prefetch: false },
         ],
         Marketplace: [
             { name: 'Explore', href: '/explore', prefetch: false },
@@ -26,8 +25,9 @@ export default function Footer() {
         Company: [
             { name: 'About Us', href: '/aboutus', prefetch: true },
             { name: 'Contact Us', href: '/contactus', prefetch: true },
-            { name: 'Terms and Services', href: '/terms', prefetch: false },
-            { name: 'Privacy Policy', href: '/privacy-policy', prefetch: false }
+            { name: 'Terms and Services', href: '/terms', prefetch: true },
+            { name: 'Privacy Policy', href: '/privacy-policy', prefetch: false },
+            { name: 'Seller Aggrement', href: '/seller-agreement', prefetch: false }
         ]
     }
 
@@ -35,7 +35,7 @@ export default function Footer() {
         { name: 'Twitter', icon: Twitter, href: 'https://x.com/spykeai' },
         { name: 'LinkedIn', icon: Linkedin, href: 'https://www.linkedin.com/company/spykeai/' },
         { name: 'Facebook', icon: Facebook, href: 'https://www.facebook.com/Spykeai/' },
-        { name: 'YouTube', icon: Youtube, href: 'https://www.youtube.com/@SpykeAITech' },
+        { name: 'YouTube', icon: Youtube, href: 'https://www.youtube.com/@SpykeAITech?sub_confirmation=1' },
         { name: 'Instagram', icon: Instagram, href: 'https://www.instagram.com/spykeai/' }
     ]
 

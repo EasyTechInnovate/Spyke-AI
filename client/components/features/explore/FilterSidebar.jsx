@@ -85,7 +85,6 @@ export default function FilterSidebar({
     (filters.priceRange && (filters.priceRange[0] > 0 || filters.priceRange[1] < 1000))
   , [filters])
 
-  // Price range options with actual counts
   const priceRangeOptions = [
     { 
       label: 'Free', 
@@ -94,22 +93,22 @@ export default function FilterSidebar({
       count: productCounts.priceRanges?.free || 0
     },
     { 
-      label: 'Under $20', 
+      label: 'Under $50', 
       min: 1, 
-      max: 20,
-      count: productCounts.priceRanges?.under_20 || 0
-    },
-    { 
-      label: '$20 - $50', 
-      min: 20, 
       max: 50,
-      count: productCounts.priceRanges?.['20_to_50'] || 0
+      count: productCounts.priceRanges?.under_50 || 0
     },
     { 
-      label: 'Over $50', 
+      label: '$50 - $200', 
       min: 50, 
-      max: 1000,
-      count: productCounts.priceRanges?.over_50 || 0
+      max: 200,
+      count: productCounts.priceRanges?.['50_to_200'] || 0
+    },
+    { 
+      label: 'Over $200', 
+      min: 200, 
+      max: 100000,
+      count: productCounts.priceRanges?.over_200 || 0
     }
   ]
 

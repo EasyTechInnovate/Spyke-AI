@@ -679,7 +679,7 @@ export default function ProductPage() {
                                 {/* Simple Tab Navigation */}
                                 <div className="w-64 flex-shrink-0">
                                     <div className="sticky top-24 space-y-2">
-                                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-6">
+                                        <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-6">
                                             Product Information
                                         </h3>
                                         
@@ -699,10 +699,10 @@ export default function ProductPage() {
                                                         }`}>
                                                         <IconComponent className="w-5 h-5" />
                                                         <div>
-                                                            <div className="font-medium text-sm">
+                                                            <div className="font-medium text-base">
                                                                 {tab.label}
                                                             </div>
-                                                            <div className="text-xs opacity-75 mt-0.5">
+                                                            <div className="text-sm opacity-75 mt-0.5">
                                                                 {tab.description}
                                                             </div>
                                                         </div>
@@ -715,22 +715,22 @@ export default function ProductPage() {
                                         <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                                             <div className="grid grid-cols-1 gap-3">
                                                 <div className="text-center py-2">
-                                                    <div className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">
+                                                    <div className="text-xl font-semibold text-emerald-600 dark:text-emerald-400">
                                                         {product?.averageRating?.toFixed(1) || '5.0'}
                                                     </div>
-                                                    <div className="text-xs text-gray-500 dark:text-gray-400">Rating</div>
+                                                    <div className="text-sm text-gray-500 dark:text-gray-400">Rating</div>
                                                 </div>
                                                 <div className="text-center py-2">
-                                                    <div className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                                                    <div className="text-xl font-semibold text-gray-700 dark:text-gray-300">
                                                         {product?.views || 0}
                                                     </div>
-                                                    <div className="text-xs text-gray-500 dark:text-gray-400">Views</div>
+                                                    <div className="text-sm text-gray-500 dark:text-gray-400">Views</div>
                                                 </div>
                                                 <div className="text-center py-2">
-                                                    <div className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">
+                                                    <div className="text-xl font-semibold text-emerald-600 dark:text-emerald-400">
                                                         {product?.sales || 0}
                                                     </div>
-                                                    <div className="text-xs text-gray-500 dark:text-gray-400">Sales</div>
+                                                    <div className="text-sm text-gray-500 dark:text-gray-400">Sales</div>
                                                 </div>
                                             </div>
                                         </div>

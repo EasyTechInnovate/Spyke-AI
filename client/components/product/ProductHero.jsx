@@ -139,7 +139,11 @@ export default function ProductHero({
                         
                         {/* Main Media Display */}
                         <div className="relative group">
-                            <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 dark:bg-[#1f1f1f] border border-gray-200 dark:border-gray-700">
+                            <div
+                                className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 h-80 sm:h-[520px] md:h-[640px] lg:h-[720px] bg-gray-100 dark:bg-[#1f1f1f] bg-center bg-cover"
+                                style={{
+                                    backgroundImage: `url(${(activeMedia?.type === 'image' ? activeMedia?.src : activeMedia?.poster) || product.thumbnail || ''})`
+                                }}>
                                 <AnimatePresence mode="wait">
                                     <motion.div
                                         key={currentImageIndex}
@@ -155,8 +159,9 @@ export default function ProductHero({
                                                     ref={videoRef}
                                                     src={activeMedia.src}
                                                     poster={activeMedia.poster}
-                                                    className="w-full h-full object-cover"
+                                                    className="absolute inset-0 w-full h-full object-contain object-center"
                                                     muted={isMuted}
+                                                    playsInline
                                                     onPlay={() => setIsPlaying(true)}
                                                     onPause={() => setIsPlaying(false)}
                                                 />
@@ -178,7 +183,7 @@ export default function ProductHero({
                                             <img
                                                 src={activeMedia?.src || product.thumbnail || '/images/placeholder-product.jpg'}
                                                 alt={activeMedia?.alt || product.title}
-                                                className="w-full h-full object-cover"
+                                                className="absolute inset-0 w-full h-full object-contain object-center"
                                                 onError={(e) => {
                                                     e.target.src = product.thumbnail || '/images/placeholder-product.jpg'
                                                 }}
@@ -201,14 +206,7 @@ export default function ProductHero({
                                             </>
                                         )}
 
-                                        {/* Simple Badges */}
-                                        {discountPercentage > 0 && (
-                                            <div className="absolute top-4 left-4">
-                                                <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#FFC050]/20 text-[#FFC050] text-sm font-medium border border-[#FFC050]/30">
-                                                    {discountPercentage}% OFF
-                                                </span>
-                                            </div>
-                                        )}
+                                        {/* Discount badge removed from media overlay to keep gallery clean. */}
                                     </motion.div>
                                 </AnimatePresence>
                             </div>
@@ -359,8 +357,17 @@ export default function ProductHero({
                         {/* Pricing Card */}
                         <motion.div
                             ref={ctaRef}
-                            className="bg-gray-50 dark:bg-[#1f1f1f] rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+                            className="relative bg-gray-50 dark:bg-[#1f1f1f] rounded-xl p-6 border border-gray-200 dark:border-gray-700">
                             
+                            {/* Discount badge moved here for a cleaner layout */}
+                            {discountPercentage > 0 && (
+                                <div className="absolute top-4 right-4">
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#FFC050]/20 text-[#FFC050] text-sm font-medium border border-[#FFC050]/30">
+                                        {discountPercentage}% OFF
+                                    </span>
+                                </div>
+                            )}
+                             
                             {/* Pricing */}
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="text-3xl font-bold text-[#00FF89]">

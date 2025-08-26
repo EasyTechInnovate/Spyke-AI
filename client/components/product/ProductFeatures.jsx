@@ -95,13 +95,13 @@ export default function ProductFeatures({ product }) {
                                 
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between mb-3">
-                                        <h3 className="font-medium text-[#121212] dark:text-[#00FF89] text-base leading-tight">
+                                        <h3 className="font-large text-[#121212] dark:text-[#00FF89] text-base leading-tight">
                                             Benefit {index + 1}
                                         </h3>
                                         <CheckCircle className="w-4 h-4 text-[#00FF89] opacity-60 group-hover:opacity-100 transition-opacity" />
                                     </div>
                                     
-                                    <p className="text-[#6b7280] dark:text-[#9ca3af] text-sm leading-relaxed">
+                                    <p className="text-[#6b7280] dark:text-[#9ca3af] text-lg leading-relaxed">
                                         {feature}
                                     </p>
                                 </div>
