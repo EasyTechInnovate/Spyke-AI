@@ -215,110 +215,93 @@ export default function SellerProfile() {
                 </div>
             )}
 
-            {/* Hero Section with Banner */}
+            {/* Hero Section */}
             <section className="relative">
-                {/* Banner Image */}
-                <div className="relative h-48 sm:h-64 lg:h-80 overflow-hidden">
-                    <img
-                        src={seller.sellerBanner || 'https://picsum.photos/1200/400.jpg'}
-                        alt="Seller Banner"
-                        className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/80 via-transparent to-transparent"></div>
-
-                    {/* Edit Banner Button */}
-                    <button className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-sm rounded-lg hover:bg-black/70 transition-colors">
-                        <Camera className="w-5 h-5 text-white" />
-                    </button>
-                </div>
-
                 {/* Profile Content */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="relative -mt-16 sm:-mt-20 pb-8">
-                        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-                            {/* Profile Info */}
-                            <div className="flex flex-col sm:flex-row items-start sm:items-end gap-6">
-                                {/* Avatar */}
-                                <div className="relative">
-                                    <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-[#00FF89] to-blue-500 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-bold text-black border-4 border-[#0a0a0a]">
-                                        {seller.fullName?.charAt(0) || 'S'}
-                                    </div>
-                                    <button className="absolute -bottom-2 -right-2 p-2 bg-[#00FF89] rounded-full hover:bg-[#00FF89]/90 transition-colors">
-                                        <Edit3 className="w-4 h-4 text-black" />
-                                    </button>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-8">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                        {/* Profile Info */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                            {/* Avatar */}
+                            <div className="relative">
+                                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-[#00FF89] to-blue-500 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-bold text-black">
+                                    {seller.fullName?.charAt(0) || 'S'}
                                 </div>
-
-                                {/* Name and Details */}
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
-                                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">{seller.fullName}</h1>
-                                        <VerificationBadge
-                                            status={seller.verification?.status}
-                                            size="large"
-                                        />
-                                    </div>
-
-                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-300 mb-4">
-                                        <div className="flex items-center gap-2">
-                                            <Mail className="w-4 h-4" />
-                                            <span className="text-sm">{seller.email}</span>
-                                        </div>
-                                        {seller.location?.country && (
-                                            <div className="flex items-center gap-2">
-                                                <MapPin className="w-4 h-4" />
-                                                <span className="text-sm">{seller.location.country}</span>
-                                            </div>
-                                        )}
-                                        <div className="flex items-center gap-2">
-                                            <Calendar className="w-4 h-4" />
-                                            <span className="text-sm">Since {formatDate(seller.createdAt)}</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Specializations */}
-                                    <div className="flex flex-wrap gap-2">
-                                        {seller.niches?.map((niche) => (
-                                            <span
-                                                key={niche}
-                                                className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm border border-blue-500/30">
-                                                {niche}
-                                            </span>
-                                        ))}
-                                        {seller.toolsSpecialization?.map((tool) => (
-                                            <span
-                                                key={tool}
-                                                className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm border border-purple-500/30">
-                                                {tool}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex flex-col sm:flex-row gap-3 lg:flex-shrink-0">
-                                <button className="flex items-center justify-center gap-2 px-6 py-3 bg-[#1f1f1f] border border-gray-700 rounded-xl hover:border-gray-600 transition-colors">
-                                    <Settings className="w-5 h-5" />
-                                    <span>Edit Profile</span>
+                                <button className="absolute -bottom-2 -right-2 p-2 bg-[#00FF89] rounded-full hover:bg-[#00FF89]/90 transition-colors">
+                                    <Edit3 className="w-4 h-4 text-black" />
                                 </button>
-                                {(seller.verification?.status === VERIFICATION_STATUSES.PENDING ||
-                                    seller.verification?.status === VERIFICATION_STATUSES.UNDER_REVIEW) && (
-                                    <button
-                                        onClick={() => setShowUpload(true)}
-                                        className="flex items-center justify-center gap-2 px-6 py-3 bg-amber-500 text-black rounded-xl font-semibold hover:bg-amber-500/90 transition-colors">
-                                        <Upload className="w-5 h-5" />
-                                        <span>Submit Documents</span>
-                                    </button>
-                                )}
-                                {canSell && (
-                                    <Link
-                                        href="/seller/products/create"
-                                        className="flex items-center justify-center gap-2 px-6 py-3 bg-[#00FF89] text-black rounded-xl font-semibold hover:bg-[#00FF89]/90 transition-colors">
-                                        <Plus className="w-5 h-5" />
-                                        <span>Add Product</span>
-                                    </Link>
-                                )}
                             </div>
+
+                            {/* Name and Details */}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
+                                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">{seller.fullName}</h1>
+                                    <VerificationBadge
+                                        status={seller.verification?.status}
+                                        size="large"
+                                    />
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-300 mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <Mail className="w-4 h-4" />
+                                        <span className="text-sm">{seller.email}</span>
+                                    </div>
+                                    {seller.location?.country && (
+                                        <div className="flex items-center gap-2">
+                                            <MapPin className="w-4 h-4" />
+                                            <span className="text-sm">{seller.location.country}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-2">
+                                        <Calendar className="w-4 h-4" />
+                                        <span className="text-sm">Since {formatDate(seller.createdAt)}</span>
+                                    </div>
+                                </div>
+
+                                {/* Specializations */}
+                                <div className="flex flex-wrap gap-2">
+                                    {seller.niches?.map((niche) => (
+                                        <span
+                                            key={niche}
+                                            className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm border border-blue-500/30">
+                                            {niche}
+                                        </span>
+                                    ))}
+                                    {seller.toolsSpecialization?.map((tool) => (
+                                        <span
+                                            key={tool}
+                                            className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm border border-purple-500/30">
+                                            {tool}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-3 lg:flex-shrink-0">
+                            <button className="flex items-center justify-center gap-2 px-6 py-3 bg-[#1f1f1f] border border-gray-700 rounded-xl hover:border-gray-600 transition-colors">
+                                <Settings className="w-5 h-5" />
+                                <span>Edit Profile</span>
+                            </button>
+                            {(seller.verification?.status === VERIFICATION_STATUSES.PENDING ||
+                                seller.verification?.status === VERIFICATION_STATUSES.UNDER_REVIEW) && (
+                                <button
+                                    onClick={() => setShowUpload(true)}
+                                    className="flex items-center justify-center gap-2 px-6 py-3 bg-amber-500 text-black rounded-xl font-semibold hover:bg-amber-500/90 transition-colors">
+                                    <Upload className="w-5 h-5" />
+                                    <span>Submit Documents</span>
+                                </button>
+                            )}
+                            {canSell && (
+                                <Link
+                                    href="/seller/products/create"
+                                    className="flex items-center justify-center gap-2 px-6 py-3 bg-[#00FF89] text-black rounded-xl font-semibold hover:bg-[#00FF89]/90 transition-colors">
+                                    <Plus className="w-5 h-5" />
+                                    <span>Add Product</span>
+                                </Link>
+                            )}
                         </div>
                     </div>
                 </div>

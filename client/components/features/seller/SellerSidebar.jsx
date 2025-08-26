@@ -132,7 +132,7 @@ const SellerSidebar = ({ currentPath = '/profile', sellerName = '', sidebarOpen,
 
             {/* Mobile Overlay - Sophisticated blur */}
             <div
-                className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-all duration-500 ${
+                className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-all duration-300 ${
                     isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
                 }`}
                 onClick={() => setIsOpen(false)}
@@ -140,16 +140,9 @@ const SellerSidebar = ({ currentPath = '/profile', sellerName = '', sidebarOpen,
 
             {/* Sidebar - Refined glass morphism design with collapse functionality */}
             <aside
-                className={`fixed top-0 left-0 z-[100] h-screen bg-gradient-to-b from-black/95 to-black/98 backdrop-blur-xl border-r border-white/5 transform transition-all duration-500 ease-out flex flex-col shadow-2xl ${
+                className={`fixed top-0 left-0 z-50 h-full bg-gradient-to-b from-black/95 to-black/98 backdrop-blur-xl border-r border-white/5 transition-all duration-300 ease-out flex flex-col shadow-2xl lg:z-[100] ${
                     isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-                } ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-64'} w-64`}
-                style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    height: '100vh',
-                    zIndex: 100
-                }}
+                } ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-64'} w-80`}
                 aria-label="Seller navigation sidebar">
                 {/* Desktop Collapse Toggle Button */}
                 <button
