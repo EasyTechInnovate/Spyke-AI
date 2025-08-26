@@ -21,6 +21,7 @@ router
     .get(authentication, authorization([EUserRole.SELLER]), sellerController.getProfile)
     .put(authentication,authorization([EUserRole.ADMIN,EUserRole.SELLER]),validateRequest(sellerSchemas.updateProfile), sellerController.updateProfile)
 
+router.route('/dashboard').get(authentication, authorization([EUserRole.SELLER]), sellerController.getDashboard)
 router.route('/verification/submit').post(authentication, validateRequest(sellerSchemas.submitVerification), sellerController.submitForVerification)
 router.route('/commission/accept').post(authentication, sellerController.acceptCommissionOffer)
 router.route('/commission/reject').post(authentication, validateRequest(sellerSchemas.rejectCommissionOffer), sellerController.rejectCommissionOffer)

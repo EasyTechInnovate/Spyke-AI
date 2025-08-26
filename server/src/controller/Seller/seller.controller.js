@@ -6,8 +6,10 @@ import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc.js'
 import userModel from '../../model/user.model.js'
 import sellerProfileModel from '../../model/seller.profile.model.js'
+import Product from '../../model/product.model.js'
+import Purchase from '../../model/purchase.model.js'
 import { notificationService } from '../../util/notification.js'
-import { EUserRole, ESellerVerificationStatus, ECommissionOfferStatus, EPayoutMethod } from '../../constant/application.js'
+import { EUserRole, ESellerVerificationStatus, ECommissionOfferStatus, EPayoutMethod, EOrderStatus, EPaymentStatus } from '../../constant/application.js'
 
 dayjs.extend(utc)
 
@@ -667,6 +669,254 @@ export default {
                 acceptedAt: sellerProfile.commissionOffer.offeredAt,
                 negotiationRound: sellerProfile.commissionOffer.negotiationRound
             })
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+    getDashboard: async (req, res, next) => {
+        try {
+            const { authenticatedUser } = req
+
+            const sellerProfile = await sellerProfileModel.findOne({ userId: authenticatedUser.id })
+            if (!sellerProfile) {
+                return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('Seller profile')), req, 404)
+            }
+
+            // Get time ranges for analytics
+            const now = dayjs().utc()
+            const last30Days = now.subtract(30, 'days').toDate()
+            const last7Days = now.subtract(7, 'days').toDate()
+
+            // Aggregate dashboard data in parallel for performance
+            const [
+                recentOrders,
+                topProducts,
+                totalProductViews,
+                pendingOrdersCount,
+                completedOrdersCount,
+                revenueThisMonth,
+                salesThisMonth
+            ] = await Promise.all([
+                // Recent orders (last 10)
+                Purchase.aggregate([
+                    {
+                        $match: {
+                            'items.sellerId': sellerProfile._id,
+                            paymentStatus: EPaymentStatus.COMPLETED,
+                            purchaseDate: { $gte: last30Days }
+                        }
+                    },
+                    { $unwind: '$items' },
+                    { $match: { 'items.sellerId': sellerProfile._id } },
+                    {
+                        $lookup: {
+                            from: 'products',
+                            localField: 'items.productId',
+                            foreignField: '_id',
+                            as: 'product'
+                        }
+                    },
+                    { $unwind: '$product' },
+                    {
+                        $lookup: {
+                            from: 'users',
+                            localField: 'userId',
+                            foreignField: '_id',
+                            as: 'buyer'
+                        }
+                    },
+                    { $unwind: '$buyer' },
+                    {
+                        $project: {
+                            _id: 1,
+                            orderId: '$_id',
+                            productTitle: '$product.title',
+                            productType: '$product.type',
+                            price: '$items.price',
+                            buyerName: '$buyer.name',
+                            buyerEmail: '$buyer.emailAddress',
+                            orderDate: '$purchaseDate',
+                            status: '$orderStatus'
+                        }
+                    },
+                    { $sort: { orderDate: -1 } },
+                    { $limit: 10 }
+                ]),
+
+                // Top performing products (by sales)
+                Product.find({ sellerId: sellerProfile._id })
+                    .select('title type price sales views averageRating thumbnail')
+                    .sort({ sales: -1 })
+                    .limit(5)
+                    .lean(),
+
+                // Total product views (sum of all product views)
+                Product.aggregate([
+                    { $match: { sellerId: sellerProfile._id } },
+                    { $group: { _id: null, totalViews: { $sum: '$views' } } }
+                ]).then(result => result[0]?.totalViews || 0),
+
+                // Pending orders count
+                Purchase.countDocuments({
+                    'items.sellerId': sellerProfile._id,
+                    orderStatus: EOrderStatus.PENDING,
+                    paymentStatus: EPaymentStatus.COMPLETED
+                }),
+
+                // Completed orders count
+                Purchase.countDocuments({
+                    'items.sellerId': sellerProfile._id,
+                    orderStatus: EOrderStatus.COMPLETED,
+                    paymentStatus: EPaymentStatus.COMPLETED
+                }),
+
+                // Revenue this month
+                Purchase.aggregate([
+                    {
+                        $match: {
+                            'items.sellerId': sellerProfile._id,
+                            paymentStatus: EPaymentStatus.COMPLETED,
+                            purchaseDate: { $gte: now.startOf('month').toDate() }
+                        }
+                    },
+                    { $unwind: '$items' },
+                    { $match: { 'items.sellerId': sellerProfile._id } },
+                    { $group: { _id: null, totalRevenue: { $sum: '$items.price' } } }
+                ]).then(result => result[0]?.totalRevenue || 0),
+
+                // Sales count this month
+                Purchase.aggregate([
+                    {
+                        $match: {
+                            'items.sellerId': sellerProfile._id,
+                            paymentStatus: EPaymentStatus.COMPLETED,
+                            purchaseDate: { $gte: now.startOf('month').toDate() }
+                        }
+                    },
+                    { $unwind: '$items' },
+                    { $match: { 'items.sellerId': sellerProfile._id } },
+                    { $count: 'totalSales' }
+                ]).then(result => result[0]?.totalSales || 0)
+            ])
+
+            // Calculate conversion funnel data
+            const totalCartAdditions = await Purchase.aggregate([
+                {
+                    $match: {
+                        'items.sellerId': sellerProfile._id,
+                        purchaseDate: { $gte: last30Days }
+                    }
+                },
+                { $unwind: '$items' },
+                { $match: { 'items.sellerId': sellerProfile._id } },
+                { $count: 'totalCarts' }
+            ]).then(result => result[0]?.totalCarts || 0)
+
+            // Calculate trends (comparing last 30 days vs previous 30 days)
+            const previous30Days = now.subtract(60, 'days').toDate()
+            const [currentPeriodRevenue, previousPeriodRevenue] = await Promise.all([
+                Purchase.aggregate([
+                    {
+                        $match: {
+                            'items.sellerId': sellerProfile._id,
+                            paymentStatus: EPaymentStatus.COMPLETED,
+                            purchaseDate: { $gte: last30Days }
+                        }
+                    },
+                    { $unwind: '$items' },
+                    { $match: { 'items.sellerId': sellerProfile._id } },
+                    { $group: { _id: null, revenue: { $sum: '$items.price' } } }
+                ]).then(result => result[0]?.revenue || 0),
+
+                Purchase.aggregate([
+                    {
+                        $match: {
+                            'items.sellerId': sellerProfile._id,
+                            paymentStatus: EPaymentStatus.COMPLETED,
+                            purchaseDate: { $gte: previous30Days, $lt: last30Days }
+                        }
+                    },
+                    { $unwind: '$items' },
+                    { $match: { 'items.sellerId': sellerProfile._id } },
+                    { $group: { _id: null, revenue: { $sum: '$items.price' } } }
+                ]).then(result => result[0]?.revenue || 0)
+            ])
+
+            // Calculate revenue growth percentage
+            const revenueGrowth = previousPeriodRevenue > 0 
+                ? ((currentPeriodRevenue - previousPeriodRevenue) / previousPeriodRevenue * 100)
+                : currentPeriodRevenue > 0 ? 100 : 0
+
+            // Construct dashboard response matching frontend expectations
+            const dashboardData = {
+                // Core stats from seller profile + real-time data
+                totalEarnings: sellerProfile.stats.totalEarnings,
+                totalOrders: sellerProfile.stats.totalSales,
+                totalProducts: sellerProfile.stats.totalProducts,
+                averageRating: sellerProfile.stats.averageRating,
+                
+                // Real-time order status counts
+                pendingOrders: pendingOrdersCount,
+                completedOrders: completedOrdersCount,
+                
+                // Recent activity
+                recentOrders: recentOrders.map(order => ({
+                    id: order._id,
+                    orderId: String(order._id).slice(-6), // Last 6 chars for display
+                    productTitle: order.productTitle,
+                    productType: order.productType,
+                    price: order.price,
+                    buyerName: order.buyerName,
+                    buyerEmail: order.buyerEmail,
+                    orderDate: order.orderDate,
+                    status: order.status,
+                    formattedDate: dayjs(order.orderDate).format('MMM DD, YYYY')
+                })),
+
+                // Top performing products
+                topProducts: topProducts.map(product => ({
+                    id: product._id,
+                    title: product.title,
+                    type: product.type,
+                    price: product.price,
+                    sales: product.sales,
+                    views: product.views,
+                    averageRating: product.averageRating,
+                    thumbnail: product.thumbnail,
+                    conversionRate: product.views > 0 ? ((product.sales / product.views) * 100).toFixed(1) : 0
+                })),
+
+                // Analytics for funnel chart
+                analytics: {
+                    views: totalProductViews,
+                    carts: totalCartAdditions,
+                    purchases: sellerProfile.stats.totalSales,
+                    conversionRate: totalProductViews > 0 ? ((sellerProfile.stats.totalSales / totalProductViews) * 100).toFixed(2) : 0
+                },
+
+                // Performance metrics
+                performance: {
+                    revenueThisMonth: revenueThisMonth,
+                    salesThisMonth: salesThisMonth,
+                    revenueGrowth: revenueGrowth.toFixed(1),
+                    profileViews: sellerProfile.stats.profileViews,
+                    averageOrderValue: sellerProfile.stats.totalSales > 0 
+                        ? (sellerProfile.stats.totalEarnings / sellerProfile.stats.totalSales).toFixed(2) 
+                        : 0
+                },
+
+                // Summary for quick overview
+                summary: {
+                    isApproved: sellerProfile.isApproved,
+                    verificationStatus: sellerProfile.verification.status,
+                    commissionRate: sellerProfile.getCurrentCommissionRate(),
+                    completionPercentage: sellerProfile.completionPercentage,
+                    memberSince: sellerProfile.createdAt,
+                    lastUpdated: sellerProfile.updatedAt
+                }
+            }
+
+            httpResponse(req, res, 200, responseMessage.SUCCESS, dashboardData)
         } catch (err) {
             httpError(next, err, req, 500)
         }
