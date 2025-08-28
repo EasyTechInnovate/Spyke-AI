@@ -138,6 +138,14 @@ function useExploreData(initialURLState) {
 }
 
 export default function ExplorePage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-gray-400">Loading Explore…</div>}>
+            <ExplorePageContent />
+        </Suspense>
+    )
+}
+
+function ExplorePageContent() {
     const router = useRouter()
     const urlState = useURLState()
 
@@ -158,12 +166,10 @@ export default function ExplorePage() {
 
     const { products, totalItems, loading, error, fetchProducts } = useExploreData({ ...filters, page })
 
-    // Re-fetch when core filters change
     useEffect(() => {
         fetchProducts({ ...filters, search: debouncedSearch, page })
     }, [filters.category, debouncedSearch, filters.rating, filters.verifiedOnly, filters.priceRange[0], filters.priceRange[1], page, fetchProducts])
 
-    // Sync URL (keeps shareability)
     useEffect(() => {
         const params = new URLSearchParams()
         if (filters.category !== 'all') params.set('category', filters.category)
