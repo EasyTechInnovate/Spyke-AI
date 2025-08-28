@@ -29,12 +29,11 @@ export default function CategoryDetailClient({ categoryId }) {
       const params = {
         category: filters.category,
         page: pagination.page,
-        limit: pagination.limit,
-        sortBy: filters.sortBy,
-        sortOrder: 'desc'
+        limit: pagination.limit
+        // Removed sortBy & sortOrder per requirement: no sorting params sent to API
       }
 
-      // merge any explicit overrides
+      // merge any explicit overrides (will not include sort keys)
       Object.assign(params, opts)
 
       const res = await productsAPI.getProducts(params)
@@ -49,7 +48,7 @@ export default function CategoryDetailClient({ categoryId }) {
     } finally {
       setLoading(false)
     }
-  }, [filters.category, filters.sortBy, pagination.limit, pagination.page])
+  }, [filters.category, pagination.limit, pagination.page])
 
   useEffect(() => {
     // reset to page 1 when category or filters change

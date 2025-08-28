@@ -7,9 +7,6 @@ import WhatsAppButton from '@/components/shared/WhatsAppButton'
 import ConditionalFooter from '@/components/shared/layout/ConditionalFooter'
 import ConditionalHeader from '@/components/shared/layout/ConditionalHeader'
 // import NotificationProvider from '@/components/shared/notifications/NotificationProvider'
-import { Inter } from 'next/font/google'
-
-const inter = Inter({ subsets: ['latin'] })
 
 const structuredData = {
     '@context': 'https://schema.org',
@@ -206,6 +203,13 @@ export default function RootLayout({ children }) {
                     crossOrigin="anonymous"
                 />
 
+                <link
+                    rel="preload"
+                    as="image"
+                    href="/og-image.png"
+                    imagesrcset="/og-image.png 1200w"
+                />
+
                 {/* Structured Data */}
                 <script
                     type="application/ld+json"
@@ -224,7 +228,7 @@ export default function RootLayout({ children }) {
 
                 <ConditionalHeader />
                 {/* <NotificationProvider> */}
-                    <main id="main-content">{children}</main>
+                <main id="main-content">{children}</main>
                 {/* </NotificationProvider> */}
                 <ConditionalFooter />
                 <WhatsAppButton />

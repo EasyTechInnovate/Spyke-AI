@@ -13,7 +13,7 @@ export const PRODUCT_TYPES = [
   { id: 'all', name: 'All Types' },
   { id: 'automation', name: 'Automation', icon: Zap },
   { id: 'prompt', name: 'AI Prompts', icon: Code2 },
-  { id: 'template', name: 'Templates', icon: Star }
+  { id: 'agent', name: 'Agent', icon: Star }
 ]
 
 // Industries from backend (only what backend actually supports)

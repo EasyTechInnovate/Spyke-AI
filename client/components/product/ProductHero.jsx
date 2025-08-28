@@ -9,12 +9,8 @@ import {
     ShoppingCart,
     Download,
     ThumbsUp,
-    Package,
     Play,
     Pause,
-    Volume2,
-    VolumeX,
-    Maximize2,
     Star,
     User,
     Shield,
@@ -28,7 +24,19 @@ import {
     ExternalLink
 } from 'lucide-react'
 
-// Helper function to detect video URL type and convert to embeddable format
+// NEW: Central type badge color constants for easy theming
+const TYPE_BADGE_STYLES = {
+    // example custom types (extend as needed)
+    prompt: { bg: 'bg-indigo-500/10', border: 'border-indigo-500/30', text: 'text-indigo-400' },
+    hiring: { bg: 'bg-rose-500/10', border: 'border-rose-500/30', text: 'text-rose-400' },
+    // fallback / default (previous green style) with improved contrast on light mode
+    default: { bg: 'bg-[#00FF89]/10', border: 'border-[#00FF89]/30', text: 'text-emerald-700 dark:text-[#00FF89]' }
+}
+
+// Accessible focus ring utility (can be abstracted later)
+const focusRing =
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00FF89] focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#121212]'
+
 const getVideoEmbedInfo = (url) => {
     if (!url) return null
 
@@ -208,7 +216,27 @@ export default function ProductHero({
                         transition={{ duration: 0.6 }}
                         className="space-y-4">
                         {/* Main Media Display */}
-                        <div className="relative group">
+                        <div
+                            className="relative group"
+                            role="region"
+                            aria-roledescription="carousel"
+                            aria-label={`${product.title} media gallery`}
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                                if (e.key === 'ArrowRight') {
+                                    e.preventDefault()
+                                    nextImage()
+                                } else if (e.key === 'ArrowLeft') {
+                                    e.preventDefault()
+                                    prevImage()
+                                } else if (e.key === 'Home') {
+                                    e.preventDefault()
+                                    setCurrentImageIndex(0)
+                                } else if (e.key === 'End') {
+                                    e.preventDefault()
+                                    setCurrentImageIndex(mediaItems.length - 1)
+                                }
+                            }}>
                             <div
                                 className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 h-80 sm:h-[520px] md:h-[640px] lg:h-[720px] bg-gray-100 dark:bg-[#1f1f1f] bg-center bg-cover"
                                 style={{
@@ -272,12 +300,14 @@ export default function ProductHero({
                                             <>
                                                 <button
                                                     onClick={prevImage}
-                                                    className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 dark:bg-[#1f1f1f]/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white dark:hover:bg-[#1f1f1f]">
+                                                    aria-label="Previous media"
+                                                    className={`absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 dark:bg-[#1f1f1f]/90 rounded-full flex items-center justify-center transition-opacity hover:bg-white dark:hover:bg-[#1f1f1f] opacity-0 group-hover:opacity-100 focus-visible:opacity-100 ${focusRing}`}>
                                                     <ChevronLeft className="w-5 h-5 text-[#121212] dark:text-[#00FF89]" />
                                                 </button>
                                                 <button
                                                     onClick={nextImage}
-                                                    className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 dark:bg-[#1f1f1f]/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white dark:hover:bg-[#1f1f1f]">
+                                                    aria-label="Next media"
+                                                    className={`absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 dark:bg-[#1f1f1f]/90 rounded-full flex items-center justify-center transition-opacity hover:bg-white dark:hover:bg-[#1f1f1f] opacity-0 group-hover:opacity-100 focus-visible:opacity-100 ${focusRing}`}>
                                                     <ChevronRight className="w-5 h-5 text-[#121212] dark:text-[#00FF89]" />
                                                 </button>
                                             </>
@@ -290,12 +320,19 @@ export default function ProductHero({
 
                             {/* Media Indicators */}
                             {mediaItems.length > 1 && (
-                                <div className="flex justify-center mt-3 gap-2">
+                                <div
+                                    className="flex justify-center mt-3 gap-2"
+                                    role="tablist"
+                                    aria-label="Media selection">
                                     {mediaItems.map((_, index) => (
                                         <button
                                             key={index}
+                                            role="tab"
+                                            aria-selected={currentImageIndex === index}
+                                            aria-label={`Go to media ${index + 1} of ${mediaItems.length}`}
+                                            aria-current={currentImageIndex === index ? 'true' : undefined}
                                             onClick={() => setCurrentImageIndex(index)}
-                                            className={`w-2 h-2 rounded-full transition-all ${
+                                            className={`w-2 h-2 rounded-full transition-all ${focusRing} focus-visible:w-6 ${
                                                 currentImageIndex === index
                                                     ? 'bg-[#00FF89] w-6'
                                                     : 'bg-[#6b7280] dark:bg-[#9ca3af] hover:bg-[#00FF89]/70'
@@ -342,11 +379,24 @@ export default function ProductHero({
                         className="space-y-6">
                         {/* Product Header */}
                         <div className="space-y-4">
-                            {/* Category Badge */}
-                            <div className="inline-flex items-center px-3 py-1 rounded-full bg-[#00FF89]/10 border border-[#00FF89]/30">
-                                <span className="text-sm font-medium text-[#00FF89]">
-                                    {product.category?.replace('_', ' ')} • {product.type}
-                                </span>
+                            {/* Category + Type Badges (split) */}
+                            <div className="flex flex-wrap items-center gap-2">
+                                {/* Category Badge (improved contrast) */}
+                                <div className="inline-flex items-center px-3 py-1 rounded-full bg-[#00FF89]/10 border border-[#00FF89]/30">
+                                    <span className="text-sm font-medium text-emerald-700 dark:text-[#00FF89]">
+                                        {product.category?.replace('_', ' ')}
+                                    </span>
+                                </div>
+                                {/* Type Badge with color mapping */}
+                                {(() => {
+                                    const key = (product.type || '').toLowerCase()
+                                    const style = TYPE_BADGE_STYLES[key] || TYPE_BADGE_STYLES.default
+                                    return (
+                                        <div className={`inline-flex items-center px-3 py-1 rounded-full ${style.bg} border ${style.border}`}>
+                                            <span className={`text-sm font-medium ${style.text}`}>{product.type}</span>
+                                        </div>
+                                    )
+                                })()}
                             </div>
 
                             {/* Title */}
@@ -387,7 +437,9 @@ export default function ProductHero({
                                     <button
                                         onClick={onUpvote}
                                         disabled={isUpvoting}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                                        aria-pressed={!!upvoted}
+                                        aria-label={upvoted ? 'Remove upvote' : 'Upvote product'}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${focusRing} ${
                                             upvoted
                                                 ? 'bg-[#00FF89]/10 border-[#00FF89]/30 text-[#00FF89]'
                                                 : 'bg-gray-50 dark:bg-[#1f1f1f] border-gray-200 dark:border-gray-700 text-[#6b7280] dark:text-[#9ca3af] hover:bg-[#00FF89]/5 hover:border-[#00FF89]/20'
@@ -398,7 +450,9 @@ export default function ProductHero({
 
                                     <button
                                         onClick={onLike}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                                        aria-pressed={!!liked}
+                                        aria-label={liked ? 'Remove from favorites' : 'Add to favorites'}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${focusRing} ${
                                             liked
                                                 ? 'bg-[#FFC050]/10 border-[#FFC050]/30 text-[#FFC050]'
                                                 : 'bg-gray-50 dark:bg-[#1f1f1f] border-gray-200 dark:border-gray-700 text-[#6b7280] dark:text-[#9ca3af] hover:bg-[#FFC050]/5 hover:border-[#FFC050]/20'
@@ -410,7 +464,8 @@ export default function ProductHero({
 
                                 <button
                                     onClick={onShare}
-                                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-[#1f1f1f] hover:bg-[#00FF89]/10 hover:border-[#00FF89]/20 rounded-lg transition-colors border border-gray-200 dark:border-gray-700 relative">
+                                    aria-label="Share product"
+                                    className={`flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-[#1f1f1f] hover:bg-[#00FF89]/10 hover:border-[#00FF89]/20 rounded-lg transition-colors border border-gray-200 dark:border-gray-700 relative ${focusRing}`}>
                                     <Share2 className="w-4 h-4 text-[#121212] dark:text-[#00FF89]" />
                                     <span className="text-[#121212] dark:text-[#00FF89] font-medium text-sm">Share</span>
                                     {showCopied && (

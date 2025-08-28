@@ -1,14 +1,11 @@
 import { motion } from 'framer-motion'
-import { Search, Filter, SlidersHorizontal, ChevronDown, Grid3X3, List } from 'lucide-react'
-import { SORT_OPTIONS } from '@/data/explore/constants'
+import { Search, Filter, SlidersHorizontal, Grid3X3, List } from 'lucide-react'
 
 export default function ExploreControls({
     filters,
-    sortBy,
     viewMode,
     showFilters,
     onSearch,
-    onSortChange,
     onViewModeChange,
     onToggleFilters,
     onToggleMobileFilters
@@ -34,6 +31,7 @@ export default function ExploreControls({
                         onChange={(e) => onSearch(e.target.value)}
                         placeholder="Search products, prompts, tools..."
                         className="w-full pl-12 pr-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent hover:border-gray-700 transition-all"
+                        aria-label="Search products"
                     />
                 </div>
 
@@ -41,7 +39,8 @@ export default function ExploreControls({
                     {/* Mobile Filter Button */}
                     <button
                         onClick={onToggleMobileFilters}
-                        className="lg:hidden flex items-center gap-2 px-4 py-2 bg-gray-900 border border-gray-800 rounded-xl hover:bg-gray-800 transition-colors">
+                        className="lg:hidden flex items-center gap-2 px-4 py-2 bg-gray-900 border border-gray-800 rounded-xl hover:bg-gray-800 transition-colors"
+                        aria-label="Open filters">
                         <Filter className="w-4 h-4" />
                         Filters
                         {hasActiveFilters && <span className="w-2 h-2 bg-brand-primary rounded-full" />}
@@ -50,26 +49,26 @@ export default function ExploreControls({
                     {/* Desktop Filter Toggle */}
                     <button
                         onClick={onToggleFilters}
-                        className="hidden lg:flex items-center gap-2 px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl hover:bg-gray-800 transition-colors h-12">
+                        className="hidden lg:flex items-center gap-2 px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl hover:bg-gray-800 transition-colors h-12"
+                        aria-label="Toggle filters panel">
                         <SlidersHorizontal className="w-4 h-4" />
                         {showFilters ? 'Hide' : 'Show'} Filters
                     </button>
 
-                    {/* Sort Dropdown */}
-                    <div className="relative">
-                        <select
-                            value={sortBy}
-                            onChange={(e) => onSortChange(e.target.value)}
-                            className="appearance-none px-4 py-3 pr-10 bg-gray-900 border border-gray-800 rounded-xl hover:bg-gray-800 transition-colors cursor-pointer h-12">
-                            {SORT_OPTIONS.map((option) => (
-                                <option
-                                    key={option.id}
-                                    value={option.id}>
-                                    {option.name}
-                                </option>
-                            ))}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" />
+                    {/* View Mode Toggle */}
+                    <div className="flex items-center gap-1 bg-gray-900 border border-gray-800 rounded-xl p-1 h-12">
+                        <button
+                            onClick={() => onViewModeChange('grid')}
+                            aria-label="Grid view"
+                            className={`p-2 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'}`}>
+                            <Grid3X3 className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={() => onViewModeChange('list')}
+                            aria-label="List view"
+                            className={`p-2 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'}`}>
+                            <List className="w-4 h-4" />
+                        </button>
                     </div>
                 </div>
             </div>

@@ -1,479 +1,324 @@
-import { motion, AnimatePresence } from 'framer-motion'
-import { X, ChevronUp, ChevronDown, Star, CheckCircle2, DollarSign } from 'lucide-react'
-import { useState, useCallback, useMemo } from 'react'
+'use client'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { X, ChevronDown, ChevronUp, Star, DollarSign } from 'lucide-react'
+import { createPortal } from 'react-dom'
 
-export default function MobileFilterDrawer({ 
-  isOpen, 
-  onClose, 
-  filters, 
-  categories,
-  productTypes,
-  industries,
-  setupTimes,
-  onFilterChange 
+export default function MobileFilterDrawer({
+    isOpen,
+    onClose,
+    filters,
+    categories = [],
+    productTypes = [],
+    industries = [],
+    setupTimes = [],
+    onFilterChange
 }) {
-  const [expandedSections, setExpandedSections] = useState({
-    productType: true,
-    category: true,
-    industry: true,
-    setupTime: true,
-    priceRange: true,
-    rating: true,
-    seller: true
-  })
-
-  // Toggle section with smooth animation
-  const toggleSection = useCallback((section) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }))
-  }, [])
-
-  // Enhanced filter handlers for all filter types
-  const handleProductTypeChange = useCallback((typeId) => {
-    onFilterChange({ ...filters, type: typeId })
-  }, [filters, onFilterChange])
-
-  const handleCategoryChange = useCallback((categoryId) => {
-    onFilterChange({ ...filters, category: categoryId })
-  }, [filters, onFilterChange])
-
-  const handleIndustryChange = useCallback((industryId) => {
-    onFilterChange({ ...filters, industry: industryId })
-  }, [filters, onFilterChange])
-
-  const handleSetupTimeChange = useCallback((setupTimeId) => {
-    onFilterChange({ ...filters, setupTime: setupTimeId })
-  }, [filters, onFilterChange])
-
-  const handlePriceRangeChange = useCallback((range) => {
-    onFilterChange({ ...filters, priceRange: range })
-  }, [filters, onFilterChange])
-
-  const handleRatingChange = useCallback((rating) => {
-    onFilterChange({ ...filters, rating })
-  }, [filters, onFilterChange])
-
-  const handleVerifiedChange = useCallback((checked) => {
-    onFilterChange({ ...filters, verifiedOnly: checked })
-  }, [filters, onFilterChange])
-
-  const clearAllFilters = useCallback(() => {
-    onFilterChange({
-      category: 'all',
-      type: 'all',
-      industry: 'all',
-      setupTime: 'all',
-      priceRange: [0, 1000],
-      rating: 0,
-      verifiedOnly: false,
-      search: filters.search
+    // Section expansion state (only a few open by default for compactness)
+    const [open, setOpen] = useState({
+        productType: true,
+        category: true,
+        price: true,
+        industry: false,
+        setup: false,
+        rating: false,
+        seller: false
     })
-    // Close the drawer after clearing filters
-    onClose()
-  }, [filters.search, onFilterChange, onClose])
 
-  const applyFiltersAndClose = useCallback(() => {
-    onClose()
-  }, [onClose])
+    // Refs for focus management
+    const dialogRef = useRef(null)
+    const firstFocusRef = useRef(null)
+    const lastFocusRef = useRef(null)
 
-  // Check if any filters are active
-  const hasActiveFilters = useMemo(() => 
-    filters.category !== 'all' ||
-    filters.type !== 'all' ||
-    filters.industry !== 'all' ||
-    filters.setupTime !== 'all' ||
-    filters.rating > 0 ||
-    filters.verifiedOnly ||
-    (filters.priceRange && (filters.priceRange[0] > 0 || filters.priceRange[1] < 1000))
-  , [filters])
+    // Focus first element when opening
+    useEffect(() => {
+        if (isOpen) {
+            requestAnimationFrame(() => firstFocusRef.current?.focus())
+        }
+    }, [isOpen])
 
-  // Price range options
-  const priceRangeOptions = [
-    { label: 'Under $25', min: 0, max: 25 },
-    { label: '$25 - $50', min: 25, max: 50 },
-    { label: '$50 - $100', min: 50, max: 100 },
-    { label: '$100+', min: 100, max: 1000 }
-  ]
+    // Dynamic viewport height CSS var to handle mobile browser chrome
+    useEffect(() => {
+        const setVH = () => {
+            document.documentElement.style.setProperty('--vh', `${window.innerHeight}px`)
+        }
+        setVH()
+        window.addEventListener('resize', setVH)
+        return () => window.removeEventListener('resize', setVH)
+    }, [])
 
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 lg:hidden"
-          />
-          
-          {/* Drawer */}
-          <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 h-screen w-full max-w-sm bg-[#1a1b2e] z-50 shadow-2xl flex flex-col lg:hidden"
-          >
-            <div className="flex-1 flex flex-col h-full">
-              {/* Header */}
-              <div className="flex items-center justify-between p-4 pt-6 border-b border-[#3a3b4d] flex-shrink-0">
-                <h2 className="text-xl font-bold text-white">Filters</h2>
-                <button
-                  onClick={onClose}
-                  className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5 text-gray-400" />
-                </button>
-              </div>
+    // Lock body scroll when open
+    useEffect(() => {
+        if (isOpen) {
+            document.body.classList.add('mobile-filter-open')
+        } else {
+            document.body.classList.remove('mobile-filter-open')
+        }
+        return () => document.body.classList.remove('mobile-filter-open')
+    }, [isOpen])
 
-              {/* Scrollable Content - Fixed height to prevent growing */}
-              <div className="flex-1 overflow-y-auto overscroll-contain" style={{ maxHeight: 'calc(100vh - 160px)' }}>
-                <div className="p-4 pb-6">
-                  <div className="space-y-2">
-                    {/* Product Type Filter */}
-                    <MobileFilterSection
-                      title="Product Type"
-                      isExpanded={expandedSections.productType}
-                      onToggle={() => toggleSection('productType')}
+    // Simple focus trap + ESC close
+    useEffect(() => {
+        if (!isOpen) return
+        const handler = (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault()
+                onClose()
+            }
+            if (e.key === 'Tab') {
+                const focusable = dialogRef.current?.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+                if (!focusable?.length) return
+                const first = focusable[0]
+                const last = focusable[focusable.length - 1]
+                if (e.shiftKey) {
+                    if (document.activeElement === first) {
+                        e.preventDefault()
+                        last.focus()
+                    }
+                } else if (document.activeElement === last) {
+                    e.preventDefault()
+                    first.focus()
+                }
+            }
+        }
+        document.addEventListener('keydown', handler)
+        return () => document.removeEventListener('keydown', handler)
+    }, [isOpen, onClose])
+
+    // Utility
+    const toggle = useCallback((k) => setOpen((o) => ({ ...o, [k]: !o[k] })), [])
+    const update = useCallback((partial) => onFilterChange({ ...filters, ...partial }), [filters, onFilterChange])
+    const clear = useCallback(() => {
+        update({ category: 'all', type: 'all', industry: 'all', setupTime: 'all', priceRange: [0, 1000], rating: 0, verifiedOnly: false })
+        onClose()
+    }, [update, onClose])
+
+    const hasActive = useMemo(
+        () =>
+            filters.category !== 'all' ||
+            filters.type !== 'all' ||
+            filters.industry !== 'all' ||
+            filters.setupTime !== 'all' ||
+            filters.rating > 0 ||
+            filters.verifiedOnly ||
+            filters.priceRange?.[0] > 0 ||
+            filters.priceRange?.[1] < 1000,
+        [filters]
+    )
+
+    // Data-driven sections definition
+    const sections = [
+        {
+            key: 'productType',
+            label: 'Product Type',
+            items: productTypes.map((i) => ({ id: i.id, name: i.name, active: filters.type === i.id, onClick: () => update({ type: i.id }) }))
+        },
+        {
+            key: 'category',
+            label: 'Category',
+            items: categories.map((i) => ({ id: i.id, name: i.name, active: filters.category === i.id, onClick: () => update({ category: i.id }) }))
+        },
+        {
+            key: 'industry',
+            label: 'Industry',
+            items: industries.map((i) => ({ id: i.id, name: i.name, active: filters.industry === i.id, onClick: () => update({ industry: i.id }) }))
+        },
+        {
+            key: 'setup',
+            label: 'Setup Time',
+            items: setupTimes.map((i) => ({ id: i.id, name: i.name, active: filters.setupTime === i.id, onClick: () => update({ setupTime: i.id }) }))
+        }
+    ]
+
+    return (
+        isOpen ? createPortal(
+            <AnimatePresence>
+                <>
+                    <motion.div
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] lg:hidden"
+                        onClick={onClose}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    />
+                    <motion.div
+                        ref={dialogRef}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="mobile-filters-title"
+                        className="fixed right-0 top-0 h-[var(--vh)] w-full max-w-sm z-[101] lg:hidden flex flex-col bg-[#111214] text-gray-200 shadow-2xl border-l border-gray-800/60"
+                        initial={{ x: '100%' }}
+                        animate={{ x: 0 }}
+                        exit={{ x: '100%' }}
+                        transition={{ type: 'spring', damping: 26, stiffness: 260 }}
                     >
-                      <div className="space-y-1">
-                        {productTypes?.map(type => (
-                          <MobileFilterOption
-                            key={type.id}
-                            label={type.name}
-                            isSelected={filters.type === type.id}
-                            onSelect={() => handleProductTypeChange(type.id)}
-                            count={type.count || 8}
-                          />
-                        ))}
-                      </div>
-                    </MobileFilterSection>
-
-                    {/* Category Filter */}
-                    <MobileFilterSection
-                      title="Category"
-                      isExpanded={expandedSections.category}
-                      onToggle={() => toggleSection('category')}
-                    >
-                      <div className="space-y-1">
-                        {categories?.map(category => (
-                          <MobileFilterOption
-                            key={category.id}
-                            label={category.name}
-                            isSelected={filters.category === category.id}
-                            onSelect={() => handleCategoryChange(category.id)}
-                            count={category.count || 8}
-                          />
-                        ))}
-                      </div>
-                    </MobileFilterSection>
-
-                    {/* Industry Filter */}
-                    <MobileFilterSection
-                      title="Industry"
-                      isExpanded={expandedSections.industry}
-                      onToggle={() => toggleSection('industry')}
-                    >
-                      <div className="space-y-1">
-                        {industries?.map(industry => (
-                          <MobileFilterOption
-                            key={industry.id}
-                            label={industry.name}
-                            isSelected={filters.industry === industry.id}
-                            onSelect={() => handleIndustryChange(industry.id)}
-                            count={industry.count || 8}
-                          />
-                        ))}
-                      </div>
-                    </MobileFilterSection>
-
-                    {/* Setup Time Filter */}
-                    <MobileFilterSection
-                      title="Setup Time"
-                      isExpanded={expandedSections.setupTime}
-                      onToggle={() => toggleSection('setupTime')}
-                    >
-                      <div className="space-y-1">
-                        {setupTimes?.map(setupTime => (
-                          <MobileFilterOption
-                            key={setupTime.id}
-                            label={setupTime.name}
-                            isSelected={filters.setupTime === setupTime.id}
-                            onSelect={() => handleSetupTimeChange(setupTime.id)}
-                            count={setupTime.count || 8}
-                          />
-                        ))}
-                      </div>
-                    </MobileFilterSection>
-
-                    {/* Price Range Filter */}
-                    <MobileFilterSection
-                      title="Price"
-                      isExpanded={expandedSections.priceRange}
-                      onToggle={() => toggleSection('priceRange')}
-                    >
-                      <div className="space-y-2">
-                        {/* Custom Range Inputs */}
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 relative">
-                            <DollarSign className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                            <input
-                              type="number"
-                              min="0"
-                              max={filters.priceRange?.[1] || 1000}
-                              value={filters.priceRange?.[0] || 0}
-                              onChange={(e) => handlePriceRangeChange([
-                                parseInt(e.target.value) || 0,
-                                filters.priceRange?.[1] || 1000
-                              ])}
-                              className="w-full pl-8 pr-3 py-2 bg-[#2a2b3d] border border-[#3a3b4d] rounded-lg text-white text-sm focus:outline-none focus:border-[#00FF89] transition-colors"
-                              placeholder="Min"
-                            />
-                          </div>
-                          <span className="text-gray-400">–</span>
-                          <div className="flex-1 relative">
-                            <DollarSign className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                            <input
-                              type="number"
-                              min={filters.priceRange?.[0] || 0}
-                              value={filters.priceRange?.[1] || 1000}
-                              onChange={(e) => handlePriceRangeChange([
-                                filters.priceRange?.[0] || 0,
-                                parseInt(e.target.value) || 1000
-                              ])}
-                              className="w-full pl-8 pr-3 py-2 bg-[#2a2b3d] border border-[#3a3b4d] rounded-lg text-white text-sm focus:outline-none focus:border-[#00FF89] transition-colors"
-                              placeholder="Max"
-                            />
-                          </div>
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-5 pt-6 pb-4 border-b border-gray-800/70 shrink-0">
+                            <h2 id="mobile-filters-title" className="text-lg font-semibold tracking-wide flex items-center gap-2">
+                                Filters
+                                {hasActive && <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-400">ACTIVE</span>}
+                            </h2>
+                            <button ref={firstFocusRef} onClick={onClose} aria-label="Close filters" className="p-2 rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/60">
+                                <X className="w-5 h-5" />
+                            </button>
                         </div>
 
-                        {/* Quick Price Options */}
-                        <div className="grid grid-cols-2 gap-1.5">
-                          <button
-                            onClick={() => handlePriceRangeChange([0, 0])}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                              filters.priceRange?.[0] === 0 && filters.priceRange?.[1] === 0
-                                ? 'bg-[#00FF89]/20 text-[#00FF89] border border-[#00FF89]/30'
-                                : 'bg-[#2a2b3d] text-gray-300 hover:bg-[#3a3b4d] border border-transparent hover:border-[#4a4b5d]'
-                            }`}
-                          >
-                            Free
-                          </button>
-                          <button
-                            onClick={() => handlePriceRangeChange([1, 20])}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                              filters.priceRange?.[0] === 1 && filters.priceRange?.[1] === 20
-                                ? 'bg-[#00FF89]/20 text-[#00FF89] border border-[#00FF89]/30'
-                                : 'bg-[#2a2b3d] text-gray-300 hover:bg-[#3a3b4d] border border-transparent hover:border-[#4a4b5d]'
-                            }`}
-                          >
-                            Under $20
-                          </button>
-                          <button
-                            onClick={() => handlePriceRangeChange([20, 50])}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                              filters.priceRange?.[0] === 20 && filters.priceRange?.[1] === 50
-                                ? 'bg-[#00FF89]/20 text-[#00FF89] border border-[#00FF89]/30'
-                                : 'bg-[#2a2b3d] text-gray-300 hover:bg-[#3a3b4d] border border-transparent hover:border-[#4a4b5d]'
-                            }`}
-                          >
-                            $20 - $50
-                          </button>
-                          <button
-                            onClick={() => handlePriceRangeChange([50, 1000])}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                              filters.priceRange?.[0] === 50 && filters.priceRange?.[1] === 1000
-                                ? 'bg-[#00FF89]/20 text-[#00FF89] border border-[#00FF89]/30'
-                                : 'bg-[#2a2b3d] text-gray-300 hover:bg-[#3a3b4d] border border-transparent hover:border-[#4a4b5d]'
-                            }`}
-                          >
-                            Over $50
-                          </button>
-                        </div>
-                      </div>
-                    </MobileFilterSection>
+                        {/* Scrollable content */}
+                        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3" style={{ WebkitOverflowScrolling: 'touch' }}>
+                            {/* Reduced bottom padding so content ends just above footer */}
+                            <div className="space-y-3 pb-6">
+                                {sections.map(sec => (
+                                    <Section key={sec.key} id={sec.key} label={sec.label} expanded={open[sec.key]} onToggle={toggle}>
+                                        <ul className="flex flex-col gap-2">
+                                            {sec.items.map(it => (
+                                                <li key={it.id}>
+                                                    <OptionButton active={it.active} onClick={it.onClick} label={it.name} />
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </Section>
+                                ))}
 
-                    {/* Rating Filter */}
-                    <MobileFilterSection
-                      title="Rating"
-                      isExpanded={expandedSections.rating}
-                      onToggle={() => toggleSection('rating')}
-                    >
-                      <div className="space-y-1">
-                        {[4, 3, 2, 1, 0].map(rating => (
-                          <MobileRatingOption
-                            key={rating}
-                            rating={rating}
-                            isSelected={filters.rating === rating}
-                            onSelect={() => handleRatingChange(rating)}
-                          />
-                        ))}
-                      </div>
-                    </MobileFilterSection>
+                                <Section id="price" label="Price" expanded={open.price} onToggle={toggle}>
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-3">
+                                            <PriceInput aria-label="Minimum price" value={filters.priceRange?.[0] ?? 0} min={0} max={filters.priceRange?.[1] ?? 1000} onChange={v => update({ priceRange: [v, filters.priceRange?.[1] ?? 1000] })} />
+                                            <span className="text-gray-500">–</span>
+                                            <PriceInput aria-label="Maximum price" value={filters.priceRange?.[1] ?? 1000} min={filters.priceRange?.[0] ?? 0} max={1000} onChange={v => update({ priceRange: [filters.priceRange?.[0] ?? 0, v] })} />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <QuickPrice label="Free" active={filters.priceRange?.[0] === 0 && filters.priceRange?.[1] === 0} onClick={() => update({ priceRange: [0,0] })} />
+                                            <QuickPrice label="Under $20" active={filters.priceRange?.[0] === 1 && filters.priceRange?.[1] === 20} onClick={() => update({ priceRange: [1,20] })} />
+                                            <QuickPrice label="$20 - $50" active={filters.priceRange?.[0] === 20 && filters.priceRange?.[1] === 50} onClick={() => update({ priceRange: [20,50] })} />
+                                            <QuickPrice label="Over $50" active={filters.priceRange?.[0] === 50 && filters.priceRange?.[1] === 1000} onClick={() => update({ priceRange: [50,1000] })} />
+                                        </div>
+                                    </div>
+                                </Section>
 
-                    {/* Seller Filter */}
-                    <MobileFilterSection
-                      title="Seller"
-                      isExpanded={expandedSections.seller}
-                      onToggle={() => toggleSection('seller')}
-                    >
-                      <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#2a2b3d] transition-colors cursor-pointer group">
-                        <div className="relative flex-shrink-0">
-                          <input
-                            type="checkbox"
-                            checked={filters.verifiedOnly}
-                            onChange={(e) => handleVerifiedChange(e.target.checked)}
-                            className="sr-only"
-                          />
-                          <div className={`w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center ${
-                            filters.verifiedOnly
-                              ? 'bg-[#00FF89] border-[#00FF89]'
-                              : 'bg-transparent border-gray-500 group-hover:border-gray-400'
-                          }`}>
-                            {filters.verifiedOnly && <CheckCircle2 className="w-3.5 h-3.5 text-black" />}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 flex-1">
-                          <CheckCircle2 className="w-4 h-4 text-[#00FF89] flex-shrink-0" />
-                          <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                            Verified sellers only
-                          </span>
-                        </div>
-                      </label>
-                    </MobileFilterSection>
-                  </div>
-                </div>
-              </div>
+                                <Section id="rating" label="Rating" expanded={open.rating} onToggle={toggle}>
+                                    <div className="flex flex-col gap-2">
+                                        {[4,3,2,1,0].map(r => (
+                                            <RatingButton key={r} rating={r} active={filters.rating === r} onClick={() => update({ rating: r })} />
+                                        ))}
+                                    </div>
+                                </Section>
 
-              {/* Footer Actions - Sticky at bottom */}
-              <div className="flex-shrink-0 p-4 border-t border-[#3a3b4d] bg-[#1a1b2e]">
-                <div className="flex gap-3">
-                  <button
-                    onClick={clearAllFilters}
-                    className="flex-1 py-2.5 bg-[#FFC050] text-black rounded-xl font-bold hover:bg-[#FFC050]/90 transition-all duration-200"
-                  >
-                    Clear Filters
-                  </button>
-                  <button
-                    onClick={applyFiltersAndClose}
-                    className="flex-1 py-2.5 bg-[#00FF89] text-black rounded-xl font-bold hover:bg-[#00FF89]/90 transition-all duration-200"
-                  >
-                    Apply Filters
-                  </button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  )
+                                <Section id="seller" label="Seller" expanded={open.seller} onToggle={toggle}>
+                                    <label className="flex items-center gap-3 p-3 rounded-md bg-gray-900/40 hover:bg-gray-800/60 cursor-pointer">
+                                        <input type="checkbox" checked={filters.verifiedOnly} onChange={e => update({ verifiedOnly: e.target.checked })} className="h-4 w-4 rounded border-gray-600 text-emerald-400 focus:ring-emerald-500" aria-label="Verified sellers only" />
+                                        <span className="text-sm">Verified sellers only</span>
+                                    </label>
+                                </Section>
+                            </div>
+                        </div>
+
+                        {/* Footer (flex item, fixed at bottom via flex layout) */}
+                        <div className="px-5 py-4 flex gap-3 border-t border-gray-800/70 bg-[#111214] shrink-0 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+                            <button onClick={clear} className="flex-1 h-11 rounded-lg bg-gray-800 text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/50">Clear</button>
+                            <button ref={lastFocusRef} onClick={onClose} className="flex-1 h-11 rounded-lg bg-emerald-400 text-black text-sm font-semibold hover:bg-emerald-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#111214] focus:ring-emerald-400">Apply</button>
+                        </div>
+                    </motion.div>
+                </>
+            </AnimatePresence>, document.body) : null
+    )
 }
 
-// Mobile Filter Section Component
-function MobileFilterSection({ title, children, isExpanded, onToggle }) {
-  return (
-    <div className="border-b border-[#3a3b4d] pb-3 last:border-b-0 last:pb-0">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-between mb-2 p-2 hover:bg-[#2a2b3d] rounded-lg transition-colors group"
-      >
-        <h3 className="font-semibold text-white text-base group-hover:text-[#00FF89] transition-colors">
-          {title}
-        </h3>
-        {isExpanded ? (
-          <ChevronUp className="w-4 h-4 text-gray-400 group-hover:text-[#00FF89] transition-colors" />
-        ) : (
-          <ChevronDown className="w-4 h-4 text-gray-400 group-hover:text-[#00FF89] transition-colors" />
-        )}
-      </button>
-      
-      {/* Simplified animation - more reliable */}
-      <motion.div
-        initial={false}
-        animate={{ 
-          height: isExpanded ? 'auto' : 0,
-          opacity: isExpanded ? 1 : 0
-        }}
-        transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className="overflow-hidden"
-      >
-        <div className={isExpanded ? 'block' : 'hidden'}>
-          {children}
+/* ---------------- Sub Components ---------------- */
+function Section({ id, label, children, expanded, onToggle }) {
+    return (
+        <div className="border border-gray-800/60 rounded-lg overflow-hidden">
+            <button
+                onClick={() => onToggle(id)}
+                aria-expanded={expanded}
+                aria-controls={`sec-${id}`}
+                className="w-full flex items-center justify-between px-4 py-3 bg-gray-900/40 hover:bg-gray-800/60 text-left focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
+                <span className="text-sm font-medium tracking-wide">{label}</span>
+                {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+            <motion.div
+                id={`sec-${id}`}
+                initial={false}
+                animate={{ height: expanded ? 'auto' : 0, opacity: expanded ? 1 : 0 }}
+                transition={{ duration: 0.25 }}
+                className="overflow-hidden">
+                {expanded && <div className="px-4 pt-2 pb-4 space-y-2">{children}</div>}
+            </motion.div>
         </div>
-      </motion.div>
-    </div>
-  )
+    )
 }
 
-// Generic Mobile Filter Option Component
-function MobileFilterOption({ label, isSelected, onSelect, count }) {
-  return (
-    <motion.button
-      onClick={onSelect}
-      whileTap={{ scale: 0.98 }}
-      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${
-        isSelected
-          ? 'bg-gray-900/80 text-white border border-gray-700'
-          : 'bg-[#2a2b3d] hover:bg-[#3a3b4d] text-gray-300 hover:text-white'
-      }`}
-    >
-      <div className={`w-4 h-4 rounded-full border-2 transition-all flex items-center justify-center ${
-        isSelected ? 'bg-gray-800 border-gray-800' : 'border-gray-500'
-      }`}>
-        {isSelected && <div className="w-2 h-2 bg-white rounded-full" />}
-      </div>
-      <span className="flex-1 text-left font-medium text-sm">{label}</span>
-      {count && (
-        <span className="text-xs text-gray-400 bg-[#1a1b2e] px-2 py-1 rounded-full">
-          {count}
-        </span>
-      )}
-    </motion.button>
-  )
+function OptionButton({ label, active, onClick }) {
+    return (
+        <button
+            onClick={onClick}
+            aria-pressed={active}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm border transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500/40 ${
+                active ? 'bg-gray-800 border-gray-600 text-white' : 'bg-gray-900/30 border-transparent hover:bg-gray-800/50 text-gray-300'
+            }`}>
+            <span className="truncate">{label}</span>
+            {active && <span className="w-2 h-2 rounded-full bg-emerald-400" />}
+        </button>
+    )
 }
 
-// Mobile Rating Option Component
-function MobileRatingOption({ rating, isSelected, onSelect }) {
-  return (
-    <motion.button
-      onClick={onSelect}
-      whileTap={{ scale: 0.98 }}
-      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${
-        isSelected
-          ? 'bg-gray-900/80 text-white border border-gray-700'
-          : 'bg-[#2a2b3d] hover:bg-[#3a3b4d] text-gray-300 hover:text-white'
-      }`}
-    >
-      <div className={`w-4 h-4 rounded-full border-2 transition-all flex items-center justify-center ${
-        isSelected ? 'bg-gray-800 border-gray-800' : 'border-gray-500'
-      }`}>
-        {isSelected && <div className="w-2 h-2 bg-white rounded-full" />}
-      </div>
-      
-      <div className="flex items-center gap-2 flex-1">
-        {rating === 0 ? (
-          <span className="font-medium text-sm">All ratings</span>
-        ) : (
-          <div className="flex items-center gap-1">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={`w-3.5 h-3.5 ${
-                  i < rating
-                    ? 'text-yellow-400 fill-current'
-                    : 'text-gray-600'
-                }`}
-              />
-            ))}
-            <span className="ml-1 font-medium text-sm">& up</span>
-          </div>
-        )}
-      </div>
-    </motion.button>
-  )
+function RatingButton({ rating, active, onClick }) {
+    return (
+        <button
+            onClick={onClick}
+            aria-pressed={active}
+            aria-label={rating === 0 ? 'All ratings' : `${rating} stars & up`}
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm border transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500/40 ${
+                active ? 'bg-gray-800 border-gray-600 text-white' : 'bg-gray-900/30 border-transparent hover:bg-gray-800/50 text-gray-300'
+            }`}>
+            {rating === 0 ? (
+                <span>All ratings</span>
+            ) : (
+                <div className="flex items-center gap-1">
+                    {[...Array(5)].map((_, i) => (
+                        <Star
+                            key={i}
+                            className={`w-4 h-4 ${i < rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`}
+                        />
+                    ))}
+                    <span className="text-xs text-gray-500">& up</span>
+                </div>
+            )}
+            {active && <span className="ml-auto w-2 h-2 rounded-full bg-emerald-400" />}
+        </button>
+    )
 }
+
+function PriceInput({ value, onChange, min, max, ...rest }) {
+    return (
+        <div className="flex-1 relative">
+            <DollarSign className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+                type="number"
+                value={value}
+                min={min}
+                max={max}
+                onChange={(e) => {
+                    const raw = parseInt(e.target.value) || 0
+                    onChange(Math.min(max, Math.max(min, raw)))
+                }}
+                className="w-full pl-8 pr-2 py-2 bg-gray-900/40 border border-gray-800 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                {...rest}
+            />
+        </div>
+    )
+}
+
+function QuickPrice({ label, active, onClick }) {
+    return (
+        <button
+            onClick={onClick}
+            className={`px-2.5 py-2 rounded-md text-xs font-medium border transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500/40 ${
+                active
+                    ? 'bg-emerald-400/20 border-emerald-400/40 text-emerald-300'
+                    : 'bg-gray-900/30 border-transparent hover:bg-gray-800/50 text-gray-300'
+            }`}>
+            {label}
+        </button>
+    )
+}
+
