@@ -12,19 +12,19 @@
   --brand-secondary-text: #FFFFFF;
   --brand-white: #FFFFFF;
   --brand-white-text: #FFC050;
-  
+
   /* Background Colors */
   --bg-light: #FFFFFF;
   --bg-dark: #121212;
   --bg-card-light: #FFFFFF;
   --bg-card-dark: #1f1f1f;
-  
+
   /* Text Colors */
   --text-primary-light: #121212;
   --text-primary-dark: #00FF89;
   --text-secondary-light: #6b7280;
   --text-secondary-dark: #9ca3af;
-  
+
   /* Font Variables */
   --font-league-spartan: 'League Spartan', system-ui, -apple-system, sans-serif;
   --font-kumbh-sans: 'Kumbh Sans', system-ui, -apple-system, sans-serif;
@@ -46,7 +46,7 @@ html {
 body {
   margin: 0;
   padding: 0;
-  font-family: var(--font-league-spartan);
+  font-family: var(--font-kumbh-sans);
   background-color: #121212;
   color: #ffffff;
 }
@@ -70,7 +70,7 @@ body {
 }
 
 .font-body {
-  font-family: var(--font-kumbh-sans);
+  font-family: var(--font-league-spartan);
 }
 
 /* Utility Classes */
@@ -80,19 +80,17 @@ body {
 }
 
 @keyframes gradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
+  0% {
+    background-position: 0% 50%;
+  }
 
-.animate-gradient-x {
-  animation: gradient-x 3s ease infinite;
-}
+  50% {
+    background-position: 100% 50%;
+  }
 
-@keyframes gradient-x {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .bg-400 {
@@ -131,6 +129,7 @@ body {
 
 /* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -142,7 +141,8 @@ body {
 }
 
 /* Performance Optimizations */
-img, video {
+img,
+video {
   max-width: 100%;
   height: auto;
 }
@@ -154,8 +154,13 @@ img {
 
 /* Loading States */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideInRight {
@@ -163,55 +168,10 @@ img {
     transform: translateX(100%);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
-  }
-}
-
-@keyframes toastSlideIn {
-  from {
-    transform: translateX(calc(100% + 1rem));
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes toastSlideOut {
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(calc(100% + 1rem));
-    opacity: 0;
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -200px 0;
-  }
-  100% {
-    background-position: calc(200px + 100%) 0;
-  }
-}
-
-.shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  background-size: 200px 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes toastPulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.02);
   }
 }
 
@@ -244,58 +204,11 @@ img {
   color: var(--brand-primary-text);
 }
 
-/* Custom scrollbar styles */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(30, 30, 30, 0.5);
-  border-radius: 3px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(107, 114, 128, 0.5);
-  border-radius: 3px;
-  transition: background 0.2s;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(107, 114, 128, 0.8);
-}
-
-/* Firefox scrollbar */
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(107, 114, 128, 0.5) rgba(30, 30, 30, 0.5);
-}
-
 /* Focus States */
 :focus-visible {
-  outline: 3px solid rgba(0, 255, 137, 0.95);
-  outline-offset: 3px;
-  box-shadow: 0 0 0 4px rgba(0, 255, 137, 0.08);
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
 }
-
-/* Touch target helper: ensure minimum tappable size */
-.touch-target {
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0.35rem 0.6rem; /* gentle padding to meet size and maintain layout */
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Strong contrast text for small labels (use on badges and tiny captions) */
-.text-contrast-strong {
-  color: #FFFFFF !important;
-  text-shadow: 0 1px 0 rgba(0,0,0,0.35);
-}
-
-/* Make sure decorative SVGs don't leak semantics */
-.icon-decorative { aria-hidden: true; }
 
 /* Line Clamp Utilities */
 .line-clamp-1 {
@@ -324,139 +237,21 @@ img {
   .backdrop-blur-sm {
     backdrop-filter: blur(4px);
   }
+
   .backdrop-blur {
     backdrop-filter: blur(8px);
   }
+
   .backdrop-blur-md {
     backdrop-filter: blur(12px);
   }
+
   .backdrop-blur-lg {
     backdrop-filter: blur(16px);
   }
+
   .backdrop-blur-xl {
     backdrop-filter: blur(24px);
-  }
-}
-
-/* Enhanced Toast Styles */
-[data-sonner-toast] {
-  font-weight: 500 !important;
-  animation: toastSlideIn 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards !important;
-}
-
-[data-sonner-toast][data-removed="true"] {
-  animation: toastSlideOut 0.4s cubic-bezier(0.06, 0.71, 0.55, 1) forwards !important;
-}
-
-[data-sonner-toast][data-swipe="move"] {
-  transform: translateX(var(--swipe-amount)) !important;
-  opacity: 1 - abs(var(--swipe-amount) / 100) !important;
-}
-
-[data-sonner-toast][data-swipe="cancel"] {
-  transform: translateX(0) !important;
-  transition: transform 0.2s ease-out !important;
-}
-
-[data-sonner-toast]:hover {
-  transform: translateX(-4px) !important;
-  transition: transform 0.2s ease-out !important;
-}
-
-/* Ensure icons have proper color */
-[data-sonner-toast] svg {
-  color: currentColor !important;
-}
-
-[data-sonner-toast][data-styled="true"] {
-  padding: 16px 20px !important;
-}
-
-/* Toast close button styling */
-[data-sonner-toast] [data-close-button] {
-  background: rgba(255, 255, 255, 0.2) !important;
-  border: none !important;
-  color: rgba(255, 255, 255, 0.8) !important;
-  border-radius: 6px !important;
-  width: 24px !important;
-  height: 24px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-[data-sonner-toast] [data-close-button]:hover {
-  background: rgba(255, 255, 255, 0.3) !important;
-  color: rgba(255, 255, 255, 1) !important;
-  transform: scale(1.1) !important;
-}
-
-/* Toast content spacing */
-[data-sonner-toast] [data-content] {
-  gap: 12px !important;
-}
-
-/* Toast icon animations */
-[data-sonner-toast] [data-icon] {
-  animation: toastPulse 2s ease-in-out infinite !important;
-}
-
-/* Progress bar for loading toasts */
-[data-sonner-toast][data-type="loading"]::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(0, 255, 137, 0.8) 50%, 
-    transparent 100%
-  );
-  animation: shimmer 1.5s ease-in-out infinite;
-}
-
-/* Smooth stacking for multiple toasts */
-[data-sonner-toaster] {
-  --offset: 24px;
-}
-
-[data-sonner-toaster] [data-sonner-toast] {
-  transition: transform 0.23s cubic-bezier(0.21, 1.02, 0.73, 1), 
-              opacity 0.23s ease, 
-              height 0.23s ease !important;
-}
-
-/* Left position for RTL or left-aligned toasts */
-[data-sonner-toaster][data-x-position="left"] [data-sonner-toast] {
-  animation: toastSlideInLeft 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards !important;
-}
-
-[data-sonner-toaster][data-x-position="left"] [data-sonner-toast][data-removed="true"] {
-  animation: toastSlideOutLeft 0.4s cubic-bezier(0.06, 0.71, 0.55, 1) forwards !important;
-}
-
-@keyframes toastSlideInLeft {
-  from {
-    transform: translateX(calc(-100% - 1rem));
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes toastSlideOutLeft {
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(calc(-100% - 1rem));
-    opacity: 0;
   }
 }
 
@@ -466,6 +261,7 @@ img {
     transform: translateX(100%);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -477,7 +273,7 @@ img {
   .hover\:scale-105:hover {
     transform: scale(1.05);
   }
-  
+
   .hover\:scale-110:hover {
     transform: scale(1.1);
   }
@@ -535,6 +331,7 @@ img {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  display: inline-block;
 }
 
 .gradient-dark {
@@ -598,9 +395,12 @@ img {
 
 /* Animation Classes */
 @keyframes pulse-brand {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -611,12 +411,15 @@ img {
     opacity: 0;
     transform: scale(0.3);
   }
+
   50% {
     transform: scale(1.05);
   }
+
   70% {
     transform: scale(0.9);
   }
+
   100% {
     opacity: 1;
     transform: scale(1);
@@ -632,7 +435,12 @@ img {
 }
 
 /* Typography Enhancements */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-league-spartan);
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -647,14 +455,18 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Form Styles */
-input, textarea, select {
+input,
+textarea,
+select {
   background-color: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: white;
   transition: all 0.2s ease;
 }
 
-input:focus, textarea:focus, select:focus {
+input:focus,
+textarea:focus,
+select:focus {
   outline: none;
   border-color: var(--brand-primary);
   box-shadow: 0 0 0 3px rgba(0, 255, 137, 0.1);
@@ -720,9 +532,11 @@ input:focus, textarea:focus, select:focus {
   0% {
     background-color: rgba(255, 255, 255, 0.05);
   }
+
   50% {
     background-color: rgba(255, 255, 255, 0.1);
   }
+
   100% {
     background-color: rgba(255, 255, 255, 0.05);
   }
@@ -733,53 +547,13 @@ input:focus, textarea:focus, select:focus {
   border-radius: 0.5rem;
 }
 
-/* Scrollbar Hide Utility */
-.scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari and Opera */
-}
-
-/* Hide scrollbar utility for overflow containers */
-.no-scrollbar {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
-}
-.no-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
-}
-
-/* Admin Sidebar Gap Fix */
-.admin-sidebar-fix {
-  left: 0 !important;
-  margin-left: 0 !important;
-  border-left: none !important;
-  transform: translateX(0) !important;
-}
-
-/* Ensure no gaps in admin layout */
-.admin-layout-container {
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-/* Force sidebar to be flush with viewport edge */
-aside[aria-label="Admin navigation sidebar"] {
-  left: 0 !important;
-  margin-left: 0 !important;
-  transform: translateX(0) !important;
-}
-
 /* Print Styles */
 @media print {
   body {
     background: var(--bg-light);
     color: var(--text-primary-light);
   }
-  
+
   .no-print {
     display: none !important;
   }

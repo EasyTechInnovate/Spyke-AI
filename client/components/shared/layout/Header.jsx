@@ -1,6 +1,6 @@
 'use client'
-export const dynamic = 'force-dynamic'
 
+import { useEffect, useRef, useState } from 'react'
 import { X, Menu } from 'lucide-react'
 import { useHeader } from '@/hooks/useHeader'
 import HeaderLogo from './Header/Logo'
@@ -16,6 +16,9 @@ import Container from './Container'
 import { NAVIGATION, SELLER_MENU_ITEMS, USER_MENU_ITEMS } from './Header/const'
 
 export default function Header() {
+    const headerRef = useRef(null)
+    const [scrollY, setScrollY] = useState(0)
+    
     const {
         mobileMenuOpen,
         setMobileMenuOpen,
@@ -36,14 +39,42 @@ export default function Header() {
 
     const menuItems = currentRole === 'seller' && isSeller ? SELLER_MENU_ITEMS : USER_MENU_ITEMS
 
+    // Track scroll position and manually position header
+    useEffect(() => {
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY
+            setScrollY(currentScrollY)
+            
+            if (headerRef.current) {
+                // Use transform to manually position the header at the top of viewport
+                headerRef.current.style.transform = `translateY(${currentScrollY}px)`
+                // Remove console.log since it's working
+            }
+        }
+
+        window.addEventListener('scroll', handleScroll, { passive: true })
+        return () => window.removeEventListener('scroll', handleScroll)
+    }, [])
+
     return (
         <>
             <header
-                className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 ${
+                ref={headerRef}
+                className={`absolute top-0 left-0 right-0 w-full z-50 transition-all duration-300 ${
                     scrolled
                         ? 'bg-black/95 backdrop-blur-lg shadow-2xl shadow-brand-primary/10 border-b border-brand-primary/20'
                         : 'bg-black/90 backdrop-blur-sm border-b border-white/10'
-                }`}>
+                }`}
+                style={{
+                    position: 'absolute', // Use absolute instead of fixed
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    width: '100vw',
+                    zIndex: 999999,
+                    transform: `translateY(${scrollY}px)` // Manually position with transform
+                }}>
+                
                 <Container>
                     <div className="flex items-center justify-between h-16 sm:h-20">
                         {/* Logo - Always visible */}
@@ -96,7 +127,6 @@ export default function Header() {
                                     <Link
                                         href="/signin"
                                         className="relative group inline-flex overflow-hidden rounded-xl"
-                                        style={{ zIndex: 10 }}
                                         onClick={() => {
                                             // Clear any stale auth data
                                             if (typeof window !== 'undefined') {

@@ -3,7 +3,21 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Heart, Share2, ShoppingCart, Download, ThumbsUp, BookOpen, Sparkles, Play, HelpCircle, BarChart3, Package } from 'lucide-react'
+import {
+    ArrowLeft,
+    Heart,
+    Share2,
+    ShoppingCart,
+    Download,
+    ThumbsUp,
+    BookOpen,
+    Sparkles,
+    Play,
+    HelpCircle,
+    BarChart3,
+    Package,
+    Star
+} from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { useCart } from '@/hooks/useCart'
@@ -14,10 +28,11 @@ import ProductFeatures from '@/components/product/ProductFeatures'
 import ProductHowItWorks from '@/components/product/ProductHowItWorks'
 import ProductSpecs from '@/components/product/ProductSpecs'
 import ProductFAQ from '@/components/product/ProductFAQ'
-import { Header } from '@/components/shared/layout'
+import ProductReviews from '@/components/product/ProductReviews'
 import { ErrorBoundary } from 'next/dist/client/components/error-boundary'
 import ProductBreadcrumb from '@/components/product/ProductBreadcrumb'
 import ProductHero from '@/components/product/ProductHero'
+import InlineNotification from '@/components/shared/notifications/InlineNotification'
 
 const PRODUCT_TABS = [
     {
@@ -47,6 +62,13 @@ const PRODUCT_TABS = [
         icon: BarChart3,
         description: 'Technical details',
         component: ProductSpecs
+    },
+    {
+        id: 'reviews',
+        label: 'Reviews',
+        icon: Star,
+        description: 'Customer feedback and ratings',
+        component: ProductReviews
     },
     {
         id: 'faq',
@@ -389,6 +411,15 @@ export default function ProductPage() {
         }
     }, [hasPurchased, router, showMessage])
 
+    // Handle product updates from child components
+    const handleProductUpdate = useCallback((updatedData) => {
+        setProduct((prevProduct) => ({
+            ...prevProduct,
+            ...updatedData
+        }))
+    }, [])
+
+    // Handle share functionality
     const handleShare = useCallback(async () => {
         if (!mounted) return
 
@@ -418,6 +449,80 @@ export default function ProductPage() {
         }
     }, [mounted, product, showMessage])
 
+    // Handle review submission
+    const handleReviewSubmit = useCallback(
+        async (reviewData) => {
+            if (!isAuthenticated) {
+                requireAuth()
+                return
+            }
+
+            if (!product?._id) {
+                showMessage('Product not found', 'error')
+                return
+            }
+
+            try {
+                // Call the products API to submit the review
+                const response = await productsAPI.addReview(product._id, reviewData)
+
+                if (response?.data) {
+                    showMessage('Review submitted successfully!', 'success')
+
+                    // Update the product state with the new review data
+                    setProduct((prevProduct) => ({
+                        ...prevProduct,
+                        reviews: response.data.reviews || prevProduct.reviews,
+                        averageRating: response.data.averageRating || prevProduct.averageRating,
+                        totalReviews: response.data.totalReviews || prevProduct.totalReviews,
+                        reviewStats: response.data.reviewStats || prevProduct.reviewStats
+                    }))
+                } else {
+                    showMessage('Review submitted!', 'success')
+                }
+            } catch (error) {
+                console.error('Error submitting review:', error)
+
+                if (error.status === 400) {
+                    showMessage(error.message || 'Invalid review data', 'error')
+                } else if (error.status === 401) {
+                    showMessage('Please log in to submit a review', 'error')
+                    requireAuth()
+                } else if (error.status === 403) {
+                    showMessage('You are not allowed to review this product', 'error')
+                } else if (error.status === 409) {
+                    showMessage('You have already reviewed this product', 'error')
+                } else {
+                    showMessage(error.message || 'Failed to submit review. Please try again.', 'error')
+                }
+            }
+        },
+        [isAuthenticated, product, requireAuth, showMessage]
+    )
+
+    // Handle navigation to reviews tab
+    const handleNavigateToReviews = useCallback(() => {
+        setActiveTab('reviews')
+
+        // Smooth scroll to the reviews section on mobile or desktop
+        const reviewsSection = document.querySelector('[data-tab="reviews"]') || document.querySelector('.reviews-section')
+        if (reviewsSection) {
+            reviewsSection.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            })
+        } else {
+            // Fallback: scroll to tabs section
+            const tabsSection = document.querySelector('.lg\\:flex.gap-12')
+            if (tabsSection) {
+                tabsSection.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                })
+            }
+        }
+    }, [])
+
     // Loading state
     if (loading) {
         return (
@@ -434,7 +539,6 @@ export default function ProductPage() {
                     </div>
                 )}
 
-                <Header />
                 <DSContainer
                     maxWidth="hero"
                     padding="responsive">
@@ -533,7 +637,6 @@ export default function ProductPage() {
             <div
                 className="min-h-screen"
                 style={{ backgroundColor: DESIGN_TOKENS.colors.background.dark }}>
-                <Header />
                 <DSContainer
                     maxWidth="hero"
                     padding="responsive">
@@ -577,7 +680,6 @@ export default function ProductPage() {
                     </div>
                 )}
 
-                <Header />
 
                 <main className="relative">
                     {/* Breadcrumb Navigation */}
@@ -604,6 +706,7 @@ export default function ProductPage() {
                             onUpvote={handleUpvote}
                             onDownload={handleDownload}
                             onShare={handleShare}
+                            onNavigateToReviews={handleNavigateToReviews}
                             ctaRef={ctaRef}
                         />
                     </section>
@@ -613,7 +716,6 @@ export default function ProductPage() {
                         <DSContainer
                             maxWidth="hero"
                             padding="responsive">
-                            
                             {/* Mobile: Simple Tab Navigation */}
                             <div className="lg:hidden mb-8">
                                 <div className="flex overflow-x-auto gap-2 pb-2 mb-8">
@@ -660,10 +762,18 @@ export default function ProductPage() {
                                                             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                                                                 Content Coming Soon
                                                             </h3>
-                                                            <p className="text-gray-600 dark:text-gray-400">
-                                                                This section will be available soon.
-                                                            </p>
+                                                            <p className="text-gray-600 dark:text-gray-400">This section will be available soon.</p>
                                                         </div>
+                                                    )
+                                                }
+
+                                                // Special case for ProductReviews component - pass onProductUpdate
+                                                if (activeTabConfig.id === 'reviews') {
+                                                    return (
+                                                        <ComponentToRender
+                                                            product={product}
+                                                            onProductUpdate={handleProductUpdate}
+                                                        />
                                                     )
                                                 }
 
@@ -679,10 +789,8 @@ export default function ProductPage() {
                                 {/* Simple Tab Navigation */}
                                 <div className="w-64 flex-shrink-0">
                                     <div className="sticky top-24 space-y-2">
-                                        <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-6">
-                                            Product Information
-                                        </h3>
-                                        
+                                        <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-6">Product Information</h3>
+
                                         <nav className="space-y-1">
                                             {PRODUCT_TABS.map((tab) => {
                                                 const IconComponent = tab.icon
@@ -699,12 +807,8 @@ export default function ProductPage() {
                                                         }`}>
                                                         <IconComponent className="w-5 h-5" />
                                                         <div>
-                                                            <div className="font-medium text-base">
-                                                                {tab.label}
-                                                            </div>
-                                                            <div className="text-sm opacity-75 mt-0.5">
-                                                                {tab.description}
-                                                            </div>
+                                                            <div className="font-medium text-base">{tab.label}</div>
+                                                            <div className="text-sm opacity-75 mt-0.5">{tab.description}</div>
                                                         </div>
                                                     </button>
                                                 )
@@ -765,6 +869,16 @@ export default function ProductPage() {
                                                                     This section will be available soon.
                                                                 </p>
                                                             </div>
+                                                        )
+                                                    }
+
+                                                    // Special case for ProductReviews component - pass onProductUpdate
+                                                    if (activeTabConfig.id === 'reviews') {
+                                                        return (
+                                                            <ComponentToRender
+                                                                product={product}
+                                                                onProductUpdate={handleProductUpdate}
+                                                            />
                                                         )
                                                     }
 

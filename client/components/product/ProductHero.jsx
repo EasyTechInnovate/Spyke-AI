@@ -24,8 +24,59 @@ import {
     ChevronLeft,
     ChevronRight,
     Eye,
-    TrendingUp
+    TrendingUp,
+    ExternalLink
 } from 'lucide-react'
+
+// Helper function to detect video URL type and convert to embeddable format
+const getVideoEmbedInfo = (url) => {
+    if (!url) return null
+
+    // YouTube URL patterns
+    const youtubeRegex =
+        /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+    const youtubeMatch = url.match(youtubeRegex)
+
+    if (youtubeMatch) {
+        return {
+            type: 'youtube',
+            id: youtubeMatch[1],
+            embedUrl: `https://www.youtube.com/embed/${youtubeMatch[1]}?autoplay=1&mute=1`,
+            thumbnailUrl: `https://img.youtube.com/vi/${youtubeMatch[1]}/maxresdefault.jpg`
+        }
+    }
+
+    // Vimeo URL patterns
+    const vimeoRegex = /(?:https?:\/\/)?(?:www\.)?(?:vimeo\.com\/)([0-9]+)/
+    const vimeoMatch = url.match(vimeoRegex)
+
+    if (vimeoMatch) {
+        return {
+            type: 'vimeo',
+            id: vimeoMatch[1],
+            embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1&muted=1`,
+            thumbnailUrl: null // Vimeo thumbnails require API call
+        }
+    }
+
+    // Direct video file URLs
+    if (url.match(/\.(mp4|webm|ogg|mov|avi)(\?.*)?$/i)) {
+        return {
+            type: 'direct',
+            url: url,
+            embedUrl: url,
+            thumbnailUrl: null
+        }
+    }
+
+    // Default to treating as direct video
+    return {
+        type: 'direct',
+        url: url,
+        embedUrl: url,
+        thumbnailUrl: null
+    }
+}
 
 export default function ProductHero({
     product,
@@ -46,15 +97,22 @@ export default function ProductHero({
     onUpvote,
     onDownload,
     onShare,
-    ctaRef
+    ctaRef,
+    onNavigateToReviews // Add new prop for navigation function
 }) {
     const [isPlaying, setIsPlaying] = useState(false)
     const [isMuted, setIsMuted] = useState(true)
     const [currentImageIndex, setCurrentImageIndex] = useState(selectedImage || 0)
     const [isImageFullscreen, setIsImageFullscreen] = useState(false)
+    const [videoError, setVideoError] = useState(false)
+    const [showVideoModal, setShowVideoModal] = useState(false)
     const videoRef = useRef(null)
+    const iframeRef = useRef(null)
 
     if (!product) return null
+
+    // Get video embed information
+    const videoInfo = product.previewVideo ? getVideoEmbedInfo(product.previewVideo) : null
 
     // Prepare media items
     const mediaItems = []
@@ -69,12 +127,13 @@ export default function ProductHero({
         })
     }
 
-    if (product.previewVideo) {
+    if (videoInfo) {
         mediaItems.push({
             type: 'video',
             src: product.previewVideo,
-            poster: product.images?.[0] || product.thumbnail,
-            alt: `${product.title} - Preview Video`
+            poster: videoInfo.thumbnailUrl || product.images?.[0] || product.thumbnail,
+            alt: `${product.title} - Preview Video`,
+            videoInfo: videoInfo
         })
     }
 
@@ -98,15 +157,21 @@ export default function ProductHero({
         }
     }, [mediaItems.length, activeMedia?.type])
 
-    // Video controls
+    // Video controls for direct video files
     const togglePlayPause = () => {
-        if (videoRef.current) {
+        if (activeMedia?.videoInfo?.type === 'direct' && videoRef.current) {
             if (isPlaying) {
                 videoRef.current.pause()
             } else {
-                videoRef.current.play()
+                videoRef.current.play().catch((error) => {
+                    console.error('Video play failed:', error)
+                    setVideoError(true)
+                })
             }
             setIsPlaying(!isPlaying)
+        } else if (activeMedia?.videoInfo?.type === 'youtube' || activeMedia?.videoInfo?.type === 'vimeo') {
+            // For YouTube/Vimeo, open in modal
+            setShowVideoModal(true)
         }
     }
 
@@ -125,18 +190,23 @@ export default function ProductHero({
         setCurrentImageIndex((prev) => (prev - 1 + mediaItems.length) % mediaItems.length)
     }
 
+    // Add handler for navigating to reviews
+    const handleNavigateToReviews = () => {
+        if (onNavigateToReviews) {
+            onNavigateToReviews()
+        }
+    }
+
     return (
         <div className="bg-white dark:bg-[#121212]">
             <div className="max-w-7xl mx-auto px-4 py-8 lg:py-12">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-                    
                     {/* Left Side - Media Gallery */}
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.6 }}
                         className="space-y-4">
-                        
                         {/* Main Media Display */}
                         <div className="relative group">
                             <div
@@ -152,19 +222,26 @@ export default function ProductHero({
                                         exit={{ opacity: 0 }}
                                         transition={{ duration: 0.3 }}
                                         className="w-full h-full relative">
-                                        
                                         {activeMedia?.type === 'video' ? (
                                             <div className="relative w-full h-full">
-                                                <video
-                                                    ref={videoRef}
-                                                    src={activeMedia.src}
-                                                    poster={activeMedia.poster}
-                                                    className="absolute inset-0 w-full h-full object-contain object-center"
-                                                    muted={isMuted}
-                                                    playsInline
-                                                    onPlay={() => setIsPlaying(true)}
-                                                    onPause={() => setIsPlaying(false)}
-                                                />
+                                                {activeMedia?.videoInfo?.type === 'direct' ? (
+                                                    <video
+                                                        ref={videoRef}
+                                                        src={activeMedia.src}
+                                                        poster={activeMedia.poster}
+                                                        className="absolute inset-0 w-full h-full object-contain object-center"
+                                                        muted={isMuted}
+                                                        playsInline
+                                                        onPlay={() => setIsPlaying(true)}
+                                                        onPause={() => setIsPlaying(false)}
+                                                    />
+                                                ) : (
+                                                    <div
+                                                        className="absolute inset-0 w-full h-full flex items-center justify-center bg-black/20"
+                                                        onClick={() => setShowVideoModal(true)}>
+                                                        <ExternalLink className="w-16 h-16 text-[#00FF89]" />
+                                                    </div>
+                                                )}
 
                                                 {/* Simple Video Controls */}
                                                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -219,8 +296,8 @@ export default function ProductHero({
                                             key={index}
                                             onClick={() => setCurrentImageIndex(index)}
                                             className={`w-2 h-2 rounded-full transition-all ${
-                                                currentImageIndex === index 
-                                                    ? 'bg-[#00FF89] w-6' 
+                                                currentImageIndex === index
+                                                    ? 'bg-[#00FF89] w-6'
                                                     : 'bg-[#6b7280] dark:bg-[#9ca3af] hover:bg-[#00FF89]/70'
                                             }`}
                                         />
@@ -263,7 +340,6 @@ export default function ProductHero({
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.6, delay: 0.1 }}
                         className="space-y-6">
-                        
                         {/* Product Header */}
                         <div className="space-y-4">
                             {/* Category Badge */}
@@ -274,38 +350,33 @@ export default function ProductHero({
                             </div>
 
                             {/* Title */}
-                            <h1 className="text-2xl lg:text-3xl font-bold text-[#121212] dark:text-[#00FF89] leading-tight">
-                                {product.title}
-                            </h1>
+                            <h1 className="text-2xl lg:text-3xl font-bold text-[#121212] dark:text-[#00FF89] leading-tight">{product.title}</h1>
 
                             {/* Description */}
-                            <p className="text-lg text-[#6b7280] dark:text-[#9ca3af] leading-relaxed">
-                                {product.shortDescription}
-                            </p>
+                            <p className="text-lg text-[#6b7280] dark:text-[#9ca3af] leading-relaxed">{product.shortDescription}</p>
 
                             {/* Stats */}
                             <div className="flex items-center gap-6">
-                                <div className="flex items-center gap-1">
-                                    <Star className="w-4 h-4 text-[#FFC050] fill-current" />
-                                    <span className="font-semibold text-[#121212] dark:text-[#00FF89]">
+                                <button
+                                    onClick={handleNavigateToReviews}
+                                    className="flex items-center gap-1 hover:opacity-80 transition-opacity cursor-pointer group"
+                                    title="View reviews">
+                                    <Star className="w-4 h-4 text-[#FFC050] fill-current group-hover:scale-110 transition-transform" />
+                                    <span className="font-semibold text-[#121212] dark:text-[#00FF89] group-hover:underline">
                                         {product.averageRating?.toFixed(1) || '5.0'}
                                     </span>
-                                    <span className="text-[#6b7280] dark:text-[#9ca3af]">
-                                        ({product.reviews?.length || 0})
+                                    <span className="text-[#6b7280] dark:text-[#9ca3af] group-hover:underline">
+                                        ({product.reviews?.length || 0} reviews)
                                     </span>
-                                </div>
+                                </button>
                                 <div className="flex items-center gap-1">
                                     <TrendingUp className="w-4 h-4 text-[#00FF89]" />
-                                    <span className="font-semibold text-[#121212] dark:text-[#00FF89]">
-                                        {product.sales || 0}
-                                    </span>
+                                    <span className="font-semibold text-[#121212] dark:text-[#00FF89]">{product.sales || 0}</span>
                                     <span className="text-[#6b7280] dark:text-[#9ca3af]">sold</span>
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <Eye className="w-4 h-4 text-[#00FF89]" />
-                                    <span className="font-semibold text-[#121212] dark:text-[#00FF89]">
-                                        {product.views || 0}
-                                    </span>
+                                    <span className="font-semibold text-[#121212] dark:text-[#00FF89]">{product.views || 0}</span>
                                     <span className="text-[#6b7280] dark:text-[#9ca3af]">views</span>
                                 </div>
                             </div>
@@ -317,7 +388,7 @@ export default function ProductHero({
                                         onClick={onUpvote}
                                         disabled={isUpvoting}
                                         className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                                            upvoted 
+                                            upvoted
                                                 ? 'bg-[#00FF89]/10 border-[#00FF89]/30 text-[#00FF89]'
                                                 : 'bg-gray-50 dark:bg-[#1f1f1f] border-gray-200 dark:border-gray-700 text-[#6b7280] dark:text-[#9ca3af] hover:bg-[#00FF89]/5 hover:border-[#00FF89]/20'
                                         }`}>
@@ -328,7 +399,7 @@ export default function ProductHero({
                                     <button
                                         onClick={onLike}
                                         className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                                            liked 
+                                            liked
                                                 ? 'bg-[#FFC050]/10 border-[#FFC050]/30 text-[#FFC050]'
                                                 : 'bg-gray-50 dark:bg-[#1f1f1f] border-gray-200 dark:border-gray-700 text-[#6b7280] dark:text-[#9ca3af] hover:bg-[#FFC050]/5 hover:border-[#FFC050]/20'
                                         }`}>
@@ -358,7 +429,6 @@ export default function ProductHero({
                         <motion.div
                             ref={ctaRef}
                             className="relative bg-gray-50 dark:bg-[#1f1f1f] rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-                            
                             {/* Discount badge moved here for a cleaner layout */}
                             {discountPercentage > 0 && (
                                 <div className="absolute top-4 right-4">
@@ -367,12 +437,10 @@ export default function ProductHero({
                                     </span>
                                 </div>
                             )}
-                             
+
                             {/* Pricing */}
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="text-3xl font-bold text-[#00FF89]">
-                                    ${Math.round(product.price || 0)}
-                                </div>
+                                <div className="text-3xl font-bold text-[#00FF89]">${Math.round(product.price || 0)}</div>
                                 {product.originalPrice && product.originalPrice > product.price && (
                                     <>
                                         <div className="text-xl text-[#6b7280] dark:text-[#9ca3af] line-through">
@@ -445,7 +513,6 @@ export default function ProductHero({
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.3 }}
                             className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-[#1f1f1f] rounded-xl border border-gray-200 dark:border-gray-700">
-                            
                             <div className="w-12 h-12 bg-[#00FF89]/10 rounded-full flex items-center justify-center">
                                 {product.sellerId?.avatar ? (
                                     <img
@@ -457,7 +524,7 @@ export default function ProductHero({
                                     <User className="w-6 h-6 text-[#00FF89]" />
                                 )}
                             </div>
-                            
+
                             <div className="flex-1">
                                 <div className="font-medium text-[#121212] dark:text-[#00FF89]">
                                     {product.sellerId?.fullName || 'Anonymous Seller'}
@@ -478,7 +545,7 @@ export default function ProductHero({
                                     ))}
                                 </div>
                             </div>
-                            
+
                             <a
                                 href={`/profile/${product.sellerId?.username || product.sellerId?._id}`}
                                 target="_blank"
@@ -514,8 +581,34 @@ export default function ProductHero({
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Video Modal */}
+            <AnimatePresence>
+                {showVideoModal && activeMedia?.videoInfo && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 bg-[#121212]/95 flex items-center justify-center p-4"
+                        onClick={() => setShowVideoModal(false)}>
+                        <button
+                            onClick={() => setShowVideoModal(false)}
+                            className="absolute top-6 right-6 w-10 h-10 bg-[#00FF89]/20 rounded-full flex items-center justify-center hover:bg-[#00FF89]/30 transition-colors">
+                            <span className="text-[#00FF89] text-xl">×</span>
+                        </button>
+                        <iframe
+                            ref={iframeRef}
+                            src={activeMedia.videoInfo.embedUrl}
+                            title="Video Player"
+                            className="w-full max-w-4xl h-[70vh] rounded-lg"
+                            frameBorder="0"
+                            allow="autoplay; fullscreen"
+                            allowFullScreen
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     )
 }
-
 
