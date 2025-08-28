@@ -100,50 +100,7 @@ export default function Footer() {
                         <div className="pt-4 border-t border-gray-800">
                             <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
                                 <p className="font-kumbh-sans text-sm text-gray-400">© {new Date().getFullYear()} Spyke AI. All rights reserved.</p>
-                                <div className="flex flex-wrap justify-center gap-6 text-sm">
-                                    <Link
-                                        href="/terms"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="font-kumbh-sans text-gray-400 hover:text-brand-primary transition-colors">
-                                        Terms & Conditions
-                                    </Link>
-                                    <Link
-                                        href="/privacy-policy"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="font-kumbh-sans text-gray-400 hover:text-brand-primary transition-colors">
-                                        Privacy Policy
-                                    </Link>
-                                    <Link
-                                        href="/refund-policy"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="font-kumbh-sans text-gray-400 hover:text-brand-primary transition-colors">
-                                        Refund Policy
-                                    </Link>
-                                    <Link
-                                        href="/seller-agreement"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="font-kumbh-sans text-gray-400 hover:text-brand-primary transition-colors">
-                                        Seller Agreement
-                                    </Link>
-                                    <Link
-                                        href="/promotion-policy"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="font-kumbh-sans text-gray-400 hover:text-brand-primary transition-colors">
-                                        Promotion Policy
-                                    </Link>
-                                    <Link
-                                        href="/payment-policy"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="font-kumbh-sans text-gray-400 hover:text-brand-primary transition-colors">
-                                        Payment Policy
-                                    </Link>
-                                </div>
+                                
                             </div>
                         </div>
                     </div>

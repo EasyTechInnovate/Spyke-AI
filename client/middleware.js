@@ -22,6 +22,7 @@ export function middleware(request) {
     const isAdminRoute = path.startsWith('/admin')
     const isSellerRoute = path.startsWith('/seller/') // Fixed: Added trailing slash
     const isProtectedRoute = path.startsWith('/protected')
+    const isSettingsRoute = path.startsWith('/settings')
     const isAuthRoute = path === '/signin' || path === '/signup'
     const isHomePage = path === '/'
 
@@ -56,6 +57,13 @@ export function middleware(request) {
         }
         if (!roles.includes('seller')) {
             return NextResponse.redirect(new URL('/', request.url))
+        }
+    }
+
+    // Protect settings route - requires authentication
+    if (isSettingsRoute) {
+        if (!isAuthenticated) {
+            return NextResponse.redirect(new URL('/signin', request.url))
         }
     }
 

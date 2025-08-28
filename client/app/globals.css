@@ -752,6 +752,27 @@ input:focus, textarea:focus, select:focus {
   display: none; /* Chrome, Safari, Opera */
 }
 
+/* Admin Sidebar Gap Fix */
+.admin-sidebar-fix {
+  left: 0 !important;
+  margin-left: 0 !important;
+  border-left: none !important;
+  transform: translateX(0) !important;
+}
+
+/* Ensure no gaps in admin layout */
+.admin-layout-container {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Force sidebar to be flush with viewport edge */
+aside[aria-label="Admin navigation sidebar"] {
+  left: 0 !important;
+  margin-left: 0 !important;
+  transform: translateX(0) !important;
+}
+
 /* Print Styles */
 @media print {
   body {

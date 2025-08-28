@@ -2,44 +2,25 @@
 
 import { useEffect, useMemo, useRef, useState, useCallback, memo } from 'react'
 import Link from 'next/link'
-import { LayoutDashboard, X, LogOut, UserCheck, ChevronDown, Package, TrendingUp, ShieldCheck, Settings, Tag, Pin, PinOff } from 'lucide-react'
+import {
+    LayoutDashboard,
+    X,
+    LogOut,
+    UserCheck,
+    ChevronDown,
+    Package,
+    TrendingUp,
+    ShieldCheck,
+    Settings,
+    Tag,
+    ChevronLeft,
+    ChevronRight,
+    HelpCircle
+} from 'lucide-react'
 import { logoutService } from '@/lib/services/logout'
 import adminAPI from '@/lib/api/admin'
 import { DESIGN_TOKENS } from '@/lib/design-system/tokens'
 import { DSBadge, DSLoadingState } from '@/lib/design-system'
-
-// Design System Theme Constants
-const SIDEBAR_TOKENS = {
-    background: {
-        main: DESIGN_TOKENS.colors.background.card.dark,
-        elevated: DESIGN_TOKENS.colors.background.elevated,
-        subtle: DESIGN_TOKENS.colors.background.subtle
-    },
-    text: {
-        primary: DESIGN_TOKENS.colors.text.inverse,
-        secondary: DESIGN_TOKENS.colors.text.subtle,
-        muted: DESIGN_TOKENS.colors.text.muted,
-        active: DESIGN_TOKENS.colors.brand.primaryText
-    },
-    border: {
-        default: '#2b2b2b',
-        focus: DESIGN_TOKENS.colors.brand.primary
-    },
-    brand: {
-        primary: DESIGN_TOKENS.colors.brand.primary,
-        gradient: `linear-gradient(135deg, ${DESIGN_TOKENS.colors.brand.primary}, #40fca7)`
-    },
-    animation: {
-        duration: DESIGN_TOKENS.animation.duration.normal,
-        easing: DESIGN_TOKENS.animation.easing.easeOut
-    },
-    spacing: {
-        sidebar: {
-            full: 'w-72 md:w-64',
-            mini: 'w-[4.25rem]'
-        }
-    }
-}
 
 // Coming Soon Features Set
 const COMING_SOON = new Set(['analytics', 'compliance', 'settings'])
@@ -101,149 +82,103 @@ const LoadingBadge = memo(({ count, loading }) => {
     if (!count && !loading) return null
 
     return (
-        <DSBadge
-            variant="primary"
-            size="small"
-            className="ml-2">
-            {loading ? (
-                <DSLoadingState
-                    type="spinner"
-                    width="12px"
-                    height="12px"
-                />
-            ) : (
-                count
-            )}
-        </DSBadge>
+        <span
+            className={`px-2 py-1 text-xs bg-[#00FF89]/10 text-[#00FF89] rounded-lg font-medium transition-all duration-300 ${loading ? 'animate-pulse' : ''}`}>
+            {loading ? <div className="w-3 h-3 border border-[#00FF89]/30 border-t-[#00FF89] rounded-full animate-spin" /> : count}
+        </span>
     )
 })
 LoadingBadge.displayName = 'LoadingBadge'
 
 // Navigation Item Component
-const NavigationItem = memo(({ item, isActive, isExpanded, onToggle, onItemClick, pinned, loadingCounts, currentPath }) => {
+const NavigationItem = memo(({ item, isActive, isExpanded, onToggle, onItemClick, isCollapsed, loadingCounts, currentPath }) => {
     const Icon = item.icon
     const isGroup = !!item.subItems
     const disabled = COMING_SOON.has(item.id)
     const { ref, h } = useMeasuredHeight(isExpanded)
 
-    const ItemShell = ({ active, children }) => (
-        <div
-            className={`group relative rounded-xl border border-transparent transition-all duration-${SIDEBAR_TOKENS.animation.duration} ${
-                active ? '' : 'hover:bg-[#232323]'
-            }`}>
-            <span
-                aria-hidden="true"
-                className={`absolute left-0 top-1/2 -translate-y-1/2 h-6 rounded-r-full transition-all duration-${SIDEBAR_TOKENS.animation.duration} ${
-                    active ? 'w-1' : 'w-0'
-                }`}
-                style={{ backgroundColor: active ? SIDEBAR_TOKENS.brand.primary : 'transparent' }}
-            />
-            {children}
-        </div>
-    )
-
-    const SoonPill = () => (
-        <span
-            className="ml-2 rounded-full px-2 py-0.5 text-[10px] font-semibold"
-            style={{
-                backgroundColor: `${SIDEBAR_TOKENS.brand.primary}1F`,
-                color: SIDEBAR_TOKENS.brand.primary
-            }}>
-            Soon
-        </span>
-    )
-
     if (!isGroup) {
         return (
-            <div
-                className="mb-1.5"
-                key={item.id}>
-                <ItemShell active={isActive}>
-                    {disabled ? (
-                        <div
-                            role="button"
-                            aria-disabled="true"
-                            title="Coming soon"
-                            className="flex items-center rounded-xl px-3 py-2.5 cursor-not-allowed opacity-60"
-                            style={{ color: SIDEBAR_TOKENS.text.secondary }}>
-                            <Icon className="mr-3 h-5 w-5 shrink-0" />
-                            <div className={`${pinned ? 'block' : 'hidden'} min-w-0 flex-1`}>
-                                <span
-                                    className="truncate"
-                                    style={{ color: SIDEBAR_TOKENS.text.primary }}>
-                                    {item.label}
-                                </span>
-                                <SoonPill />
-                            </div>
+            <div key={item.id}>
+                {disabled ? (
+                    <div
+                        className={`group flex items-center rounded-2xl text-white/30 cursor-not-allowed transition-all duration-300 ${
+                            isCollapsed ? 'justify-center px-2 py-2' : 'justify-between px-4 py-3'
+                        }`}
+                        title={isCollapsed ? `${item.label} - Coming Soon` : undefined}>
+                        <div className={`flex items-center transition-all duration-300 ${isCollapsed ? 'gap-0' : 'gap-3'}`}>
+                            <Icon className="w-4 h-4" />
+                            <span className={`font-medium text-sm tracking-tight transition-all duration-300 ${isCollapsed ? 'hidden' : ''}`}>
+                                {item.label}
+                            </span>
                         </div>
-                    ) : (
-                        <Link
-                            href={item.href}
-                            onClick={onItemClick}
-                            className="flex items-center rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all"
-                            style={{
-                                color: isActive ? SIDEBAR_TOKENS.text.active : SIDEBAR_TOKENS.text.secondary,
-                                backgroundColor: isActive ? SIDEBAR_TOKENS.brand.primary : 'transparent',
-                                focusRingColor: SIDEBAR_TOKENS.border.focus
-                            }}>
-                            <Icon className="mr-3 h-5 w-5 shrink-0" />
-                            <div className={`${pinned ? 'block' : 'hidden'} min-w-0 flex-1`}>
-                                <span
-                                    className="truncate"
-                                    style={{ color: isActive ? SIDEBAR_TOKENS.text.active : SIDEBAR_TOKENS.text.primary }}>
-                                    {item.label}
-                                </span>
-                                <LoadingBadge
-                                    count={item.badge}
-                                    loading={loadingCounts}
-                                />
-                            </div>
-                        </Link>
-                    )}
-                </ItemShell>
+                        <span
+                            className={`px-2 py-1 text-xs bg-white/5 text-white/40 rounded-lg font-medium transition-all duration-300 ${isCollapsed ? 'hidden' : ''}`}>
+                            Soon
+                        </span>
+                    </div>
+                ) : (
+                    <Link
+                        href={item.href}
+                        onClick={onItemClick}
+                        className={`group flex items-center rounded-2xl transition-all duration-300 ${
+                            isCollapsed ? 'justify-center px-2 py-2' : 'gap-3 px-4 py-3'
+                        } ${isActive ? 'bg-[#00FF89] text-black shadow-lg shadow-[#00FF89]/20' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+                        title={isCollapsed ? item.label : undefined}>
+                        <Icon className={`w-4 h-4 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-105'}`} />
+                        <span className={`font-medium text-sm tracking-tight transition-all duration-300 ${isCollapsed ? 'hidden' : ''}`}>
+                            {item.label}
+                        </span>
+                        {!isCollapsed && item.badge && (
+                            <LoadingBadge
+                                count={item.badge}
+                                loading={loadingCounts}
+                            />
+                        )}
+                    </Link>
+                )}
             </div>
         )
     }
 
     return (
         <div
-            className="mb-1.5"
-            key={item.id}>
-            <div className="rounded-xl">
-                <button
-                    onClick={() => onToggle(item.id)}
-                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onToggle(item.id)}
-                    aria-expanded={isExpanded}
-                    className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 transition-colors focus:outline-none focus:ring-2 focus:ring-opacity-50"
-                    style={{
-                        color: SIDEBAR_TOKENS.text.secondary,
-                        focusRingColor: SIDEBAR_TOKENS.border.focus
-                    }}>
-                    <div className="flex min-w-0 items-center gap-3">
-                        <Icon className="h-5 w-5 shrink-0" />
-                        <span
-                            className={`${pinned ? 'block' : 'hidden'} truncate`}
-                            style={{ color: SIDEBAR_TOKENS.text.primary }}>
-                            {item.label}
+            key={item.id}
+            className="space-y-1">
+            <button
+                onClick={() => onToggle(item.id)}
+                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onToggle(item.id)}
+                aria-expanded={isExpanded}
+                className={`group w-full flex items-center rounded-2xl transition-all duration-300 ${
+                    isCollapsed ? 'justify-center px-2 py-2' : 'justify-between px-4 py-3'
+                } ${isActive ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+                title={isCollapsed ? item.label : undefined}>
+                <div className={`flex items-center transition-all duration-300 ${isCollapsed ? 'gap-0' : 'gap-3'}`}>
+                    <Icon className="w-4 h-4" />
+                    <span className={`font-medium text-sm tracking-tight transition-all duration-300 ${isCollapsed ? 'hidden' : ''}`}>
+                        {item.label}
+                    </span>
+                </div>
+                {!isCollapsed && (
+                    <div className="flex items-center gap-2">
+                        {item.badge && (
                             <LoadingBadge
                                 count={item.badge}
                                 loading={loadingCounts}
                             />
-                        </span>
+                        )}
+                        <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                     </div>
-                    {pinned && (
-                        <ChevronDown
-                            className={`h-4 w-4 transition-transform duration-${SIDEBAR_TOKENS.animation.duration} ${isExpanded ? 'rotate-180' : ''}`}
-                        />
-                    )}
-                </button>
+                )}
+            </button>
 
+            {!isCollapsed && (
                 <div
-                    className={`overflow-hidden transition-all duration-${SIDEBAR_TOKENS.animation.duration} ${pinned ? 'opacity-100' : 'opacity-0'}`}
-                    style={{ maxHeight: pinned && isExpanded ? h : 0 }}>
+                    className="overflow-hidden transition-all duration-300"
+                    style={{ maxHeight: isExpanded ? h : 0 }}>
                     <div
                         ref={ref}
-                        className="pb-1">
+                        className="pl-4 space-y-1 pt-1">
                         {item.subItems.map((sub) => {
                             const activeSub = matchPath(currentPath, sub.href)
                             return (
@@ -251,25 +186,25 @@ const NavigationItem = memo(({ item, isActive, isExpanded, onToggle, onItemClick
                                     key={sub.id}
                                     href={sub.href}
                                     onClick={onItemClick}
-                                    className="block rounded-lg pl-11 pr-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-opacity-50"
-                                    style={{
-                                        color: activeSub ? SIDEBAR_TOKENS.brand.primary : SIDEBAR_TOKENS.text.muted,
-                                        backgroundColor: activeSub ? `${SIDEBAR_TOKENS.brand.primary}14` : 'transparent',
-                                        focusRingColor: SIDEBAR_TOKENS.border.focus
-                                    }}>
-                                    <div className="flex items-center justify-between">
-                                        <span className="truncate">{sub.label}</span>
+                                    className={`group flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-300 ${
+                                        activeSub
+                                            ? 'bg-[#00FF89]/20 text-[#00FF89] border-l-2 border-[#00FF89]'
+                                            : 'text-white/40 hover:text-white/70 hover:bg-white/5'
+                                    }`}>
+                                    <div className="w-1.5 h-1.5 rounded-full bg-current opacity-60"></div>
+                                    <span className="text-sm font-medium tracking-tight">{sub.label}</span>
+                                    {sub.badge && (
                                         <LoadingBadge
                                             count={sub.badge}
                                             loading={loadingCounts}
                                         />
-                                    </div>
+                                    )}
                                 </Link>
                             )
                         })}
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     )
 })
@@ -277,15 +212,7 @@ NavigationItem.displayName = 'NavigationItem'
 
 const AdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPath }) => {
     const [expandedMenus, setExpandedMenus] = usePersistedState('admin_expanded_menus_v2', [])
-    const [pinned, setPinned] = usePersistedState('admin_sidebar_pinned', true)
-
-    useEffect(() => {
-        try {
-            localStorage.removeItem('admin_expanded_menus')
-        } catch (error) {
-            console.warn('Failed to clear old localStorage key:', error)
-        }
-    }, [])
+    const [isCollapsed, setIsCollapsed] = usePersistedState('admin_sidebar_collapsed', false)
 
     const [counts, setCounts] = useState({
         sellers: { pending: 0, active: 0, payouts: 0 },
@@ -342,6 +269,24 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPath }) => {
         const interval = setInterval(fetchCounts, 30000)
         return () => clearInterval(interval)
     }, [fetchCounts])
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            // Set the CSS variable immediately
+            document.documentElement.style.setProperty('--admin-sidebar-width', isCollapsed ? '80px' : '256px')
+        }
+    }, [isCollapsed])
+
+    // Initialize CSS variable on mount to prevent layout shift
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            // Initialize with default value if not set
+            const currentValue = getComputedStyle(document.documentElement).getPropertyValue('--admin-sidebar-width')
+            if (!currentValue) {
+                document.documentElement.style.setProperty('--admin-sidebar-width', '256px')
+            }
+        }
+    }, [])
 
     const navigationItems = useMemo(
         () => [
@@ -431,113 +376,234 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPath }) => {
         <>
             {/* Mobile overlay */}
             <div
-                className={`fixed inset-0 z-40 bg-black/50 lg:hidden transition-opacity duration-${SIDEBAR_TOKENS.animation.duration} ${
+                className={`fixed inset-0 z-40 bg-black/50 lg:hidden transition-opacity duration-300 ${
                     sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
                 }`}
                 onClick={() => setSidebarOpen(false)}
             />
 
+            {/* Desktop Sidebar */}
             <aside
-                className={`fixed top-0 left-0 z-50 h-dvh border-r transition-[transform,width] duration-${SIDEBAR_TOKENS.animation.duration} ${
-                    sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                className={`hidden lg:flex fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-black/95 to-black/98 backdrop-blur-xl border-r border-white/5 transition-all duration-300 ease-out flex-col shadow-2xl admin-sidebar-fix ${
+                    isCollapsed ? 'w-20' : 'w-64'
                 }`}
-                style={{
-                    backgroundColor: SIDEBAR_TOKENS.background.main,
-                    borderColor: SIDEBAR_TOKENS.border.default
-                }}>
-                <div
-                    className={`flex h-full flex-col ${pinned ? SIDEBAR_TOKENS.spacing.sidebar.full : SIDEBAR_TOKENS.spacing.sidebar.mini} lg:${pinned ? SIDEBAR_TOKENS.spacing.sidebar.full : SIDEBAR_TOKENS.spacing.sidebar.mini} transition-[width] duration-${SIDEBAR_TOKENS.animation.duration}`}>
-                    {/* Header */}
-                    <div
-                        className="flex items-center justify-between gap-2 border-b px-3 py-3"
-                        style={{
-                            borderColor: SIDEBAR_TOKENS.border.default,
-                            backgroundColor: SIDEBAR_TOKENS.background.elevated
-                        }}>
-                        <div className="flex items-center gap-3 overflow-hidden">
-                            <div
-                                className="h-8 w-8 shrink-0 rounded-lg"
-                                style={{ background: SIDEBAR_TOKENS.brand.gradient }}
-                            />
-                            <div className={`min-w-0 ${pinned ? 'opacity-100' : 'opacity-0 pointer-events-none'} transition-opacity duration-200`}>
-                                <h2
-                                    className="truncate text-sm font-bold"
-                                    style={{ color: SIDEBAR_TOKENS.brand.primary }}>
+                style={{ 
+                    left: 0,
+                    width: isCollapsed ? '80px' : '256px',
+                    position: 'fixed',
+                    top: 0,
+                    bottom: 0
+                }}
+                aria-label="Admin navigation sidebar">
+                {/* Desktop Collapse Toggle Button */}
+                <button
+                    onClick={() => setIsCollapsed((prev) => !prev)}
+                    className="absolute -right-3 top-8 w-6 h-6 bg-black border border-white/10 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:border-[#00FF89]/30 transition-all duration-300 z-50"
+                    aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+                    {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
+                </button>
+
+                {/* Header - Brand section */}
+                <div className={`px-6 py-4 border-b border-white/5 flex-shrink-0 transition-all duration-300 ${isCollapsed ? 'px-3 py-3' : ''}`}>
+                    <div className="flex items-center justify-between">
+                        <div className={`space-y-1 transition-all duration-300 ${isCollapsed ? 'hidden' : ''}`}>
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-[#00FF89] animate-pulse"></div>
+                                <h2 className="text-base font-bold bg-gradient-to-r from-[#00FF89] to-[#00FF89]/80 bg-clip-text text-transparent">
                                     Admin Panel
                                 </h2>
-                                <p
-                                    className="truncate text-[11px]"
-                                    style={{ color: SIDEBAR_TOKENS.text.muted }}>
-                                    Manage your platform
-                                </p>
+                            </div>
+                            <p className="text-xs text-white/40 font-light tracking-wide">Platform Management</p>
+                        </div>
+
+                        {/* Collapsed state logo */}
+                        <div className={`items-center justify-center w-full transition-all duration-300 ${isCollapsed ? 'flex' : 'hidden'}`}>
+                            <div className="w-6 h-6 rounded-xl bg-gradient-to-br from-[#00FF89] to-[#00FF89]/80 flex items-center justify-center">
+                                <span className="text-black font-bold text-xs">A</span>
                             </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                            <button
-                                type="button"
-                                onClick={() => setPinned((v) => !v)}
-                                className="hidden lg:inline-flex items-center justify-center rounded-lg p-2 text-gray-400 hover:text-white hover:bg-[#262626] focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-colors"
-                                title={pinned ? 'Collapse sidebar' : 'Expand sidebar'}
-                                aria-label={pinned ? 'Collapse sidebar' : 'Expand sidebar'}
-                                style={{ focusRingColor: SIDEBAR_TOKENS.border.focus }}>
-                                {pinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
-                            </button>
-                            <button
-                                onClick={() => setSidebarOpen(false)}
-                                className="inline-flex lg:hidden items-center justify-center rounded-lg p-2 text-gray-400 hover:text-white hover:bg-[#262626] focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-colors"
-                                aria-label="Close sidebar"
-                                style={{ focusRingColor: SIDEBAR_TOKENS.border.focus }}>
-                                <X className="h-5 w-5" />
-                            </button>
+                    </div>
+                </div>
+
+                {/* Admin Profile */}
+                <div className={`px-6 py-3 border-b border-white/5 flex-shrink-0 transition-all duration-300 ${isCollapsed ? 'px-3 py-2' : ''}`}>
+                    <div className={`flex items-center gap-3 transition-all duration-300 ${isCollapsed ? 'justify-center gap-0' : ''}`}>
+                        <div className="relative">
+                            <div
+                                className={`rounded-2xl bg-gradient-to-br from-[#00FF89] via-[#00FF89]/90 to-[#FFC050] flex items-center justify-center shadow-lg shadow-[#00FF89]/20 transition-all duration-300 ${
+                                    isCollapsed ? 'w-7 h-7' : 'w-9 h-9'
+                                }`}>
+                                <span
+                                    className={`text-black font-bold tracking-tight transition-all duration-300 ${
+                                        isCollapsed ? 'text-xs' : 'text-sm'
+                                    }`}>
+                                    AD
+                                </span>
+                            </div>
+                            <div
+                                className={`absolute -bottom-1 -right-1 bg-[#00FF89] rounded-full border-2 border-black flex items-center justify-center transition-all duration-300 ${
+                                    isCollapsed ? 'w-3 h-3' : 'w-3.5 h-3.5'
+                                }`}>
+                                <div className={`bg-black rounded-full transition-all duration-300 ${isCollapsed ? 'w-1 h-1' : 'w-1.5 h-1.5'}`}></div>
+                            </div>
+                        </div>
+                        <div className={`flex-1 min-w-0 transition-all duration-300 ${isCollapsed ? 'hidden' : ''}`}>
+                            <h3 className="text-white font-bold text-sm tracking-tight truncate mb-0.5">Administrator</h3>
+                            <p className="text-xs text-[#00FF89]/70 font-medium tracking-wide">SUPER ADMIN</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Navigation - Desktop */}
+                <nav
+                    className={`flex-1 min-h-0 overflow-y-auto py-2 space-y-1 transition-all duration-300 custom-scrollbar ${isCollapsed ? 'px-2' : 'px-4'}`}>
+                    {navigationItems.map((item) => {
+                        const isExpanded = expandedMenus.includes(item.id)
+                        const isActive = COMING_SOON.has(item.id)
+                            ? false
+                            : item.href
+                              ? matchPath(currentPath, item.href)
+                              : item.subItems?.some((s) => matchPath(currentPath, s.href))
+
+                        return (
+                            <NavigationItem
+                                key={item.id}
+                                item={item}
+                                isActive={isActive}
+                                isExpanded={isExpanded}
+                                onToggle={toggleMenu}
+                                onItemClick={handleItemClick}
+                                isCollapsed={isCollapsed}
+                                loadingCounts={loadingCounts}
+                                currentPath={currentPath}
+                            />
+                        )
+                    })}
+                </nav>
+
+                {/* Bottom Actions - Desktop */}
+                <div className="flex-shrink-0 border-t border-white/5 bg-gradient-to-t from-black/50 to-transparent backdrop-blur-sm">
+                    <div className={`pt-2 pb-1 transition-all duration-300 ${isCollapsed ? 'px-2' : 'px-4'}`}>
+                        <div
+                            className={`bg-gradient-to-r from-[#FFC050]/5 to-transparent rounded-2xl border border-[#FFC050]/10 group hover:border-[#FFC050]/20 transition-all duration-300 ${
+                                isCollapsed ? 'p-1.5 flex justify-center' : 'p-2.5'
+                            }`}>
+                            <div className={`flex items-center transition-all duration-300 ${isCollapsed ? 'gap-0' : 'gap-2'}`}>
+                                <HelpCircle className="w-4 h-4 text-[#FFC050]/60" />
+                                <div className={`transition-all duration-300 ${isCollapsed ? 'hidden' : ''}`}>
+                                    <p className="text-xs font-semibold text-[#FFC050]/80">Admin Support</p>
+                                    <p className="text-xs text-white/30">System assistance</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Navigation */}
-                    <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-1">
-                        {navigationItems.map((item) => {
-                            const isExpanded = expandedMenus.includes(item.id)
-                            const isActive = COMING_SOON.has(item.id)
-                                ? false
-                                : item.href
-                                  ? matchPath(currentPath, item.href)
-                                  : item.subItems?.some((s) => matchPath(currentPath, s.href))
-
-                            return (
-                                <NavigationItem
-                                    key={item.id}
-                                    item={item}
-                                    isActive={isActive}
-                                    isExpanded={isExpanded}
-                                    onToggle={toggleMenu}
-                                    onItemClick={handleItemClick}
-                                    pinned={pinned}
-                                    loadingCounts={loadingCounts}
-                                    currentPath={currentPath}
-                                />
-                            )
-                        })}
-                    </nav>
-
-                    {/* Footer */}
-                    <div
-                        className="border-t px-2 py-3"
-                        style={{
-                            borderColor: SIDEBAR_TOKENS.border.default,
-                            backgroundColor: SIDEBAR_TOKENS.background.elevated
-                        }}>
+                    <div className={`pb-3 transition-all duration-300 ${isCollapsed ? 'px-2' : 'px-4'}`}>
                         <button
                             onClick={handleLogout}
-                            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-gray-300 hover:text-white hover:bg-[#262626] focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-colors"
-                            aria-label="Logout"
-                            style={{ focusRingColor: SIDEBAR_TOKENS.border.focus }}>
-                            <LogOut className="h-5 w-5" />
-                            <span className={`${pinned ? 'inline' : 'hidden'}`}>Logout</span>
+                            className={`w-full group flex items-center text-white/60 hover:text-white hover:bg-white/5 rounded-2xl font-medium text-sm tracking-tight transition-all duration-300 ${
+                                isCollapsed ? 'justify-center px-2 py-2' : 'gap-3 px-4 py-3'
+                            }`}
+                            title={isCollapsed ? 'Sign Out' : undefined}>
+                            <LogOut className="w-4 h-4 transition-transform duration-300 group-hover:rotate-12" />
+                            <span className={`transition-all duration-300 ${isCollapsed ? 'hidden' : ''}`}>Sign Out</span>
                         </button>
-                        <div
-                            className={`mt-2 text-[10px] ${pinned ? 'block' : 'hidden'}`}
-                            style={{ color: SIDEBAR_TOKENS.text.muted }}>
-                            v1.0 · admin
+                    </div>
+                </div>
+            </aside>
+
+            {/* Mobile Sidebar - Slide-in overlay */}
+            <aside
+                className={`lg:hidden fixed top-0 left-0 z-60 h-screen w-80 bg-gradient-to-b from-black/95 to-black/98 backdrop-blur-xl border-r border-white/5 transition-transform duration-300 ease-out flex flex-col shadow-2xl ${
+                    sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                }`}
+                aria-label="Admin navigation sidebar">
+                {/* Mobile Header */}
+                <div className="px-6 py-3 border-b border-white/5 flex-shrink-0">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-[#00FF89] animate-pulse"></div>
+                                <h2 className="text-lg font-bold bg-gradient-to-r from-[#00FF89] to-[#00FF89]/80 bg-clip-text text-transparent">
+                                    Admin Panel
+                                </h2>
+                            </div>
+                            <p className="text-xs text-white/40 font-light tracking-wide">Platform Management</p>
                         </div>
+
+                        <button
+                            onClick={() => setSidebarOpen && setSidebarOpen(false)}
+                            className="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200">
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Mobile Admin Profile */}
+                <div className="px-6 py-2 border-b border-white/5 flex-shrink-0">
+                    <div className="flex items-center gap-4">
+                        <div className="relative">
+                            <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-[#00FF89] via-[#00FF89]/90 to-[#FFC050] flex items-center justify-center shadow-lg shadow-[#00FF89]/20">
+                                <span className="text-black font-bold text-xs tracking-tight">AD</span>
+                            </div>
+                            <div className="absolute -bottom-1 -right-1 w-2.5 h-2.5 bg-[#00FF89] rounded-full border-2 border-black flex items-center justify-center">
+                                <div className="w-0.5 h-0.5 bg-black rounded-full"></div>
+                            </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <h3 className="text-white font-bold text-sm tracking-tight truncate mb-0.5">Administrator</h3>
+                            <p className="text-xs text-[#00FF89]/70 font-medium tracking-wide">SUPER ADMIN</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Mobile Navigation */}
+                <nav className="flex-1 min-h-0 overflow-y-auto py-2 px-4 space-y-1 custom-scrollbar">
+                    {navigationItems.map((item) => {
+                        const isExpanded = expandedMenus.includes(item.id)
+                        const isActive = COMING_SOON.has(item.id)
+                            ? false
+                            : item.href
+                              ? matchPath(currentPath, item.href)
+                              : item.subItems?.some((s) => matchPath(currentPath, s.href))
+
+                        return (
+                            <NavigationItem
+                                key={item.id}
+                                item={item}
+                                isActive={isActive}
+                                isExpanded={isExpanded}
+                                onToggle={toggleMenu}
+                                onItemClick={handleItemClick}
+                                isCollapsed={false}
+                                loadingCounts={loadingCounts}
+                                currentPath={currentPath}
+                            />
+                        )
+                    })}
+                </nav>
+
+                {/* Mobile Bottom Actions - Always visible */}
+                <div className="flex-shrink-0 border-t border-white/5 bg-gradient-to-t from-black/50 to-transparent backdrop-blur-sm">
+                    <div className="pt-1 pb-1 px-4">
+                        <div className="bg-gradient-to-r from-[#FFC050]/5 to-transparent rounded-xl border border-[#FFC050]/10 p-2 group hover:border-[#FFC050]/20 transition-all duration-300">
+                            <div className="flex items-center gap-2">
+                                <HelpCircle className="w-3 h-3 text-[#FFC050]/60" />
+                                <div>
+                                    <p className="text-xs font-semibold text-[#FFC050]/80">Admin Support</p>
+                                    <p className="text-xs text-white/30">System assistance</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="pb-2 px-4">
+                        <button
+                            onClick={handleLogout}
+                            className="w-full group flex items-center gap-3 px-4 py-2.5 text-white/60 hover:text-white hover:bg-white/5 rounded-xl font-medium text-sm tracking-tight transition-all duration-300">
+                            <LogOut className="w-4 h-4 transition-transform duration-300 group-hover:rotate-12" />
+                            <span>Sign Out</span>
+                        </button>
                     </div>
                 </div>
             </aside>

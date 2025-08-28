@@ -84,9 +84,26 @@ const authSchemas = {
         }),
 
     updateProfile: z.object({
-        name: z.string().min(2, 'Name must be at least 2 characters long').max(100, 'Name cannot exceed 100 characters').trim().optional(),
-        phoneNumber: z.string().min(1, 'Phone number is required').trim().optional(),
-        avatar: z.string().url('Avatar must be a valid URL').optional(),
+        name: z
+            .string()
+            .trim()
+            .min(1)
+            .optional()
+            .or(z.literal(''))
+            .transform((val) => (val === '' ? undefined : val)),
+        phoneNumber: z
+            .string()
+            .trim()
+            .min(1)
+            .optional()
+            .or(z.literal(''))
+            .transform((val) => (val === '' ? undefined : val)),
+        avatar: z
+            .string()
+            .url('Avatar must be a valid URL')
+            .optional()
+            .or(z.literal(''))
+            .transform((val) => (val === '' ? undefined : val)),
         userLocation: z
             .object({
                 lat: z.number('Latitude must be a number'),
@@ -122,3 +139,4 @@ const authSchemas = {
 }
 
 export default authSchemas
+

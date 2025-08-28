@@ -51,9 +51,10 @@ export default function SellerLayout({ children }) {
     }
 
     return (
-        <div className="min-h-screen bg-[#121212] relative">
-            {/* Sidebar with absolute positioning isolation */}
-            <div className="absolute inset-y-0 left-0 z-50">
+        <div className="min-h-screen bg-[#121212]">
+            {/* Mobile-first responsive layout */}
+            <div className="flex h-screen overflow-hidden">
+                {/* Sidebar - Mobile slide-in overlay, Desktop fixed */}
                 <SellerSidebar 
                     currentPath={currentPath} 
                     sellerName={sellerName}
@@ -62,30 +63,54 @@ export default function SellerLayout({ children }) {
                     isCollapsed={isCollapsed}
                     setIsCollapsed={setIsCollapsed}
                 />
-            </div>
-            
-            {/* Main Content with dynamic spacing based on sidebar state */}
-            <div 
-                className={`min-h-screen flex flex-col transition-all duration-500 ease-out ${
-                    isCollapsed ? 'lg:ml-20' : 'lg:ml-64'
-                }`}
-            >
-                <main className="flex-1 p-3 sm:p-4 md:p-6 relative z-10 transition-all duration-300">
-                    <div className="max-w-full overflow-hidden">
-                        {children}
-                    </div>
-                </main>
                 
-                {/* Footer */}
-                <footer className="bg-black/50 text-white border-t border-white/10 mt-auto backdrop-blur-sm">
-                    <div className="px-3 sm:px-4 md:px-6 py-4 sm:py-6">
-                        <div className="max-w-6xl mx-auto text-center">
-                            <p className="text-sm text-white/40 font-light">
+                {/* Mobile overlay for sidebar */}
+                {sidebarOpen && (
+                    <div 
+                        className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+                        onClick={() => setSidebarOpen(false)}
+                    />
+                )}
+                
+                {/* Main Content Area */}
+                <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
+                    isCollapsed ? 'lg:ml-20' : 'lg:ml-64'
+                }`}>
+                    {/* Mobile Header/Nav Bar */}
+                    <div className="lg:hidden bg-[#1a1a1a] border-b border-white/10 px-4 py-3 flex items-center justify-between">
+                        <button
+                            onClick={() => setSidebarOpen(true)}
+                            className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+                            aria-label="Open menu"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                        
+                        <h1 className="text-lg font-semibold text-white truncate ml-3">
+                            {sellerName || 'Seller Dashboard'}
+                        </h1>
+                        
+                        <div className="w-10 h-10" /> {/* Spacer for centering */}
+                    </div>
+                    
+                    {/* Scrollable Content */}
+                    <main className="flex-1 overflow-y-auto">
+                        <div className="p-4 lg:p-6 max-w-full">
+                            {children}
+                        </div>
+                    </main>
+                    
+                    {/* Footer */}
+                    <footer className="bg-black/30 border-t border-white/5 px-4 lg:px-6 py-4 flex-shrink-0">
+                        <div className="text-center">
+                            <p className="text-xs text-white/40">
                                 © {new Date().getFullYear()} Spyke AI. All rights reserved.
                             </p>
                         </div>
-                    </div>
-                </footer>
+                    </footer>
+                </div>
             </div>
         </div>
     )

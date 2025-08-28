@@ -12,7 +12,7 @@ export const USER_MENU_ITEMS = [
     { name: 'Wishlist', href: '/account/wishlist', icon: Heart, prefetch: false },
     { name: 'Messages', href: '/account/messages', icon: MessageSquare, prefetch: false },
     { name: 'Profile', href: '/account/profile', icon: User, prefetch: false },
-    { name: 'Settings', href: '/account/settings', icon: Settings, prefetch: false }
+    { name: 'Settings', href: '/settings', icon: Settings, prefetch: false }
 ]
 
 export const SELLER_MENU_ITEMS = [

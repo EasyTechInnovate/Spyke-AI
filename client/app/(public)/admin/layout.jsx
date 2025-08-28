@@ -14,14 +14,6 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-[#121212]">
-      {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
       {/* Sidebar Component */}
       <AdminSidebar
         sidebarOpen={sidebarOpen} 
@@ -29,8 +21,8 @@ export default function AdminLayout({ children }) {
         currentPath={pathname}
       />
 
-      {/* Main Content */}
-      <div className="lg:ml-72 min-h-screen">
+      {/* Main Content - Only apply margin on desktop */}
+      <div className="min-h-screen lg:transition-all lg:duration-300 lg:ease-out lg:ml-[var(--admin-sidebar-width,256px)]">
         {/* Header Component */}
         <AdminHeader
           setSidebarOpen={setSidebarOpen}
@@ -38,7 +30,7 @@ export default function AdminLayout({ children }) {
         />
 
         {/* Page Content */}
-        <main className="p-6">
+        <main className="p-4 lg:p-6">
           {children}
         </main>
       </div>
