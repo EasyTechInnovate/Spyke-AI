@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import { useProductCreateStore } from '@/store/productCreate'
 import { SETUP_TIMES } from '@/lib/constants/productCreate'
+import CustomSelect from '@/components/shared/CustomSelect'
 
 // Enhanced tooltips with contextual help
 const FIELD_HELP = {
@@ -136,47 +137,50 @@ const AutoSaveIndicator = () => {
   )
 }
 
-// Define tools with Lucide React icons only
-const TOOLS_AND_PLATFORMS = [
-  // AI Tools
-  { value: 'CHATGPT', label: 'ChatGPT', icon: Bot, category: 'AI' },
-  { value: 'CLAUDE', label: 'Claude', icon: Bot, category: 'AI' },
-  { value: 'GEMINI', label: 'Google Gemini', icon: Bot, category: 'AI' },
-  { value: 'PERPLEXITY', label: 'Perplexity', icon: Bot, category: 'AI' },
+// Define tools with Lucide React icons only - organized by category
+const TOOLS_BY_CATEGORY = {
+  'AI Tools': [
+    { value: 'CHATGPT', label: 'ChatGPT', icon: Bot },
+    { value: 'CLAUDE', label: 'Claude', icon: Bot },
+    { value: 'GEMINI', label: 'Google Gemini', icon: Bot },
+    { value: 'PERPLEXITY', label: 'Perplexity', icon: Bot },
+  ],
+  'Automation Platforms': [
+    { value: 'ZAPIER', label: 'Zapier', icon: Zap },
+    { value: 'MAKE', label: 'Make (Integromat)', icon: Workflow },
+    { value: 'POWER_AUTOMATE', label: 'Power Automate', icon: Workflow },
+    { value: 'N8N', label: 'n8n', icon: Workflow },
+  ],
+  'No-Code Tools': [
+    { value: 'BUBBLE', label: 'Bubble', icon: Globe },
+    { value: 'WEBFLOW', label: 'Webflow', icon: Globe },
+    { value: 'AIRTABLE', label: 'Airtable', icon: Database },
+    { value: 'NOTION', label: 'Notion', icon: Database },
+  ],
+  'CRM & Sales': [
+    { value: 'PIPEDRIVE', label: 'Pipedrive', icon: Target },
+    { value: 'HUBSPOT', label: 'HubSpot', icon: Target },
+    { value: 'SALESFORCE', label: 'Salesforce', icon: Cloud },
+  ],
+  'Communication Tools': [
+    { value: 'SLACK', label: 'Slack', icon: MessageSquare },
+    { value: 'DISCORD', label: 'Discord', icon: Users },
+    { value: 'TELEGRAM', label: 'Telegram', icon: Phone },
+  ],
+  'Email Marketing': [
+    { value: 'MAILCHIMP', label: 'Mailchimp', icon: Mail },
+    { value: 'CONVERTKIT', label: 'ConvertKit', icon: Mail },
+    { value: 'KLAVIYO', label: 'Klaviyo', icon: Mail },
+  ]
+}
 
-  // Automation Platforms
-  { value: 'ZAPIER', label: 'Zapier', icon: Zap, category: 'Automation' },
-  { value: 'MAKE', label: 'Make (Integromat)', icon: Workflow, category: 'Automation' },
-  { value: 'POWER_AUTOMATE', label: 'Power Automate', icon: Workflow, category: 'Automation' },
-  { value: 'N8N', label: 'n8n', icon: Workflow, category: 'Automation' },
-
-  // No-Code Tools
-  { value: 'BUBBLE', label: 'Bubble', icon: Globe, category: 'No-Code' },
-  { value: 'WEBFLOW', label: 'Webflow', icon: Globe, category: 'No-Code' },
-  { value: 'AIRTABLE', label: 'Airtable', icon: Database, category: 'No-Code' },
-  { value: 'NOTION', label: 'Notion', icon: Database, category: 'No-Code' },
-
-  // CRM & Sales
-  { value: 'PIPEDRIVE', label: 'Pipedrive', icon: Target, category: 'CRM' },
-  { value: 'HUBSPOT', label: 'HubSpot', icon: Target, category: 'CRM' },
-  { value: 'SALESFORCE', label: 'Salesforce', icon: Cloud, category: 'CRM' },
-
-  // Communication
-  { value: 'SLACK', label: 'Slack', icon: MessageSquare, category: 'Communication' },
-  { value: 'DISCORD', label: 'Discord', icon: Users, category: 'Communication' },
-  { value: 'TELEGRAM', label: 'Telegram', icon: Phone, category: 'Communication' },
-
-  // Email Marketing
-  { value: 'MAILCHIMP', label: 'Mailchimp', icon: Mail, category: 'Email' },
-  { value: 'CONVERTKIT', label: 'ConvertKit', icon: Mail, category: 'Email' },
-  { value: 'KLAVIYO', label: 'Klaviyo', icon: Mail, category: 'Email' }
-]
+// Flatten all tools for the dropdown
+const ALL_TOOLS = Object.values(TOOLS_BY_CATEGORY).flat()
 
 export default function Step3Technical() {
   const toolsUsed = useProductCreateStore((state) => state.toolsUsed)
   const toolsConfiguration = useProductCreateStore((state) => state.toolsConfiguration)
   const setupTimeEstimate = useProductCreateStore((state) => state.setupTimeEstimate)
-  const category = useProductCreateStore((state) => state.category)
   const errors = useProductCreateStore((state) => state.errors)
   const touchedFields = useProductCreateStore((state) => state.touchedFields)
 
@@ -193,39 +197,29 @@ export default function Step3Technical() {
     return touchedFields[fieldName] && errors[fieldName]
   }
 
-  const toggleTool = (tool) => {
-    const isSelected = toolsUsed.some((t) => t.name === tool.label)
-    if (isSelected) {
-      const filtered = toolsUsed.filter((t) => t.name !== tool.label)
-      setField('toolsUsed', filtered)
-    } else {
-      const newTool = {
+  // Handle tool selection for multiple select
+  const handleToolSelection = (selectedValues) => {
+    const selectedTools = selectedValues.map(value => {
+      const tool = ALL_TOOLS.find(t => t.value === value)
+      return {
         name: tool.label,
         value: tool.value,
         configuration: ''
       }
-      setField('toolsUsed', [...toolsUsed, newTool])
-    }
+    })
+    setField('toolsUsed', selectedTools)
     handleFieldBlur('toolsUsed')
   }
 
   const updateToolConfiguration = (toolValue, configuration) => {
-    const updated = toolsUsed.map((tool) => (tool.value === toolValue ? { ...tool, configuration } : tool))
+    const updated = toolsUsed.map((tool) =>
+      tool.value === toolValue ? { ...tool, configuration } : tool
+    )
     setField('toolsUsed', updated)
   }
 
-  const isToolSelected = (tool) => {
-    return toolsUsed.some((t) => t.value === tool.value)
-  }
-
-  // Group tools by category for better UX
-  const toolsByCategory = TOOLS_AND_PLATFORMS.reduce((acc, tool) => {
-    if (!acc[tool.category]) {
-      acc[tool.category] = []
-    }
-    acc[tool.category].push(tool)
-    return acc
-  }, {})
+  // Get currently selected tool values for the dropdown
+  const selectedToolValues = toolsUsed.map(tool => tool.value)
 
   return (
     <div className="space-y-10">
@@ -240,7 +234,7 @@ export default function Step3Technical() {
         <p className="text-lg text-gray-400">Define the tools and technical requirements for your product</p>
       </div>
 
-      {/* Tools and Platforms Used */}
+      {/* Tools Selection with Custom Dropdown */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -254,46 +248,39 @@ export default function Step3Technical() {
           <div className="text-base text-gray-400">{toolsUsed.length} selected</div>
         </div>
 
-        {/* Tool Categories */}
-        <div className="space-y-6">
-          {Object.entries(toolsByCategory).map(([categoryName, tools]) => (
-            <div key={categoryName} className="space-y-3">
-              <h4 className="text-lg font-semibold text-gray-300 flex items-center gap-2">
-                <Settings className="w-4 h-4" />
-                {categoryName} Tools
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {tools.map((tool) => {
-                  const IconComponent = tool.icon
-                  return (
-                    <motion.button
-                      key={tool.value}
-                      type="button"
-                      onClick={() => toggleTool(tool)}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className={`p-4 rounded-lg border text-left transition-all ${isToolSelected(tool)
-                        ? 'border-[#00FF89] bg-[#00FF89]/10 shadow-lg shadow-[#00FF89]/10'
-                        : 'border-gray-600 hover:border-gray-500 hover:bg-gray-800/50'
-                        }`}>
-                      <div className="flex items-center space-x-3">
-                        <IconComponent className="w-5 h-5 text-[#00FF89]" />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-lg font-medium text-white">{tool.label}</div>
-                        </div>
-                        {isToolSelected(tool) && <CheckCircle className="w-4 h-4 text-[#00FF89] flex-shrink-0" />}
-                      </div>
-                    </motion.button>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
+        <CustomSelect
+          value={selectedToolValues}
+          onChange={handleToolSelection}
+          options={ALL_TOOLS}
+          placeholder="Select the tools your product uses..."
+          multiple={true}
+          searchable={true}
+          showSelectedCount={true}
+          allowClear={true}
+          error={showError('toolsUsed')}
+          onBlur={() => handleFieldBlur('toolsUsed')}
+          maxHeight="max-h-80"
+        />
 
         {showError('toolsUsed') && (
           <div className="text-base text-red-400">
             {getEnhancedErrorMessage('toolsUsed', errors.toolsUsed)}
+          </div>
+        )}
+
+        {/* Selected Tools Preview */}
+        {toolsUsed.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 p-4 bg-gray-800/30 rounded-lg border border-gray-700">
+            {toolsUsed.map((tool) => {
+              const toolData = ALL_TOOLS.find(t => t.value === tool.value)
+              const IconComponent = toolData?.icon || Settings
+              return (
+                <div key={tool.value} className="flex items-center gap-2 p-2 bg-[#00FF89]/10 rounded-lg">
+                  <IconComponent className="w-4 h-4 text-[#00FF89]" />
+                  <span className="text-sm text-white truncate">{tool.name}</span>
+                </div>
+              )
+            })}
           </div>
         )}
       </motion.div>
@@ -306,61 +293,53 @@ export default function Step3Technical() {
         </p>
       </div>
 
-      {/* Tool Configuration Section */}
-      <div className="flex items-center my-8">
-        <div className="flex-1 border-t border-gray-700"></div>
-        <div className="px-4 text-base text-gray-400 flex items-center space-x-2">
-          <Wrench className="w-4 h-4" />
-          <span>Tool Configuration</span>
-        </div>
-        <div className="flex-1 border-t border-gray-700"></div>
-      </div>
-
       {/* Individual Tool Configurations */}
       {toolsUsed.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="space-y-4">
-          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-            <Settings className="w-5 h-5" />
-            Individual Tool Setup
-          </h3>
-          <div className="space-y-4">
-            {toolsUsed.map((tool, index) => {
-              const toolData = TOOLS_AND_PLATFORMS.find((t) => t.value === tool.value)
-              const IconComponent = toolData?.icon || Settings
-              return (
-                <motion.div
-                  key={tool.value}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                  className="p-5 bg-gray-800/50 border border-gray-700 rounded-xl">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-3">
-                      <IconComponent className="w-6 h-6 text-[#00FF89]" />
-                      <h4 className="text-lg font-semibold text-white">{tool.name}</h4>
+        <>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="space-y-4">
+            <div className="flex items-center my-8">
+              <div className="flex-1 border-t border-gray-700"></div>
+              <div className="px-4 text-base text-gray-400 flex items-center space-x-2">
+                <Wrench className="w-4 h-4" />
+                <span>Individual Tool Setup</span>
+              </div>
+              <div className="flex-1 border-t border-gray-700"></div>
+            </div>
+
+            <div className="space-y-4">
+              {toolsUsed.map((tool, index) => {
+                const toolData = ALL_TOOLS.find((t) => t.value === tool.value)
+                const IconComponent = toolData?.icon || Settings
+                return (
+                  <motion.div
+                    key={tool.value}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 * index }}
+                    className="p-5 bg-gray-800/50 border border-gray-700 rounded-xl">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <IconComponent className="w-6 h-6 text-[#00FF89]" />
+                        <h4 className="text-lg font-semibold text-white">{tool.name}</h4>
+                      </div>
                     </div>
-                    <button
-                      onClick={() => toggleTool(toolData)}
-                      className="p-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-colors">
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-                  <textarea
-                    value={tool.configuration || ''}
-                    onChange={(e) => updateToolConfiguration(tool.value, e.target.value)}
-                    placeholder={`Describe how ${tool.name} is configured and used in your solution...`}
-                    rows={3}
-                    className="w-full px-5 py-4 text-lg bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-[#00FF89] transition-all resize-none"
-                  />
-                </motion.div>
-              )
-            })}
-          </div>
-        </motion.div>
+                    <textarea
+                      value={tool.configuration || ''}
+                      onChange={(e) => updateToolConfiguration(tool.value, e.target.value)}
+                      placeholder={`Describe how ${tool.name} is configured and used in your solution...`}
+                      rows={3}
+                      className="w-full px-5 py-4 text-lg bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-[#00FF89] transition-all resize-none"
+                    />
+                  </motion.div>
+                )
+              })}
+            </div>
+          </motion.div>
+        </>
       )}
 
       {/* General Tools Configuration */}

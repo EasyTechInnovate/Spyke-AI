@@ -3,9 +3,9 @@ import { useResponsive } from '@/hooks/useResponsive'
 
 export default function PopularTags({ tags, onTagClick }) {
   const { isMobile } = useResponsive()
-  
+
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4, delay: 0.2 }}
@@ -17,11 +17,11 @@ export default function PopularTags({ tags, onTagClick }) {
           key={tag}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ 
-            duration: 0.3, 
+          transition={{
+            duration: 0.3,
             delay: 0.25 + i * 0.03
           }}
-          whileHover={!isMobile ? { 
+          whileHover={!isMobile ? {
             y: -2
           } : {}}
           whileTap={{ scale: 0.95 }}

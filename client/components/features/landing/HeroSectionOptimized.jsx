@@ -6,9 +6,11 @@ import { ArrowRight, Sparkles, Star, Zap } from 'lucide-react'
 import { appConfig } from '@/lib/config'
 import SearchBar from './hero/SearchBar'
 import HeroAccessibility from './hero/HeroAccessibility'
+import SellerButton from './hero/SellerButton'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useHeroPerformance } from '@/hooks/useHeroPerformance'
+import { useAuth } from '@/hooks/useAuth'
 import './hero/HeroMobile.css'
 
 import {
@@ -42,53 +44,56 @@ export default function HeroSectionOptimized() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [dimensions, setDimensions] = useState({ height: '90vh' })
   const [isLoading, setIsLoading] = useState(true)
-  
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+
   // Track performance metrics
   const metrics = useHeroPerformance()
+  const { user } = useAuth()
 
   useEffect(() => {
     setMounted(true)
-    
+
     // Set proper dimensions to prevent layout shift
     if (typeof window !== 'undefined') {
       const updateDimensions = () => {
         setDimensions({ height: `${Math.min(window.innerHeight * 0.9, 800)}px` })
       }
-      
+
       updateDimensions()
       window.addEventListener('resize', updateDimensions)
-      
+
       // Check reduced motion preference
       const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
       setPrefersReducedMotion(mediaQuery.matches)
-      
+
       const handleMotionChange = (e) => setPrefersReducedMotion(e.matches)
       mediaQuery.addEventListener('change', handleMotionChange)
-      
+
+      // Mouse move handler for elegant glow effect
+      const handleMouseMove = (e) => {
+        if (!prefersReducedMotion) {
+          setMousePosition({
+            x: e.clientX,
+            y: e.clientY
+          })
+        }
+      }
+
+      window.addEventListener('mousemove', handleMouseMove)
+
       // Simulate component loading completion
       const loadingTimer = setTimeout(() => {
         setIsLoading(false)
       }, 800)
-      
+
       return () => {
         window.removeEventListener('resize', updateDimensions)
         mediaQuery.removeEventListener('change', handleMotionChange)
+        window.removeEventListener('mousemove', handleMouseMove)
         clearTimeout(loadingTimer)
       }
     }
-  }, [])
-
-  // Log performance metrics in development
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development' && metrics.lcp) {
-      console.log('🎯 Hero Section Performance Metrics:', {
-        FCP: `${metrics.fcp?.toFixed(2)}ms`,
-        LCP: `${metrics.lcp?.toFixed(2)}ms`,
-        CLS: metrics.cls?.toFixed(4),
-        LoadTime: `${metrics.loadTime?.toFixed(2)}ms`
-      })
-    }
-  }, [metrics])
+  }, [prefersReducedMotion])
 
   const handleSearch = (query) => {
     console.log('🎯 [HeroSectionOptimized] Search initiated:', query)
@@ -97,36 +102,36 @@ export default function HeroSectionOptimized() {
   // Show loading state during initial render
   if (!mounted || isLoading) {
     return (
-      <section 
+      <section
         className="relative overflow-hidden flex items-center pt-16"
         style={{ minHeight: dimensions.height }}
         aria-label="Loading hero section"
       >
-        <div className="absolute inset-0 bg-[#121212]" />
-        
+        <div className="absolute inset-0 bg-black" />
+
         <DSContainer>
           <DSStack gap="large" align="center" className="text-center">
             {/* Badge Skeleton */}
             <DSLoadingState type="skeleton" width="200px" height="40px" />
-            
+
             {/* Heading Skeleton */}
             <div className="space-y-4">
               <DSLoadingState type="skeleton" width="600px" height="60px" />
               <DSLoadingState type="skeleton" width="500px" height="60px" />
             </div>
-            
+
             {/* Subheading Skeleton */}
             <DSLoadingState type="skeleton" width="400px" height="24px" />
-            
+
             {/* Search Bar Skeleton */}
             <DSLoadingState type="skeleton" width="100%" height="64px" className="max-w-3xl" />
-            
+
             {/* CTA Buttons Skeleton */}
             <div className="flex gap-4">
               <DSLoadingState type="skeleton" width="180px" height="48px" />
               <DSLoadingState type="skeleton" width="150px" height="48px" />
             </div>
-            
+
             {/* Stats Skeleton */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-12">
               {[1, 2, 3].map((i) => (
@@ -145,53 +150,73 @@ export default function HeroSectionOptimized() {
 
   return (
     <HeroAccessibility>
-      <section 
+      <section
         className="relative overflow-hidden flex items-center pt-16 hero-container"
-        style={{ minHeight: dimensions.height }}
+        style={{
+          minHeight: dimensions.height,
+          background: '#000000'
+        }}
         aria-label="Hero section with AI marketplace search"
       >
-        {/* Consistent background */}
-        <div className="absolute inset-0 bg-[#121212]">
-          {/* Immediate background to prevent flash */}
-          <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900/50 to-black" />
-          
+        {/* Mouse Follow Glow Effect */}
+        {mounted && !prefersReducedMotion && (
+          <div
+            className="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300"
+            style={{
+              background: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(0, 255, 137, 0.06), transparent 40%)`,
+            }}
+          />
+        )}
+
+        {/* Pure black background with subtle overlay */}
+        <div className="absolute inset-0 bg-black">
+          {/* Minimal elegant gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-black via-black to-gray-900/20" />
+
           {/* Enhanced background effects - lazy loaded */}
           {mounted && <BackgroundEffectsLight />}
         </div>
 
-        <DSContainer className="relative z-10 py-16 sm:py-20 lg:py-24">
+        <DSContainer className="relative z-0 py-16 sm:py-20 lg:py-24">
           <div className="max-w-5xl mx-auto">
             {/* Main Content */}
             <DSStack gap="large" align="center" className="text-center">
-              {/* Badge with proper focus handling */}
+              {/* Badge with green theme */}
               <motion.div
                 initial={prefersReducedMotion ? {} : { opacity: 0, y: 20 }}
                 animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
                 transition={{ duration: prefersReducedMotion ? 0 : 0.6 }}
               >
-                <DSBadge variant="primary" icon={Sparkles}>
-                  #{appConfig.company.name} - AI Marketplace
-                </DSBadge>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#00FF89]/20 bg-[#00FF89]/5 backdrop-blur-sm">
+                  <Sparkles className="w-4 h-4 text-[#00FF89]" />
+                  <span className="text-sm font-medium text-white">
+                    #{appConfig.company.name} - AI Marketplace
+                  </span>
+                </div>
               </motion.div>
 
-              {/* Optimized heading with proper hierarchy */}
+              {/* Hero heading with enhanced green gradient */}
               <motion.div
                 initial={prefersReducedMotion ? {} : { opacity: 0, y: 30 }}
                 animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
                 transition={{ duration: prefersReducedMotion ? 0 : 0.8, delay: prefersReducedMotion ? 0 : 0.2 }}
               >
                 <DSHeading level={1} variant="hero" className="hero-text-mobile">
-                  <span style={{ color: 'white' }}>Discover </span>
-                  <span style={{ 
-                    background: `linear-gradient(to right, #00FF89, rgba(0, 255, 137, 0.7))`,
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent'
-                  }}>
+                  <span className="text-white">Discover </span>
+                  <span
+                    className="relative"
+                    style={{
+                      background: `linear-gradient(135deg, #00FF89 0%, #00FF89 50%, rgba(0, 255, 137, 0.8) 100%)`,
+                      backgroundClip: 'text',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      textShadow: '0 0 30px rgba(0, 255, 137, 0.3)'
+                    }}
+                  >
                     10,000+ AI Prompts
                   </span>
                   <br className="hidden sm:block" />
-                  <span style={{ color: 'white' }}>
+                  <span className="text-white">
                     <span className="hidden sm:inline">& </span>
                     <span className="sm:hidden">and </span>
                     Automation Tools
@@ -199,16 +224,15 @@ export default function HeroSectionOptimized() {
                 </DSHeading>
               </motion.div>
 
-              {/* Subheading with proper contrast */}
+              {/* Clean white subheading */}
               <motion.div
                 initial={prefersReducedMotion ? {} : { opacity: 0, y: 20 }}
                 animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
                 transition={{ duration: prefersReducedMotion ? 0 : 0.6, delay: prefersReducedMotion ? 0 : 0.4 }}
               >
-                <DSText 
-                  variant="subhero" 
-                  className="hero-text-mobile max-w-2xl mx-auto"
-                  style={{ color: '#d1d5db' }}
+                <DSText
+                  variant="subhero"
+                  className="hero-text-mobile max-w-2xl mx-auto text-white/90"
                 >
                   {appConfig.company.tagline}
                 </DSText>
@@ -221,36 +245,34 @@ export default function HeroSectionOptimized() {
                 transition={{ duration: prefersReducedMotion ? 0 : 0.6, delay: prefersReducedMotion ? 0 : 0.6 }}
                 className="w-full max-w-3xl"
               >
-                <SearchBar 
+                <SearchBar
                   popularTags={POPULAR_TAGS}
                   onSearch={handleSearch}
                 />
               </motion.div>
 
-              {/* Touch-friendly CTA Buttons using Design System */}
+              {/* Refined CTA Buttons with role-based conditional rendering */}
               <motion.div
                 initial={prefersReducedMotion ? {} : { opacity: 0, y: 20 }}
                 animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
                 transition={{ duration: prefersReducedMotion ? 0 : 0.6, delay: prefersReducedMotion ? 0 : 0.8 }}
               >
-                <DSStack direction="row" gap="4" className="flex-col sm:flex-row">
-                  <Link href="/explore">
-                    <DSButton variant="primary" size="medium" className="group w-full sm:w-auto">
-                      Explore Marketplace
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </DSButton>
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 w-full max-w-md sm:max-w-none mx-auto">
+                  <Link href="/explore" className="w-full sm:w-auto">
+                    <button className="group relative inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-3 text-black font-semibold bg-[#00FF89] rounded-lg hover:bg-[#00FF89]/90 transition-all duration-200 hover:shadow-lg hover:shadow-[#00FF89]/25 w-full sm:w-auto min-h-[48px] touch-manipulation">
+                      <span className="text-base sm:text-base">Explore Marketplace</span>
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                    </button>
                   </Link>
-                  
-                  <Link href="/become-seller">
-                    <DSButton variant="secondary" size="medium" className="w-full sm:w-auto">
-                      Start Selling
-                    </DSButton>
-                  </Link>
-                </DSStack>
+
+                  <div className="w-full sm:w-auto">
+                    <SellerButton />
+                  </div>
+                </div>
               </motion.div>
             </DSStack>
 
-            {/* Stats Section using Design System */}
+            {/* Clean stats section with green accents */}
             <motion.div
               initial={prefersReducedMotion ? {} : { opacity: 0, y: 30 }}
               animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
@@ -258,14 +280,22 @@ export default function HeroSectionOptimized() {
               className="mt-12 sm:mt-16 lg:mt-20"
             >
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
-                {STATS.map((stat, index) => (
-                  <DSStatsCard
-                    key={stat.label}
-                    icon={stat.icon}
-                    value={stat.value}
-                    label={stat.label}
-                  />
-                ))}
+                {STATS.map((stat, index) => {
+                  const Icon = stat.icon
+                  return (
+                    <div key={stat.label} className="text-center group">
+                      <div className="inline-flex items-center justify-center w-12 h-12 mb-4 rounded-xl bg-[#00FF89]/10 border border-[#00FF89]/20 group-hover:bg-[#00FF89]/20 transition-all duration-300">
+                        <Icon className="w-6 h-6 text-[#00FF89]" />
+                      </div>
+                      <div className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                        {stat.value}
+                      </div>
+                      <div className="text-sm text-white/70 font-medium">
+                        {stat.label}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </motion.div>
           </div>

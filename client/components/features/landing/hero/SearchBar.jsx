@@ -40,7 +40,6 @@ export default function SearchBar({ popularTags = [], onSearch }) {
 
             setSearchResults({ products })
         } catch (error) {
-            console.error('Search error:', error)
             setSearchResults({ products: [] })
         } finally {
             setIsSearching(false)
@@ -63,6 +62,11 @@ export default function SearchBar({ popularTags = [], onSearch }) {
     // Click outside handler
     useEffect(() => {
         const handleClickOutside = (event) => {
+            // Don't close if clicking on a product button
+            if (event.target.closest('button[data-product-click]')) {
+                return
+            }
+
             if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
                 setIsFocused(false)
             }
@@ -86,11 +90,19 @@ export default function SearchBar({ popularTags = [], onSearch }) {
     }
 
     const handleProductClick = (product) => {
-        // Use slug if available, otherwise fallback to id
+        // Use slug if available, otherwise fallback to id or _id
         const identifier = product.slug || product.id || product._id
-        router.push(`/products/${identifier}`)
+
+        if (!identifier) {
+            return
+        }
+
+        const productUrl = `/products/${identifier}`
+
+        // Close dropdown and navigate immediately
         setIsFocused(false)
         setQuery('')
+        router.push(productUrl)
     }
 
     const handleTagClick = (tag) => {
@@ -128,18 +140,17 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                 transition={{ duration: 0.5 }}
                 role="search"
                 aria-label="Search AI prompts and automation tools">
-                
+
                 {/* Main Search Container */}
                 <div
-                    className={`relative overflow-hidden bg-gradient-to-r from-gray-900/80 via-gray-800/60 to-gray-900/80 backdrop-blur-2xl border transition-all duration-500 ease-out rounded-2xl ${
-                        isFocused 
-                            ? 'border-[#00FF89]/40 shadow-[0_0_40px_rgba(0,255,137,0.15)] bg-gray-900/90' 
-                            : 'border-gray-700/50 hover:border-gray-600/70 shadow-[0_4px_20px_rgba(0,0,0,0.3)]'
-                    }`}>
-                    
+                    className={`relative overflow-hidden bg-gradient-to-r from-gray-900/80 via-gray-800/60 to-gray-900/80 backdrop-blur-2xl border transition-all duration-500 ease-out rounded-2xl ${isFocused
+                        ? 'border-[#00FF89]/40 shadow-[0_0_40px_rgba(0,255,137,0.15)] bg-gray-900/90'
+                        : 'border-gray-700/50 hover:border-gray-600/70 shadow-[0_4px_20px_rgba(0,0,0,0.3)]'
+                        }`}>
+
                     {/* Animated background gradient */}
                     <div className={`absolute inset-0 bg-gradient-to-r from-[#00FF89]/5 via-transparent to-[#00FF89]/5 opacity-0 transition-opacity duration-500 ${isFocused ? 'opacity-100' : ''}`} />
-                    
+
                     <div className="relative flex items-center min-h-[60px] sm:min-h-[68px]">
                         {/* Search Icon */}
                         <div className="flex items-center justify-center w-16 sm:w-18 h-full flex-shrink-0">
@@ -147,9 +158,8 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                                 animate={isFocused ? { scale: 1.1, rotate: 5 } : { scale: 1, rotate: 0 }}
                                 transition={{ duration: 0.3, ease: "easeOut" }}>
                                 <Search
-                                    className={`w-5 h-5 sm:w-6 sm:h-6 transition-all duration-300 ${
-                                        isFocused ? 'text-[#00FF89] drop-shadow-[0_0_8px_rgba(0,255,137,0.5)]' : 'text-gray-400'
-                                    }`}
+                                    className={`w-5 h-5 sm:w-6 sm:h-6 transition-all duration-300 ${isFocused ? 'text-[#00FF89] drop-shadow-[0_0_8px_rgba(0,255,137,0.5)]' : 'text-gray-400'
+                                        }`}
                                 />
                             </motion.div>
                         </div>
@@ -223,23 +233,22 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                         <div className="flex items-center px-4">
                             <motion.button
                                 type="submit"
-                                className={`relative overflow-hidden px-6 sm:px-8 py-3 sm:py-3.5 bg-gradient-to-r from-[#00FF89] to-[#00D4AA] text-black font-semibold rounded-xl transition-all duration-300 text-sm sm:text-base shadow-lg hover:shadow-[0_8px_30px_rgba(0,255,137,0.3)] ${
-                                    query.trim() || selectedTags.length > 0 
-                                        ? 'opacity-100 scale-100 hover:scale-105' 
-                                        : 'opacity-60 scale-95'
-                                }`}
+                                className={`relative overflow-hidden px-6 sm:px-8 py-3 sm:py-3.5 bg-gradient-to-r from-[#00FF89] to-[#00D4AA] text-black font-semibold rounded-xl transition-all duration-300 text-sm sm:text-base shadow-lg hover:shadow-[0_8px_30px_rgba(0,255,137,0.3)] ${query.trim() || selectedTags.length > 0
+                                    ? 'opacity-100 scale-100 hover:scale-105'
+                                    : 'opacity-60 scale-95'
+                                    }`}
                                 disabled={!query.trim() && selectedTags.length === 0}
                                 whileHover={{ y: -1 }}
                                 whileTap={{ scale: 0.98 }}
                                 aria-label="Search">
-                                
+
                                 {/* Button shine effect */}
                                 <motion.div
                                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full"
                                     animate={query.trim() || selectedTags.length > 0 ? { x: '200%' } : {}}
                                     transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 3 }}
                                 />
-                                
+
                                 <span className="relative z-10 hidden sm:inline tracking-wide">Search</span>
                                 <Search className="relative z-10 w-4 h-4 sm:hidden" />
                             </motion.button>
@@ -284,12 +293,17 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                                         Products ({searchResults.products.length} found)
                                     </h3>
                                     <div className="space-y-2">
-                                        {searchResults.products.map((product) => (
+                                        {searchResults.products.map((product, index) => (
                                             <motion.button
                                                 key={product.id || product._id}
+                                                data-product-click="true"
                                                 initial={{ opacity: 0, x: -10 }}
                                                 animate={{ opacity: 1, x: 0 }}
-                                                onClick={() => handleProductClick(product)}
+                                                onClick={(event) => {
+                                                    event.preventDefault()
+                                                    event.stopPropagation()
+                                                    handleProductClick(product)
+                                                }}
                                                 className="w-full p-3 bg-gray-800/30 hover:bg-gray-700/40 rounded-xl transition-all duration-200 group text-left min-h-[60px] focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50">
                                                 <div className="flex items-start gap-3">
                                                     {product.image && (
@@ -370,10 +384,7 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                 </AnimatePresence>
             </motion.form>
 
-            {/* Add margin when dropdown is shown to push content down */}
-            <div className={showResults ? "h-80" : "h-0"} />
-
-            {/* Enhanced Popular Tags - Centered */}
+            {/* Enhanced Popular Tags - Centered with conditional margin */}
             <AnimatePresence>
                 {popularTags.length > 0 && (
                     <motion.div
@@ -381,7 +392,7 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.4, delay: 0.2 }}
-                        className="space-y-3 text-center">
+                        className={`space-y-3 text-center ${showResults ? 'mt-80' : ''}`}>
                         <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
                             <TrendingUp className="w-4 h-4 text-[#00FF89]" />
                             <span className="font-medium">Trending searches:</span>

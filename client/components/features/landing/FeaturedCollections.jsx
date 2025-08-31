@@ -3,6 +3,13 @@
 import { motion } from 'framer-motion'
 import { TrendingUp, Award, Zap, Package, ArrowRight, Sparkles } from 'lucide-react'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
+
+// Use the same background effects as hero section
+const BackgroundEffectsLight = dynamic(() => import('./hero/BackgroundEffectsLight'), {
+  ssr: false,
+  loading: () => null
+})
 
 const BRAND = '#00FF89'
 const AMBER = '#FFC050'
@@ -16,7 +23,7 @@ const collections = [
     color: BRAND,
     bgColor: 'rgba(0, 255, 137, 0.1)',
     borderColor: 'rgba(0, 255, 137, 0.2)',
-    link: '/explore?type=agent&category=sales&sortBy=sales',
+    link: '/explore?type=agent&category=sales',
     stats: '500+ sales'
   },
   {
@@ -56,17 +63,9 @@ const collections = [
 
 export default function FeaturedCollections() {
   return (
-    <section className="relative overflow-hidden bg-[#0f0f0f]">
-      {/* Background with theme consistency */}
-      <div className="absolute inset-0">
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              'radial-gradient(800px 400px at 30% 0%, rgba(0,255,137,.03), transparent), radial-gradient(600px 300px at 70% 100%, rgba(255,192,80,.03), transparent)'
-          }}
-        />
-      </div>
+    <section className="relative overflow-hidden bg-black">
+      {/* Consistent Background Effects */}
+      <BackgroundEffectsLight />
 
       <div className="relative z-10 px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
         <div className="max-w-7xl mx-auto">

@@ -1,10 +1,32 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { HelpCircle, Save, Check, Loader2, Package } from 'lucide-react'
 import { useProductCreateStore } from '@/store/productCreate'
-import { PRODUCT_TYPES, CATEGORIES, INDUSTRIES, VALIDATION_LIMITS } from '@/lib/constants/productCreate'
+import { PRODUCT_TYPES as CREATE_PRODUCT_TYPES, VALIDATION_LIMITS } from '@/lib/constants/productCreate'
+import {
+    PRODUCT_CATEGORIES,
+    PRODUCT_INDUSTRIES,
+    PRODUCT_TYPES as FILTER_PRODUCT_TYPES
+} from '@/lib/constants/filterMappings'
+import CustomSelect from '@/components/shared/CustomSelect'
+
+// Convert filter mappings to dropdown format for backward compatibility
+const CATEGORIES = PRODUCT_CATEGORIES.map(cat => ({
+    value: cat.id,
+    label: cat.name,
+    icon: cat.icon
+}))
+
+const INDUSTRIES = PRODUCT_INDUSTRIES.map(ind => ({
+    value: ind.id,
+    label: ind.name,
+    icon: ind.icon
+}))
+
+// Use the existing product types from create constants but ensure they match filter types
+const PRODUCT_TYPES = CREATE_PRODUCT_TYPES
 
 // Lazy load icons for better performance
 const iconMap = {
@@ -357,26 +379,18 @@ export default function Step1Basic() {
                         </label>
                         <Tooltip content={FIELD_HELP.category} examples={FIELD_HELP.category.examples} />
                     </div>
-                    <select
-                        id="category"
+                    <CustomSelect
                         value={category}
-                        onChange={(e) => {
-                            handleCategoryChange(e.target.value)
+                        onChange={(newCategory) => {
+                            handleCategoryChange(newCategory)
                             markFieldTouched('category')
                             validateTouchedFields()
                         }}
                         onBlur={() => handleFieldBlur('category')}
-                        className={`w-full px-5 py-4 text-lg bg-gray-800 border rounded-lg text-white focus:outline-none focus:ring-2 transition-all appearance-none ${showError('category')
-                            ? 'border-red-500 focus:ring-red-500/50'
-                            : 'border-gray-600 focus:ring-[#00FF89]/50 focus:border-[#00FF89]'
-                            }`}>
-                        <option value="">Select a category</option>
-                        {CATEGORIES.map((cat) => (
-                            <option key={cat.value} value={cat.value}>
-                                {cat.label}
-                            </option>
-                        ))}
-                    </select>
+                        options={CATEGORIES}
+                        placeholder="Select a category"
+                        error={showError('category')}
+                    />
                     {showError('category') && (
                         <div className="text-base text-red-400">
                             {getEnhancedErrorMessage('category', errors.category)}
@@ -396,26 +410,18 @@ export default function Step1Basic() {
                         </label>
                         <Tooltip content={FIELD_HELP.industry} examples={FIELD_HELP.industry.examples} />
                     </div>
-                    <select
-                        id="industry"
+                    <CustomSelect
                         value={industry}
-                        onChange={(e) => {
-                            setField('industry', e.target.value)
+                        onChange={(newIndustry) => {
+                            setField('industry', newIndustry)
                             markFieldTouched('industry')
                             validateTouchedFields()
                         }}
                         onBlur={() => handleFieldBlur('industry')}
-                        className={`w-full px-5 py-4 text-lg bg-gray-800 border rounded-lg text-white focus:outline-none focus:ring-2 transition-all appearance-none ${showError('industry')
-                            ? 'border-red-500 focus:ring-red-500/50'
-                            : 'border-gray-600 focus:ring-[#00FF89]/50 focus:border-[#00FF89]'
-                            }`}>
-                        <option value="">Select an industry</option>
-                        {INDUSTRIES.map((ind) => (
-                            <option key={ind.value} value={ind.value}>
-                                {ind.label}
-                            </option>
-                        ))}
-                    </select>
+                        options={INDUSTRIES}
+                        placeholder="Select an industry"
+                        error={showError('industry')}
+                    />
                     {showError('industry') && (
                         <div className="text-base text-red-400">
                             {getEnhancedErrorMessage('industry', errors.industry)}

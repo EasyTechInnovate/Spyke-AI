@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Star, TrendingUp, Award, Users, Loader2, UserX } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
+import dynamic from 'next/dynamic'
 import sellerAPI from '@/lib/api/seller'
 
 import {
@@ -16,6 +17,12 @@ import {
   DSBadge,
   DSLoadingState
 } from '@/lib/design-system'
+
+// Use the same background effects as hero section
+const BackgroundEffectsLight = dynamic(() => import('./hero/BackgroundEffectsLight'), {
+  ssr: false,
+  loading: () => null
+})
 
 export default function CreatorSpotlights() {
     const [creators, setCreators] = useState([])
@@ -75,17 +82,9 @@ export default function CreatorSpotlights() {
     }, [])
 
     return (
-        <section className="relative py-12 sm:py-16 lg:py-20 bg-[#0a0a0a]">
-            {/* Background Effects */}
-            <div className="absolute inset-0">
-                <div
-                    className="absolute inset-0 pointer-events-none"
-                    style={{
-                        background:
-                            'radial-gradient(600px 200px at 20% 50%, rgba(255,193,7,.03), transparent), radial-gradient(400px 150px at 80% 50%, rgba(255,193,7,.03), transparent)'
-                    }}
-                />
-            </div>
+        <section className="relative py-12 sm:py-16 lg:py-20 bg-black">
+            {/* Consistent Background Effects */}
+            <BackgroundEffectsLight />
 
             <div className="relative z-10">
                 <DSContainer>

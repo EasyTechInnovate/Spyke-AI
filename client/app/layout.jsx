@@ -207,7 +207,7 @@ export default function RootLayout({ children }) {
                     rel="preload"
                     as="image"
                     href="/og-image.png"
-                    imagesrcset="/og-image.png 1200w"
+                    imageSrcSet="/og-image.png 1200w"
                 />
 
                 {/* Structured Data */}

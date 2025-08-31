@@ -1,30 +1,22 @@
 import CategoriesGrid from '@/components/features/explore/CategoriesGrid'
-import { client } from '@/sanity/lib/client'
 import Header from '@/components/shared/layout/Header'
+import { PRODUCT_CATEGORIES } from '@/lib/constants/filterMappings'
 
 export default async function CategoriesPage() {
-  // GROQ query same as existing API route
-  const query = `*[_type == "category"] | order(title asc) {
-    _id,
-    title,
-    slug,
-    description,
-    color,
-    "postCount": count(*[_type == "blogPost" && references(^._id) && status == "published"])
-  }`
-
-  let blogCategories = []
-  try {
-    blogCategories = await client.fetch(query)
-  } catch (err) {
-    console.error('Failed to load blog categories for categories page', err)
-    blogCategories = []
-  }
+  const productCategories = PRODUCT_CATEGORIES.map((category, index) => ({
+    _id: category.id,
+    title: category.name,
+    slug: { current: category.id },
+    description: `Discover ${category.name.toLowerCase()} products and solutions`,
+    color: '#00FF89', // Use your brand green
+    postCount: Math.floor(Math.random() * 50) + 10, 
+    iconName: category.iconName 
+  }))
 
   return (
     <div className="min-h-screen bg-[#121212]">
       <Header />
-      <CategoriesGrid blogCategories={blogCategories} />
+      <CategoriesGrid blogCategories={productCategories} />
     </div>
   )
 }

@@ -3,34 +3,36 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import productsAPI from '@/lib/api/products'
-import { CATEGORIES } from '@/data/explore/constants'
-import { Package, ChevronRight } from 'lucide-react'
+import { PRODUCT_CATEGORIES } from '@/lib/constants/filterMappings'
+import { Package, ChevronRight, BarChart3, Users, ArrowUpRight } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function CategoriesGrid({ blogCategories = [] }) {
   const [counts, setCounts] = useState({})
-  // counts values: undefined -> not requested yet, -1 -> loading, null -> error, number >= 0 -> loaded
+  const [categoryProducts, setCategoryProducts] = useState({})
+  const [hoveredCard, setHoveredCard] = useState(null)
   const refsMap = useRef({})
   const observerRef = useRef(null)
 
   const fetchCount = useCallback(async (catId) => {
-    // avoid duplicate fetches
     if (counts[catId] !== undefined && counts[catId] !== -1) return
     setCounts((prev) => ({ ...prev, [catId]: -1 }))
     try {
-      const res = await productsAPI.getProducts({ category: catId, page: 1, limit: 1 })
+      const res = await productsAPI.getProducts({ category: catId, page: 1, limit: 3 })
       const maybeData = res?.data ?? res
       const pagination = maybeData?.pagination ?? maybeData?.meta ?? maybeData
       const total = pagination?.totalItems ?? pagination?.total ?? maybeData?.totalItems ?? maybeData?.total ?? (Array.isArray(maybeData?.products) ? maybeData.products.length : undefined) ?? 0
       setCounts((prev) => ({ ...prev, [catId]: total }))
+      if (maybeData?.products && Array.isArray(maybeData.products)) {
+        setCategoryProducts((prev) => ({ ...prev, [catId]: maybeData.products.slice(0, 3) }))
+      }
     } catch (err) {
       setCounts((prev) => ({ ...prev, [catId]: null }))
     }
   }, [counts])
 
   useEffect(() => {
-    // Create an intersection observer to lazy-load counts when cards enter viewport
     observerRef.current = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         const id = entry.target?.dataset?.categoryId
@@ -42,7 +44,6 @@ export default function CategoriesGrid({ blogCategories = [] }) {
       })
     }, { rootMargin: '200px' })
 
-    // observe all refs that exist initially
     Object.values(refsMap.current).forEach((el) => {
       if (el) observerRef.current.observe(el)
     })
@@ -55,87 +56,159 @@ export default function CategoriesGrid({ blogCategories = [] }) {
   const humanizeId = (id) => id.replace(/[_-]/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase())
 
   const containerVariants = {
-    hidden: {},
-    visible: { transition: { staggerChildren: 0.05 } }
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08,
+        delayChildren: 0.2
+      }
+    }
   }
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 8 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } }
+    hidden: {
+      opacity: 0,
+      y: 20
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: [0.25, 0.46, 0.45, 0.94]
+      }
+    }
   }
 
   return (
-    <Container className="py-12">
-      <div className="max-w-4xl mx-auto text-center mb-8">
-        <h1 className="text-3xl font-bold text-white">Categories</h1>
-        <p className="text-gray-400 mt-2">Browse AI product categories — filter and discover tools, prompts, and templates.</p>
-      </div>
+    <div className="min-h-screen bg-[#121212]">
+      {/* Subtle gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
 
-      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {CATEGORIES.filter(c => c.id !== 'all').map((cat) => {
-          const Icon = cat.icon || Package
-          return (
-            <motion.div key={cat.id} variants={itemVariants}>
-              <Link
-                href={`/explore?category=${cat.id}`}
-                ref={(el) => { refsMap.current[cat.id] = el }}
-                data-category-id={cat.id}
-                className="group block p-4 bg-gray-900/50 border border-gray-800 rounded-2xl transform transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-brand-primary"
+      <Container className="relative z-10 py-16">
+        {/* Professional Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="max-w-4xl mx-auto text-center mb-16"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900/50 border border-gray-800 rounded-lg mb-6 mt-6">
+            <BarChart3 className="w-4 h-4 text-green-400" />
+            <span className="text-sm text-gray-300 font-medium">Product Categories</span>
+          </div>
+
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+            Browse by Category
+          </h1>
+
+          <p className="text-lg text-gray-400 leading-relaxed">
+            Explore our comprehensive collection of AI-powered solutions,
+            organized by business function and use case.
+          </p>
+        </motion.div>
+
+        {/* Professional Grid Layout */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+        >
+          {PRODUCT_CATEGORIES.map((cat, index) => {
+            const Icon = cat.icon || Package
+            const isHovered = hoveredCard === cat.id
+
+            return (
+              <motion.div
+                key={cat.id}
+                variants={itemVariants}
+                onHoverStart={() => setHoveredCard(cat.id)}
+                onHoverEnd={() => setHoveredCard(null)}
+                whileHover={{
+                  y: -4,
+                  transition: { duration: 0.2, ease: "easeOut" }
+                }}
+                className="group"
               >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="flex-shrink-0 w-14 h-14 rounded-lg flex items-center justify-center"
-                    style={cat.color ? { background: `linear-gradient(135deg, ${cat.color}22, transparent)` } : { background: 'linear-gradient(135deg, rgba(16,185,129,0.08), transparent)' }}
-                  >
-                    <div className="w-10 h-10 rounded-md bg-black/40 flex items-center justify-center">
-                      <Icon className="w-5 h-5 text-brand-primary" />
+                <Link
+                  href={`/explore?category=${cat.id}`}
+                  ref={(el) => { refsMap.current[cat.id] = el }}
+                  data-category-id={cat.id}
+                  className="block h-full p-6 bg-gray-900/40 backdrop-blur-sm border border-gray-800/50 rounded-xl transition-all duration-300 hover:bg-gray-900/60 hover:border-green-500/30 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 focus:ring-offset-black"
+                >
+                  {/* Header with Icon */}
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-gradient-to-br from-green-500/10 to-green-500/5 rounded-lg flex items-center justify-center border border-green-500/20">
+                        <Icon className="w-7 h-7 text-green-400 group-hover:text-green-300 transition-colors duration-300" />
+                      </div>
+
+                      <div>
+                        <div className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-1">
+                          {humanizeId(cat.id)}
+                        </div>
+                        <h3 className="text-xl font-semibold text-white group-hover:text-green-300 transition-colors duration-300">
+                          {cat.name}
+                        </h3>
+                      </div>
                     </div>
+
+                    <ArrowUpRight className="w-5 h-5 text-gray-600 group-hover:text-green-400 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300" />
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs text-gray-400 uppercase tracking-wider">{humanizeId(cat.id)}</div>
-                    <div className="mt-1 text-lg font-semibold text-white truncate">{cat.name}</div>
-                    {cat.description && (
-                      <div className="text-sm text-gray-400 mt-1 line-clamp-2">{cat.description}</div>
-                    )}
-                  </div>
+                  {/* Description */}
+                  {cat.description && (
+                    <p className="text-gray-400 group-hover:text-gray-300 mb-6 text-sm leading-relaxed transition-colors duration-300">
+                      {cat.description}
+                    </p>
+                  )}
 
-                  <div className="ml-3 flex flex-col items-end justify-center gap-1">
-                    <div className="text-sm text-gray-400">
+                  {/* Product Preview */}
+                  {categoryProducts[cat.id] && categoryProducts[cat.id].length > 0 && (
+                    <div className="mb-6 p-4 bg-black/20 rounded-lg border border-gray-700/30">
+                      <div className="text-xs text-gray-500 mb-2 font-medium">Product:</div>
+                      <div className="text-sm text-gray-300 font-medium">
+                        {categoryProducts[cat.id][0].title}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Stats Footer */}
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-700/30 mt-auto">
+                    <div className="flex items-center gap-2">
                       {counts[cat.id] === -1 || counts[cat.id] === undefined ? (
-                        // skeleton
-                        <span className="inline-block w-16 h-3 bg-gray-800 rounded animate-pulse" />
+                        <>
+                          <div className="w-3 h-3 border border-green-400 border-t-transparent rounded-full animate-spin" />
+                          <span className="text-xs text-gray-500 font-medium">Loading</span>
+                        </>
                       ) : counts[cat.id] === null ? (
-                        <span>—</span>
+                        <span className="text-xs text-gray-500">Unavailable</span>
                       ) : counts[cat.id] === 0 ? (
-                        <span>No products</span>
+                        <span className="text-xs text-gray-500">No products</span>
                       ) : (
-                        <span>{counts[cat.id]} {counts[cat.id] !== 1 ? 'products' : 'product'}</span>
+                        <>
+                          <Users className="w-4 h-4 text-green-400" />
+                          <span className="text-sm text-green-400 font-semibold">
+                            {counts[cat.id]} {counts[cat.id] !== 1 ? 'Products' : 'Product'}
+                          </span>
+                        </>
                       )}
                     </div>
-                    <div className="mt-1">
-                      <ChevronRight className="w-4 h-4 text-gray-500 transition-transform group-hover:translate-x-1" />
+
+                    <div className="text-xs text-gray-500 group-hover:text-green-400 transition-colors duration-300 font-medium">
+                      VIEW ALL
                     </div>
                   </div>
-                </div>
-              </Link>
-            </motion.div>
-          )
-        })}
-      </motion.div>
+                </Link>
+              </motion.div>
+            )
+          })}
+        </motion.div>
 
-      {blogCategories && blogCategories.length > 0 && (
-        <section className="mt-10">
-          <h2 className="text-lg font-semibold text-white mb-4">Blog Categories</h2>
-          <div className="flex gap-2 flex-wrap">
-            {blogCategories.map((b) => (
-              <div key={b._id} className="px-3 py-1.5 bg-gray-800 rounded-full text-sm text-gray-300 border border-gray-700">
-                {b.title} {b.postCount != null ? `· ${b.postCount}` : ''}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-    </Container>
+
+      </Container>
+    </div>
   )
 }

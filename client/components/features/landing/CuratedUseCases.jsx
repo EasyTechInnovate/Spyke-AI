@@ -4,6 +4,13 @@ import { motion } from 'framer-motion'
 import { Briefcase, Megaphone, User, TrendingUp, Users, Mail } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
+
+// Use the same background effects as hero section
+const BackgroundEffectsLight = dynamic(() => import('./hero/BackgroundEffectsLight'), {
+  ssr: false,
+  loading: () => null
+})
 
 const useCases = [
   {
@@ -70,9 +77,12 @@ const useCases = [
 
 export default function CuratedUseCases() {
   return (
-    <section className="relative py-20 lg:py-24 bg-gray-950">
+    <section className="relative py-20 lg:py-24 bg-black">
+      {/* Consistent Background Effects */}
+      <BackgroundEffectsLight />
+      
       <Container>
-        <div className="max-w-7xl mx-auto">
+        <div className="relative z-10 max-w-7xl mx-auto">
           {/* Section Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { ArrowRight, Star, Eye, ShoppingCart, CheckCircle, Sparkles, Loader2, Activity, Heart } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 import SmoothProductCarousel from './featured/SmoothProductCarousel'
 import { useCart } from '@/hooks/useCart'
@@ -17,6 +18,12 @@ import { featuredProductsDummy } from '@/data/featuredProductsDummy'
 import { DSStack, DSHeading, DSText, DSButton, DSBadge, DSLoadingState } from '@/lib/design-system'
 
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
+
+// Use the same background effects as hero section
+const BackgroundEffectsLight = dynamic(() => import('./hero/BackgroundEffectsLight'), {
+    ssr: false,
+    loading: () => null
+})
 
 const getBadgeForProduct = (product) => {
     // Priority-based badge system - only return the highest priority badge
@@ -105,17 +112,9 @@ const FeaturedProducts = memo(function FeaturedProducts() {
     }
 
     return (
-        <section className="relative overflow-hidden bg-[#121212]">
-            {/* Background Effects */}
-            <div className="absolute inset-0">
-                <div
-                    className="absolute inset-0 pointer-events-none"
-                    style={{
-                        background:
-                            'radial-gradient(600px 200px at 10% 50%, rgba(0,255,137,.04), transparent), radial-gradient(400px 150px at 90% 50%, rgba(255,192,80,.04), transparent)'
-                    }}
-                />
-            </div>
+        <section className="relative overflow-hidden bg-black">
+            {/* Consistent Background Effects */}
+            <BackgroundEffectsLight />
 
             <div className="relative z-10 py-12 sm:py-16 lg:py-20">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -125,7 +124,7 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                         viewport={{ once: true }}
                         transition={{ duration: 0.5 }}
                         className="text-center mb-12 sm:mb-16">
-                        
+
                         <DSBadge
                             variant="primary"
                             icon={Sparkles}
@@ -305,7 +304,7 @@ function ProductCard({ product, onClick }) {
     // Calculate discount percentage
     const actualDiscountPrice = discountPrice || (originalPrice && originalPrice > price ? price : null)
     const actualOriginalPrice = originalPrice || (discountPrice ? price : null)
-    const discountPercentage = actualOriginalPrice && actualDiscountPrice && actualOriginalPrice > actualDiscountPrice ? 
+    const discountPercentage = actualOriginalPrice && actualDiscountPrice && actualOriginalPrice > actualDiscountPrice ?
         Math.round(((actualOriginalPrice - actualDiscountPrice) / actualOriginalPrice) * 100) : 0
 
     // Format price display
@@ -387,7 +386,7 @@ function ProductCard({ product, onClick }) {
                 tabIndex={0}
                 role="button"
                 aria-label={`View product: ${title}`}>
-                
+
                 <div className="relative aspect-[16/9] bg-[#1b1b1b] overflow-hidden">
                     {!imageError ? (
                         <OptimizedImage
@@ -439,7 +438,7 @@ function ProductCard({ product, onClick }) {
                             className="p-1.5 rounded-md bg-black/45 backdrop-blur hover:bg-black/65 transition">
                             <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-200'}`} />
                         </button>
-                        
+
                     </div>
                 </div>
 

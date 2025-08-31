@@ -3,13 +3,17 @@ import { ChevronUp, ChevronDown, Star, CheckCircle2, X, DollarSign } from 'lucid
 import { useState, useCallback, useMemo } from 'react'
 import { Button } from '@/lib/design-system'
 import { cn } from '@/lib/utils'
+import { 
+  PRODUCT_CATEGORIES, 
+  PRODUCT_TYPES, 
+  PRODUCT_INDUSTRIES, 
+  PRODUCT_SETUP_TIMES,
+  PRODUCT_PRICE_CATEGORIES,
+  DEFAULT_FILTERS 
+} from '@/lib/constants/filterMappings'
 
 export default function FilterSidebar({ 
   filters, 
-  categories, 
-  productTypes, 
-  industries, 
-  setupTimes, 
   onFilterChange,
   productCounts = {},
   className
@@ -55,13 +59,7 @@ export default function FilterSidebar({
 
   const clearAllFilters = useCallback(() => {
     onFilterChange({
-      category: 'all',
-      type: 'all',
-      industry: 'all',
-      setupTime: 'all',
-      priceRange: [0, 1000],
-      rating: 0,
-      verifiedOnly: false,
+      ...DEFAULT_FILTERS,
       search: filters.search
     })
   }, [filters.search, onFilterChange])
@@ -85,32 +83,10 @@ export default function FilterSidebar({
     (filters.priceRange && (filters.priceRange[0] > 0 || filters.priceRange[1] < 1000))
   , [filters])
 
-  const priceRangeOptions = [
-    { 
-      label: 'Free', 
-      min: 0, 
-      max: 0,
-      count: productCounts.priceRanges?.free || 0
-    },
-    { 
-      label: 'Under $50', 
-      min: 1, 
-      max: 50,
-      count: productCounts.priceRanges?.under_50 || 0
-    },
-    { 
-      label: '$50 - $200', 
-      min: 50, 
-      max: 200,
-      count: productCounts.priceRanges?.['50_to_200'] || 0
-    },
-    { 
-      label: 'Over $200', 
-      min: 200, 
-      max: 100000,
-      count: productCounts.priceRanges?.over_200 || 0
-    }
-  ]
+  const priceRangeOptions = PRODUCT_PRICE_CATEGORIES.map(option => ({
+    ...option,
+    count: productCounts.priceRanges?.[option.id] || 0
+  }))
 
   return (
     <motion.aside 
@@ -147,10 +123,10 @@ export default function FilterSidebar({
             title="Product Type"
             isExpanded={expandedSections.productType}
             onToggle={() => toggleSection('productType')}
-            count={productTypes?.length || 0}
+            count={PRODUCT_TYPES.length}
           >
             <div className="space-y-1">
-              {productTypes?.slice(0, expandedSections.productType ? undefined : 4).map(type => (
+              {PRODUCT_TYPES.slice(0, expandedSections.productType ? undefined : 4).map(type => (
                 <FilterOption
                   key={type.id}
                   label={type.name}
@@ -159,12 +135,12 @@ export default function FilterSidebar({
                   count={productCounts.productTypes?.[type.id] || 0}
                 />
               ))}
-              {!expandedSections.productType && productTypes?.length > 4 && (
+              {!expandedSections.productType && PRODUCT_TYPES.length > 4 && (
                 <button
                   onClick={() => toggleSection('productType')}
                   className="w-full text-left text-xs text-gray-400 hover:text-white py-1 px-2 rounded transition-colors"
                 >
-                  +{productTypes.length - 4} more
+                  +{PRODUCT_TYPES.length - 4} more
                 </button>
               )}
             </div>
@@ -175,10 +151,10 @@ export default function FilterSidebar({
             title="Category"
             isExpanded={expandedSections.category}
             onToggle={() => toggleSection('category')}
-            count={categories?.length || 0}
+            count={PRODUCT_CATEGORIES.length}
           >
             <div className="space-y-1">
-              {categories?.slice(0, expandedSections.category ? undefined : 4).map(category => (
+              {PRODUCT_CATEGORIES.slice(0, expandedSections.category ? undefined : 4).map(category => (
                 <FilterOption
                   key={category.id}
                   label={category.name}
@@ -187,12 +163,12 @@ export default function FilterSidebar({
                   count={productCounts.categories?.[category.id] || 0}
                 />
               ))}
-              {!expandedSections.category && categories?.length > 4 && (
+              {!expandedSections.category && PRODUCT_CATEGORIES.length > 4 && (
                 <button
                   onClick={() => toggleSection('category')}
                   className="w-full text-left text-xs text-gray-400 hover:text-white py-1 px-2 rounded transition-colors"
                 >
-                  +{categories.length - 4} more
+                  +{PRODUCT_CATEGORIES.length - 4} more
                 </button>
               )}
             </div>
@@ -206,13 +182,13 @@ export default function FilterSidebar({
           >
             <div className="space-y-2">
               <div className="space-y-1">
-                {priceRangeOptions.map(option => (
+                {PRODUCT_PRICE_CATEGORIES.map(option => (
                   <FilterOption
-                    key={option.label}
-                    label={option.label}
+                    key={option.id}
+                    label={option.name}
                     isSelected={filters.priceRange?.[0] === option.min && filters.priceRange?.[1] === option.max}
                     onSelect={() => handlePriceRangeChange([option.min, option.max])}
-                    count={option.count}
+                    count={productCounts.priceRanges?.[option.id] || 0}
                   />
                 ))}
               </div>
@@ -282,10 +258,10 @@ export default function FilterSidebar({
             title="Industry"
             isExpanded={expandedSections.industry}
             onToggle={() => toggleSection('industry')}
-            count={industries?.length || 0}
+            count={PRODUCT_INDUSTRIES.length}
           >
             <div className="space-y-1">
-              {industries?.slice(0, expandedSections.industry ? undefined : 3).map(industry => (
+              {PRODUCT_INDUSTRIES.slice(0, expandedSections.industry ? undefined : 3).map(industry => (
                 <FilterOption
                   key={industry.id}
                   label={industry.name}
@@ -294,12 +270,12 @@ export default function FilterSidebar({
                   count={productCounts.industries?.[industry.id] || 0}
                 />
               ))}
-              {!expandedSections.industry && industries?.length > 3 && (
+              {!expandedSections.industry && PRODUCT_INDUSTRIES.length > 3 && (
                 <button
                   onClick={() => toggleSection('industry')}
                   className="w-full text-left text-xs text-gray-400 hover:text-white py-1 px-2 rounded transition-colors"
                 >
-                  +{industries.length - 3} more
+                  +{PRODUCT_INDUSTRIES.length - 3} more
                 </button>
               )}
             </div>
@@ -310,10 +286,10 @@ export default function FilterSidebar({
             title="Setup Time"
             isExpanded={expandedSections.setupTime}
             onToggle={() => toggleSection('setupTime')}
-            count={setupTimes?.length || 0}
+            count={PRODUCT_SETUP_TIMES.length}
           >
             <div className="space-y-1">
-              {setupTimes?.slice(0, expandedSections.setupTime ? undefined : 3).map(setupTime => (
+              {PRODUCT_SETUP_TIMES.slice(0, expandedSections.setupTime ? undefined : 3).map(setupTime => (
                 <FilterOption
                   key={setupTime.id}
                   label={setupTime.name}
@@ -322,12 +298,12 @@ export default function FilterSidebar({
                   count={productCounts.setupTimes?.[setupTime.id] || 0}
                 />
               ))}
-              {!expandedSections.setupTime && setupTimes?.length > 3 && (
+              {!expandedSections.setupTime && PRODUCT_SETUP_TIMES.length > 3 && (
                 <button
                   onClick={() => toggleSection('setupTime')}
                   className="w-full text-left text-xs text-gray-400 hover:text-white py-1 px-2 rounded transition-colors"
                 >
-                  +{setupTimes.length - 3} more
+                  +{PRODUCT_SETUP_TIMES.length - 3} more
                 </button>
               )}
             </div>
