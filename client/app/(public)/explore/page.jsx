@@ -51,13 +51,27 @@ function useURLState() {
         const get = (k, d) => searchParams.get(k) ?? d
         const page = Math.max(1, parseInt(get('page', '1')) || 1)
         const category = get('category', 'all')
+        const type = get('type', 'all')
+        const industry = get('industry', 'all')
+        const setupTime = get('setupTime', 'all')
         const search = get('search', '')
         const sort = get('sort', 'newest') // retained in UI only
         const rating = parseInt(get('rating', '0')) || 0
         const verifiedOnly = get('verified', '') === 'true'
         const minPrice = parseInt(get('minPrice', '0')) || 0
         const maxPrice = parseInt(get('maxPrice', '1000')) || 1000
-        return { page, category, search, sort, rating, verifiedOnly, priceRange: [minPrice, maxPrice] }
+        return { 
+            page, 
+            category, 
+            type, 
+            industry, 
+            setupTime, 
+            search, 
+            sort, 
+            rating, 
+            verifiedOnly, 
+            priceRange: [minPrice, maxPrice] 
+        }
     }, [searchParams])
 }
 
@@ -83,6 +97,9 @@ function useExploreData(initialURLState) {
                 page: filters.page,
                 limit: ITEMS_PER_PAGE,
                 ...(filters.category !== 'all' && { category: filters.category }),
+                ...(filters.type !== 'all' && { type: filters.type }),
+                ...(filters.industry !== 'all' && { industry: filters.industry }),
+                ...(filters.setupTime !== 'all' && { setupTime: filters.setupTime }),
                 ...(filters.search && { search: filters.search.trim().slice(0, 100) }),
                 ...(filters.rating > 0 && { minRating: filters.rating }),
                 ...(filters.verifiedOnly && { verifiedOnly: 'true' }),
@@ -152,6 +169,9 @@ function ExplorePageContent() {
     const [filters, setFilters] = useState({
         ...DEFAULT_FILTERS,
         category: urlState.category,
+        type: urlState.type,
+        industry: urlState.industry,
+        setupTime: urlState.setupTime,
         search: urlState.search,
         priceRange: urlState.priceRange,
         rating: urlState.rating,
@@ -168,11 +188,14 @@ function ExplorePageContent() {
 
     useEffect(() => {
         fetchProducts({ ...filters, search: debouncedSearch, page })
-    }, [filters.category, debouncedSearch, filters.rating, filters.verifiedOnly, filters.priceRange[0], filters.priceRange[1], page, fetchProducts])
+    }, [filters.category, filters.type, filters.industry, filters.setupTime, debouncedSearch, filters.rating, filters.verifiedOnly, filters.priceRange[0], filters.priceRange[1], page, fetchProducts])
 
     useEffect(() => {
         const params = new URLSearchParams()
         if (filters.category !== 'all') params.set('category', filters.category)
+        if (filters.type !== 'all') params.set('type', filters.type)
+        if (filters.industry !== 'all') params.set('industry', filters.industry)
+        if (filters.setupTime !== 'all') params.set('setupTime', filters.setupTime)
         if (filters.search) params.set('search', filters.search)
         if (filters.rating > 0) params.set('rating', String(filters.rating))
         if (filters.verifiedOnly) params.set('verified', 'true')
@@ -188,6 +211,9 @@ function ExplorePageContent() {
     const hasActiveFilters = useMemo(
         () =>
             filters.category !== 'all' ||
+            filters.type !== 'all' ||
+            filters.industry !== 'all' ||
+            filters.setupTime !== 'all' ||
             !!filters.search ||
             filters.rating > 0 ||
             filters.verifiedOnly ||

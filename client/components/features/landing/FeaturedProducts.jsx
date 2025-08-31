@@ -2,7 +2,7 @@
 
 import { useState, memo, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowRight, Star, Eye, ShoppingCart, CheckCircle, Sparkles, Loader2, Activity } from 'lucide-react'
+import { ArrowRight, Star, Eye, ShoppingCart, CheckCircle, Sparkles, Loader2, Activity, Heart } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import OptimizedImage from '@/components/shared/ui/OptimizedImage'
@@ -254,25 +254,122 @@ const FeaturedProducts = memo(function FeaturedProducts() {
 })
 
 function ProductCard({ product, onClick }) {
-    const [imageLoaded, setImageLoaded] = useState(false)
-    const [imgSrc, setImgSrc] = useState(product.thumbnail)
+    const [isImageLoading, setIsImageLoading] = useState(true)
+    const [imageError, setImageError] = useState(false)
+    const [isLiked, setIsLiked] = useState(false)
     const { addToCart } = useCart()
 
-    useEffect(() => {
-        setImageLoaded(false)
-        setImgSrc(product.thumbnail)
-    }, [product])
+    // Safe data extraction with fallbacks (matching ProductCardLite)
+    const {
+        _id: id,
+        slug,
+        title = 'Untitled Product',
+        price = 0,
+        discountPrice,
+        originalPrice,
+        rating: legacyRating = 0,
+        reviewCount: legacyReviewCount = 0,
+        image,
+        thumbnail,
+        images = [],
+        category = 'general',
+        type,
+        industry,
+        tags = [],
+        seller = {},
+        sellerId, // API shape
+        sales = 0,
+        isFeatured = false,
+        isNew = false,
+        createdAt,
+        shortDescription,
+        fullDescription,
+        averageRating: productAverageRating,
+        totalReviews: productTotalReviews
+    } = product || {}
 
-    const badge = getBadgeForProduct(product)
-    const discountPercentage =
-        product.originalPrice && product.originalPrice > product.price
-            ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-            : 0
+    // Normalized seller data (prefer explicit seller else sellerId)
+    const sellerInfo = seller?.name || seller?.fullName ? seller : sellerId || {}
+    const sellerDisplayName = sellerInfo.name || sellerInfo.fullName || ''
+    const sellerVerified = sellerInfo.verified || sellerInfo.verification?.status === 'approved'
+
+    // Ratings: product rating independent from seller rating
+    const productRating =
+        typeof productAverageRating === 'number' && productAverageRating > 0 ? productAverageRating : legacyRating > 0 ? legacyRating : 0
+
+    const description = (shortDescription || product?.description || fullDescription || 'No description available').trim()
+
+    // Use the first available image
+    const productImage = image || thumbnail || images?.[0] || '/images/placeholder-product.svg'
+
+    // Calculate discount percentage
+    const actualDiscountPrice = discountPrice || (originalPrice && originalPrice > price ? price : null)
+    const actualOriginalPrice = originalPrice || (discountPrice ? price : null)
+    const discountPercentage = actualOriginalPrice && actualDiscountPrice && actualOriginalPrice > actualDiscountPrice ? 
+        Math.round(((actualOriginalPrice - actualDiscountPrice) / actualOriginalPrice) * 100) : 0
+
+    // Format price display
+    const formatPrice = (price) => {
+        if (price === 0) return 'Free'
+        return `$${price.toFixed(2)}`
+    }
+
+    // Check if product is new (within 30 days)
+    const isNewProduct = isNew || (createdAt && new Date(createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
+
+    const handleLike = (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setIsLiked(!isLiked)
+    }
+
+    const handleAddToCart = async (e) => {
+        e.stopPropagation()
+        e.preventDefault()
+
+        const cartProduct = {
+            id: id,
+            title: title,
+            price: actualDiscountPrice || price,
+            thumbnail: productImage,
+            shortDescription: description,
+            type: type
+        }
+
+        try {
+            await addToCart(cartProduct)
+        } catch (error) {
+            console.error('Error adding to cart:', error)
+        }
+    }
+
+    const microMeta = (
+        <div className="flex items-center gap-3 text-[14px] md:text-[13px] font-medium text-gray-500 leading-tight">
+            {sellerDisplayName ? (
+                <span className="inline-flex items-center gap-1 max-w-[180px] truncate text-gray-300 text-[14px] md:text-[13px]">
+                    {sellerVerified && <CheckCircle className="w-4 h-4 text-[#00FF89]" />}
+                    <span className="truncate">{sellerDisplayName}</span>
+                </span>
+            ) : (
+                <span className="text-gray-600">Unknown seller</span>
+            )}
+        </div>
+    )
+
+    // Derive display tags: real tags only
+    const displayTags = tags.slice(0, 2)
+    const extraTagCount = tags.length > 2 ? tags.length - 2 : 0
 
     return (
-        <div className="group h-full">
+        <motion.div
+            layout
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileHover={{ y: -6 }}
+            transition={{ duration: 0.35, type: 'spring', stiffness: 260 }}
+            className="group bg-[#101010] border border-[#1d1d1d] rounded-2xl overflow-hidden hover:border-[#2a2a2a] transition-all h-full">
             <div
-                className="bg-[#171717] border border-gray-800 rounded-xl overflow-hidden hover:border-[#00FF89]/50 transition-all duration-200 hover:shadow-lg hover:shadow-[#00FF89]/5 h-full flex flex-col cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:ring-offset-2 focus:ring-offset-[#121212]"
+                className="flex flex-col h-full cursor-pointer"
                 onClick={(e) => {
                     if (e.target.closest('button')) {
                         return
@@ -289,147 +386,105 @@ function ProductCard({ product, onClick }) {
                 }}
                 tabIndex={0}
                 role="button"
-                aria-label={`View product: ${product.title}`}>
+                aria-label={`View product: ${title}`}>
                 
-                {/* Product Image */}
-                <div className="relative aspect-[3/2] bg-gray-800 overflow-hidden">
-                    {!imageLoaded && <div className="absolute inset-0 bg-gray-800 animate-pulse" />}
+                <div className="relative aspect-[16/9] bg-[#1b1b1b] overflow-hidden">
+                    {!imageError ? (
+                        <OptimizedImage
+                            src={productImage}
+                            alt={title}
+                            width={300}
+                            height={200}
+                            className={`w-full h-full object-cover transition-transform duration-[1100ms] ease-out group-hover:scale-105 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
+                            onLoad={() => setIsImageLoading(false)}
+                            onError={() => {
+                                setImageError(true)
+                                setIsImageLoading(false)
+                            }}
+                            loading="lazy"
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                            <Eye className="w-10 h-10 text-gray-600" />
+                        </div>
+                    )}
+                    {isImageLoading && <div className="absolute inset-0 bg-gray-700/30 animate-pulse" />}
 
-                    <OptimizedImage
-                        src={imgSrc}
-                        alt={`${product.title} - ${getTypeDisplay(product.type)}`}
-                        width={300}
-                        height={200}
-                        className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-105 group-focus:scale-105 ${
-                            imageLoaded ? 'opacity-100' : 'opacity-0'
-                        }`}
-                        onLoad={() => setImageLoaded(true)}
-                        onError={(e) => {
-                            setImageLoaded(true)
-                            // Fallback to a placeholder - check if target exists
-                            if (e?.target) {
-                                e.target.src = `https://placehold.co/300x200/171717/9ca3af?text=${encodeURIComponent(product.title.charAt(0))}`
-                            } else {
-                                // Fallback: update state instead
-                                setImgSrc(`https://placehold.co/300x200/171717/9ca3af?text=${encodeURIComponent(product.title.charAt(0))}`)
-                            }
-                        }}
-                        loading="lazy"
-                    />
+                    {/* Subtle gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent opacity-60 pointer-events-none" />
 
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 group-focus:bg-black/50 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus:opacity-100">
-                        <DSStack direction="row" gap="small" align="center">
-                            <Eye className="w-4 h-4 text-white" />
-                            <DSText size="sm" style={{ color: 'white', fontWeight: 500 }}>
-                                Quick View
-                            </DSText>
-                        </DSStack>
+                    {/* Badges */}
+                    <div className="absolute top-2 left-2 flex flex-col gap-1">
+                        {isFeatured && (
+                            <span className="px-3.5 py-1 rounded-full bg-black/55 backdrop-blur text-[14px] font-semibold tracking-wide text-[#00FF89] border border-[#00FF89]/30">
+                                Featured
+                            </span>
+                        )}
+                        {isNewProduct && (
+                            <span className="px-3.5 py-1 rounded-full bg-black/55 backdrop-blur text-[14px] font-semibold tracking-wide text-blue-400 border border-blue-400/30">
+                                New
+                            </span>
+                        )}
+                        {discountPercentage > 0 && (
+                            <span className="px-3.5 py-1 rounded-full bg-black/55 backdrop-blur text-[14px] font-semibold tracking-wide text-red-400 border border-red-400/30">
+                                -{discountPercentage}%
+                            </span>
+                        )}
                     </div>
 
-                    {/* Product Badge */}
-                    {badge && (
-                        <div className="absolute top-2 left-2 z-10">
-                            <DSBadge variant={badge.variant} size="small" className="text-xs px-2 py-1 shadow-sm">
-                                {badge.text}
-                            </DSBadge>
-                        </div>
-                    )}
-
-                    {/* Discount Badge - only show if no product badge to avoid overlap */}
-                    {discountPercentage > 0 && !badge && (
-                        <div className="absolute top-2 right-2 z-10">
-                            <DSBadge variant="error" size="small" className="text-xs px-2 py-1 shadow-sm">
-                                -{discountPercentage}%
-                            </DSBadge>
-                        </div>
-                    )}
+                    {/* Like & Cart */}
+                    <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                            onClick={handleLike}
+                            className="p-1.5 rounded-md bg-black/45 backdrop-blur hover:bg-black/65 transition">
+                            <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-200'}`} />
+                        </button>
+                        
+                    </div>
                 </div>
 
-                {/* Product Info */}
-                <div className="p-4 flex-1 flex flex-col">
-                    <DSStack direction="column" gap="small" className="h-full">
-                        {/* Header */}
-                        <DSStack direction="row" justify="between" align="center">
-                            <DSText size="sm" style={{ color: '#00FF89', fontWeight: 600 }}>
-                                {getTypeDisplay(product.type)}
-                            </DSText>
-                            <DSStack direction="row" gap="xsmall" align="center">
-                                <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                                <DSText size="sm" style={{ color: 'white', fontWeight: 500 }}>
-                                    {(product.averageRating || 0).toFixed(1)}
-                                </DSText>
-                                <DSText size="sm" style={{ color: '#6b7280' }}>
-                                    ({product.totalReviews || 0})
-                                </DSText>
-                            </DSStack>
-                        </DSStack>
-
-                        {/* Title */}
-                        <h3 className="text-sm font-semibold text-white line-clamp-2 group-hover:text-[#00FF89] transition-colors leading-tight">
-                            {product.title}
-                        </h3>
-
-                        {/* Description */}
-                        <p className="text-xs text-gray-400 line-clamp-2 flex-1 leading-relaxed">
-                            {product.shortDescription}
-                        </p>
-
-                        {/* Seller Info */}
-                        <DSStack direction="row" gap="small" align="center">
-                            <span className="text-xs text-gray-500">by</span>
-                            <span className="text-xs text-gray-300 truncate">
-                                {product.sellerId?.fullName || 'Anonymous Seller'}
+                {/* Body */}
+                <div className="p-6 flex flex-col flex-1">
+                    <div className="mb-2">
+                        <h3 className="font-semibold text-[18px] md:text-[18px] leading-snug text-white line-clamp-2 group-hover:text-[#00FF89] transition-colors">{title}</h3>
+                        <div className="mt-1 flex items-center gap-1.5 text-[12px] text-gray-300">
+                            <span className="inline-flex items-center gap-1 bg-[#1a1a1a] border border-[#272727] px-2 py-0.5 rounded-md text-[11.5px] font-medium">
+                                <Star className="w-3.5 h-3.5 text-yellow-400" />{productRating.toFixed(1)}
                             </span>
-                            {product.sellerId?.verification?.status === 'approved' && (
-                                <CheckCircle className="w-3 h-3 text-[#00FF89] flex-shrink-0" />
+                            {productRating === 0 && isNewProduct && (
+                                <span className="text-[11px] font-medium text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-md">New</span>
                             )}
-                        </DSStack>
-
-                        {/* Price and Add to Cart */}
-                        <DSStack direction="row" justify="between" align="center" className="mt-2">
-                            <DSStack direction="row" gap="small" align="baseline">
-                                <span className="text-lg font-bold text-[#00FF89]">
-                                    {formatPrice(product.price)}
+                        </div>
+                    </div>
+                    <p className="text-[15px] md:text-[15px] text-gray-300 line-clamp-3 leading-relaxed mb-4">{description}</p>
+                    {displayTags.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-4">
+                            {displayTags.map((tag, i) => (
+                                <span
+                                    key={i}
+                                    className="px-2 py-0.5 rounded-full border border-[#272727] text-[10px] uppercase tracking-wide text-gray-400">
+                                    {tag}
                                 </span>
-                                {product.originalPrice && product.originalPrice > product.price && (
-                                    <span className="text-xs text-gray-500 line-through">
-                                        {formatPrice(product.originalPrice)}
-                                    </span>
-                                )}
-                            </DSStack>
-
-                            <DSButton
-                                variant="primary"
-                                size="small"
-                                onClick={async (e) => {
-                                    e.stopPropagation()
-                                    e.preventDefault()
-
-                                    const cartProduct = {
-                                        id: product._id || product.id,
-                                        title: product.title,
-                                        price: product.price,
-                                        thumbnail: imgSrc,
-                                        shortDescription: product.shortDescription,
-                                        type: product.type
-                                    }
-
-                                    try {
-                                        await addToCart(cartProduct)
-                                    } catch (error) {
-                                        console.error('Error adding to cart:', error)
-                                    }
-                                }}
-                                className="flex-shrink-0 !px-3 !py-2"
-                                aria-label={`Add ${product.title} to cart`}>
-                                <ShoppingCart className="w-4 h-4" />
-                            </DSButton>
-                        </DSStack>
-                    </DSStack>
+                            ))}
+                            {extraTagCount > 0 && <span className="px-2 py-0.5 rounded-full border border-[#272727] text-[10px] text-gray-500">+{extraTagCount}</span>}
+                        </div>
+                    )}
+                    <div className="mt-auto flex items-center justify-between">
+                        {microMeta}
+                        <div className="text-right ml-4 flex items-center">
+                            {actualDiscountPrice && actualOriginalPrice && actualOriginalPrice > actualDiscountPrice ? (
+                                <div className="flex items-center justify-end gap-2 leading-none">
+                                    <span className="text-xl md:text-lg font-bold text-[#00FF89] leading-none">{formatPrice(actualDiscountPrice)}</span>
+                                    <span className="text-xs text-gray-500 line-through leading-none">{formatPrice(actualOriginalPrice)}</span>
+                                </div>
+                            ) : (
+                                <span className="text-xl md:text-lg font-bold text-[#00FF89] leading-none">{formatPrice(price)}</span>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </motion.div>
     )
 }
 

@@ -4,10 +4,11 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Save, X, Plus, Upload, Loader2, RefreshCcw, Trash2 } from 'lucide-react'
+import { ArrowLeft, Save, X, Plus, Upload, Loader2, RefreshCcw, Trash2, ImageIcon } from 'lucide-react'
 import { productsAPI } from '@/lib/api'
 import toast from '@/lib/utils/toast'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
+import ImageUpload from '@/components/shared/forms/ImageUpload'
 import {
   FORM_STEPS,
   PRODUCT_TYPES,
@@ -593,16 +594,58 @@ function DynamicList({ title, field, values, placeholder, onChange, addItem, rem
 }
 
 function DynamicImages({ images, onChange, add, remove }) {
+  const handleImageChange = (index, newUrl) => {
+    const updatedImages = [...images]
+    updatedImages[index] = newUrl
+    onChange('images', updatedImages)
+  }
+
   return (
-    <div>
-      <label className="block text-sm font-medium text-gray-300 mb-2">Additional Images</label>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <label className="block text-sm font-medium text-gray-300">Additional Images</label>
+        <button 
+          type="button"
+          onClick={add} 
+          className="inline-flex items-center gap-2 px-3 py-1.5 text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Add Image
+        </button>
+      </div>
+      
       {images.map((img, i) => (
-        <div key={i} className="flex gap-2 mb-2">
-          <input value={img} onChange={e => onChange('images', i, e.target.value)} placeholder="https://example.com/image.jpg" className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-brand-primary" />
-          <button onClick={() => remove(i)} className="p-3 text-red-400 hover:bg-red-400/10 rounded-lg"><X className="w-5 h-5" /></button>
+        <div key={i} className="relative border border-gray-700 rounded-lg p-4 bg-gray-800/50">
+          <div className="flex items-start justify-between mb-3">
+            <h4 className="text-sm font-medium text-white">Image {i + 1}</h4>
+            <button 
+              type="button"
+              onClick={() => remove(i)} 
+              className="p-1.5 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+              title="Remove image"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          
+          <ImageUpload
+            value={img}
+            onChange={(e) => handleImageChange(i, e.target.value)}
+            category="product-images"
+            placeholder="Upload image or enter URL"
+            showPreview={true}
+            helperText="Additional product image to showcase different angles or features"
+          />
         </div>
       ))}
-      <button onClick={add} className="inline-flex items-center gap-2 px-4 py-2 text-brand-primary hover:bg-brand-primary/10 rounded-lg"><Plus className="w-4 h-4" />Add Image</button>
+      
+      {images.length === 0 && (
+        <div className="text-center py-8 text-gray-400 border-2 border-dashed border-gray-700 rounded-lg">
+          <ImageIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
+          <p className="text-sm">No additional images added yet</p>
+          <p className="text-xs mt-1">Click "Add Image" to upload product images</p>
+        </div>
+      )}
     </div>
   )
 }

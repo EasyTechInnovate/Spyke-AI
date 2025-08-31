@@ -161,11 +161,19 @@ const productSchema = new mongoose.Schema(
             enum: Object.values(EProductSetupTime),
             required: true
         },
+        // deliveryMethod field removed - no longer needed
         targetAudience: String,
         benefits: [String],
         useCaseExamples: [String],
         howItWorks: [String],
         outcome: [String],
+
+        performanceMetrics: String,
+        usageInformation: String,
+        supportAndMaintenance: {
+            type: String,
+            required: true
+        },
 
         premiumContent: {
             promptText: {

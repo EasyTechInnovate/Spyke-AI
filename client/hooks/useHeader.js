@@ -85,25 +85,6 @@ export function useHeader() {
         setMobileMenuOpen(false)
     }, [pathname])
 
-    // Keyboard shortcuts
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const handleKeyDown = (e) => {
-                if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-                    e.preventDefault()
-                    setSearchOpen(true)
-                }
-                // Close search with Escape
-                if (e.key === 'Escape' && searchOpen) {
-                    setSearchOpen(false)
-                }
-            }
-
-            document.addEventListener('keydown', handleKeyDown)
-            return () => document.removeEventListener('keydown', handleKeyDown)
-        }
-    }, [searchOpen])
-
     const handleLogout = async () => {
         setDropdownOpen(false)
 

@@ -1,18 +1,17 @@
 import { motion } from 'framer-motion'
 import { Search, Filter, SlidersHorizontal, Grid3X3, List } from 'lucide-react'
 
-export default function ExploreControls({
-    filters,
-    viewMode,
-    showFilters,
-    onSearch,
-    onViewModeChange,
-    onToggleFilters,
-    onToggleMobileFilters
-}) {
+export default function ExploreControls({ filters, viewMode, showFilters, onSearch, onViewModeChange, onToggleFilters, onToggleMobileFilters }) {
     const hasActiveFilters =
         Object.keys(filters).filter(
-            (k) => (k === 'category' && filters[k] !== 'all') || (k === 'rating' && filters[k] > 0) || (k === 'verified' && filters[k])
+            (k) =>
+                (k === 'category' && filters[k] !== 'all') ||
+                (k === 'type' && filters[k] !== 'all') ||
+                (k === 'industry' && filters[k] !== 'all') ||
+                (k === 'setupTime' && filters[k] !== 'all') ||
+                (k === 'rating' && filters[k] > 0) ||
+                (k === 'verifiedOnly' && filters[k]) ||
+                (k === 'priceRange' && (filters[k][0] > 0 || filters[k][1] < 1000))
         ).length > 0
 
     return (
@@ -60,13 +59,17 @@ export default function ExploreControls({
                         <button
                             onClick={() => onViewModeChange('grid')}
                             aria-label="Grid view"
-                            className={`p-2 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'}`}>
+                            className={`p-2 rounded-lg transition-colors ${
+                                viewMode === 'grid' ? 'bg-brand-primary text-black' : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                            }`}>
                             <Grid3X3 className="w-4 h-4" />
                         </button>
                         <button
                             onClick={() => onViewModeChange('list')}
                             aria-label="List view"
-                            className={`p-2 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'}`}>
+                            className={`p-2 rounded-lg transition-colors ${
+                                viewMode === 'list' ? 'bg-brand-primary text-black' : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                            }`}>
                             <List className="w-4 h-4" />
                         </button>
                     </div>
@@ -75,3 +78,4 @@ export default function ExploreControls({
         </motion.div>
     )
 }
+

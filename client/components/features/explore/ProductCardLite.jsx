@@ -9,24 +9,24 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
     const [imageError, setImageError] = useState(false)
     const [isLiked, setIsLiked] = useState(false)
 
-    // Safe data extraction with fallbacks
     const {
         _id: id,
         slug,
         title = 'Untitled Product',
         price = 0,
         discountPrice,
+        originalPrice,
         rating: legacyRating = 0,
         reviewCount: legacyReviewCount = 0,
         image,
-        thumbnail, // new: API provides thumbnail
+        thumbnail,
         images = [],
         category = 'general',
         type,
         industry,
         tags = [],
         seller = {},
-        sellerId, // API shape
+        sellerId,
         sales = 0,
         isFeatured = false,
         isNew = false,
@@ -55,8 +55,11 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
     // Use the first available image
     const productImage = image || thumbnail || images?.[0] || '/images/placeholder-product.svg'
 
-    // Calculate discount percentage
-    const discountPercentage = discountPrice && price > discountPrice ? Math.round(((price - discountPrice) / price) * 100) : 0
+    // Calculate discount percentage and pricing
+    const actualDiscountPrice = discountPrice || (originalPrice && originalPrice > price ? price : null)
+    const actualOriginalPrice = originalPrice || (discountPrice && discountPrice < price ? price : null)
+    const discountPercentage = actualOriginalPrice && actualDiscountPrice && actualOriginalPrice > actualDiscountPrice ? 
+        Math.round(((actualOriginalPrice - actualDiscountPrice) / actualOriginalPrice) * 100) : 0
 
     // Format price display
     const formatPrice = (price) => {
@@ -134,17 +137,17 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
                             {/* Badges */}
                             <div className="absolute top-2 left-2 flex flex-col gap-1">
                                 {isFeatured && (
-                                    <span className="px-2 py-0.5 rounded-full bg-black/60 backdrop-blur text-[10px] font-semibold tracking-wide text-[#00FF89] border border-[#00FF89]/30">
+                                    <span className="px-3.5 py-1 rounded-full bg-black/55 backdrop-blur text-[14px] font-semibold tracking-wide text-[#00FF89] border border-[#00FF89]/30">
                                         Featured
                                     </span>
                                 )}
                                 {isNewProduct && (
-                                    <span className="px-2 py-0.5 rounded-full bg-black/60 backdrop-blur text-[10px] font-semibold tracking-wide text-blue-400 border border-blue-400/30">
+                                    <span className="px-3.5 py-1 rounded-full bg-black/55 backdrop-blur text-[14px] font-semibold tracking-wide text-blue-400 border border-blue-400/30">
                                         New
                                     </span>
                                 )}
                                 {discountPercentage > 0 && (
-                                    <span className="px-2 py-0.5 rounded-full bg-black/60 backdrop-blur text-[10px] font-semibold tracking-wide text-red-400 border border-red-400/30">
+                                    <span className="px-3.5 py-1 rounded-full bg-black/55 backdrop-blur text-[14px] font-semibold tracking-wide text-red-400 border border-red-400/30">
                                         -{discountPercentage}%
                                     </span>
                                 )}
@@ -159,10 +162,13 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
                         {/* Content */}
                         <div className="flex-1 min-w-0 flex flex-col">
                             <div className="mb-2">
-                                <h3 className="text-[18px] md:text-[17px] font-semibold text-white leading-snug line-clamp-2 group-hover:text-[#00FF89] transition-colors">{title}</h3>
+                                <h3 className="text-[18px] md:text-[17px] font-semibold text-white leading-snug line-clamp-2 group-hover:text-[#00FF89] transition-colors">
+                                    {title}
+                                </h3>
                                 <div className="mt-1 flex items-center gap-1.5 text-[12px] text-gray-300">
                                     <span className="inline-flex items-center gap-1 bg-[#1a1a1a] border border-[#272727] px-2 py-0.5 rounded-md text-[11.5px] font-medium">
-                                        <Star className="w-3.5 h-3.5 text-yellow-400" />{productRating.toFixed(1)}
+                                        <Star className="w-3.5 h-3.5 text-yellow-400" />
+                                        {productRating.toFixed(1)}
                                     </span>
                                     {productRating === 0 && isNewProduct && (
                                         <span className="text-[11px] font-medium text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-md">New</span>
@@ -190,23 +196,20 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
                                 <div>{microMeta}</div>
                                 <div className="text-right ml-4 flex items-center">
                                     {/* ensure vertical centering */}
-                                    {discountPrice && discountPrice < price ? (
+                                    {actualDiscountPrice && actualOriginalPrice && actualDiscountPrice < actualOriginalPrice ? (
                                         <div className="flex items-center justify-end gap-2 leading-none">
                                             {/* normalize line height */}
                                             <span className="text-xl font-bold text-[#00FF89] md:text-lg leading-none">
-                                                {formatPrice(discountPrice)}
+                                                {formatPrice(actualDiscountPrice)}
                                             </span>
-                                            <span className="text-xs md:text-xs text-gray-500 line-through leading-none">{formatPrice(price)}</span>
+                                            <span className="text-xs md:text-xs text-gray-500 line-through leading-none">
+                                                {formatPrice(actualOriginalPrice)}
+                                            </span>
                                         </div>
                                     ) : (
                                         <span className="text-xl font-bold text-[#00FF89] md:text-lg leading-none">{formatPrice(price)}</span>
                                     )}
-                                    <button
-                                        onClick={handleAddToCart}
-                                        className="ml-3 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[#00FF89] text-black text-xs font-semibold hover:bg-[#00FF89]/90 transition">
-                                        <ShoppingCart className="w-4 h-4" />
-                                        Add
-                                    </button>
+                                    
                                 </div>
                             </div>
                         </div>
@@ -254,17 +257,17 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
                     {/* Badges */}
                     <div className="absolute top-2 left-2 flex flex-col gap-1">
                         {isFeatured && (
-                            <span className="px-2 py-0.5 rounded-full bg-black/55 backdrop-blur text-[10px] font-semibold tracking-wide text-[#00FF89] border border-[#00FF89]/30">
+                            <span className="px-2.5 py-1 rounded-full bg-black/55 backdrop-blur text-[11px] font-semibold tracking-wide text-[#00FF89] border border-[#00FF89]/30">
                                 Featured
                             </span>
                         )}
                         {isNewProduct && (
-                            <span className="px-2 py-0.5 rounded-full bg-black/55 backdrop-blur text-[10px] font-semibold tracking-wide text-blue-400 border border-blue-400/30">
+                            <span className="px-2.5 py-1 rounded-full bg-black/55 backdrop-blur text-[11px] font-semibold tracking-wide text-blue-400 border border-blue-400/30">
                                 New
                             </span>
                         )}
                         {discountPercentage > 0 && (
-                            <span className="px-2 py-0.5 rounded-full bg-black/55 backdrop-blur text-[10px] font-semibold tracking-wide text-red-400 border border-red-400/30">
+                            <span className="px-2.5 py-1 rounded-full bg-black/55 backdrop-blur text-[11px] font-semibold tracking-wide text-red-400 border border-red-400/30">
                                 -{discountPercentage}%
                             </span>
                         )}
@@ -277,11 +280,7 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
                             className="p-1.5 rounded-md bg-black/45 backdrop-blur hover:bg-black/65 transition">
                             <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-200'}`} />
                         </button>
-                        <button
-                            onClick={handleAddToCart}
-                            className="p-1.5 rounded-md bg-[#00FF89] text-black hover:bg-[#00FF89]/90 transition">
-                            <ShoppingCart className="w-4 h-4" />
-                        </button>
+                        
                     </div>
                 </div>
                 {/* Body */}
@@ -314,10 +313,10 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
                         {microMeta}
                         <div className="text-right ml-4 flex items-center">
                             {/* ensure vertical centering */}
-                            {discountPrice && discountPrice < price ? (
+                            {actualDiscountPrice && actualOriginalPrice && actualDiscountPrice < actualOriginalPrice ? (
                                 <div className="flex items-center justify-end gap-2 leading-none">
-                                    <span className="text-xl md:text-lg font-bold text-[#00FF89] leading-none">{formatPrice(discountPrice)}</span>
-                                    <span className="text-xs text-gray-500 line-through leading-none">{formatPrice(price)}</span>
+                                    <span className="text-xl md:text-lg font-bold text-[#00FF89] leading-none">{formatPrice(actualDiscountPrice)}</span>
+                                    <span className="text-xs text-gray-500 line-through leading-none">{formatPrice(actualOriginalPrice)}</span>
                                 </div>
                             ) : (
                                 <span className="text-xl md:text-lg font-bold text-[#00FF89] leading-none">{formatPrice(price)}</span>
@@ -331,4 +330,5 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
 })
 
 export default ProductCardLite
+
 

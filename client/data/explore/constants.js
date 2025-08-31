@@ -50,8 +50,8 @@ export const DEFAULT_FILTERS = {
   type: 'all',
   industry: 'all',
   setupTime: 'all',
-  priceRange: [0, 200],
+  priceRange: [0, 1000],
   rating: 0,
-  verified: false,
+  verifiedOnly: false,
   search: ''
 }

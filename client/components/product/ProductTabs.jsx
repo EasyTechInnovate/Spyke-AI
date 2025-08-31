@@ -57,39 +57,62 @@ export default function ProductTabs({
         return () => observer.disconnect()
     }, [])
 
-    // Handle keyboard navigation for tabs
+    // Smooth scroll to active tab
     useEffect(() => {
-        const handleKeyDown = (event) => {
-            if (event.target.closest('[role="tablist"]')) {
-                const tabIds = tabsConfig.map(tab => tab.id)
-                const currentIndex = tabIds.indexOf(activeTab)
-                
-                switch (event.key) {
-                    case 'ArrowLeft':
-                        event.preventDefault()
-                        const prevIndex = currentIndex > 0 ? currentIndex - 1 : tabIds.length - 1
-                        onTabChange(tabIds[prevIndex])
-                        break
-                    case 'ArrowRight':
-                        event.preventDefault()
-                        const nextIndex = currentIndex < tabIds.length - 1 ? currentIndex + 1 : 0
-                        onTabChange(tabIds[nextIndex])
-                        break
-                    case 'Home':
-                        event.preventDefault()
-                        onTabChange(tabIds[0])
-                        break
-                    case 'End':
-                        event.preventDefault()
-                        onTabChange(tabIds[tabIds.length - 1])
-                        break
-                }
-            }
+        const activeTabElement = document.querySelector(`[data-tab="${activeTab}"]`)
+        if (activeTabElement) {
+            activeTabElement.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'nearest', 
+                inline: 'center' 
+            })
         }
+    }, [activeTab])
 
-        document.addEventListener('keydown', handleKeyDown)
-        return () => document.removeEventListener('keydown', handleKeyDown)
-    }, [activeTab, onTabChange])
+    // Intersection Observer for content sections
+    useEffect(() => {
+        if (!product) return
+        
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        const tabId = entry.target.getAttribute('data-section')
+                        if (tabId && tabId !== activeTab) {
+                            onTabChange(tabId)
+                        }
+                    }
+                })
+            },
+            { root: null, threshold: 0.5 }
+        )
+        
+        tabsConfig.forEach(tab => {
+            const el = document.querySelector(`[data-section="${tab.id}"]`)
+            if (el) observer.observe(el)
+        })
+        
+        return () => observer.disconnect()
+    }, [activeTab, onTabChange, product])
+
+    // Handle section visibility tracking
+    useEffect(() => {
+        if (!product) return
+        
+        const el = document.querySelector(`[data-section="${activeTab}"]`)
+        if (!el) return
+        
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    entry.target.setAttribute('data-visible', entry.isIntersecting)
+                })
+            },
+            { root: null, threshold: 0 }
+        )
+        observer.observe(el)
+        return () => observer.disconnect()
+    }, [activeTab])
 
     return (
         <div className="mb-8">

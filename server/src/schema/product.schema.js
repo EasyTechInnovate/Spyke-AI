@@ -3,9 +3,9 @@ import { EProductType, EProductCategory, EProductIndustry, EProductPriceCategory
 
 const toolSchema = z.object({
   name: z.string().min(1, 'Tool name is required'),
-  logo: z.string().url().optional(),
-  model: z.string().optional(),
-  link: z.string().url().optional()
+  logo: z.string().url().optional().or(z.literal('')),
+  model: z.string().optional().or(z.literal('')),
+  link: z.string().url().optional().or(z.literal('')).or(z.undefined())
 })
 
 const versionSchema = z.object({
@@ -100,7 +100,7 @@ export const createProductSchema = z.object({
   
   images: z.array(z.string().url()).optional(),
   
-  previewVideo: z.string().url().optional(),
+  previewVideo: z.string().url().optional().or(z.literal(null)),
   
   type: z.enum(Object.values(EProductType), {
     errorMap: () => ({ message: 'Type must be one of: prompt, automation, agent, bundle' })
@@ -121,38 +121,31 @@ export const createProductSchema = z.object({
     .min(0, 'Original price must be non-negative')
     .optional(),
   
-  toolsUsed: z.array(toolSchema).optional(),
+  targetAudience: z.string().optional(),
+  benefits: z.array(z.string()).optional(),
+  useCaseExamples: z.array(z.string()).optional(),
+  howItWorks: z.array(z.string()).min(1, 'At least one step is required for how it works'),
+  outcome: z.array(z.string()).optional(),
   
+  toolsUsed: z.array(toolSchema).optional(),
   setupTime: z.enum(Object.values(EProductSetupTime), {
     errorMap: () => ({ message: 'Invalid setup time' })
   }),
+  // deliveryMethod field removed - no longer required
   
-  targetAudience: z.string().optional(),
-  
-  benefits: z.array(z.string()).optional(),
-  
-  useCaseExamples: z.array(z.string()).optional(),
-  
-  howItWorks: z.array(z.string()).optional(),
-  
-  outcome: z.array(z.string()).optional(),
-  
-  hasRefundPolicy: z.boolean().optional(),
-  
-  hasGuarantee: z.boolean().optional(),
-  
-  guaranteeText: z.string().optional(),
-  
-  faqs: z.array(faqSchema).optional(),
-  
-  tags: z.array(z.string()).optional(),
-  
+  tags: z.array(z.string()).min(1, 'At least one tag is required').max(10, 'Maximum 10 tags allowed'),
   searchKeywords: z.array(z.string()).optional(),
   
+  performanceMetrics: z.string().optional(),
+  usageInformation: z.string().optional(),
+  supportAndMaintenance: z.string().optional(),
+  faqs: z.array(faqSchema).min(1, 'At least one FAQ is required'),
+  
+  hasRefundPolicy: z.boolean().optional(),
+  hasGuarantee: z.boolean().optional(),
+  guaranteeText: z.string().optional(),
   versions: z.array(versionSchema).optional(),
-  
   currentVersion: z.string().optional(),
-  
   premiumContent: premiumContentSchema.optional()
 })
 
@@ -177,7 +170,7 @@ export const updateProductSchema = z.object({
   
   images: z.array(z.string().url()).optional(),
   
-  previewVideo: z.string().url().optional(),
+  previewVideo: z.string().url().optional().or(z.literal(null)),
   
   type: z.enum(Object.values(EProductType)).optional(),
   
