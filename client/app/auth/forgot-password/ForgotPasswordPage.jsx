@@ -12,7 +12,6 @@ import { validateEmail } from '@/lib/utils/utils'
 
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function ForgotPasswordPage() {
-    // Inline notification state
     const [notification, setNotification] = useState(null)
 
     // Show inline notification messages  
@@ -324,7 +323,7 @@ export default function ForgotPasswordPage() {
                             <div className="mt-8 text-center">
                                 <p className="text-gray-400 text-sm">
                                     Need help?{' '}
-                                    <Link href="/support" className="text-[#00FF89] hover:underline font-medium">
+                                    <Link href="/contactus" className="text-[#00FF89] hover:underline font-medium">
                                         Contact Support
                                     </Link>
                                     {' '}or{' '}

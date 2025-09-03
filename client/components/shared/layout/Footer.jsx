@@ -8,9 +8,9 @@ import { Twitter, Linkedin, Github, Youtube, Facebook, Instagram } from 'lucide-
 export default function Footer() {
     const footerLinks = {
         Product: [
-            { name: 'Pricing', href: '/pricing', prefetch: false },
             { name: 'Promotion Policy', href: '/promotion-policy', prefetch: false },
             { name: 'Refund & Return Policy', href: '/refund-policy', prefetch: false },
+            { name: 'Payment Policy', href: '/payment-policy', prefetch: false },
         ],
         Marketplace: [
             { name: 'Explore', href: '/explore', prefetch: false },

@@ -176,6 +176,14 @@ const sellerSchemas = {
         sellerBanner: z.string()
             .url('Banner must be a valid URL')
             .optional(),
+
+        profileImage: z.string()
+            .url('Profile image must be a valid URL')
+            .optional(),
+
+        languages: z.array(z.string())
+            .max(10, 'You can select maximum 10 languages')
+            .optional(),
         
         socialHandles: z.object({
             linkedin: socialHandleValidation,

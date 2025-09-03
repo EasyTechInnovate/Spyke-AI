@@ -4,7 +4,6 @@ import { motion } from 'framer-motion'
 import Container from '@/components/shared/layout/Container'
 import ConditionalHeader from '@/components/shared/layout/ConditionalHeader'
 import Footer from '@/components/shared/layout/Footer'
-import { SpykeLogo } from '@/components/Logo'
 import { Calendar, Mail, Globe, Percent, Gift, Tag, Users, AlertTriangle, Star, CheckCircle } from 'lucide-react'
 
 export default function PromotionPolicyPage() {
@@ -124,58 +123,51 @@ export default function PromotionPolicyPage() {
                 {/* Header Section */}
                 <section className="relative py-16 border-b border-gray-800">
                     <Container>
-                        <motion.div 
+                        <motion.div
                             className="text-center max-w-4xl mx-auto"
                             initial="initial"
                             animate="animate"
                             variants={staggerContainer}
                         >
-                            <motion.div variants={fadeInUp} className="mb-8">
-                                <SpykeLogo
-                                    sizePreset="xl"
-                                    showText={false}
-                                    darkMode={true}
-                                    className="mx-auto mb-6"
-                                />
-                            </motion.div>
-                            
-                            <motion.h1 
+
+
+                            <motion.h1
                                 variants={fadeInUp}
                                 className="text-4xl md:text-5xl font-bold text-white mb-4 font-league-spartan"
                             >
                                 Promotion Policy
                             </motion.h1>
-                            
-                            <motion.div 
+
+                            <motion.div
                                 variants={fadeInUp}
                                 className="flex items-center justify-center gap-2 text-gray-400 mb-6"
                             >
                                 <Calendar className="w-4 h-4" />
                                 <span className="text-sm">Effective Date: August 26, 2025</span>
                             </motion.div>
-                            
-                            <motion.p 
+
+                            <motion.p
                                 variants={fadeInUp}
                                 className="text-lg text-gray-300 leading-relaxed mb-8"
                             >
-                                At SpykeAI, we aim to provide transparent, fair, and effective promotions for both Sellers and Buyers. 
+                                At SpykeAI, we aim to provide transparent, fair, and effective promotions for both Sellers and Buyers.
                                 This Promotion Policy outlines the types of promotions available, who can initiate them, and the general terms governing promotional activities.
                             </motion.p>
 
                             {/* Promotion Highlights */}
-                            <motion.div 
+                            <motion.div
                                 variants={fadeInUp}
                                 className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8"
                             >
                                 {promotionHighlights.map((highlight, index) => {
                                     const Icon = highlight.icon
-                                    const borderColor = highlight.type === 'success' ? 'border-green-500/30' : 
-                                                      highlight.type === 'warning' ? 'border-yellow-500/30' : 
-                                                      'border-[#00FF89]/30'
-                                    const iconColor = highlight.type === 'success' ? 'text-green-500' : 
-                                                    highlight.type === 'warning' ? 'text-yellow-500' : 
-                                                    'text-[#00FF89]'
-                                    
+                                    const borderColor = highlight.type === 'success' ? 'border-green-500/30' :
+                                        highlight.type === 'warning' ? 'border-yellow-500/30' :
+                                            'border-[#00FF89]/30'
+                                    const iconColor = highlight.type === 'success' ? 'text-green-500' :
+                                        highlight.type === 'warning' ? 'text-yellow-500' :
+                                            'text-[#00FF89]'
+
                                     return (
                                         <div key={index} className={`bg-[#1f1f1f] rounded-xl p-4 border ${borderColor} hover:${borderColor.replace('/30', '/50')} transition-colors`}>
                                             <Icon className={`w-6 h-6 ${iconColor} mx-auto mb-2`} />
@@ -192,7 +184,7 @@ export default function PromotionPolicyPage() {
                 {/* Main Content */}
                 <section className="py-16">
                     <Container>
-                        <motion.div 
+                        <motion.div
                             className="max-w-4xl mx-auto"
                             initial="initial"
                             animate="animate"
@@ -202,7 +194,7 @@ export default function PromotionPolicyPage() {
                                 {/* Section 1 - Types of Promotions */}
                                 <motion.div variants={fadeInUp} className="mb-16">
                                     <h2 className="text-3xl font-bold text-[#00FF89] mb-8 font-league-spartan">1. Types of Promotions</h2>
-                                    
+
                                     <div className="grid gap-6">
                                         {promotionTypes.map((type, index) => {
                                             const Icon = type.icon
@@ -238,7 +230,7 @@ export default function PromotionPolicyPage() {
                                 {/* Section 2 - Who Can Initiate Promotions */}
                                 <motion.div variants={fadeInUp} className="mb-16">
                                     <h2 className="text-3xl font-bold text-[#00FF89] mb-8 font-league-spartan">2. Who Can Initiate Promotions</h2>
-                                    
+
                                     <div className="space-y-8">
                                         {/* Marketplace-Initiated */}
                                         <div className="bg-[#1f1f1f] rounded-xl p-6 border border-gray-800">
@@ -269,7 +261,7 @@ export default function PromotionPolicyPage() {
                                 {/* Section 3 - General Guidelines */}
                                 <motion.div variants={fadeInUp} className="mb-16">
                                     <h2 className="text-3xl font-bold text-[#00FF89] mb-8 font-league-spartan">3. General Guidelines for Promotions</h2>
-                                    
+
                                     <div className="grid gap-4">
                                         {guidelines.map((guideline, index) => (
                                             <div key={index} className="bg-[#1f1f1f] rounded-xl p-6 border border-gray-800 hover:border-[#00FF89]/30 transition-all duration-300">
@@ -290,7 +282,7 @@ export default function PromotionPolicyPage() {
                                 {/* Section 4 - Limitations & Disclaimer */}
                                 <motion.div variants={fadeInUp} className="mb-16">
                                     <h2 className="text-3xl font-bold text-[#00FF89] mb-8 font-league-spartan">4. Limitations & Disclaimer</h2>
-                                    
+
                                     <div className="bg-yellow-500/10 rounded-xl p-6 border border-yellow-500/20">
                                         <div className="flex items-start gap-4 mb-4">
                                             <AlertTriangle className="w-6 h-6 text-yellow-500 flex-shrink-0 mt-1" />
@@ -307,7 +299,7 @@ export default function PromotionPolicyPage() {
                                 {/* Section 5 - Violation of Promotion Policy */}
                                 <motion.div variants={fadeInUp} className="mb-16">
                                     <h2 className="text-3xl font-bold text-[#00FF89] mb-8 font-league-spartan">5. Violation of Promotion Policy</h2>
-                                    
+
                                     <div className="bg-red-500/10 rounded-xl p-6 border border-red-500/20">
                                         <div className="flex items-start gap-4 mb-4">
                                             <AlertTriangle className="w-6 h-6 text-red-500 flex-shrink-0 mt-1" />
@@ -350,7 +342,6 @@ export default function PromotionPolicyPage() {
                     </Container>
                 </section>
             </div>
-            <Footer />
         </>
     )
 }

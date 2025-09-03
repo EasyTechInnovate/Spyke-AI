@@ -78,58 +78,49 @@ export default function RefundPolicyPage() {
             {/* Header Section */}
             <section className="relative py-16 border-b border-gray-800">
                 <Container>
-                    <motion.div 
-                        className="text-center max-w-4xl mx-auto"
+                    <motion.div
+                        className="text-center max-w-4xl mx-auto mt-7"
                         initial="initial"
                         animate="animate"
                         variants={staggerContainer}
                     >
-                        <motion.div variants={fadeInUp} className="mb-8">
-                            <SpykeLogo
-                                sizePreset="xl"
-                                showText={false}
-                                darkMode={true}
-                                className="mx-auto mb-6"
-                            />
-                        </motion.div>
-                        
-                        <motion.h1 
+                        <motion.h1
                             variants={fadeInUp}
                             className="text-4xl md:text-5xl font-bold text-white mb-4 font-league-spartan"
                         >
                             Return & Refund Policy
                         </motion.h1>
-                        
-                        <motion.div 
+
+                        <motion.div
                             variants={fadeInUp}
                             className="flex items-center justify-center gap-2 text-gray-400 mb-6"
                         >
                             <Calendar className="w-4 h-4" />
                             <span className="text-sm">Effective Date: August 26, 2025</span>
                         </motion.div>
-                        
-                        <motion.p 
+
+                        <motion.p
                             variants={fadeInUp}
                             className="text-lg text-gray-300 leading-relaxed mb-8"
                         >
-                            This Return & Refund Policy outlines the terms under which refunds or returns may be issued 
+                            This Return & Refund Policy outlines the terms under which refunds or returns may be issued
                             for purchases made through SpykeAI. By purchasing from our marketplace, you agree to the following terms.
                         </motion.p>
 
                         {/* Refund Highlights */}
-                        <motion.div 
+                        <motion.div
                             variants={fadeInUp}
                             className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8"
                         >
                             {refundHighlights.map((highlight, index) => {
                                 const Icon = highlight.icon
-                                const borderColor = highlight.type === 'success' ? 'border-green-500/30' : 
-                                                  highlight.type === 'warning' ? 'border-yellow-500/30' : 
-                                                  'border-[#00FF89]/30'
-                                const iconColor = highlight.type === 'success' ? 'text-green-500' : 
-                                                highlight.type === 'warning' ? 'text-yellow-500' : 
-                                                'text-[#00FF89]'
-                                
+                                const borderColor = highlight.type === 'success' ? 'border-green-500/30' :
+                                    highlight.type === 'warning' ? 'border-yellow-500/30' :
+                                        'border-[#00FF89]/30'
+                                const iconColor = highlight.type === 'success' ? 'text-green-500' :
+                                    highlight.type === 'warning' ? 'text-yellow-500' :
+                                        'text-[#00FF89]'
+
                                 return (
                                     <div key={index} className={`bg-[#1f1f1f] rounded-xl p-4 border ${borderColor} hover:${borderColor.replace('/30', '/50')} transition-colors`}>
                                         <Icon className={`w-6 h-6 ${iconColor} mx-auto mb-2`} />
@@ -146,7 +137,7 @@ export default function RefundPolicyPage() {
             {/* Main Content */}
             <section className="py-16">
                 <Container>
-                    <motion.div 
+                    <motion.div
                         className="max-w-4xl mx-auto"
                         initial="initial"
                         animate="animate"
@@ -169,7 +160,7 @@ export default function RefundPolicyPage() {
                                 </div>
                                 <div className="space-y-4 text-gray-300">
                                     <p>
-                                        Due to the nature of digital goods, we do not offer refunds or exchanges once the product 
+                                        Due to the nature of digital goods, we do not offer refunds or exchanges once the product
                                         has been delivered or accessed, unless otherwise stated in this policy.
                                     </p>
                                 </div>
@@ -201,14 +192,14 @@ export default function RefundPolicyPage() {
                                 <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">3. Refund Request Process</h2>
                                 <div className="space-y-6 text-gray-300">
                                     <p>To request a refund:</p>
-                                    
+
                                     <div className="bg-[#1f1f1f] rounded-xl p-6 border border-gray-800">
                                         <div className="space-y-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 bg-[#00FF89] text-black rounded-full flex items-center justify-center font-bold text-sm">1</div>
                                                 <p className="text-white">Contact us at <span className="text-[#00FF89]">contact@spykeai.com</span> within <strong>7 days</strong> from the product purchase date.</p>
                                             </div>
-                                            
+
                                             <div className="flex items-start gap-3">
                                                 <div className="w-8 h-8 bg-[#00FF89] text-black rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 mt-1">2</div>
                                                 <div>

@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion'
 import Container from '@/components/shared/layout/Container'
-import { SpykeLogo } from '@/components/Logo'
 import { Calendar, Mail, Globe } from 'lucide-react'
 
 export default function TermsAndConditionsPage() {
@@ -32,12 +31,7 @@ export default function TermsAndConditionsPage() {
                         variants={staggerContainer}
                     >
                         <motion.div variants={fadeInUp} className="mb-8">
-                            <SpykeLogo
-                                sizePreset="xl"
-                                showText={false}
-                                darkMode={true}
-                                className="mx-auto mb-6"
-                            />
+                            
                         </motion.div>
                         
                         <motion.h1 
@@ -52,7 +46,7 @@ export default function TermsAndConditionsPage() {
                             className="flex items-center justify-center gap-2 text-gray-400 mb-6"
                         >
                             <Calendar className="w-4 h-4" />
-                            <span className="text-sm">Effective Date: December 1, 2024</span>
+                            <span className="text-sm">Effective Date: August 26, 2025</span>
                         </motion.div>
                         
                         <motion.p 

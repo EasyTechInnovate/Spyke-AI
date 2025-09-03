@@ -4,13 +4,13 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Container from '@/components/shared/layout/Container'
 import { SpykeLogo } from '@/components/Logo'
-import { 
-    Mail, 
-    Globe, 
-    Clock, 
-    Phone, 
+import {
+    Mail,
+    Globe,
+    Clock,
+    Phone,
     MessageCircle,
-    MapPin, 
+    MapPin,
     Send,
     FileText,
     HelpCircle,
@@ -72,19 +72,19 @@ export default function ContactUsPage() {
         {
             icon: Phone,
             title: "Phone",
-            value: "+1 (555) 123-4567",
-            href: "tel:+15551234567"
+            value: "+971 585107689",
+            href: "tel:+971 585107689"
         },
         {
             icon: MessageCircle,
             title: "WhatsApp",
             value: "Message us directly",
-            href: "https://wa.me/15551234567"
+            href: "https://wa.link/7uwiza"
         },
         {
             icon: MapPin,
             title: "Address",
-            value: "SpykeAI Innovation Hub, Dubai, UAE",
+            value: "Spyke Technologies, Burjuman ,Dubai, UAE",
             href: null
         }
     ]
@@ -166,7 +166,7 @@ export default function ContactUsPage() {
     const handleSubmit = async (e) => {
         e.preventDefault()
         setIsSubmitting(true)
-        
+
         try {
             // Simulate API call
             await new Promise(resolve => setTimeout(resolve, 2000))
@@ -190,7 +190,7 @@ export default function ContactUsPage() {
             {/* Hero Section */}
             <section className="relative py-16 lg:py-20 border-b border-gray-800">
                 <Container>
-                    <motion.div 
+                    <motion.div
                         className="text-center max-w-4xl mx-auto"
                         initial="initial"
                         animate="animate"
@@ -204,19 +204,19 @@ export default function ContactUsPage() {
                                 className="mx-auto mb-6"
                             />
                         </motion.div>
-                        
-                        <motion.h1 
+
+                        <motion.h1
                             variants={fadeInUp}
                             className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 font-league-spartan"
                         >
                             Contact Us
                         </motion.h1>
-                        
-                        <motion.p 
+
+                        <motion.p
                             variants={fadeInUp}
                             className="text-lg md:text-xl text-gray-300 leading-relaxed max-w-3xl mx-auto"
                         >
-                            We're here to help! Whether you have a question about our AI marketplace, need assistance 
+                            We're here to help! Whether you have a question about our AI marketplace, need assistance
                             with a purchase, or want to discuss collaboration opportunities, our team is ready to assist you.
                         </motion.p>
                     </motion.div>
@@ -226,7 +226,7 @@ export default function ContactUsPage() {
             {/* Contact Information Grid */}
             <section className="py-16 lg:py-20">
                 <Container>
-                    <motion.div 
+                    <motion.div
                         className="max-w-6xl mx-auto"
                         initial="initial"
                         whileInView="animate"
@@ -266,7 +266,7 @@ export default function ContactUsPage() {
                                 return (
                                     <motion.div key={index} variants={fadeInUp}>
                                         {info.href ? (
-                                            <a 
+                                            <a
                                                 href={info.href}
                                                 className="block h-full"
                                                 target={info.href.startsWith('http') ? '_blank' : undefined}
@@ -288,7 +288,7 @@ export default function ContactUsPage() {
             {/* Contact Form */}
             <section className="py-16 lg:py-20 bg-[#0f0f0f]">
                 <Container>
-                    <motion.div 
+                    <motion.div
                         className="max-w-4xl mx-auto"
                         initial="initial"
                         whileInView="animate"
@@ -441,7 +441,7 @@ export default function ContactUsPage() {
             {/* Support Links */}
             <section className="py-16 lg:py-20">
                 <Container>
-                    <motion.div 
+                    <motion.div
                         className="max-w-6xl mx-auto"
                         initial="initial"
                         whileInView="animate"
@@ -462,7 +462,7 @@ export default function ContactUsPage() {
                                 const Icon = link.icon
                                 return (
                                     <motion.div key={index} variants={fadeInUp}>
-                                        <Link 
+                                        <Link
                                             href={link.href}
                                             className="block bg-[#1f1f1f] rounded-xl p-6 border border-gray-800 hover:border-[#00FF89]/30 transition-all duration-300 group"
                                         >
@@ -491,7 +491,7 @@ export default function ContactUsPage() {
             {/* Social Media & Community */}
             <section className="py-16 lg:py-20 bg-[#0f0f0f]">
                 <Container>
-                    <motion.div 
+                    <motion.div
                         className="max-w-4xl mx-auto text-center"
                         initial="initial"
                         whileInView="animate"

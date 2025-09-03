@@ -91,6 +91,30 @@ const sellerProfileSchema = new mongoose.Schema(
                 message: 'Banner must be a valid image file'
             }
         },
+
+        profileImage: {
+            type: String,
+            default: null,
+            validate: {
+                validator: function(v) {
+                    if (!v) return true
+                    return /\.(jpg|jpeg|png|gif|webp)$/i.test(v)
+                },
+                message: 'Profile image must be a valid image file'
+            }
+        },
+
+        languages: {
+            type: [String],
+            default: [],
+            validate: {
+                validator: function(languages) {
+                    if (!languages || languages.length === 0) return true
+                    return languages.every(lang => typeof lang === 'string' && lang.trim().length > 0)
+                },
+                message: 'All languages must be valid non-empty strings'
+            }
+        },
         
         socialHandles: {
             linkedin: {

@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion'
 import Container from '@/components/shared/layout/Container'
-import { SpykeLogo } from '@/components/Logo'
 import { Calendar, Mail, Globe, Shield, Eye, Lock, Users, Database } from 'lucide-react'
 
 export default function PrivacyPolicyPage() {
@@ -48,46 +47,41 @@ export default function PrivacyPolicyPage() {
             {/* Header Section */}
             <section className="relative py-16 border-b border-gray-800">
                 <Container>
-                    <motion.div 
+                    <motion.div
                         className="text-center max-w-4xl mx-auto"
                         initial="initial"
                         animate="animate"
                         variants={staggerContainer}
                     >
                         <motion.div variants={fadeInUp} className="mb-8">
-                            <SpykeLogo
-                                sizePreset="xl"
-                                showText={false}
-                                darkMode={true}
-                                className="mx-auto mb-6"
-                            />
+
                         </motion.div>
-                        
-                        <motion.h1 
+
+                        <motion.h1
                             variants={fadeInUp}
                             className="text-4xl md:text-5xl font-bold text-white mb-4 font-league-spartan"
                         >
                             Privacy Policy
                         </motion.h1>
-                        
-                        <motion.div 
+
+                        <motion.div
                             variants={fadeInUp}
                             className="flex items-center justify-center gap-2 text-gray-400 mb-6"
                         >
                             <Calendar className="w-4 h-4" />
                             <span className="text-sm">Effective Date: August 26, 2025</span>
                         </motion.div>
-                        
-                        <motion.p 
+
+                        <motion.p
                             variants={fadeInUp}
                             className="text-lg text-gray-300 leading-relaxed mb-8"
                         >
-                            SpykeAI respects your privacy and is committed to protecting your personal information. 
+                            SpykeAI respects your privacy and is committed to protecting your personal information.
                             This Privacy Policy explains how we collect, use, store, and protect your data when you use our Platform.
                         </motion.p>
 
                         {/* Privacy Highlights */}
-                        <motion.div 
+                        <motion.div
                             variants={fadeInUp}
                             className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8"
                         >
@@ -109,7 +103,7 @@ export default function PrivacyPolicyPage() {
             {/* Main Content */}
             <section className="py-16">
                 <Container>
-                    <motion.div 
+                    <motion.div
                         className="max-w-4xl mx-auto"
                         initial="initial"
                         animate="animate"
@@ -120,7 +114,7 @@ export default function PrivacyPolicyPage() {
                             <motion.div variants={fadeInUp} className="mb-12">
                                 <div className="bg-[#1f1f1f] rounded-xl p-6 border border-gray-800 mb-8">
                                     <p className="text-gray-300 leading-relaxed">
-                                        By using our Platform, you agree to the practices described in this Privacy Policy. 
+                                        By using our Platform, you agree to the practices described in this Privacy Policy.
                                         We are committed to maintaining the highest standards of data protection and transparency.
                                     </p>
                                 </div>
@@ -141,7 +135,7 @@ export default function PrivacyPolicyPage() {
                                             <li>Information you provide when listing or purchasing AI products or services</li>
                                         </ul>
                                     </div>
-                                    
+
                                     <div>
                                         <h3 className="text-xl font-semibold text-white mb-3">b) Automatically Collected Information</h3>
                                         <ul className="list-disc list-inside space-y-2 ml-4">
@@ -213,7 +207,7 @@ export default function PrivacyPolicyPage() {
                                 <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">5. Data Retention</h2>
                                 <div className="space-y-4 text-gray-300">
                                     <p>
-                                        We retain personal data only as long as necessary for the purposes described above, 
+                                        We retain personal data only as long as necessary for the purposes described above,
                                         or as required by law.
                                     </p>
                                 </div>
@@ -264,7 +258,7 @@ export default function PrivacyPolicyPage() {
                                 </h2>
                                 <div className="space-y-4 text-gray-300">
                                     <p>
-                                        We use industry-standard encryption, firewalls, and access controls to protect your data. 
+                                        We use industry-standard encryption, firewalls, and access controls to protect your data.
                                         However, no system is completely secure, and we cannot guarantee absolute security.
                                     </p>
                                 </div>
@@ -275,7 +269,7 @@ export default function PrivacyPolicyPage() {
                                 <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">8. Children's Privacy</h2>
                                 <div className="space-y-4 text-gray-300">
                                     <p>
-                                        SpykeAI is not intended for children under 18. We do not knowingly collect personal 
+                                        SpykeAI is not intended for children under 18. We do not knowingly collect personal
                                         information from minors.
                                     </p>
                                 </div>
@@ -286,7 +280,7 @@ export default function PrivacyPolicyPage() {
                                 <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">9. International Data Transfers</h2>
                                 <div className="space-y-4 text-gray-300">
                                     <p>
-                                        Your data may be transferred to and stored in countries outside your own, where privacy 
+                                        Your data may be transferred to and stored in countries outside your own, where privacy
                                         laws may differ. We ensure appropriate safeguards are in place for such transfers.
                                     </p>
                                 </div>
@@ -297,7 +291,7 @@ export default function PrivacyPolicyPage() {
                                 <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">10. Changes to This Privacy Policy</h2>
                                 <div className="space-y-4 text-gray-300">
                                     <p>
-                                        We may update this Privacy Policy from time to time. Changes will be posted on this page 
+                                        We may update this Privacy Policy from time to time. Changes will be posted on this page
                                         with a new "Effective Date."
                                     </p>
                                 </div>

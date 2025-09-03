@@ -69,9 +69,7 @@ export default function SellerSidebar({ currentPath = '/profile', sellerName = '
             id: 'settings',
             label: 'Settings',
             icon: Settings,
-            href: '/seller/settings',
-            disabled: true,
-            badge: 'Soon'
+            href: '/seller/settings'
         }
     ]
 
