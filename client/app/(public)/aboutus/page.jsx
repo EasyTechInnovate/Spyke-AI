@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion'
 import Container from '@/components/shared/layout/Container'
-import { SpykeLogo } from '@/components/Logo'
 import { ArrowRight, Shield, Globe, CheckCircle, Zap, Users, Target, Lightbulb, Star, Award } from 'lucide-react'
 import Link from 'next/link'
 
@@ -101,8 +100,7 @@ export default function AboutUsPage() {
 
     return (
         <div className="min-h-screen bg-[#121212] text-white">
-            {/* Hero Section */}
-            <section className="relative py-20 lg:py-32 border-b border-gray-800">
+            <section className="relative py-20 lg:py-32">
                 <Container>
                     <motion.div 
                         className="text-center max-w-4xl mx-auto"
@@ -110,14 +108,7 @@ export default function AboutUsPage() {
                         animate="animate"
                         variants={staggerContainer}
                     >
-                        <motion.div variants={fadeInUp} className="mb-8">
-                            <SpykeLogo
-                                sizePreset="2xl"
-                                showText={false}
-                                darkMode={true}
-                                className="mx-auto mb-8"
-                            />
-                        </motion.div>
+                        
                         
                         <motion.h1 
                             variants={fadeInUp}

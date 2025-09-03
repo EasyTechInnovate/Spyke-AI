@@ -590,7 +590,7 @@ export default function SignupPage() {
                                                 </Link>{' '}
                                                 and{' '}
                                                 <Link
-                                                    href="/privacy"
+                                                    href="/privacy-policy"
                                                     className="text-[#00FF89] hover:underline font-semibold">
                                                     Privacy Policy
                                                 </Link>
