@@ -25,7 +25,7 @@ export default function Footer() {
         Company: [
             { name: 'About Us', href: '/aboutus', prefetch: true },
             { name: 'Contact Us', href: '/contactus', prefetch: true },
-            { name: 'Terms and Services', href: '/terms', prefetch: true },
+            { name: 'Terms and Condition', href: '/terms', prefetch: true },
             { name: 'Privacy Policy', href: '/privacy-policy', prefetch: false },
             { name: 'Seller Aggrement', href: '/seller-agreement', prefetch: false }
         ]

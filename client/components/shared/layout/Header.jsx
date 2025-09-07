@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
 import { X, Menu } from 'lucide-react'
 import { useHeader } from '@/hooks/useHeader'
 import HeaderLogo from './Header/Logo'
@@ -40,18 +39,16 @@ export default function Header() {
         <>
             <header
                 className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 ${scrolled
-                        ? 'bg-black/95 backdrop-blur-lg shadow-2xl shadow-brand-primary/10 border-b border-brand-primary/20'
-                        : 'bg-black/90 backdrop-blur-sm border-b border-white/10'
+                    ? 'bg-black/95 backdrop-blur-lg shadow-2xl shadow-brand-primary/10 border-b border-brand-primary/20'
+                    : 'bg-black/90 backdrop-blur-sm border-b border-white/10'
                     }`}>
 
                 <Container>
                     <div className="flex items-center justify-between h-16 sm:h-20">
-                        {/* Logo - Always visible */}
                         <div className="flex-shrink-0">
                             <HeaderLogo />
                         </div>
 
-                        {/* Desktop Navigation - Hidden on mobile */}
                         <div className="hidden md:flex flex-1 justify-center">
                             <Navigation
                                 showBecomeSeller={showBecomeSeller}
@@ -59,17 +56,11 @@ export default function Header() {
                             />
                         </div>
 
-                        {/* Actions - Responsive layout */}
                         <div className="flex items-center space-x-1 sm:space-x-2">
-                            {/* Search Button - Hidden on small mobile, visible on sm+ */}
                             <div className="hidden sm:block">
                                 <SearchButton onClick={() => setSearchOpen(true)} />
                             </div>
-
-                            {/* Cart - Always visible but smaller on mobile */}
                             <CartButton count={cartCount} />
-
-                            {/* User actions - Desktop only */}
                             {user && (
                                 <div className="hidden md:block">
                                     <SimpleNotificationBell />
@@ -77,7 +68,6 @@ export default function Header() {
                             )}
 
                             {user ? (
-                                /* User dropdown - Desktop only */
                                 <div className="hidden md:block">
                                     <UserDropdown
                                         ref={dropdownRef}
@@ -91,18 +81,15 @@ export default function Header() {
                                     />
                                 </div>
                             ) : (
-                                /* Sign in - Desktop only */
                                 <div className="hidden md:flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
                                     <Link
                                         href="/signin"
                                         className="relative group inline-flex overflow-hidden rounded-xl"
                                         onClick={() => {
-                                            // Clear any stale auth data
                                             if (typeof window !== 'undefined') {
                                                 localStorage.removeItem('authToken')
                                                 localStorage.removeItem('user')
                                                 localStorage.removeItem('roles')
-                                                // Clear cookies too
                                                 document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
                                                 document.cookie = 'roles=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
                                             }
@@ -114,8 +101,6 @@ export default function Header() {
                                     </Link>
                                 </div>
                             )}
-
-                            {/* Mobile Menu Toggle - Mobile only */}
                             <button
                                 className="md:hidden p-2 text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all duration-200"
                                 onClick={() => {
@@ -127,8 +112,6 @@ export default function Header() {
                         </div>
                     </div>
                 </Container>
-
-                {/* Mobile Menu */}
                 <MobileMenu
                     isOpen={mobileMenuOpen}
                     onClose={() => setMobileMenuOpen(false)}
@@ -143,8 +126,6 @@ export default function Header() {
                     onLogout={handleLogout}
                 />
             </header>
-
-            {/* Search Overlay */}
             <SearchOverlay
                 isOpen={searchOpen}
                 onClose={() => setSearchOpen(false)}

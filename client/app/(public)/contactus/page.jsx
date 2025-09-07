@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Container from '@/components/shared/layout/Container'
-import { SpykeLogo } from '@/components/Logo'
 import {
     Mail,
     Globe,
@@ -197,12 +196,6 @@ export default function ContactUsPage() {
                         variants={staggerContainer}
                     >
                         <motion.div variants={fadeInUp} className="mb-8">
-                            <SpykeLogo
-                                sizePreset="xl"
-                                showText={false}
-                                darkMode={true}
-                                className="mx-auto mb-6"
-                            />
                         </motion.div>
 
                         <motion.h1

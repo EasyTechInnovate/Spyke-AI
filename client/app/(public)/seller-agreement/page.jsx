@@ -83,12 +83,6 @@ export default function SellerAgreementPage() {
                             variants={staggerContainer}
                         >
                             <motion.div variants={fadeInUp} className="mb-8">
-                                <SpykeLogo
-                                    sizePreset="xl"
-                                    showText={false}
-                                    darkMode={true}
-                                    className="mx-auto mb-6"
-                                />
                             </motion.div>
                             
                             <motion.h1 
