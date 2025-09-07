@@ -13,8 +13,8 @@ const nextConfig = {
   output: process.env.NODE_ENV === 'production' ? 'standalone' : undefined,
 
   images: {
-    // Allow all external domains temporarily for development
-    unoptimized: process.env.NODE_ENV === 'development',
+    // Keep unoptimized false for production performance
+    unoptimized: false,
     
     remotePatterns: [
       {
@@ -47,6 +47,28 @@ const nextConfig = {
         hostname: 'picsum.photos',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'dummyimage.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'assets.promptbase.com',
+        pathname: '/**',
+      },
+      // Add your QA and production domains
+      {
+        protocol: 'https',
+        hostname: 'qa.spykeai.com',
+        port: '8443',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'spykeai.com',
+        pathname: '/**',
+      },
       // Add localhost for development
       {
         protocol: 'http',
@@ -76,6 +98,12 @@ const nextConfig = {
         hostname: 'firebasestorage.googleapis.com',
         pathname: '/**',
       },
+      // Add ImageKit for your uploads
+      {
+        protocol: 'https',
+        hostname: 'ik.imagekit.io',
+        pathname: '/**',
+      },
       // Add any other domains you might use
       {
         protocol: 'https',
@@ -92,10 +120,15 @@ const nextConfig = {
       'placehold.co',
       'via.placeholder.com',
       'picsum.photos',
+      'dummyimage.com',
+      'assets.promptbase.com',
+      'qa.spykeai.com',
+      'spykeai.com',
       'localhost',
       'res.cloudinary.com',
       'storage.googleapis.com',
-      'firebasestorage.googleapis.com'
+      'firebasestorage.googleapis.com',
+      'ik.imagekit.io'
     ],
     
     // Image format optimization
@@ -111,8 +144,15 @@ const nextConfig = {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     
-    // Minimize layout shift
+    // Minimize layout shift and improve error handling
     minimumCacheTTL: 60,
+    
+    // Add better loader configuration
+    loader: 'default',
+    path: '/_next/image',
+    
+    // Add custom loader for better error handling
+    loaderFile: undefined,
   },
 
   modularizeImports: {
