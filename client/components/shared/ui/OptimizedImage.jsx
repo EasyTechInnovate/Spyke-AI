@@ -1,6 +1,6 @@
 import { useState, useMemo, memo, useCallback, useRef, useEffect } from 'react'
 import NextImage from 'next/image'
-import { getCurrentImageConfig, validateImageDomain, generateOptimizedImageUrl } from '../../lib/config/images'
+import { getCurrentImageConfig, validateImageDomain, generateOptimizedImageUrl } from '../../../lib/config/images'
 
 // Enhanced URL validation with configuration-based checks
 const isValidImageUrl = (src) => {
