@@ -25,6 +25,9 @@ import {
     X,
     AlertCircle
 } from 'lucide-react'
+import CustomSelect from '@/components/shared/CustomSelect'
+import Notification from '@/components/shared/Notification'
+import { Globe as GlobeIcon } from 'lucide-react'
 
 export const debounce = (func, wait) => {
     let timeout
@@ -34,81 +37,13 @@ export const debounce = (func, wait) => {
     }
 }
 
-// Custom Toast Component
-function Toast({ message, type = 'success', onClose, show }) {
-    const [isVisible, setIsVisible] = useState(show)
-
-    useEffect(() => {
-        setIsVisible(show)
-        if (show) {
-            const timer = setTimeout(
-                () => {
-                    setIsVisible(false)
-                    setTimeout(onClose, 300) // Wait for exit animation
-                },
-                type === 'success' ? 8000 : 5000
-            )
-            return () => clearTimeout(timer)
-        }
-    }, [show, type, onClose])
-
-    if (!show) return null
-
-    const styles = {
-        success: {
-            bg: 'bg-green-900/90',
-            border: 'border-green-500/50',
-            text: 'text-green-100',
-            icon: CheckCircle,
-            iconColor: 'text-green-400'
-        },
-        error: {
-            bg: 'bg-red-900/90',
-            border: 'border-red-500/50',
-            text: 'text-red-100',
-            icon: AlertCircle,
-            iconColor: 'text-red-400'
-        }
-    }
-
-    const style = styles[type] || styles.success
-    const Icon = style.icon
-
-    return (
-        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[60] w-full max-w-md px-4">
-            <div
-                className={`
-                ${isVisible ? 'animate-in slide-in-from-top-2' : 'animate-out slide-out-to-top-2'} 
-                ${style.bg} ${style.border} ${style.text} 
-                backdrop-blur-xl border rounded-xl p-4 shadow-2xl
-            `}>
-                <div className="flex items-start gap-3">
-                    <Icon className={`w-5 h-5 ${style.iconColor} flex-shrink-0 mt-0.5`} />
-                    <p className="text-sm font-medium flex-1 leading-relaxed">{message}</p>
-                    <button
-                        onClick={() => {
-                            setIsVisible(false)
-                            setTimeout(onClose, 300)
-                        }}
-                        className="text-white/70 hover:text-white transition-colors p-1 flex-shrink-0 -mt-1">
-                        <X className="w-4 h-4" />
-                    </button>
-                </div>
-            </div>
-        </div>
-    )
-}
-
 export default function SignupPage() {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
     const [emailChecking, setEmailChecking] = useState(false)
     const [emailAvailable, setEmailAvailable] = useState(true)
-    const [showCountryDropdown, setShowCountryDropdown] = useState(false)
-
-    // Toast state
-    const [toast, setToast] = useState({ show: false, message: '', type: 'success' })
+    const [notification, setNotification] = useState(null)
 
     const [formData, setFormData] = useState({
         emailAddress: '',
@@ -123,30 +58,16 @@ export default function SignupPage() {
     const [touched, setTouched] = useState({})
 
     const emailCheckRef = useRef(null)
-    const dropdownRef = useRef(null)
 
-    // Show toast messages
-    const showToast = (message, type = 'success') => {
-        setToast({ show: true, message, type })
+    // Show notification messages
+    const showNotification = (message, type = 'success') => {
+        setNotification({
+            id: Date.now(),
+            type,
+            message,
+            duration: type === 'error' ? 6000 : 4000
+        })
     }
-
-    // Clear toast
-    const clearToast = () => {
-        setToast({ show: false, message: '', type: 'success' })
-    }
-
-    useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-                setShowCountryDropdown(false)
-            }
-        }
-
-        if (showCountryDropdown && typeof window !== 'undefined') {
-            document.addEventListener('mousedown', handleClickOutside)
-            return () => document.removeEventListener('mousedown', handleClickOutside)
-        }
-    }, [showCountryDropdown])
 
     useEffect(() => {
         emailCheckRef.current = debounce(async (email) => {
@@ -280,27 +201,23 @@ export default function SignupPage() {
                 })
 
                 // Check if registration was successful - handle different response structures
-                if (response && (
-                    response.success === true || 
-                    response.statusCode === 201 || 
-                    (response.id && response.emailAddress) // Direct data response
-                )) {
+                if (
+                    response &&
+                    (response.success === true || response.statusCode === 201 || (response.id && response.emailAddress)) // Direct data response
+                ) {
                     // Show email verification toast
-                    showToast(
-                        'Account created successfully! Please check your email to verify your account before signing in.',
-                        'success'
-                    )
-                    
-                    // Redirect to signin page after showing the toast
+                    showNotification('Account created successfully! Please check your email to verify your account before signing in.', 'success')
+
+                    // Redirect to verify-email page after showing the toast
                     setTimeout(() => {
-                        router.push('/signin?message=verify-email')
+                        router.push(`/verify-email?email=${encodeURIComponent(formData.emailAddress)}`)
                     }, 3000)
                 } else {
                     throw new Error(response?.message || 'Registration failed')
                 }
             } catch (error) {
                 const errorMessage = error?.response?.data?.message || error?.message || 'Registration failed. Please try again.'
-                showToast(errorMessage, 'error')
+                showNotification(errorMessage, 'error')
             } finally {
                 setLoading(false)
             }
@@ -309,24 +226,35 @@ export default function SignupPage() {
     )
 
     const passwordStrength = checkPasswordStrength(formData.password)
+
+    // Sort countries alphabetically and format for CustomSelect
+    const countryOptions = countryCodes
+        .map(({ code, country, flag }) => ({
+            value: code,
+            label: `${code} ${country}`,
+            icon: () => <span className="text-base">{flag}</span>,
+            searchText: `${country.toLowerCase()} ${code.toLowerCase()} ${code.replace('+', '').toLowerCase()}`
+        }))
+        .sort((a, b) => {
+            // Sort by country name primarily
+            const countryA = countryCodes.find((c) => c.code === a.value)?.country || ''
+            const countryB = countryCodes.find((c) => c.code === b.value)?.country || ''
+            return countryA.localeCompare(countryB)
+        })
+
     const selectedCountry = countryCodes.find((c) => c.code === formData.countryCode) || countryCodes[0]
 
     return (
         <div className="min-h-screen bg-[#121212] relative overflow-hidden font-league-spartan">
-            {/* Background Effects */}
-            <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900/50 to-black" />
-
-                {/* Animated gradient orbs */}
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#00FF89]/8 rounded-full blur-3xl animate-pulse opacity-60" />
-                <div
-                    className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[#FFC050]/6 rounded-full blur-3xl animate-pulse opacity-40"
-                    style={{ animationDelay: '2s' }}
-                />
-
-                {/* Subtle overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/10" />
-            </div>
+            {/* Notification */}
+            {notification && (
+                <div className="fixed top-8 left-1/2 transform -translate-x-1/2 z-[60]">
+                    <Notification
+                        {...notification}
+                        onClose={() => setNotification(null)}
+                    />
+                </div>
+            )}
 
             <Header />
 
@@ -388,7 +316,7 @@ export default function SignupPage() {
 
                 {/* Right side - Signup Form */}
                 <div className="w-full lg:w-1/2 flex items-center justify-center px-4 sm:px-6 lg:px-8 xl:px-12 py-8">
-                    <div className="w-full max-w-md">
+                    <div className="w-full max-w-lg">
                         {/* Mobile header */}
                         <div className="text-center lg:hidden mb-6">
                             <h1 className="text-2xl font-bold text-white mb-1">Join SpykeAI</h1>
@@ -404,7 +332,7 @@ export default function SignupPage() {
                                 {/* Form header */}
                                 <div className="mb-6">
                                     <h2 className="text-xl font-bold text-white mb-1">Create Account</h2>
-                                    <p className="text-gray-400 font-medium text-sm">Join thousands of creators and innovators</p>
+                                    <p className="text-gray-400 font-medium text-md">Join thousands of creators and innovators</p>
                                 </div>
 
                                 <form
@@ -448,45 +376,23 @@ export default function SignupPage() {
                                             Phone Number <span className="text-red-400">*</span>
                                         </label>
                                         <div className="flex gap-2">
-                                            {/* Country Code Dropdown */}
-                                            <div
-                                                className="relative"
-                                                ref={dropdownRef}>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                                                    className="flex items-center gap-1.5 px-3 py-3 bg-[#121212]/50 border border-gray-600/50 rounded-xl text-white hover:border-gray-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 min-w-[85px]">
-                                                    <span className="text-sm">{selectedCountry.flag}</span>
-                                                    <span className="font-bold text-xs">{selectedCountry.code}</span>
-                                                    <ChevronDown
-                                                        className={`w-3 h-3 transition-transform ${showCountryDropdown ? 'rotate-180' : ''}`}
-                                                    />
-                                                </button>
-
-                                                {showCountryDropdown && (
-                                                    <div className="absolute z-50 mt-1 w-64 bg-[#1a1a1a] border border-gray-700 rounded-xl shadow-2xl max-h-40 overflow-y-auto">
-                                                        {countryCodes.map(({ code, country, flag }, index) => (
-                                                            <button
-                                                                key={`${code}-${country}-${index}`}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setFormData((prev) => ({
-                                                                        ...prev,
-                                                                        countryCode: code,
-                                                                        phoneNumber: ''
-                                                                    }))
-                                                                    setShowCountryDropdown(false)
-                                                                }}
-                                                                className={`w-full px-3 py-2 text-left hover:bg-gray-800 flex items-center gap-2 transition-colors ${
-                                                                    code === formData.countryCode ? 'bg-gray-800' : ''
-                                                                }`}>
-                                                                <span className="text-sm">{flag}</span>
-                                                                <span className="text-white font-bold text-xs">{code}</span>
-                                                                <span className="text-gray-400 text-xs truncate">{country}</span>
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                )}
+                                            {/* Country Code Dropdown using CustomSelect */}
+                                            <div className="w-36">
+                                                <CustomSelect
+                                                    value={formData.countryCode}
+                                                    onChange={(value) => {
+                                                        setFormData((prev) => ({
+                                                            ...prev,
+                                                            countryCode: value,
+                                                            phoneNumber: ''
+                                                        }))
+                                                    }}
+                                                    options={countryOptions}
+                                                    placeholder="Country"
+                                                    searchable={true}
+                                                    className="text-sm"
+                                                    maxHeight="max-h-32"
+                                                />
                                             </div>
 
                                             {/* Phone Input */}
@@ -581,7 +487,7 @@ export default function SignupPage() {
                                                 className="mt-0.5 w-4 h-4 text-[#00FF89] bg-[#121212]/50 border-gray-600 rounded focus:ring-[#00FF89] focus:ring-2"
                                                 required
                                             />
-                                            <label className="text-xs text-gray-300 leading-4">
+                                            <label className="text-sm text-gray-300 leading-5">
                                                 I agree to SpykeAI's{' '}
                                                 <Link
                                                     href="/terms"
@@ -606,7 +512,7 @@ export default function SignupPage() {
                                                 onChange={handleChange}
                                                 className="mt-0.5 w-4 h-4 text-[#00FF89] bg-[#121212]/50 border-gray-600 rounded focus:ring-[#00FF89] focus:ring-2"
                                             />
-                                            <label className="text-xs text-gray-300 leading-4">
+                                            <label className="text-sm text-gray-300 leading-5">
                                                 Send me tips, updates, and exclusive offers (optional)
                                             </label>
                                         </div>
@@ -711,14 +617,6 @@ export default function SignupPage() {
                     </div>
                 </div>
             </main>
-
-            {/* Toast Notification */}
-            <Toast
-                message={toast.message}
-                type={toast.type}
-                onClose={clearToast}
-                show={toast.show}
-            />
         </div>
     )
 }

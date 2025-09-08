@@ -1,51 +1,52 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useEffect } from 'react'
 import { CheckCircle, AlertCircle, Info, AlertTriangle, X } from 'lucide-react'
 
 const notificationConfig = {
     success: {
         icon: CheckCircle,
-        gradient: 'from-gray-900/95 via-gray-800/90 to-gray-900/95',
+        bg: 'bg-gray-900/95',
         border: 'border-[#00FF89]/40',
         shadowColor: 'rgba(0, 255, 137, 0.4)',
         iconBg: 'bg-[#00FF89]/20 text-[#00FF89]',
         titleColor: 'text-[#00FF89]',
         messageColor: 'text-gray-200/90',
-        progressGradient: 'from-[#00FF89] to-[#00FF89]/80',
+        progressBg: 'bg-[#00FF89]',
         closeBtnColor: 'text-gray-300 hover:text-[#00FF89] hover:bg-[#00FF89]/10'
     },
     error: {
         icon: AlertCircle,
-        gradient: 'from-red-950/90 via-red-900/80 to-red-950/90',
+        bg: 'bg-red-950/90',
         border: 'border-red-500/40',
         shadowColor: 'rgba(239, 68, 68, 0.4)',
         iconBg: 'bg-red-500/20 text-red-400',
         titleColor: 'text-red-100',
         messageColor: 'text-red-200/90',
-        progressGradient: 'from-red-400 to-red-500',
+        progressBg: 'bg-red-400',
         closeBtnColor: 'text-red-300 hover:text-red-200 hover:bg-red-500/10'
     },
     warning: {
         icon: AlertTriangle,
-        gradient: 'from-gray-900/95 via-gray-800/90 to-gray-900/95',
+        bg: 'bg-gray-900/95',
         border: 'border-[#FFC050]/40',
         shadowColor: 'rgba(255, 192, 80, 0.4)',
         iconBg: 'bg-[#FFC050]/20 text-[#FFC050]',
         titleColor: 'text-[#FFC050]',
         messageColor: 'text-gray-200/90',
-        progressGradient: 'from-[#FFC050] to-[#FFC050]/80',
+        progressBg: 'bg-[#FFC050]',
         closeBtnColor: 'text-gray-300 hover:text-[#FFC050] hover:bg-[#FFC050]/10'
     },
     info: {
         icon: Info,
-        gradient: 'from-gray-900/95 via-gray-800/90 to-gray-900/95',
+        bg: 'bg-gray-900/95',
         border: 'border-gray-600/40',
         shadowColor: 'rgba(107, 114, 128, 0.4)',
         iconBg: 'bg-gray-600/20 text-gray-400',
         titleColor: 'text-gray-100',
         messageColor: 'text-gray-300/90',
-        progressGradient: 'from-gray-500 to-gray-600',
+        progressBg: 'bg-gray-500',
         closeBtnColor: 'text-gray-400 hover:text-gray-200 hover:bg-gray-600/10'
     }
 }
@@ -70,11 +71,22 @@ export default function Notification({
     const IconComponent = config.icon
     const displayTitle = title || titleMap[type]
 
+    // Auto-close timer
+    useEffect(() => {
+        if (duration > 0 && onClose) {
+            const timer = setTimeout(() => {
+                onClose(id)
+            }, duration)
+
+            return () => clearTimeout(timer)
+        }
+    }, [duration, onClose, id])
+
     return (
         <motion.div
             initial={{ opacity: 0, y: -50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -50, scale: 0.95 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
             className="max-w-sm w-full cursor-pointer"
             onClick={() => onClick?.(id)}>
@@ -82,7 +94,7 @@ export default function Notification({
             <div className={`
                 relative overflow-hidden rounded-2xl border backdrop-blur-xl shadow-2xl
                 transform transition-all duration-300 hover:scale-[1.02]
-                bg-gradient-to-br ${config.gradient} ${config.border}
+                ${config.bg} ${config.border}
             `}>
                 
                 {/* Animated Border Glow */}
@@ -126,7 +138,7 @@ export default function Notification({
                             initial={{ width: '100%' }}
                             animate={{ width: '0%' }}
                             transition={{ duration: duration / 1000, ease: 'linear' }}
-                            className={`absolute bottom-0 left-0 h-1 rounded-b-2xl bg-gradient-to-r ${config.progressGradient}`}
+                            className={`absolute bottom-0 left-0 h-1 rounded-b-2xl ${config.progressBg}`}
                         />
                     )}
                 </div>
