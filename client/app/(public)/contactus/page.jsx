@@ -93,7 +93,7 @@ export default function ContactUsPage() {
             icon: HelpCircle,
             title: "Help Center & FAQ",
             description: "Find answers to common questions",
-            href: "/help"
+            href: "/payment-policy"
         },
         {
             icon: Shield,

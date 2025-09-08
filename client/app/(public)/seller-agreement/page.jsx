@@ -4,7 +4,6 @@ import { motion } from 'framer-motion'
 import Container from '@/components/shared/layout/Container'
 import ConditionalHeader from '@/components/shared/layout/ConditionalHeader'
 import Footer from '@/components/shared/layout/Footer'
-import { SpykeLogo } from '@/components/Logo'
 import { Calendar, Mail, Globe, Handshake, DollarSign, Shield, AlertTriangle, Scale, FileText } from 'lucide-react'
 import Link from 'next/link'
 
@@ -46,7 +45,7 @@ export default function SellerAgreementPage() {
             icon: Scale,
             title: "Legal Clarity",
             description: "Clear terms governing your seller relationship",
-            type: "warning"
+            type: "success"
         }
     ]
 
@@ -74,7 +73,7 @@ export default function SellerAgreementPage() {
             <ConditionalHeader />
             <div className="min-h-screen bg-[#121212] text-white">
                 {/* Header Section */}
-                <section className="relative py-16 border-b border-gray-800">
+                <section className="relative py-16">
                     <Container>
                         <motion.div 
                             className="text-center max-w-4xl mx-auto"
@@ -82,12 +81,9 @@ export default function SellerAgreementPage() {
                             animate="animate"
                             variants={staggerContainer}
                         >
-                            <motion.div variants={fadeInUp} className="mb-8">
-                            </motion.div>
-                            
                             <motion.h1 
                                 variants={fadeInUp}
-                                className="text-4xl md:text-5xl font-bold text-white mb-4 font-league-spartan"
+                                className="text-4xl md:text-5xl font-bold text-white mb-4 mt-12 font-league-spartan"
                             >
                                 SpykeAI Seller Agreement
                             </motion.h1>

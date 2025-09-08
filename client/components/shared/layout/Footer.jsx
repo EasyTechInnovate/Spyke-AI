@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import Container from './Container'
 import { SpykeLogo } from '@/components/Logo'
-import { Twitter, Linkedin, Github, Youtube, Facebook, Instagram } from 'lucide-react'
+import { Twitter, Linkedin, Youtube, Facebook, Instagram } from 'lucide-react'
 
 export default function Footer() {
     const footerLinks = {

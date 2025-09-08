@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion'
 import Container from '@/components/shared/layout/Container'
 import ConditionalHeader from '@/components/shared/layout/ConditionalHeader'
-import Footer from '@/components/shared/layout/Footer'
 import { Calendar, Mail, Globe, Percent, Gift, Tag, Users, AlertTriangle, Star, CheckCircle } from 'lucide-react'
 
 export default function PromotionPolicyPage() {
@@ -44,7 +43,7 @@ export default function PromotionPolicyPage() {
             icon: Tag,
             title: "Clear Terms",
             description: "Well-defined guidelines and limitations",
-            type: "warning"
+            type: "success"
         }
     ]
 
@@ -121,7 +120,7 @@ export default function PromotionPolicyPage() {
             <ConditionalHeader />
             <div className="min-h-screen bg-[#121212] text-white">
                 {/* Header Section */}
-                <section className="relative py-16 border-b border-gray-800">
+                <section className="relative py-16">
                     <Container>
                         <motion.div
                             className="text-center max-w-4xl mx-auto"
@@ -129,11 +128,9 @@ export default function PromotionPolicyPage() {
                             animate="animate"
                             variants={staggerContainer}
                         >
-
-
                             <motion.h1
                                 variants={fadeInUp}
-                                className="text-4xl md:text-5xl font-bold text-white mb-4 font-league-spartan"
+                                className="text-4xl md:text-5xl font-bold text-white mb-4 mt-12 font-league-spartan"
                             >
                                 Promotion Policy
                             </motion.h1>
