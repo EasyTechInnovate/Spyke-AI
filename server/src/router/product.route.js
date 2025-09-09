@@ -20,6 +20,12 @@ const router = Router()
 
 router.get('/self', productController.self)
 
+router.get('/featured', productController.getFeaturedProducts)
+router.get('/trending', productController.getTrendingProducts)
+router.get('/high-rated', productController.getHighRatedProducts)
+router.get('/recently-added', productController.getRecentlyAdded)
+router.get('/discovery', productController.getProductDiscovery)
+
 router.get(
   '/',
   validateRequest(getProductsSchema, 'query'),
@@ -133,6 +139,5 @@ router.post(
   validateRequest(verifyProductSchema),
   productController.verifyProduct
 )
-
 
 export default router

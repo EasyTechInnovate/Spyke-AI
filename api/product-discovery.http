@@ -1,0 +1,112 @@
+### Product Discovery APIs
+
+@baseUrl = http://localhost:5000/v1
+
+### 1. Get Featured Products (Default)
+GET {{baseUrl}}/products/featured
+Content-Type: application/json
+
+### 2. Get Featured Products with Limit
+GET {{baseUrl}}/products/featured?limit=8
+Content-Type: application/json
+
+### 3. Get Featured Products by Category
+GET {{baseUrl}}/products/featured?category=hiring&limit=6
+Content-Type: application/json
+
+### 4. Get Featured Products by Type
+GET {{baseUrl}}/products/featured?type=prompt&limit=10
+Content-Type: application/json
+
+### 5. Get Featured Products with High Rating Filter
+GET {{baseUrl}}/products/featured?minRating=4.0&limit=8
+Content-Type: application/json
+
+### 6. Get Featured Products (Prompts Only)
+GET {{baseUrl}}/products/featured?type=prompt&category=hiring&limit=12
+Content-Type: application/json
+
+### 7. Get Trending Products (Default - Last 7 Days)
+GET {{baseUrl}}/products/trending
+Content-Type: application/json
+
+### 8. Get Trending Products (Last 14 Days)
+GET {{baseUrl}}/products/trending?days=14&limit=10
+Content-Type: application/json
+
+### 9. Get Trending Products (Last 30 Days)
+GET {{baseUrl}}/products/trending?days=30&limit=12
+Content-Type: application/json
+
+### 10. Get High Rated Products (Default)
+GET {{baseUrl}}/products/high-rated
+Content-Type: application/json
+
+### 11. Get High Rated Products with Custom Filters
+GET {{baseUrl}}/products/high-rated?limit=10&minReviews=5
+Content-Type: application/json
+
+### 12. Get Recently Added Products (Default - Last 30 Days)
+GET {{baseUrl}}/products/recently-added
+Content-Type: application/json
+
+### 13. Get Recently Added Products (Last 7 Days)
+GET {{baseUrl}}/products/recently-added?days=7&limit=8
+Content-Type: application/json
+
+### 14. Get Recently Added Products (Last 60 Days)
+GET {{baseUrl}}/products/recently-added?days=60&limit=15
+Content-Type: application/json
+
+### 15. Get Complete Product Discovery (All Sections)
+GET {{baseUrl}}/products/discovery
+Content-Type: application/json
+
+### 16. Get Product Discovery for Homepage
+GET {{baseUrl}}/products/discovery
+Content-Type: application/json
+
+### 17. Test Featured Products Algorithm Edge Cases
+
+# Empty results test
+GET {{baseUrl}}/products/featured?category=nonexistent
+Content-Type: application/json
+
+### 18. Test Trending Products Edge Cases
+
+# Very short period
+GET {{baseUrl}}/products/trending?days=1&limit=5
+Content-Type: application/json
+
+### 19. Test High Rated Products Edge Cases
+
+# Very high minimum reviews
+GET {{baseUrl}}/products/high-rated?minReviews=100&limit=3
+Content-Type: application/json
+
+### 20. Test Recently Added Edge Cases
+
+# Very recent only
+GET {{baseUrl}}/products/recently-added?days=1&limit=5
+Content-Type: application/json
+
+### 21. Performance Test - Multiple Concurrent Requests
+
+GET {{baseUrl}}/products/featured?limit=20
+Content-Type: application/json
+
+###
+GET {{baseUrl}}/products/trending?limit=15
+Content-Type: application/json
+
+###
+GET {{baseUrl}}/products/high-rated?limit=10
+Content-Type: application/json
+
+###
+GET {{baseUrl}}/products/recently-added?limit=12
+Content-Type: application/json
+
+###
+GET {{baseUrl}}/products/discovery
+Content-Type: application/json

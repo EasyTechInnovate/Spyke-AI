@@ -10,6 +10,7 @@ import Purchase from '../../model/purchase.model.js'
 import { notificationService } from '../../util/notification.js'
 import { EProductPriceCategory, EProductStatusNew, EUserRole } from '../../constant/application.js'
 import { v4 as uuidv4 } from 'uuid'
+import productQuicker from './quicker.controller.js'
 
 dayjs.extend(utc)
 
@@ -802,4 +803,108 @@ export default {
             httpError(next, err, req, 500)
         }
     },
+
+    getFeaturedProducts: async (req, res, next) => {
+        try {
+            const { 
+                limit = 12, 
+                category, 
+                type,
+                minRating = 3.5 
+            } = req.query
+
+            const options = {
+                limit: parseInt(limit),
+                category,
+                minRating: parseFloat(minRating)
+            }
+
+            const featuredProducts = await productQuicker.getFeaturedProductsAlgorithm(options)
+
+            if (type) {
+                const filteredProducts = featuredProducts.filter(product => product.type === type)
+                return httpResponse(req, res, 200, responseMessage.SUCCESS, filteredProducts)
+            }
+
+            httpResponse(req, res, 200, responseMessage.SUCCESS, featuredProducts)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+
+    getTrendingProducts: async (req, res, next) => {
+        try {
+            const { limit = 8, days = 7 } = req.query
+
+            const options = {
+                limit: parseInt(limit),
+                days: parseInt(days)
+            }
+
+            const trendingProducts = await productQuicker.getTrendingProducts(options)
+            httpResponse(req, res, 200, responseMessage.SUCCESS, trendingProducts)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+
+    getHighRatedProducts: async (req, res, next) => {
+        try {
+            const { limit = 6, minReviews = 3 } = req.query
+
+            const options = {
+                limit: parseInt(limit),
+                minReviews: parseInt(minReviews)
+            }
+
+            const highRatedProducts = await productQuicker.getHighRatedProducts(options)
+            httpResponse(req, res, 200, responseMessage.SUCCESS, highRatedProducts)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+
+    getRecentlyAdded: async (req, res, next) => {
+        try {
+            const { limit = 6, days = 30 } = req.query
+
+            const options = {
+                limit: parseInt(limit),
+                days: parseInt(days)
+            }
+
+            const recentProducts = await productQuicker.getRecentlyAddedProducts(options)
+            httpResponse(req, res, 200, responseMessage.SUCCESS, recentProducts)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+
+    getProductDiscovery: async (req, res, next) => {
+        try {
+            const [
+                featured,
+                trending,
+                highRated,
+                recentlyAdded
+            ] = await Promise.all([
+                productQuicker.getFeaturedProductsAlgorithm({ limit: 8 }),
+                productQuicker.getTrendingProducts({ limit: 6 }),
+                productQuicker.getHighRatedProducts({ limit: 6 }),
+                productQuicker.getRecentlyAddedProducts({ limit: 6 })
+            ])
+
+            const discoveryData = {
+                featured,
+                trending,
+                highRated,
+                recentlyAdded,
+                totalSections: 4
+            }
+
+            httpResponse(req, res, 200, responseMessage.SUCCESS, discoveryData)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    }
 }

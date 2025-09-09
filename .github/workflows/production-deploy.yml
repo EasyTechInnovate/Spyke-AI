@@ -60,10 +60,7 @@ jobs:
                       exit 1
                     fi
 
-                    # SSL Certificate Setup with Certbot
-                    echo '🔒 Checking/Updating SSL certificates...'
-                    certbot certonly --standalone -d $DOMAIN --non-interactive --agree-tos -m srikanishkav@gmail.com || { echo '❌ Certbot failed'; exit 1; }
-                    
+
                     # Stop existing containers
                     echo '🛑 Stopping existing containers...'
                     docker compose -f Docker/docker-compose.yml --profile production down || true

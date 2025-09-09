@@ -1,0 +1,36 @@
+### Authentication Extra APIs
+
+@baseUrl = http://localhost:5000/v1
+@authToken = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE0MTkyY2NmNTlhNTI5MDM1MDg5NzkiLCJlbWFpbEFkZHJlc3MiOiJ0ZXN0QGdtYWlsLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzU1NTg0ODQ5LCJleHAiOjE3NTU1ODg0NDl9.j-KoGyqF2dpP2soX_UbY_IrFLNuXPkjvlMYGi2gB8MQ
+
+### 1. Resend Verification Email
+POST {{baseUrl}}/auth/resend-verification
+Content-Type: application/json
+
+{
+  "emailAddress": "test@gmail.com"
+}
+
+### 2. Resend Verification for Different User
+POST {{baseUrl}}/auth/resend-verification
+Content-Type: application/json
+
+{
+  "emailAddress": "anandjunk1308@gmail.com"
+}
+
+### 3. Test Resend for Already Verified Account (Should Fail)
+POST {{baseUrl}}/auth/resend-verification
+Content-Type: application/json
+
+{
+  "emailAddress": "verified@gmail.com"
+}
+
+### 4. Test Resend for Non-existent User (Should Fail)
+POST {{baseUrl}}/auth/resend-verification
+Content-Type: application/json
+
+{
+  "emailAddress": "nonexistent@gmail.com"
+}

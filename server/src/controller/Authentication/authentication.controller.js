@@ -699,5 +699,58 @@ export default {
         } catch (err) {
             httpError(next, err, req, 500)
         }
+    },
+
+    resendVerification: async (req, res, next) => {
+        try {
+            const { emailAddress } = req.body
+
+            const user = await userModel.findOne({ emailAddress: emailAddress.toLowerCase() })
+            if (!user) {
+                return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('User')), req, 404)
+            }
+
+            if (user.accountConfirmation.status) {
+                return httpError(next, new Error('Account is already verified'), req, 400)
+            }
+
+            const token = quicker.generateRandomId()
+            const code = quicker.generateOtp(6)
+
+            user.accountConfirmation.token = token
+            user.accountConfirmation.code = code
+            user.accountConfirmation.timestamp = dayjs().utc().toDate()
+            await user.save()
+
+            const confirmationUrl = `${config.client.url}/auth/confirm/${token}?code=${code}`
+            
+            const registrationEmail = emailTemplates.registration({
+                emailAddress: user.emailAddress,
+                confirmationUrl
+            })
+
+            try {
+                await emailService.sendEmail(
+                    user.emailAddress,
+                    registrationEmail.subject,
+                    registrationEmail.text,
+                    registrationEmail.html
+                )
+            } catch (emailError) {
+                console.error('Failed to send verification email:', emailError)
+                return httpError(next, new Error('Failed to send verification email'), req, 500)
+            }
+
+            await notificationService.sendToUser(
+                user._id,
+                'Verification Email Sent',
+                'A new verification email has been sent to your email address. Please check your inbox.',
+                'info'
+            )
+
+            httpResponse(req, res, 200, 'Verification email sent successfully')
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
     }
 }
