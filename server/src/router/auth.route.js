@@ -31,5 +31,6 @@ router.route('/notifications/read').post(authentication, validateRequest(authSch
 router.route('/notifications/read-all').post(authentication, authenticationController.markAllNotificationsRead)
 router.route('/notifications/send').post(authentication, authorization([EUserRole.ADMIN]), validateRequest(authSchemas.sendNotification), authenticationController.sendNotification)
 router.route('/notifications/send-bulk').post(authentication, authorization([EUserRole.ADMIN]), validateRequest(authSchemas.sendBulkNotification), authenticationController.sendBulkNotification)
+router.route('/resend-verification').post(authenticationController.resendVerification)
 
 export default router
