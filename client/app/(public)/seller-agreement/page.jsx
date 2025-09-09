@@ -341,7 +341,7 @@ export default function SellerAgreementPage() {
                                             Join thousands of creators monetizing their AI expertise on SpykeAI
                                         </p>
                                         <Link
-                                            href="/become-seller"
+                                            href="/signup"
                                             className="inline-flex items-center gap-2 px-8 py-4 bg-[#00FF89] text-black font-semibold rounded-xl hover:bg-[#00FF89]/90 transition-all duration-300"
                                         >
                                             <Handshake className="w-5 h-5" />
