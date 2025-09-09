@@ -4,7 +4,6 @@ import {
   Users,
   ShoppingCart,
   Lock,
-  BarChart3,
   Percent,
   CreditCard
 } from 'lucide-react';
@@ -64,7 +63,8 @@ export const appConfig = {
         'Profile Management',
         'Token Refresh',
         'Notifications',
-        'Email Availability Check'
+        'Email Availability Check',
+        'Resend Verification Email'
       ]
     },
     {
@@ -107,6 +107,11 @@ export const appConfig = {
       endpoints: [
         'Product CRUD Operations',
         'Product Discovery',
+        'Featured Products Algorithm',
+        'Trending Products',
+        'High Rated Products',
+        'Recently Added Products',
+        'Complete Discovery Dashboard',
         'Product Reviews',
         'Favorites & Upvotes',
         'Related Products',
@@ -116,20 +121,20 @@ export const appConfig = {
         'Product Verification'
       ]
     },
-    {
-      id: 'analytics',
-      name: 'Analytics & Tracking',
-      icon: BarChart3,
-      color: 'from-[#FFC050] to-[#00FF89]',
-      healthEndpoint: '/analytics/self',
-      description: 'Event tracking, analytics, and system monitoring',
-      endpoints: [
-        'Event Tracking',
-        'Analytics Data Retrieval',
-        'Statistics Generation',
-        'Data Management'
-      ]
-    },
+    // {
+    //   id: 'analytics',
+    //   name: 'Analytics & Tracking',
+    //   icon: BarChart3,
+    //   color: 'from-[#FFC050] to-[#00FF89]',
+    //   healthEndpoint: '/analytics/self',
+    //   description: 'Event tracking, analytics, and system monitoring',
+    //   endpoints: [
+    //     'Event Tracking',
+    //     'Analytics Data Retrieval',
+    //     'Statistics Generation',
+    //     'Data Management'
+    //   ]
+    // },
     {
       id: 'purchase',
       name: 'Purchase & Cart Management',
