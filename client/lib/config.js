@@ -64,7 +64,8 @@ export const appConfig = {
         'Profile Management',
         'Token Refresh',
         'Notifications',
-        'Email Availability Check'
+        'Email Availability Check',
+        'Resend Verification Email'
       ]
     },
     {
@@ -107,6 +108,11 @@ export const appConfig = {
       endpoints: [
         'Product CRUD Operations',
         'Product Discovery',
+        'Featured Products Algorithm',
+        'Trending Products',
+        'High Rated Products',
+        'Recently Added Products',
+        'Complete Discovery Dashboard',
         'Product Reviews',
         'Favorites & Upvotes',
         'Related Products',
@@ -122,12 +128,29 @@ export const appConfig = {
       icon: BarChart3,
       color: 'from-[#FFC050] to-[#00FF89]',
       healthEndpoint: '/analytics/self',
-      description: 'Event tracking, analytics, and system monitoring',
+      description: 'Comprehensive analytics, reporting, and business intelligence',
       endpoints: [
-        'Event Tracking',
-        'Analytics Data Retrieval',
-        'Statistics Generation',
-        'Data Management'
+        'User Dashboard Analytics',
+        'Purchase History Analytics',
+        'Favorite Products Analytics',
+        'User Activity Tracking',
+        'Spending Insights',
+        'Seller Dashboard Analytics',
+        'Product Performance Analytics',
+        'Sales Analytics',
+        'Revenue Analytics',
+        'Customer Analytics',
+        'Platform Overview Analytics',
+        'User Management Analytics',
+        'Seller Management Analytics',
+        'Product Management Analytics',
+        'Sales Management Analytics',
+        'Promocode Analytics',
+        'Revenue Management Analytics',
+        'User Trends (7-365 days)',
+        'Seller Trends (7-365 days)',
+        'Feedback & Reviews Analytics',
+        'Traffic & Visitor Analytics'
       ]
     },
     {
