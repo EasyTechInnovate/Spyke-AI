@@ -1,6 +1,7 @@
 export const EApplicationEnvironment = Object.freeze({
     PRODUCTION: 'production',
-    DEVELOPMENT: 'development'
+    DEVELOPMENT: 'development',
+    QA: 'qa'
 });
 
 export const EUserRole = Object.freeze({
