@@ -4,6 +4,7 @@ import {
   Users,
   ShoppingCart,
   Lock,
+  BarChart3,
   Percent,
   CreditCard
 } from 'lucide-react';
@@ -121,20 +122,37 @@ export const appConfig = {
         'Product Verification'
       ]
     },
-    // {
-    //   id: 'analytics',
-    //   name: 'Analytics & Tracking',
-    //   icon: BarChart3,
-    //   color: 'from-[#FFC050] to-[#00FF89]',
-    //   healthEndpoint: '/analytics/self',
-    //   description: 'Event tracking, analytics, and system monitoring',
-    //   endpoints: [
-    //     'Event Tracking',
-    //     'Analytics Data Retrieval',
-    //     'Statistics Generation',
-    //     'Data Management'
-    //   ]
-    // },
+    {
+      id: 'analytics',
+      name: 'Analytics & Tracking',
+      icon: BarChart3,
+      color: 'from-[#FFC050] to-[#00FF89]',
+      healthEndpoint: '/analytics/self',
+      description: 'Comprehensive analytics, reporting, and business intelligence',
+      endpoints: [
+        'User Dashboard Analytics',
+        'Purchase History Analytics',
+        'Favorite Products Analytics',
+        'User Activity Tracking',
+        'Spending Insights',
+        'Seller Dashboard Analytics',
+        'Product Performance Analytics',
+        'Sales Analytics',
+        'Revenue Analytics',
+        'Customer Analytics',
+        'Platform Overview Analytics',
+        'User Management Analytics',
+        'Seller Management Analytics',
+        'Product Management Analytics',
+        'Sales Management Analytics',
+        'Promocode Analytics',
+        'Revenue Management Analytics',
+        'User Trends (7-365 days)',
+        'Seller Trends (7-365 days)',
+        'Feedback & Reviews Analytics',
+        'Traffic & Visitor Analytics'
+      ]
+    },
     {
       id: 'purchase',
       name: 'Purchase & Cart Management',

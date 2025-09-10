@@ -1,0 +1,469 @@
+### Analytics APIs
+
+@baseUrl = http://localhost:5000/v1
+@authToken = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE0MTkyY2NmNTlhNTI5MDM1MDg5NzkiLCJlbWFpbEFkZHJlc3MiOiJ0ZXN0QGdtYWlsLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzU1NTg0ODQ5LCJleHAiOjE3NTU1ODg0NDl9.j-KoGyqF2dpP2soX_UbY_IrFLNuXPkjvlMYGi2gB8MQ
+@sellerToken = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE3MDhmYzU4NmZiZTQzY2MwM2Y1MGMiLCJlbWFpbEFkZHJlc3MiOiJzcDYxMzMxNDZAZ21haWwuY29tIiwicm9sZXMiOlsidXNlciIsInNlbGxlciJdLCJpYXQiOjE3NTc0OTA0NDgsImV4cCI6MTc1NzQ5NDA0OH0.hLHvwkY0y9fsJ28aq3QyNRUlWRW6sd8VeKMwGmxvOX8
+@adminToken = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGE0MTkyY2NmNTlhNTI5MDM1MDg5NzkiLCJlbWFpbEFkZHJlc3MiOiJhZG1pbkBnbWFpbC5jb20iLCJyb2xlcyI6WyJhZG1pbiJdLCJpYXQiOjE3NTU1ODQ4NDksImV4cCI6MTc1NTU4ODQ0OX0.xyz789
+
+### 1. Service Health Check
+GET {{baseUrl}}/analytics/self
+Content-Type: application/json
+
+###############################################################################
+### USER ANALYTICS
+###############################################################################
+
+### 2. User Dashboard Analytics
+GET {{baseUrl}}/analytics/user/dashboard
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 3. User Purchase History (Default)
+GET {{baseUrl}}/analytics/user/purchases
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 4. User Purchase History with Pagination
+GET {{baseUrl}}/analytics/user/purchases?page=1&limit=5&sortBy=createdAt&sortOrder=desc
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 5. User Purchase History with Date Filter
+GET {{baseUrl}}/analytics/user/purchases?dateFrom=2024-01-01&dateTo=2024-12-31&category=hiring
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 6. User Favorite Analytics (Default)
+GET {{baseUrl}}/analytics/user/favorites
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 7. User Favorite Analytics with Pagination
+GET {{baseUrl}}/analytics/user/favorites?page=1&limit=10
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 8. User Activity Analytics (30 days)
+GET {{baseUrl}}/analytics/user/activity?period=30d
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 9. User Activity Analytics (7 days)
+GET {{baseUrl}}/analytics/user/activity?period=7d
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 10. User Activity Analytics (90 days)
+GET {{baseUrl}}/analytics/user/activity?period=90d
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 11. User Activity Analytics (1 year)
+GET {{baseUrl}}/analytics/user/activity?period=1y
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 12. User Spending Insights
+GET {{baseUrl}}/analytics/user/spending
+Content-Type: application/json
+Authorization: {{authToken}}
+
+###############################################################################
+### SELLER ANALYTICS
+###############################################################################
+
+### 13. Seller Dashboard Analytics
+GET {{baseUrl}}/analytics/seller/dashboard
+Content-Type: application/json
+Authorization: {{sellerToken}}
+
+### 14. Seller Product Analytics (Default)
+GET {{baseUrl}}/analytics/seller/products
+Content-Type: application/json
+Authorization: {{sellerToken}}
+
+### 15. Seller Product Analytics with Filters
+GET {{baseUrl}}/analytics/seller/products?page=1&limit=10&sortBy=salesCount&sortOrder=desc&category=hiring
+Content-Type: application/json
+Authorization: {{sellerToken}}
+
+### 16. Seller Product Analytics by Status
+GET {{baseUrl}}/analytics/seller/products?status=published&sortBy=viewCount&sortOrder=desc
+Content-Type: application/json
+Authorization: {{sellerToken}}
+
+### 17. Seller Sales Analytics (30 days)
+GET {{baseUrl}}/analytics/seller/sales?period=30d&page=1&limit=20
+Content-Type: application/json
+Authorization: {{sellerToken}}
+
+### 18. Seller Sales Analytics (7 days)
+GET {{baseUrl}}/analytics/seller/sales?period=7d&limit=10
+Content-Type: application/json
+Authorization: {{sellerToken}}
+
+### 19. Seller Sales Analytics (90 days)
+GET {{baseUrl}}/analytics/seller/sales?period=90d&limit=25
+Content-Type: application/json
+Authorization: {{sellerToken}}
+
+### 20. Seller Sales Analytics (1 year)
+GET {{baseUrl}}/analytics/seller/sales?period=1y&limit=50
+Content-Type: application/json
+Authorization: {{sellerToken}}
+
+### 21. Seller Revenue Analytics
+GET {{baseUrl}}/analytics/seller/revenue
+Content-Type: application/json
+Authorization: {{sellerToken}}
+
+### 22. Seller Customer Analytics (Default)
+GET {{baseUrl}}/analytics/seller/customers
+Content-Type: application/json
+Authorization: {{sellerToken}}
+
+### 23. Seller Customer Analytics with Pagination
+GET {{baseUrl}}/analytics/seller/customers?page=1&limit=15
+Content-Type: application/json
+Authorization: {{sellerToken}}
+
+###############################################################################
+### ADMIN ANALYTICS
+###############################################################################
+
+### 24. Admin Platform Analytics
+GET {{baseUrl}}/analytics/admin/platform
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 25. Admin User Analytics (Default)
+GET {{baseUrl}}/analytics/admin/users
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 26. Admin User Analytics with Filters
+GET {{baseUrl}}/analytics/admin/users?page=1&limit=20&sortBy=createdAt&sortOrder=desc&role=user
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 27. Admin User Analytics by Status
+GET {{baseUrl}}/analytics/admin/users?status=active&limit=25
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 28. Admin Seller Analytics (Default)
+GET {{baseUrl}}/analytics/admin/sellers
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 29. Admin Seller Analytics with Filters
+GET {{baseUrl}}/analytics/admin/sellers?page=1&limit=20&sortBy=totalRevenue&sortOrder=desc
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 30. Admin Seller Analytics by Verification Status
+GET {{baseUrl}}/analytics/admin/sellers?verificationStatus=verified&limit=15
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 31. Admin Product Analytics (Default)
+GET {{baseUrl}}/analytics/admin/products
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 32. Admin Product Analytics with Filters
+GET {{baseUrl}}/analytics/admin/products?page=1&limit=20&category=hiring&status=published&sortBy=viewCount&sortOrder=desc
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 33. Admin Product Analytics by Category
+GET {{baseUrl}}/analytics/admin/products?category=automation&limit=25
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 34. Admin Sales Analytics (30 days)
+GET {{baseUrl}}/analytics/admin/sales?period=30d&page=1&limit=50
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 35. Admin Sales Analytics (7 days)
+GET {{baseUrl}}/analytics/admin/sales?period=7d&limit=25
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 36. Admin Sales Analytics (90 days)
+GET {{baseUrl}}/analytics/admin/sales?period=90d&limit=100
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 37. Admin Sales Analytics (1 year)
+GET {{baseUrl}}/analytics/admin/sales?period=1y&limit=200
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 38. Admin Promocode Analytics (Default)
+GET {{baseUrl}}/analytics/admin/promocodes
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 39. Admin Promocode Analytics with Filters
+GET {{baseUrl}}/analytics/admin/promocodes?page=1&limit=20&status=active&sortBy=totalUsage&sortOrder=desc
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 40. Admin Promocode Analytics by Status
+GET {{baseUrl}}/analytics/admin/promocodes?status=active&limit=15
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 41. Admin Revenue Analytics
+GET {{baseUrl}}/analytics/admin/revenue
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 42. Admin User Trends (7 days)
+GET {{baseUrl}}/analytics/admin/user-trends?period=7d
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 43. Admin User Trends (15 days)
+GET {{baseUrl}}/analytics/admin/user-trends?period=15d
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 44. Admin User Trends (30 days)
+GET {{baseUrl}}/analytics/admin/user-trends?period=30d
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 45. Admin User Trends (90 days)
+GET {{baseUrl}}/analytics/admin/user-trends?period=90d
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 46. Admin User Trends (365 days)
+GET {{baseUrl}}/analytics/admin/user-trends?period=365d
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 47. Admin Seller Trends (7 days)
+GET {{baseUrl}}/analytics/admin/seller-trends?period=7d
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 48. Admin Seller Trends (15 days)
+GET {{baseUrl}}/analytics/admin/seller-trends?period=15d
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 49. Admin Seller Trends (30 days)
+GET {{baseUrl}}/analytics/admin/seller-trends?period=30d
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 50. Admin Seller Trends (90 days)
+GET {{baseUrl}}/analytics/admin/seller-trends?period=90d
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 51. Admin Seller Trends (365 days)
+GET {{baseUrl}}/analytics/admin/seller-trends?period=365d
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 52. Admin Feedback Analytics (7 days)
+GET {{baseUrl}}/analytics/admin/feedback?period=7d&page=1&limit=10
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 53. Admin Feedback Analytics (30 days)
+GET {{baseUrl}}/analytics/admin/feedback?period=30d&page=1&limit=20
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 54. Admin Feedback Analytics (90 days)
+GET {{baseUrl}}/analytics/admin/feedback?period=90d&page=1&limit=25
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 55. Admin Traffic Analytics (7 days)
+GET {{baseUrl}}/analytics/admin/traffic?period=7d
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 56. Admin Traffic Analytics (30 days)
+GET {{baseUrl}}/analytics/admin/traffic?period=30d
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 57. Admin Traffic Analytics (90 days)
+GET {{baseUrl}}/analytics/admin/traffic?period=90d
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 58. Admin Traffic Analytics (365 days)
+GET {{baseUrl}}/analytics/admin/traffic?period=365d
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+###############################################################################
+### ERROR SCENARIOS & EDGE CASES
+###############################################################################
+
+### 59. Unauthorized Access (No Token)
+GET {{baseUrl}}/analytics/user/dashboard
+Content-Type: application/json
+
+### 60. Invalid Token
+GET {{baseUrl}}/analytics/user/dashboard
+Content-Type: application/json
+Authorization: Bearer invalid-token-here
+
+### 61. User Trying to Access Seller Routes
+GET {{baseUrl}}/analytics/seller/dashboard
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 62. User Trying to Access Admin Routes
+GET {{baseUrl}}/analytics/admin/platform
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 63. Seller Trying to Access Admin Routes
+GET {{baseUrl}}/analytics/admin/platform
+Content-Type: application/json
+Authorization: {{sellerToken}}
+
+### 64. Invalid Pagination Parameters
+GET {{baseUrl}}/analytics/user/purchases?page=0&limit=0
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 65. Invalid Date Parameters
+GET {{baseUrl}}/analytics/user/purchases?dateFrom=invalid-date&dateTo=2024-12-31
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 66. Invalid Period Parameter
+GET {{baseUrl}}/analytics/user/activity?period=invalid
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 67. Large Limit Test (Performance)
+GET {{baseUrl}}/analytics/admin/sales?limit=1000&period=1y
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 68. Invalid Period for Trends
+GET {{baseUrl}}/analytics/admin/user-trends?period=invalid
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### 69. Test All Periods for User Trends
+GET {{baseUrl}}/analytics/admin/user-trends?period=7d
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+###
+GET {{baseUrl}}/analytics/admin/user-trends?period=15d
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+###
+GET {{baseUrl}}/analytics/admin/user-trends?period=30d
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+###
+GET {{baseUrl}}/analytics/admin/user-trends?period=90d
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+###
+GET {{baseUrl}}/analytics/admin/user-trends?period=365d
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+###############################################################################
+### PERFORMANCE & LOAD TESTING
+###############################################################################
+
+### 70. Concurrent User Dashboard Requests
+GET {{baseUrl}}/analytics/user/dashboard
+Content-Type: application/json
+Authorization: {{authToken}}
+
+###
+GET {{baseUrl}}/analytics/user/purchases
+Content-Type: application/json
+Authorization: {{authToken}}
+
+###
+GET {{baseUrl}}/analytics/user/favorites
+Content-Type: application/json
+Authorization: {{authToken}}
+
+###
+GET {{baseUrl}}/analytics/user/activity
+Content-Type: application/json
+Authorization: {{authToken}}
+
+###
+GET {{baseUrl}}/analytics/user/spending
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 71. Concurrent Seller Analytics Requests
+GET {{baseUrl}}/analytics/seller/dashboard
+Content-Type: application/json
+Authorization: {{sellerToken}}
+
+###
+GET {{baseUrl}}/analytics/seller/products
+Content-Type: application/json
+Authorization: {{sellerToken}}
+
+###
+GET {{baseUrl}}/analytics/seller/sales
+Content-Type: application/json
+Authorization: {{sellerToken}}
+
+###
+GET {{baseUrl}}/analytics/seller/revenue
+Content-Type: application/json
+Authorization: {{sellerToken}}
+
+###
+GET {{baseUrl}}/analytics/seller/customers
+Content-Type: application/json
+Authorization: {{sellerToken}}
+
+### 72. Concurrent Admin Analytics Requests
+GET {{baseUrl}}/analytics/admin/platform
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+###
+GET {{baseUrl}}/analytics/admin/users
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+###
+GET {{baseUrl}}/analytics/admin/sellers
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+###
+GET {{baseUrl}}/analytics/admin/products
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+###
+GET {{baseUrl}}/analytics/admin/sales
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+###
+GET {{baseUrl}}/analytics/admin/revenue
+Content-Type: application/json
+Authorization: {{adminToken}}
