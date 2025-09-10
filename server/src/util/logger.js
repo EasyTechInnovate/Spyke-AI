@@ -111,26 +111,78 @@ const fileLogFormat = format.printf((info) => {
 })
 
 const fileTransport = () => {
-    return [
-        new transports.File({
-            filename: path.join(logDir, `${config.env}.log`), // Use corrected logDir
-            level: 'info',
-            format: format.combine(format.timestamp(), fileLogFormat)
-        })
-    ]
+    // Only log to files in development environment
+    if (config.env === EApplicationEnvironment.DEVELOPMENT) {
+        return [
+            new transports.File({
+                filename: path.join(logDir, `${config.env}.log`),
+                level: 'info',
+                format: format.combine(format.timestamp(), fileLogFormat)
+            })
+        ]
+    }
+    
+    // In production and QA, only log errors to files
+    if (config.env === EApplicationEnvironment.PRODUCTION || config.env === EApplicationEnvironment.QA) {
+        return [
+            new transports.File({
+                filename: path.join(logDir, `${config.env}-errors.log`),
+                level: 'error',
+                format: format.combine(format.timestamp(), fileLogFormat),
+                maxsize: 10485760, // 10MB
+                maxFiles: 5,
+                tailable: true
+            })
+        ]
+    }
+    
+    return []
 }
 
 const mongodbTransport = () => {
-    return [
-        new transports.MongoDB({
-            level: 'info',
-            db: config.database.url,
-            metaKey: 'meta',
-            expireAfterSeconds: 3600 * 24 * 30,
-            collection: 'application-logs',
-            format: format.combine(format.timestamp(), transformMeta())
-        })
-    ]
+    // Development: log all levels with shorter retention
+    if (config.env === EApplicationEnvironment.DEVELOPMENT) {
+        return [
+            new transports.MongoDB({
+                level: 'info',
+                db: config.database.url,
+                metaKey: 'meta',
+                expireAfterSeconds: 3600 * 24 * 7, // 7 days in development
+                collection: 'application-logs',
+                format: format.combine(format.timestamp(), transformMeta())
+            })
+        ]
+    }
+    
+    // QA: log warnings and errors with moderate retention
+    if (config.env === EApplicationEnvironment.QA) {
+        return [
+            new transports.MongoDB({
+                level: 'warn',
+                db: config.database.url,
+                metaKey: 'meta',
+                expireAfterSeconds: 3600 * 24 * 14, // 14 days in QA
+                collection: 'application-logs',
+                format: format.combine(format.timestamp(), transformMeta())
+            })
+        ]
+    }
+    
+    // Production: only log errors with longer retention
+    if (config.env === EApplicationEnvironment.PRODUCTION) {
+        return [
+            new transports.MongoDB({
+                level: 'error',
+                db: config.database.url,
+                metaKey: 'meta',
+                expireAfterSeconds: 3600 * 24 * 90, // 90 days in production for compliance
+                collection: 'application-logs',
+                format: format.combine(format.timestamp(), transformMeta())
+            })
+        ]
+    }
+    
+    return []
 }
 
 export default createLogger({
