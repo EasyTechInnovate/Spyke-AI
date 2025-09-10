@@ -1,14 +1,16 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { CheckCircle, XCircle, Clock, Database, Globe, Activity } from 'lucide-react'
+import React, { useState, useEffect, useMemo } from 'react'
+import { CheckCircle, XCircle, Clock, Database, Globe, Activity, Server, Zap, Shield, Code, Terminal, GitBranch, Monitor } from 'lucide-react'
 import { appConfig, getTotalEndpoints, buildApiUrl } from '@/lib/config'
 import { SpykeLogo } from '@/components/Logo'
+import Container from '@/components/shared/layout/Container'
 
 export default function APIPage() {
     const [serviceStatus, setServiceStatus] = useState({})
     const [loading, setLoading] = useState(true)
     const [mounted, setMounted] = useState(false)
+    const [selectedService, setSelectedService] = useState(null)
 
     useEffect(() => {
         setMounted(true)
@@ -75,7 +77,26 @@ export default function APIPage() {
         return () => clearInterval(interval)
     }, [])
 
-    const getOverallStatus = () => {
+    // Memoized computed values
+    const computedStats = useMemo(() => {
+        const totalServices = appConfig.services.length
+        const totalEndpoints = getTotalEndpoints()
+        const onlineServices = Object.values(serviceStatus).filter((s) => s?.status === 'online').length
+        const uptimeTarget = appConfig.company.uptimeTarget
+        const avgResponseTime = Object.values(serviceStatus)
+            .filter((s) => s?.responseTime)
+            .reduce((acc, s, _, arr) => acc + s.responseTime / arr.length, 0)
+
+        return {
+            totalServices,
+            totalEndpoints,
+            onlineServices,
+            uptimeTarget,
+            avgResponseTime: Math.round(avgResponseTime) || 0
+        }
+    }, [serviceStatus])
+
+    const overallStatus = useMemo(() => {
         if (loading) return 'checking'
 
         const statuses = Object.values(serviceStatus)
@@ -85,27 +106,25 @@ export default function APIPage() {
         if (onlineServices === totalServices) return 'all-operational'
         if (onlineServices > totalServices / 2) return 'partial-outage'
         return 'major-outage'
-    }
+    }, [loading, serviceStatus])
 
-    const getStatusMessage = () => {
-        const overall = getOverallStatus()
-        switch (overall) {
+    const statusMessage = useMemo(() => {
+        switch (overallStatus) {
             case 'checking':
-                return appConfig.statusMessages.checking
+                return 'System Health Check in Progress...'
             case 'all-operational':
-                return appConfig.statusMessages.allOperational
+                return 'All Systems Operational'
             case 'partial-outage':
-                return appConfig.statusMessages.partialOutage
+                return 'Partial Service Degradation'
             case 'major-outage':
-                return appConfig.statusMessages.majorOutage
+                return 'Major Service Outage'
             default:
-                return appConfig.statusMessages.unknown
+                return 'Status Unknown'
         }
-    }
+    }, [overallStatus])
 
-    const getStatusColor = () => {
-        const overall = getOverallStatus()
-        switch (overall) {
+    const statusColor = useMemo(() => {
+        switch (overallStatus) {
             case 'checking':
                 return 'text-[#FFC050] bg-[#FFC050]/10 border-[#FFC050]/30'
             case 'all-operational':
@@ -117,14 +136,19 @@ export default function APIPage() {
             default:
                 return 'text-gray-500 bg-gray-500/10 border-gray-500/30'
         }
-    }
+    }, [overallStatus])
+
+    const healthData = useMemo(() => {
+        const healthService = serviceStatus['health'] || Object.values(serviceStatus).find((s) => s?.status === 'online' && s?.data?.data)
+        return healthService?.data?.data || null
+    }, [serviceStatus])
 
     const StatusIndicator = ({ status, compact = false }) => {
         if (loading) {
             return (
                 <div className={`flex items-center ${compact ? 'text-sm' : ''}`}>
                     <div className="w-3 h-3 bg-[#FFC050] rounded-full mr-2 animate-pulse"></div>
-                    <span className="font-medium text-gray-500 body-font">Checking...</span>
+                    <span className="font-medium text-gray-400 font-mono">CHECKING</span>
                 </div>
             )
         }
@@ -133,7 +157,7 @@ export default function APIPage() {
             return (
                 <div className={`flex items-center ${compact ? 'text-sm' : ''}`}>
                     <div className="w-3 h-3 bg-[#00FF89] rounded-full mr-2"></div>
-                    <span className="font-medium text-[#00FF89] body-font">Operational</span>
+                    <span className="font-medium text-[#00FF89] font-mono">ONLINE</span>
                 </div>
             )
         }
@@ -141,7 +165,7 @@ export default function APIPage() {
         return (
             <div className={`flex items-center ${compact ? 'text-sm' : ''}`}>
                 <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-                <span className="font-medium text-red-500 body-font">Offline</span>
+                <span className="font-medium text-red-500 font-mono">OFFLINE</span>
             </div>
         )
     }
@@ -174,227 +198,257 @@ export default function APIPage() {
     }
 
     return (
-        <div className="min-h-screen bg-white text-[#121212] body-font">
-            {/* Header */}
-            <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-white via-[#00FF89]/5 to-[#FFC050]/5"></div>
-                <div className="absolute inset-0 bg-[#00FF89] opacity-5"></div>
+        <div className="min-h-screen bg-[#121212]">
+            {/* Header Section */}
+            <section className="relative py-16 border-b border-gray-800">
+                <Container>
+                    <div className="text-center max-w-4xl mx-auto">
+                        <div className="mb-8"></div>
 
-                <div className="relative max-w-7xl mx-auto px-6 py-16">
-                    <div className="text-center">
-                        <div className="flex justify-center mb-8">
-                            <SpykeLogo size={64} showText={false} />
-                        </div>
+                        <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">{appConfig.company.fullName} Developer API</h1>
 
-                        <h1 className="text-6xl font-bold text-[#121212] mb-4 title-font">{appConfig.company.fullName}</h1>
-                        <div className="text-sm text-[#00FF89] mb-6 body-font">{appConfig.company.tagline}</div>
-                        <p className="text-2xl text-gray-600 mb-8 max-w-3xl mx-auto body-font">{appConfig.company.description}</p>
+                        <div className="text-[#00FF89] mb-6 font-mono text-lg">v2.1.0 • REST API • GraphQL Ready</div>
+
+                        <p className="text-lg text-gray-300 leading-relaxed mb-8">
+                            Production-grade APIs for AI marketplace integration. Real-time monitoring, comprehensive documentation, and
+                            developer-first experience.
+                        </p>
 
                         {/* Overall Status */}
-                        <div className={`inline-flex items-center px-8 py-4 rounded-2xl border-2 ${getStatusColor()} backdrop-blur-sm shadow-lg`}>
+                        <div className={`inline-flex items-center px-8 py-4 rounded-xl border ${statusColor}`}>
                             <div className="flex items-center space-x-3">
                                 {loading ? (
                                     <Clock className="w-6 h-6 animate-spin" />
-                                ) : getOverallStatus() === 'all-operational' ? (
+                                ) : overallStatus === 'all-operational' ? (
                                     <CheckCircle className="w-6 h-6" />
                                 ) : (
                                     <XCircle className="w-6 h-6" />
                                 )}
-                                <span className="text-xl font-semibold title-font">{getStatusMessage()}</span>
+                                <span className="text-xl font-semibold font-mono">{statusMessage}</span>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
 
-            {/* Summary Stats */}
-            <div className="max-w-7xl mx-auto px-6 mb-12">
-                <div className="bg-gradient-to-br from-[#00FF89]/10 to-[#FFC050]/10 backdrop-blur-sm rounded-3xl p-8 border border-[#00FF89]/20 shadow-lg">
-                    <div className="grid md:grid-cols-4 gap-8 text-center">
-                        <div className="bg-white/70 rounded-2xl p-6 border border-[#00FF89]/20 shadow-md">
+                        {/* Quick Access Links */}
+                        <div className="flex items-center justify-center gap-4 mt-8 flex-wrap">
+                            <a
+                                href="#documentation"
+                                className="flex items-center gap-2 px-4 py-2 bg-[#1f1f1f] border border-gray-700 rounded-lg hover:border-[#00FF89]/30 transition-colors">
+                                <Code className="w-4 h-4 text-[#00FF89]" />
+                                <span className="text-gray-300 font-mono text-sm">API Docs</span>
+                            </a>
+                            <a
+                                href="#swagger"
+                                className="flex items-center gap-2 px-4 py-2 bg-[#1f1f1f] border border-gray-700 rounded-lg hover:border-[#00FF89]/30 transition-colors">
+                                <Terminal className="w-4 h-4 text-[#00FF89]" />
+                                <span className="text-gray-300 font-mono text-sm">OpenAPI</span>
+                            </a>
+                            <a
+                                href="#sdk"
+                                className="flex items-center gap-2 px-4 py-2 bg-[#1f1f1f] border border-gray-700 rounded-lg hover:border-[#00FF89]/30 transition-colors">
+                                <GitBranch className="w-4 h-4 text-[#00FF89]" />
+                                <span className="text-gray-300 font-mono text-sm">SDKs</span>
+                            </a>
+                        </div>
+                    </div>
+                </Container>
+            </section>
+
+            {/* Technical Stats */}
+            <section className="py-16">
+                <Container>
+                    <div className="grid md:grid-cols-5 gap-6 text-center mb-16">
+                        <div className="bg-[#1f1f1f] rounded-xl p-6 border border-gray-800 hover:border-[#00FF89]/30 transition-colors">
                             <Database className="w-8 h-8 text-[#00FF89] mx-auto mb-3" />
-                            <div className="text-3xl font-bold text-[#121212] mb-2 title-font">{appConfig.services.length}</div>
-                            <div className="text-gray-600 font-medium body-font">Total Services</div>
+                            <div className="text-3xl font-bold text-white mb-2 font-mono">{computedStats.totalServices}</div>
+                            <div className="text-gray-400 font-medium text-sm">Microservices</div>
                         </div>
-                        <div className="bg-white/70 rounded-2xl p-6 border border-[#00FF89]/20 shadow-md">
+                        <div className="bg-[#1f1f1f] rounded-xl p-6 border border-gray-800 hover:border-[#00FF89]/30 transition-colors">
                             <Globe className="w-8 h-8 text-[#00FF89] mx-auto mb-3" />
-                            <div className="text-3xl font-bold text-[#121212] mb-2 title-font">{getTotalEndpoints()}</div>
-                            <div className="text-gray-600 font-medium body-font">Total Endpoints</div>
+                            <div className="text-3xl font-bold text-white mb-2 font-mono">{computedStats.totalEndpoints}</div>
+                            <div className="text-gray-400 font-medium text-sm">API Endpoints</div>
                         </div>
-                        <div className="bg-white/70 rounded-2xl p-6 border border-[#00FF89]/20 shadow-md">
+                        <div className="bg-[#1f1f1f] rounded-xl p-6 border border-gray-800 hover:border-[#00FF89]/30 transition-colors">
                             <CheckCircle className="w-8 h-8 text-[#00FF89] mx-auto mb-3" />
-                            <div className="text-3xl font-bold text-[#121212] mb-2 title-font">
-                                {Object.values(serviceStatus).filter((s) => s?.status === 'online').length}
-                            </div>
-                            <div className="text-gray-600 font-medium body-font">Services Online</div>
+                            <div className="text-3xl font-bold text-white mb-2 font-mono">{computedStats.onlineServices}</div>
+                            <div className="text-gray-400 font-medium text-sm">Online Services</div>
                         </div>
-                        <div className="bg-white/70 rounded-2xl p-6 border border-[#00FF89]/20 shadow-md">
+                        <div className="bg-[#1f1f1f] rounded-xl p-6 border border-gray-800 hover:border-[#00FF89]/30 transition-colors">
                             <Activity className="w-8 h-8 text-[#00FF89] mx-auto mb-3" />
-                            <div className="text-3xl font-bold text-[#121212] mb-2 title-font">{appConfig.company.uptimeTarget}</div>
-                            <div className="text-gray-600 font-medium body-font">Uptime Target</div>
+                            <div className="text-3xl font-bold text-white mb-2 font-mono">{computedStats.uptimeTarget}</div>
+                            <div className="text-gray-400 font-medium text-sm">SLA Uptime</div>
+                        </div>
+                        <div className="bg-[#1f1f1f] rounded-xl p-6 border border-gray-800 hover:border-[#00FF89]/30 transition-colors">
+                            <Zap className="w-8 h-8 text-[#00FF89] mx-auto mb-3" />
+                            <div className="text-3xl font-bold text-white mb-2 font-mono">{computedStats.avgResponseTime}ms</div>
+                            <div className="text-gray-400 font-medium text-sm">Avg Response</div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            {/* Services Grid */}
-            <div className="max-w-7xl mx-auto px-6 pb-20">
-                <div className="grid lg:grid-cols-2 gap-8">
-                    {appConfig.services.map((service, index) => {
-                        const Icon = service.icon
-                        const status = serviceStatus[service.id]
+                    {/* Service Status Grid */}
+                    <div className="grid lg:grid-cols-2 gap-8 mb-16">
+                        {appConfig.services.map((service, index) => {
+                            const Icon = service.icon
+                            const status = serviceStatus[service.id]
 
-                        return (
-                            <div
-                                key={service.id}
-                                className="bg-white/70 backdrop-blur-sm rounded-3xl border border-gray-100 shadow-lg hover:shadow-xl hover:border-[#00FF89]/30 transition-all duration-300 overflow-hidden">
-                                {/* Service Header */}
-                                <div className="p-8 border-b border-gray-100">
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex items-center space-x-4">
-                                            <div className={`p-4 rounded-2xl bg-gradient-to-r ${service.color} text-white shadow-lg`}>
-                                                <Icon className="w-8 h-8" />
+                            return (
+                                <div
+                                    key={service.id}
+                                    className="bg-[#1f1f1f] rounded-xl border border-gray-800 hover:border-[#00FF89]/30 transition-all duration-300 overflow-hidden group cursor-pointer"
+                                    onClick={() => setSelectedService(selectedService === service.id ? null : service.id)}>
+                                    {/* Service Header */}
+                                    <div className="p-6 border-b border-gray-800">
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex items-center space-x-4">
+                                                <div className="p-3 rounded-lg bg-[#00FF89] text-[#121212] group-hover:bg-[#FFC050] transition-colors">
+                                                    <Icon className="w-6 h-6" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-xl font-bold text-white mb-1 font-mono">{service.name}</h3>
+                                                    <p className="text-gray-400 mb-3 text-sm">{service.description}</p>
+                                                    <div className="flex items-center space-x-4 text-xs">
+                                                        <StatusIndicator
+                                                            status={status?.status}
+                                                            compact
+                                                        />
+                                                        <span className="text-gray-500 font-mono">{service.endpoints.length} endpoints</span>
+                                                        {status?.responseTime && (
+                                                            <span className="text-gray-500 font-mono">{status.responseTime}ms</span>
+                                                        )}
+                                                        <span className="text-gray-500 font-mono">RESTful</span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <h3 className="text-2xl font-bold text-[#121212] mb-2 title-font">{service.name}</h3>
-                                                <p className="text-gray-600 mb-3 leading-relaxed body-font">{service.description}</p>
-                                                <div className="flex items-center space-x-4">
-                                                    <StatusIndicator
-                                                        status={status?.status}
-                                                        compact
-                                                    />
-                                                    <span className="text-sm text-gray-500 body-font">{service.endpoints.length} endpoints</span>
-                                                    {status?.responseTime && (
-                                                        <span className="text-sm text-gray-500 body-font">{status.responseTime}ms</span>
-                                                    )}
+                                            <div className="text-right">
+                                                <div className="text-xs text-gray-500 font-mono mb-1">
+                                                    Last Check: {status?.lastChecked ? new Date(status.lastChecked).toLocaleTimeString() : 'N/A'}
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* Endpoints List */}
-                                <div className="p-8">
-                                    <h4 className="text-lg font-semibold text-[#121212] mb-4 title-font">Available Endpoints:</h4>
-                                    <div className="grid gap-3">
-                                        {service.endpoints.map((endpoint, endpointIndex) => (
-                                            <div
-                                                key={endpointIndex}
-                                                className="flex items-center space-x-3 p-3 bg-gray-50/50 rounded-xl border border-gray-100 hover:border-[#00FF89]/30 transition-colors">
-                                                <div className="w-2 h-2 bg-[#00FF89] rounded-full flex-shrink-0"></div>
-                                                <span className="text-gray-700 font-medium body-font">{endpoint}</span>
+                                    {/* Endpoints List */}
+                                    <div className="p-6">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h4 className="text-sm font-semibold text-white font-mono">API Endpoints</h4>
+                                            <div className="text-xs text-gray-500 font-mono">
+                                                Base URL: <span className="text-[#00FF89]">/api/v2/{service.id}</span>
                                             </div>
-                                        ))}
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            {service.endpoints
+                                                .slice(0, selectedService === service.id ? service.endpoints.length : 3)
+                                                .map((endpoint, endpointIndex) => (
+                                                    <div
+                                                        key={endpointIndex}
+                                                        className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg border border-gray-700 hover:border-[#00FF89]/30 transition-colors group/endpoint">
+                                                        <div className="flex items-center space-x-3">
+                                                            <div className="w-2 h-2 bg-[#00FF89] rounded-full flex-shrink-0 group-hover/endpoint:bg-[#FFC050] transition-colors"></div>
+                                                            <span className="text-gray-300 font-mono text-sm group-hover/endpoint:text-white transition-colors">
+                                                                {endpoint}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center space-x-2">
+                                                            <span className="text-xs text-gray-500 font-mono">GET</span>
+                                                            <div className="w-1 h-1 bg-gray-600 rounded-full"></div>
+                                                            <span className="text-xs text-gray-500 font-mono">JSON</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+
+                                            {service.endpoints.length > 3 && selectedService !== service.id && (
+                                                <div className="text-center py-2">
+                                                    <button className="text-xs text-[#00FF89] hover:text-[#FFC050] font-mono transition-colors">
+                                                        +{service.endpoints.length - 3} more endpoints
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Code Example */}
+                                        {selectedService === service.id && (
+                                            <div className="mt-6">
+                                                <h5 className="text-sm font-semibold text-white font-mono mb-3">Usage Example</h5>
+                                                <div className="bg-black/50 rounded-lg p-4 border border-gray-700">
+                                                    <pre className="text-xs text-gray-300 font-mono overflow-x-auto">
+                                                        {`curl -X GET \\
+  "https://api.spykeai.com/v2/${service.id}/${service.endpoints[0]}" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Content-Type: application/json"`}
+                                                    </pre>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
-                            </div>
-                        )
-                    })}
-                </div>
-
-                {/* Monitoring Information */}
-                <div className="text-center mt-16 bg-gradient-to-br from-[#00FF89]/10 to-[#FFC050]/10 backdrop-blur-sm rounded-3xl p-8 border border-[#00FF89]/20 shadow-lg">
-                    <h3 className="text-xl font-semibold text-[#121212] mb-4 title-font">Monitoring Information</h3>
-                    <div className="grid md:grid-cols-3 gap-6 text-gray-600">
-                        <div>
-                            <div className="font-semibold mb-2 text-[#00FF89] title-font">Real-time Updates</div>
-                            <p className="text-sm body-font">{appConfig.monitoring.realTimeUpdates}</p>
-                        </div>
-                        <div>
-                            <div className="font-semibold mb-2 text-[#00FF89] title-font">Last Updated</div>
-                            <p className="text-sm body-font">{new Date().toLocaleString()}</p>
-                        </div>
-                        <div>
-                            <div className="font-semibold mb-2 text-[#00FF89] title-font">Service Coverage</div>
-                            <p className="text-sm body-font">{appConfig.monitoring.serviceCoverage}</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* System Health Metrics */}
-                <div className="mt-8 bg-gradient-to-br from-[#00FF89]/10 to-[#FFC050]/10 backdrop-blur-sm rounded-3xl p-8 border border-[#00FF89]/20 shadow-lg">
-                    <h3 className="text-xl font-semibold text-[#121212] mb-6 text-center title-font">System Health Metrics</h3>
-
-                    {(() => {
-                        // Get health data from the main health service or first available online service
-                        const healthService =
-                            serviceStatus['health'] || Object.values(serviceStatus).find((s) => s?.status === 'online' && s?.data?.data)
-
-                        if (!healthService?.data?.data) {
-                            return (
-                                <div className="text-center py-8">
-                                    <div className="text-gray-500 mb-2 body-font">No health metrics available</div>
-                                    <div className="text-sm text-gray-400 body-font">Services must be online to display health data</div>
                                 </div>
                             )
-                        }
+                        })}
+                    </div>
 
-                        const { application, system } = healthService.data.data
-
-                        return (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
-                                {/* Environment */}
-                                {appConfig.healthDisplay.metricsToShow.environment && application?.environment && (
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600 body-font">Environment:</span>
-                                        <span className="text-[#121212] font-medium capitalize body-font">{application.environment}</span>
-                                    </div>
-                                )}
-
-                                {/* Uptime */}
-                                {appConfig.healthDisplay.metricsToShow.uptime && application?.uptime && (
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600 body-font">Uptime:</span>
-                                        <span className="text-[#121212] font-medium body-font">{formatUptime(application.uptime)}</span>
-                                    </div>
-                                )}
-
-                                {/* Memory Usage */}
-                                {appConfig.healthDisplay.metricsToShow.memoryUsage && application?.memoryUsage && (
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600 body-font">Heap Used:</span>
-                                        <span className="text-[#121212] font-medium body-font">{formatMemory(application.memoryUsage.heapUsed)}</span>
-                                    </div>
-                                )}
-
-                                {/* CPU Usage */}
-                                {appConfig.healthDisplay.metricsToShow.cpuUsage && system?.cpuUsage && (
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600 body-font">CPU Usage:</span>
-                                        <span className="text-[#121212] font-medium body-font">{formatCpuUsage(system.cpuUsage)}</span>
-                                    </div>
-                                )}
-
-                                {/* Free Memory */}
-                                {system?.freeMemory && (
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600 body-font">Free Memory:</span>
-                                        <span className="text-[#121212] font-medium body-font">{formatMemory(system.freeMemory)}</span>
-                                    </div>
-                                )}
-
-                                {/* Total Memory */}
-                                {system?.totalMemory && (
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600 body-font">Total Memory:</span>
-                                        <span className="text-[#121212] font-medium body-font">{formatMemory(system.totalMemory)}</span>
-                                    </div>
-                                )}
-
-                                {/* Heap Total */}
-                                {application?.memoryUsage?.heapTotal && (
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600 body-font">Heap Total:</span>
-                                        <span className="text-[#121212] font-medium body-font">
-                                            {formatMemory(application.memoryUsage.heapTotal)}
-                                        </span>
-                                    </div>
-                                )}
+                    {/* Technical Information */}
+                    <div className="bg-[#1f1f1f] rounded-xl p-8 border border-gray-800 hover:border-[#00FF89]/30 transition-colors">
+                        <h3 className="text-2xl font-bold text-[#00FF89] mb-6 text-center font-mono">Technical Specifications</h3>
+                        <div className="grid md:grid-cols-3 gap-6">
+                            <div className="text-center">
+                                <div className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
+                                    <Activity className="w-8 h-8 text-[#00FF89] mx-auto mb-3" />
+                                    <div className="font-semibold mb-2 text-[#00FF89] font-mono">Rate Limiting</div>
+                                    <p className="text-sm text-gray-400 font-mono">1000 req/min</p>
+                                    <p className="text-xs text-gray-500 font-mono mt-1">Per API key</p>
+                                </div>
                             </div>
-                        )
-                    })()}
-                </div>
-            </div>
+                            <div className="text-center">
+                                <div className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
+                                    <Clock className="w-8 h-8 text-[#00FF89] mx-auto mb-3" />
+                                    <div className="font-semibold mb-2 text-[#00FF89] font-mono">Monitoring</div>
+                                    <p className="text-sm text-gray-400 font-mono">Real-time</p>
+                                    <p className="text-xs text-gray-500 font-mono mt-1">5-second intervals</p>
+                                </div>
+                            </div>
+                            <div className="text-center">
+                                <div className="bg-gray-800/30 rounded-lg p-6 border border-gray-700">
+                                    <Shield className="w-8 h-8 text-[#00FF89] mx-auto mb-3" />
+                                    <div className="font-semibold mb-2 text-[#00FF89] font-mono">Security</div>
+                                    <p className="text-sm text-gray-400 font-mono">OAuth 2.0</p>
+                                    <p className="text-xs text-gray-500 font-mono mt-1">JWT + API Keys</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* API Version Info */}
+                        <div className="mt-8 pt-6 border-t border-gray-800">
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <h4 className="text-lg font-bold text-white mb-3 font-mono">API Versions</h4>
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center p-2 bg-gray-800/30 rounded">
+                                            <span className="font-mono text-sm text-gray-300">v2.1.0</span>
+                                            <span className="text-xs text-[#00FF89] font-mono">CURRENT</span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-2 bg-gray-800/30 rounded">
+                                            <span className="font-mono text-sm text-gray-300">v2.0.0</span>
+                                            <span className="text-xs text-gray-500 font-mono">DEPRECATED</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 className="text-lg font-bold text-white mb-3 font-mono">Response Formats</h4>
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center p-2 bg-gray-800/30 rounded">
+                                            <span className="font-mono text-sm text-gray-300">JSON</span>
+                                            <span className="text-xs text-[#00FF89] font-mono">DEFAULT</span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-2 bg-gray-800/30 rounded">
+                                            <span className="font-mono text-sm text-gray-300">XML</span>
+                                            <span className="text-xs text-gray-500 font-mono">AVAILABLE</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </Container>
+            </section>
         </div>
     )
 }

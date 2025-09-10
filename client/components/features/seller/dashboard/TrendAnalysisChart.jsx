@@ -191,4 +191,3 @@ export default function TrendAnalysisChart({ data, className = "" }) {
     </div>
   )
 }
-`

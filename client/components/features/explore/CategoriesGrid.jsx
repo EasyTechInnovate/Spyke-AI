@@ -30,7 +30,7 @@ export default function CategoriesGrid({ blogCategories = [] }) {
     } catch (err) {
       setCounts((prev) => ({ ...prev, [catId]: null }))
     }
-  }, [counts])
+  }, []) // Remove counts dependency to prevent infinite loop
 
   useEffect(() => {
     observerRef.current = new IntersectionObserver((entries) => {
@@ -51,7 +51,7 @@ export default function CategoriesGrid({ blogCategories = [] }) {
     return () => {
       if (observerRef.current) observerRef.current.disconnect()
     }
-  }, [fetchCount])
+  }, [fetchCount]) // fetchCount is now stable with empty deps
 
   const humanizeId = (id) => id.replace(/[_-]/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase())
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
 export function useHeroPerformance() {
   const [metrics, setMetrics] = useState({
@@ -8,10 +8,14 @@ export function useHeroPerformance() {
     tti: null,
     loadTime: null
   })
+  const observersRef = useRef([])
 
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return
+
     // Track First Contentful Paint
-    const observer = new PerformanceObserver((list) => {
+    const fcpObserver = new PerformanceObserver((list) => {
       const entries = list.getEntries()
       entries.forEach((entry) => {
         if (entry.name === 'first-contentful-paint') {
@@ -20,22 +24,16 @@ export function useHeroPerformance() {
       })
     })
 
-    if (typeof window !== 'undefined' && 'PerformanceObserver' in window) {
-      observer.observe({ entryTypes: ['paint'] })
-    }
-
     // Track Largest Contentful Paint
     const lcpObserver = new PerformanceObserver((list) => {
       const entries = list.getEntries()
       const lastEntry = entries[entries.length - 1]
-      setMetrics(prev => ({ ...prev, lcp: lastEntry.startTime }))
+      if (lastEntry) {
+        setMetrics(prev => ({ ...prev, lcp: lastEntry.startTime }))
+      }
     })
 
-    if (typeof window !== 'undefined' && 'PerformanceObserver' in window) {
-      lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] })
-    }
-
-    // Track Cumulative Layout Shift
+    // Track Cumulative Layout Shift with proper cleanup
     let clsScore = 0
     const clsObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
@@ -46,11 +44,20 @@ export function useHeroPerformance() {
       setMetrics(prev => ({ ...prev, cls: clsScore }))
     })
 
-    if (typeof window !== 'undefined' && 'PerformanceObserver' in window) {
-      clsObserver.observe({ entryTypes: ['layout-shift'] })
+    try {
+      if ('PerformanceObserver' in window) {
+        fcpObserver.observe({ entryTypes: ['paint'] })
+        lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] })
+        clsObserver.observe({ entryTypes: ['layout-shift'] })
+        
+        // Store observers for cleanup
+        observersRef.current = [fcpObserver, lcpObserver, clsObserver]
+      }
+    } catch (error) {
+      console.warn('Performance observers not supported:', error)
     }
 
-    // Track page load time
+    // Track page load time with single event listener
     const handleLoad = () => {
       const loadTime = performance.now()
       setMetrics(prev => ({ ...prev, loadTime }))
@@ -59,17 +66,21 @@ export function useHeroPerformance() {
     if (document.readyState === 'complete') {
       handleLoad()
     } else {
-      window.addEventListener('load', handleLoad)
+      window.addEventListener('load', handleLoad, { once: true })
     }
 
-    // Cleanup
+    // Cleanup function
     return () => {
-      observer.disconnect()
-      lcpObserver.disconnect()
-      clsObserver.disconnect()
-      window.removeEventListener('load', handleLoad)
+      observersRef.current.forEach(observer => {
+        try {
+          observer.disconnect()
+        } catch (error) {
+          console.warn('Error disconnecting observer:', error)
+        }
+      })
+      observersRef.current = []
     }
-  }, [])
+  }, []) // Empty dependency array - run once on mount
 
   return metrics
 }

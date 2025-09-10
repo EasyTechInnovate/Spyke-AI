@@ -37,163 +37,178 @@ export function useNotifications() {
                 type: params.type
             })
 
-            const data = response?.data || response
-
-            if (params.append) {
-                setNotifications(prev => [...prev, ...data.notifications])
-            } else {
-                setNotifications(data.notifications || [])
+            if (response?.data) {
+                const { notifications: newNotifications = [], pagination: newPagination = {} } = response.data
+                
+                setNotifications(newNotifications)
+                setPagination(prev => ({
+                    ...prev,
+                    ...newPagination
+                }))
+                
+                // Update unread count
+                const unread = newNotifications.filter(n => !n.read).length
+                setUnreadCount(unread)
             }
-
-            setUnreadCount(data.unreadCount || 0)
-            setPagination(data.pagination || {
-                page: 1,
-                limit: 10,
-                total: 0,
-                totalPages: 0
-            })
-            
-            return data
-        } catch (err) {
-            setError(err.message || 'Failed to fetch notifications')
-            console.error('Failed to fetch notifications:', err)
+        } catch (error) {
+            console.error('Failed to fetch notifications:', error)
+            setError(error.message || 'Failed to load notifications')
         } finally {
             setLoading(false)
         }
-    }, [isAuthenticated]) // Removed pagination dependency to prevent loop
+    }, [isAuthenticated]) // Removed dependencies that cause infinite loops
 
-    // Mark notification as read - Fixed API method name
+    // Mark notification as read
     const markAsRead = useCallback(async (notificationId) => {
+        if (!isAuthenticated) return
+
         try {
             await authAPI.markNotificationAsRead(notificationId)
             
-            // Update local state
             setNotifications(prev => 
                 prev.map(notification => 
                     notification._id === notificationId 
-                        ? { ...notification, isRead: true, readAt: new Date().toISOString() }
+                        ? { ...notification, read: true }
                         : notification
                 )
             )
             
-            // Update unread count
             setUnreadCount(prev => Math.max(0, prev - 1))
-            
-        } catch (err) {
-            console.error('Failed to mark notification as read:', err)
-            // Removed toast notification
+        } catch (error) {
+            console.error('Failed to mark notification as read:', error)
         }
-    }, [])
+    }, [isAuthenticated])
 
-    // Mark all as read - Updated to use new bulk endpoint
+    // Mark all notifications as read
     const markAllAsRead = useCallback(async () => {
+        if (!isAuthenticated) return
+
         try {
-            await authAPI.markAllNotificationsRead()
+            await authAPI.markAllNotificationsAsRead()
             
-            // Update local state - mark all notifications as read
             setNotifications(prev => 
-                prev.map(notification => ({ 
-                    ...notification, 
-                    isRead: true, 
-                    readAt: new Date().toISOString() 
-                }))
+                prev.map(notification => ({ ...notification, read: true }))
             )
             
             setUnreadCount(0)
-            // Removed toast notification
-            
-        } catch (err) {
-            console.error('Failed to mark all notifications as read:', err)
-            // Removed toast notification
+        } catch (error) {
+            console.error('Failed to mark all notifications as read:', error)
         }
-    }, [])
+    }, [isAuthenticated])
 
-    // Load more notifications (pagination)
+    // Load more notifications
     const loadMore = useCallback(async () => {
-        if (pagination.page >= pagination.totalPages || loading) return
-        
+        if (!isAuthenticated || loading || pagination.page >= pagination.totalPages) return
+
         await fetchNotifications({
             page: pagination.page + 1,
-            limit: pagination.limit,
-            append: true
+            limit: pagination.limit
         })
-    }, [pagination.page, pagination.totalPages, pagination.limit, loading, fetchNotifications])
+    }, [isAuthenticated, loading, pagination.page, pagination.totalPages, pagination.limit, fetchNotifications])
 
     // Filter notifications by type
     const filterByType = useCallback(async (type) => {
         await fetchNotifications({ type, page: 1 })
     }, [fetchNotifications])
 
-    // Start polling - Fixed to prevent infinite calls
-    const startPolling = useCallback(() => {
-        if (pollingIntervalRef.current || !isAuthenticated) return
-        
-        pollingIntervalRef.current = setInterval(() => {
-            // Only poll if user is authenticated and page is visible
-            if (isAuthenticated && !document.hidden) {
-                fetchNotifications({ page: 1, limit: 10 })
-            }
-        }, POLLING_INTERVAL)
-    }, [isAuthenticated, fetchNotifications])
-
-    const stopPolling = useCallback(() => {
-        if (pollingIntervalRef.current) {
-            clearInterval(pollingIntervalRef.current)
-            pollingIntervalRef.current = null
-        }
-        if (fetchTimeoutRef.current) {
-            clearTimeout(fetchTimeoutRef.current)
-            fetchTimeoutRef.current = null
-        }
-    }, [])
-
-    // Initialize - Fixed dependencies to prevent infinite loop
-    useEffect(() => {
-        if (isAuthenticated && user) {
-            // Debounce initial fetch to prevent rapid calls
-            fetchTimeoutRef.current = setTimeout(() => {
-                fetchNotifications()
-                startPolling()
-            }, 100)
-        } else {
-            setNotifications([])
-            setUnreadCount(0)
-            stopPolling()
-        }
-
-        return () => stopPolling()
-    }, [isAuthenticated, user?.id]) // Only depend on authentication status and user ID
-
-    // Handle visibility change (pause/resume polling)
-    useEffect(() => {
-        const handleVisibilityChange = () => {
-            if (document.hidden) {
-                stopPolling()
-            } else if (isAuthenticated) {
-                startPolling()
-            }
-        }
-
-        document.addEventListener('visibilitychange', handleVisibilityChange)
-        return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-    }, [isAuthenticated, startPolling, stopPolling])
-
-    // Cleanup on unmount
-    useEffect(() => {
-        return () => {
-            stopPolling()
-        }
-    }, [stopPolling])
+    // Get unread notifications only
+    const getUnreadNotifications = useCallback(() => {
+        return notifications.filter(notification => !notification.read)
+    }, [notifications])
 
     // Get notifications by type
     const getNotificationsByType = useCallback((type) => {
         return notifications.filter(notification => notification.type === type)
     }, [notifications])
 
-    // Get unread notifications
-    const getUnreadNotifications = useCallback(() => {
-        return notifications.filter(notification => !notification.isRead)
-    }, [notifications])
+    // Initial fetch
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchNotifications()
+        }
+    }, [isAuthenticated, fetchNotifications])
+
+    // Start/stop polling based on authentication
+    useEffect(() => {
+        if (!isAuthenticated) {
+            // Clear existing timeouts and intervals
+            if (pollingIntervalRef.current) {
+                clearInterval(pollingIntervalRef.current)
+                pollingIntervalRef.current = null
+            }
+            if (fetchTimeoutRef.current) {
+                clearTimeout(fetchTimeoutRef.current)
+                fetchTimeoutRef.current = null
+            }
+            return
+        }
+
+        // Start polling only if authenticated
+        const startPolling = () => {
+            if (pollingIntervalRef.current) return // Already polling
+            
+            pollingIntervalRef.current = setInterval(() => {
+                fetchNotifications()
+            }, POLLING_INTERVAL)
+        }
+
+        // Small delay before starting polling to avoid immediate calls
+        fetchTimeoutRef.current = setTimeout(startPolling, 2000)
+
+        return () => {
+            if (pollingIntervalRef.current) {
+                clearInterval(pollingIntervalRef.current)
+                pollingIntervalRef.current = null
+            }
+            if (fetchTimeoutRef.current) {
+                clearTimeout(fetchTimeoutRef.current)
+                fetchTimeoutRef.current = null
+            }
+        }
+    }, [isAuthenticated]) // Only depend on isAuthenticated, not fetchNotifications
+
+    // Handle visibility change (pause/resume polling)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                if (pollingIntervalRef.current) {
+                    clearInterval(pollingIntervalRef.current)
+                    pollingIntervalRef.current = null
+                }
+                if (fetchTimeoutRef.current) {
+                    clearTimeout(fetchTimeoutRef.current)
+                    fetchTimeoutRef.current = null
+                }
+            } else if (isAuthenticated) {
+                const startPolling = () => {
+                    if (pollingIntervalRef.current) return // Already polling
+                    
+                    pollingIntervalRef.current = setInterval(() => {
+                        fetchNotifications()
+                    }, POLLING_INTERVAL)
+                }
+
+                fetchTimeoutRef.current = setTimeout(startPolling, 2000)
+            }
+        }
+
+        document.addEventListener('visibilitychange', handleVisibilityChange)
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }, [isAuthenticated])
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (pollingIntervalRef.current) {
+                clearInterval(pollingIntervalRef.current)
+                pollingIntervalRef.current = null
+            }
+            if (fetchTimeoutRef.current) {
+                clearTimeout(fetchTimeoutRef.current)
+                fetchTimeoutRef.current = null
+            }
+        }
+    }, [])
 
     return {
         // Data
@@ -215,9 +230,5 @@ export function useNotifications() {
         // Utils
         getNotificationsByType,
         getUnreadNotifications,
-        
-        // Polling
-        startPolling,
-        stopPolling
     }
 }

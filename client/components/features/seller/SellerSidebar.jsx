@@ -17,12 +17,18 @@ import {
     ArrowLeftRight,
     HelpCircle,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    BarChart3,
+    TrendingUp,
+    DollarSign,
+    Users,
+    ChevronDown
 } from 'lucide-react'
 import { logoutService } from '@/lib/services/logout'
 
 export default function SellerSidebar({ currentPath = '/profile', sellerName = '', sidebarOpen, setSidebarOpen, isCollapsed, setIsCollapsed }) {
     const router = useRouter()
+    const [expandedMenus, setExpandedMenus] = useState(['reports']) // Default expand reports
 
     const navigationItems = [
         {
@@ -61,9 +67,32 @@ export default function SellerSidebar({ currentPath = '/profile', sellerName = '
             id: 'reports',
             label: 'Reports',
             icon: FileText,
-            href: '/seller/reports',
-            disabled: true,
-            badge: 'Soon'
+            subItems: [
+                {
+                    id: 'analytics-overview',
+                    label: 'Analytics Overview',
+                    href: '/seller/reports/analytics',
+                    icon: BarChart3
+                },
+                {
+                    id: 'sales-analytics',
+                    label: 'Sales Analytics',
+                    href: '/seller/reports/sales',
+                    icon: TrendingUp
+                },
+                {
+                    id: 'revenue-analytics',
+                    label: 'Revenue Analytics',
+                    href: '/seller/reports/revenue',
+                    icon: DollarSign
+                },
+                {
+                    id: 'customer-analytics',
+                    label: 'Customer Analytics',
+                    href: '/seller/reports/customers',
+                    icon: Users
+                }
+            ]
         },
         {
             id: 'settings',
@@ -72,6 +101,14 @@ export default function SellerSidebar({ currentPath = '/profile', sellerName = '
             href: '/seller/settings'
         }
     ]
+
+    const toggleMenu = useCallback((menuId) => {
+        setExpandedMenus(prev => 
+            prev.includes(menuId) 
+                ? prev.filter(id => id !== menuId)
+                : [...prev, menuId]
+        )
+    }, [])
 
     const handleLogout = useCallback(async () => {
         await logoutService.logout()
@@ -90,13 +127,129 @@ export default function SellerSidebar({ currentPath = '/profile', sellerName = '
     const isActive = (href) => {
         const cleanPath = currentPath.replace('/seller', '')
         const cleanHref = href.replace('/seller', '')
-        return cleanPath === cleanHref
+        return cleanPath === cleanHref || (cleanHref !== '' && cleanPath.startsWith(cleanHref))
     }
 
     const handleSwitchToBuyer = useCallback(() => {
         setSidebarOpen && setSidebarOpen(false)
         router.push('/explore')
     }, [router, setSidebarOpen])
+
+    const renderNavigationItem = (item) => {
+        const Icon = item.icon
+        const itemIsActive = item.href ? isActive(item.href) : item.subItems?.some(sub => isActive(sub.href))
+        const isExpanded = expandedMenus.includes(item.id)
+        const isGroup = !!item.subItems
+
+        if (!isGroup) {
+            return (
+                <div key={item.id}>
+                    {item.disabled ? (
+                        <div
+                            className={`group flex items-center rounded-2xl text-white/30 cursor-not-allowed transition-all duration-300 ${
+                                isCollapsed ? 'justify-center px-2 py-2' : 'justify-between px-4 py-3'
+                            }`}>
+                            <div className={`flex items-center transition-all duration-300 ${isCollapsed ? 'gap-0' : 'gap-3'}`}>
+                                <Icon className="w-4 h-4" />
+                                <span
+                                    className={`font-medium text-sm tracking-tight transition-all duration-300 ${
+                                        isCollapsed ? 'hidden' : ''
+                                    }`}>
+                                    {item.label}
+                                </span>
+                            </div>
+                            {item.badge && (
+                                <span
+                                    className={`px-2 py-1 text-xs bg-white/5 text-white/40 rounded-lg font-medium transition-all duration-300 ${
+                                        isCollapsed ? 'hidden' : ''
+                                    }`}>
+                                    {item.badge}
+                                </span>
+                            )}
+                        </div>
+                    ) : (
+                        <Link
+                            href={item.href}
+                            className={`group flex items-center rounded-2xl transition-all duration-300 ${
+                                isCollapsed ? 'justify-center px-2 py-2' : 'gap-3 px-4 py-3'
+                            } ${
+                                itemIsActive
+                                    ? 'bg-[#00FF89] text-black shadow-lg shadow-[#00FF89]/20'
+                                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                            }`}
+                            title={isCollapsed ? item.label : undefined}>
+                            <Icon
+                                className={`w-4 h-4 transition-transform duration-300 ${
+                                    itemIsActive ? 'scale-110' : 'group-hover:scale-105'
+                                }`}
+                            />
+                            <span
+                                className={`font-medium text-sm tracking-tight transition-all duration-300 ${
+                                    isCollapsed ? 'hidden' : ''
+                                }`}>
+                                {item.label}
+                            </span>
+                        </Link>
+                    )}
+                </div>
+            )
+        }
+
+        // Group item with sub-items
+        return (
+            <div key={item.id} className="space-y-1">
+                <button
+                    onClick={() => toggleMenu(item.id)}
+                    className={`group w-full flex items-center rounded-2xl transition-all duration-300 ${
+                        isCollapsed ? 'justify-center px-2 py-2' : 'justify-between px-4 py-3'
+                    } ${
+                        itemIsActive
+                            ? 'bg-white/10 text-white'
+                            : 'text-white/60 hover:text-white hover:bg-white/5'
+                    }`}
+                    title={isCollapsed ? item.label : undefined}>
+                    <div className={`flex items-center transition-all duration-300 ${isCollapsed ? 'gap-0' : 'gap-3'}`}>
+                        <Icon className="w-4 h-4" />
+                        <span
+                            className={`font-medium text-sm tracking-tight transition-all duration-300 ${
+                                isCollapsed ? 'hidden' : ''
+                            }`}>
+                            {item.label}
+                        </span>
+                    </div>
+                    {!isCollapsed && (
+                        <ChevronDown
+                            className={`w-4 h-4 transition-transform duration-300 ${
+                                isExpanded ? 'rotate-180' : ''
+                            }`}
+                        />
+                    )}
+                </button>
+
+                {!isCollapsed && isExpanded && (
+                    <div className="pl-4 space-y-1 pt-1">
+                        {item.subItems.map((subItem) => {
+                            const SubIcon = subItem.icon
+                            const subIsActive = isActive(subItem.href)
+                            return (
+                                <Link
+                                    key={subItem.id}
+                                    href={subItem.href}
+                                    className={`group flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-300 ${
+                                        subIsActive
+                                            ? 'bg-[#00FF89]/20 text-[#00FF89] border-l-2 border-[#00FF89]'
+                                            : 'text-white/40 hover:text-white/70 hover:bg-white/5'
+                                    }`}>
+                                    <SubIcon className="w-3.5 h-3.5" />
+                                    <span className="text-sm font-medium tracking-tight">{subItem.label}</span>
+                                </Link>
+                            )
+                        })}
+                    </div>
+                )}
+            </div>
+        )
+    }
 
     return (
         <>
@@ -167,62 +320,7 @@ export default function SellerSidebar({ currentPath = '/profile', sellerName = '
 
                 {/* Navigation - Desktop */}
                 <nav className={`flex-1 overflow-y-auto py-4 space-y-1 transition-all duration-300 ${isCollapsed ? 'px-2' : 'px-4'}`}>
-                    {navigationItems.map((item) => {
-                        const Icon = item.icon
-                        const itemIsActive = isActive(item.href)
-
-                        return (
-                            <div key={item.id}>
-                                {item.disabled ? (
-                                    <div
-                                        className={`group flex items-center rounded-2xl text-white/30 cursor-not-allowed transition-all duration-300 ${
-                                            isCollapsed ? 'justify-center px-2 py-2' : 'justify-between px-4 py-3'
-                                        }`}>
-                                        <div className={`flex items-center transition-all duration-300 ${isCollapsed ? 'gap-0' : 'gap-3'}`}>
-                                            <Icon className="w-4 h-4" />
-                                            <span
-                                                className={`font-medium text-sm tracking-tight transition-all duration-300 ${
-                                                    isCollapsed ? 'hidden' : ''
-                                                }`}>
-                                                {item.label}
-                                            </span>
-                                        </div>
-                                        {item.badge && (
-                                            <span
-                                                className={`px-2 py-1 text-xs bg-white/5 text-white/40 rounded-lg font-medium transition-all duration-300 ${
-                                                    isCollapsed ? 'hidden' : ''
-                                                }`}>
-                                                {item.badge}
-                                            </span>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <Link
-                                        href={item.href}
-                                        className={`group flex items-center rounded-2xl transition-all duration-300 ${
-                                            isCollapsed ? 'justify-center px-2 py-2' : 'gap-3 px-4 py-3'
-                                        } ${
-                                            itemIsActive
-                                                ? 'bg-[#00FF89] text-black shadow-lg shadow-[#00FF89]/20'
-                                                : 'text-white/60 hover:text-white hover:bg-white/5'
-                                        }`}
-                                        title={isCollapsed ? item.label : undefined}>
-                                        <Icon
-                                            className={`w-4 h-4 transition-transform duration-300 ${
-                                                itemIsActive ? 'scale-110' : 'group-hover:scale-105'
-                                            }`}
-                                        />
-                                        <span
-                                            className={`font-medium text-sm tracking-tight transition-all duration-300 ${
-                                                isCollapsed ? 'hidden' : ''
-                                            }`}>
-                                            {item.label}
-                                        </span>
-                                    </Link>
-                                )}
-                            </div>
-                        )
-                    })}
+                    {navigationItems.map(renderNavigationItem)}
                 </nav>
 
                 {/* Bottom Actions - Desktop */}
@@ -315,36 +413,86 @@ export default function SellerSidebar({ currentPath = '/profile', sellerName = '
                 <nav className="flex-1 overflow-y-auto py-4 px-4 space-y-1">
                     {navigationItems.map((item) => {
                         const Icon = item.icon
-                        const itemIsActive = isActive(item.href)
+                        const itemIsActive = item.href ? isActive(item.href) : item.subItems?.some(sub => isActive(sub.href))
+                        const isExpanded = expandedMenus.includes(item.id)
+                        const isGroup = !!item.subItems
 
-                        return (
-                            <div key={item.id}>
-                                {item.disabled ? (
-                                    <div className="group flex items-center justify-between px-4 py-3 rounded-2xl text-white/30 cursor-not-allowed transition-all duration-300">
-                                        <div className="flex items-center gap-3">
-                                            <Icon className="w-4 h-4" />
-                                            <span className="font-medium text-sm tracking-tight">{item.label}</span>
+                        if (!isGroup) {
+                            return (
+                                <div key={item.id}>
+                                    {item.disabled ? (
+                                        <div className="group flex items-center justify-between px-4 py-3 rounded-2xl text-white/30 cursor-not-allowed transition-all duration-300">
+                                            <div className="flex items-center gap-3">
+                                                <Icon className="w-4 h-4" />
+                                                <span className="font-medium text-sm tracking-tight">{item.label}</span>
+                                            </div>
+                                            {item.badge && (
+                                                <span className="px-2 py-1 text-xs bg-white/5 text-white/40 rounded-lg font-medium">{item.badge}</span>
+                                            )}
                                         </div>
-                                        {item.badge && (
-                                            <span className="px-2 py-1 text-xs bg-white/5 text-white/40 rounded-lg font-medium">{item.badge}</span>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <Link
-                                        href={item.href}
-                                        onClick={() => setSidebarOpen && setSidebarOpen(false)}
-                                        className={`group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 ${
-                                            itemIsActive
-                                                ? 'bg-[#00FF89] text-black shadow-lg shadow-[#00FF89]/20'
-                                                : 'text-white/60 hover:text-white hover:bg-white/5'
-                                        }`}>
-                                        <Icon
-                                            className={`w-4 h-4 transition-transform duration-300 ${
-                                                itemIsActive ? 'scale-110' : 'group-hover:scale-105'
-                                            }`}
-                                        />
+                                    ) : (
+                                        <Link
+                                            href={item.href}
+                                            onClick={() => setSidebarOpen && setSidebarOpen(false)}
+                                            className={`group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 ${
+                                                itemIsActive
+                                                    ? 'bg-[#00FF89] text-black shadow-lg shadow-[#00FF89]/20'
+                                                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                                            }`}>
+                                            <Icon
+                                                className={`w-4 h-4 transition-transform duration-300 ${
+                                                    itemIsActive ? 'scale-110' : 'group-hover:scale-105'
+                                                }`}
+                                            />
+                                            <span className="font-medium text-sm tracking-tight">{item.label}</span>
+                                        </Link>
+                                    )}
+                                </div>
+                            )
+                        }
+
+                        // Mobile group item
+                        return (
+                            <div key={item.id} className="space-y-1">
+                                <button
+                                    onClick={() => toggleMenu(item.id)}
+                                    className={`group w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 ${
+                                        itemIsActive
+                                            ? 'bg-white/10 text-white'
+                                            : 'text-white/60 hover:text-white hover:bg-white/5'
+                                    }`}>
+                                    <div className="flex items-center gap-3">
+                                        <Icon className="w-4 h-4" />
                                         <span className="font-medium text-sm tracking-tight">{item.label}</span>
-                                    </Link>
+                                    </div>
+                                    <ChevronDown
+                                        className={`w-4 h-4 transition-transform duration-300 ${
+                                            isExpanded ? 'rotate-180' : ''
+                                        }`}
+                                    />
+                                </button>
+
+                                {isExpanded && (
+                                    <div className="pl-4 space-y-1 pt-1">
+                                        {item.subItems.map((subItem) => {
+                                            const SubIcon = subItem.icon
+                                            const subIsActive = isActive(subItem.href)
+                                            return (
+                                                <Link
+                                                    key={subItem.id}
+                                                    href={subItem.href}
+                                                    onClick={() => setSidebarOpen && setSidebarOpen(false)}
+                                                    className={`group flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-300 ${
+                                                        subIsActive
+                                                            ? 'bg-[#00FF89]/20 text-[#00FF89] border-l-2 border-[#00FF89]'
+                                                            : 'text-white/40 hover:text-white/70 hover:bg-white/5'
+                                                    }`}>
+                                                    <SubIcon className="w-3.5 h-3.5" />
+                                                    <span className="text-sm font-medium tracking-tight">{subItem.label}</span>
+                                                </Link>
+                                            )
+                                        })}
+                                    </div>
                                 )}
                             </div>
                         )

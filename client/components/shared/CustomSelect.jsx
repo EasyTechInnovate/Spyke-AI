@@ -17,11 +17,72 @@ export default function CustomSelect({
     className,
     maxHeight = 'max-h-60',
     showSelectedCount = false,
-    allowClear = false
+    allowClear = false,
+    type = 'user' // New prop with default 'user'
 }) {
     const [isOpen, setIsOpen] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
     const dropdownRef = useRef(null)
+
+    // Theme configurations for different types
+    const themes = {
+        user: {
+            button: 'bg-[#121212]/50 border-gray-600/50 focus:ring-[#00FF89]/50 focus:border-[#00FF89]/50 hover:border-gray-500',
+            dropdown: 'bg-gray-800 border-gray-600',
+            searchInput: 'bg-gray-700 border-gray-600 focus:ring-[#00FF89]',
+            selectedTag: 'bg-[#00FF89]/20 text-[#00FF89]',
+            selectedIcon: 'text-[#00FF89]',
+            selectedOption: 'bg-[#00FF89]/10 text-white',
+            checkIcon: 'text-[#00FF89]',
+            optionHover: 'hover:bg-gray-700',
+            clearButton: 'hover:bg-gray-700',
+            footerBg: 'bg-gray-800/50 border-gray-700',
+            optionText: 'text-gray-300'
+        },
+        customer: {
+            button: 'bg-blue-950/30 border-blue-600/40 focus:ring-blue-400/50 focus:border-blue-400/50 hover:border-blue-500',
+            dropdown: 'bg-blue-900/90 border-blue-600',
+            searchInput: 'bg-blue-800/50 border-blue-600 focus:ring-blue-400',
+            selectedTag: 'bg-blue-400/20 text-blue-300',
+            selectedIcon: 'text-blue-400',
+            selectedOption: 'bg-blue-400/15 text-white',
+            checkIcon: 'text-blue-400',
+            optionHover: 'hover:bg-blue-800/50',
+            clearButton: 'hover:bg-blue-800/50',
+            footerBg: 'bg-blue-900/50 border-blue-700',
+            optionText: 'text-blue-100'
+        },
+        admin: {
+            button: 'bg-black/80 border-green-500/60 focus:ring-green-400/50 focus:border-green-400 hover:border-green-400',
+            dropdown: 'bg-black/95 border-green-500/60',
+            searchInput: 'bg-gray-900 border-green-500/50 focus:ring-green-400 focus:border-green-400',
+            selectedTag: 'bg-green-400/20 text-green-300',
+            selectedIcon: 'text-green-400',
+            selectedOption: 'bg-green-400/15 text-green-100 border-green-500/20',
+            checkIcon: 'text-green-400',
+            optionHover: 'hover:bg-green-900/30 text-white',
+            clearButton: 'hover:bg-gray-900',
+            footerBg: 'bg-gray-900/80 border-green-500/30',
+            optionText: 'text-green-100',
+            separatorBorder: 'border-green-500/20'
+        },
+        seller: {
+            button: 'bg-black/80 border-green-500/60 focus:ring-green-400/50 focus:border-green-400 hover:border-green-400',
+            dropdown: 'bg-black/95 border-green-500/60',
+            searchInput: 'bg-gray-900 border-green-500/50 focus:ring-green-400 focus:border-green-400',
+            selectedTag: 'bg-green-400/20 text-green-300',
+            selectedIcon: 'text-green-400',
+            selectedOption: 'bg-green-400/15 text-green-100 border-green-500/20',
+            checkIcon: 'text-green-400',
+            optionHover: 'hover:bg-green-900/30 text-white',
+            clearButton: 'hover:bg-gray-900',
+            footerBg: 'bg-gray-900/80 border-green-500/30',
+            optionText: 'text-green-100',
+            separatorBorder: 'border-green-500/20'
+        }
+    }
+
+    const currentTheme = themes[type] || themes.user
 
     const filteredOptions = options.filter(
         (option) =>
@@ -81,10 +142,11 @@ export default function CustomSelect({
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
-                    'w-full px-3 py-3 text-sm bg-[#121212]/50 border rounded-xl text-left focus:outline-none focus:ring-2 transition-all flex items-center justify-between min-h-[48px]',
+                    'w-full px-3 py-3 text-sm text-left focus:outline-none focus:ring-2 transition-all flex items-center justify-between min-h-[48px]',
+                    currentTheme.button,
                     error
                         ? 'border-red-500 focus:ring-red-500/50'
-                        : 'border-gray-600/50 focus:ring-[#00FF89]/50 focus:border-[#00FF89]/50 hover:border-gray-500'
+                        : ''
                 )}>
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                     {multiple ? (
@@ -96,18 +158,18 @@ export default function CustomSelect({
                                         {selectedOptions.slice(0, 2).map((option) => (
                                             <div
                                                 key={option.value}
-                                                className="flex items-center gap-1 px-2 py-1 bg-[#00FF89]/20 text-[#00FF89] rounded-md text-xs">
+                                                className={cn('flex items-center gap-1 px-2 py-1 rounded-md text-xs', currentTheme.selectedTag)}>
                                                 <option.icon className="w-3 h-3" />
                                                 <span className="truncate max-w-[80px]">{option.label}</span>
                                             </div>
                                         ))}
-                                        <span className="text-[#00FF89] font-medium text-xs">+{selectedOptions.length - 2} more</span>
+                                        <span className="font-medium text-xs" style={{ color: currentTheme.selectedIcon }}>{`+${selectedOptions.length - 2} more`}</span>
                                     </>
                                 ) : (
                                     selectedOptions.slice(0, 4).map((option) => (
                                         <div
                                             key={option.value}
-                                            className="flex items-center gap-1 px-2 py-1 bg-[#00FF89]/20 text-[#00FF89] rounded-md text-xs">
+                                            className={cn('flex items-center gap-1 px-2 py-1 rounded-md text-xs', currentTheme.selectedTag)}>
                                             <option.icon className="w-3 h-3" />
                                             <span className="truncate max-w-[100px]">{option.label}</span>
                                         </div>
@@ -120,7 +182,7 @@ export default function CustomSelect({
                     ) : // Single selection display
                     selectedOption ? (
                         <>
-                            <selectedOption.icon className="w-4 h-4 text-[#00FF89] flex-shrink-0" />
+                            <selectedOption.icon className={cn('w-4 h-4 flex-shrink-0', currentTheme.selectedIcon)} />
                             <span className="text-white truncate text-sm font-medium">{selectedOption.label}</span>
                         </>
                     ) : (
@@ -133,7 +195,7 @@ export default function CustomSelect({
                         <button
                             type="button"
                             onClick={handleClear}
-                            className="p-1 hover:bg-gray-700 rounded transition-colors">
+                            className={cn('p-1 rounded transition-colors', currentTheme.clearButton)}>
                             <X className="w-3 h-3 text-gray-400 hover:text-red-400" />
                         </button>
                     )}
@@ -143,79 +205,94 @@ export default function CustomSelect({
 
             <AnimatePresence>
                 {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                        transition={{ duration: 0.2 }}
-                        className={cn(
-                            'absolute top-full left-0 right-0 mt-2 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-50 overflow-hidden',
-                            maxHeight
-                        )}>
-                        {/* Search Input */}
-                        {searchable && (
-                            <div className="p-3 border-b border-gray-700 sticky top-0 bg-gray-800">
-                                <div className="relative">
-                                    <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                                    <input
-                                        type="text"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        placeholder="Search..."
-                                        className="w-full pl-10 pr-3 py-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#00FF89] text-sm"
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Options */}
-                        <div className="max-h-48 overflow-y-auto">
-                            {filteredOptions.length > 0 ? (
-                                filteredOptions.map((option) => {
-                                    const selected = isSelected(option)
-                                    return (
-                                        <motion.button
-                                            key={option.value}
-                                            type="button"
-                                            onClick={() => handleSelect(option.value)}
-                                            whileHover={{ backgroundColor: 'rgba(75, 85, 99, 0.5)' }}
-                                            className={cn(
-                                                'w-full px-4 py-3 text-left transition-colors flex items-center gap-3 border-b border-gray-700/50 last:border-b-0',
-                                                selected ? 'bg-[#00FF89]/10 text-white' : 'hover:bg-gray-700 text-gray-300'
-                                            )}>
-                                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                                                <option.icon className={cn('w-5 h-5 flex-shrink-0', selected ? 'text-[#00FF89]' : 'text-gray-400')} />
-                                                <span className="truncate font-medium text-sm">{option.label}</span>
-                                            </div>
-                                            {selected && <Check className="w-4 h-4 text-[#00FF89] flex-shrink-0" />}
-                                        </motion.button>
-                                    )
-                                })
-                            ) : (
-                                <div className="px-4 py-6 text-gray-400 text-center">
-                                    <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                                    <p className="text-sm">No options found</p>
+                    <>
+                        {/* Backdrop */}
+                        <div className="fixed inset-0 z-[99998]" onClick={() => setIsOpen(false)} />
+                        
+                        {/* Dropdown */}
+                        <motion.div
+                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                            className={cn(
+                                'absolute top-full left-0 right-0 mt-2 rounded-lg shadow-2xl overflow-hidden backdrop-blur-sm',
+                                'z-[99999]', // Even higher z-index
+                                currentTheme.dropdown,
+                                maxHeight
+                            )}
+                            style={{
+                                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+                                position: 'absolute',
+                                zIndex: 99999
+                            }}>
+                            {/* Search Input */}
+                            {searchable && (
+                                <div className="p-3 border-b sticky top-0" style={{ backgroundColor: currentTheme.dropdown, borderColor: currentTheme.footerBg }}>
+                                    <div className="relative">
+                                        <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                                        <input
+                                            type="text"
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            placeholder="Search..."
+                                            className={cn('w-full pl-10 pr-3 py-2 rounded text-white placeholder-gray-400 focus:outline-none focus:ring-1 text-sm', currentTheme.searchInput)}
+                                        />
+                                    </div>
                                 </div>
                             )}
-                        </div>
 
-                        {/* Footer with selection count for multiple */}
-                        {multiple && selectedOptions.length > 0 && (
-                            <div className="p-3 border-t border-gray-700 bg-gray-800/50 sticky bottom-0">
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="text-gray-400">{selectedOptions.length} selected</span>
-                                    {allowClear && (
-                                        <button
-                                            type="button"
-                                            onClick={handleClear}
-                                            className="text-red-400 hover:text-red-300 font-medium">
-                                            Clear all
-                                        </button>
-                                    )}
-                                </div>
+                            {/* Options */}
+                            <div className="max-h-48 overflow-y-auto">
+                                {filteredOptions.length > 0 ? (
+                                    filteredOptions.map((option) => {
+                                        const selected = isSelected(option)
+                                        return (
+                                            <motion.button
+                                                key={option.value}
+                                                type="button"
+                                                onClick={() => handleSelect(option.value)}
+                                                className={cn(
+                                                    'w-full px-4 py-3 text-left transition-colors flex items-center gap-3 border-b last:border-b-0',
+                                                    selected 
+                                                        ? `${currentTheme.selectedOption}` 
+                                                        : `${currentTheme.optionHover} ${currentTheme.optionText}`,
+                                                    currentTheme.separatorBorder || 'border-gray-700/50'
+                                                )}>
+                                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                                    <option.icon className={cn('w-5 h-5 flex-shrink-0', selected ? currentTheme.selectedIcon : 'text-gray-400')} />
+                                                    <span className={cn('truncate font-medium text-sm', selected ? 'text-current' : currentTheme.optionText)}>{option.label}</span>
+                                                </div>
+                                                {selected && <Check className={cn('w-4 h-4 flex-shrink-0', currentTheme.checkIcon)} />}
+                                            </motion.button>
+                                        )
+                                    })
+                                ) : (
+                                    <div className="px-4 py-6 text-gray-400 text-center">
+                                        <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                        <p className="text-sm">No options found</p>
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </motion.div>
+
+                            {/* Footer with selection count for multiple */}
+                            {multiple && selectedOptions.length > 0 && (
+                                <div className="p-3 border-t sticky bottom-0" style={{ backgroundColor: currentTheme.footerBg, borderColor: currentTheme.footerBg }}>
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-gray-400">{selectedOptions.length} selected</span>
+                                        {allowClear && (
+                                            <button
+                                                type="button"
+                                                onClick={handleClear}
+                                                className="text-red-400 hover:text-red-300 font-medium">
+                                                Clear all
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </motion.div>
+                    </>
                 )}
             </AnimatePresence>
         </div>

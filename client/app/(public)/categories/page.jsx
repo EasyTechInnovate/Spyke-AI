@@ -1,5 +1,4 @@
 import CategoriesGrid from '@/components/features/explore/CategoriesGrid'
-import Header from '@/components/shared/layout/Header'
 import { PRODUCT_CATEGORIES } from '@/lib/constants/filterMappings'
 
 export default async function CategoriesPage() {
@@ -15,7 +14,7 @@ export default async function CategoriesPage() {
 
   return (
     <div className="min-h-screen bg-[#121212]">
-      <Header />
+      {/* Removed direct Header import - now uses the sticky header from layout */}
       <CategoriesGrid blogCategories={productCategories} />
     </div>
   )

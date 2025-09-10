@@ -216,4 +216,3 @@ export default function AnalyticsDashboard({ data, className = "" }) {
     </div>
   )
 }
-`
