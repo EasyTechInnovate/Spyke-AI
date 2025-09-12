@@ -1,7 +1,6 @@
 import responseMessage from '../../constant/responseMessage.js'
 import httpError from '../../util/httpError.js'
 import httpResponse from '../../util/httpResponse.js'
-import quicker from '../../util/quicker.js'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc.js'
 import productModel from '../../model/product.model.js'
@@ -31,8 +30,7 @@ export default {
 
             const totalProducts = await productModel.countDocuments({
                 sellerId: sellerProfile._id,
-                isDeleted: false
-            })
+                            })
 
             const activeProducts = await productModel.countDocuments({
                 sellerId: sellerProfile._id,
@@ -131,8 +129,7 @@ export default {
 
             let matchQuery = { 
                 sellerId: sellerProfile._id,
-                isDeleted: false
-            }
+                            }
 
             if (category) matchQuery.category = category
             if (status) matchQuery.status = status

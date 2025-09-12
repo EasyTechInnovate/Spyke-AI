@@ -24,19 +24,18 @@ export default {
     getPlatformAnalytics: async (req, res, next) => {
         try {
             // Total users count
-            const totalUsers = await userModel.countDocuments({ isDeleted: false })
+            const totalUsers = await userModel.countDocuments({})
 
             // Total sellers count
-            const totalSellers = await sellerProfileModel.countDocuments({ isDeleted: false })
+            const totalSellers = await sellerProfileModel.countDocuments({})
 
             // Total products count
-            const totalProducts = await productModel.countDocuments({ isDeleted: false })
+            const totalProducts = await productModel.countDocuments({})
 
             // Active products count
             const activeProducts = await productModel.countDocuments({
                 isActive: true,
-                isDeleted: false,
-                status: 'published'
+                                status: 'published'
             })
 
             // Total sales and revenue
@@ -60,7 +59,7 @@ export default {
 
             // Total platform views
             const platformViews = await productModel.aggregate([
-                { $match: { isDeleted: false } },
+                { $match: {} },
                 { $group: { _id: null, totalViews: { $sum: '$viewCount' } } }
             ])
 
@@ -71,13 +70,11 @@ export default {
 
             const newUsersLast30Days = await userModel.countDocuments({
                 createdAt: { $gte: thirtyDaysAgo },
-                isDeleted: false
-            })
+                            })
 
             const newProductsLast30Days = await productModel.countDocuments({
                 createdAt: { $gte: thirtyDaysAgo },
-                isDeleted: false
-            })
+                            })
 
             const salesLast30Days = await purchaseModel.countDocuments({
                 createdAt: { $gte: thirtyDaysAgo },
@@ -86,7 +83,7 @@ export default {
 
             // Top categories by products count
             const topCategories = await productModel.aggregate([
-                { $match: { isDeleted: false } },
+                { $match: {} },
                 {
                     $group: {
                         _id: '$category',
@@ -130,7 +127,7 @@ export default {
             const skip = (parseInt(page) - 1) * parseInt(limit)
             const sortOptions = { [sortBy]: sortOrder === 'desc' ? -1 : 1 }
 
-            let matchQuery = { isDeleted: false }
+            let matchQuery = {}
             if (role) matchQuery.roles = role
             if (status === 'active') matchQuery.isActive = true
             if (status === 'inactive') matchQuery.isActive = false
@@ -180,8 +177,7 @@ export default {
                 {
                     $match: {
                         createdAt: { $gte: dayjs().subtract(30, 'day').toDate() },
-                        isDeleted: false
-                    }
+                                            }
                 },
                 {
                     $group: {
@@ -196,7 +192,7 @@ export default {
 
             // User role distribution
             const roleDistribution = await userModel.aggregate([
-                { $match: { isDeleted: false } },
+                { $match: {} },
                 { $unwind: '$roles' },
                 { $group: { _id: '$roles', count: { $sum: 1 } } },
                 { $sort: { count: -1 } }
@@ -227,7 +223,7 @@ export default {
             const skip = (parseInt(page) - 1) * parseInt(limit)
             const sortOptions = { [sortBy]: sortOrder === 'desc' ? -1 : 1 }
 
-            let matchQuery = { isDeleted: false }
+            let matchQuery = {}
             if (verificationStatus) matchQuery.verificationStatus = verificationStatus
 
             // Get sellers with performance analytics
@@ -239,7 +235,7 @@ export default {
                         localField: '_id',
                         foreignField: 'sellerId',
                         pipeline: [
-                            { $match: { isDeleted: false } },
+                            { $match: {} },
                             {
                                 $group: {
                                     _id: null,
@@ -301,7 +297,7 @@ export default {
 
             // Top performing sellers
             const topSellers = await sellerProfileModel.aggregate([
-                { $match: { isDeleted: false } },
+                { $match: {} },
                 {
                     $lookup: {
                         from: 'purchases',
@@ -361,7 +357,7 @@ export default {
             const skip = (parseInt(page) - 1) * parseInt(limit)
             const sortOptions = { [sortBy]: sortOrder === 'desc' ? -1 : 1 }
 
-            let matchQuery = { isDeleted: false }
+            let matchQuery = {}
             if (category) matchQuery.category = category
             if (status) matchQuery.status = status
 
@@ -429,7 +425,7 @@ export default {
 
             // Product category distribution
             const categoryDistribution = await productModel.aggregate([
-                { $match: { isDeleted: false } },
+                { $match: {} },
                 {
                     $group: {
                         _id: '$category',
@@ -443,7 +439,7 @@ export default {
 
             // Product status distribution
             const statusDistribution = await productModel.aggregate([
-                { $match: { isDeleted: false } },
+                { $match: {} },
                 { $group: { _id: '$status', count: { $sum: 1 } } },
                 { $sort: { count: -1 } }
             ])
@@ -588,7 +584,7 @@ export default {
             const skip = (parseInt(page) - 1) * parseInt(limit)
             const sortOptions = { [sortBy]: sortOrder === 'desc' ? -1 : 1 }
 
-            let matchQuery = { isDeleted: false }
+            let matchQuery = {}
             if (status) matchQuery.isActive = status === 'active'
 
             // Get promocodes with usage analytics
@@ -640,7 +636,7 @@ export default {
 
             // Top performing promocodes
             const topPromocodes = await promocodeModel.aggregate([
-                { $match: { isDeleted: false } },
+                { $match: {} },
                 {
                     $lookup: {
                         from: 'purchases',
@@ -723,9 +719,7 @@ export default {
             const userRegistrations = await userModel.aggregate([
                 {
                     $match: {
-                        createdAt: { $gte: dateFilter },
-                        isDeleted: false
-                    }
+                        createdAt: { $gte: dateFilter }                    }
                 },
                 {
                     $group: {
@@ -768,9 +762,7 @@ export default {
             const roleDistribution = await userModel.aggregate([
                 {
                     $match: {
-                        createdAt: { $gte: dateFilter },
-                        isDeleted: false
-                    }
+                        createdAt: { $gte: dateFilter }                    }
                 },
                 { $unwind: '$roles' },
                 {
@@ -786,11 +778,10 @@ export default {
             ])
 
             // User retention metrics
-            const totalUsers = await userModel.countDocuments({ isDeleted: false })
+            const totalUsers = await userModel.countDocuments({})
             const newUsers = await userModel.countDocuments({
                 createdAt: { $gte: dateFilter },
-                isDeleted: false
-            })
+                            })
             const activeUsers = await purchaseModel.distinct('userId', {
                 createdAt: { $gte: dateFilter },
                 orderStatus: 'completed'
@@ -801,8 +792,7 @@ export default {
             const previousPeriodEnd = dateFilter
             const previousPeriodUsers = await userModel.countDocuments({
                 createdAt: { $gte: previousPeriodStart, $lt: previousPeriodEnd },
-                isDeleted: false
-            })
+                            })
 
             const growthRate = previousPeriodUsers > 0 
                 ? ((newUsers - previousPeriodUsers) / previousPeriodUsers) * 100 
@@ -862,9 +852,7 @@ export default {
             const sellerRegistrations = await sellerProfileModel.aggregate([
                 {
                     $match: {
-                        createdAt: { $gte: dateFilter },
-                        isDeleted: false
-                    }
+                        createdAt: { $gte: dateFilter }                    }
                 },
                 {
                     $group: {
@@ -881,9 +869,7 @@ export default {
             const sellerActivity = await productModel.aggregate([
                 {
                     $match: {
-                        createdAt: { $gte: dateFilter },
-                        isDeleted: false
-                    }
+                        createdAt: { $gte: dateFilter }                    }
                 },
                 {
                     $group: {
@@ -907,9 +893,7 @@ export default {
             const verificationTrend = await sellerProfileModel.aggregate([
                 {
                     $match: {
-                        createdAt: { $gte: dateFilter },
-                        isDeleted: false
-                    }
+                        createdAt: { $gte: dateFilter }                    }
                 },
                 {
                     $group: {
@@ -924,11 +908,10 @@ export default {
             ])
 
             // Seller performance metrics
-            const totalSellers = await sellerProfileModel.countDocuments({ isDeleted: false })
+            const totalSellers = await sellerProfileModel.countDocuments({})
             const newSellers = await sellerProfileModel.countDocuments({
                 createdAt: { $gte: dateFilter },
-                isDeleted: false
-            })
+                            })
             const activeSellers = await purchaseModel.distinct('items.sellerId', {
                 createdAt: { $gte: dateFilter },
                 orderStatus: 'completed'
@@ -939,8 +922,7 @@ export default {
             const previousPeriodEnd = dateFilter
             const previousPeriodSellers = await sellerProfileModel.countDocuments({
                 createdAt: { $gte: previousPeriodStart, $lt: previousPeriodEnd },
-                isDeleted: false
-            })
+                            })
 
             const growthRate = previousPeriodSellers > 0 
                 ? ((newSellers - previousPeriodSellers) / previousPeriodSellers) * 100 
@@ -996,8 +978,7 @@ export default {
             const feedbackData = await productModel.aggregate([
                 {
                     $match: {
-                        isDeleted: false,
-                        'reviews.0': { $exists: true }
+                                                'reviews.0': { $exists: true }
                     }
                 },
                 { $unwind: '$reviews' },
@@ -1035,8 +1016,7 @@ export default {
             const totalFeedback = await productModel.aggregate([
                 {
                     $match: {
-                        isDeleted: false,
-                        'reviews.0': { $exists: true }
+                                                'reviews.0': { $exists: true }
                     }
                 },
                 { $unwind: '$reviews' },
@@ -1054,8 +1034,7 @@ export default {
             const feedbackSummary = await productModel.aggregate([
                 {
                     $match: {
-                        isDeleted: false,
-                        'reviews.0': { $exists: true }
+                                                'reviews.0': { $exists: true }
                     }
                 },
                 { $unwind: '$reviews' },
@@ -1100,8 +1079,7 @@ export default {
             const dailyFeedback = await productModel.aggregate([
                 {
                     $match: {
-                        isDeleted: false,
-                        'reviews.0': { $exists: true }
+                                                'reviews.0': { $exists: true }
                     }
                 },
                 { $unwind: '$reviews' },
@@ -1168,7 +1146,7 @@ export default {
 
             // Total product views (proxy for website visits)
             const totalViews = await productModel.aggregate([
-                { $match: { isDeleted: false } },
+                { $match: {} },
                 { $group: { _id: null, totalViews: { $sum: '$viewCount' } } }
             ])
 
@@ -1176,8 +1154,7 @@ export default {
 
             // Most viewed products
             const topViewedProducts = await productModel.find({
-                isDeleted: false,
-                updatedAt: { $gte: dateFilter }
+                                updatedAt: { $gte: dateFilter }
             })
             .sort({ viewCount: -1 })
             .limit(10)
@@ -1186,7 +1163,7 @@ export default {
 
             // Category views distribution
             const categoryViews = await productModel.aggregate([
-                { $match: { isDeleted: false } },
+                { $match: {} },
                 {
                     $group: {
                         _id: '$category',
@@ -1200,7 +1177,7 @@ export default {
 
             // Conversion metrics (views to purchases)
             const conversionData = await productModel.aggregate([
-                { $match: { isDeleted: false } },
+                { $match: {} },
                 {
                     $lookup: {
                         from: 'purchases',
@@ -1256,9 +1233,7 @@ export default {
             const engagementMetrics = await userModel.aggregate([
                 {
                     $match: {
-                        createdAt: { $gte: dateFilter },
-                        isDeleted: false
-                    }
+                        createdAt: { $gte: dateFilter }                    }
                 },
                 {
                     $lookup: {
