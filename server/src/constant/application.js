@@ -136,11 +136,11 @@ export const ERateLimit = {
         MAX_REQUESTS: 100
     },
     AUTH: {
-        WINDOW_MS: 15 * 60 * 1000, 
+        WINDOW_MS: 15 * 60 * 1000,
         MAX_REQUESTS: 5
     },
     UPLOAD: {
-        WINDOW_MS: 60 * 60 * 1000, 
+        WINDOW_MS: 60 * 60 * 1000,
         MAX_REQUESTS: 50
     }
 }
@@ -232,4 +232,9 @@ export const EProductStatusNew = Object.freeze({
     PENDING_REVIEW: 'pending_review',
     PUBLISHED: 'published',
     ARCHIVED: 'archived'
+})
+
+export const EAuthProvider = Object.freeze({
+    LOCAL: "LOCAL",
+    GOOGLE: "GOOGLE"
 })

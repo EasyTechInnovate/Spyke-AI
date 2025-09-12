@@ -1,7 +1,6 @@
 import responseMessage from '../../constant/responseMessage.js'
 import httpError from '../../util/httpError.js'
 import httpResponse from '../../util/httpResponse.js'
-import quicker from '../../util/quicker.js'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc.js'
 import userModel from '../../model/user.model.js'
@@ -36,7 +35,7 @@ export default {
 
             // Get total spent amount
             const spentAnalytics = await purchaseModel.aggregate([
-                { $match: { userId: quicker.toObjectId(authenticatedUser.id), orderStatus: 'completed' } },
+                { $match: { userId: authenticatedUser.id, orderStatus: 'completed' } },
                 { $group: { _id: null, totalSpent: { $sum: '$finalAmount' } } }
             ])
 
@@ -60,7 +59,7 @@ export default {
             const monthlySpending = await purchaseModel.aggregate([
                 {
                     $match: {
-                        userId: quicker.toObjectId(authenticatedUser.id),
+                        userId: authenticatedUser.id,
                         orderStatus: 'completed',
                         createdAt: { $gte: dayjs().subtract(6, 'month').startOf('month').toDate() }
                     }
@@ -107,7 +106,7 @@ export default {
             const sortOptions = { [sortBy]: sortOrder === 'desc' ? -1 : 1 }
 
             let matchQuery = { 
-                userId: quicker.toObjectId(authenticatedUser.id),
+                userId: authenticatedUser.id,
                 orderStatus: 'completed'
             }
 
@@ -155,10 +154,10 @@ export default {
                         }
                     }
                 },
-                { $unset: 'productDetails' },
                 { $sort: sortOptions },
                 { $skip: skip },
-                { $limit: parseInt(limit) }
+                { $limit: parseInt(limit) },
+                { $unset: 'productDetails' }
             ]
 
             if (category) {
@@ -219,8 +218,7 @@ export default {
 
             const favorites = await productModel.find({
                 'engagement.favorites': authenticatedUser.id,
-                isActive: true,
-                isDeleted: false
+                isActive: true
             })
             .populate('sellerId', 'fullName avatar')
             .sort({ 'engagement.favoritedAt': -1 })
@@ -229,18 +227,16 @@ export default {
 
             const totalFavorites = await productModel.countDocuments({
                 'engagement.favorites': authenticatedUser.id,
-                isActive: true,
-                isDeleted: false
+                isActive: true
             })
 
             // Get category breakdown of favorites
             const categoryBreakdown = await productModel.aggregate([
                 { 
                     $match: { 
-                        'engagement.favorites': quicker.toObjectId(authenticatedUser.id),
+                        'engagement.favorites': authenticatedUser.id,
                         isActive: true,
-                        isDeleted: false
-                    }
+                                            }
                 },
                 {
                     $group: {
@@ -300,7 +296,7 @@ export default {
             const purchaseActivity = await purchaseModel.aggregate([
                 {
                     $match: {
-                        userId: quicker.toObjectId(authenticatedUser.id),
+                        userId: authenticatedUser.id,
                         createdAt: { $gte: dateFilter },
                         orderStatus: 'completed'
                     }
@@ -321,7 +317,7 @@ export default {
             const favoriteActivity = await productModel.aggregate([
                 {
                     $match: {
-                        'engagement.favorites': quicker.toObjectId(authenticatedUser.id),
+                        'engagement.favorites': authenticatedUser.id,
                         'engagement.favoritedAt': { $gte: dateFilter }
                     }
                 },
@@ -359,7 +355,7 @@ export default {
             const categorySpending = await purchaseModel.aggregate([
                 {
                     $match: {
-                        userId: quicker.toObjectId(authenticatedUser.id),
+                        userId: authenticatedUser.id,
                         orderStatus: 'completed'
                     }
                 },
@@ -388,7 +384,7 @@ export default {
             const monthlyTrend = await purchaseModel.aggregate([
                 {
                     $match: {
-                        userId: quicker.toObjectId(authenticatedUser.id),
+                        userId: authenticatedUser.id,
                         orderStatus: 'completed',
                         createdAt: { $gte: dayjs().subtract(12, 'month').toDate() }
                     }
@@ -410,7 +406,7 @@ export default {
             const topSellers = await purchaseModel.aggregate([
                 {
                     $match: {
-                        userId: quicker.toObjectId(authenticatedUser.id),
+                        userId: authenticatedUser.id,
                         orderStatus: 'completed'
                     }
                 },

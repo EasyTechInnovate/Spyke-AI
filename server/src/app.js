@@ -7,6 +7,9 @@ import cors from 'cors'
 import config from './config/config.js'
 import cookieParser from 'cookie-parser'
 import router from './router/index.js'
+import session from "express-session";
+import { passportService } from './service/passprotService.js'
+
 
 const app = express()
 
@@ -28,6 +31,20 @@ app.use(
         credentials: true
     })
 )
+
+
+
+app.use(
+    session({
+        secret: config.jwt.accessToken.secret || "your-session-secret",
+        resave: false,
+        saveUninitialized: false,
+    })
+);
+app.use(passportService.initialize());
+app.use(passportService.session());
+app.set('passport', passportService.passport);
+
 
 app.use(express.json())
 app.use(cookieParser())

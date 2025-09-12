@@ -1,7 +1,6 @@
 import responseMessage from '../../constant/responseMessage.js'
 import httpError from '../../util/httpError.js'
 import httpResponse from '../../util/httpResponse.js'
-import quicker from '../../util/quicker.js'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc.js'
 import productModel from '../../model/product.model.js'
@@ -30,14 +29,12 @@ export default {
             }
 
             const totalProducts = await productModel.countDocuments({
-                sellerId: sellerProfile._id,
-                isDeleted: false
+                sellerId: sellerProfile._id
             })
 
             const activeProducts = await productModel.countDocuments({
                 sellerId: sellerProfile._id,
                 isActive: true,
-                isDeleted: false,
                 status: 'published'
             })
 
@@ -61,11 +58,17 @@ export default {
             }
 
             const viewsAnalytics = await productModel.aggregate([
-                { $match: { sellerId: sellerProfile._id, isDeleted: false } },
+                { $match: { sellerId: sellerProfile._id } },
                 { $group: { _id: null, totalViews: { $sum: '$viewCount' } } }
             ])
 
-            const totalViews = viewsAnalytics.length > 0 ? viewsAnalytics[0].totalViews : 0
+            const totalProductViews = viewsAnalytics.length > 0 ? viewsAnalytics[0].totalViews : 0
+            
+            // Get seller profile views
+            const profileViews = sellerProfile.stats?.profileViews || 0
+            
+            // Total views = product views + profile views
+            const totalViews = totalProductViews + profileViews
 
             const recentSales = await purchaseModel.find({
                 'items.sellerId': sellerProfile._id,
@@ -106,6 +109,8 @@ export default {
                     totalRevenue: salesData.totalRevenue,
                     avgOrderValue: salesData.avgOrderValue,
                     totalViews,
+                    profileViews,
+                    productViews: totalProductViews,
                     sellerSince: sellerProfile.createdAt
                 },
                 recentSales,
@@ -131,8 +136,7 @@ export default {
 
             let matchQuery = { 
                 sellerId: sellerProfile._id,
-                isDeleted: false
-            }
+                            }
 
             if (category) matchQuery.category = category
             if (status) matchQuery.status = status

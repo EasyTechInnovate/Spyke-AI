@@ -10,7 +10,8 @@ import refreshTokenModel from '../../model/refresh.token.model.js'
 import { notificationService } from '../../util/notification.js'
 import emailService from '../../service/email.service.js'
 import emailTemplates from '../../util/email.formatter.js'
-
+import { EApplicationEnvironment, EUserRole } from '../../constant/application.js'
+import passport from 'passport';
 dayjs.extend(utc)
 
 export default {
@@ -89,7 +90,7 @@ export default {
             const savedUser = await newUser.save()
 
             const confirmationUrl = `${config.client.url}/auth/confirm/${token}?code=${code}`
-            
+
             const registrationEmail = emailTemplates.registration({
                 emailAddress: savedUser.emailAddress,
                 confirmationUrl
@@ -162,7 +163,7 @@ export default {
             await user.save()
 
             const dashboardUrl = `${config.client.url}/dashboard`
-            
+
             const confirmationEmail = emailTemplates.confirmation({
                 emailAddress: user.emailAddress,
                 dashboardUrl
@@ -385,7 +386,7 @@ export default {
             await user.save()
 
             const resetUrl = `${config.client.url}/auth/reset-password?token=${resetToken}`
-            
+
             const forgotPasswordEmail = emailTemplates.forgotPassword({
                 emailAddress: user.emailAddress,
                 resetUrl,
@@ -437,7 +438,7 @@ export default {
             await user.save()
 
             const loginUrl = `${config.client.url}/auth/login`
-            
+
             const resetPasswordEmail = emailTemplates.resetPassword({
                 emailAddress: user.emailAddress,
                 loginUrl
@@ -640,7 +641,7 @@ export default {
             }
 
             const unreadCount = user.notifications.filter(n => !n.isRead).length
-            
+
             user.markAllNotificationsAsRead()
             await user.save()
 
@@ -723,7 +724,7 @@ export default {
             await user.save()
 
             const confirmationUrl = `${config.client.url}/auth/confirm/${token}?code=${code}`
-            
+
             const registrationEmail = emailTemplates.registration({
                 emailAddress: user.emailAddress,
                 confirmationUrl
@@ -752,5 +753,59 @@ export default {
         } catch (err) {
             httpError(next, err, req, 500)
         }
-    }
+    },
+    googleAuth: (req, res, next) => {
+        const { role } = req.query;
+        if (role && !Object.values(EUserRole).includes(role)) {
+            return httpError(next, new Error('Invalid role specified'), req, 400);
+        }
+
+        req.session.userRole = role || EUserRole.USER;
+
+        return passport.authenticate('google', {
+            scope: ['profile', 'email']
+        })(req, res, next);
+    },
+    googleCallback: async (req, res, next) => {
+        passport.authenticate("google", {
+            failureRedirect: `${config.client.url}/signin?error=auth_failed`,
+        })(req, res, async () => {
+            try {
+                const user = req.user;
+                if (!user) {
+                    return res.redirect(`${config.client.url}/signin?error=auth_failed`);
+                }
+
+                if (req.session.userRole && !user.roles.includes(req.session.userRole)) {
+                    user.addRole(req.session.userRole);
+                    await user.save();
+                }
+
+                const accessToken = quicker.generateToken(
+                    { userId: user._id },
+                    config.jwt.accessToken.secret,
+                    config.jwt.accessToken.expiresIn
+                );
+
+                user.updateLoginInfo(req.ip);
+                user.isActive = true;
+                await user.save();
+
+                const DOMAIN = quicker.getDomainFromUrl(config.server.url);
+                res.cookie("accessToken", accessToken, {
+                    path: config.env === 'development' ? "/v1" : "/api/v1",
+                    domain: DOMAIN,
+                    sameSite: "strict",
+                    maxAge: parseInt(process.env.JWT_EXPIRES_IN || "3600", 10) * 1000,
+                    httpOnly: true,
+                    secure: !(config.env === 'development'),
+                });
+
+                return res.redirect(`${config.client.url}/auth-success?token=${accessToken}`);
+            } catch (error) {
+                console.error("Google callback error:", error);
+                return res.redirect(`${config.client.url}/signin?error=internal_error`);
+            }
+        });
+    },
 }
