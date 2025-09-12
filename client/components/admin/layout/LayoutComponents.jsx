@@ -7,36 +7,69 @@ export const PageHeader = memo(({
   subtitle, 
   actions = [], 
   breadcrumbs = [], 
-  className = '' 
+  className = '',
+  icon: Icon = null
 }) => (
-  <div className={`bg-gradient-to-br from-gray-900/50 to-gray-800/30 border border-gray-700/50 rounded-xl p-6 mb-6 ${className}`}>
-    {breadcrumbs.length > 0 && (
-      <nav className="mb-3">
-        <ol className="flex items-center space-x-2 text-sm">
-          {breadcrumbs.map((crumb, index) => (
-            <li key={index} className="flex items-center">
-              {index > 0 && <span className="text-gray-500 mx-2">/</span>}
-              <span className={index === breadcrumbs.length - 1 ? 'text-white' : 'text-gray-400'}>
-                {crumb}
-              </span>
-            </li>
-          ))}
-        </ol>
-      </nav>
-    )}
+  <div className={`relative bg-gradient-to-br from-gray-900/90 via-gray-800/60 to-gray-900/80 border border-gray-700/40 rounded-2xl p-8 mb-8 overflow-hidden backdrop-blur-sm ${className}`}>
+    {/* Subtle background pattern */}
+    <div className="absolute inset-0 bg-gradient-to-r from-[#00FF89]/5 via-transparent to-blue-500/5 opacity-50"></div>
+    <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#00FF89]/30 to-transparent"></div>
     
-    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-      <div>
-        <h1 className="text-2xl font-bold text-white mb-1">{title}</h1>
-        {subtitle && <p className="text-gray-400">{subtitle}</p>}
-      </div>
-      
-      {actions.length > 0 && (
-        <div className="flex items-center gap-3">
-          {actions.map((action, index) => action)}
-        </div>
+    <div className="relative z-10">
+      {breadcrumbs.length > 0 && (
+        <nav className="mb-4">
+          <ol className="flex items-center space-x-2 text-sm">
+            {breadcrumbs.map((crumb, index) => (
+              <li key={index} className="flex items-center">
+                {index > 0 && (
+                  <span className="text-gray-500/60 mx-2 select-none">/</span>
+                )}
+                <span className={`transition-colors duration-200 ${
+                  index === breadcrumbs.length - 1 
+                    ? 'text-[#00FF89] font-medium' 
+                    : 'text-gray-400 hover:text-gray-300'
+                }`}>
+                  {crumb}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </nav>
       )}
+      
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div className="flex items-start gap-4">
+          {Icon && (
+            <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-[#00FF89]/20 to-[#00FF89]/10 border border-[#00FF89]/20 rounded-xl flex items-center justify-center mt-1">
+              <Icon className="w-6 h-6 text-[#00FF89]" />
+            </div>
+          )}
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-gray-100 to-gray-200 bg-clip-text text-transparent mb-2 leading-tight">
+              {title}
+            </h1>
+            {subtitle && (
+              <p className="text-gray-400/90 text-lg leading-relaxed max-w-2xl">
+                {subtitle}
+              </p>
+            )}
+          </div>
+        </div>
+        
+        {actions.length > 0 && (
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {actions.map((action, index) => (
+              <div key={index} className="transform transition-transform duration-200 hover:scale-105">
+                {action}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
+    
+    {/* Subtle bottom accent */}
+    <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-600/30 to-transparent"></div>
   </div>
 ))
 PageHeader.displayName = 'PageHeader'

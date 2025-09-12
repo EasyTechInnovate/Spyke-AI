@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useReducer, useEffect, useCallback, useMemo } from 'react'
+import { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import adminAPI from '@/lib/api/admin'
 import analyticsAPI from '@/lib/api/analytics'
@@ -104,6 +104,7 @@ const getTotal = (res) => res?.meta?.total ?? res?.pagination?.total ?? res?.tot
 export function AdminProvider({ children }) {
   const [state, dispatch] = useReducer(adminReducer, initialState)
   const pathname = usePathname()
+  const [isHydrated, setIsHydrated] = useState(false)
   
   // Page configuration based on current route
   const pageConfig = useMemo(() => getPageConfig(pathname), [pathname])
@@ -113,8 +114,16 @@ export function AdminProvider({ children }) {
     dispatch({ type: ADMIN_ACTIONS.SET_CURRENT_PAGE, payload: pageConfig })
   }, [pageConfig])
 
+  // Hydration effect - ensures client matches server initially
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
+
   // Fetch admin counts (only when needed)
   const fetchCounts = useCallback(async (force = false) => {
+    // Skip if not hydrated yet to prevent hydration mismatch
+    if (!isHydrated) return
+    
     // Skip if not needed for current page type
     if (!pageConfig.needsCounts && !force) {
       dispatch({ 
@@ -166,10 +175,13 @@ export function AdminProvider({ children }) {
         }
       })
     }
-  }, [pageConfig.needsCounts, state.lastFetch])
+  }, [pageConfig.needsCounts, isHydrated]) // Remove state.lastFetch from dependencies
 
   // Fetch overview data (only for dashboard)
   const fetchOverview = useCallback(async () => {
+    // Skip if not hydrated yet to prevent hydration mismatch
+    if (!isHydrated) return
+    
     if (!pageConfig.needsOverview) return
 
     try {
@@ -189,7 +201,7 @@ export function AdminProvider({ children }) {
         totalRevenue: 0
       }})
     }
-  }, [pageConfig.needsOverview])
+  }, [pageConfig.needsOverview, isHydrated])
 
   // Refresh all data
   const refreshData = useCallback(async () => {
@@ -204,15 +216,17 @@ export function AdminProvider({ children }) {
     dispatch({ type: ADMIN_ACTIONS.CLEAR_ERROR })
   }, [])
 
-  // Initial data fetch
+  // Initial data fetch - only after hydration
   useEffect(() => {
-    fetchCounts()
-    fetchOverview()
-  }, [fetchCounts, fetchOverview])
+    if (isHydrated) {
+      fetchCounts()
+      fetchOverview()
+    }
+  }, [isHydrated]) // Remove fetchCounts and fetchOverview from dependencies to prevent infinite loop
 
   // Auto-refresh counts (only for dashboard page and with longer intervals)
   useEffect(() => {
-    if (!pageConfig.needsCounts || pageConfig.type !== 'dashboard') return
+    if (!isHydrated || !pageConfig.needsCounts || pageConfig.type !== 'dashboard') return
 
     const interval = setInterval(() => {
       // Only refresh if data is older than 2 minutes and user is active
@@ -222,7 +236,7 @@ export function AdminProvider({ children }) {
     }, 60000) // Increased to 60 seconds from 30 seconds
 
     return () => clearInterval(interval)
-  }, [fetchCounts, pageConfig.needsCounts, pageConfig.type, state.lastFetch])
+  }, [isHydrated, pageConfig.needsCounts, pageConfig.type]) // Remove fetchCounts and state.lastFetch from dependencies
 
   // Context value
   const value = useMemo(() => ({

@@ -507,7 +507,7 @@ export default {
                 createdAt: { $gte: dateFilter }
             })
 
-            // Sales summary
+            // Sales summary with conversion rate calculation
             const salesSummary = await purchaseModel.aggregate([
                 {
                     $match: {
@@ -526,11 +526,20 @@ export default {
                 }
             ])
 
-            const summary = salesSummary.length > 0 ? salesSummary[0] : {
+            const platformViews = await productModel.aggregate([
+                { $match: { isDeleted: false } },
+                { $group: { _id: null, totalViews: { $sum: '$viewCount' } } }
+            ])
+            const totalViews = platformViews.length > 0 ? platformViews[0].totalViews : 0
+            const summary = salesSummary.length > 0 ? {
+                ...salesSummary[0],
+                conversionRate: totalViews > 0 ? ((salesSummary[0].totalSales / totalViews) * 100) : 0
+            } : {
                 totalSales: 0,
                 totalRevenue: 0,
                 avgOrderValue: 0,
-                totalItems: 0
+                totalItems: 0,
+                conversionRate: 0
             }
 
             // Daily sales trend

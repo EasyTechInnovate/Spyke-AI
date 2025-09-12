@@ -197,6 +197,64 @@ export const adminAPI = {
         }
     },
 
+    // Sales Analytics APIs
+    sales: {
+        // Get platform sales analytics
+        getAnalytics: async (params = {}) => {
+            const { startDate, endDate, groupBy = 'day' } = params
+            const queryParams = new URLSearchParams({ groupBy })
+            if (startDate) queryParams.append('startDate', startDate)
+            if (endDate) queryParams.append('endDate', endDate)
+
+            const res = await apiClient.get(`v1/seller/analytics/sales?${queryParams}`)
+            return res?.data
+        },
+
+        // Get sales trends
+        getTrends: async (params = {}) => {
+            const { startDate, endDate, period = '30d' } = params
+            const queryParams = new URLSearchParams({ period })
+            if (startDate) queryParams.append('startDate', startDate)
+            if (endDate) queryParams.append('endDate', endDate)
+
+            const res = await apiClient.get(`v1/seller/analytics/sales/trends?${queryParams}`)
+            return res?.data
+        },
+
+        // Get top performing products
+        getTopProducts: async (params = {}) => {
+            const { limit = 10, startDate, endDate, sortBy = 'revenue' } = params
+            const queryParams = new URLSearchParams({ limit, sortBy })
+            if (startDate) queryParams.append('startDate', startDate)
+            if (endDate) queryParams.append('endDate', endDate)
+
+            const res = await apiClient.get(`v1/seller/analytics/products/top?${queryParams}`)
+            return res?.data
+        },
+
+        // Get sales by category
+        getByCategory: async (params = {}) => {
+            const { startDate, endDate } = params
+            const queryParams = new URLSearchParams()
+            if (startDate) queryParams.append('startDate', startDate)
+            if (endDate) queryParams.append('endDate', endDate)
+
+            const res = await apiClient.get(`v1/seller/analytics/sales/categories?${queryParams}`)
+            return res?.data
+        },
+
+        // Get payment methods breakdown
+        getPaymentMethods: async (params = {}) => {
+            const { startDate, endDate } = params
+            const queryParams = new URLSearchParams()
+            if (startDate) queryParams.append('startDate', startDate)
+            if (endDate) queryParams.append('endDate', endDate)
+
+            const res = await apiClient.get(`v1/seller/analytics/payments/methods?${queryParams}`)
+            return res?.data
+        }
+    },
+
     // Dashboard Overview API
     dashboard: {
         // Get overview stats

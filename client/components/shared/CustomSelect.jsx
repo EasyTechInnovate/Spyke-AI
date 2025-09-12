@@ -159,7 +159,9 @@ export default function CustomSelect({
                                             <div
                                                 key={option.value}
                                                 className={cn('flex items-center gap-1 px-2 py-1 rounded-md text-xs', currentTheme.selectedTag)}>
-                                                <option.icon className="w-3 h-3" />
+                                                {option.icon && (
+                                                    <option.icon className="w-3 h-3" />
+                                                )}
                                                 <span className="truncate max-w-[80px]">{option.label}</span>
                                             </div>
                                         ))}
@@ -170,7 +172,9 @@ export default function CustomSelect({
                                         <div
                                             key={option.value}
                                             className={cn('flex items-center gap-1 px-2 py-1 rounded-md text-xs', currentTheme.selectedTag)}>
-                                            <option.icon className="w-3 h-3" />
+                                            {option.icon && (
+                                                <option.icon className="w-3 h-3" />
+                                            )}
                                             <span className="truncate max-w-[100px]">{option.label}</span>
                                         </div>
                                     ))
@@ -182,7 +186,9 @@ export default function CustomSelect({
                     ) : // Single selection display
                     selectedOption ? (
                         <>
-                            <selectedOption.icon className={cn('w-4 h-4 flex-shrink-0', currentTheme.selectedIcon)} />
+                            {selectedOption.icon && (
+                                <selectedOption.icon className={cn('w-4 h-4 flex-shrink-0', currentTheme.selectedIcon)} />
+                            )}
                             <span className="text-white truncate text-sm font-medium">{selectedOption.label}</span>
                         </>
                     ) : (
@@ -260,7 +266,9 @@ export default function CustomSelect({
                                                     currentTheme.separatorBorder || 'border-gray-700/50'
                                                 )}>
                                                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                                                    <option.icon className={cn('w-5 h-5 flex-shrink-0', selected ? currentTheme.selectedIcon : 'text-gray-400')} />
+                                                    {option.icon && (
+                                                        <option.icon className={cn('w-5 h-5 flex-shrink-0', selected ? currentTheme.selectedIcon : 'text-gray-400')} />
+                                                    )}
                                                     <span className={cn('truncate font-medium text-sm', selected ? 'text-current' : currentTheme.optionText)}>{option.label}</span>
                                                 </div>
                                                 {selected && <Check className={cn('w-4 h-4 flex-shrink-0', currentTheme.checkIcon)} />}

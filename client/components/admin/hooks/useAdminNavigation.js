@@ -4,23 +4,35 @@ import { useState, useEffect, useCallback } from 'react'
 
 // Custom hook for persisted state with localStorage
 export function usePersistedState(key, initialValue) {
-  const [state, setState] = useState(() => {
-    if (typeof window === 'undefined') return initialValue
-    try {
-      const stored = localStorage.getItem(key)
-      return stored ? JSON.parse(stored) : initialValue
-    } catch {
-      return initialValue
-    }
-  })
+  // Always start with initialValue to match server rendering
+  const [state, setState] = useState(initialValue)
+  const [isHydrated, setIsHydrated] = useState(false)
 
+  // Hydrate from localStorage after component mounts
   useEffect(() => {
-    try {
-      localStorage.setItem(key, JSON.stringify(state))
-    } catch (error) {
-      console.warn(`Failed to persist ${key}:`, error)
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem(key)
+        if (stored) {
+          setState(JSON.parse(stored))
+        }
+      } catch (error) {
+        console.warn(`Failed to load persisted state for ${key}:`, error)
+      }
+      setIsHydrated(true)
     }
-  }, [key, state])
+  }, [key])
+
+  // Persist to localStorage when state changes (but only after hydration)
+  useEffect(() => {
+    if (isHydrated && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(key, JSON.stringify(state))
+      } catch (error) {
+        console.warn(`Failed to persist ${key}:`, error)
+      }
+    }
+  }, [key, state, isHydrated])
 
   return [state, setState]
 }

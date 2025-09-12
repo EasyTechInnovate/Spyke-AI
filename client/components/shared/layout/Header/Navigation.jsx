@@ -10,13 +10,13 @@ export default function Navigation() {
     return (
         <nav
             ref={navRef}
-            className="hidden md:flex items-center space-x-1 sm:space-x-2">
+            className="hidden md:flex items-center space-x-3 lg:space-x-6 xl:space-x-8">
             <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}>
                 <Link
                     href="/explore"
-                    className="nav-link px-3 py-2 text-base font-medium text-white/80 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-white/10">
+                    className="nav-link px-4 py-2 text-base font-medium text-white/80 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-white/10 whitespace-nowrap">
                     Explore
                 </Link>
             </motion.div>
@@ -26,7 +26,7 @@ export default function Navigation() {
                 whileTap={{ scale: 0.95 }}>
                 <Link
                     href="/creators"
-                    className="nav-link px-3 py-2 text-base font-medium text-white/80 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-white/10">
+                    className="nav-link px-4 py-2 text-base font-medium text-white/80 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-white/10 whitespace-nowrap">
                     Sellers
                 </Link>
             </motion.div>
@@ -36,7 +36,7 @@ export default function Navigation() {
                 whileTap={{ scale: 0.95 }}>
                 <Link
                     href="/categories"
-                    className="nav-link px-3 py-2 text-base font-medium text-white/80 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-white/10">
+                    className="nav-link px-4 py-2 text-base font-medium text-white/80 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-white/10 whitespace-nowrap">
                     Categories
                 </Link>
             </motion.div>
@@ -46,7 +46,7 @@ export default function Navigation() {
                 whileTap={{ scale: 0.95 }}>
                 <Link
                     href="/how-it-works"
-                    className="nav-link px-3 py-2 text-base font-medium text-white/80 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-white/10">
+                    className="nav-link px-4 py-2 text-base font-medium text-white/80 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-white/10 whitespace-nowrap">
                     How It Works
                 </Link>
             </motion.div>

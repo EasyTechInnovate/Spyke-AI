@@ -1,340 +1,389 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import {
-    Users,
-    Package,
-    DollarSign,
-    ShoppingCart,
-    Eye,
-    UserCheck,
-    Activity,
-    TrendingUp,
-    ArrowUpRight,
-    ArrowDownRight,
-    RefreshCw,
-    Download,
-    BarChart3,
-    Clock,
-    Calendar
-} from 'lucide-react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { Clock, RefreshCw, Download, Calendar, BarChart3, Users, ShoppingCart, Package, Activity } from 'lucide-react'
 import analyticsAPI from '@/lib/api/analytics'
 import CustomSelect from '@/components/shared/CustomSelect'
 import { useAdmin } from '@/providers/AdminProvider'
-import { MetricCard, PageHeader, QuickActionsBar, LoadingSkeleton, EmptyState, ErrorState } from '@/components/admin'
+import { PageHeader, LoadingSkeleton, ErrorState } from '@/components/admin'
+import { motion, AnimatePresence } from 'framer-motion'
+import { TIME_RANGE_OPTIONS, ADMIN_TAB_OPTIONS } from '@/lib/constants/analytics'
 
-// Growth metric card using the new MetricCard component
-const GrowthCard = ({ title, value, change, changeType }) => (
-    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors">
-        <div className="flex items-center justify-between mb-2">
-            <h3 className="text-gray-300 font-medium">{title}</h3>
-            {change && (
-                <div className={`flex items-center gap-1 text-sm font-semibold ${changeType === 'increase' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {changeType === 'increase' ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-                    {change}
-                </div>
-            )}
-        </div>
-        <p className="text-2xl font-bold text-white">{value}</p>
-    </div>
-)
+import { OverviewTab, UsersTab, SalesTab, ProductsTab } from '@/components/features/admin/analytics/tabs'
 
-// Top categories component
-const TopCategoriesSection = ({ categories }) => (
-    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-        <div className="flex items-center gap-2 mb-6">
-            <BarChart3 className="w-5 h-5 text-emerald-400" />
-            <h2 className="text-xl font-semibold text-white">Top Categories</h2>
-        </div>
+const getIconComponent = (iconName) => {
+    const iconMap = {
+        Clock: Clock,
+        Calendar: Calendar,
+        BarChart3: BarChart3,
+        Users: Users,
+        ShoppingCart: ShoppingCart,
+        Package: Package,
+        Activity: Activity
+    }
+    return iconMap[iconName] || Clock
+}
 
-        {categories.length === 0 ? (
-            <EmptyState
-                icon={Package}
-                title="No categories available"
-                description="Categories will appear here once data is available"
-            />
-        ) : (
-            <div className="space-y-3">
-                {categories.map((category, index) => (
-                    <div
-                        key={category}
-                        className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
-                        <div className="flex items-center gap-3">
-                            <span className="w-8 h-8 bg-emerald-500/20 text-emerald-400 rounded-lg flex items-center justify-center text-sm font-bold">
-                                #{index + 1}
-                            </span>
-                            <span className="text-gray-300 font-medium">{category}</span>
-                        </div>
-                        <div className="w-32 bg-white/5 rounded-full h-2">
-                            <div
-                                className="bg-gradient-to-r from-emerald-500 to-blue-500 h-full rounded-full"
-                                style={{ width: `${Math.max(20, 100 - index * 15)}%` }}
-                            />
-                        </div>
-                    </div>
-                ))}
-            </div>
-        )}
-    </div>
-)
-
-export default function AdminEcommerceAnalytics() {
-    const [loading, setLoading] = useState(true)
-    const [refreshing, setRefreshing] = useState(false)
+export default function AdminAnalyticsPlatform() {
+    const { user } = useAdmin()
+    
+    // Store data for each tab with time range as cache key
+    const [tabCache, setTabCache] = useState({})
+    const [loading, setLoading] = useState({
+        overview: false,
+        users: false,
+        sales: false,
+        products: false,
+        performance: false
+    })
+    const [errors, setErrors] = useState({})
     const [timeRange, setTimeRange] = useState('30d')
-    const [analyticsData, setAnalyticsData] = useState(null)
-    const [error, setError] = useState(null)
+    const [activeTab, setActiveTab] = useState('overview')
 
-    // Get admin context
-    const { isAnalyticsPage } = useAdmin()
+    // Generate cache key for memoization
+    const getCacheKey = useCallback((tab, range) => `${tab}_${range}`, [])
 
-    // Time range options for CustomSelect
-    const timeRangeOptions = [
-        { value: 'today', label: 'Today', icon: Clock },
-        { value: '7d', label: 'Last 7 days', icon: Calendar },
-        { value: '30d', label: 'Last 30 days', icon: Calendar },
-        { value: 'custom', label: 'Custom range', icon: Calendar }
-    ]
+    // Get cached data for current tab and time range
+    const currentTabData = useMemo(() => {
+        const cacheKey = getCacheKey(activeTab, timeRange)
+        return tabCache[cacheKey] || null
+    }, [activeTab, timeRange, tabCache, getCacheKey])
 
-    const loadAnalytics = async (silent = false) => {
+    const getTabAPI = useCallback((tab) => {
+        switch (tab) {
+            case 'overview':
+                return () => analyticsAPI.admin.getPlatform()
+            case 'users':
+                return () => analyticsAPI.admin.getUsers()
+            case 'sales':
+                return () => analyticsAPI.admin.getSales({ period: timeRange })
+            case 'products':
+                return () => analyticsAPI.admin.getProducts()
+            case 'performance':
+                // For performance tab, combine data from multiple sources efficiently
+                return async () => {
+                    // Check if we already have all the data cached
+                    const platformKey = getCacheKey('overview', timeRange)
+                    const usersKey = getCacheKey('users', timeRange)
+                    const salesKey = getCacheKey('sales', timeRange)
+                    const productsKey = getCacheKey('products', timeRange)
+
+                    const cachedPlatform = tabCache[platformKey]
+                    const cachedUsers = tabCache[usersKey]
+                    const cachedSales = tabCache[salesKey]
+                    const cachedProducts = tabCache[productsKey]
+
+                    // If we have all cached data, use it
+                    if (cachedPlatform && cachedUsers && cachedSales && cachedProducts) {
+                        return {
+                            platform: cachedPlatform,
+                            users: cachedUsers,
+                            sales: cachedSales,
+                            products: cachedProducts
+                        }
+                    }
+
+                    // Otherwise, fetch only the missing data
+                    const promises = []
+                    const dataKeys = []
+
+                    if (!cachedPlatform) {
+                        promises.push(analyticsAPI.admin.getPlatform())
+                        dataKeys.push('platform')
+                    }
+                    if (!cachedUsers) {
+                        promises.push(analyticsAPI.admin.getUsers())
+                        dataKeys.push('users')
+                    }
+                    if (!cachedSales) {
+                        promises.push(analyticsAPI.admin.getSales({ period: timeRange }))
+                        dataKeys.push('sales')
+                    }
+                    if (!cachedProducts) {
+                        promises.push(analyticsAPI.admin.getProducts())
+                        dataKeys.push('products')
+                    }
+
+                    const results = await Promise.all(promises)
+                    
+                    // Combine cached and new data
+                    const combinedData = {
+                        platform: cachedPlatform,
+                        users: cachedUsers,
+                        sales: cachedSales,
+                        products: cachedProducts
+                    }
+
+                    // Update with new data
+                    results.forEach((result, index) => {
+                        const key = dataKeys[index]
+                        combinedData[key] = result
+                        
+                        // Cache the individual results for future use
+                        const cacheKey = getCacheKey(key === 'platform' ? 'overview' : key, timeRange)
+                        setTabCache(prev => ({ ...prev, [cacheKey]: result }))
+                    })
+
+                    return combinedData
+                }
+            default:
+                return () => analyticsAPI.admin.getPlatform()
+        }
+    }, [timeRange, tabCache, getCacheKey])
+
+    // Fetch data for specific tab
+    const fetchTabData = useCallback(async (tab) => {
+        const cacheKey = getCacheKey(tab, timeRange)
+        
+        // Skip if already loading or if we have cached data
+        if (loading[tab] || tabCache[cacheKey]) {
+            return
+        }
+
         try {
-            setError(null)
-            if (!silent) setLoading(true)
-            if (silent) setRefreshing(true)
+            setLoading(prev => ({ ...prev, [tab]: true }))
+            setErrors(prev => ({ ...prev, [tab]: null }))
 
-            const response = await analyticsAPI.admin.getPlatform()
-            setAnalyticsData(response.data)
-        } catch (error) {
-            console.error('Failed to load analytics:', error)
-            setError('Failed to load analytics data')
+            const apiCall = getTabAPI(tab)
+            const data = await apiCall()
 
-            // Set null data instead of fallback mock data
-            setAnalyticsData(null)
+            // Cache the data
+            setTabCache(prev => ({ ...prev, [cacheKey]: data }))
+        } catch (err) {
+            console.error(`Error fetching ${tab} analytics data:`, err)
+            setErrors(prev => ({ 
+                ...prev, 
+                [tab]: `Failed to load ${tab} data: ${err.message}` 
+            }))
         } finally {
-            setLoading(false)
-            setRefreshing(false)
+            setLoading(prev => ({ ...prev, [tab]: false }))
+        }
+    }, [timeRange, loading, tabCache, getCacheKey, getTabAPI])
+
+    // Fetch data when active tab changes or when we don't have cached data
+    useEffect(() => {
+        const cacheKey = getCacheKey(activeTab, timeRange)
+        if (!tabCache[cacheKey] && !loading[activeTab]) {
+            fetchTabData(activeTab)
+        }
+    }, [activeTab, timeRange, tabCache, loading, fetchTabData, getCacheKey])
+
+    // Clear cache when time range changes
+    useEffect(() => {
+        // Clear loading states
+        setLoading({
+            overview: false,
+            users: false,
+            sales: false,
+            products: false,
+            performance: false
+        })
+        setErrors({})
+    }, [timeRange])
+
+    // Refresh current tab data (force refresh)
+    const refreshCurrentTab = useCallback(() => {
+        const cacheKey = getCacheKey(activeTab, timeRange)
+        
+        // Clear the cached data for current tab
+        setTabCache(prev => {
+            const newCache = { ...prev }
+            delete newCache[cacheKey]
+            return newCache
+        })
+        
+        // Fetch fresh data
+        fetchTabData(activeTab)
+    }, [activeTab, timeRange, fetchTabData, getCacheKey])
+
+    // Handle tab change
+    const handleTabChange = useCallback((newTab) => {
+        setActiveTab(newTab)
+    }, [])
+
+    // Export functionality for current tab
+    const handleExport = useCallback(() => {
+        if (!currentTabData) return
+
+        // Create export data
+        const exportData = {
+            tab: activeTab,
+            timeRange,
+            data: currentTabData,
+            exportedAt: new Date().toISOString()
+        }
+
+        // Download as JSON (you can modify this to export as CSV/Excel)
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+            type: 'application/json'
+        })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `analytics-${activeTab}-${timeRange}-${new Date().toISOString().split('T')[0]}.json`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+    }, [activeTab, timeRange, currentTabData])
+
+    const renderTabContent = () => {
+        const isLoading = loading[activeTab]
+        const error = errors[activeTab]
+
+        // Show loading state for current tab
+        if (isLoading && !currentTabData) {
+            return <LoadingSkeleton />
+        }
+
+        // Show error state for current tab
+        if (error) {
+            return (
+                <div className="flex flex-col items-center justify-center py-12">
+                    <ErrorState message={error} />
+                    <button
+                        onClick={() => fetchTabData(activeTab)}
+                        className="mt-4 px-4 py-2 bg-[#00FF89] hover:bg-[#00E67A] text-black font-medium rounded-lg transition-colors">
+                        Retry
+                    </button>
+                </div>
+            )
+        }
+
+        // Render tab content with data
+        switch (activeTab) {
+            case 'overview':
+                return (
+                    <OverviewTab
+                        analyticsData={currentTabData}
+                        timeRange={timeRange}
+                        loading={isLoading}
+                    />
+                )
+            case 'users':
+                return (
+                    <UsersTab
+                        analyticsData={currentTabData}
+                        timeRange={timeRange}
+                        loading={isLoading}
+                    />
+                )
+            case 'sales':
+                return (
+                    <SalesTab
+                        analyticsData={currentTabData}
+                        timeRange={timeRange}
+                        loading={isLoading}
+                    />
+                )
+            case 'products':
+                return (
+                    <ProductsTab
+                        analyticsData={currentTabData}
+                        timeRange={timeRange}
+                        loading={isLoading}
+                    />
+                )
+            default:
+                return (
+                    <OverviewTab
+                        analyticsData={currentTabData}
+                        timeRange={timeRange}
+                        loading={isLoading}
+                    />
+                )
         }
     }
 
-    useEffect(() => {
-        loadAnalytics()
-    }, [timeRange])
-
-    const handleRefresh = () => {
-        loadAnalytics(true)
-    }
-
-    const handleExport = () => {
-        if (!analyticsData) return
-        const dataStr = JSON.stringify(analyticsData, null, 2)
-        const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
-        const exportFileDefaultName = `ecommerce-analytics-${new Date().toISOString().split('T')[0]}.json`
-        const linkElement = document.createElement('a')
-        linkElement.setAttribute('href', dataUri)
-        linkElement.setAttribute('download', exportFileDefaultName)
-        linkElement.click()
-    }
-
-    // Loading state
-    if (loading) {
-        return (
-            <div className="space-y-8">
-                <LoadingSkeleton className="h-8 w-96" />
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {[...Array(8)].map((_, i) => (
-                        <LoadingSkeleton
-                            key={i}
-                            variant="card"
-                        />
-                    ))}
-                </div>
-                <LoadingSkeleton
-                    className="h-64"
-                    variant="card"
-                />
-            </div>
-        )
-    }
-
-    // Error state
-    if (error && !analyticsData) {
-        return (
-            <ErrorState
-                title="Failed to load analytics"
-                description={error}
-                onRetry={() => loadAnalytics()}
-            />
-        )
-    }
-
-    const { overview, growth, topCategories } = analyticsData || {}
-
-    // Safe values with defaults
-    const safeOverview = {
-        totalUsers: overview?.totalUsers || 0,
-        totalSellers: overview?.totalSellers || 0,
-        totalProducts: overview?.totalProducts || 0,
-        activeProducts: overview?.activeProducts || 0,
-        totalSales: overview?.totalSales || 0,
-        totalRevenue: overview?.totalRevenue || 0,
-        avgOrderValue: overview?.avgOrderValue || 0,
-        totalViews: overview?.totalViews || 0
-    }
-
-    const safeGrowth = {
-        newUsersLast30Days: growth?.newUsersLast30Days || 0,
-        newProductsLast30Days: growth?.newProductsLast30Days || 0,
-        salesLast30Days: growth?.salesLast30Days || 0
-    }
-
-    const safeCategories = topCategories || []
-
-    // Calculate growth percentages from real data only
-    const calculateGrowthChange = (current, previous) => {
-        if (!previous || previous === 0) return null
-        const percentage = ((current - previous) / previous) * 100
-        return percentage > 0 ? `+${percentage.toFixed(1)}%` : `${percentage.toFixed(1)}%`
-    }
-
-    // Header actions
-    const headerActions = [
-        <CustomSelect
-            key="timeRange"
-            value={timeRange}
-            onChange={setTimeRange}
-            options={timeRangeOptions}
-            placeholder="Select time range"
-            searchable={false}
-            allowClear={false}
-            type="admin"
-            className="w-48"
-        />,
-        <button
-            key="refresh"
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white text-sm font-medium transition-colors disabled:opacity-50">
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
-        </button>,
-        <button
-            key="export"
-            onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white text-sm font-medium transition-colors">
-            <Download className="w-4 h-4" />
-            Export
-        </button>
-    ]
-
     return (
-        <div className="space-y-8">
-            {/* Page Header */}
+        <div className="min-h-screen bg-gray-900">
             <PageHeader
-                title="E-commerce Analytics"
-                subtitle="Admin dashboard for platform insights and performance"
-                breadcrumbs={['Admin', 'Analytics', 'Platform']}
-                actions={headerActions}
+                title="Admin Analytics"
+                subtitle="Comprehensive insights into your admin performance"
+                icon={BarChart3}
             />
 
-            {/* Error banner */}
-            {error && (
-                <div className="bg-rose-500/10 border border-rose-500/20 rounded-lg p-4">
-                    <p className="text-rose-400 text-sm">{error}</p>
-                </div>
-            )}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Controls */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                    <div className="flex items-center gap-4">
+                        <CustomSelect
+                            value={timeRange}
+                            onChange={setTimeRange}
+                            options={TIME_RANGE_OPTIONS}
+                            label="Time Range"
+                        />
+                    </div>
 
-            {/* Overview Cards */}
-            <section>
-                <h2 className="text-xl font-semibold text-white mb-6">Platform Overview</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <MetricCard
-                        title="Total Users"
-                        value={safeOverview.totalUsers.toLocaleString()}
-                        icon={Users}
-                        color="blue"
-                        loading={loading}
-                    />
-                    <MetricCard
-                        title="Total Sellers"
-                        value={safeOverview.totalSellers.toLocaleString()}
-                        icon={UserCheck}
-                        color="emerald"
-                        loading={loading}
-                    />
-                    <MetricCard
-                        title="Total Products"
-                        value={safeOverview.totalProducts.toLocaleString()}
-                        icon={Package}
-                        color="purple"
-                        loading={loading}
-                    />
-                    <MetricCard
-                        title="Active Products"
-                        value={safeOverview.activeProducts.toLocaleString()}
-                        icon={Activity}
-                        color="indigo"
-                        loading={loading}
-                    />
-                    <MetricCard
-                        title="Total Sales"
-                        value={safeOverview.totalSales.toLocaleString()}
-                        icon={ShoppingCart}
-                        color="rose"
-                        loading={loading}
-                    />
-                    <MetricCard
-                        title="Total Revenue"
-                        value={`$${safeOverview.totalRevenue.toLocaleString()}`}
-                        icon={DollarSign}
-                        color="amber"
-                        loading={loading}
-                    />
-                    <MetricCard
-                        title="Avg Order Value"
-                        value={`$${safeOverview.avgOrderValue.toFixed(2)}`}
-                        icon={TrendingUp}
-                        color="cyan"
-                        loading={loading}
-                    />
-                    <MetricCard
-                        title="Total Views"
-                        value={safeOverview.totalViews.toLocaleString()}
-                        icon={Eye}
-                        color="emerald"
-                        loading={loading}
-                    />
+                    <div className="flex items-center gap-3">
+                        <button
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-300 hover:text-white hover:border-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={refreshCurrentTab}
+                            disabled={loading[activeTab]}>
+                            <RefreshCw className={`w-4 h-4 ${loading[activeTab] ? 'animate-spin' : ''}`} />
+                            Refresh
+                        </button>
+                        <button 
+                            className="flex items-center gap-2 px-4 py-2 bg-[#00FF89] hover:bg-[#00E67A] text-black font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={handleExport}
+                            disabled={!currentTabData || loading[activeTab]}>
+                            <Download className="w-4 h-4" />
+                            Export
+                        </button>
+                    </div>
                 </div>
-            </section>
 
-            {/* Growth Section (Last 30 Days) */}
-            <section>
-                <h2 className="text-xl font-semibold text-white mb-6">Growth Metrics (Last 30 Days)</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <GrowthCard
-                        title="New Users"
-                        value={safeGrowth.newUsersLast30Days.toLocaleString()}
-                        change={calculateGrowthChange(safeGrowth.newUsersLast30Days, growth?.previousUsers)}
-                        changeType="increase"
-                    />
-                    <GrowthCard
-                        title="New Products"
-                        value={safeGrowth.newProductsLast30Days.toLocaleString()}
-                        change={calculateGrowthChange(safeGrowth.newProductsLast30Days, growth?.previousProducts)}
-                        changeType="increase"
-                    />
-                    <GrowthCard
-                        title="Sales"
-                        value={safeGrowth.salesLast30Days.toLocaleString()}
-                        change={calculateGrowthChange(safeGrowth.salesLast30Days, growth?.previousSales)}
-                        changeType="increase"
-                    />
+                {/* Tabs */}
+                <div className="mb-8">
+                    <div className="border-b border-gray-800">
+                        <nav className="-mb-px flex space-x-8 overflow-x-auto">
+                            {ADMIN_TAB_OPTIONS.map((tab) => {
+                                const IconComponent = getIconComponent(tab.icon)
+                                const isCurrentTab = activeTab === tab.value
+                                const cacheKey = getCacheKey(tab.value, timeRange)
+                                const hasData = !!tabCache[cacheKey]
+                                const isTabLoading = loading[tab.value]
+                                
+                                return (
+                                    <button
+                                        key={tab.value}
+                                        onClick={() => handleTabChange(tab.value)}
+                                        className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-base flex items-center gap-2 relative ${
+                                            isCurrentTab
+                                                ? 'border-[#00FF89] text-[#00FF89]'
+                                                : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+                                        }`}>
+                                        <IconComponent className="w-4 h-4" />
+                                        {tab.label}
+                                        
+                                        {/* Loading indicator for tab */}
+                                        {isTabLoading && (
+                                            <div className="w-2 h-2 bg-[#00FF89] rounded-full animate-pulse" />
+                                        )}
+                                        
+                                        {/* Data indicator - small dot if tab has data */}
+                                        {hasData && !isTabLoading && !isCurrentTab && (
+                                            <div className="w-1.5 h-1.5 bg-gray-500 rounded-full" />
+                                        )}
+                                    </button>
+                                )
+                            })}
+                        </nav>
+                    </div>
                 </div>
-            </section>
 
-            {/* Top Categories */}
-            <section>
-                <TopCategoriesSection categories={safeCategories} />
-            </section>
+                {/* Tab Content */}
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={activeTab}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}>
+                        {renderTabContent()}
+                    </motion.div>
+                </AnimatePresence>
+            </div>
         </div>
     )
 }

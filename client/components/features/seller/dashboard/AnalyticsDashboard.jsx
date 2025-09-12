@@ -1,8 +1,21 @@
 'use client'
 
 import { useState } from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Bar, Area } from 'recharts'
-import { BarChart3, Calendar, Filter, Download } from 'lucide-react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Bar, Area, AreaChart } from 'recharts'
+import { BarChart3, Calendar, Filter, Download, Users, ShoppingCart, Package, Activity } from 'lucide-react'
+import { SELLER_TAB_OPTIONS, SELLER_ANALYTICS_TABS } from '@/lib/constants/analytics'
+
+// Icon mapping utility for converting string icon names to components
+const getIconComponent = (iconName) => {
+  const iconMap = {
+    'BarChart3': BarChart3,
+    'Activity': Activity,
+    'Users': Users,
+    'ShoppingCart': ShoppingCart,
+    'Package': Package
+  }
+  return iconMap[iconName] || BarChart3
+}
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -29,7 +42,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function AnalyticsDashboard({ data, className = "" }) {
-  const [selectedChart, setSelectedChart] = useState('overview')
+  const [selectedChart, setSelectedChart] = useState(SELLER_ANALYTICS_TABS.OVERVIEW)
   const [timePeriod, setTimePeriod] = useState('30d')
 
   // Sample comprehensive data - replace with real API data
@@ -43,12 +56,6 @@ export default function AnalyticsDashboard({ data, className = "" }) {
     { date: 'Jan 7', revenue: 1890, sales: 23, views: 356, conversion: 6.5 }
   ]
 
-  const chartTypes = [
-    { key: 'overview', label: 'Overview', description: 'Combined metrics' },
-    { key: 'revenue', label: 'Revenue', description: 'Revenue trends' },
-    { key: 'conversion', label: 'Conversion', description: 'Conversion rates' }
-  ]
-
   const periods = [
     { value: '7d', label: '7D' },
     { value: '30d', label: '30D' },
@@ -57,7 +64,7 @@ export default function AnalyticsDashboard({ data, className = "" }) {
 
   const renderChart = () => {
     switch (selectedChart) {
-      case 'revenue':
+      case SELLER_ANALYTICS_TABS.REVENUE:
         return (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={overviewData}>
@@ -84,7 +91,7 @@ export default function AnalyticsDashboard({ data, className = "" }) {
           </ResponsiveContainer>
         )
       
-      case 'conversion':
+      case SELLER_ANALYTICS_TABS.PERFORMANCE:
         return (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={overviewData}>
@@ -105,7 +112,7 @@ export default function AnalyticsDashboard({ data, className = "" }) {
           </ResponsiveContainer>
         )
       
-      default:
+      default: // SELLER_ANALYTICS_TABS.OVERVIEW
         return (
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={overviewData}>
@@ -139,58 +146,69 @@ export default function AnalyticsDashboard({ data, className = "" }) {
 
   return (
     <div className={`bg-[#1f1f1f] border border-gray-800 rounded-2xl ${className}`}>
-      <div className="p-6 border-b border-gray-800">
+      <div className="p-4 sm:p-6 border-b border-gray-800">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-[#00FF89]/20 rounded-xl border border-[#00FF89]/30">
               <BarChart3 className="w-5 h-5 text-[#00FF89]" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">Analytics Dashboard</h3>
-              <p className="text-sm text-gray-400">Comprehensive performance insights</p>
+              <h3 className="text-lg font-semibold text-white">Seller Analytics</h3>
+              <p className="text-sm text-gray-400">Your performance metrics</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
-            <button className="p-2 text-gray-400 hover:text-white transition-colors">
+          <div className="flex items-center gap-2">
+            <button className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-700">
               <Download className="w-4 h-4" />
             </button>
-            <button className="p-2 text-gray-400 hover:text-white transition-colors">
+            <button className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-700">
               <Filter className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          {/* Chart Type Selector */}
-          <div className="flex gap-2">
-            {chartTypes.map((chart) => (
-              <button
-                key={chart.key}
-                onClick={() => setSelectedChart(chart.key)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                  selectedChart === chart.key
-                    ? 'bg-[#00FF89]/20 text-[#00FF89] border border-[#00FF89]/30'
-                    : 'bg-[#121212] text-gray-400 hover:text-white border border-gray-700'
-                }`}
-              >
-                <div className="font-medium">{chart.label}</div>
-                <div className="text-[10px] opacity-80">{chart.description}</div>
-              </button>
-            ))}
+        {/* Navigation Tabs */}
+        <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
+          {/* Tab Navigation */}
+          <div className="flex gap-1 p-1 bg-[#121212] rounded-xl border border-gray-700 overflow-x-auto">
+            {SELLER_TAB_OPTIONS.map((tab) => {
+              const IconComponent = getIconComponent(tab.icon)
+              const isActive = selectedChart === tab.key
+              
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setSelectedChart(tab.key)}
+                  className={`
+                    flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg transition-all duration-200 
+                    whitespace-nowrap text-sm font-medium min-w-0 flex-shrink-0
+                    ${isActive 
+                      ? 'bg-[#00FF89] text-[#121212] shadow-lg' 
+                      : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                    }
+                  `}
+                >
+                  <IconComponent className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">{tab.label}</span>
+                </button>
+              )
+            })}
           </div>
 
           {/* Time Period Selector */}
-          <div className="flex gap-2 ml-auto">
+          <div className="flex gap-1 p-1 bg-[#121212] rounded-lg border border-gray-700">
             {periods.map((period) => (
               <button
                 key={period.value}
                 onClick={() => setTimePeriod(period.value)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                  timePeriod === period.value
-                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                    : 'bg-[#121212] text-gray-400 hover:text-white border border-gray-700'
-                }`}
+                className={`
+                  px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200
+                  ${timePeriod === period.value
+                    ? 'bg-blue-500 text-white shadow-sm' 
+                    : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                  }
+                `}
               >
                 {period.label}
               </button>
@@ -199,17 +217,20 @@ export default function AnalyticsDashboard({ data, className = "" }) {
         </div>
       </div>
 
-      <div className="p-6">
-        <div className="h-96">
+      <div className="p-4 sm:p-6">
+        <div className="h-80 sm:h-96">
           {renderChart()}
         </div>
         
-        {/* Chart Legend/Description */}
+        {/* Chart Footer Info */}
         <div className="mt-4 pt-4 border-t border-gray-800">
-          <div className="text-xs text-gray-500 text-center">
-            {selectedChart === 'overview' && 'Shows views (area), sales (bars), and revenue (line) trends'}
-            {selectedChart === 'revenue' && 'Track your revenue growth over the selected time period'}
-            {selectedChart === 'conversion' && 'Monitor conversion rate changes to optimize performance'}
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <span>
+              {selectedChart === SELLER_ANALYTICS_TABS.OVERVIEW && 'Views (area), Sales (bars), Revenue (line)'}
+              {selectedChart === SELLER_ANALYTICS_TABS.REVENUE && 'Revenue trends over time'}
+              {selectedChart === SELLER_ANALYTICS_TABS.PERFORMANCE && 'Conversion rate analysis'}
+            </span>
+            <span>Last updated: {new Date().toLocaleTimeString()}</span>
           </div>
         </div>
       </div>

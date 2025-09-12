@@ -81,48 +81,7 @@ export const createNavigationItems = (counts) => [
     id: 'analytics', 
     label: 'Analytics', 
     icon: TrendingUp, 
-    subItems: [
-      {
-        id: 'platform-analytics',
-        label: 'Platform Overview',
-        href: '/admin/analytics/platform'
-      },
-      {
-        id: 'user-analytics',
-        label: 'User Analytics',
-        href: '/admin/analytics/users'
-      },
-      {
-        id: 'seller-analytics',
-        label: 'Seller Analytics',
-        href: '/admin/analytics/sellers'
-      },
-      {
-        id: 'product-analytics',
-        label: 'Product Analytics',
-        href: '/admin/analytics/products'
-      },
-      {
-        id: 'sales-analytics',
-        label: 'Sales Analytics',
-        href: '/admin/analytics/sales'
-      },
-      {
-        id: 'revenue-analytics',
-        label: 'Revenue Analytics',
-        href: '/admin/analytics/revenue'
-      },
-      {
-        id: 'trends-analytics',
-        label: 'Trends & Insights',
-        href: '/admin/analytics/trends'
-      },
-      {
-        id: 'traffic-analytics',
-        label: 'Traffic Analytics',
-        href: '/admin/analytics/traffic'
-      }
-    ]
+    href: '/admin/analytics/platform'
   },
   { 
     id: 'compliance', 

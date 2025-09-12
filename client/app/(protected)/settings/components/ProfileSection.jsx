@@ -116,11 +116,22 @@ export default function ProfileSection({ onSuccess, onError }) {
 
     // Helper function to get current values for display
     const getCurrentValues = () => {
+        // Function to get readable location from user data
+        const getLocationDisplay = () => {
+            // If we have coordinates, show them
+            if (user?.userLocation?.lat && user?.userLocation?.long) {
+                const lat = user.userLocation.lat
+                const long = user.userLocation.long
+                return `${lat.toFixed(4)}, ${long.toFixed(4)}`
+            }
+            return 'Not set'
+        }
+
         return {
             name: user?.name || 'Not set',
             email: user?.emailAddress || user?.email || 'Not set',
             phone: formatPhoneNumber(user?.phoneNumber || user?.phone) || 'Not set',
-            location: user?.userLocation?.address || 'Not set'
+            location: getLocationDisplay()
         }
     }
 

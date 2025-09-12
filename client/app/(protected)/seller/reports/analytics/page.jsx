@@ -20,9 +20,9 @@ import {
 } from 'lucide-react'
 import analyticsAPI from '@/lib/api/analytics'
 
-const MetricCard = ({ title, value, change, changeType, icon: Icon, color = 'emerald' }) => {
+const MetricCard = ({ title, value, change, changeType, icon: Icon, color = 'custom' }) => {
     const colorMap = {
-        emerald: 'from-emerald-500 to-emerald-600',
+        custom: 'from-[#00FF89] to-[#00E67A]',
         blue: 'from-blue-500 to-blue-600',
         purple: 'from-purple-500 to-purple-600',
         amber: 'from-amber-500 to-amber-600',
@@ -42,7 +42,7 @@ const MetricCard = ({ title, value, change, changeType, icon: Icon, color = 'eme
                 {change && (
                     <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${
                         changeType === 'increase' 
-                            ? 'bg-emerald-500/10 text-emerald-400' 
+                            ? 'bg-[#00FF89]/10 text-[#00FF89]' 
                             : 'bg-rose-500/10 text-rose-400'
                     }`}>
                         {changeType === 'increase' ? (
@@ -189,7 +189,7 @@ export default function SellerAnalyticsOverview() {
                         change="+12.5%"
                         changeType="increase"
                         icon={DollarSign}
-                        color="emerald"
+                        color="custom"
                     />
                     <MetricCard
                         title="Total Sales"
