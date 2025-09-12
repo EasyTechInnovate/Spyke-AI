@@ -49,7 +49,7 @@ const userSchema = new mongoose.Schema(
         timezone: {
             type: String,
             trim: true,
-            required: [true, 'Timezone is required']
+            // required: [true, 'Timezone is required']
         },
 
         password: {
