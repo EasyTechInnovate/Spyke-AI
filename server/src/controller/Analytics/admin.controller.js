@@ -1154,7 +1154,7 @@ export default {
 
             // Most viewed products
             const topViewedProducts = await productModel.find({
-                                updatedAt: { $gte: dateFilter }
+                updatedAt: { $gte: dateFilter }
             })
             .sort({ viewCount: -1 })
             .limit(10)

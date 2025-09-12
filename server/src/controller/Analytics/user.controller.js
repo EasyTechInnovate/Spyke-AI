@@ -154,10 +154,10 @@ export default {
                         }
                     }
                 },
-                { $unset: 'productDetails' },
                 { $sort: sortOptions },
                 { $skip: skip },
-                { $limit: parseInt(limit) }
+                { $limit: parseInt(limit) },
+                { $unset: 'productDetails' }
             ]
 
             if (category) {
@@ -218,8 +218,8 @@ export default {
 
             const favorites = await productModel.find({
                 'engagement.favorites': authenticatedUser.id,
-                isActive: true,
-                            })
+                isActive: true
+            })
             .populate('sellerId', 'fullName avatar')
             .sort({ 'engagement.favoritedAt': -1 })
             .skip(skip)
@@ -227,8 +227,8 @@ export default {
 
             const totalFavorites = await productModel.countDocuments({
                 'engagement.favorites': authenticatedUser.id,
-                isActive: true,
-                            })
+                isActive: true
+            })
 
             // Get category breakdown of favorites
             const categoryBreakdown = await productModel.aggregate([
