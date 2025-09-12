@@ -33,4 +33,7 @@ router.route('/notifications/send').post(authentication, authorization([EUserRol
 router.route('/notifications/send-bulk').post(authentication, authorization([EUserRole.ADMIN]), validateRequest(authSchemas.sendBulkNotification), authenticationController.sendBulkNotification)
 router.route('/resend-verification').post(authenticationController.resendVerification)
 
+router.route('/google').get(authenticationController.googleAuth)
+router.route('/google/callback').get(authenticationController.googleCallback)
+
 export default router

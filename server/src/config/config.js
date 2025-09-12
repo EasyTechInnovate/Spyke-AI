@@ -37,7 +37,12 @@ const config = {
         IMAGEKIT_PUBLIC_KEY: process.env.IMAGEKIT_PUBLIC_KEY,
         IMAGEKIT_PRIVATE_KEY: process.env.IMAGEKIT_PRIVATE_KEY,
         IMAGEKIT_URL_ENDPOINT: process.env.IMAGEKIT_URL_ENDPOINT
-    }
+    },
+    google: {
+        GMAIL_CLIENT_ID: process.env.GMAIL_CLIENT_ID,
+        GMAIL_CLIENT_SECRET: process.env.GMAIL_CLIENT_SECRET,
+        GMAIL_CALLBACK_URL: process.env.GMAIL_CALLBACK_URL || "http://localhost:4000/v1/auth/google/callback",
+    },
 }
 
 export default config
