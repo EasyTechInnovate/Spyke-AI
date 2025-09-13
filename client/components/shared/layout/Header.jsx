@@ -1,6 +1,6 @@
 'use client'
 
-import { X, Menu, TrendingUp } from 'lucide-react'
+import { X, Menu } from 'lucide-react'
 import { useHeader } from '@/hooks/useHeader'
 import HeaderLogo from './Header/Logo'
 import Navigation from './Header/Navigation'
@@ -11,7 +11,6 @@ import UserDropdown from './Header/UserDropdown'
 import MobileMenu from './Header/MobileMenu'
 import SearchOverlay from './Header/SearchOverlay'
 import Link from 'next/link'
-import Container from './Container'
 import { NAVIGATION, SELLER_MENU_ITEMS, USER_MENU_ITEMS } from './Header/const'
 import { usePathname } from 'next/navigation'
 
@@ -20,7 +19,6 @@ export default function Header() {
     const {
         mobileMenuOpen,
         setMobileMenuOpen,
-        scrolled,
         user,
         dropdownOpen,
         setDropdownOpen,
@@ -40,41 +38,69 @@ export default function Header() {
 
     return (
         <>
-            <header
-                className="fixed top-0 left-0 right-0 w-full z-[99999] bg-black/95 backdrop-blur-lg border-b border-white/10 transition-all duration-300"
+            <div 
+                className="sticky-header-wrapper"
                 style={{
-                    position: 'fixed !important',
-                    top: '0px !important',
-                    left: '0px !important',
-                    right: '0px !important',
-                    zIndex: '99999 !important',
+                    position: 'sticky !important',
+                    top: '0 !important',
+                    zIndex: '9999 !important',
                     width: '100% !important',
-                    transform: 'translateZ(0)',
-                    willChange: 'transform',
-                    backfaceVisibility: 'hidden'
+                    backgroundColor: 'rgba(0, 0, 0, 0.95) !important',
+                    backdropFilter: 'blur(20px) !important',
+                    WebkitBackdropFilter: 'blur(20px) !important',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.1) !important',
+                    boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3) !important',
+                    willChange: 'transform !important',
+                    transform: 'translateZ(0) !important'
+                }}
+            >
+                <div style={{
+                    maxWidth: '120rem !important',
+                    margin: '0 auto !important',
+                    padding: '0 2rem !important'
                 }}>
-                <Container>
-                    <div className="flex items-center justify-between h-20 sm:h-24 lg:h-28">
-                        <div className="flex-shrink-0">
+                    <div style={{
+                        display: 'flex !important',
+                        alignItems: 'center !important',
+                        justifyContent: 'space-between !important',
+                        height: '80px !important',
+                        width: '100% !important'
+                    }}>
+                        <div style={{
+                            flexShrink: '0 !important'
+                        }}>
                             <HeaderLogo />
                         </div>
 
-                        <div className="hidden md:flex flex-1 justify-center">
+                        <div style={{
+                            flex: '1 !important',
+                            display: 'flex !important',
+                            justifyContent: 'center !important',
+                            margin: '0 2rem !important'
+                        }} className="hidden md:flex">
                             <Navigation
                                 showBecomeSeller={showBecomeSeller}
                                 searchOpen={searchOpen}
                             />
                         </div>
 
-                        {/* Right side controls positioned at far right */}
-                        <div className="flex items-center space-x-3">
-                            {/* Desktop only controls */}
-                            <div className="hidden lg:flex items-center space-x-4">
+                        <div style={{
+                            display: 'flex !important',
+                            alignItems: 'center !important',
+                            gap: '1rem !important'
+                        }}>
+                            <div className="hidden sm:block">
                                 <SearchButton onClick={() => setSearchOpen(true)} />
-                                <CartButton count={cartCount} />
-                                {user && <SimpleNotificationBell />}
-                                
-                                {user ? (
+                            </div>
+                            <CartButton count={cartCount} />
+                            {user && (
+                                <div className="hidden md:block">
+                                    <SimpleNotificationBell />
+                                </div>
+                            )}
+
+                            {user ? (
+                                <div className="hidden md:block">
                                     <UserDropdown
                                         ref={dropdownRef}
                                         user={user}
@@ -85,59 +111,80 @@ export default function Header() {
                                         onLogout={handleLogout}
                                         onSwitchRole={switchRole}
                                     />
-                                ) : (
-                                    !isSignInPage && (
-                                        <Link
-                                            href="/signin"
-                                            className="relative group inline-flex overflow-hidden rounded-xl ml-4"
-                                            onClick={() => {
-                                                if (typeof window !== 'undefined') {
-                                                    localStorage.removeItem('authToken')
-                                                    localStorage.removeItem('user')
-                                                    localStorage.removeItem('roles')
-                                                    document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-                                                    document.cookie = 'roles=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-                                                }
-                                            }}>
-                                            <div className="absolute inset-0 bg-gradient-to-r from-brand-primary via-green-400 to-brand-primary bg-[length:200%_100%] animate-gradient-x rounded-xl opacity-100 blur-sm transition-all duration-300 group-hover:blur-md" />
-                                            <span className="relative flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-black/90 backdrop-blur-sm rounded-xl text-brand-primary font-kumbh-sans font-semibold text-sm sm:text-lg transition-all duration-300 hover:text-white hover:bg-black/80 border border-brand-primary/20 hover:border-brand-primary/40">
-                                                Sign In
-                                            </span>
-                                        </Link>
-                                    )
-                                )}
-                            </div>
-
-                            {/* Mobile controls - bigger and more spacious */}
-                            <div className="flex lg:hidden items-center space-x-4">
-                                <SearchButton onClick={() => setSearchOpen(true)} />
-                                <CartButton count={cartCount} />
-                                <button
-                                    className="md:hidden p-3 text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all duration-200"
-                                    onClick={() => {
-                                        setMobileMenuOpen(!mobileMenuOpen)
-                                    }}
-                                    aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}>
-                                    {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-                                </button>
-                            </div>
+                                </div>
+                            ) : (
+                                !isSignInPage && (
+                                    <Link
+                                        href="/signin"
+                                        style={{
+                                            display: 'inline-flex !important',
+                                            alignItems: 'center !important',
+                                            padding: '8px 20px !important',
+                                            backgroundColor: 'transparent !important',
+                                            color: '#00FF89 !important',
+                                            fontWeight: '600 !important',
+                                            borderRadius: '12px !important',
+                                            textDecoration: 'none !important',
+                                            fontSize: '16px !important',
+                                            border: '1px solid rgba(255, 255, 255, 0.2) !important',
+                                            transition: 'all 0.3s ease !important'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.target.style.color = '#00FF89'
+                                            e.target.style.borderColor = 'rgba(0, 255, 137, 0.4)'
+                                            e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.target.style.color = '#00FF89'
+                                            e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)'
+                                            e.target.style.backgroundColor = 'transparent'
+                                        }}
+                                        onClick={() => {
+                                            if (typeof window !== 'undefined') {
+                                                localStorage.removeItem('authToken')
+                                                localStorage.removeItem('user')
+                                                localStorage.removeItem('roles')
+                                                document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+                                                document.cookie = 'roles=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+                                            }
+                                        }}>
+                                        Sign In
+                                    </Link>
+                                )
+                            )}
+                            
+                            <button
+                                className="md:hidden"
+                                style={{
+                                    padding: '8px !important',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.05) !important',
+                                    borderRadius: '8px !important',
+                                    border: 'none !important',
+                                    color: 'rgba(255, 255, 255, 0.7) !important'
+                                }}
+                                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}>
+                                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                            </button>
                         </div>
                     </div>
-                </Container>
-                <MobileMenu
-                    isOpen={mobileMenuOpen}
-                    onClose={() => setMobileMenuOpen(false)}
-                    user={user}
-                    cartCount={cartCount}
-                    currentRole={currentRole}
-                    isSeller={isSeller}
-                    navigation={NAVIGATION}
-                    menuItems={menuItems}
-                    showBecomeSeller={showBecomeSeller}
-                    onSwitchRole={switchRole}
-                    onLogout={handleLogout}
-                />
-            </header>
+                </div>
+            </div>
+
+            <MobileMenu
+                isOpen={mobileMenuOpen}
+                onClose={() => setMobileMenuOpen(false)}
+                user={user}
+                cartCount={cartCount}
+                currentRole={currentRole}
+                isSeller={isSeller}
+                navigation={NAVIGATION}
+                menuItems={menuItems}
+                showBecomeSeller={showBecomeSeller}
+                onSwitchRole={switchRole}
+                onLogout={handleLogout}
+            />
+            
             <SearchOverlay
                 isOpen={searchOpen}
                 onClose={() => setSearchOpen(false)}

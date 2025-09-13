@@ -665,8 +665,8 @@ select:focus {
   box-sizing: border-box;
 }
 
-/* Force header with maximum priority */
-header {
+/* Force header with maximum priority - BUT EXCLUDE SELLER LAYOUT */
+body:not(:has([data-seller-layout])) header {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
@@ -681,10 +681,35 @@ header {
   transition: none !important;
 }
 
-/* Override any transforms or animations that might hide the header */
-header * {
+/* Override any transforms or animations that might hide the header - BUT EXCLUDE SELLER LAYOUT */
+body:not(:has([data-seller-layout])) header * {
   transform: none !important;
   transition: none !important;
+}
+
+/* SELLER LAYOUT SPECIFIC OVERRIDES - Reset all forced header styles */
+[data-seller-layout] header {
+  position: static !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  z-index: auto !important;
+  width: auto !important;
+  height: auto !important;
+  transform: none !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Reset any forced positioning for seller layout elements */
+[data-seller-layout] header * {
+  transform: none !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Ensure seller layout content flows naturally */
+[data-seller-layout] main {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
 }
 
 /* Force main content spacing */

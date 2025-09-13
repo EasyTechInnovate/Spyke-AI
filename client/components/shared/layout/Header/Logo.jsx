@@ -4,10 +4,9 @@ import { SpykeLogo } from '@/components/Logo'
 export default function HeaderLogo() {
     return (
         <Link href="/" className="flex items-center z-10 group">
-            {/* Desktop Logo - Icon only, no text */}
             <div className="hidden md:flex items-center">
                 <SpykeLogo
-                    sizePreset="lg"
+                    sizePreset="3xl"
                     showText={false}
                     darkMode={true}
                     priority={true}
