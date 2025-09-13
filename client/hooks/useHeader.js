@@ -127,7 +127,7 @@ export function useHeader() {
         fetchNotifications,
         isAuthenticated,
         isSeller: hasRole('seller'),
-        showBecomeSeller: !hasRole('seller') && currentRole === 'user'
+        showBecomeSeller: !isAuthenticated || !hasRole('seller')
     }
 }
 

@@ -1,23 +1,18 @@
 'use client'
 
-import { useState, memo, useMemo, useEffect } from 'react'
+import { useState, memo, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowRight, Star, Eye, ShoppingCart, CheckCircle, Sparkles, Loader2, Activity, Heart } from 'lucide-react'
+import { ArrowRight, Star, Eye, CheckCircle, Sparkles, Loader2, Activity, Heart, Package } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import OptimizedImage from '@/components/shared/ui/OptimizedImage'
-import SmoothProductCarousel from './featured/SmoothProductCarousel'
 import { useCart } from '@/hooks/useCart'
-import { useAuth } from '@/hooks/useAuth'
-import toast from '@/lib/utils/toast'
-import { useProducts } from '@/hooks/useProducts'
-import { featuredProductsDummy } from '@/data/featuredProductsDummy'
+import { productsAPI } from '@/lib/api'
 
 // Import Design System Components
 import { DSStack, DSHeading, DSText, DSButton, DSBadge, DSLoadingState } from '@/lib/design-system'
 
-import InlineNotification from '@/components/shared/notifications/InlineNotification'
 
 // Use the same background effects as hero section
 const BackgroundEffectsLight = dynamic(() => import('./hero/BackgroundEffectsLight'), {
@@ -55,57 +50,37 @@ const getTypeDisplay = (type) => {
 
 const FeaturedProducts = memo(function FeaturedProducts() {
     const router = useRouter()
+    const [featuredProducts, setFeaturedProducts] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
 
-    const {
-        products: featuredProducts,
-        loading: loadingFeatured,
-        error: errorFeatured
-    } = useProducts({
-        sortBy: 'popularity',
-        sortOrder: 'desc',
-        limit: 8
-    })
-
-    const {
-        products: popularProducts,
-        loading: loadingPopular,
-        error: errorPopular
-    } = useProducts({
-        sortBy: 'popularity',
-        sortOrder: 'desc',
-        limit: 8,
-        verifiedOnly: 'true'
-    })
-
-    const sourceFeatured = featuredProducts || []
-    const sourcePopular = popularProducts || []
-
-    const products = useMemo(() => {
-        if ((sourceFeatured?.length || 0) >= 4) return sourceFeatured
-
-        const mapId = (p) => p._id || p.id || p.slug
-        const merged = []
-        const seen = new Set()
-
-        for (const p of sourceFeatured || []) {
-            const id = mapId(p)
-            if (id && !seen.has(id)) {
-                seen.add(id)
-                merged.push(p)
+    // Fetch featured products using the proper backend API
+    useEffect(() => {
+        const fetchFeaturedProducts = async () => {
+            try {
+                setLoading(true)
+                setError(null)
+                
+                const response = await productsAPI.getFeaturedProducts({
+                    limit: 8,
+                    minRating: 3.5
+                })
+                
+                if (response?.data) {
+                    setFeaturedProducts(response.data)
+                } else {
+                    setFeaturedProducts([])
+                }
+            } catch (err) {
+                setError(err.message || 'Failed to load featured products')
+                setFeaturedProducts([])
+            } finally {
+                setLoading(false)
             }
         }
-        for (const p of sourcePopular || []) {
-            const id = mapId(p)
-            if (id && !seen.has(id)) {
-                seen.add(id)
-                merged.push(p)
-            }
-        }
-        return merged
-    }, [sourceFeatured, sourcePopular])
 
-    const loading = loadingFeatured || (products.length < 4 && loadingPopular)
-    const error = (errorFeatured || errorPopular) && products.length === 0
+        fetchFeaturedProducts()
+    }, [])
 
     const handleProductClick = (product) => {
         router.push(`/products/${product.slug || product.id || product._id}`)
@@ -129,20 +104,20 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                             variant="primary"
                             icon={Sparkles}
                             className="mb-4 sm:mb-6">
-                            Trending This Week
+                            Featured Products
                         </DSBadge>
 
                         <DSHeading
                             level={2}
                             variant="hero"
                             className="mb-3 sm:mb-4">
-                            <span style={{ color: 'white' }}>Featured Products</span>
+                            <span style={{ color: 'white' }}>Handpicked AI Solutions</span>
                         </DSHeading>
 
                         <DSText
                             variant="subhero"
                             style={{ color: '#9ca3af' }}>
-                            Handpicked AI tools and prompts loved by thousands of creators
+                            Discover verified AI tools and prompts chosen by our algorithm for quality and performance
                         </DSText>
                     </motion.div>
 
@@ -159,35 +134,78 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                                     gap="medium"
                                     direction="column"
                                     align="center">
-                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-500/10 rounded-xl flex items-center justify-center">
-                                        <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-red-400" />
+                                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-red-500/10 rounded-xl flex items-center justify-center border border-red-500/20">
+                                        <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-red-400" />
                                     </div>
 
-                                    <DSText style={{ color: '#9ca3af' }}>Failed to load products</DSText>
+                                    <DSHeading level={3} className="text-white mb-2">
+                                        Unable to Load Featured Products
+                                    </DSHeading>
+
+                                    <DSText style={{ color: '#9ca3af' }} className="mb-4">
+                                        We're having trouble loading our featured products. Please try again or browse all products.
+                                    </DSText>
+
+                                    <div className="flex flex-col sm:flex-row gap-3">
+                                        <DSButton
+                                            variant="primary"
+                                            size="medium"
+                                            onClick={() => window.location.reload()}>
+                                            Try Again
+                                        </DSButton>
+                                        
+                                        <Link href="/explore">
+                                            <DSButton
+                                                variant="secondary"
+                                                size="medium">
+                                                Browse All Products
+                                                <ArrowRight className="w-4 h-4" />
+                                            </DSButton>
+                                        </Link>
+                                    </div>
+                                </DSStack>
+                            </div>
+                        ) : featuredProducts.length === 0 ? (
+                            <div className="text-center py-8 sm:py-12">
+                                <DSStack
+                                    gap="medium"
+                                    direction="column"
+                                    align="center">
+                                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-800/50 rounded-xl flex items-center justify-center border border-gray-700/50">
+                                        <Package className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
+                                    </div>
+
+                                    <DSHeading level={3} className="text-white mb-2">
+                                        No Featured Products Available
+                                    </DSHeading>
+
+                                    <DSText style={{ color: '#9ca3af' }} className="mb-4">
+                                        We're working on curating amazing products for you. Check out our full catalog in the meantime.
+                                    </DSText>
 
                                     <Link href="/explore">
                                         <DSButton
                                             variant="primary"
                                             size="medium">
-                                            Browse all products
+                                            Explore All Products
                                             <ArrowRight className="w-4 h-4" />
                                         </DSButton>
                                     </Link>
                                 </DSStack>
                             </div>
-                        ) : products.length > 0 ? (
-                            products.length === 1 ? (
+                        ) : (
+                            featuredProducts.length === 1 ? (
                                 <div className="flex justify-center">
-                                    <div className="w-full max-w-xs">
+                                    <div className="w-full max-w-sm">
                                         <ProductCard
-                                            product={products[0]}
-                                            onClick={() => handleProductClick(products[0])}
+                                            product={featuredProducts[0]}
+                                            onClick={() => handleProductClick(featuredProducts[0])}
                                         />
                                     </div>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                    {products.slice(0, 4).map((product, index) => (
+                                    {featuredProducts.slice(0, 8).map((product, index) => (
                                         <motion.div
                                             key={product._id || product.id}
                                             initial={{ opacity: 0, y: 20 }}
@@ -203,32 +221,10 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                                     ))}
                                 </div>
                             )
-                        ) : (
-                            <div className="text-center py-8 sm:py-12">
-                                <DSStack
-                                    gap="medium"
-                                    direction="column"
-                                    align="center">
-                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-800 rounded-xl flex items-center justify-center">
-                                        <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
-                                    </div>
-
-                                    <DSText style={{ color: '#9ca3af' }}>No products available</DSText>
-
-                                    <Link href="/explore">
-                                        <DSButton
-                                            variant="secondary"
-                                            size="medium">
-                                            Check back soon
-                                            <ArrowRight className="w-4 h-4" />
-                                        </DSButton>
-                                    </Link>
-                                </DSStack>
-                            </div>
                         )}
                     </div>
 
-                    {products.length > 0 && (
+                    {featuredProducts.length > 0 && (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}

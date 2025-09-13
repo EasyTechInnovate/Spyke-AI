@@ -20,7 +20,6 @@ export default function Footer() {
         ],
         Resources: [
             { name: 'Blog', href: '/blog', prefetch: false },
-            { name: 'Guides', href: '/guides', prefetch: false },
         ],
         Company: [
             { name: 'About Us', href: '/aboutus', prefetch: true },

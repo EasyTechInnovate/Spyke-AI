@@ -55,6 +55,18 @@ export function useAuth() {
             if (response) {
                 setUser(response)
                 setIsAuthenticated(true)
+                
+                const roles = authService.getUserRoles()
+                if (roles.includes('admin')) {
+                    router.push('/admin/dashboard')
+                } else if (roles.includes('seller')) {
+                    router.push('/seller/dashboard')
+                } else {
+                    const returnTo = typeof window !== 'undefined' ? localStorage.getItem('returnTo') : null
+                    const redirectUrl = returnTo || '/'
+                    if (returnTo) localStorage.removeItem('returnTo')
+                    router.push(redirectUrl)
+                }
             }
             return response
         } catch (error) {

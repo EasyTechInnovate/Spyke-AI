@@ -41,6 +41,8 @@ html {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   scroll-behavior: smooth;
+  /* Ensure html doesn't override header positioning */
+  position: relative;
 }
 
 body {
@@ -49,6 +51,95 @@ body {
   font-family: var(--font-kumbh-sans);
   background-color: #121212;
   color: #ffffff;
+  /* Ensure body doesn't create stacking context issues */
+  position: relative;
+  overflow-x: hidden;
+  padding-top: 0 !important;
+}
+
+/* Force header to always stay on top */
+.header-sticky {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+  width: 100% !important;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+/* Override any potential interference */
+header[class*="fixed"] {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 99999 !important;
+  width: 100vw !important;
+  transform: translateZ(0) !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Force any header element to be visible */
+header {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 999999 !important;
+  width: 100% !important;
+  height: 64px !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+/* Override any transforms or animations that might hide the header */
+header * {
+  transform: none !important;
+  transition: none !important;
+}
+
+/* Ensure main content has proper spacing */
+main#main-content {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* The working sticky header class - based on what made orange bar work */
+.working-sticky-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 999999 !important;
+    width: 100% !important;
+    background: rgba(0, 0, 0, 0.95) !important;
+    backdrop-filter: blur(10px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0 24px !important;
+    height: 80px !important;
+    color: white !important;
+    margin: 0 !important;
+}
+
+/* Override the global header rules for our specific sticky header */
+header.working-sticky-header {
+    position: sticky !important;
+    top: 0 !important;
+    transform: none !important;
+    transition: none !important;
+    margin: 0 !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+    height: 80px !important;
 }
 
 /* Font Classes */
@@ -567,4 +658,51 @@ select:focus {
   .no-print {
     display: none !important;
   }
+}
+
+/* Kill any potential interference */
+* {
+  box-sizing: border-box;
+}
+
+/* Force header with maximum priority */
+header {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 999999 !important;
+  width: 100% !important;
+  height: 64px !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+/* Override any transforms or animations that might hide the header */
+header * {
+  transform: none !important;
+  transition: none !important;
+}
+
+/* Force main content spacing */
+main#main-content {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* Override any section that might interfere */
+section {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* Ensure no component can override header */
+.hero-container,
+[class*="hero"],
+[class*="Hero"] {
+  position: relative !important;
+  z-index: 1 !important;
 }
