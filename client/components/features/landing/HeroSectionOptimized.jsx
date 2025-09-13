@@ -151,7 +151,7 @@ export default function HeroSectionOptimized() {
   return (
     <HeroAccessibility>
       <section
-        className="relative overflow-hidden flex items-center pt-16 hero-container"
+        className="relative overflow-hidden flex items-center hero-container"
         style={{
           minHeight: dimensions.height,
           background: '#000000'
@@ -177,7 +177,7 @@ export default function HeroSectionOptimized() {
           {mounted && <BackgroundEffectsLight />}
         </div>
 
-        <DSContainer className="relative z-0 py-16 sm:py-20 lg:py-24">
+        <DSContainer className="relative z-0 mt-2 pb-16 sm:pb-20 lg:pb-24">
           <div className="max-w-5xl mx-auto">
             {/* Main Content */}
             <DSStack gap="large" align="center" className="text-center">

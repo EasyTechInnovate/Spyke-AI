@@ -25,7 +25,6 @@ import {
     X,
     AlertCircle
 } from 'lucide-react'
-import CustomSelect from '@/components/shared/CustomSelect'
 import Notification from '@/components/shared/Notification'
 import { Globe as GlobeIcon } from 'lucide-react'
 
@@ -59,7 +58,6 @@ export default function SignupPage() {
 
     const emailCheckRef = useRef(null)
 
-    // Show notification messages
     const showNotification = (message, type = 'success') => {
         setNotification({
             id: Date.now(),
@@ -95,7 +93,6 @@ export default function SignupPage() {
         }, 500)
     }, [])
 
-    // Enhanced email validation with custom error handling
     const validateEmailInput = (email) => {
         if (!email) return 'Email is required'
         if (!email.includes('@')) return "Please include an '@' in the email address"
@@ -117,7 +114,6 @@ export default function SignupPage() {
                 }))
             }
 
-            // Clear errors and provide real-time validation
             if (name === 'emailAddress') {
                 const emailError = validateEmailInput(value)
                 setErrors((prev) => ({ ...prev, emailAddress: emailError }))
@@ -200,15 +196,9 @@ export default function SignupPage() {
                     role: 'user'
                 })
 
-                // Check if registration was successful - handle different response structures
-                if (
-                    response &&
-                    (response.success === true || response.statusCode === 201 || (response.id && response.emailAddress)) // Direct data response
-                ) {
-                    // Show email verification toast
+                if (response && (response.success === true || response.statusCode === 201 || (response.id && response.emailAddress))) {
                     showNotification('Account created successfully! Please check your email to verify your account before signing in.', 'success')
 
-                    // Redirect to verify-email page after showing the toast
                     setTimeout(() => {
                         router.push(`/verify-email?email=${encodeURIComponent(formData.emailAddress)}`)
                     }, 3000)
@@ -227,7 +217,6 @@ export default function SignupPage() {
 
     const passwordStrength = checkPasswordStrength(formData.password)
 
-    // Sort countries alphabetically and format for CustomSelect
     const countryOptions = countryCodes
         .map(({ code, country, flag }) => ({
             value: code,
@@ -236,7 +225,6 @@ export default function SignupPage() {
             searchText: `${country.toLowerCase()} ${code.toLowerCase()} ${code.replace('+', '').toLowerCase()}`
         }))
         .sort((a, b) => {
-            // Sort by country name primarily
             const countryA = countryCodes.find((c) => c.code === a.value)?.country || ''
             const countryB = countryCodes.find((c) => c.code === b.value)?.country || ''
             return countryA.localeCompare(countryB)
@@ -245,8 +233,17 @@ export default function SignupPage() {
     const selectedCountry = countryCodes.find((c) => c.code === formData.countryCode) || countryCodes[0]
 
     return (
-        <div className="min-h-screen bg-[#121212] relative overflow-hidden font-league-spartan">
-            {/* Notification */}
+        <div className="min-h-screen bg-[#121212] relative overflow-hidden flex flex-col">
+            <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900/60 to-black" />
+                <div className="absolute top-1/4 left-1/5 w-64 sm:w-80 h-64 sm:h-80 bg-[#00FF89]/8 rounded-full blur-3xl animate-pulse opacity-60" />
+                <div
+                    className="absolute bottom-1/4 right-1/5 w-56 sm:w-72 h-56 sm:h-72 bg-[#FFC050]/6 rounded-full blur-3xl animate-pulse opacity-40"
+                    style={{ animationDelay: '2s' }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/10" />
+            </div>
+
             {notification && (
                 <div className="fixed top-8 left-1/2 transform -translate-x-1/2 z-[60]">
                     <Notification
@@ -258,35 +255,30 @@ export default function SignupPage() {
 
             <Header />
 
-            <main className="relative min-h-screen flex flex-col lg:flex-row pt-20">
-                {/* Left side - Branding & Benefits */}
-                <div className="hidden lg:flex lg:w-1/2 flex-col justify-center px-8 xl:px-12">
-                    <div className="max-w-xl">
-                        {/* Badge */}
+            <main className="relative flex-1 flex flex-col lg:flex-row pt-12 sm:pt-16 lg:pt-20">
+                <div className="hidden lg:flex lg:w-1/2 flex-col justify-center px-6 xl:px-12">
+                    <div className="max-w-lg">
                         <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#00FF89]/10 border border-[#00FF89]/20 rounded-full mb-6">
                             <Sparkles className="w-4 h-4 text-[#00FF89]" />
-                            <span className="text-sm font-medium text-[#00FF89]">Join 10,000+ creators worldwide</span>
+                            <span className="text-sm font-semibold text-[#00FF89]">Join 10,000+ creators worldwide</span>
                         </div>
 
-                        {/* Heading */}
                         <h1 className="text-3xl xl:text-4xl font-bold text-white mb-4 leading-tight">
                             Start your journey with <span className="text-[#00FF89]">SpykeAI</span>
                         </h1>
 
-                        {/* Subtext */}
-                        <p className="text-base text-gray-300 mb-8 leading-relaxed font-medium">
+                        <p className="text-base xl:text-lg text-gray-300 mb-6 leading-relaxed font-medium">
                             Create your account in seconds and unlock the world's largest AI marketplace. Connect with creators, discover premium
                             tools, and scale your business.
                         </p>
 
-                        {/* Features */}
                         <div className="space-y-3">
                             <div className="flex items-center gap-3 p-3 bg-[#1a1a1a]/50 border border-gray-800/50 rounded-xl backdrop-blur-sm">
                                 <div className="w-8 h-8 bg-[#00FF89]/20 rounded-lg flex items-center justify-center flex-shrink-0">
                                     <Users className="w-4 h-4 text-[#00FF89]" />
                                 </div>
                                 <div>
-                                    <h3 className="text-white font-semibold text-sm mb-0.5">Instant Access</h3>
+                                    <h3 className="text-white font-bold text-sm mb-0.5">Instant Access</h3>
                                     <p className="text-xs text-gray-400">Browse 1000+ AI tools immediately</p>
                                 </div>
                             </div>
@@ -296,7 +288,7 @@ export default function SignupPage() {
                                     <Shield className="w-4 h-4 text-[#FFC050]" />
                                 </div>
                                 <div>
-                                    <h3 className="text-white font-semibold text-sm mb-0.5">Safe & Secure</h3>
+                                    <h3 className="text-white font-bold text-sm mb-0.5">Safe & Secure</h3>
                                     <p className="text-xs text-gray-400">Bank-level encryption & protection</p>
                                 </div>
                             </div>
@@ -306,7 +298,7 @@ export default function SignupPage() {
                                     <Zap className="w-4 h-4 text-[#ff6b6b]" />
                                 </div>
                                 <div>
-                                    <h3 className="text-white font-semibold text-sm mb-0.5">Free to Start</h3>
+                                    <h3 className="text-white font-bold text-sm mb-0.5">Free to Start</h3>
                                     <p className="text-xs text-gray-400">No hidden fees or commitments</p>
                                 </div>
                             </div>
@@ -314,33 +306,27 @@ export default function SignupPage() {
                     </div>
                 </div>
 
-                {/* Right side - Signup Form */}
-                <div className="w-full lg:w-1/2 flex items-center justify-center px-4 sm:px-6 lg:px-8 xl:px-12 py-8">
-                    <div className="w-full max-w-lg">
-                        {/* Mobile header */}
+                <div className="w-full lg:w-1/2 flex items-center justify-center px-4 sm:px-6 lg:px-8 xl:px-12 py-6">
+                    <div className="w-full max-w-md">
                         <div className="text-center lg:hidden mb-6">
-                            <h1 className="text-2xl font-bold text-white mb-1">Join SpykeAI</h1>
-                            <p className="text-gray-400 font-medium text-sm">Create your account in 30 seconds</p>
+                            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Join SpykeAI</h1>
+                            <p className="text-gray-400 font-medium">Create your account in 30 seconds</p>
                         </div>
 
-                        {/* Form container */}
                         <div className="relative">
-                            {/* Glow effect */}
-                            <div className="absolute -inset-1 bg-gradient-to-r from-[#00FF89]/20 via-[#FFC050]/20 to-[#00FF89]/20 rounded-2xl blur-xl opacity-60" />
+                            <div className="absolute -inset-1 bg-gradient-to-r from-[#00FF89]/15 via-[#FFC050]/15 to-[#00FF89]/15 rounded-2xl blur-xl opacity-60" />
 
                             <div className="relative bg-[#1a1a1a]/90 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 shadow-2xl">
-                                {/* Form header */}
                                 <div className="mb-6">
-                                    <h2 className="text-xl font-bold text-white mb-1">Create Account</h2>
-                                    <p className="text-gray-400 font-medium text-md">Join thousands of creators and innovators</p>
+                                    <h2 className="text-xl lg:text-2xl font-bold text-white mb-1">Create Account</h2>
+                                    <p className="text-gray-400 font-medium text-sm">Join thousands of creators and innovators</p>
                                 </div>
 
                                 <form
                                     onSubmit={handleSubmit}
                                     className="space-y-4">
-                                    {/* Email input */}
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-300 mb-1.5">
+                                        <label className="block text-sm font-bold text-gray-300 mb-1.5">
                                             Email Address <span className="text-red-400">*</span>
                                         </label>
                                         <div className="relative">
@@ -370,32 +356,54 @@ export default function SignupPage() {
                                         )}
                                     </div>
 
-                                    {/* Phone input */}
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-300 mb-1.5">
+                                        <label className="block text-sm font-bold text-gray-300 mb-1.5">
                                             Phone Number <span className="text-red-400">*</span>
                                         </label>
                                         <div className="flex gap-2">
-                                            {/* Country Code Dropdown using CustomSelect */}
-                                            <div className="w-36">
-                                                <CustomSelect
-                                                    value={formData.countryCode}
-                                                    onChange={(value) => {
-                                                        setFormData((prev) => ({
-                                                            ...prev,
-                                                            countryCode: value,
-                                                            phoneNumber: ''
-                                                        }))
-                                                    }}
-                                                    options={countryOptions}
-                                                    placeholder="Country"
-                                                    searchable={true}
-                                                    className="text-sm"
-                                                    maxHeight="max-h-32"
-                                                />
+                                            <div className="w-32">
+                                                <div className="relative group">
+                                                    <select
+                                                        value={formData.countryCode}
+                                                        onChange={(e) => {
+                                                            setFormData((prev) => ({
+                                                                ...prev,
+                                                                countryCode: e.target.value,
+                                                                phoneNumber: ''
+                                                            }))
+                                                        }}
+                                                        className="w-full pl-3 pr-9 py-3 bg-[#121212]/60 border border-gray-600/60 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/60 focus:border-[#00FF89]/60 focus:bg-[#121212]/80 transition-all duration-200 text-sm font-medium appearance-none cursor-pointer hover:border-gray-500/60 hover:bg-[#121212]/70 group-hover:border-gray-500/60"
+                                                        disabled={loading}
+                                                        style={{
+                                                            backgroundImage: 'none',
+                                                            WebkitAppearance: 'none',
+                                                            MozAppearance: 'none',
+                                                            msDropdown: 'none'
+                                                        }}
+                                                    >
+                                                        {countryCodes.map(({ code, country, flag }) => (
+                                                            <option 
+                                                                key={code} 
+                                                                value={code}
+                                                                className="bg-[#1a1a1a] text-white py-3 px-3 border-none"
+                                                                style={{
+                                                                    backgroundColor: '#1a1a1a',
+                                                                    color: 'white',
+                                                                    padding: '12px',
+                                                                    fontSize: '14px',
+                                                                    fontWeight: '500'
+                                                                }}
+                                                            >
+                                                                {flag} {code}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                        <ChevronDown className="w-4 h-4 text-gray-400 group-hover:text-gray-300 transition-colors duration-200" />
+                                                    </div>
+                                                </div>
                                             </div>
 
-                                            {/* Phone Input */}
                                             <div className="flex-1 relative">
                                                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                                 <input
@@ -416,9 +424,8 @@ export default function SignupPage() {
                                         )}
                                     </div>
 
-                                    {/* Password input */}
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-300 mb-1.5">
+                                        <label className="block text-sm font-bold text-gray-300 mb-1.5">
                                             Password <span className="text-red-400">*</span>
                                         </label>
                                         <div className="relative">
@@ -442,9 +449,10 @@ export default function SignupPage() {
                                                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                             </button>
                                         </div>
+
                                         {formData.password && (
-                                            <div className="mt-2">
-                                                <div className="flex items-center gap-2 mb-1">
+                                            <div className="mt-3 space-y-2">
+                                                <div className="flex items-center gap-2 mb-2">
                                                     <div className="flex-1 bg-gray-800 rounded-full h-1.5 overflow-hidden">
                                                         <div
                                                             className={`h-full transition-all duration-300 ${
@@ -459,7 +467,7 @@ export default function SignupPage() {
                                                         />
                                                     </div>
                                                     <span
-                                                        className={`text-xs font-medium ${
+                                                        className={`text-xs font-semibold ${
                                                             passwordStrength.score === 0
                                                                 ? 'text-red-400'
                                                                 : passwordStrength.score === 1
@@ -471,12 +479,72 @@ export default function SignupPage() {
                                                         {passwordStrength.label}
                                                     </span>
                                                 </div>
+
+                                                <div className="bg-[#121212]/30 border border-gray-700/50 rounded-lg p-3">
+                                                    <p className="text-xs text-gray-400 font-semibold mb-2">Password requirements:</p>
+                                                    <div className="space-y-1">
+                                                        <div className="flex items-center gap-2">
+                                                            {formData.password.length >= 8 ? (
+                                                                <CheckCircle className="w-3 h-3 text-[#00FF89] flex-shrink-0" />
+                                                            ) : (
+                                                                <div className="w-3 h-3 border border-gray-500 rounded-full flex-shrink-0" />
+                                                            )}
+                                                            <span
+                                                                className={`text-xs ${formData.password.length >= 8 ? 'text-[#00FF89] font-medium' : 'text-gray-400'}`}>
+                                                                At least 8 characters
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            {/[A-Z]/.test(formData.password) ? (
+                                                                <CheckCircle className="w-3 h-3 text-[#00FF89] flex-shrink-0" />
+                                                            ) : (
+                                                                <div className="w-3 h-3 border border-gray-500 rounded-full flex-shrink-0" />
+                                                            )}
+                                                            <span
+                                                                className={`text-xs ${/[A-Z]/.test(formData.password) ? 'text-[#00FF89] font-medium' : 'text-gray-400'}`}>
+                                                                One uppercase letter (A-Z)
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            {/[a-z]/.test(formData.password) ? (
+                                                                <CheckCircle className="w-3 h-3 text-[#00FF89] flex-shrink-0" />
+                                                            ) : (
+                                                                <div className="w-3 h-3 border border-gray-500 rounded-full flex-shrink-0" />
+                                                            )}
+                                                            <span
+                                                                className={`text-xs ${/[a-z]/.test(formData.password) ? 'text-[#00FF89] font-medium' : 'text-gray-400'}`}>
+                                                                One lowercase letter (a-z)
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            {/\d/.test(formData.password) ? (
+                                                                <CheckCircle className="w-3 h-3 text-[#00FF89] flex-shrink-0" />
+                                                            ) : (
+                                                                <div className="w-3 h-3 border border-gray-500 rounded-full flex-shrink-0" />
+                                                            )}
+                                                            <span
+                                                                className={`text-xs ${/\d/.test(formData.password) ? 'text-[#00FF89] font-medium' : 'text-gray-400'}`}>
+                                                                One number (0-9)
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            {/[!@#$%^&*(),.?":{}|<>]/.test(formData.password) ? (
+                                                                <CheckCircle className="w-3 h-3 text-[#00FF89] flex-shrink-0" />
+                                                            ) : (
+                                                                <div className="w-3 h-3 border border-gray-500 rounded-full flex-shrink-0" />
+                                                            )}
+                                                            <span
+                                                                className={`text-xs ${/[!@#$%^&*(),.?":{}|<>]/.test(formData.password) ? 'text-[#00FF89] font-medium' : 'text-gray-400'}`}>
+                                                                One special character (!@#$%^&*)
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         )}
                                         {errors.password && touched.password && <p className="mt-1 text-xs text-red-400">{errors.password}</p>}
                                     </div>
 
-                                    {/* Consent checkboxes */}
                                     <div className="space-y-3">
                                         <div className="flex items-start gap-2">
                                             <input
@@ -518,7 +586,6 @@ export default function SignupPage() {
                                         </div>
                                     </div>
 
-                                    {/* Submit button */}
                                     <button
                                         type="submit"
                                         disabled={loading || emailChecking || !emailAvailable || !formData.consent}
@@ -540,7 +607,6 @@ export default function SignupPage() {
                                         )}
                                     </button>
 
-                                    {/* Divider */}
                                     <div className="relative my-4">
                                         <div className="absolute inset-0 flex items-center">
                                             <div className="w-full border-t border-gray-700" />
@@ -550,7 +616,6 @@ export default function SignupPage() {
                                         </div>
                                     </div>
 
-                                    {/* Google OAuth button */}
                                     <button
                                         type="button"
                                         onClick={() => api.auth.googleAuth()}
@@ -583,9 +648,8 @@ export default function SignupPage() {
                                     </button>
                                 </form>
 
-                                {/* Sign in link */}
                                 <div className="mt-4 text-center">
-                                    <p className="text-gray-400 text-xs font-medium">
+                                    <p className="text-gray-400 text-sm">
                                         Already have an account?{' '}
                                         <Link
                                             href="/signin"
@@ -599,8 +663,7 @@ export default function SignupPage() {
                             </div>
                         </div>
 
-                        {/* Trust indicators */}
-                        <div className="mt-6 grid grid-cols-3 gap-2 max-w-md mx-auto">
+                        <div className="mt-6 grid grid-cols-3 gap-2">
                             <div className="flex flex-col items-center gap-1 p-2 bg-[#1a1a1a]/30 rounded-lg backdrop-blur-sm">
                                 <Shield className="w-3 h-3 text-[#00FF89]" />
                                 <span className="text-xs text-gray-400 font-medium text-center">SSL Secured</span>

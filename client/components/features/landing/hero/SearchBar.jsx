@@ -128,10 +128,9 @@ export default function SearchBar({ popularTags = [], onSearch }) {
 
     return (
         <div
-            className="w-full max-w-4xl mx-auto space-y-4 relative px-4 sm:px-0"
+            className="w-full max-w-4xl mx-auto space-y-4 relative px-2 sm:px-4"
             id="main-search"
             ref={searchContainerRef}>
-            {/* Main Search Input */}
             <motion.form
                 onSubmit={handleSearch}
                 className="relative group"
@@ -143,7 +142,7 @@ export default function SearchBar({ popularTags = [], onSearch }) {
 
                 {/* Main Search Container */}
                 <div
-                    className={`relative overflow-hidden bg-gradient-to-r from-gray-900/80 via-gray-800/60 to-gray-900/80 backdrop-blur-2xl border transition-all duration-500 ease-out rounded-2xl ${isFocused
+                    className={`relative overflow-hidden bg-gradient-to-r from-gray-900/80 via-gray-800/60 to-gray-900/80 backdrop-blur-2xl border transition-all duration-500 ease-out rounded-xl sm:rounded-2xl ${isFocused
                         ? 'border-[#00FF89]/40 shadow-[0_0_40px_rgba(0,255,137,0.15)] bg-gray-900/90'
                         : 'border-gray-700/50 hover:border-gray-600/70 shadow-[0_4px_20px_rgba(0,0,0,0.3)]'
                         }`}>
@@ -151,14 +150,14 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                     {/* Animated background gradient */}
                     <div className={`absolute inset-0 bg-gradient-to-r from-[#00FF89]/5 via-transparent to-[#00FF89]/5 opacity-0 transition-opacity duration-500 ${isFocused ? 'opacity-100' : ''}`} />
 
-                    <div className="relative flex items-center min-h-[60px] sm:min-h-[68px]">
+                    <div className="relative flex items-center min-h-[56px] sm:min-h-[68px]">
                         {/* Search Icon */}
-                        <div className="flex items-center justify-center w-16 sm:w-18 h-full flex-shrink-0">
+                        <div className="flex items-center justify-center w-12 sm:w-16 h-full flex-shrink-0 pl-3 sm:pl-4">
                             <motion.div
                                 animate={isFocused ? { scale: 1.1, rotate: 5 } : { scale: 1, rotate: 0 }}
                                 transition={{ duration: 0.3, ease: "easeOut" }}>
                                 <Search
-                                    className={`w-5 h-5 sm:w-6 sm:h-6 transition-all duration-300 ${isFocused ? 'text-[#00FF89] drop-shadow-[0_0_8px_rgba(0,255,137,0.5)]' : 'text-gray-400'
+                                    className={`w-4 h-4 sm:w-6 sm:h-6 transition-all duration-300 ${isFocused ? 'text-[#00FF89] drop-shadow-[0_0_8px_rgba(0,255,137,0.5)]' : 'text-gray-400'
                                         }`}
                                 />
                             </motion.div>
@@ -172,8 +171,8 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                             onChange={(e) => setQuery(e.target.value)}
                             onFocus={() => setIsFocused(true)}
                             onKeyDown={handleKeyDown}
-                            placeholder="Search AI prompts, tools, automation scripts..."
-                            className="flex-1 h-full !bg-transparent !text-white/90 !placeholder-gray-400 text-base sm:text-lg font-light tracking-wide !outline-none !border-none !focus:outline-none !focus:ring-0 pr-4 !appearance-none !shadow-none !focus:shadow-none !ring-0 !focus:ring-0 !m-0 !p-0"
+                            placeholder="Search AI prompts, tools..."
+                            className="flex-1 h-full !bg-transparent !text-white/90 !placeholder-gray-400 text-sm sm:text-lg font-light tracking-wide !outline-none !border-none !focus:outline-none !focus:ring-0 pr-2 sm:pr-4 !appearance-none !shadow-none !focus:shadow-none !ring-0 !focus:ring-0 !m-0 !p-0"
                             style={{
                                 border: '0 !important',
                                 outline: '0 !important',
@@ -200,7 +199,7 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                                     initial={{ opacity: 0, x: 20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: 20 }}
-                                    className="flex items-center gap-2 px-3 border-l border-gray-700/50">
+                                    className="hidden sm:flex items-center gap-2 px-3 border-l border-gray-700/50">
                                     {selectedTags.slice(0, 2).map((tag, index) => (
                                         <motion.span
                                             key={tag}
@@ -230,10 +229,10 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                         </AnimatePresence>
 
                         {/* Search Button - Refined */}
-                        <div className="flex items-center px-4">
+                        <div className="flex items-center px-2 sm:px-4">
                             <motion.button
                                 type="submit"
-                                className={`relative overflow-hidden px-6 sm:px-8 py-3 sm:py-3.5 bg-gradient-to-r from-[#00FF89] to-[#00D4AA] text-black font-semibold rounded-xl transition-all duration-300 text-sm sm:text-base shadow-lg hover:shadow-[0_8px_30px_rgba(0,255,137,0.3)] ${query.trim() || selectedTags.length > 0
+                                className={`relative overflow-hidden px-3 sm:px-8 py-2.5 sm:py-3.5 bg-gradient-to-r from-[#00FF89] to-[#00D4AA] text-black font-semibold rounded-lg sm:rounded-xl transition-all duration-300 text-xs sm:text-base shadow-lg hover:shadow-[0_8px_30px_rgba(0,255,137,0.3)] ${query.trim() || selectedTags.length > 0
                                     ? 'opacity-100 scale-100 hover:scale-105'
                                     : 'opacity-60 scale-95'
                                     }`}
@@ -271,25 +270,25 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
                             transition={{ duration: 0.2 }}
-                            className="absolute top-full left-0 right-0 mt-2 z-[999] bg-[#1f1f1f]/98 backdrop-blur-xl border border-gray-700 rounded-2xl overflow-hidden max-h-80 overflow-y-auto shadow-2xl mx-4 sm:mx-0"
+                            className="absolute top-full left-0 right-0 mt-2 z-[999] bg-[#1f1f1f]/98 backdrop-blur-xl border border-gray-700 rounded-xl sm:rounded-2xl overflow-hidden max-h-80 overflow-y-auto shadow-2xl mx-2 sm:mx-0"
                             style={{
                                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05)'
                             }}>
                             {isSearching ? (
-                                <div className="p-6 text-center">
+                                <div className="p-4 sm:p-6 text-center">
                                     <div className="inline-flex items-center gap-2 text-gray-400">
                                         <motion.div
                                             animate={{ rotate: 360 }}
                                             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-                                            <Search className="h-5 w-5" />
+                                            <Search className="h-4 w-4 sm:h-5 sm:w-5" />
                                         </motion.div>
-                                        <span>Searching...</span>
+                                        <span className="text-sm sm:text-base">Searching...</span>
                                     </div>
                                 </div>
                             ) : searchResults.products.length > 0 ? (
-                                <div className="p-4">
-                                    <h3 className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
-                                        <Package className="h-4 w-4" />
+                                <div className="p-3 sm:p-4">
+                                    <h3 className="text-xs sm:text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
+                                        <Package className="h-3 w-3 sm:h-4 sm:w-4" />
                                         Products ({searchResults.products.length} found)
                                     </h3>
                                     <div className="space-y-2">
@@ -304,24 +303,24 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                                                     event.stopPropagation()
                                                     handleProductClick(product)
                                                 }}
-                                                className="w-full p-3 bg-gray-800/30 hover:bg-gray-700/40 rounded-xl transition-all duration-200 group text-left min-h-[60px] focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50">
-                                                <div className="flex items-start gap-3">
+                                                className="w-full p-2.5 sm:p-3 bg-gray-800/30 hover:bg-gray-700/40 rounded-lg sm:rounded-xl transition-all duration-200 group text-left min-h-[60px] focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50">
+                                                <div className="flex items-start gap-2 sm:gap-3">
                                                     {product.image && (
                                                         <img
                                                             src={product.image}
                                                             alt={product.title}
-                                                            className="w-12 h-12 rounded-lg object-cover bg-gray-700 flex-shrink-0"
+                                                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover bg-gray-700 flex-shrink-0"
                                                             loading="lazy"
                                                         />
                                                     )}
                                                     <div className="flex-1 min-w-0">
-                                                        <h4 className="font-medium text-white group-hover:text-[#00FF89] transition-colors truncate">
+                                                        <h4 className="font-medium text-white group-hover:text-[#00FF89] transition-colors truncate text-sm sm:text-base">
                                                             {product.title}
                                                         </h4>
-                                                        <p className="text-sm text-gray-400 mt-1 line-clamp-2 leading-tight">
+                                                        <p className="text-xs sm:text-sm text-gray-400 mt-1 line-clamp-2 leading-tight">
                                                             {product.shortDescription || product.description}
                                                         </p>
-                                                        <div className="flex items-center gap-4 mt-2 text-xs">
+                                                        <div className="flex items-center gap-2 sm:gap-4 mt-2 text-xs">
                                                             <span className="text-[#00FF89] font-semibold">${product.price}</span>
                                                             {product.averageRating > 0 && (
                                                                 <span className="flex items-center gap-1 text-yellow-500">
@@ -329,10 +328,10 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                                                                     {product.averageRating.toFixed(1)}
                                                                 </span>
                                                             )}
-                                                            {product.sales > 0 && <span className="text-gray-500">{product.sales} sales</span>}
+                                                            {product.sales > 0 && <span className="text-gray-500 hidden sm:inline">{product.sales} sales</span>}
                                                         </div>
                                                     </div>
-                                                    <ChevronRight className="h-5 w-5 text-gray-500 group-hover:text-[#00FF89] transition-colors flex-shrink-0" />
+                                                    <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 group-hover:text-[#00FF89] transition-colors flex-shrink-0" />
                                                 </div>
                                             </motion.button>
                                         ))}
@@ -343,23 +342,23 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         onClick={handleSearch}
-                                        className="w-full mt-3 p-3 bg-[#00FF89]/10 hover:bg-[#00FF89]/20 text-[#00FF89] rounded-xl transition-all duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50">
+                                        className="w-full mt-3 p-2.5 sm:p-3 bg-[#00FF89]/10 hover:bg-[#00FF89]/20 text-[#00FF89] rounded-lg sm:rounded-xl transition-all duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 text-sm sm:text-base">
                                         View all results for "{query}"
                                     </motion.button>
                                 </div>
                             ) : query.length > 2 ? (
-                                <div className="p-6 text-center text-gray-400">
-                                    <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                    <p className="text-sm">No results found for "{query}"</p>
+                                <div className="p-4 sm:p-6 text-center text-gray-400">
+                                    <Search className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 opacity-50" />
+                                    <p className="text-xs sm:text-sm">No results found for "{query}"</p>
                                     <button
                                         onClick={handleSearch}
-                                        className="mt-2 text-[#00FF89] hover:text-[#00FF89]/80 text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 rounded px-2 py-1">
+                                        className="mt-2 text-[#00FF89] hover:text-[#00FF89]/80 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 rounded px-2 py-1">
                                         Search in all products
                                     </button>
                                 </div>
                             ) : (
-                                <div className="p-4 space-y-2">
-                                    <div className="text-sm text-gray-400 font-medium">Quick suggestions</div>
+                                <div className="p-3 sm:p-4 space-y-2">
+                                    <div className="text-xs sm:text-sm text-gray-400 font-medium">Quick suggestions</div>
                                     {[`${query} prompts`, `${query} automation`, `${query} templates`, `${query} scripts`]
                                         .filter((suggestion) => suggestion.trim().length > 8)
                                         .map((suggestion, index) => (
@@ -372,7 +371,7 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                                                     setQuery(suggestion)
                                                     performSearch(suggestion)
                                                 }}
-                                                className="block w-full text-left px-3 py-2 hover:bg-gray-700/40 rounded-lg text-sm text-gray-300 hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50">
+                                                className="block w-full text-left px-2.5 sm:px-3 py-2 hover:bg-gray-700/40 rounded-lg text-xs sm:text-sm text-gray-300 hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50">
                                                 <Search className="inline w-3 h-3 mr-2 opacity-50" />
                                                 {suggestion}
                                             </motion.button>
@@ -393,12 +392,12 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.4, delay: 0.2 }}
                         className={`space-y-3 text-center ${showResults ? 'mt-80' : ''}`}>
-                        <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
-                            <TrendingUp className="w-4 h-4 text-[#00FF89]" />
+                        <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-gray-400">
+                            <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-[#00FF89]" />
                             <span className="font-medium">Trending searches:</span>
                         </div>
 
-                        <div className="flex flex-wrap justify-center gap-2 sm:gap-3 px-2">
+                        <div className="flex flex-wrap justify-center gap-1.5 sm:gap-3 px-2">
                             {popularTags.map((tag, index) => (
                                 <motion.button
                                     key={tag}
@@ -408,7 +407,7 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                                     whileHover={{ scale: 1.05, y: -2 }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => handleTagClick(tag)}
-                                    className={`group relative px-3 sm:px-4 py-2 bg-gray-800/40 hover:bg-gray-700/50 border border-gray-600 hover:border-[#00FF89]/40 rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 min-h-[36px] ${selectedTags.includes(tag) ? 'bg-[#00FF89]/10 border-[#00FF89]/50 text-[#00FF89]' : 'text-gray-300 hover:text-white'}`}
+                                    className={`group relative px-2.5 sm:px-4 py-1.5 sm:py-2 bg-gray-800/40 hover:bg-gray-700/50 border border-gray-600 hover:border-[#00FF89]/40 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 min-h-[32px] sm:min-h-[36px] ${selectedTags.includes(tag) ? 'bg-[#00FF89]/10 border-[#00FF89]/50 text-[#00FF89]' : 'text-gray-300 hover:text-white'}`}
                                     aria-label={`Add ${tag} filter`}>
                                     {/* Sparkle effect on hover */}
                                     <motion.div
@@ -416,11 +415,11 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                                         initial={{ rotate: 0 }}
                                         whileHover={{ rotate: 180 }}
                                         transition={{ duration: 0.3 }}>
-                                        <Sparkles className="w-3 h-3 text-[#00FF89]" />
+                                        <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#00FF89]" />
                                     </motion.div>
 
-                                    <Hash className="inline w-3 h-3 mr-1 opacity-50" />
-                                    <span className="truncate max-w-[80px] sm:max-w-none">{tag}</span>
+                                    <Hash className="inline w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1 opacity-50" />
+                                    <span className="truncate max-w-[60px] sm:max-w-none">{tag}</span>
                                 </motion.button>
                             ))}
                         </div>

@@ -220,6 +220,7 @@ export default function RootLayout({ children }) {
             <body
                 className={`font-league-spartan bg-brand-dark text-white antialiased min-h-screen`}
                 suppressHydrationWarning={true}>
+                
                 <a
                     href="#main-content"
                     className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-brand-primary text-brand-primary-text px-4 py-2 rounded-md font-bold z-50">

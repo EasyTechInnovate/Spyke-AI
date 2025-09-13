@@ -1,0 +1,566 @@
+{
+  "timestamp": "2025-09-13T14:51:33.836Z",
+  "duration": "0.09s",
+  "summary": {
+    "total": 404,
+    "used": 293,
+    "unused": 111
+  },
+  "unusedFiles": [
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/app/(protected)/seller/dashboard/metadata.js",
+      "relativePath": "app/(protected)/seller/dashboard/metadata.js",
+      "name": "metadata.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/app/(protected)/seller/products/create/components/NavigationControls.jsx",
+      "relativePath": "app/(protected)/seller/products/create/components/NavigationControls.jsx",
+      "name": "NavigationControls.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/app/(public)/products/[productId]/AddToCartButton.jsx",
+      "relativePath": "app/(public)/products/[productId]/AddToCartButton.jsx",
+      "name": "AddToCartButton.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/app/(public)/products/[productId]/page-design3.jsx",
+      "relativePath": "app/(public)/products/[productId]/page-design3.jsx",
+      "name": "page-design3.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/app/(public)/products/[productId]/styles.css",
+      "relativePath": "app/(public)/products/[productId]/styles.css",
+      "name": "styles.css"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/app/(public)/seller/Seller.jsx",
+      "relativePath": "app/(public)/seller/Seller.jsx",
+      "name": "Seller.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/app/unauthorized.jsx",
+      "relativePath": "app/unauthorized.jsx",
+      "name": "unauthorized.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/admin/SalesAnalytics.jsx",
+      "relativePath": "components/admin/SalesAnalytics.jsx",
+      "name": "SalesAnalytics.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/examples/ImageExamples.jsx",
+      "relativePath": "components/examples/ImageExamples.jsx",
+      "name": "ImageExamples.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/admin/analytics/shared/AnalyticsChart.jsx",
+      "relativePath": "components/features/admin/analytics/shared/AnalyticsChart.jsx",
+      "name": "AnalyticsChart.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/admin/analytics/shared/MetricCard.jsx",
+      "relativePath": "components/features/admin/analytics/shared/MetricCard.jsx",
+      "name": "MetricCard.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/admin/analytics/shared/index.js",
+      "relativePath": "components/features/admin/analytics/shared/index.js",
+      "name": "index.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/admin/analytics/tabs/PerformanceTab.jsx",
+      "relativePath": "components/features/admin/analytics/tabs/PerformanceTab.jsx",
+      "name": "PerformanceTab.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/cart/AddSampleItemsButton.jsx",
+      "relativePath": "components/features/cart/AddSampleItemsButton.jsx",
+      "name": "AddSampleItemsButton.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/explore/FilterSidebar.jsx",
+      "relativePath": "components/features/explore/FilterSidebar.jsx",
+      "name": "FilterSidebar.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/explore/MobileFilterDrawer.jsx",
+      "relativePath": "components/features/explore/MobileFilterDrawer.jsx",
+      "name": "MobileFilterDrawer.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/explore/ProductCard.jsx",
+      "relativePath": "components/features/explore/ProductCard.jsx",
+      "name": "ProductCard.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/explore/VirtualizedProductGrid.jsx",
+      "relativePath": "components/features/explore/VirtualizedProductGrid.jsx",
+      "name": "VirtualizedProductGrid.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/landing/NewsletterCTA.jsx",
+      "relativePath": "components/features/landing/NewsletterCTA.jsx",
+      "name": "NewsletterCTA.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/landing/featured/ProductCarousel.jsx",
+      "relativePath": "components/features/landing/featured/ProductCarousel.jsx",
+      "name": "ProductCarousel.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/landing/featured/SmoothProductCarousel.jsx",
+      "relativePath": "components/features/landing/featured/SmoothProductCarousel.jsx",
+      "name": "SmoothProductCarousel.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/landing/hero/AnimatedText.jsx",
+      "relativePath": "components/features/landing/hero/AnimatedText.jsx",
+      "name": "AnimatedText.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/landing/hero/BackgroundEffects.jsx",
+      "relativePath": "components/features/landing/hero/BackgroundEffects.jsx",
+      "name": "BackgroundEffects.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/landing/hero/BackgroundEffectsLight.jsx",
+      "relativePath": "components/features/landing/hero/BackgroundEffectsLight.jsx",
+      "name": "BackgroundEffectsLight.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/landing/hero/FloatingParticles.jsx",
+      "relativePath": "components/features/landing/hero/FloatingParticles.jsx",
+      "name": "FloatingParticles.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/landing/hero/GlowingButton.jsx",
+      "relativePath": "components/features/landing/hero/GlowingButton.jsx",
+      "name": "GlowingButton.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/landing/hero/HeroStyles.jsx",
+      "relativePath": "components/features/landing/hero/HeroStyles.jsx",
+      "name": "HeroStyles.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/landing/hero/MouseSpotlight.jsx",
+      "relativePath": "components/features/landing/hero/MouseSpotlight.jsx",
+      "name": "MouseSpotlight.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/landing/hero/PopularTags.jsx",
+      "relativePath": "components/features/landing/hero/PopularTags.jsx",
+      "name": "PopularTags.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/landing/hero/StatCard.jsx",
+      "relativePath": "components/features/landing/hero/StatCard.jsx",
+      "name": "StatCard.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/SellerLoader.jsx",
+      "relativePath": "components/features/seller/SellerLoader.jsx",
+      "name": "SellerLoader.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/dashboard/ActionItemsPanel.jsx",
+      "relativePath": "components/features/seller/dashboard/ActionItemsPanel.jsx",
+      "name": "ActionItemsPanel.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/dashboard/AnalyticsDashboard.jsx",
+      "relativePath": "components/features/seller/dashboard/AnalyticsDashboard.jsx",
+      "name": "AnalyticsDashboard.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/dashboard/ConversionFunnelChart.jsx",
+      "relativePath": "components/features/seller/dashboard/ConversionFunnelChart.jsx",
+      "name": "ConversionFunnelChart.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/dashboard/CustomerDemographics.jsx",
+      "relativePath": "components/features/seller/dashboard/CustomerDemographics.jsx",
+      "name": "CustomerDemographics.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/dashboard/FunnelMiniChart.jsx",
+      "relativePath": "components/features/seller/dashboard/FunnelMiniChart.jsx",
+      "name": "FunnelMiniChart.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/dashboard/PerformanceChart.jsx",
+      "relativePath": "components/features/seller/dashboard/PerformanceChart.jsx",
+      "name": "PerformanceChart.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/dashboard/RecentOrdersPanel.jsx",
+      "relativePath": "components/features/seller/dashboard/RecentOrdersPanel.jsx",
+      "name": "RecentOrdersPanel.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/dashboard/RevenueChart.jsx",
+      "relativePath": "components/features/seller/dashboard/RevenueChart.jsx",
+      "name": "RevenueChart.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/dashboard/SalesAnalyticsChart.jsx",
+      "relativePath": "components/features/seller/dashboard/SalesAnalyticsChart.jsx",
+      "name": "SalesAnalyticsChart.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/dashboard/StatCard.jsx",
+      "relativePath": "components/features/seller/dashboard/StatCard.jsx",
+      "name": "StatCard.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/dashboard/TopProductsPanel.jsx",
+      "relativePath": "components/features/seller/dashboard/TopProductsPanel.jsx",
+      "name": "TopProductsPanel.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/dashboard/TrendAnalysisChart.jsx",
+      "relativePath": "components/features/seller/dashboard/TrendAnalysisChart.jsx",
+      "name": "TrendAnalysisChart.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/profile/ProductCard.jsx",
+      "relativePath": "components/features/seller/profile/ProductCard.jsx",
+      "name": "ProductCard.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/profile/ProfileEditModal.jsx",
+      "relativePath": "components/features/seller/profile/ProfileEditModal.jsx",
+      "name": "ProfileEditModal.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/profile/SellerIdentity.jsx",
+      "relativePath": "components/features/seller/profile/SellerIdentity.jsx",
+      "name": "SellerIdentity.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/profile/SellerProducts.jsx",
+      "relativePath": "components/features/seller/profile/SellerProducts.jsx",
+      "name": "SellerProducts.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/profile/SellerProfileHeader.jsx",
+      "relativePath": "components/features/seller/profile/SellerProfileHeader.jsx",
+      "name": "SellerProfileHeader.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/profile/SellerShell.jsx",
+      "relativePath": "components/features/seller/profile/SellerShell.jsx",
+      "name": "SellerShell.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/profile/SocialLinks.jsx",
+      "relativePath": "components/features/seller/profile/SocialLinks.jsx",
+      "name": "SocialLinks.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/profile/StatsDashboard.jsx",
+      "relativePath": "components/features/seller/profile/StatsDashboard.jsx",
+      "name": "StatsDashboard.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/profile/VerificationAlerts.jsx",
+      "relativePath": "components/features/seller/profile/VerificationAlerts.jsx",
+      "name": "VerificationAlerts.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/product/ProductTabs.jsx",
+      "relativePath": "components/product/ProductTabs.jsx",
+      "name": "ProductTabs.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/product/RelatedProducts.jsx",
+      "relativePath": "components/product/RelatedProducts.jsx",
+      "name": "RelatedProducts.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/product/SellerInfoCard.jsx",
+      "relativePath": "components/product/SellerInfoCard.jsx",
+      "name": "SellerInfoCard.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/product/StickyPurchaseBar.jsx",
+      "relativePath": "components/product/StickyPurchaseBar.jsx",
+      "name": "StickyPurchaseBar.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/product/create/FormInput.jsx",
+      "relativePath": "components/product/create/FormInput.jsx",
+      "name": "FormInput.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/product/create/FormSelect.jsx",
+      "relativePath": "components/product/create/FormSelect.jsx",
+      "name": "FormSelect.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/product/create/FormTextarea.jsx",
+      "relativePath": "components/product/create/FormTextarea.jsx",
+      "name": "FormTextarea.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/product/create/ProgressSteps.jsx",
+      "relativePath": "components/product/create/ProgressSteps.jsx",
+      "name": "ProgressSteps.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/product/create/ToolButton.jsx",
+      "relativePath": "components/product/create/ToolButton.jsx",
+      "name": "ToolButton.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/product/create/constants.js",
+      "relativePath": "components/product/create/constants.js",
+      "name": "constants.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/product/create/inputs/FormInput.jsx",
+      "relativePath": "components/product/create/inputs/FormInput.jsx",
+      "name": "FormInput.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/product/create/inputs/FormSelect.jsx",
+      "relativePath": "components/product/create/inputs/FormSelect.jsx",
+      "name": "FormSelect.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/product/create/inputs/FormTextarea.jsx",
+      "relativePath": "components/product/create/inputs/FormTextarea.jsx",
+      "name": "FormTextarea.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/CounterOfferModal.jsx",
+      "relativePath": "components/shared/CounterOfferModal.jsx",
+      "name": "CounterOfferModal.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/ErrorBoundary.jsx",
+      "relativePath": "components/shared/ErrorBoundary.jsx",
+      "name": "ErrorBoundary.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/PlatformTest.jsx",
+      "relativePath": "components/shared/PlatformTest.jsx",
+      "name": "PlatformTest.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/Tooltip.jsx",
+      "relativePath": "components/shared/Tooltip.jsx",
+      "name": "Tooltip.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/UnifiedConsentBanner.jsx",
+      "relativePath": "components/shared/UnifiedConsentBanner.jsx",
+      "name": "UnifiedConsentBanner.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/layout/CartIcon.jsx",
+      "relativePath": "components/shared/layout/CartIcon.jsx",
+      "name": "CartIcon.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/layout/MainContent.jsx",
+      "relativePath": "components/shared/layout/MainContent.jsx",
+      "name": "MainContent.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/layout/PageLayout.jsx",
+      "relativePath": "components/shared/layout/PageLayout.jsx",
+      "name": "PageLayout.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/layout/ProfileSwitcher.jsx",
+      "relativePath": "components/shared/layout/ProfileSwitcher.jsx",
+      "name": "ProfileSwitcher.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/layout/index.js",
+      "relativePath": "components/shared/layout/index.js",
+      "name": "index.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/motion/LazyMotion.jsx",
+      "relativePath": "components/shared/motion/LazyMotion.jsx",
+      "name": "LazyMotion.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/notifications/NotificationBell.jsx",
+      "relativePath": "components/shared/notifications/NotificationBell.jsx",
+      "name": "NotificationBell.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/ui/AuthStatus.jsx",
+      "relativePath": "components/shared/ui/AuthStatus.jsx",
+      "name": "AuthStatus.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/ui/Icon.jsx",
+      "relativePath": "components/shared/ui/Icon.jsx",
+      "name": "Icon.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/ui/LazyRoute.jsx",
+      "relativePath": "components/shared/ui/LazyRoute.jsx",
+      "name": "LazyRoute.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/ui/ResponsiveContainer.jsx",
+      "relativePath": "components/shared/ui/ResponsiveContainer.jsx",
+      "name": "ResponsiveContainer.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/ui/accordion.jsx",
+      "relativePath": "components/shared/ui/accordion.jsx",
+      "name": "accordion.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/ui/index.js",
+      "relativePath": "components/shared/ui/index.js",
+      "name": "index.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/ui/loader.jsx",
+      "relativePath": "components/shared/ui/loader.jsx",
+      "name": "loader.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/ui/searchbar.jsx",
+      "relativePath": "components/shared/ui/searchbar.jsx",
+      "name": "searchbar.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/ui/select.jsx",
+      "relativePath": "components/shared/ui/select.jsx",
+      "name": "select.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/ui/tabs.jsx",
+      "relativePath": "components/shared/ui/tabs.jsx",
+      "name": "tabs.jsx"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/config/index.js",
+      "relativePath": "config/index.js",
+      "name": "index.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/data/explore/mockProducts.js",
+      "relativePath": "data/explore/mockProducts.js",
+      "name": "mockProducts.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/data/featuredProductsDummy.js",
+      "relativePath": "data/featuredProductsDummy.js",
+      "name": "featuredProductsDummy.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/hooks/useImageLoader.js",
+      "relativePath": "hooks/useImageLoader.js",
+      "name": "useImageLoader.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/hooks/useMousePosition.js",
+      "relativePath": "hooks/useMousePosition.js",
+      "name": "useMousePosition.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/hooks/useProducts.js",
+      "relativePath": "hooks/useProducts.js",
+      "name": "useProducts.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/hooks/useResponsive.js",
+      "relativePath": "hooks/useResponsive.js",
+      "name": "useResponsive.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/hooks/useReviewPerformance.js",
+      "relativePath": "hooks/useReviewPerformance.js",
+      "name": "useReviewPerformance.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/hooks/useRoleBasedRedirect.js",
+      "relativePath": "hooks/useRoleBasedRedirect.js",
+      "name": "useRoleBasedRedirect.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/hooks/useSellerDashboard.js",
+      "relativePath": "hooks/useSellerDashboard.js",
+      "name": "useSellerDashboard.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/lib/design-system/components/index.js",
+      "relativePath": "lib/design-system/components/index.js",
+      "name": "index.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/lib/design-system/tokens/index.js",
+      "relativePath": "lib/design-system/tokens/index.js",
+      "name": "index.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/lib/dynamic-imports.js",
+      "relativePath": "lib/dynamic-imports.js",
+      "name": "dynamic-imports.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/lib/hooks/useFilter.js",
+      "relativePath": "lib/hooks/useFilter.js",
+      "name": "useFilter.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/lib/hooks/useSearch.js",
+      "relativePath": "lib/hooks/useSearch.js",
+      "name": "useSearch.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/lib/types/index.js",
+      "relativePath": "lib/types/index.js",
+      "name": "index.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/lib/types/seller.js",
+      "relativePath": "lib/types/seller.js",
+      "name": "seller.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/lib/utils/AuthContext.js",
+      "relativePath": "lib/utils/AuthContext.js",
+      "name": "AuthContext.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/lib/utils/currency.js",
+      "relativePath": "lib/utils/currency.js",
+      "name": "currency.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/lib/utils/notifications.js",
+      "relativePath": "lib/utils/notifications.js",
+      "name": "notifications.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/lib/utils/productCreateHelpers.js",
+      "relativePath": "lib/utils/productCreateHelpers.js",
+      "name": "productCreateHelpers.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/sanity/lib/live.js",
+      "relativePath": "sanity/lib/live.js",
+      "name": "live.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/sanity.cli.js",
+      "relativePath": "sanity.cli.js",
+      "name": "sanity.cli.js"
+    },
+    {
+      "path": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/scripts/check-syntax.js",
+      "relativePath": "scripts/check-syntax.js",
+      "name": "check-syntax.js"
+    }
+  ]
+}

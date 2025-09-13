@@ -134,7 +134,7 @@ export default function BlogHighlights() {
           >
             <Link
               href="/blog"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900/80 text-white border border-gray-800 rounded-xl hover:bg-gray-800/80 hover:border-brand-primary/30 transition-all duration-200 group font-body"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#00FF89] text-black font-semibold rounded-lg hover:bg-[#00FF89]/90 transition-all duration-200 hover:shadow-lg hover:shadow-[#00FF89]/25 group"
             >
               View All Articles
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

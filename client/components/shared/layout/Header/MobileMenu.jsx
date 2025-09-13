@@ -25,9 +25,19 @@ export default function MobileMenu({
                 onClick={onClose}
             />
             
-            {/* Mobile Menu Content */}
-            <div className="md:hidden fixed top-16 sm:top-20 left-0 right-0 bg-black/95 backdrop-blur-lg border-t border-gray-700 max-h-[calc(100vh-4rem)] sm:max-h-[calc(100vh-5rem)] overflow-y-auto z-50">
+            {/* Mobile Menu Content - Fixed positioning to align with header */}
+            <div className="md:hidden fixed top-20 sm:top-24 lg:top-28 left-0 right-0 bg-black/95 backdrop-blur-lg border-t border-gray-700 max-h-[calc(100vh-5rem)] sm:max-h-[calc(100vh-6rem)] lg:max-h-[calc(100vh-7rem)] overflow-y-auto z-50">
                 <nav className="flex flex-col py-4">
+                    {showBecomeSeller && (
+                        <Link
+                            href="/become-seller"
+                            className="flex items-center gap-3 font-kumbh-sans font-medium text-base text-[#00FF89] hover:text-[#00e67a] px-6 py-4 hover:bg-[#00FF89]/10 transition-all border-b-2 border-[#00FF89]/20 bg-gradient-to-r from-[#00FF89]/5 to-transparent"
+                            onClick={onClose}>
+                            <TrendingUp className="h-5 w-5" />
+                            <span>Become a Seller</span>
+                        </Link>
+                    )}
+
                     {/* Navigation Links */}
                     {navigation.map((item) => (
                         <Link
@@ -39,16 +49,6 @@ export default function MobileMenu({
                             <span>{item.name}</span>
                         </Link>
                     ))}
-
-                    {showBecomeSeller && (
-                        <Link
-                            href="/become-seller"
-                            className="flex items-center gap-3 font-kumbh-sans font-medium text-base text-brand-primary px-6 py-4 hover:bg-white/5 transition-all border-b border-gray-800/50"
-                            onClick={onClose}>
-                            <TrendingUp className="h-5 w-5 opacity-70" />
-                            <span>Become a seller</span>
-                        </Link>
-                    )}
 
                     {user ? (
                         <>
@@ -118,16 +118,6 @@ export default function MobileMenu({
                                         <span>{item.name}</span>
                                     </Link>
                                 ))}
-
-                                {!isSeller && (
-                                    <Link
-                                        href="/become-seller"
-                                        className="flex items-center gap-3 font-kumbh-sans font-medium text-base text-brand-primary px-6 py-4 hover:bg-white/5 transition-all border-b border-gray-800/50"
-                                        onClick={onClose}>
-                                        <Store className="h-5 w-5" />
-                                        <span>Become a Seller</span>
-                                    </Link>
-                                )}
 
                                 {/* Logout Button */}
                                 <div className="px-6 py-4">

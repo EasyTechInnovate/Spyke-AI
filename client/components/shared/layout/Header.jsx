@@ -11,14 +11,14 @@ import UserDropdown from './Header/UserDropdown'
 import MobileMenu from './Header/MobileMenu'
 import SearchOverlay from './Header/SearchOverlay'
 import Link from 'next/link'
-import Container from './Container'
 import { NAVIGATION, SELLER_MENU_ITEMS, USER_MENU_ITEMS } from './Header/const'
+import { usePathname } from 'next/navigation'
 
 export default function Header() {
+    const pathname = usePathname()
     const {
         mobileMenuOpen,
         setMobileMenuOpen,
-        scrolled,
         user,
         dropdownOpen,
         setDropdownOpen,
@@ -34,29 +34,61 @@ export default function Header() {
     } = useHeader()
 
     const menuItems = currentRole === 'seller' && isSeller ? SELLER_MENU_ITEMS : USER_MENU_ITEMS
+    const isSignInPage = pathname === '/signin'
 
     return (
         <>
-            <header
-                className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 ${scrolled
-                    ? 'bg-black/95 backdrop-blur-lg shadow-2xl shadow-brand-primary/10 border-b border-brand-primary/20'
-                    : 'bg-black/90 backdrop-blur-sm border-b border-white/10'
-                    }`}>
-
-                <Container>
-                    <div className="flex items-center justify-between h-16 sm:h-20">
-                        <div className="flex-shrink-0">
+            <div 
+                className="sticky-header-wrapper"
+                style={{
+                    position: 'sticky !important',
+                    top: '0 !important',
+                    zIndex: '9999 !important',
+                    width: '100% !important',
+                    backgroundColor: 'rgba(0, 0, 0, 0.95) !important',
+                    backdropFilter: 'blur(20px) !important',
+                    WebkitBackdropFilter: 'blur(20px) !important',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.1) !important',
+                    boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3) !important',
+                    willChange: 'transform !important',
+                    transform: 'translateZ(0) !important'
+                }}
+            >
+                <div style={{
+                    maxWidth: '120rem !important',
+                    margin: '0 auto !important',
+                    padding: '0 2rem !important'
+                }}>
+                    <div style={{
+                        display: 'flex !important',
+                        alignItems: 'center !important',
+                        justifyContent: 'space-between !important',
+                        height: '80px !important',
+                        width: '100% !important'
+                    }}>
+                        <div style={{
+                            flexShrink: '0 !important'
+                        }}>
                             <HeaderLogo />
                         </div>
 
-                        <div className="hidden md:flex flex-1 justify-center">
+                        <div style={{
+                            flex: '1 !important',
+                            display: 'flex !important',
+                            justifyContent: 'center !important',
+                            margin: '0 2rem !important'
+                        }} className="hidden md:flex">
                             <Navigation
                                 showBecomeSeller={showBecomeSeller}
                                 searchOpen={searchOpen}
                             />
                         </div>
 
-                        <div className="flex items-center space-x-1 sm:space-x-2">
+                        <div style={{
+                            display: 'flex !important',
+                            alignItems: 'center !important',
+                            gap: '1rem !important'
+                        }}>
                             <div className="hidden sm:block">
                                 <SearchButton onClick={() => setSearchOpen(true)} />
                             </div>
@@ -81,10 +113,32 @@ export default function Header() {
                                     />
                                 </div>
                             ) : (
-                                <div className="hidden md:flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
+                                !isSignInPage && (
                                     <Link
                                         href="/signin"
-                                        className="relative group inline-flex overflow-hidden rounded-xl"
+                                        style={{
+                                            display: 'inline-flex !important',
+                                            alignItems: 'center !important',
+                                            padding: '8px 20px !important',
+                                            backgroundColor: 'transparent !important',
+                                            color: '#00FF89 !important',
+                                            fontWeight: '600 !important',
+                                            borderRadius: '12px !important',
+                                            textDecoration: 'none !important',
+                                            fontSize: '16px !important',
+                                            border: '1px solid rgba(255, 255, 255, 0.2) !important',
+                                            transition: 'all 0.3s ease !important'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.target.style.color = '#00FF89'
+                                            e.target.style.borderColor = 'rgba(0, 255, 137, 0.4)'
+                                            e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.target.style.color = '#00FF89'
+                                            e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)'
+                                            e.target.style.backgroundColor = 'transparent'
+                                        }}
                                         onClick={() => {
                                             if (typeof window !== 'undefined') {
                                                 localStorage.removeItem('authToken')
@@ -94,38 +148,43 @@ export default function Header() {
                                                 document.cookie = 'roles=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
                                             }
                                         }}>
-                                        <div className="absolute inset-0 bg-gradient-to-r from-brand-primary via-green-400 to-brand-primary bg-[length:200%_100%] animate-gradient-x rounded-xl opacity-100 blur-sm transition-all duration-300 group-hover:blur-md" />
-                                        <span className="relative flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-black/90 backdrop-blur-sm rounded-xl text-brand-primary font-kumbh-sans font-semibold text-sm sm:text-lg transition-all duration-300 hover:text-white hover:bg-black/80 border border-brand-primary/20 hover:border-brand-primary/40">
-                                            Sign In
-                                        </span>
+                                        Sign In
                                     </Link>
-                                </div>
+                                )
                             )}
+                            
                             <button
-                                className="md:hidden p-2 text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all duration-200"
-                                onClick={() => {
-                                    setMobileMenuOpen(!mobileMenuOpen)
+                                className="md:hidden"
+                                style={{
+                                    padding: '8px !important',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.05) !important',
+                                    borderRadius: '8px !important',
+                                    border: 'none !important',
+                                    color: 'rgba(255, 255, 255, 0.7) !important'
                                 }}
+                                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                                 aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}>
                                 {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                             </button>
                         </div>
                     </div>
-                </Container>
-                <MobileMenu
-                    isOpen={mobileMenuOpen}
-                    onClose={() => setMobileMenuOpen(false)}
-                    user={user}
-                    cartCount={cartCount}
-                    currentRole={currentRole}
-                    isSeller={isSeller}
-                    navigation={NAVIGATION}
-                    menuItems={menuItems}
-                    showBecomeSeller={showBecomeSeller}
-                    onSwitchRole={switchRole}
-                    onLogout={handleLogout}
-                />
-            </header>
+                </div>
+            </div>
+
+            <MobileMenu
+                isOpen={mobileMenuOpen}
+                onClose={() => setMobileMenuOpen(false)}
+                user={user}
+                cartCount={cartCount}
+                currentRole={currentRole}
+                isSeller={isSeller}
+                navigation={NAVIGATION}
+                menuItems={menuItems}
+                showBecomeSeller={showBecomeSeller}
+                onSwitchRole={switchRole}
+                onLogout={handleLogout}
+            />
+            
             <SearchOverlay
                 isOpen={searchOpen}
                 onClose={() => setSearchOpen(false)}

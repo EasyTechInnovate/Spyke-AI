@@ -1,0 +1,32 @@
+{
+  "timestamp": "2025-09-13T15:04:13.148Z",
+  "summary": {
+    "totalMissingFiles": 1,
+    "criticalMissing": 0,
+    "importantMissing": 1,
+    "optionalMissing": 0,
+    "brokenImports": 1
+  },
+  "categories": {
+    "critical": [],
+    "important": [
+      {
+        "file": "components/features/seller/dashboard/PerformanceChart",
+        "importedBy": [
+          "app/(protected)/seller/dashboard/page.jsx"
+        ],
+        "usageCount": 1,
+        "category": "important"
+      }
+    ],
+    "optional": []
+  },
+  "brokenImports": [
+    {
+      "file": "app/(protected)/seller/dashboard/page.jsx",
+      "missingImport": "components/features/seller/dashboard/PerformanceChart",
+      "originalImport": "/Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/features/seller/dashboard/PerformanceChart"
+    }
+  ],
+  "restoreCommands": []
+}

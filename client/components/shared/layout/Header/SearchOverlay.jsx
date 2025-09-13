@@ -102,8 +102,6 @@ export default function SearchOverlay({ isOpen, onClose }) {
                 search: query.trim(),
                 limit: 5
             })
-
-            // Extract products from the correct path (same as home page)
             let products = []
             if (response?.data?.products && Array.isArray(response.data.products)) {
                 products = response.data.products
@@ -120,7 +118,6 @@ export default function SearchOverlay({ isOpen, onClose }) {
         }
     }
 
-    // Debounced search - only search when query length > 2
     useEffect(() => {
         if (searchQuery.trim().length > 2) {
             const timer = setTimeout(() => {

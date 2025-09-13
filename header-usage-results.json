@@ -1,0 +1,457 @@
+[
+  {
+    "file": "client/components/shared/layout/ConditionalHeader.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from './Header'"
+        ]
+      },
+      {
+        "type": "headerUsage",
+        "matches": [
+          "<Header />"
+        ]
+      },
+      {
+        "type": "conditionalHeader",
+        "matches": [
+          "ConditionalHeader"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/components/shared/layout/Header.jsx",
+    "patterns": [
+      {
+        "type": "useHeaderHook",
+        "matches": [
+          "useHeader("
+        ]
+      },
+      {
+        "type": "headerSubComponents",
+        "matches": [
+          "from './Header/Logo'",
+          "from './Header/Navigation'",
+          "from './Header/SearchButton'"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/components/shared/layout/PageLayout.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from \"./Header\""
+        ]
+      },
+      {
+        "type": "headerUsage",
+        "matches": [
+          "<Header />"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/(marketing)/pricing/Pricing.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from '@/components/shared/layout/Header'"
+        ]
+      },
+      {
+        "type": "headerUsage",
+        "matches": [
+          "<Header />"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/(protected)/dashboard/page.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from '@/components/shared/layout/Header'"
+        ]
+      },
+      {
+        "type": "headerUsage",
+        "matches": [
+          "<Header />",
+          "<Header />"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/(protected)/purchases/page.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from '@/components/shared/layout/Header'"
+        ]
+      },
+      {
+        "type": "headerUsage",
+        "matches": [
+          "<Header />",
+          "<Header />"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/(protected)/seller/success/page.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from '@/components/shared/layout/Header'"
+        ]
+      },
+      {
+        "type": "headerUsage",
+        "matches": [
+          "<Header />"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/(public)/become-seller/BecomeSeller.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from '@/components/shared/layout/Header'"
+        ]
+      },
+      {
+        "type": "headerUsage",
+        "matches": [
+          "<Header />"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/(public)/cart/components/CartLoading.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from '@/components/shared/layout/Header'"
+        ]
+      },
+      {
+        "type": "headerUsage",
+        "matches": [
+          "<Header />"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/(public)/cart/page.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from '@/components/shared/layout/Header'"
+        ]
+      },
+      {
+        "type": "headerUsage",
+        "matches": [
+          "<Header />",
+          "<Header />"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/(public)/checkout/page.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from '@/components/shared/layout/Header'"
+        ]
+      },
+      {
+        "type": "headerUsage",
+        "matches": [
+          "<Header />",
+          "<Header />"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/(public)/checkout/success/page.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from '@/components/shared/layout/Header'"
+        ]
+      },
+      {
+        "type": "headerUsage",
+        "matches": [
+          "<Header />",
+          "<Header />",
+          "<Header />"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/(public)/creators/page.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from '@/components/shared/layout/Header'"
+        ]
+      },
+      {
+        "type": "headerUsage",
+        "matches": [
+          "<Header />",
+          "<Header />"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/(public)/explore/page.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from '@/components/shared/layout/Header'"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/(public)/products/[productId]/page-design3.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from '@/components/shared/layout/Header'"
+        ]
+      },
+      {
+        "type": "headerUsage",
+        "matches": [
+          "<Header />",
+          "<Header />",
+          "<Header />"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/(public)/profile/[sellerId]/page.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from '@/components/shared/layout/Header'"
+        ]
+      },
+      {
+        "type": "headerUsage",
+        "matches": [
+          "<Header />",
+          "<Header />",
+          "<Header />"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/(public)/promotion-policy/page.jsx",
+    "patterns": [
+      {
+        "type": "conditionalHeader",
+        "matches": [
+          "ConditionalHeader",
+          "ConditionalHeader",
+          "ConditionalHeader"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/(public)/seller-agreement/page.jsx",
+    "patterns": [
+      {
+        "type": "conditionalHeader",
+        "matches": [
+          "ConditionalHeader",
+          "ConditionalHeader",
+          "ConditionalHeader"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/(public)/signin/SigninPage.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from '@/components/shared/layout/Header'"
+        ]
+      },
+      {
+        "type": "headerUsage",
+        "matches": [
+          "<Header />"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/(public)/signup/SignupPage.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from '@/components/shared/layout/Header'"
+        ]
+      },
+      {
+        "type": "headerUsage",
+        "matches": [
+          "<Header />"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/auth/confirm/[token]/EmailConfirmPage.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from '@/components/shared/layout/Header'"
+        ]
+      },
+      {
+        "type": "headerUsage",
+        "matches": [
+          "<Header />"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/auth/forgot-password/ForgotPasswordPage.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from '@/components/shared/layout/Header'"
+        ]
+      },
+      {
+        "type": "headerUsage",
+        "matches": [
+          "<Header />"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/auth/reset-password/ResetPasswordPage.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from '@/components/shared/layout/Header'"
+        ]
+      },
+      {
+        "type": "headerUsage",
+        "matches": [
+          "<Header />",
+          "<Header />"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/layout.jsx",
+    "patterns": [
+      {
+        "type": "conditionalHeader",
+        "matches": [
+          "ConditionalHeader",
+          "ConditionalHeader",
+          "ConditionalHeader"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/not-found.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from '@/components/shared/layout/Header'"
+        ]
+      },
+      {
+        "type": "headerUsage",
+        "matches": [
+          "<Header />"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/app/unauthorized.jsx",
+    "patterns": [
+      {
+        "type": "headerImport",
+        "matches": [
+          "import Header from '@/components/shared/layout/Header'"
+        ]
+      },
+      {
+        "type": "headerUsage",
+        "matches": [
+          "<Header />"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "client/hooks/useHeader.js",
+    "patterns": [
+      {
+        "type": "useHeaderHook",
+        "matches": [
+          "useHeader("
+        ]
+      }
+    ]
+  }
+]

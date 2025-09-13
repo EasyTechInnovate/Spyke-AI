@@ -1,9 +1,10 @@
-import { BarChart3, Briefcase, DollarSign, Heart, MessageSquare, Package, Settings, User, Users } from "lucide-react"
+import { BarChart3, Briefcase, DollarSign, Heart, MessageSquare, Package, Settings, User, Users, Search, UserCheck, Grid3X3, HelpCircle } from "lucide-react"
 
 export const NAVIGATION = [
-    { name: 'Explore', href: '/explore', prefetch: false },
-    { name: 'Categories', href: '/categories', prefetch: false },
-    { name: 'Top Creators', href: '/creators', prefetch: false },
+    { name: 'Explore', href: '/explore', prefetch: false, icon: Search },
+    { name: 'Sellers', href: '/creators', prefetch: false, icon: UserCheck },
+    { name: 'Categories', href: '/categories', prefetch: false, icon: Grid3X3 },
+    { name: 'How It Works', href: '/how-it-works', prefetch: false, icon: HelpCircle },
     { name: 'Hire', href: '/hire', prefetch: false, icon: Users }
 ]
 

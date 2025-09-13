@@ -120,6 +120,43 @@ class ProductsAPI {
         
         return apiClient.get(endpoint)
     }
+
+    // Get featured products using the backend algorithm
+    async getFeaturedProducts(params = {}) {
+        const queryParams = new URLSearchParams()
+        
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '' && value !== 'all') {
+                queryParams.append(key, value)
+            }
+        })
+        
+        const queryString = queryParams.toString()
+        const endpoint = queryString ? `v1/products/featured?${queryString}` : 'v1/products/featured'
+        
+        return apiClient.get(endpoint)
+    }
+
+    // Get trending products
+    async getTrendingProducts(params = {}) {
+        const queryParams = new URLSearchParams()
+        
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '' && value !== 'all') {
+                queryParams.append(key, value)
+            }
+        })
+        
+        const queryString = queryParams.toString()
+        const endpoint = queryString ? `v1/products/trending?${queryString}` : 'v1/products/trending'
+        
+        return apiClient.get(endpoint)
+    }
+
+    // Get complete product discovery (featured, trending, high-rated, recently added)
+    async getProductDiscovery() {
+        return apiClient.get('v1/products/discovery')
+    }
 }
 
 // Create singleton instance
