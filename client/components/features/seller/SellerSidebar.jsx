@@ -28,7 +28,7 @@ import { logoutService } from '@/lib/services/logout'
 
 export default function SellerSidebar({ currentPath = '/profile', sellerName = '', sidebarOpen, setSidebarOpen, isCollapsed, setIsCollapsed }) {
     const router = useRouter()
-    const [expandedMenus, setExpandedMenus] = useState(['reports']) // Default expand reports
+    const [expandedMenus, setExpandedMenus] = useState([])
 
     const navigationItems = [
         {
@@ -64,35 +64,10 @@ export default function SellerSidebar({ currentPath = '/profile', sellerName = '
             badge: 'Soon'
         },
         {
-            id: 'reports',
-            label: 'Reports',
-            icon: FileText,
-            subItems: [
-                {
-                    id: 'analytics-overview',
-                    label: 'Analytics Overview',
-                    href: '/seller/reports/analytics',
-                    icon: BarChart3
-                },
-                {
-                    id: 'sales-analytics',
-                    label: 'Sales Analytics',
-                    href: '/seller/reports/sales',
-                    icon: TrendingUp
-                },
-                {
-                    id: 'revenue-analytics',
-                    label: 'Revenue Analytics',
-                    href: '/seller/reports/revenue',
-                    icon: DollarSign
-                },
-                {
-                    id: 'customer-analytics',
-                    label: 'Customer Analytics',
-                    href: '/seller/reports/customers',
-                    icon: Users
-                }
-            ]
+            id: 'analytics',
+            label: 'Analytics',
+            icon: BarChart3,
+            href: '/seller/analytics'
         },
         {
             id: 'settings',

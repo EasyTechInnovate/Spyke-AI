@@ -1,0 +1,5 @@
+export { default as OverviewTab } from './OverviewTab'
+export { default as ProductsTab } from './ProductsTab'
+export { default as SalesTab } from './SalesTab'
+export { default as RevenueTab } from './RevenueTab'
+export { default as CustomersTab } from './CustomersTab'
