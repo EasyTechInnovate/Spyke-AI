@@ -274,6 +274,15 @@ export default function ProductPage() {
 
     const handleAddToCart = useCallback(async () => {
         if (!product) return
+        if (!isAuthenticated) {
+            try {
+                const redirectTo = typeof window !== 'undefined' ? window.location.pathname + window.location.search : `/products/${productSlug}`
+                router.push(`/signin?redirect=${encodeURIComponent(redirectTo)}`)
+            } catch (_) {
+                router.push('/signin')
+            }
+            return
+        }
 
         if (hasPurchased) {
             showMessage('You already own this product', 'info')
@@ -309,7 +318,7 @@ export default function ProductPage() {
             console.log('🚨 Unexpected error in handleAddToCart:', error)
             showMessage('Failed to add to cart', 'error')
         }
-    }, [product, hasPurchased, isOwner, mounted, cartLoading, isInCart, addToCart, showMessage])
+    }, [product, hasPurchased, isOwner, mounted, cartLoading, isInCart, addToCart, showMessage, isAuthenticated, router, productSlug])
 
     const handleBuyNow = useCallback(async () => {
         if (hasPurchased) {

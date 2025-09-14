@@ -11,8 +11,9 @@ import SellerAbout from '@/components/features/seller/profile/SellerAbout'
 import SellerReviews from '@/components/features/seller/profile/SellerReviews'
 import ContactWidget from '@/components/features/seller/profile/ContactWidget'
 import { useEnhancedSellerProfile } from '@/hooks/useEnhancedSellerProfile'
-import { Star, Users, Sparkles } from 'lucide-react'
+import { Star, Users, Sparkles, Award, Zap, Target, TrendingUp, Clock, Shield, Globe } from 'lucide-react'
 import { formatLocation } from '@/lib/utils/seller'
+
 
 export default function PublicSellerProfile() {
     const params = useParams()
@@ -28,7 +29,6 @@ export default function PublicSellerProfile() {
     }
 
     const handleProductClick = (productId) => {
-        // Navigate to product page in the same tab
         window.location.href = `/products/${productId}`
     }
 
@@ -94,8 +94,7 @@ export default function PublicSellerProfile() {
 
     return (
         <div className="min-h-screen bg-[#121212] text-[#FFFFFF]">
-
-            <main className="pt-20 pb-16">
+            <main className=" pb-16">
                 <div className="w-full">
                     <SellerHero
                         seller={seller}
@@ -130,12 +129,9 @@ export default function PublicSellerProfile() {
                                         />
                                     </div>
                                 </div>
-
-                                {/* Quick Actions */}
                             </nav>
                         </div>
 
-                        {/* Tab Content with Smooth Transitions */}
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={activeTab}
@@ -155,7 +151,94 @@ export default function PublicSellerProfile() {
 
                                 {activeTab === 'about' && (
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                        <div className="lg:col-span-2">
+                                        <div className="lg:col-span-2 space-y-8">
+                                            {/* Achievement Badges Section */}
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: 0.1 }}
+                                                className="bg-[#1f1f1f] rounded-2xl p-6 border border-[#6b7280]/20">
+                                                <h3 className="text-[#FFFFFF] mb-6 text-xl font-[var(--font-league-spartan)] flex items-center gap-2">
+                                                    <Award className="w-5 h-5 text-[#FFC050]" />
+                                                    Achievements & Badges
+                                                </h3>
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                    <AchievementBadge 
+                                                        icon={Shield} 
+                                                        title="Verified Creator" 
+                                                        earned={seller?.isVerified} 
+                                                        color="emerald"
+                                                    />
+                                                    <AchievementBadge 
+                                                        icon={Target} 
+                                                        title="Top Seller" 
+                                                        earned={seller?.metrics?.totalSales > 50} 
+                                                        color="blue"
+                                                    />
+                                                    <AchievementBadge 
+                                                        icon={TrendingUp} 
+                                                        title="Rising Star" 
+                                                        earned={seller?.metrics?.profileViews > 1000} 
+                                                        color="purple"
+                                                    />
+                                                    <AchievementBadge 
+                                                        icon={Clock} 
+                                                        title="Quick Responder" 
+                                                        earned={seller?.responseTime === '< 24h'} 
+                                                        color="amber"
+                                                    />
+                                                </div>
+                                            </motion.div>
+
+                                            {/* Skills & Tools Section */}
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: 0.2 }}
+                                                className="bg-[#1f1f1f] rounded-2xl p-6 border border-[#6b7280]/20">
+                                                <h3 className="text-[#FFFFFF] mb-6 text-xl font-[var(--font-league-spartan)] flex items-center gap-2">
+                                                    <Zap className="w-5 h-5 text-[#00FF89]" />
+                                                    Skills & Expertise
+                                                </h3>
+                                                <div className="space-y-6">
+                                                    {seller?.niches?.length > 0 && (
+                                                        <div>
+                                                            <h4 className="text-[#9ca3af] text-sm font-medium mb-3 uppercase tracking-wider">Specializations</h4>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {seller.niches.map((niche, index) => (
+                                                                    <motion.span
+                                                                        key={index}
+                                                                        initial={{ opacity: 0, scale: 0.8 }}
+                                                                        animate={{ opacity: 1, scale: 1 }}
+                                                                        transition={{ delay: index * 0.1 }}
+                                                                        className="px-4 py-2 bg-[#00FF89]/10 text-[#00FF89] rounded-xl text-sm font-medium border border-[#00FF89]/20 hover:bg-[#00FF89]/20 transition-all">
+                                                                        {niche}
+                                                                    </motion.span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {seller?.toolsSpecialization?.length > 0 && (
+                                                        <div>
+                                                            <h4 className="text-[#9ca3af] text-sm font-medium mb-3 uppercase tracking-wider">Tools & Technologies</h4>
+                                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                                                {seller.toolsSpecialization.map((tool, index) => (
+                                                                    <motion.div
+                                                                        key={index}
+                                                                        initial={{ opacity: 0, x: -20 }}
+                                                                        animate={{ opacity: 1, x: 0 }}
+                                                                        transition={{ delay: index * 0.1 }}
+                                                                        className="flex items-center gap-2 px-3 py-2 bg-[#121212] rounded-lg border border-[#6b7280]/20 hover:border-[#FFC050]/30 transition-all">
+                                                                        <Globe className="w-4 h-4 text-[#FFC050]" />
+                                                                        <span className="text-[#FFFFFF] text-sm font-medium">{tool}</span>
+                                                                    </motion.div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </motion.div>
+
                                             <SellerAbout seller={seller} />
                                         </div>
                                         <div className="space-y-6">
@@ -209,6 +292,46 @@ export default function PublicSellerProfile() {
                                                     </button>
                                                 </div>
                                             </div>
+
+                                            {/* Social Proof Section */}
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: 0.4 }}
+                                                className="bg-[#1f1f1f] rounded-2xl p-6 border border-[#6b7280]/20">
+                                                <h3 className="text-[#FFFFFF] mb-4 text-lg font-[var(--font-league-spartan)]">
+                                                    Trust & Credibility
+                                                </h3>
+                                                <div className="space-y-4">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Member Since</span>
+                                                        <span className="text-[#FFFFFF] font-[var(--font-league-spartan)]">
+                                                            {seller?.createdAt ? new Date(seller.createdAt).getFullYear() : 'N/A'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Last Active</span>
+                                                        <span className="text-[#00FF89] font-[var(--font-league-spartan)]">
+                                                            {seller?.isOnline ? 'Online now' : 'Recently'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Verification</span>
+                                                        <div className="flex items-center gap-1">
+                                                            <Shield className={`w-4 h-4 ${seller?.isVerified ? 'text-[#00FF89]' : 'text-[#6b7280]'}`} />
+                                                            <span className={`text-sm font-[var(--font-league-spartan)] ${seller?.isVerified ? 'text-[#00FF89]' : 'text-[#6b7280]'}`}>
+                                                                {seller?.isVerified ? 'Verified' : 'Pending'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Languages</span>
+                                                        <span className="text-[#FFFFFF] font-[var(--font-league-spartan)] text-sm">
+                                                            {seller?.languages?.length > 0 ? seller.languages.slice(0, 2).join(', ') : 'English'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
                                         </div>
                                     </div>
                                 )}
@@ -246,7 +369,6 @@ export default function PublicSellerProfile() {
                 </Container>
             </main>
 
-            {/* Contact Widget - Always available */}
             <ContactWidget
                 seller={seller}
                 isOpen={isContactWidgetOpen}
@@ -261,18 +383,17 @@ function TabButton({ label, count, isActive, onClick, icon }) {
     return (
         <button
             onClick={onClick}
-            className={`flex items-center gap-2 py-3 sm:py-4 px-4 sm:px-6 border-b-2 text-sm transition-all duration-200 font-[var(--font-kumbh-sans)] ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-[var(--font-kumbh-sans)] ${
                 isActive
-                    ? 'border-[#00FF89] text-[#00FF89] bg-[#00FF89]/5'
-                    : 'border-transparent text-[#9ca3af] hover:text-[#FFFFFF] hover:border-[#6b7280]/50'
+                    ? 'bg-[#00FF89] text-[#121212] font-semibold'
+                    : 'text-[#9ca3af] hover:text-[#FFFFFF] hover:bg-[#1f1f1f]'
             }`}>
             {icon}
             <span>{label}</span>
             {count !== undefined && (
-                <span
-                    className={`ml-2 px-2 py-1 text-xs rounded-full font-[var(--font-league-spartan)] ${
-                        isActive ? 'bg-[#00FF89] text-[#121212]' : 'bg-[#1f1f1f] text-[#9ca3af] border border-[#6b7280]/20'
-                    }`}>
+                <span className={`px-2 py-1 text-xs rounded-full ${
+                    isActive ? 'bg-[#121212]/20' : 'bg-[#6b7280]/20'
+                }`}>
                     {count}
                 </span>
             )}
@@ -303,6 +424,47 @@ function SimilarSellerCard({ seller, onClick }) {
                     <span className="font-[var(--font-kumbh-sans)]">{seller.stats?.averageRating ? seller.stats.averageRating.toFixed(1) : 'N/A'}</span>
                 </div>
             </div>
+        </motion.div>
+    )
+}
+
+function AchievementBadge({ icon: Icon, title, earned, color = 'gray' }) {
+    const colorClasses = {
+        emerald: earned ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-gray-800 text-gray-500 border-gray-700',
+        blue: earned ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' : 'bg-gray-800 text-gray-500 border-gray-700',
+        purple: earned ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' : 'bg-gray-800 text-gray-500 border-gray-700',
+        amber: earned ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-gray-800 text-gray-500 border-gray-700',
+        gray: 'bg-gray-800 text-gray-500 border-gray-700'
+    }
+
+    return (
+        <motion.div
+            whileHover={{ scale: earned ? 1.05 : 1 }}
+            className={`relative flex flex-col items-center text-center p-4 rounded-xl border transition-all ${
+                colorClasses[color]
+            } ${earned ? 'hover:shadow-lg cursor-pointer' : 'opacity-60'}`}>
+            
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
+                earned ? 'bg-current/20' : 'bg-gray-700'
+            }`}>
+                <Icon className="w-6 h-6" />
+            </div>
+            
+            <h4 className="text-sm font-medium font-[var(--font-kumbh-sans)] leading-tight">
+                {title}
+            </h4>
+            
+            {earned && (
+                <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="absolute -top-2 -right-2 w-5 h-5 bg-[#00FF89] rounded-full flex items-center justify-center">
+                    <svg className="w-3 h-3 text-[#121212]" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                </motion.div>
+            )}
         </motion.div>
     )
 }

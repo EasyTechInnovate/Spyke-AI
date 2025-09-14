@@ -211,96 +211,90 @@ export default function CustomSelect({
 
             <AnimatePresence>
                 {isOpen && (
-                    <>
-                        {/* Backdrop */}
-                        <div className="fixed inset-0 z-[99998]" onClick={() => setIsOpen(false)} />
-                        
-                        {/* Dropdown */}
-                        <motion.div
-                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                            transition={{ duration: 0.2 }}
-                            className={cn(
-                                'absolute top-full left-0 right-0 mt-2 rounded-lg shadow-2xl overflow-hidden backdrop-blur-sm',
-                                'z-[99999]', // Even higher z-index
-                                currentTheme.dropdown,
-                                maxHeight
-                            )}
-                            style={{
-                                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05)',
-                                position: 'absolute',
-                                zIndex: 99999
-                            }}>
-                            {/* Search Input */}
-                            {searchable && (
-                                <div className="p-3 border-b sticky top-0" style={{ backgroundColor: currentTheme.dropdown, borderColor: currentTheme.footerBg }}>
-                                    <div className="relative">
-                                        <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                                        <input
-                                            type="text"
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            placeholder="Search..."
-                                            className={cn('w-full pl-10 pr-3 py-2 rounded text-white placeholder-gray-400 focus:outline-none focus:ring-1 text-sm', currentTheme.searchInput)}
-                                        />
-                                    </div>
+                    <motion.div
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className={cn(
+                            'absolute top-full left-0 right-0 mt-2 rounded-lg shadow-2xl overflow-hidden backdrop-blur-sm',
+                            'z-[99999]',
+                            currentTheme.dropdown,
+                            maxHeight
+                        )}
+                        style={{
+                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+                            position: 'absolute',
+                            zIndex: 99999
+                        }}>
+                        {/* Search Input */}
+                        {searchable && (
+                            <div className="p-3 border-b sticky top-0" style={{ backgroundColor: currentTheme.dropdown, borderColor: currentTheme.footerBg }}>
+                                <div className="relative">
+                                    <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                                    <input
+                                        type="text"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        placeholder="Search..."
+                                        className={cn('w-full pl-10 pr-3 py-2 rounded text-white placeholder-gray-400 focus:outline-none focus:ring-1 text-sm', currentTheme.searchInput)}
+                                    />
                                 </div>
-                            )}
-
-                            {/* Options */}
-                            <div className="max-h-48 overflow-y-auto">
-                                {filteredOptions.length > 0 ? (
-                                    filteredOptions.map((option) => {
-                                        const selected = isSelected(option)
-                                        return (
-                                            <motion.button
-                                                key={option.value}
-                                                type="button"
-                                                onClick={() => handleSelect(option.value)}
-                                                className={cn(
-                                                    'w-full px-4 py-3 text-left transition-colors flex items-center gap-3 border-b last:border-b-0',
-                                                    selected 
-                                                        ? `${currentTheme.selectedOption}` 
-                                                        : `${currentTheme.optionHover} ${currentTheme.optionText}`,
-                                                    currentTheme.separatorBorder || 'border-gray-700/50'
-                                                )}>
-                                                <div className="flex items-center gap-3 flex-1 min-w-0">
-                                                    {option.icon && (
-                                                        <option.icon className={cn('w-5 h-5 flex-shrink-0', selected ? currentTheme.selectedIcon : 'text-gray-400')} />
-                                                    )}
-                                                    <span className={cn('truncate font-medium text-sm', selected ? 'text-current' : currentTheme.optionText)}>{option.label}</span>
-                                                </div>
-                                                {selected && <Check className={cn('w-4 h-4 flex-shrink-0', currentTheme.checkIcon)} />}
-                                            </motion.button>
-                                        )
-                                    })
-                                ) : (
-                                    <div className="px-4 py-6 text-gray-400 text-center">
-                                        <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                                        <p className="text-sm">No options found</p>
-                                    </div>
-                                )}
                             </div>
+                        )}
 
-                            {/* Footer with selection count for multiple */}
-                            {multiple && selectedOptions.length > 0 && (
-                                <div className="p-3 border-t sticky bottom-0" style={{ backgroundColor: currentTheme.footerBg, borderColor: currentTheme.footerBg }}>
-                                    <div className="flex items-center justify-between text-sm">
-                                        <span className="text-gray-400">{selectedOptions.length} selected</span>
-                                        {allowClear && (
-                                            <button
-                                                type="button"
-                                                onClick={handleClear}
-                                                className="text-red-400 hover:text-red-300 font-medium">
-                                                Clear all
-                                            </button>
-                                        )}
-                                    </div>
+                        {/* Options */}
+                        <div className="max-h-48 overflow-y-auto">
+                            {filteredOptions.length > 0 ? (
+                                filteredOptions.map((option) => {
+                                    const selected = isSelected(option)
+                                    return (
+                                        <motion.button
+                                            key={option.value}
+                                            type="button"
+                                            onClick={() => handleSelect(option.value)}
+                                            className={cn(
+                                                'w-full px-4 py-3 text-left transition-colors flex items-center gap-3 border-b last:border-b-0',
+                                                selected 
+                                                    ? `${currentTheme.selectedOption}` 
+                                                    : `${currentTheme.optionHover} ${currentTheme.optionText}`,
+                                                currentTheme.separatorBorder || 'border-gray-700/50'
+                                            )}>
+                                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                                                {option.icon && (
+                                                    <option.icon className={cn('w-5 h-5 flex-shrink-0', selected ? currentTheme.selectedIcon : 'text-gray-400')} />
+                                                )}
+                                                <span className={cn('truncate font-medium text-sm', selected ? 'text-current' : currentTheme.optionText)}>{option.label}</span>
+                                            </div>
+                                            {selected && <Check className={cn('w-4 h-4 flex-shrink-0', currentTheme.checkIcon)} />}
+                                        </motion.button>
+                                    )
+                                })
+                            ) : (
+                                <div className="px-4 py-6 text-gray-400 text-center">
+                                    <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                    <p className="text-sm">No options found</p>
                                 </div>
                             )}
-                        </motion.div>
-                    </>
+                        </div>
+
+                        {/* Footer with selection count for multiple */}
+                        {multiple && selectedOptions.length > 0 && (
+                            <div className="p-3 border-t sticky bottom-0" style={{ backgroundColor: currentTheme.footerBg, borderColor: currentTheme.footerBg }}>
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-gray-400">{selectedOptions.length} selected</span>
+                                    {allowClear && (
+                                        <button
+                                            type="button"
+                                            onClick={handleClear}
+                                            className="text-red-400 hover:text-red-300 font-medium">
+                                            Clear all
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </motion.div>
                 )}
             </AnimatePresence>
         </div>

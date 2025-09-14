@@ -1,8 +1,6 @@
 import mongoose from 'mongoose'
 import {
     EProductType,
-    EProductCategory,
-    EProductIndustry,
     EProductPriceCategory,
     EProductSetupTime,
     EProductStatusNew
@@ -128,13 +126,13 @@ const productSchema = new mongoose.Schema(
             required: true
         },
         category: {
-            type: String,
-            enum: Object.values(EProductCategory),
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Category',
             required: true
         },
         industry: {
-            type: String,
-            enum: Object.values(EProductIndustry),
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Industry',
             required: true
         },
 
@@ -379,5 +377,75 @@ productSchema.virtual('discountPercentage').get(function () {
 
 productSchema.set('toJSON', { virtuals: true })
 productSchema.set('toObject', { virtuals: true })
+
+// Middleware to update category/industry product counts
+productSchema.post('save', async function(doc) {
+    if (this.isNew) {
+        // New product created - increment counts if published
+        if (doc.status === 'published') {
+            const Category = mongoose.model('Category')
+            const Industry = mongoose.model('Industry')
+            
+            await Promise.all([
+                Category.incrementProductCount(doc.category),
+                Industry.incrementProductCount(doc.industry)
+            ])
+        }
+    } else {
+        // Product updated - check if status changed to/from published
+        const original = this.getChanges()
+        if (original.status) {
+            const Category = mongoose.model('Category')
+            const Industry = mongoose.model('Industry')
+            
+            if (original.status.from !== 'published' && original.status.to === 'published') {
+                // Product became published - increment counts
+                await Promise.all([
+                    Category.incrementProductCount(doc.category),
+                    Industry.incrementProductCount(doc.industry)
+                ])
+            } else if (original.status.from === 'published' && original.status.to !== 'published') {
+                // Product unpublished - decrement counts
+                await Promise.all([
+                    Category.decrementProductCount(doc.category),
+                    Industry.decrementProductCount(doc.industry)
+                ])
+            }
+        }
+        
+        // Check if category or industry changed for published products
+        if (doc.status === 'published' && (original.category || original.industry)) {
+            const Category = mongoose.model('Category')
+            const Industry = mongoose.model('Industry')
+            
+            if (original.category) {
+                await Promise.all([
+                    Category.decrementProductCount(original.category.from),
+                    Category.incrementProductCount(original.category.to)
+                ])
+            }
+            
+            if (original.industry) {
+                await Promise.all([
+                    Industry.decrementProductCount(original.industry.from),
+                    Industry.incrementProductCount(original.industry.to)
+                ])
+            }
+        }
+    }
+})
+
+productSchema.post('findOneAndDelete', async function(doc) {
+    if (doc && doc.status === 'published') {
+        // Product deleted - decrement counts
+        const Category = mongoose.model('Category')
+        const Industry = mongoose.model('Industry')
+        
+        await Promise.all([
+            Category.decrementProductCount(doc.category),
+            Industry.decrementProductCount(doc.industry)
+        ])
+    }
+})
 
 export default mongoose.model('Product', productSchema)

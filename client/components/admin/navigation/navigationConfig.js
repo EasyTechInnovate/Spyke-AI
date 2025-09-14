@@ -5,7 +5,8 @@ import {
   Tag,
   TrendingUp,
   ShieldCheck,
-  Settings
+  Settings,
+  Wrench
 } from 'lucide-react'
 
 // Coming Soon Features Set
@@ -76,6 +77,12 @@ export const createNavigationItems = (counts) => [
     label: 'Promocodes', 
     icon: Tag, 
     href: '/admin/promocodes' 
+  },
+  { 
+    id: 'tools-niche', 
+    label: 'Tools and Niche', 
+    icon: Wrench, 
+    href: '/admin/tools-niche' 
   },
   { 
     id: 'analytics', 

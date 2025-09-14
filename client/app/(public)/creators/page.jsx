@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react'
+import { useState, useEffect, useMemo, useCallback, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ErrorBoundary } from 'react-error-boundary'
@@ -8,7 +8,6 @@ import { debounce } from '@/utils/debounce'
 import { sellerAPI } from '@/lib/api'
 import Link from 'next/link'
 import Image from 'next/image'
-import toast from '@/lib/utils/toast'
 import { 
     Search, 
     Users, 
@@ -17,56 +16,356 @@ import {
     Calendar, 
     Package, 
     Filter,
-    Grid3X3,
-    List,
-    RefreshCw,
-    AlertTriangle,
     Loader2,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Eye,
+    TrendingUp,
+    Award,
+    Heart,
+    ExternalLink
 } from 'lucide-react'
 
-// Import Design System Components
-import { DSContainer, DSStack, DSHeading, DSText, DSButton, DSLoadingState, DSBadge } from '@/lib/design-system'
-
-const BRAND = '#00FF89'
 const ITEMS_PER_PAGE = 12
 
-// Helper function to format join date
-const formatJoinDate = (dateString) => {
-    return new Date(dateString).getFullYear()
-}
-
-// Loading skeletons following design system patterns
 function CreatorCardSkeleton() {
     return (
-        <div className="bg-[#171717] border border-gray-800 rounded-xl overflow-hidden">
-            <div className="p-6 space-y-4">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gray-800 rounded-full animate-pulse" />
-                    <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-gray-800 rounded animate-pulse" />
-                        <div className="h-3 bg-gray-800 rounded w-2/3 animate-pulse" />
-                    </div>
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 animate-pulse">
+            <div className="flex items-center gap-4 mb-4">
+                <div className="w-16 h-16 bg-white/10 rounded-full" />
+                <div className="flex-1 space-y-2">
+                    <div className="h-5 bg-white/10 rounded w-3/4" />
+                    <div className="h-4 bg-white/10 rounded w-1/2" />
                 </div>
-                <div className="space-y-2">
-                    <div className="h-3 bg-gray-800 rounded animate-pulse" />
-                    <div className="h-3 bg-gray-800 rounded w-4/5 animate-pulse" />
-                </div>
-                <div className="flex gap-2">
-                    <div className="h-6 bg-gray-800 rounded-full w-16 animate-pulse" />
-                    <div className="h-6 bg-gray-800 rounded-full w-20 animate-pulse" />
+            </div>
+            <div className="space-y-3">
+                <div className="h-4 bg-white/10 rounded" />
+                <div className="h-4 bg-white/10 rounded w-5/6" />
+                <div className="flex gap-2 mt-4">
+                    <div className="h-6 bg-white/10 rounded-full w-20" />
+                    <div className="h-6 bg-white/10 rounded-full w-24" />
                 </div>
             </div>
         </div>
     )
 }
 
-function CreatorsGrid({ creators, loading, viewMode = 'grid' }) {
+function HeroSection({ creatorsCount }) {
+    return (
+        <section className="text-center py-8 relative">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+            >
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#00FF89]/10 border border-[#00FF89]/20 rounded-full mb-6">
+                    <Users className="w-4 h-4 text-[#00FF89]" />
+                    <span className="text-sm font-medium text-[#00FF89]">
+                        {creatorsCount?.toLocaleString() || '0'} Active Creators
+                    </span>
+                </div>
+
+                <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 leading-tight">
+                    Meet Our{' '}
+                    <span className="bg-gradient-to-r from-[#00FF89] to-emerald-400 bg-clip-text text-transparent">
+                        Creators
+                    </span>
+                </h1>
+
+                <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
+                    Discover talented automation experts and digital creators ready to transform your business
+                </p>
+            </motion.div>
+        </section>
+    )
+}
+
+function SearchControls({ 
+    searchQuery, 
+    filters, 
+    sortBy, 
+    onSearchChange, 
+    onFilterChange, 
+    onSortChange,
+    onClearFilters,
+    creatorsCount 
+}) {
+    const niches = ['E-commerce', 'Email Marketing', 'Lead Generation', 'Sales Automation']
+    const tools = ['Zapier', 'Mailchimp']
+    const countries = ['India']
+
+    const hasActiveFilters = filters.niche || filters.tool || filters.country
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mb-12"
+        >
+            <div className="relative mb-8">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                    type="text"
+                    placeholder="Search creators by name or expertise..."
+                    value={searchQuery}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                    className="w-full pl-12 pr-4 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-[#00FF89]/50 transition-all"
+                />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4 mb-6">
+                <div className="flex items-center gap-2 text-gray-400">
+                    <Filter className="w-4 h-4" />
+                    <span className="text-sm font-medium">Filters</span>
+                </div>
+
+                <select
+                    value={filters.niche}
+                    onChange={(e) => {
+                        onFilterChange('niche', e.target.value)
+                    }}
+                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50"
+                >
+                    <option value="">All Niches</option>
+                    {niches.map(niche => (
+                        <option key={niche} value={niche} className="bg-gray-800">{niche}</option>
+                    ))}
+                </select>
+
+                <select
+                    value={filters.tool}
+                    onChange={(e) => {
+                        onFilterChange('tool', e.target.value)
+                    }}
+                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50"
+                >
+                    <option value="">All Tools</option>
+                    {tools.map(tool => (
+                        <option key={tool} value={tool} className="bg-gray-800">{tool}</option>
+                    ))}
+                </select>
+
+                <select
+                    value={filters.country}
+                    onChange={(e) => {
+                        onFilterChange('country', e.target.value)
+                    }}
+                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50"
+                >
+                    <option value="">All Countries</option>
+                    {countries.map(country => (
+                        <option key={country} value={country} className="bg-gray-800">{country}</option>
+                    ))}
+                </select>
+
+                <select
+                    value={sortBy}
+                    onChange={(e) => {
+                        onSortChange(e.target.value)
+                    }}
+                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50"
+                >
+                    <option value="createdAt-desc" className="bg-gray-800">Newest First</option>
+                    <option value="stats.averageRating-desc" className="bg-gray-800">Highest Rated</option>
+                    <option value="stats.totalProducts-desc" className="bg-gray-800">Most Products</option>
+                    <option value="stats.profileViews-desc" className="bg-gray-800">Most Popular</option>
+                </select>
+
+                {hasActiveFilters && (
+                    <button
+                        onClick={() => {
+                            onClearFilters()
+                        }}
+                        className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl text-sm hover:bg-red-500/30 transition-all"
+                    >
+                        Clear Filters
+                    </button>
+                )}
+            </div>
+
+            {hasActiveFilters && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                    {filters.niche && (
+                        <span className="px-3 py-1 bg-[#00FF89]/20 text-[#00FF89] text-xs font-medium rounded-full border border-[#00FF89]/30">
+                            Niche: {filters.niche}
+                        </span>
+                    )}
+                    {filters.tool && (
+                        <span className="px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-medium rounded-full border border-blue-500/30">
+                            Tool: {filters.tool}
+                        </span>
+                    )}
+                    {filters.country && (
+                        <span className="px-3 py-1 bg-purple-500/20 text-purple-400 text-xs font-medium rounded-full border border-purple-500/30">
+                            Country: {filters.country}
+                        </span>
+                    )}
+                </div>
+            )}
+
+            <div className="text-sm text-gray-400">
+                Showing {creatorsCount?.toLocaleString() || 0} creators
+            </div>
+        </motion.div>
+    )
+}
+
+function CreatorCard({ creator }) {
+    const formatJoinDate = (dateString) => {
+        return new Date(dateString).toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short' 
+        })
+    }
+
+    const getInitials = (name) => {
+        return name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'CR'
+    }
+
+    return (
+        <Link href={`/profile/${creator._id}`} className="group block h-full">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                whileHover={{ y: -4 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="h-full"
+            >
+                <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 h-full hover:border-[#00FF89]/30 hover:bg-white/10 transition-all duration-300 group flex flex-col">
+                    <div className="flex items-start gap-4 mb-4 flex-shrink-0">
+                        <div className="relative flex-shrink-0">
+                            {creator.userId?.avatar ? (
+                                <Image
+                                    src={creator.userId.avatar}
+                                    alt={creator.fullName}
+                                    width={64}
+                                    height={64}
+                                    className="w-16 h-16 rounded-full object-cover border-2 border-white/10"
+                                />
+                            ) : (
+                                <div className="w-16 h-16 bg-gradient-to-br from-[#00FF89]/20 to-emerald-400/20 rounded-full flex items-center justify-center border-2 border-[#00FF89]/30">
+                                    <span className="text-[#00FF89] font-bold text-lg">
+                                        {getInitials(creator.fullName)}
+                                    </span>
+                                </div>
+                            )}
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#00FF89] rounded-full border-2 border-black" />
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-white text-lg leading-tight mb-1 group-hover:text-[#00FF89] transition-colors">
+                                {creator.fullName}
+                            </h3>
+                            {creator.location?.country && (
+                                <div className="flex items-center gap-1 text-sm text-gray-400">
+                                    <MapPin className="w-3 h-3" />
+                                    <span>{creator.location.country}</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="mb-4 flex-shrink-0">
+                        {creator.bio ? (
+                            <p className="text-sm text-gray-300 leading-relaxed h-16 overflow-hidden relative">
+                                <span className="line-clamp-3">{creator.bio}</span>
+                            </p>
+                        ) : (
+                            <div className="h-16"></div>
+                        )}
+                    </div>
+
+                    <div className="mb-4 flex-shrink-0">
+                        {creator.niches && creator.niches.length > 0 ? (
+                            <div className="flex flex-wrap gap-1.5 min-h-[36px]">
+                                {creator.niches.slice(0, 2).map((niche, index) => (
+                                    <span 
+                                        key={index}
+                                        className="px-2.5 py-1 bg-[#00FF89]/20 text-[#00FF89] text-xs font-medium rounded-full border border-[#00FF89]/30 whitespace-nowrap flex-shrink-0"
+                                    >
+                                        {niche}
+                                    </span>
+                                ))}
+                                {creator.niches.length > 2 && (
+                                    <span className="px-2.5 py-1 bg-white/10 text-gray-300 text-xs font-medium rounded-full whitespace-nowrap flex-shrink-0">
+                                        +{creator.niches.length - 2}
+                                    </span>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="h-9"></div>
+                        )}
+                    </div>
+
+                    <div className="mb-4 flex-shrink-0">
+                        {creator.toolsSpecialization && creator.toolsSpecialization.length > 0 ? (
+                            <>
+                                <p className="text-xs text-gray-500 mb-2">Tools:</p>
+                                <div className="flex flex-wrap gap-1 min-h-[28px]">
+                                    {creator.toolsSpecialization.slice(0, 3).map((tool, index) => (
+                                        <span 
+                                            key={index}
+                                            className="px-2 py-1 bg-white/5 text-gray-300 text-xs rounded-lg border border-white/10"
+                                        >
+                                            {tool}
+                                        </span>
+                                    ))}
+                                </div>
+                            </>
+                        ) : (
+                            <div className="h-12"></div>
+                        )}
+                    </div>
+
+                    <div className="flex-1"></div>
+
+                    {creator.stats && (
+                        <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/10 mb-4 flex-shrink-0">
+                            <div className="text-center">
+                                <div className="text-lg font-bold text-white mb-1">
+                                    {creator.stats.totalProducts || 0}
+                                </div>
+                                <div className="text-xs text-gray-400">Products</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="flex items-center justify-center gap-1 mb-1">
+                                    <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                                    <span className="text-lg font-bold text-white">
+                                        {creator.stats.averageRating || '0.0'}
+                                    </span>
+                                </div>
+                                <div className="text-xs text-gray-400">
+                                    {creator.stats.totalReviews || 0} reviews
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-4 border-t border-white/10 flex-shrink-0">
+                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <Calendar className="w-3 h-3" />
+                            <span>Since {formatJoinDate(creator.userId?.createdAt)}</span>
+                        </div>
+                        {creator.stats?.profileViews && (
+                            <div className="flex items-center gap-1 text-xs text-gray-500">
+                                <Eye className="w-3 h-3" />
+                                <span>{creator.stats.profileViews.toLocaleString()}</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </motion.div>
+        </Link>
+    )
+}
+
+function CreatorsGrid({ creators, loading }) {
     if (loading) {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {[...Array(12)].map((_, i) => (
+                {[...Array(8)].map((_, i) => (
                     <CreatorCardSkeleton key={i} />
                 ))}
             </div>
@@ -78,299 +377,34 @@ function CreatorsGrid({ creators, loading, viewMode = 'grid' }) {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-center py-16">
-                <Users className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                <DSHeading level={3} size="lg" style={{ color: '#ffffff', marginBottom: '0.5rem' }}>
-                    No creators found
-                </DSHeading>
-                <DSText style={{ color: '#9ca3af' }}>
+                className="text-center py-20"
+            >
+                <Users className="w-16 h-16 text-gray-600 mx-auto mb-6" />
+                <h3 className="text-2xl font-semibold text-white mb-4">No creators found</h3>
+                <p className="text-gray-400 max-w-md mx-auto">
                     Try adjusting your search or filters to discover more creators
-                </DSText>
+                </p>
             </motion.div>
         )
     }
 
     return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {creators.map((creator, index) => (
                 <motion.div
                     key={creator._id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05, duration: 0.3 }}>
+                    transition={{ delay: index * 0.1, duration: 0.3 }}
+                >
                     <CreatorCard creator={creator} />
                 </motion.div>
             ))}
-        </motion.div>
-    )
-}
-
-// Enhanced Creator Card following design system
-function CreatorCard({ creator }) {
-    const hasStats = creator.stats && Object.keys(creator.stats).length > 0
-
-    return (
-        <Link href={`/profile/${creator._id}`} className="group block">
-            <motion.div
-                whileHover={{ y: -4 }}
-                transition={{ duration: 0.2 }}
-                className="bg-[#171717] border border-gray-800 rounded-xl p-6 hover:border-[#00FF89]/30 transition-all duration-300 h-full">
-                
-                <div className="flex items-center gap-4 mb-4">
-                    <div className="relative">
-                        {creator.userId?.avatar ? (
-                            <Image
-                                src={creator.userId.avatar}
-                                alt={creator.fullName}
-                                width={48}
-                                height={48}
-                                className="rounded-full"
-                            />
-                        ) : (
-                            <div className="w-12 h-12 bg-[#00FF89]/20 rounded-full flex items-center justify-center">
-                                <span className="text-[#00FF89] font-semibold text-lg">
-                                    {creator.fullName?.charAt(0) || 'U'}
-                                </span>
-                            </div>
-                        )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-white truncate group-hover:text-[#00FF89] transition-colors">
-                            {creator.fullName || 'Anonymous Creator'}
-                        </h3>
-                        {creator.location?.country && (
-                            <div className="flex items-center gap-1 text-sm text-gray-400">
-                                <MapPin className="w-3 h-3" />
-                                <span>{creator.location.country}</span>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Bio */}
-                {creator.bio && (
-                    <DSText size="sm" style={{ color: '#9ca3af', marginBottom: '1rem' }} className="line-clamp-3">
-                        {creator.bio}
-                    </DSText>
-                )}
-
-                {/* Expertise Tags */}
-                {creator.niches && creator.niches.length > 0 && (
-                    <div className="mb-4">
-                        <div className="flex flex-wrap gap-1">
-                            {creator.niches.slice(0, 3).map((niche, index) => (
-                                <DSBadge 
-                                    key={index}
-                                    variant="primary"
-                                    size="sm"
-                                >
-                                    {niche}
-                                </DSBadge>
-                            ))}
-                            {creator.niches.length > 3 && (
-                                <DSBadge variant="secondary" size="sm">
-                                    +{creator.niches.length - 3}
-                                </DSBadge>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* Tools */}
-                {creator.toolsSpecialization && creator.toolsSpecialization.length > 0 && (
-                    <div className="mb-4">
-                        <DSText size="xs" style={{ color: '#6b7280', marginBottom: '0.25rem' }}>
-                            Specializes in:
-                        </DSText>
-                        <div className="flex flex-wrap gap-1">
-                            {creator.toolsSpecialization.slice(0, 3).map((tool, index) => (
-                                <span 
-                                    key={index}
-                                    className="px-2 py-1 bg-gray-800 text-gray-300 text-xs rounded"
-                                >
-                                    {tool}
-                                </span>
-                            ))}
-                            {creator.toolsSpecialization.length > 3 && (
-                                <span className="px-2 py-1 bg-gray-700 text-gray-400 text-xs rounded">
-                                    +{creator.toolsSpecialization.length - 3}
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* Stats */}
-                {hasStats && (
-                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-800">
-                        <div className="text-center">
-                            <div className="text-lg font-semibold text-white">
-                                {creator.stats.totalProducts || 0}
-                            </div>
-                            <div className="text-xs text-gray-500">Products</div>
-                        </div>
-                        <div className="text-center">
-                            <div className="flex items-center justify-center gap-1">
-                                <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                                <span className="text-lg font-semibold text-white">
-                                    {creator.stats.averageRating ? creator.stats.averageRating.toFixed(1) : '0.0'}
-                                </span>
-                            </div>
-                            <div className="text-xs text-gray-500">
-                                ({creator.stats.totalReviews || 0} reviews)
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Join Date */}
-                {creator.userId?.createdAt && (
-                    <div className="flex items-center gap-1 mt-4 pt-4 border-t border-gray-800 text-xs text-gray-500">
-                        <Calendar className="w-3 h-3" />
-                        <span>Joined {formatJoinDate(creator.userId.createdAt)}</span>
-                    </div>
-                )}
-            </motion.div>
-        </Link>
-    )
-}
-
-// Enhanced filter controls following design system
-function CreatorControls({ 
-    searchQuery, 
-    filters, 
-    sortBy,
-    onSearchChange, 
-    onFilterChange, 
-    onSortChange,
-    onClearFilters,
-    creatorsCount = 0
-}) {
-    const niches = ['E-commerce', 'Marketing', 'Social Media', 'Email Marketing', 'Lead Generation', 'Customer Support', 'Data Analysis']
-    const tools = ['Zapier', 'Make', 'Shopify', 'WooCommerce', 'Mailchimp', 'HubSpot', 'Airtable', 'Google Sheets']
-    const countries = ['United States', 'Canada', 'United Kingdom', 'Australia', 'Germany', 'France', 'India', 'Brazil']
-
-    const hasActiveFilters = filters.niche || filters.tool || filters.country || filters.minRating > 0
-
-    return (
-        <div className="mb-8">
-            {/* Search Bar */}
-            <div className="mb-6">
-                <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                        type="text"
-                        placeholder="Search creators by name, skills, or expertise..."
-                        value={searchQuery}
-                        onChange={(e) => onSearchChange(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3 bg-[#171717] border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-[#00FF89]/50 transition-all"
-                    />
-                </div>
-            </div>
-
-            {/* Filter Controls */}
-            <div className="bg-[#171717] border border-gray-800 rounded-xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                    <DSText size="sm" style={{ color: '#ffffff' }}>
-                        Filters ({creatorsCount} creators)
-                    </DSText>
-                    {hasActiveFilters && (
-                        <DSButton
-                            variant="secondary"
-                            size="small"
-                            onClick={onClearFilters}
-                        >
-                            Clear All
-                        </DSButton>
-                    )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {/* Niche Filter */}
-                    <select
-                        value={filters.niche}
-                        onChange={(e) => onFilterChange('niche', e.target.value)}
-                        className="px-4 py-2 bg-[#121212] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50"
-                    >
-                        <option value="">All Specializations</option>
-                        {niches.map(niche => (
-                            <option key={niche} value={niche}>{niche}</option>
-                        ))}
-                    </select>
-
-                    {/* Tool Filter */}
-                    <select
-                        value={filters.tool}
-                        onChange={(e) => onFilterChange('tool', e.target.value)}
-                        className="px-4 py-2 bg-[#121212] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50"
-                    >
-                        <option value="">All Tools</option>
-                        {tools.map(tool => (
-                            <option key={tool} value={tool}>{tool}</option>
-                        ))}
-                    </select>
-
-                    {/* Country Filter */}
-                    <select
-                        value={filters.country}
-                        onChange={(e) => onFilterChange('country', e.target.value)}
-                        className="px-4 py-2 bg-[#121212] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50"
-                    >
-                        <option value="">All Countries</option>
-                        {countries.map(country => (
-                            <option key={country} value={country}>{country}</option>
-                        ))}
-                    </select>
-
-                    {/* Sort Filter */}
-                    <select
-                        value={sortBy}
-                        onChange={(e) => onSortChange(e.target.value)}
-                        className="px-4 py-2 bg-[#121212] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50"
-                    >
-                        <option value="createdAt-desc">Newest First</option>
-                        <option value="createdAt-asc">Oldest First</option>
-                        <option value="stats.averageRating-desc">Highest Rated</option>
-                        <option value="stats.totalProducts-desc">Most Products</option>
-                    </select>
-                </div>
-
-                {/* Active Filters Display */}
-                {hasActiveFilters && (
-                    <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-800">
-                        {filters.niche && (
-                            <DSBadge variant="primary">
-                                Niche: {filters.niche}
-                            </DSBadge>
-                        )}
-                        {filters.tool && (
-                            <DSBadge variant="primary">
-                                Tool: {filters.tool}
-                            </DSBadge>
-                        )}
-                        {filters.country && (
-                            <DSBadge variant="primary">
-                                Country: {filters.country}
-                            </DSBadge>
-                        )}
-                        {filters.minRating > 0 && (
-                            <DSBadge variant="primary">
-                                {filters.minRating}+ Stars
-                            </DSBadge>
-                        )}
-                    </div>
-                )}
-            </div>
         </div>
     )
 }
 
-// Enhanced Pagination component
-function CreatorsPagination({ currentPage, totalPages, onPageChange, loading }) {
+function Pagination({ currentPage, totalPages, onPageChange, loading }) {
     if (totalPages <= 1) return null
 
     const getPageNumbers = () => {
@@ -381,7 +415,6 @@ function CreatorsPagination({ currentPage, totalPages, onPageChange, loading }) 
         let startPage = Math.max(1, currentPage - halfShow)
         let endPage = Math.min(totalPages, currentPage + halfShow)
         
-        // Adjust if we're near the beginning or end
         if (endPage - startPage + 1 < showPages) {
             if (startPage === 1) {
                 endPage = Math.min(totalPages, startPage + showPages - 1)
@@ -401,76 +434,64 @@ function CreatorsPagination({ currentPage, totalPages, onPageChange, loading }) 
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-center gap-2 mt-12">
-            
-            <DSButton
-                variant="secondary"
-                size="small"
+            className="flex items-center justify-center gap-2 mt-16"
+        >
+            <button
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 1 || loading}
-                className="flex items-center gap-1"
+                className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-all"
             >
                 <ChevronLeft className="w-4 h-4" />
                 Previous
-            </DSButton>
+            </button>
             
             {getPageNumbers().map((pageNum) => (
                 <button
                     key={pageNum}
                     onClick={() => onPageChange(pageNum)}
                     disabled={loading}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
+                    className={`px-4 py-2 rounded-xl transition-all ${
                         pageNum === currentPage
                             ? 'bg-[#00FF89] text-black font-medium'
-                            : 'bg-[#171717] border border-gray-800 text-white hover:bg-[#1f1f1f] hover:border-gray-700'
+                            : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
                     }`}
                 >
                     {pageNum}
                 </button>
             ))}
             
-            <DSButton
-                variant="secondary"
-                size="small"
+            <button
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages || loading}
-                className="flex items-center gap-1"
+                className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-all"
             >
                 Next
                 <ChevronRight className="w-4 h-4" />
-            </DSButton>
+            </button>
         </motion.div>
     )
 }
 
-// Error boundary component
-function CreatorsErrorBoundary({ error, resetErrorBoundary, onRetry }) {
+function ErrorState({ error, onRetry }) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="min-h-[60vh] flex items-center justify-center">
-            <div className="text-center max-w-md mx-auto">
-                <DSStack gap="large" direction="column" align="center">
-                    <div className="w-16 h-16 bg-red-500/10 rounded-xl flex items-center justify-center">
-                        <AlertTriangle className="w-8 h-8 text-red-500" />
-                    </div>
-                    
-                    <DSStack gap="small" direction="column" align="center">
-                        <DSHeading level={3} size="lg">
-                            <span style={{ color: 'white' }}>Something went wrong</span>
-                        </DSHeading>
-                        <DSText style={{ color: '#9ca3af', textAlign: 'center' }}>
-                            {error?.message || 'Failed to load creators. Please try again.'}
-                        </DSText>
-                    </DSStack>
-                    
-                    <DSButton variant="primary" onClick={onRetry || resetErrorBoundary}>
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                        Try Again
-                    </DSButton>
-                </DSStack>
+            className="text-center py-20"
+        >
+            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <TrendingUp className="w-8 h-8 text-red-400" />
             </div>
+            <h3 className="text-2xl font-semibold text-white mb-4">Something went wrong</h3>
+            <p className="text-gray-400 mb-8 max-w-md mx-auto">
+                {error || 'Failed to load creators. Please try again.'}
+            </p>
+            <button
+                onClick={onRetry}
+                className="px-6 py-3 bg-[#00FF89] text-black font-semibold rounded-xl hover:bg-[#00FF89]/90 transition-colors"
+            >
+                Try Again
+            </button>
         </motion.div>
     )
 }
@@ -479,18 +500,15 @@ function CreatorsPageContent() {
     const searchParams = useSearchParams()
     const router = useRouter()
 
-    // State management
     const [creators, setCreators] = useState([])
     const [loading, setLoading] = useState(true)
-    const [initialLoading, setInitialLoading] = useState(true)
     const [error, setError] = useState(null)
     const [searchQuery, setSearchQuery] = useState('')
     const [searchInput, setSearchInput] = useState('')
     const [filters, setFilters] = useState({
         niche: '',
         tool: '',
-        country: '',
-        minRating: 0
+        country: ''
     })
     const [pagination, setPagination] = useState({
         page: 1,
@@ -500,64 +518,120 @@ function CreatorsPageContent() {
     })
     const [sortBy, setSortBy] = useState('createdAt-desc')
 
-    // Enhanced debounced search
-    const debouncedSearch = useCallback(
-        debounce((searchTerm) => {
-            setSearchQuery(searchTerm)
-            setPagination(prev => ({ ...prev, page: 1 }))
-        }, 300),
-        []
-    )
-
-    // Enhanced API call
-    const fetchCreators = useCallback(async (page = 1) => {
+    const fetchCreators = useCallback(async (resetData = false) => {
         try {
             setLoading(true)
             setError(null)
 
-            // Build query parameters
             const params = new URLSearchParams()
-            
-            if (filters.niche) params.append('niche', filters.niche)
-            if (filters.tool) params.append('tool', filters.tool)
-            if (filters.country) params.append('country', filters.country)
-            if (filters.minRating > 0) params.append('minRating', filters.minRating)
-            if (searchQuery) params.append('search', searchQuery)
-            
-            params.append('page', page)
-            params.append('limit', pagination.limit)
-            
-            const [sortField, sortOrder] = sortBy.split('-')
-            params.append('sortBy', sortField)
-            params.append('sortOrder', sortOrder)
+            params.append('page', 1)
+            params.append('limit', 100)
+            params.append('sortBy', 'createdAt')
+            params.append('sortOrder', 'desc')
 
-            const queryString = params.toString() ? `?${params.toString()}` : ''
+            const queryString = `?${params.toString()}`
+
             const response = await sellerAPI.searchSellers(queryString)
             
-            if (response?.sellers) {
-                setCreators(response.sellers)
-                setPagination(prev => ({
-                    ...prev,
-                    page,
-                    total: response.pagination?.total || 0,
-                    totalPages: response.pagination?.totalPages || 0
-                }))
+            let sellersData = null
+            if (response?.data?.sellers) {
+                sellersData = response.data.sellers
+            } else if (response?.sellers) {
+                sellersData = response.sellers
+            } else {
+                sellersData = []
             }
+
+            setCreators(sellersData)
+            
         } catch (err) {
-            console.error('Error fetching creators:', err)
-            setError('Failed to load creators. Please try again.')
+            setError(err.message || 'Failed to load creators')
             setCreators([])
         } finally {
             setLoading(false)
-            setInitialLoading(false)
         }
-    }, [filters, searchQuery, sortBy, pagination.limit])
+    }, [])
 
-    // Event handlers
+    const filteredAndSortedCreators = useMemo(() => {
+        let filtered = [...creators]
+
+        if (searchInput.trim()) {
+            const query = searchInput.toLowerCase()
+            filtered = filtered.filter(creator => 
+                creator.fullName?.toLowerCase().includes(query) ||
+                creator.bio?.toLowerCase().includes(query) ||
+                creator.niches?.some(niche => niche.toLowerCase().includes(query)) ||
+                creator.toolsSpecialization?.some(tool => tool.toLowerCase().includes(query))
+            )
+        }
+
+        if (filters.niche) {
+            filtered = filtered.filter(creator => 
+                creator.niches?.includes(filters.niche)
+            )
+        }
+
+        if (filters.tool) {
+            filtered = filtered.filter(creator => 
+                creator.toolsSpecialization?.includes(filters.tool)
+            )
+        }
+
+        if (filters.country) {
+            filtered = filtered.filter(creator => 
+                creator.location?.country === filters.country
+            )
+        }
+
+        if (sortBy) {
+            const [sortField, sortOrder] = sortBy.split('-')
+            filtered.sort((a, b) => {
+                let aValue, bValue
+
+                if (sortField === 'createdAt') {
+                    aValue = new Date(a.userId?.createdAt || 0)
+                    bValue = new Date(b.userId?.createdAt || 0)
+                } else if (sortField.startsWith('stats.')) {
+                    const statField = sortField.replace('stats.', '')
+                    aValue = a.stats?.[statField] || 0
+                    bValue = b.stats?.[statField] || 0
+                } else {
+                    aValue = a[sortField] || ''
+                    bValue = b[sortField] || ''
+                }
+
+                if (sortOrder === 'desc') {
+                    return bValue > aValue ? 1 : -1
+                } else {
+                    return aValue > bValue ? 1 : -1
+                }
+            })
+        }
+
+        return filtered
+    }, [creators, searchInput, filters, sortBy])
+
+    const paginatedCreators = useMemo(() => {
+        const startIndex = (pagination.page - 1) * ITEMS_PER_PAGE
+        const endIndex = startIndex + ITEMS_PER_PAGE
+        const paginatedData = filteredAndSortedCreators.slice(startIndex, endIndex)
+        
+        const newTotal = filteredAndSortedCreators.length
+        const newTotalPages = Math.ceil(newTotal / ITEMS_PER_PAGE)
+        
+        setPagination(prev => ({
+            ...prev,
+            total: newTotal,
+            totalPages: newTotalPages
+        }))
+
+        return paginatedData
+    }, [filteredAndSortedCreators, pagination.page])
+
     const handleSearchChange = useCallback((searchTerm) => {
         setSearchInput(searchTerm)
-        debouncedSearch(searchTerm)
-    }, [debouncedSearch])
+        setPagination(prev => ({ ...prev, page: 1 }))
+    }, [])
 
     const handleFilterChange = useCallback((filterType, value) => {
         setFilters(prev => ({ ...prev, [filterType]: value }))
@@ -575,155 +649,71 @@ function CreatorsPageContent() {
     }, [])
 
     const clearFilters = useCallback(() => {
-        setFilters({
-            niche: '',
-            tool: '',
-            country: '',
-            minRating: 0
-        })
-        setSearchQuery('')
+        setFilters({ niche: '', tool: '', country: '' })
         setSearchInput('')
         setPagination(prev => ({ ...prev, page: 1 }))
     }, [])
 
     const handleRetry = useCallback(() => {
-        fetchCreators(pagination.page)
-    }, [fetchCreators, pagination.page])
+        fetchCreators(true)
+    }, [fetchCreators])
 
-    // Effects
     useEffect(() => {
-        fetchCreators(pagination.page)
-    }, [fetchCreators, pagination.page])
-
-    // Filter creators by search query on frontend for responsive search
-    const filteredCreators = useMemo(() => {
-        if (!searchInput.trim() || searchInput === searchQuery) return creators
-        
-        const query = searchInput.toLowerCase()
-        return creators.filter(creator => 
-            creator.fullName?.toLowerCase().includes(query) ||
-            creator.bio?.toLowerCase().includes(query) ||
-            creator.niches?.some(niche => niche.toLowerCase().includes(query)) ||
-            creator.toolsSpecialization?.some(tool => tool.toLowerCase().includes(query))
-        )
-    }, [creators, searchInput, searchQuery])
+        fetchCreators()
+    }, [fetchCreators])
 
     return (
-        <ErrorBoundary FallbackComponent={CreatorsErrorBoundary}>
-            <div className="min-h-screen bg-black text-white">
-                <main className="pt-24 pb-16">
-                    <DSContainer>
-                        {/* Page Header following ExploreHeader pattern */}
-                        {/* <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="mb-8 sm:mb-12 text-center">
-                            
-                            <DSStack gap="medium" direction="column" align="center">
-                                <DSBadge variant="primary" icon={Users} className="mb-2">
-                                    Meet Our Community
-                                </DSBadge>
-                                
-                                <DSHeading level={1} variant="hero">
-                                    <span style={{ color: 'white' }}>Discover </span>
-                                    <span style={{ color: BRAND }}>Creators</span>
-                                </DSHeading>
-                                
-                                <DSText variant="subhero" style={{ color: '#9ca3af' }}>
-                                    Connect with talented automation experts and digital creators ready to transform your business
-                                </DSText>
+        <div className="min-h-screen bg-black text-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-1 pb-16">
+                <HeroSection creatorsCount={filteredAndSortedCreators.length} />
+                
+                <SearchControls
+                    searchQuery={searchInput}
+                    filters={filters}
+                    sortBy={sortBy}
+                    onSearchChange={handleSearchChange}
+                    onFilterChange={handleFilterChange}
+                    onSortChange={handleSortChange}
+                    onClearFilters={clearFilters}
+                    creatorsCount={filteredAndSortedCreators.length}
+                />
 
-                                <div className="flex items-center justify-center gap-6 mt-4 text-sm text-gray-500">
-                                    <div className="flex items-center gap-2">
-                                        <Users className="w-4 h-4" />
-                                        <span>{pagination.total} Active Creators</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Package className="w-4 h-4" />
-                                        <span>1000+ Products Available</span>
-                                    </div>
-                                </div>
-                            </DSStack>
-                        </motion.div> */}
-
-                        {/* Controls */}
-                        <CreatorControls
-                            searchQuery={searchInput}
-                            filters={filters}
-                            sortBy={sortBy}
-                            onSearchChange={handleSearchChange}
-                            onFilterChange={handleFilterChange}
-                            onSortChange={handleSortChange}
-                            onClearFilters={clearFilters}
-                            creatorsCount={pagination.total}
+                {error ? (
+                    <ErrorState error={error} onRetry={handleRetry} />
+                ) : (
+                    <>
+                        <CreatorsGrid creators={paginatedCreators} loading={loading} />
+                        
+                        <Pagination
+                            currentPage={pagination.page}
+                            totalPages={pagination.totalPages}
+                            onPageChange={handlePageChange}
+                            loading={loading}
                         />
-
-                        {/* Main Content */}
-                        {initialLoading ? (
-                            <DSLoadingState
-                                icon={Loader2}
-                                message="Discovering Amazing Creators"
-                                description="Finding the perfect creators for you..."
-                                className="min-h-[60vh]"
-                            />
-                        ) : error ? (
-                            <CreatorsErrorBoundary
-                                error={{ message: error }}
-                                onRetry={handleRetry}
-                            />
-                        ) : (
-                            <>
-                                <CreatorsGrid
-                                    creators={filteredCreators}
-                                    loading={loading && !initialLoading}
-                                />
-
-                                <CreatorsPagination
-                                    currentPage={pagination.page}
-                                    totalPages={pagination.totalPages}
-                                    onPageChange={handlePageChange}
-                                    loading={loading}
-                                />
-
-                                {/* Results Summary */}
-                                {!loading && !error && filteredCreators.length > 0 && (
-                                    <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ delay: 0.3 }}
-                                        className="mt-8 text-center">
-                                        <DSText size="sm" style={{ color: '#9ca3af' }}>
-                                            Showing {filteredCreators.length} of {pagination.total.toLocaleString()} creators
-                                        </DSText>
-                                    </motion.div>
-                                )}
-                            </>
-                        )}
-                    </DSContainer>
-                </main>
+                    </>
+                )}
             </div>
-        </ErrorBoundary>
+        </div>
+    )
+}
+
+function LoadingFallback() {
+    return (
+        <div className="min-h-screen bg-black text-white flex items-center justify-center">
+            <div className="text-center">
+                <Loader2 className="w-12 h-12 text-[#00FF89] animate-spin mx-auto mb-4" />
+                <p className="text-gray-400">Loading creators...</p>
+            </div>
+        </div>
     )
 }
 
 export default function CreatorsPage() {
     return (
-        <Suspense
-            fallback={
-                <div className="min-h-screen bg-black text-white">
-                    <div className="pt-24 pb-16">
-                        <DSContainer>
-                            <DSLoadingState
-                                icon={Loader2}
-                                message="Loading Creators"
-                                description="Setting up your browsing experience..."
-                                className="min-h-[60vh]"
-                            />
-                        </DSContainer>
-                    </div>
-                </div>
-            }>
-            <CreatorsPageContent />
-        </Suspense>
+        <ErrorBoundary fallback={<ErrorState />}>
+            <Suspense fallback={<LoadingFallback />}>
+                <CreatorsPageContent />
+            </Suspense>
+        </ErrorBoundary>
     )
 }

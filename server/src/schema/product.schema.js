@@ -106,13 +106,11 @@ export const createProductSchema = z.object({
     errorMap: () => ({ message: 'Type must be one of: prompt, automation, agent, bundle' })
   }),
   
-  category: z.enum(Object.values(EProductCategory), {
-    errorMap: () => ({ message: 'Invalid category' })
-  }),
+  category: z.string()
+    .regex(/^[0-9a-fA-F]{24}$/, 'Category must be a valid MongoDB ObjectId'),
   
-  industry: z.enum(Object.values(EProductIndustry), {
-    errorMap: () => ({ message: 'Invalid industry' })
-  }),
+  industry: z.string()
+    .regex(/^[0-9a-fA-F]{24}$/, 'Industry must be a valid MongoDB ObjectId'),
   
   price: z.number()
     .min(0, 'Price must be non-negative'),
@@ -174,9 +172,13 @@ export const updateProductSchema = z.object({
   
   type: z.enum(Object.values(EProductType)).optional(),
   
-  category: z.enum(Object.values(EProductCategory)).optional(),
+  category: z.string()
+    .regex(/^[0-9a-fA-F]{24}$/, 'Category must be a valid MongoDB ObjectId')
+    .optional(),
   
-  industry: z.enum(Object.values(EProductIndustry)).optional(),
+  industry: z.string()
+    .regex(/^[0-9a-fA-F]{24}$/, 'Industry must be a valid MongoDB ObjectId')
+    .optional(),
   
   price: z.number().min(0, 'Price must be non-negative').optional(),
   
@@ -223,9 +225,15 @@ export const getProductsSchema = z.object({
   
   type: z.enum([...Object.values(EProductType), 'all']).optional(),
   
-  category: z.enum([...Object.values(EProductCategory), 'all']).optional(),
+  category: z.string()
+    .regex(/^[0-9a-fA-F]{24}$/, 'Category must be a valid ObjectId')
+    .or(z.enum(['all']))
+    .optional(),
   
-  industry: z.enum([...Object.values(EProductIndustry), 'all']).optional(),
+  industry: z.string()
+    .regex(/^[0-9a-fA-F]{24}$/, 'Industry must be a valid ObjectId')
+    .or(z.enum(['all']))
+    .optional(),
   
   priceCategory: z.enum([...Object.values(EProductPriceCategory), 'all']).optional(),
   

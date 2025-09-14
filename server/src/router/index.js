@@ -8,6 +8,8 @@ import promocodeRoutes from './promocode.route.js'
 import purchaseRoutes from './purchase.route.js'
 import analyticsRoutes from './analytics.route.js'
 import adminRoutes from './admin.route.js'
+import categoryRoutes from '../routes/category.routes.js'
+import industryRoutes from '../routes/industry.routes.js'
 
 const router = Router()
 
@@ -20,5 +22,7 @@ router.use('/promocode', promocodeRoutes)
 router.use('/purchase', purchaseRoutes)
 router.use('/analytics', analyticsRoutes)
 router.use('/admin', adminRoutes)
+router.use('/categories', categoryRoutes)
+router.use('/industries', industryRoutes)
 
 export default router

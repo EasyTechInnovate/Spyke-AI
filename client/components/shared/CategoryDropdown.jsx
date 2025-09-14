@@ -1,0 +1,159 @@
+'use client'
+
+import { useState, useEffect, useRef } from 'react'
+import { ChevronDown, Package, Loader2 } from 'lucide-react'
+import { categoryAPI } from '@/lib/api/toolsNiche'
+import { useNotifications } from '@/hooks/useNotifications'
+
+export default function CategoryDropdown({ 
+    value, 
+    onChange, 
+    placeholder = "Select Category",
+    className = "",
+    disabled = false,
+    showAllOption = true,
+    required = false,
+    error = null,
+    onDataLoaded = () => {}
+}) {
+    const [categories, setCategories] = useState([])
+    const [loading, setLoading] = useState(false)
+    const [isOpen, setIsOpen] = useState(false)
+    const { addNotification } = useNotifications()
+    const fetchedRef = useRef(false)
+
+    useEffect(() => {
+        if (fetchedRef.current) return
+        fetchedRef.current = true
+        const fetchCategories = async () => {
+            try {
+                setLoading(true)
+                const response = await categoryAPI.getCategories()
+                let categoriesData = response?.data?.categories || response?.categories || response?.data || []
+                if (!Array.isArray(categoriesData)) {
+                    categoriesData = []
+                }
+                const formattedCategories = categoriesData.map(cat => ({
+                    id: cat._id || cat.id,
+                    name: cat.name || cat.title,
+                    icon: cat.icon || 'Package',
+                    productCount: cat.productCount || 0,
+                    isActive: cat.isActive !== false
+                })).filter(cat => cat.isActive)
+
+                setCategories(formattedCategories)
+                // Call without causing dependency loop
+                try { onDataLoaded(formattedCategories) } catch { /* noop */ }
+            } catch (error) {
+                console.error('Error fetching categories:', error)
+                addNotification({
+                    type: 'error',
+                    message: 'Failed to load categories'
+                })
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchCategories()
+        // deliberately empty dependency array to avoid infinite loop
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    const handleSelect = (categoryId) => {
+        onChange(categoryId)
+        setIsOpen(false)
+    }
+
+    const selectedCategory = categories.find(cat => cat.id === value)
+
+    return (
+        <div className={`relative ${className}`}>
+            <button
+                type="button"
+                onClick={() => !disabled && setIsOpen(!isOpen)}
+                disabled={disabled || loading}
+                className={`
+                    w-full px-4 py-3 bg-gray-800 border rounded-lg text-left flex items-center justify-between
+                    transition-colors duration-200 min-h-[48px]
+                    ${disabled || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-750 cursor-pointer'}
+                    ${error ? 'border-red-500' : 'border-gray-700 focus:border-[#00FF89] focus:ring-1 focus:ring-[#00FF89]'}
+                    ${isOpen ? 'border-[#00FF89] ring-1 ring-[#00FF89]' : ''}
+                `}>
+                
+                <div className="flex items-center gap-3">
+                    <Package className="w-4 h-4 text-gray-400" />
+                    <span className={selectedCategory ? 'text-white' : 'text-gray-400'}>
+                        {loading ? 'Loading...' : selectedCategory?.name || placeholder}
+                    </span>
+                </div>
+
+                {loading ? (
+                    <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
+                ) : (
+                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                )}
+            </button>
+
+            {/* Dropdown Menu */}
+            {isOpen && !loading && (
+                <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                    {showAllOption && (
+                        <button
+                            type="button"
+                            onClick={() => handleSelect('')}
+                            className={`
+                                w-full px-4 py-3 text-left hover:bg-gray-700 transition-colors
+                                border-b border-gray-700 flex items-center gap-3
+                                ${!value ? 'bg-[#00FF89]/10 text-[#00FF89]' : 'text-gray-300'}
+                            `}>
+                            <Package className="w-4 h-4" />
+                            <div className="font-medium">All Categories</div>
+                        </button>
+                    )}
+
+                    {categories.length === 0 ? (
+                        <div className="px-4 py-6 text-center text-gray-400">
+                            No categories available
+                        </div>
+                    ) : (
+                        categories.map((category) => (
+                            <button
+                                key={category.id}
+                                type="button"
+                                onClick={() => handleSelect(category.id)}
+                                className={`
+                                    w-full px-4 py-3 text-left hover:bg-gray-700 transition-colors
+                                    flex items-center gap-3
+                                    ${value === category.id ? 'bg-[#00FF89]/10 text-[#00FF89]' : 'text-gray-300'}
+                                `}>
+                                <Package className="w-4 h-4" />
+                                <div className="font-medium">{category.name}</div>
+                            </button>
+                        ))
+                    )}
+                </div>
+            )}
+
+            {/* Error Message */}
+            {error && (
+                <div className="mt-1 text-sm text-red-400">
+                    {error}
+                </div>
+            )}
+
+            {/* Required Indicator */}
+            {required && (
+                <span className="absolute -top-1 -right-1 text-red-400 text-xs">*</span>
+            )}
+
+            {/* Click outside handler */}
+            {isOpen && (
+                <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setIsOpen(false)}
+                />
+            )}
+        </div>
+    )
+}

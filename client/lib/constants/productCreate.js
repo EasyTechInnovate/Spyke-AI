@@ -120,7 +120,8 @@ export const VALIDATION_LIMITS = {
   BENEFITS_MAX: 10,
   USE_CASES_MAX: 10,
   VIDEO_MAX_SIZE_MB: 150,
-  VIDEO_MAX_DURATION_SECONDS: 300
+  VIDEO_MAX_DURATION_SECONDS: 300,
+  SUPPORT_MIN_LENGTH: 20 // Add missing constant for support field validation
 }
 
 // Helper text and tips for each step

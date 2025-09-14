@@ -8,6 +8,7 @@ export { default as cartAPI } from './cart'
 export { default as purchaseAPI } from './purchase'
 export { default as promocodeAPI } from './promocode'
 export { default as analyticsAPI } from './analytics'
+export { default as metadataAPI } from './metadata'
 // export { default as workflowAPI } from './workflow'
 
 // Default export for backward compatibility with auth attached

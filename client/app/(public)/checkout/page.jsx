@@ -17,12 +17,10 @@ import {
     Wallet,
     Bitcoin,
     Zap,
-    Edit2,
     ChevronDown,
     ChevronUp
 } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
-import Header from '@/components/shared/layout/Header'
 import { useCart } from '@/hooks/useCart'
 import { cartAPI } from '@/lib/api'
 import Link from 'next/link'
@@ -33,7 +31,7 @@ export default function CheckoutPage() {
     // Inline notification state
     const [notification, setNotification] = useState(null)
 
-    // Show inline notification messages  
+    // Show inline notification messages
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
         // Auto-dismiss after 5 seconds
@@ -169,17 +167,15 @@ export default function CheckoutPage() {
     if (cartLoading || !hasCheckedCart) {
         return (
             <div className="min-h-screen bg-black">
-            {/* Inline Notification */}
-            {notification && (
-                <InlineNotification
-                    type={notification.type}
-                    message={notification.message}
-                    onDismiss={clearNotification}
-                />
-            )}
+                {/* Inline Notification */}
+                {notification && (
+                    <InlineNotification
+                        type={notification.type}
+                        message={notification.message}
+                        onDismiss={clearNotification}
+                    />
+                )}
 
-            
-                <Header />
                 <Container>
                     <div className="flex items-center justify-center min-h-[60vh]">
                         <div className="text-center">
@@ -194,8 +190,6 @@ export default function CheckoutPage() {
 
     return (
         <div className="min-h-screen bg-black">
-            <Header />
-
             <main className="pt-16 pb-24">
                 <Container>
                     {/* Progress Steps */}
@@ -650,3 +644,4 @@ function OrderSummary({ cartItems, subtotal, discount, total, promocode }) {
         </div>
     )
 }
+

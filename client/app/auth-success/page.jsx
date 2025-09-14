@@ -17,19 +17,13 @@ function AuthSuccessContent() {
     useEffect(() => {
         const handleAuthSuccess = async () => {
             try {
-                console.log('🔍 Auth success page - processing token...')
                 const token = searchParams.get('token')
                 
                 if (!token) {
-                    console.error('❌ No token found in URL')
                     setStatus('error')
                     setErrorMessage('No authentication token provided')
                     return
                 }
-
-                console.log('✅ Token received:', token.substring(0, 20) + '...')
-
-                // Set the auth token using apiClient (which has the setAuthToken method)
                 const apiClient = (await import('@/lib/api/client')).default
                 apiClient.setAuthToken(token)
                 
@@ -37,20 +31,13 @@ function AuthSuccessContent() {
                 const cookieOptions = 'path=/; max-age=86400; SameSite=strict; secure=' + (window.location.protocol === 'https:')
                 document.cookie = `accessToken=${token}; ${cookieOptions}`
                 document.cookie = `authToken=${token}; ${cookieOptions}`
-                
-                // Store in localStorage
                 localStorage.setItem('authToken', token)
                 localStorage.setItem('loginTime', new Date().toISOString())
-
-                console.log('💾 Token stored successfully')
-
                 // Get user profile to complete authentication
                 try {
-                    console.log('👤 Fetching user profile...')
                     const userProfile = await authAPI.getCurrentUser()
                     
                     if (userProfile) {
-                        console.log('✅ User profile received:', userProfile.emailAddress || userProfile.email)
                         
                         // Store user data and roles
                         localStorage.setItem('user', JSON.stringify(userProfile))
@@ -58,21 +45,16 @@ function AuthSuccessContent() {
                         if (userProfile.roles) {
                             localStorage.setItem('roles', JSON.stringify(userProfile.roles))
                             document.cookie = `roles=${JSON.stringify(userProfile.roles)}; ${cookieOptions}`
-                            console.log('👑 User roles stored:', userProfile.roles)
                         }
                     } else {
                         console.warn('⚠️ No user profile data received')
                     }
                 } catch (profileError) {
-                    console.error('❌ Could not fetch user profile:', profileError)
-                    // Don't fail the auth if profile fetch fails, token might still be valid
-                    console.log('⚠️ Continuing with auth despite profile error')
-                }
+                    console.warn('⚠️ No user profile data received')
 
-                console.log('🎉 Authentication successful!')
+                }
                 setStatus('success')
 
-                // Start countdown and redirect
                 const countdownInterval = setInterval(() => {
                     setCountdown((prev) => {
                         if (prev <= 1) {
@@ -82,7 +64,6 @@ function AuthSuccessContent() {
                             const redirectPath = localStorage.getItem('redirectAfterLogin') || '/explore'
                             localStorage.removeItem('redirectAfterLogin') // Clean up
                             
-                            console.log('🔄 Redirecting to:', redirectPath)
                             router.push(redirectPath)
                             return 0
                         }
@@ -93,7 +74,6 @@ function AuthSuccessContent() {
                 return () => clearInterval(countdownInterval)
 
             } catch (error) {
-                console.error('❌ Auth success handling failed:', error)
                 setStatus('error')
                 setErrorMessage(error.message || 'Authentication failed. Please try again.')
             }

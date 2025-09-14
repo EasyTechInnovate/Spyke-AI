@@ -2,76 +2,62 @@
 
 import { useState, useCallback, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Upload, X, Play, Image as ImageIcon, Tag, AlertTriangle, Plus, Loader2, Video, HelpCircle, Save, Check, Camera, DollarSign, Palette } from 'lucide-react'
+import {
+    Upload,
+    X,
+    Play,
+    Image as ImageIcon,
+    Tag,
+    AlertTriangle,
+    Plus,
+    Loader2,
+    Video,
+    HelpCircle,
+    Save,
+    Check,
+    Camera,
+    DollarSign,
+    Palette
+} from 'lucide-react'
 import { useProductCreateStore } from '@/store/productCreate'
 import { VALIDATION_LIMITS } from '@/lib/constants/productCreate'
 import { useImageUpload } from '@/hooks/useImageUpload'
 import { useNotifications } from '@/components/shared/NotificationProvider'
+import { useFileUploadQueue } from '@/hooks/useFileUploadQueue'
+import { getEnhancedErrorMessage } from '@/lib/utils/errorMessages'
 
 // Enhanced tooltips with contextual help
 const FIELD_HELP = {
     thumbnailImage: {
-        title: "Thumbnail Image Guide",
-        content: "Upload a high-quality, professional image that represents your product. This is the first thing customers see.",
-        examples: ["Product mockups or screenshots", "Professional graphics with your branding", "Clear, well-lit photos"]
-    },
-    profileBanner: {
-        title: "Profile Banner Guide",
-        content: "Upload a banner image for your product profile page. This appears at the top of your product listing.",
-        examples: ["Product showcase banner", "Brand header image", "Professional cover photo"]
+        title: 'Thumbnail Image Guide',
+        content: 'Upload a high-quality, professional image that represents your product. This is the first thing customers see.',
+        examples: ['Product mockups or screenshots', 'Professional graphics with your branding', 'Clear, well-lit photos']
     },
     additionalImages: {
-        title: "Additional Images Tips",
-        content: "Show different aspects of your product. Include process screenshots, results, or usage examples.",
-        examples: ["Before/after screenshots", "Step-by-step process images", "Dashboard or interface views"]
+        title: 'Additional Images Tips',
+        content: 'Show different aspects of your product. Include process screenshots, results, or usage examples.',
+        examples: ['Before/after screenshots', 'Step-by-step process images', 'Dashboard or interface views']
     },
     previewVideo: {
-        title: "Preview Video Guide",
-        content: "Create a short video demonstrating your product in action. Keep it under 3 minutes for best engagement.",
-        examples: ["Product walkthrough", "Demo of the automation running", "Quick setup tutorial"]
+        title: 'Preview Video Guide',
+        content: 'Create a short video demonstrating your product in action. Keep it under 3 minutes for best engagement.',
+        examples: ['Product walkthrough', 'Demo of the automation running', 'Quick setup tutorial']
     },
     productTags: {
-        title: "Product Tags Strategy",
-        content: "Use specific, searchable keywords that customers would use to find your product.",
-        examples: ["automation", "lead-generation", "crm-integration", "ai-powered"]
+        title: 'Product Tags Strategy',
+        content: 'Use specific, searchable keywords that customers would use to find your product.',
+        examples: ['automation', 'lead-generation', 'crm-integration', 'ai-powered']
     },
     seoKeywords: {
-        title: "SEO Keywords Guide",
-        content: "Think like your customers. What terms would they search for when looking for your solution?",
-        examples: ["automated lead scoring", "CRM workflow", "sales automation tool"]
+        title: 'SEO Keywords Guide',
+        content: 'Think like your customers. What terms would they search for when looking for your solution?',
+        examples: ['automated lead scoring', 'CRM workflow', 'sales automation tool']
     },
     pricing: {
-        title: "Pricing Strategy",
-        content: "Set competitive prices based on the value you provide. Research similar products in the marketplace.",
-        examples: ["Simple automation: $10-50", "Complex workflow: $50-200", "Enterprise solution: $200+"]
+        title: 'Pricing Strategy',
+        content: 'Set competitive prices based on the value you provide. Research similar products in the marketplace.',
+        examples: ['Simple automation: $10-50', 'Complex workflow: $50-200', 'Enterprise solution: $200+']
     }
-}
-
-// Enhanced error messages
-const getEnhancedErrorMessage = (field, error) => {
-    const errorMap = {
-        thumbnailImage: {
-            'required': 'A thumbnail image helps customers understand your product at a glance.',
-            'invalid': 'Please upload a valid image file (JPG, PNG, or WebP).'
-        },
-        additionalImages: {
-            'required': 'Additional images showcase different aspects of your product.',
-            'minItems': 'Add at least 2-3 images to give customers a complete view.',
-            'maxItems': `Maximum ${VALIDATION_LIMITS.ADDITIONAL_IMAGES_MAX} images to avoid overwhelming customers.`
-        },
-        productTags: {
-            'required': 'Tags help customers discover your product through search.',
-            'minItems': 'Add at least 3-5 relevant tags to improve discoverability.',
-            'maxItems': `Maximum ${VALIDATION_LIMITS.PRODUCT_TAGS_MAX} tags for focused categorization.`
-        },
-        price: {
-            'required': 'Price is required for customers to make purchasing decisions.',
-            'invalid': 'Please enter a valid price amount.',
-            'minimum': 'Price must be greater than $0.'
-        }
-    }
-
-    return errorMap[field]?.[error] || error
 }
 
 // Tooltip component (reused from Step1)
@@ -103,7 +89,9 @@ const Tooltip = ({ content, examples }) => {
                             <p className="text-xs text-gray-400 mb-2">Examples:</p>
                             <ul className="space-y-1">
                                 {examples.map((example, index) => (
-                                    <li key={index} className="text-xs text-gray-300 bg-gray-700 px-2 py-1 rounded">
+                                    <li
+                                        key={index}
+                                        className="text-xs text-gray-300 bg-gray-700 px-2 py-1 rounded">
                                         {example}
                                     </li>
                                 ))}
@@ -145,7 +133,6 @@ const AutoSaveIndicator = () => {
 
 export default function Step5MediaPricing() {
     const thumbnailImage = useProductCreateStore((state) => state.thumbnailImage)
-    const profileBanner = useProductCreateStore((state) => state.profileBanner)
     const additionalImages = useProductCreateStore((state) => state.additionalImages)
     const previewVideo = useProductCreateStore((state) => state.previewVideo)
     const productTags = useProductCreateStore((state) => state.productTags)
@@ -169,8 +156,7 @@ export default function Step5MediaPricing() {
     const [keywordInput, setKeywordInput] = useState('')
     const [videoMetadata, setVideoMetadata] = useState(null)
     const [uploadingThumbnail, setUploadingThumbnail] = useState(false)
-    const [uploadingProfileBanner, setUploadingProfileBanner] = useState(false)
-    const [uploadingAdditional, setUploadingAdditional] = useState(false)
+    const [uploadingAdditional, setUploadingAdditional] = useState(new Set()) // Track multiple uploads by index
     const [videoInputType, setVideoInputType] = useState('upload')
     const [videoUrl, setVideoUrl] = useState('')
     const [uploadingVideo, setUploadingVideo] = useState(false)
@@ -190,27 +176,19 @@ export default function Step5MediaPricing() {
         }
     })
 
-    const profileBannerUpload = useImageUpload({
-        category: 'profile-banners',
-        maxSize: 10,
-        onSuccess: (url) => {
-            setField('profileBanner', url)
-            showSuccess('Profile banner uploaded successfully')
-        },
-        onError: (error) => {
-            showError(error)
-        }
-    })
-
     const additionalUpload = useImageUpload({
         category: 'product-images',
         maxSize: 10,
         onSuccess: (url) => {
             addFile('additionalImages', url)
             showSuccess('Image uploaded successfully')
+            // Clear the upload state for the "add new" slot
+            setUploadingAdditional(new Set())
         },
         onError: (error) => {
             showError(error)
+            // Clear the upload state on error
+            setUploadingAdditional(new Set())
         }
     })
 
@@ -227,7 +205,8 @@ export default function Step5MediaPricing() {
                 return
             }
 
-            if (file.size > 100 * 1024 * 1024) { // 100MB limit
+            if (file.size > 100 * 1024 * 1024) {
+                // 100MB limit
                 reject('Video file size must be less than 100MB')
                 return
             }
@@ -238,7 +217,8 @@ export default function Step5MediaPricing() {
 
             video.onloadedmetadata = () => {
                 window.URL.revokeObjectURL(video.src)
-                if (video.duration > 180) { // 3 minutes limit
+                if (video.duration > 180) {
+                    // 3 minutes limit
                     reject('Video duration must be less than 3 minutes')
                 } else {
                     resolve()
@@ -282,23 +262,6 @@ export default function Step5MediaPricing() {
                     setUploadingThumbnail(false)
                     return error.message
                 }
-            } else if (type === 'profileBanner') {
-                if (!file.type.startsWith('image/')) {
-                    showError('Please select an image file')
-                    return 'Please select an image file'
-                }
-                if (file.size > 10 * 1024 * 1024) {
-                    showError('Image size must be less than 10MB')
-                    return 'Image size must be less than 10MB'
-                }
-
-                setUploadingProfileBanner(true)
-                try {
-                    await profileBannerUpload.uploadImage(file)
-                } catch (error) {
-                    setUploadingProfileBanner(false)
-                    return error.message
-                }
             } else if (type === 'additional') {
                 if (!file.type.startsWith('image/')) {
                     showError('Please select an image file')
@@ -314,11 +277,11 @@ export default function Step5MediaPricing() {
                     return `Maximum ${VALIDATION_LIMITS.ADDITIONAL_IMAGES_MAX} images allowed`
                 }
 
-                setUploadingAdditional(true)
+                setUploadingAdditional(prev => new Set([...prev, 'new']))
                 try {
                     await additionalUpload.uploadImage(file)
                 } catch (error) {
-                    setUploadingAdditional(false)
+                    setUploadingAdditional(new Set())
                     return error.message
                 }
             } else if (type === 'video') {
@@ -333,7 +296,7 @@ export default function Step5MediaPricing() {
 
             return null
         },
-        [additionalImages.length, thumbnailUpload, profileBannerUpload, additionalUpload, validateVideoFile, setFile, showError]
+        [additionalImages.length, thumbnailUpload, additionalUpload, validateVideoFile, setFile, showError]
     )
 
     const handleDrop = useCallback(
@@ -397,11 +360,6 @@ export default function Step5MediaPricing() {
     const removeThumbnail = useCallback(() => {
         setField('thumbnailImage', null)
         showSuccess('Thumbnail removed')
-    }, [setField, showSuccess])
-
-    const removeProfileBanner = useCallback(() => {
-        setField('profileBanner', null)
-        showSuccess('Profile banner removed')
     }, [setField, showSuccess])
 
     const removeVideo = useCallback(() => {
@@ -492,10 +450,11 @@ export default function Step5MediaPricing() {
                 transition={{ delay: 0.1 }}
                 className="space-y-4">
                 <div className="flex items-center space-x-2">
-                    <label className="block text-lg font-semibold text-white">
-                        Product Thumbnail *
-                    </label>
-                    <Tooltip content={FIELD_HELP.thumbnailImage} examples={FIELD_HELP.thumbnailImage.examples} />
+                    <label className="block text-lg font-semibold text-white">Product Thumbnail *</label>
+                    <Tooltip
+                        content={FIELD_HELP.thumbnailImage}
+                        examples={FIELD_HELP.thumbnailImage.examples}
+                    />
                 </div>
                 <p className="text-base text-gray-400 mb-4">Upload a high-quality image that represents your product (max 10MB)</p>
 
@@ -516,10 +475,9 @@ export default function Step5MediaPricing() {
                     </div>
                 ) : (
                     <div
-                        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${dragOver
-                            ? 'border-[#00FF89] bg-[#00FF89]/10'
-                            : 'border-gray-600 hover:border-gray-500 hover:bg-gray-800/50'
-                            }`}
+                        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
+                            dragOver ? 'border-[#00FF89] bg-[#00FF89]/10' : 'border-gray-600 hover:border-gray-500 hover:bg-gray-800/50'
+                        }`}
                         onDrop={(e) => handleDrop(e, 'thumbnail')}
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}>
@@ -559,75 +517,6 @@ export default function Step5MediaPricing() {
                 )}
             </motion.div>
 
-            {/* Profile Banner */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-                className="space-y-4">
-                <div className="flex items-center space-x-2">
-                    <label className="block text-lg font-semibold text-white">
-                        Profile Banner
-                        <span className="text-gray-400 text-base ml-2">(Optional)</span>
-                    </label>
-                    <Tooltip content={FIELD_HELP.profileBanner} examples={FIELD_HELP.profileBanner.examples} />
-                </div>
-                <p className="text-base text-gray-400 mb-4">Upload a banner image for your product profile page (max 10MB)</p>
-
-                {profileBanner ? (
-                    <div className="relative group">
-                        <img
-                            src={profileBanner}
-                            alt="Profile banner"
-                            className="w-full h-48 object-cover rounded-xl border border-gray-700"
-                        />
-                        <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl flex items-center justify-center">
-                            <button
-                                onClick={removeProfileBanner}
-                                className="bg-red-500 hover:bg-red-600 text-white p-3 rounded-full transition-colors">
-                                <X className="w-6 h-6" />
-                            </button>
-                        </div>
-                    </div>
-                ) : (
-                    <div
-                        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${dragOver
-                            ? 'border-[#00FF89] bg-[#00FF89]/10'
-                            : 'border-gray-600 hover:border-gray-500 hover:bg-gray-800/50'
-                            }`}
-                        onDrop={(e) => handleDrop(e, 'profileBanner')}
-                        onDragOver={handleDragOver}
-                        onDragLeave={handleDragLeave}>
-                        {uploadingProfileBanner ? (
-                            <div className="flex flex-col items-center">
-                                <Loader2 className="w-12 h-12 text-[#00FF89] animate-spin mb-4" />
-                                <p className="text-lg text-gray-400">Uploading banner...</p>
-                            </div>
-                        ) : (
-                            <>
-                                <Palette className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                                <p className="text-lg text-gray-400 mb-2">
-                                    Drag and drop your profile banner here, or{' '}
-                                    <label className="text-[#00FF89] hover:text-[#00FF89]/80 cursor-pointer">
-                                        browse
-                                        <input
-                                            type="file"
-                                            className="hidden"
-                                            accept="image/*"
-                                            onChange={(e) => {
-                                                const file = e.target.files?.[0]
-                                                if (file) handleFileUpload(file, 'profileBanner')
-                                            }}
-                                        />
-                                    </label>
-                                </p>
-                                <p className="text-base text-gray-500">Supports JPG, PNG, WebP (max 10MB)</p>
-                            </>
-                        )}
-                    </div>
-                )}
-            </motion.div>
-
             {/* Visual break */}
             <div className="border-l-4 border-[#00FF89]/30 pl-6 py-4 bg-gray-800/20 rounded-r-lg">
                 <p className="text-base text-gray-300">
@@ -643,13 +532,15 @@ export default function Step5MediaPricing() {
                 transition={{ delay: 0.2 }}
                 className="space-y-4">
                 <div className="flex items-center space-x-2">
-                    <label className="block text-base font-semibold text-white">
-                        Additional Images *
-                    </label>
-                    <Tooltip content={FIELD_HELP.additionalImages} examples={FIELD_HELP.additionalImages.examples} />
+                    <label className="block text-base font-semibold text-white">Additional Images *</label>
+                    <Tooltip
+                        content={FIELD_HELP.additionalImages}
+                        examples={FIELD_HELP.additionalImages.examples}
+                    />
                 </div>
                 <p className="text-sm text-gray-400 mb-4">
-                    Add up to {VALIDATION_LIMITS.ADDITIONAL_IMAGES_MAX} more images to showcase your product ({additionalImages.length}/{VALIDATION_LIMITS.ADDITIONAL_IMAGES_MAX})
+                    Add up to {VALIDATION_LIMITS.ADDITIONAL_IMAGES_MAX} more images to showcase your product ({additionalImages.length}/
+                    {VALIDATION_LIMITS.ADDITIONAL_IMAGES_MAX})
                 </p>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -676,14 +567,13 @@ export default function Step5MediaPricing() {
 
                     {additionalImages.length < VALIDATION_LIMITS.ADDITIONAL_IMAGES_MAX && (
                         <div
-                            className={`aspect-square border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-center transition-all cursor-pointer ${dragOver
-                                ? 'border-[#00FF89] bg-[#00FF89]/10'
-                                : 'border-gray-600 hover:border-gray-500 hover:bg-gray-800/50'
-                                }`}
+                            className={`aspect-square border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-center transition-all cursor-pointer ${
+                                dragOver ? 'border-[#00FF89] bg-[#00FF89]/10' : 'border-gray-600 hover:border-gray-500 hover:bg-gray-800/50'
+                            }`}
                             onDrop={(e) => handleDrop(e, 'additional')}
                             onDragOver={handleDragOver}
                             onDragLeave={handleDragLeave}>
-                            {uploadingAdditional ? (
+                            {uploadingAdditional.size > 0 ? (
                                 <Loader2 className="w-8 h-8 text-[#00FF89] animate-spin" />
                             ) : (
                                 <>
@@ -708,9 +598,7 @@ export default function Step5MediaPricing() {
                     )}
                 </div>
                 {showFieldError('additionalImages') && (
-                    <div className="text-sm text-red-400">
-                        {getEnhancedErrorMessage('additionalImages', errors.additionalImages)}
-                    </div>
+                    <div className="text-sm text-red-400">{getEnhancedErrorMessage('additionalImages', errors.additionalImages)}</div>
                 )}
             </motion.div>
 
@@ -723,7 +611,10 @@ export default function Step5MediaPricing() {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                         <label className="block text-base font-semibold text-white">Preview Video</label>
-                        <Tooltip content={FIELD_HELP.previewVideo} examples={FIELD_HELP.previewVideo.examples} />
+                        <Tooltip
+                            content={FIELD_HELP.previewVideo}
+                            examples={FIELD_HELP.previewVideo.examples}
+                        />
                     </div>
                     <span className="text-sm text-gray-400">(Optional)</span>
                 </div>
@@ -748,14 +639,13 @@ export default function Step5MediaPricing() {
                 transition={{ delay: 0.4 }}
                 className="space-y-4">
                 <div className="flex items-center space-x-2">
-                    <label className="block text-base font-semibold text-white">
-                        Product Tags *
-                    </label>
-                    <Tooltip content={FIELD_HELP.productTags} examples={FIELD_HELP.productTags.examples} />
+                    <label className="block text-base font-semibold text-white">Product Tags *</label>
+                    <Tooltip
+                        content={FIELD_HELP.productTags}
+                        examples={FIELD_HELP.productTags.examples}
+                    />
                 </div>
-                <p className="text-sm text-gray-400 mb-4">
-                    Add tags to help customers find your product (max {VALIDATION_LIMITS.PRODUCT_TAGS_MAX})
-                </p>
+                <p className="text-sm text-gray-400 mb-4">Add tags to help customers find your product (max {VALIDATION_LIMITS.PRODUCT_TAGS_MAX})</p>
 
                 <div className="space-y-3">
                     <div className="flex flex-wrap gap-3">
@@ -785,8 +675,11 @@ export default function Step5MediaPricing() {
                             onBlur={() => handleFieldBlur('productTags')}
                             placeholder="Type a tag and press Enter"
                             disabled={productTags.length >= VALIDATION_LIMITS.PRODUCT_TAGS_MAX}
-                            className={`w-full px-5 py-4 text-base bg-gray-800 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${showFieldError('productTags') ? 'border-red-500 focus:ring-red-500/50' : 'border-gray-600 focus:ring-[#00FF89]/50 focus:border-[#00FF89]'
-                                }`}
+                            className={`w-full px-5 py-4 text-base bg-gray-800 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                                showFieldError('productTags')
+                                    ? 'border-red-500 focus:ring-red-500/50'
+                                    : 'border-gray-600 focus:ring-[#00FF89]/50 focus:border-[#00FF89]'
+                            }`}
                         />
                         <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm text-gray-400">
                             {productTags.length}/{VALIDATION_LIMITS.PRODUCT_TAGS_MAX}
@@ -794,9 +687,7 @@ export default function Step5MediaPricing() {
                     </div>
                 </div>
                 {showFieldError('productTags') && (
-                    <div className="text-sm text-red-400">
-                        {getEnhancedErrorMessage('productTags', errors.productTags)}
-                    </div>
+                    <div className="text-sm text-red-400">{getEnhancedErrorMessage('productTags', errors.productTags)}</div>
                 )}
             </motion.div>
 
@@ -811,11 +702,12 @@ export default function Step5MediaPricing() {
                         SEO Keywords
                         <span className="text-gray-400 text-sm ml-2">(Optional)</span>
                     </label>
-                    <Tooltip content={FIELD_HELP.seoKeywords} examples={FIELD_HELP.seoKeywords.examples} />
+                    <Tooltip
+                        content={FIELD_HELP.seoKeywords}
+                        examples={FIELD_HELP.seoKeywords.examples}
+                    />
                 </div>
-                <p className="text-sm text-gray-400 mb-4">
-                    Add keywords to improve search visibility (max {VALIDATION_LIMITS.SEO_KEYWORDS_MAX})
-                </p>
+                <p className="text-sm text-gray-400 mb-4">Add keywords to improve search visibility (max {VALIDATION_LIMITS.SEO_KEYWORDS_MAX})</p>
 
                 {/* ...existing SEO keywords code with consistent styling... */}
             </motion.div>
@@ -838,7 +730,10 @@ export default function Step5MediaPricing() {
                 className="space-y-6">
                 <div className="flex items-center space-x-2">
                     <label className="block text-base font-semibold text-white">Pricing</label>
-                    <Tooltip content={FIELD_HELP.pricing} examples={FIELD_HELP.pricing.examples} />
+                    <Tooltip
+                        content={FIELD_HELP.pricing}
+                        examples={FIELD_HELP.pricing.examples}
+                    />
                 </div>
                 <p className="text-sm text-gray-400">Set your product pricing to attract customers while reflecting its value</p>
 
@@ -855,8 +750,11 @@ export default function Step5MediaPricing() {
                                 placeholder="0.00"
                                 min="0"
                                 step="0.01"
-                                className={`w-full pl-10 pr-5 py-4 text-base bg-gray-800 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${showFieldError('price') ? 'border-red-500 focus:ring-red-500/50' : 'border-gray-600 focus:ring-[#00FF89]/50 focus:border-[#00FF89]'
-                                    }`}
+                                className={`w-full pl-10 pr-5 py-4 text-base bg-gray-800 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
+                                    showFieldError('price')
+                                        ? 'border-red-500 focus:ring-red-500/50'
+                                        : 'border-gray-600 focus:ring-[#00FF89]/50 focus:border-[#00FF89]'
+                                }`}
                             />
                         </div>
                         {showFieldError('price') && (
@@ -925,9 +823,7 @@ export default function Step5MediaPricing() {
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-base">
                         <div className="text-center">
-                            <div className="text-2xl font-bold text-[#00FF89] mb-1">
-                                {thumbnailImage ? 1 : 0}
-                            </div>
+                            <div className="text-2xl font-bold text-[#00FF89] mb-1">{thumbnailImage ? 1 : 0}</div>
                             <div className="text-gray-400">Thumbnail</div>
                         </div>
                         <div className="text-center">
@@ -939,9 +835,7 @@ export default function Step5MediaPricing() {
                             <div className="text-gray-400">Tags</div>
                         </div>
                         <div className="text-center">
-                            <div className="text-2xl font-bold text-[#00FF89] mb-1">
-                                {price ? `$${price}` : '-'}
-                            </div>
+                            <div className="text-2xl font-bold text-[#00FF89] mb-1">{price ? `$${price}` : '-'}</div>
                             <div className="text-gray-400">Price</div>
                         </div>
                     </div>

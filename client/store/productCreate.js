@@ -3,12 +3,57 @@ import { persist, subscribeWithSelector } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import { VALIDATION_LIMITS, SMART_SUGGESTIONS } from '@/lib/constants/productCreate'
 
+// LRU Cache implementation for selector memoization
+class LRUCache {
+    constructor(maxSize = 50) {
+        this.maxSize = maxSize
+        this.cache = new Map()
+    }
+
+    get(key) {
+        const value = this.cache.get(key)
+        if (value !== undefined) {
+            // Move to end (most recently used)
+            this.cache.delete(key)
+            this.cache.set(key, value)
+        }
+        return value
+    }
+
+    set(key, value) {
+        if (this.cache.has(key)) {
+            // Update existing key
+            this.cache.delete(key)
+        } else if (this.cache.size >= this.maxSize) {
+            // Remove least recently used item
+            const firstKey = this.cache.keys().next().value
+            this.cache.delete(firstKey)
+        }
+        this.cache.set(key, value)
+    }
+
+    has(key) {
+        return this.cache.has(key)
+    }
+
+    clear() {
+        this.cache.clear()
+    }
+
+    get size() {
+        return this.cache.size
+    }
+}
+
 const STORAGE_KEY = 'spyke-product-create'
 const SCHEMA_VERSION = '1.0'
 
 // Cache for memoized selectors
-let selectorCache = new Map()
+let selectorCache = new LRUCache(50)
 let lastStateSnapshot = null
+
+// Validation ID counter for race condition prevention
+let validationCounter = 0
 
 // Initial form state
 const initialState = {
@@ -145,55 +190,100 @@ export const useProductCreateStore = create(
                         state.touchedFields[field] = true
                     }),
 
-                // New action to validate only touched fields
+                // Enhanced validation with race condition prevention
                 validateTouchedFields: () => {
+                    const currentValidationId = ++validationCounter
                     const state = get()
                     const errors = {}
                     const touched = state.touchedFields
 
                     // Only validate fields that have been touched
                     if (touched.title && !state.title.trim()) {
-                        errors.title = 'Title is required'
+                        errors.title = 'required'
+                    } else if (touched.title && state.title.length < VALIDATION_LIMITS.TITLE.MIN) {
+                        errors.title = 'minLength'
                     } else if (touched.title && state.title.length > VALIDATION_LIMITS.TITLE.MAX) {
-                        errors.title = `Title must be less than ${VALIDATION_LIMITS.TITLE.MAX} characters`
+                        errors.title = 'maxLength'
                     }
 
                     if (touched.type && !state.type) {
-                        errors.type = 'Product type is required'
+                        errors.type = 'required'
                     }
 
                     if (touched.category && !state.category) {
-                        errors.category = 'Category is required'
+                        errors.category = 'required'
                     }
 
                     if (touched.industry && !state.industry) {
-                        errors.industry = 'Industry is required'
+                        errors.industry = 'required'
                     }
 
                     if (touched.shortDescription && !state.shortDescription.trim()) {
-                        errors.shortDescription = 'Short description is required'
+                        errors.shortDescription = 'required'
                     } else if (touched.shortDescription && state.shortDescription.length < VALIDATION_LIMITS.SHORT_DESCRIPTION.MIN) {
-                        errors.shortDescription = `Short description must be at least ${VALIDATION_LIMITS.SHORT_DESCRIPTION.MIN} characters`
+                        errors.shortDescription = 'minLength'
                     } else if (touched.shortDescription && state.shortDescription.length > VALIDATION_LIMITS.SHORT_DESCRIPTION.MAX) {
-                        errors.shortDescription = `Short description must be less than ${VALIDATION_LIMITS.SHORT_DESCRIPTION.MAX} characters`
+                        errors.shortDescription = 'maxLength'
                     }
 
                     if (touched.fullDescription && !state.fullDescription.trim()) {
-                        errors.fullDescription = 'Full description is required'
+                        errors.fullDescription = 'required'
                     } else if (touched.fullDescription && state.fullDescription.length < VALIDATION_LIMITS.FULL_DESCRIPTION.MIN) {
-                        errors.fullDescription = `Full description must be at least ${VALIDATION_LIMITS.FULL_DESCRIPTION.MIN} characters`
+                        errors.fullDescription = 'minLength'
+                    } else if (touched.fullDescription && state.fullDescription.length > VALIDATION_LIMITS.FULL_DESCRIPTION.MAX) {
+                        errors.fullDescription = 'maxLength'
                     }
 
-                    set((state) => {
-                        // Only update errors for touched fields, keep existing errors for untouched fields
-                        state.errors = { ...state.errors, ...errors }
-                        // Clear errors for touched fields that are now valid
-                        Object.keys(touched).forEach((field) => {
-                            if (!errors[field]) {
-                                delete state.errors[field]
-                            }
-                        })
-                    })
+                    if (touched.toolsConfiguration && !state.toolsConfiguration.trim()) {
+                        errors.toolsConfiguration = 'required'
+                    }
+
+                    if (touched.setupTimeEstimate && !state.setupTimeEstimate) {
+                        errors.setupTimeEstimate = 'required'
+                    }
+
+                    if (touched.supportAndMaintenance && !state.supportAndMaintenance.trim()) {
+                        errors.supportAndMaintenance = 'required'
+                    } else if (touched.supportAndMaintenance && state.supportAndMaintenance.length < VALIDATION_LIMITS.SUPPORT_MIN_LENGTH) {
+                        errors.supportAndMaintenance = 'minLength'
+                    }
+
+                    if (touched.productTags && state.productTags.length === 0) {
+                        errors.productTags = 'required'
+                    } else if (touched.productTags && state.productTags.length > VALIDATION_LIMITS.PRODUCT_TAGS_MAX) {
+                        errors.productTags = 'maxItems'
+                    }
+
+                    if (touched.howItWorks) {
+                        const validSteps = state.howItWorks.filter((step) => step.title.trim() && step.detail.trim())
+                        if (validSteps.length < VALIDATION_LIMITS.HOW_IT_WORKS_MIN_STEPS) {
+                            errors.howItWorks = 'minSteps'
+                        }
+                    }
+
+                    if (touched.faq) {
+                        const validFaqs = state.faq.filter((faq) => faq.question.trim() && faq.answer.trim())
+                        if (validFaqs.length === 0) {
+                            errors.faq = 'required'
+                        }
+                    }
+
+                    // Use setTimeout to prevent race conditions
+                    setTimeout(() => {
+                        // Only apply validation if this is still the latest validation
+                        if (currentValidationId === validationCounter) {
+                            set((state) => {
+                                // Only update errors for touched fields, keep existing errors for untouched fields
+                                state.errors = { ...state.errors, ...errors }
+                                // Clear errors for touched fields that are now valid
+                                Object.keys(touched).forEach((field) => {
+                                    if (!errors[field]) {
+                                        delete state.errors[field]
+                                    }
+                                })
+                            })
+                        }
+                    }, 0)
                 },
 
                 setStep: (step) =>

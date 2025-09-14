@@ -5,30 +5,14 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { HelpCircle, Save, Check, Loader2, Package } from 'lucide-react'
 import { useProductCreateStore } from '@/store/productCreate'
 import { PRODUCT_TYPES as CREATE_PRODUCT_TYPES, VALIDATION_LIMITS } from '@/lib/constants/productCreate'
-import {
-    PRODUCT_CATEGORIES,
-    PRODUCT_INDUSTRIES,
-    PRODUCT_TYPES as FILTER_PRODUCT_TYPES
-} from '@/lib/constants/filterMappings'
+import CategoryDropdown from '@/components/shared/CategoryDropdown'
+import IndustryDropdown from '@/components/shared/IndustryDropdown'
 import CustomSelect from '@/components/shared/CustomSelect'
-
-// Convert filter mappings to dropdown format for backward compatibility
-const CATEGORIES = PRODUCT_CATEGORIES.map(cat => ({
-    value: cat.id,
-    label: cat.name,
-    icon: cat.icon
-}))
-
-const INDUSTRIES = PRODUCT_INDUSTRIES.map(ind => ({
-    value: ind.id,
-    label: ind.name,
-    icon: ind.icon
-}))
+import { getEnhancedErrorMessage } from '@/lib/utils/errorMessages'
 
 // Use the existing product types from create constants but ensure they match filter types
 const PRODUCT_TYPES = CREATE_PRODUCT_TYPES
 
-// Lazy load icons for better performance
 const iconMap = {
     Bot: () => import('lucide-react').then(m => m.Bot),
     Zap: () => import('lucide-react').then(m => m.Zap),
@@ -85,37 +69,6 @@ const FIELD_HELP = {
         content: "Explain what your product does, how it works, and the specific benefits. Use bullet points for clarity.",
         examples: []
     }
-}
-
-const getEnhancedErrorMessage = (field, error) => {
-    const errorMap = {
-        title: {
-            'required': 'Product title is required. Try: "AI Tool for [Target Audience]"',
-            'minLength': 'Title too short. Add more detail about what your product does.',
-            'maxLength': 'Title too long. Keep it under 60 characters for better readability.'
-        },
-        type: {
-            'required': 'Please select a product type. This helps customers understand your offering.'
-        },
-        category: {
-            'required': 'Category selection helps customers find your product. Choose the closest match.'
-        },
-        industry: {
-            'required': 'Target industry helps with discoverability. Select your primary market.'
-        },
-        shortDescription: {
-            'required': 'Short description is required for product listings and search results.',
-            'minLength': 'Add more detail. Explain the main benefit in 1-2 sentences.',
-            'maxLength': 'Too long for a short description. Keep key benefits concise.'
-        },
-        fullDescription: {
-            'required': 'Detailed description helps customers understand your product value.',
-            'minLength': 'Add more detail. Explain features, benefits, and how it works.',
-            'maxLength': 'Description is too long. Focus on key benefits and features.'
-        }
-    }
-
-    return errorMap[field]?.[error] || error
 }
 
 // Tooltip component
@@ -203,17 +156,32 @@ export default function Step1Basic() {
     const applySuggestions = useProductCreateStore((state) => state.applySuggestions)
 
     const [loadedIcons, setLoadedIcons] = useState({})
+    const [categoriesList, setCategoriesList] = useState([])
+    const [industriesList, setIndustriesList] = useState([])
+    const mountedRef = useRef(true)
 
-    // Lazy load icons
+    // Cleanup on unmount to prevent memory leaks
+    useEffect(() => {
+        return () => {
+            mountedRef.current = false
+            // Clear loaded icons to prevent memory leaks
+            setLoadedIcons({})
+        }
+    }, [])
+
+    // Enhanced icon loading with cleanup
     const loadIcon = useCallback(async (iconName) => {
+        if (!mountedRef.current) return Package
         if (loadedIcons[iconName]) return loadedIcons[iconName]
 
         try {
             const iconLoader = iconMap[iconName]
             if (iconLoader) {
                 const IconComponent = await iconLoader()
-                setLoadedIcons(prev => ({ ...prev, [iconName]: IconComponent }))
-                return IconComponent
+                if (mountedRef.current) {
+                    setLoadedIcons(prev => ({ ...prev, [iconName]: IconComponent }))
+                    return IconComponent
+                }
             }
         } catch (error) {
             console.warn(`Failed to load icon: ${iconName}`)
@@ -306,8 +274,8 @@ export default function Step1Basic() {
                     <Tooltip content={FIELD_HELP.type} examples={FIELD_HELP.type.examples} />
                 </div>
 
-                {/* Enhanced mobile-first grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Enhanced mobile-first horizontal scroll row */}
+                <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
                     {PRODUCT_TYPES.map((productType) => (
                         <motion.button
                             key={productType.value}
@@ -316,33 +284,32 @@ export default function Step1Basic() {
                                 handleTypeChange(productType.value)
                                 markFieldTouched('type')
                                 validateTouchedFields()
-                                loadIcon(productType.icon) // Pre-load icon
+                                loadIcon(productType.icon)
                             }}
-                            whileHover={{ scale: 1.01 }}
-                            whileTap={{ scale: 0.99 }}
-                            className={`p-4 sm:p-5 rounded-lg border-2 text-left transition-all ${type === productType.value
-                                ? 'border-[#00FF89] bg-[#00FF89]/10 shadow-lg shadow-[#00FF89]/10'
+                            whileHover={{ scale: 1.04 }}
+                            whileTap={{ scale: 0.97 }}
+                            className={`min-w-[230px] sm:min-w-[250px] snap-start p-3 rounded-md border transition-all flex-shrink-0 ${type === productType.value
+                                ? 'border-[#00FF89] bg-[#00FF89]/10 shadow shadow-[#00FF89]/10'
                                 : 'border-gray-600 hover:border-gray-500 hover:bg-gray-800/50'
-                                }`}>
-                            {/* Mobile-optimized layout */}
-                            <div className="flex flex-col sm:flex-row items-start sm:items-start space-y-3 sm:space-y-0 sm:space-x-4">
-                                <div className="text-[#00FF89] flex-shrink-0">
-                                    {renderIcon(productType.icon, "w-10 h-10 sm:w-12 sm:h-12")}
+                                }`}> 
+                            <div className="flex items-start gap-3">
+                                <div className="text-[#00FF89] flex-shrink-0 mt-0.5">
+                                    {renderIcon(productType.icon, 'w-7 h-7')}
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="text-lg sm:text-xl font-semibold text-white">{productType.label}</h3>
-                                    <p className="text-base sm:text-lg text-gray-400 mt-1 sm:mt-2 line-clamp-2">{productType.description}</p>
-                                    <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2 sm:mt-3">
-                                        {productType.features.slice(0, 3).map((feature, index) => (
+                                <div className="flex-1 min-w-0 space-y-1">
+                                    <h3 className="text-sm font-semibold text-white leading-snug truncate">{productType.label}</h3>
+                                    <p className="text-xs text-gray-400 line-clamp-2 leading-snug">{productType.description}</p>
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                        {productType.features.slice(0, 2).map((feature, index) => (
                                             <span
                                                 key={index}
-                                                className="px-2 py-0.5 sm:px-3 sm:py-1 bg-gray-700 text-sm sm:text-base text-gray-300 rounded-full">
+                                                className="px-2 py-0.5 bg-gray-700 text-[10px] text-gray-300 rounded-full">
                                                 {feature}
                                             </span>
                                         ))}
-                                        {productType.features.length > 3 && (
-                                            <span className="px-2 py-0.5 sm:px-3 sm:py-1 bg-gray-600 text-sm sm:text-base text-gray-400 rounded-full">
-                                                +{productType.features.length - 3} more
+                                        {productType.features.length > 2 && (
+                                            <span className="px-2 py-0.5 bg-gray-600 text-[10px] text-gray-400 rounded-full">
+                                                +{productType.features.length - 2}
                                             </span>
                                         )}
                                     </div>
@@ -379,23 +346,18 @@ export default function Step1Basic() {
                         </label>
                         <Tooltip content={FIELD_HELP.category} examples={FIELD_HELP.category.examples} />
                     </div>
-                    <CustomSelect
+                    <CategoryDropdown
                         value={category}
-                        onChange={(newCategory) => {
-                            handleCategoryChange(newCategory)
+                        onChange={(val) => {
+                            handleCategoryChange(val)
                             markFieldTouched('category')
                             validateTouchedFields()
                         }}
-                        onBlur={() => handleFieldBlur('category')}
-                        options={CATEGORIES}
+                        onDataLoaded={(data) => setCategoriesList(data)}
                         placeholder="Select a category"
-                        error={showError('category')}
+                        required
+                        error={showError('category') ? getEnhancedErrorMessage('category', errors.category) : null}
                     />
-                    {showError('category') && (
-                        <div className="text-base text-red-400">
-                            {getEnhancedErrorMessage('category', errors.category)}
-                        </div>
-                    )}
                 </motion.div>
 
                 {/* Industry */}
@@ -410,23 +372,18 @@ export default function Step1Basic() {
                         </label>
                         <Tooltip content={FIELD_HELP.industry} examples={FIELD_HELP.industry.examples} />
                     </div>
-                    <CustomSelect
+                    <IndustryDropdown
                         value={industry}
-                        onChange={(newIndustry) => {
-                            setField('industry', newIndustry)
+                        onChange={(val) => {
+                            setField('industry', val)
                             markFieldTouched('industry')
                             validateTouchedFields()
                         }}
-                        onBlur={() => handleFieldBlur('industry')}
-                        options={INDUSTRIES}
+                        onDataLoaded={(data) => setIndustriesList(data)}
                         placeholder="Select an industry"
-                        error={showError('industry')}
+                        required
+                        error={showError('industry') ? getEnhancedErrorMessage('industry', errors.industry) : null}
                     />
-                    {showError('industry') && (
-                        <div className="text-base text-red-400">
-                            {getEnhancedErrorMessage('industry', errors.industry)}
-                        </div>
-                    )}
                 </motion.div>
             </div>
 
@@ -536,7 +493,7 @@ export default function Step1Basic() {
                                     )}
                                     {category && (
                                         <span className="px-3 py-1 bg-gray-700 text-gray-300 text-base font-medium rounded-full">
-                                            {CATEGORIES.find((c) => c.value === category)?.label}
+                                            {categoriesList.find((c) => c.id === category)?.name}
                                         </span>
                                     )}
                                 </div>

@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from './useAuth'
 import { authAPI } from '@/lib/api/auth'
 
-import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export function useNotifications() {
     const { user, isAuthenticated } = useAuth()
     const [notifications, setNotifications] = useState([])

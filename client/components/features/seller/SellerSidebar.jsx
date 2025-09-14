@@ -17,7 +17,8 @@ import {
     ChevronLeft,
     ChevronRight,
     BarChart3,
-    ChevronDown
+    ChevronDown,
+    FileText
 } from 'lucide-react'
 import { logoutService } from '@/lib/services/logout'
 
