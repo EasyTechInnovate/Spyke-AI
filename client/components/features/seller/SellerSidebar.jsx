@@ -18,7 +18,8 @@ import {
     ChevronRight,
     BarChart3,
     ChevronDown,
-    FileText
+    FileText,
+    Banknote
 } from 'lucide-react'
 import { logoutService } from '@/lib/services/logout'
 
@@ -64,6 +65,12 @@ const NAVIGATION_ITEMS = [
         label: 'Analytics',
         icon: BarChart3,
         href: '/seller/analytics'
+    },
+    {
+        id: 'payouts',
+        label: 'Payouts',
+        icon: Banknote,
+        href: '/seller/payouts'
     },
     {
         id: 'settings',

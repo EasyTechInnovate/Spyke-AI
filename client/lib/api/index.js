@@ -10,6 +10,7 @@ export { default as promocodeAPI } from './promocode'
 export { default as analyticsAPI } from './analytics'
 export { default as metadataAPI } from './metadata'
 // export { default as workflowAPI } from './workflow'
+export { default as payoutAPI } from './payout'
 
 // Default export for backward compatibility with auth attached
 import apiClient from './client'

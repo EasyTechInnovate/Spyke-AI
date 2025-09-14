@@ -6,43 +6,51 @@ import {
   TrendingUp,
   ShieldCheck,
   Settings,
-  Wrench
+  Wrench,
+  DollarSign
 } from 'lucide-react'
 
 // Coming Soon Features Set
 export const COMING_SOON = new Set(['compliance', 'settings'])
 
 // Navigation items factory function
-export const createNavigationItems = (counts) => [
+export const createNavigationItems = (counts = { sellers:{ pending:0, active:0, payouts:0 }, products:{ pending:0, flagged:0, featured:0 } }) => [
   {
     id: 'overview',
     label: 'Dashboard',
     icon: LayoutDashboard,
     href: '/admin/dashboard'
   },
+  // NEW: Dedicated Payout menu (separate from Sellers>Payouts subsection)
+  {
+    id: 'payout',
+    label: 'Payout',
+    icon: DollarSign,
+    href: '/admin/payout'
+  },
   {
     id: 'sellers',
     label: 'Sellers',
     icon: UserCheck,
-    badge: counts.sellers.pending + counts.sellers.active || undefined,
+    badge: (counts?.sellers?.pending || 0) + (counts?.sellers?.active || 0) || undefined,
     subItems: [
       {
         id: 'pending-sellers',
         label: 'Pending Approval',
         href: '/admin/sellers/pending',
-        badge: counts.sellers.pending || undefined
+        badge: counts?.sellers?.pending || undefined
       },
       {
         id: 'active-sellers',
         label: 'Active Sellers',
         href: '/admin/sellers/active',
-        badge: counts.sellers.active || undefined
+        badge: counts?.sellers?.active || undefined
       },
       {
         id: 'payouts',
         label: 'Payouts',
         href: '/admin/sellers/payouts',
-        badge: counts.sellers.payouts || undefined
+        badge: counts?.sellers?.payouts || undefined
       }
     ]
   },
@@ -50,25 +58,25 @@ export const createNavigationItems = (counts) => [
     id: 'products',
     label: 'Products',
     icon: Package,
-    badge: counts.products.pending + counts.products.flagged + counts.products.featured || undefined,
+    badge: (counts?.products?.pending || 0) + (counts?.products?.flagged || 0) + (counts?.products?.featured || 0) || undefined,
     subItems: [
       {
         id: 'pending-products',
         label: 'Pending Review',
         href: '/admin/products/pending',
-        badge: counts.products.pending || undefined
+        badge: counts?.products?.pending || undefined
       },
       {
         id: 'flagged-products',
         label: 'Flagged Items',
         href: '/admin/products/flagged',
-        badge: counts.products.flagged || undefined
+        badge: counts?.products?.flagged || undefined
       },
       {
         id: 'featured-products',
         label: 'Featured',
         href: '/admin/products/featured',
-        badge: counts.products.featured || undefined
+        badge: counts?.products?.featured || undefined
       }
     ]
   },

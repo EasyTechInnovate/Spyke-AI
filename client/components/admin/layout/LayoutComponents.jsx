@@ -84,58 +84,61 @@ export const QuickActionsBar = memo(({
   onAdd,
   refreshing = false,
   placeholder = "Search...",
-  className = '' 
+  className = '',
+  children
 }) => (
-  <div className={`flex flex-col sm:flex-row gap-3 mb-6 ${className}`}>
-    {/* Search */}
-    <div className="relative flex-1">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-      <input
-        type="text"
-        placeholder={placeholder}
-        value={searchValue}
-        onChange={(e) => onSearchChange?.(e.target.value)}
-        className="w-full pl-10 pr-4 py-2.5 bg-gray-900/50 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-colors"
-      />
+  children ? (
+    <div className={`flex flex-col sm:flex-row justify-between gap-4 mb-6 ${className}`}>
+      {children}
     </div>
-    
-    {/* Action Buttons */}
-    <div className="flex items-center gap-2">
-      {onRefresh && (
-        <button
-          onClick={onRefresh}
-          disabled={refreshing}
-          className="px-3 py-2.5 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 rounded-lg text-gray-300 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-        </button>
-      )}
-      
-      {onFilter && (
-        <button
-          onClick={onFilter}
-          className="px-3 py-2.5 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 rounded-lg text-gray-300 hover:text-white transition-colors">
-          <Filter className="w-4 h-4" />
-        </button>
-      )}
-      
-      {onExport && (
-        <button
-          onClick={onExport}
-          className="px-3 py-2.5 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 rounded-lg text-gray-300 hover:text-white transition-colors">
-          <Download className="w-4 h-4" />
-        </button>
-      )}
-      
-      {onAdd && (
-        <button
-          onClick={onAdd}
-          className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 border border-emerald-500 rounded-lg text-white font-medium transition-colors flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">Add New</span>
-        </button>
-      )}
+  ) : (
+    <div className={`flex flex-col sm:flex-row gap-3 mb-6 ${className}`}>
+      {/* Search */}
+      <div className="relative flex-1">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+        <input
+          type="text"
+          placeholder={placeholder}
+          value={searchValue}
+          onChange={(e) => onSearchChange?.(e.target.value)}
+          className="w-full pl-10 pr-4 py-2.5 bg-gray-900/50 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-colors"
+        />
+      </div>
+      {/* Action Buttons */}
+      <div className="flex items-center gap-2">
+        {onRefresh && (
+          <button
+            onClick={onRefresh}
+            disabled={refreshing}
+            className="px-3 py-2.5 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 rounded-lg text-gray-300 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+          </button>
+        )}
+        {onFilter && (
+          <button
+            onClick={onFilter}
+            className="px-3 py-2.5 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 rounded-lg text-gray-300 hover:text-white transition-colors">
+            <Filter className="w-4 h-4" />
+          </button>
+        )}
+        {onExport && (
+          <button
+            onClick={onExport}
+            className="px-3 py-2.5 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 rounded-lg text-gray-300 hover:text-white transition-colors">
+            <Download className="w-4 h-4" />
+          </button>
+        )}
+        {onAdd && (
+          <button
+            onClick={onAdd}
+            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 border border-emerald-500 rounded-lg text-white font-medium transition-colors flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Add New</span>
+          </button>
+        )}
+      </div>
     </div>
-  </div>
+  )
 ))
 QuickActionsBar.displayName = 'QuickActionsBar'
 
