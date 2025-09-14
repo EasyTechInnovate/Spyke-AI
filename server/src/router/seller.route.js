@@ -21,7 +21,12 @@ router
     .route('/profile')
     .post(authentication, validateRequest(sellerSchemas.createProfile), sellerController.createProfile)
     .get(authentication, authorization([EUserRole.SELLER]), sellerController.getProfile)
-    .put(authentication,authorization([EUserRole.ADMIN,EUserRole.SELLER]),validateRequest(sellerSchemas.updateProfile), sellerController.updateProfile)
+    .put(
+        authentication,
+        authorization([EUserRole.ADMIN, EUserRole.SELLER]),
+        validateRequest(sellerSchemas.updateProfile),
+        sellerController.updateProfile
+    )
 
 router.route('/dashboard').get(authentication, authorization([EUserRole.SELLER]), sellerController.getDashboard)
 router.route('/verification/submit').post(authentication, validateRequest(sellerSchemas.submitVerification), sellerController.submitForVerification)
@@ -32,11 +37,26 @@ router.route('/stats').get(authentication, sellerController.getStats)
 router.route('/payout').put(authentication, validateRequest(sellerSchemas.updatePayoutInfo), sellerController.updatePayoutInfo)
 
 // Payout routes
-router.route('/payout/dashboard').get(authentication, authorization([EUserRole.SELLER]), validateRequest(payoutSchemas.getEarnings, 'query'), payoutController.getPayoutDashboard)
-router.route('/payout/history').get(authentication, authorization([EUserRole.SELLER]), validateRequest(payoutSchemas.getPayoutHistory, 'query'), payoutController.getPayoutHistory)
-router.route('/payout/request').post(authentication, authorization([EUserRole.SELLER]), validateRequest(payoutSchemas.requestPayout), payoutController.requestPayout)
-router.route('/payout/eligible-earnings').get(authentication, authorization([EUserRole.SELLER]), validateRequest(payoutSchemas.getEarnings, 'query'), payoutController.getEligibleEarnings)
-router.route('/payout/method').put(authentication, authorization([EUserRole.SELLER]), validateRequest(payoutSchemas.updatePayoutMethod), payoutController.updatePayoutMethod)
+router
+    .route('/payout/dashboard')
+    .get(authentication, authorization([EUserRole.SELLER]), validateRequest(payoutSchemas.getEarnings, 'query'), payoutController.getPayoutDashboard)
+router
+    .route('/payout/history')
+    .get(
+        authentication,
+        authorization([EUserRole.SELLER]),
+        validateRequest(payoutSchemas.getPayoutHistory, 'query'),
+        payoutController.getPayoutHistory
+    )
+router
+    .route('/payout/request')
+    .post(authentication, authorization([EUserRole.SELLER]), validateRequest(payoutSchemas.requestPayout), payoutController.requestPayout)
+router
+    .route('/payout/eligible-earnings')
+    .get(authentication, authorization([EUserRole.SELLER]), validateRequest(payoutSchemas.getEarnings, 'query'), payoutController.getEligibleEarnings)
+router
+    .route('/payout/method')
+    .put(authentication, authorization([EUserRole.SELLER]), validateRequest(payoutSchemas.updatePayoutMethod), payoutController.updatePayoutMethod)
 
 // Payout service health check
 router.get('/payout/self', payoutController.self)

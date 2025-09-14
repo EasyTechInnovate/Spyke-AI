@@ -11,18 +11,18 @@ export const self = (req, res, next) => {
     }
 }
 
-export const getPlatformSettings = async (req, res) => {
+export const getPlatformSettings = async (req, res, next) => {
     try {
         const settings = await PlatformSettings.getCurrentSettings()
         
         return httpResponse(req, res, 200, responseMessage.SUCCESS, settings)
     } catch (error) {
         console.error('Error in getPlatformSettings:', error)
-        return httpError(req, res, 500, error.message)
+        httpError(next, error, req, 500)
     }
 }
 
-export const updatePlatformSettings = async (req, res) => {
+export const updatePlatformSettings = async (req, res, next) => {
     try {
         const {
             platformFeePercentage,
@@ -71,11 +71,11 @@ export const updatePlatformSettings = async (req, res) => {
         return httpResponse(req, res, 200, 'Platform settings updated successfully', settings)
     } catch (error) {
         console.error('Error in updatePlatformSettings:', error)
-        return httpError(req, res, 500, error.message)
+        httpError(next, error, req, 500)
     }
 }
 
-export const resetPlatformSettings = async (req, res) => {
+export const resetPlatformSettings = async (req, res, next) => {
     try {
         const adminId = req.authenticatedUser.id
         
@@ -93,6 +93,6 @@ export const resetPlatformSettings = async (req, res) => {
         return httpResponse(req, res, 200, 'Platform settings reset to defaults successfully', defaultSettings)
     } catch (error) {
         console.error('Error in resetPlatformSettings:', error)
-        return httpError(req, res, 500, error.message)
+        httpError(next, error, req, 500)
     }
 }

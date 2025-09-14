@@ -168,10 +168,10 @@ const payoutSchemas = {
             .regex(/^[0-9a-fA-F]{24}$/, 'Invalid seller ID format')
             .optional(),
         fromDate: z.string()
-            .datetime('Invalid from date format')
+            .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid from date format, use YYYY-MM-DD')
             .optional(),
         toDate: z.string()
-            .datetime('Invalid to date format')
+            .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid to date format, use YYYY-MM-DD')
             .optional(),
         sortBy: z.enum(['requestedAt', 'amount', 'status'])
             .optional(),
@@ -196,10 +196,10 @@ const payoutSchemas = {
 
     getEarnings: z.object({
         fromDate: z.string()
-            .datetime('Invalid from date format')
+            .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid from date format, use YYYY-MM-DD')
             .optional(),
         toDate: z.string()
-            .datetime('Invalid to date format')
+            .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid to date format, use YYYY-MM-DD')
             .optional()
     }),
 

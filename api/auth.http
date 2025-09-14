@@ -1,12 +1,14 @@
 @baseUrl = http://localhost:5000/v1
 @contentType = application/json
 
-@userEmailAddress = admin@gmail.com
-@userPassword = Q1e2r3s4
+# @userEmailAddress = admin@gmail.com
+# @userPassword = Q1e2r3s4
 # @userEmailAddress = sp6133146@gmail.com
 # @userPassword = SpykeAI00
 # @userEmailAddress = srikanishkav@gmail.com
 # @userPassword = kanni4b5@Spyke
+@userEmailAddress = anandpandey503@gmail.com
+@userPassword = anand@123ANAND
 
 @accessToken = YOUR_JWT_TOKEN_HERE
 @token = 463101a5-d205-46a1-957d-b51160773444

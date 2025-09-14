@@ -77,15 +77,23 @@ platformSettingsSchema.index({ lastUpdatedBy: 1 })
 
 platformSettingsSchema.statics.getCurrentSettings = async function() {
     let settings = await this.findOne({ isActive: true }).populate('lastUpdatedBy', 'firstName lastName email')
-    
+
     if (!settings) {
-        const defaultAdmin = await mongoose.model('User').findOne({ role: 'admin' })
+        // Find the admin user by email
+        const defaultAdmin = await mongoose.model('User').findOne({
+            emailAddress: 'admin@gmail.com'
+        })
+
+        if (!defaultAdmin) {
+            throw new Error('Admin user (admin@gmail.com) not found to create default platform settings')
+        }
+
         settings = await this.create({
             lastUpdatedBy: defaultAdmin._id
         })
         await settings.populate('lastUpdatedBy', 'firstName lastName email')
     }
-    
+
     return settings
 }
 

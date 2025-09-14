@@ -20,7 +20,7 @@ export const self = (req, res, next) => {
 const calculateEarnings = async (sellerId, fromDate = null, toDate = null) => {
     try {
         const platformSettings = await PlatformSettings.getCurrentSettings()
-        const seller = await SellerProfile.findById(sellerId)
+        const seller = await SellerProfile.findOne({ userId: sellerId })
         
         if (!seller) {
             throw new Error('Seller not found')
@@ -106,9 +106,9 @@ const calculateEarnings = async (sellerId, fromDate = null, toDate = null) => {
     }
 }
 
-export const getPayoutDashboard = async (req, res) => {
+export const getPayoutDashboard = async (req, res, next) => {
     try {
-        const sellerId = req.seller._id
+        const sellerId = req.authenticatedUser.id
         const { fromDate, toDate } = req.query
 
         const earningsData = await calculateEarnings(sellerId, fromDate, toDate)
@@ -131,13 +131,13 @@ export const getPayoutDashboard = async (req, res) => {
         })
     } catch (error) {
         console.error('Error in getPayoutDashboard:', error)
-        return httpError(req, res, 500, error.message)
+        httpError(next, error, req, 500)
     }
 }
 
-export const getPayoutHistory = async (req, res) => {
+export const getPayoutHistory = async (req, res, next) => {
     try {
-        const sellerId = req.seller._id
+        const sellerId = req.authenticatedUser.id
         const { page = 1, limit = 10, status } = req.query
 
         const payouts = await Payout.getSellerPayouts(sellerId, { 
@@ -162,22 +162,22 @@ export const getPayoutHistory = async (req, res) => {
         })
     } catch (error) {
         console.error('Error in getPayoutHistory:', error)
-        return httpError(req, res, 500, error.message)
+        httpError(next, error, req, 500)
     }
 }
 
-export const requestPayout = async (req, res) => {
+export const requestPayout = async (req, res, next) => {
     try {
-        const sellerId = req.seller._id
+        const sellerId = req.authenticatedUser.id
         const { notes } = req.body
 
-        const seller = await SellerProfile.findById(sellerId)
+        const seller = await SellerProfile.findOne({ userId: sellerId })
         if (!seller) {
-            return httpError(req, res, 404, responseMessage.ERROR.NOT_FOUND('Seller'))
+            return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('Seller')), req, 404)
         }
 
         if (!seller.payoutInfo || !seller.payoutInfo.method) {
-            return httpError(req, res, 400, 'Payout method not configured')
+            return httpError(next, new Error('Payout method not configured'), req, 400)
         }
 
         const existingPendingPayout = await Payout.findOne({
@@ -186,17 +186,17 @@ export const requestPayout = async (req, res) => {
         })
 
         if (existingPendingPayout) {
-            return httpError(req, res, 400, 'You already have a pending payout request')
+            return httpError(next, new Error('You already have a pending payout request'), req, 400)
         }
 
         const earningsData = await calculateEarnings(sellerId)
 
         if (!earningsData.isEligible) {
-            return httpError(req, res, 400, `Minimum payout threshold of $${earningsData.minimumThreshold} not met`)
+            return httpError(next, new Error(`Minimum payout threshold of $${earningsData.minimumThreshold} not met`), req, 400)
         }
 
         if (earningsData.isOnHold) {
-            return httpError(req, res, 400, `Your account is on hold until ${earningsData.holdPeriodEnd.toDateString()}`)
+            return httpError(next, new Error(`Your account is on hold until ${earningsData.holdPeriodEnd.toDateString()}`), req, 400)
         }
 
         const payoutPeriodStart = new Date()
@@ -282,32 +282,32 @@ export const requestPayout = async (req, res) => {
         })
     } catch (error) {
         console.error('Error in requestPayout:', error)
-        return httpError(req, res, 500, error.message)
+        httpError(next, error, req, 500)
     }
 }
 
-export const getEligibleEarnings = async (req, res) => {
+export const getEligibleEarnings = async (req, res, next) => {
     try {
-        const sellerId = req.seller._id
+        const sellerId = req.authenticatedUser.id
         const { fromDate, toDate } = req.query
 
         const earningsData = await calculateEarnings(sellerId, fromDate, toDate)
 
-        return httpResponse(req, res, 200, responseMessage.success, earningsData)
+        return httpResponse(req, res, 200, responseMessage.SUCCESS, earningsData)
     } catch (error) {
         console.error('Error in getEligibleEarnings:', error)
-        return httpError(req, res, 500, error.message)
+        httpError(next, error, req, 500)
     }
 }
 
-export const updatePayoutMethod = async (req, res) => {
+export const updatePayoutMethod = async (req, res, next) => {
     try {
-        const sellerId = req.seller._id
+        const sellerId = req.authenticatedUser.id
         const { method, bankDetails, paypalEmail, stripeAccountId, wiseEmail } = req.body
 
-        const seller = await SellerProfile.findById(sellerId)
+        const seller = await SellerProfile.findOne({ userId: sellerId })
         if (!seller) {
-            return httpError(req, res, 404, responseMessage.ERROR.NOT_FOUND('Seller'))
+            return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('Seller')), req, 404)
         }
 
         const pendingPayout = await Payout.findOne({
@@ -316,7 +316,7 @@ export const updatePayoutMethod = async (req, res) => {
         })
 
         if (pendingPayout) {
-            return httpError(req, res, 400, 'Cannot update payout method while you have a pending payout')
+            return httpError(next, new Error('Cannot update payout method while you have a pending payout'), req, 400)
         }
 
         seller.payoutInfo.method = method
@@ -340,11 +340,11 @@ export const updatePayoutMethod = async (req, res) => {
 
         await seller.save()
 
-        return httpResponse(req, res, 200, 'Payout method updated successfully', {
+        return httpResponse(req, res, 200, responseMessage.UPDATED, {
             payoutInfo: seller.payoutInfo
         })
     } catch (error) {
         console.error('Error in updatePayoutMethod:', error)
-        return httpError(req, res, 500, error.message)
+        httpError(next, error, req, 500)
     }
 }

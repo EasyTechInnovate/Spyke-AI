@@ -17,7 +17,7 @@ export const self = (req, res, next) => {
     }
 }
 
-export const getPayouts = async (req, res) => {
+export const getPayouts = async (req, res, next) => {
     try {
         const { 
             page = 1, 
@@ -83,11 +83,11 @@ export const getPayouts = async (req, res) => {
         })
     } catch (error) {
         console.error('Error in getPayouts:', error)
-        return httpError(req, res, 500, error.message)
+        httpError(next, error, req, 500)
     }
 }
 
-export const getPayoutDetails = async (req, res) => {
+export const getPayoutDetails = async (req, res, next) => {
     try {
         const { id } = req.params
 
@@ -97,17 +97,17 @@ export const getPayoutDetails = async (req, res) => {
             .populate('salesIncluded', 'totalAmount purchaseDate items')
 
         if (!payout) {
-            return httpError(req, res, 404, responseMessage.ERROR.NOT_FOUND('Payout'))
+            return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('Payout')), req, 404)
         }
 
         return httpResponse(req, res, 200, responseMessage.SUCCESS, { payout })
     } catch (error) {
         console.error('Error in getPayoutDetails:', error)
-        return httpError(req, res, 500, error.message)
+        httpError(next, error, req, 500)
     }
 }
 
-export const approvePayout = async (req, res) => {
+export const approvePayout = async (req, res, next) => {
     try {
         const { id } = req.params
         const { notes } = req.body
@@ -116,11 +116,11 @@ export const approvePayout = async (req, res) => {
         const payout = await Payout.findById(id).populate('sellerId', 'fullName email')
 
         if (!payout) {
-            return httpError(req, res, 404, responseMessage.ERROR.NOT_FOUND('Payout'))
+            return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('Payout')), req, 404)
         }
 
         if (payout.status !== 'pending') {
-            return httpError(req, res, 400, `Cannot approve payout with status: ${payout.status}`)
+            return httpError(next, new Error(`Cannot approve payout with status: ${payout.status}`), req, 400)
         }
 
         await payout.approve(adminId, notes)
@@ -150,27 +150,27 @@ export const approvePayout = async (req, res) => {
         })
     } catch (error) {
         console.error('Error in approvePayout:', error)
-        return httpError(req, res, 500, error.message)
+        httpError(next, error, req, 500)
     }
 }
 
-export const rejectPayout = async (req, res) => {
+export const rejectPayout = async (req, res, next) => {
     try {
         const { id } = req.params
         const { reason } = req.body
 
         if (!reason) {
-            return httpError(req, res, 400, 'Rejection reason is required')
+            return httpError(next, new Error('Rejection reason is required'), req, 400)
         }
 
         const payout = await Payout.findById(id).populate('sellerId', 'fullName email')
 
         if (!payout) {
-            return httpError(req, res, 404, responseMessage.ERROR.NOT_FOUND('Payout'))
+            return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('Payout')), req, 404)
         }
 
         if (payout.status !== 'pending') {
-            return httpError(req, res, 400, `Cannot reject payout with status: ${payout.status}`)
+            return httpError(next, new Error(`Cannot reject payout with status: ${payout.status}`), req, 400)
         }
 
         await payout.reject(reason)
@@ -197,11 +197,11 @@ export const rejectPayout = async (req, res) => {
         return httpResponse(req, res, 200, 'Payout rejected successfully', { payout })
     } catch (error) {
         console.error('Error in rejectPayout:', error)
-        return httpError(req, res, 500, error.message)
+        httpError(next, error, req, 500)
     }
 }
 
-export const holdPayout = async (req, res) => {
+export const holdPayout = async (req, res, next) => {
     try {
         const { id } = req.params
         const { reason } = req.body
@@ -209,11 +209,11 @@ export const holdPayout = async (req, res) => {
         const payout = await Payout.findById(id).populate('sellerId', 'fullName email')
 
         if (!payout) {
-            return httpError(req, res, 404, responseMessage.ERROR.NOT_FOUND('Payout'))
+            return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('Payout')), req, 404)
         }
 
         if (!['pending', 'approved'].includes(payout.status)) {
-            return httpError(req, res, 400, `Cannot hold payout with status: ${payout.status}`)
+            return httpError(next, new Error(`Cannot hold payout with status: ${payout.status}`), req, 400)
         }
 
         payout.status = 'failed'
@@ -242,22 +242,22 @@ export const holdPayout = async (req, res) => {
         return httpResponse(req, res, 200, 'Payout put on hold successfully', { payout })
     } catch (error) {
         console.error('Error in holdPayout:', error)
-        return httpError(req, res, 500, error.message)
+        httpError(next, error, req, 500)
     }
 }
 
-export const releasePayout = async (req, res) => {
+export const releasePayout = async (req, res, next) => {
     try {
         const { id } = req.params
 
         const payout = await Payout.findById(id).populate('sellerId', 'fullName email')
 
         if (!payout) {
-            return httpError(req, res, 404, responseMessage.ERROR.NOT_FOUND('Payout'))
+            return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('Payout')), req, 404)
         }
 
         if (payout.status !== 'failed') {
-            return httpError(req, res, 400, 'Only failed/held payouts can be released')
+            return httpError(next, new Error('Only failed/held payouts can be released'), req, 400)
         }
 
         payout.status = 'pending'
@@ -267,11 +267,11 @@ export const releasePayout = async (req, res) => {
         return httpResponse(req, res, 200, 'Payout released successfully', { payout })
     } catch (error) {
         console.error('Error in releasePayout:', error)
-        return httpError(req, res, 500, error.message)
+        httpError(next, error, req, 500)
     }
 }
 
-export const markAsProcessing = async (req, res) => {
+export const markAsProcessing = async (req, res, next) => {
     try {
         const { id } = req.params
         const { transactionId, notes } = req.body
@@ -279,11 +279,11 @@ export const markAsProcessing = async (req, res) => {
         const payout = await Payout.findById(id).populate('sellerId', 'fullName email')
 
         if (!payout) {
-            return httpError(req, res, 404, responseMessage.ERROR.NOT_FOUND('Payout'))
+            return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('Payout')), req, 404)
         }
 
         if (payout.status !== 'approved') {
-            return httpError(req, res, 400, `Cannot process payout with status: ${payout.status}`)
+            return httpError(next, new Error(`Cannot process payout with status: ${payout.status}`), req, 400)
         }
 
         await payout.markAsProcessing(transactionId)
@@ -315,11 +315,11 @@ export const markAsProcessing = async (req, res) => {
         return httpResponse(req, res, 200, 'Payout marked as processing', { payout })
     } catch (error) {
         console.error('Error in markAsProcessing:', error)
-        return httpError(req, res, 500, error.message)
+        httpError(next, error, req, 500)
     }
 }
 
-export const markAsCompleted = async (req, res) => {
+export const markAsCompleted = async (req, res, next) => {
     try {
         const { id } = req.params
         const { transactionId, notes } = req.body
@@ -327,11 +327,11 @@ export const markAsCompleted = async (req, res) => {
         const payout = await Payout.findById(id).populate('sellerId', 'fullName email stats')
 
         if (!payout) {
-            return httpError(req, res, 404, responseMessage.ERROR.NOT_FOUND('Payout'))
+            return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('Payout')), req, 404)
         }
 
         if (payout.status !== 'processing') {
-            return httpError(req, res, 400, `Cannot complete payout with status: ${payout.status}`)
+            return httpError(next, new Error(`Cannot complete payout with status: ${payout.status}`), req, 400)
         }
 
         await payout.markAsCompleted(transactionId)
@@ -374,17 +374,17 @@ export const markAsCompleted = async (req, res) => {
         return httpResponse(req, res, 200, 'Payout completed successfully', { payout })
     } catch (error) {
         console.error('Error in markAsCompleted:', error)
-        return httpError(req, res, 500, error.message)
+        httpError(next, error, req, 500)
     }
 }
 
-export const bulkApprovePayout = async (req, res) => {
+export const bulkApprovePayout = async (req, res, next) => {
     try {
         const { payoutIds, notes } = req.body
         const adminId = req.authenticatedUser.id
 
         if (!payoutIds || !Array.isArray(payoutIds) || payoutIds.length === 0) {
-            return httpError(req, res, 400, 'Payout IDs array is required')
+            return httpError(next, new Error('Payout IDs array is required'), req, 400)
         }
 
         const payouts = await Payout.find({
@@ -393,7 +393,7 @@ export const bulkApprovePayout = async (req, res) => {
         }).populate('sellerId', 'fullName email')
 
         if (payouts.length === 0) {
-            return httpError(req, res, 400, 'No eligible payouts found')
+            return httpError(next, new Error('No eligible payouts found'), req, 400)
         }
 
         const approvedPayouts = []
@@ -431,11 +431,11 @@ export const bulkApprovePayout = async (req, res) => {
         })
     } catch (error) {
         console.error('Error in bulkApprovePayout:', error)
-        return httpError(req, res, 500, error.message)
+        httpError(next, error, req, 500)
     }
 }
 
-export const getPayoutAnalytics = async (req, res) => {
+export const getPayoutAnalytics = async (req, res, next) => {
     try {
         const { fromDate, toDate, period = '30' } = req.query
 
@@ -538,6 +538,6 @@ export const getPayoutAnalytics = async (req, res) => {
         })
     } catch (error) {
         console.error('Error in getPayoutAnalytics:', error)
-        return httpError(req, res, 500, error.message)
+        httpError(next, error, req, 500)
     }
 }
