@@ -39,7 +39,7 @@ export const getPayouts = async (req, res, next) => {
         }
         
         if (sellerId) {
-            matchQuery.sellerId = new mongoose.Types.ObjectId(sellerId)
+            matchQuery.sellerId = sellerId
         }
         
         if (fromDate || toDate) {

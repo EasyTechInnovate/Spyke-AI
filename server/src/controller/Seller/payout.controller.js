@@ -3,7 +3,6 @@ import SellerProfile from '../../model/seller.profile.model.js'
 import PlatformSettings from '../../model/platform.settings.model.js'
 import Purchase from '../../model/purchase.model.js'
 import responseMessage from '../../constant/responseMessage.js'
-import mongoose from 'mongoose'
 import emailService from '../../service/email.service.js'
 import emailTemplates from '../../util/email.formatter.js'
 import httpError from '../../util/httpError.js'
@@ -32,7 +31,7 @@ const calculateEarnings = async (sellerId, fromDate = null, toDate = null) => {
         }
 
         let matchStage = {
-            'items.sellerId': new mongoose.Types.ObjectId(sellerId),
+            'items.sellerId': sellerId,
             paymentStatus: 'completed',
             orderStatus: 'completed'
         }
