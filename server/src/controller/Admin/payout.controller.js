@@ -9,6 +9,14 @@ import mongoose from 'mongoose'
 import emailService from '../../service/email.service.js'
 import emailTemplates from '../../util/email.formatter.js'
 
+export const self = (req, res, next) => {
+    try {
+        httpResponse(req, res, 200, responseMessage.SERVICE('Admin Payout'))
+    } catch (err) {
+        httpError(next, err, req, 500)
+    }
+}
+
 export const getPayouts = async (req, res) => {
     try {
         const { 

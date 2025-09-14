@@ -3,6 +3,14 @@ import httpError from '../../util/httpError.js'
 import httpResponse from '../../util/httpResponse.js'
 import responseMessage from '../../constant/responseMessage.js'
 
+export const self = (req, res, next) => {
+    try {
+        httpResponse(req, res, 200, responseMessage.SERVICE('Platform Settings'))
+    } catch (err) {
+        httpError(next, err, req, 500)
+    }
+}
+
 export const getPlatformSettings = async (req, res) => {
     try {
         const settings = await PlatformSettings.getCurrentSettings()

@@ -9,6 +9,10 @@ import { EUserRole } from '../constant/application.js'
 
 const router = Router()
 
+// Service health checks
+router.get('/platform/settings/self', platformSettingsController.self)
+router.get('/payouts/self', payoutController.self)
+
 // Platform Settings Routes
 router.route('/platform/settings')
     .get(authentication, authorization([EUserRole.ADMIN]), platformSettingsController.getPlatformSettings)

@@ -9,6 +9,14 @@ import emailTemplates from '../../util/email.formatter.js'
 import httpError from '../../util/httpError.js'
 import httpResponse from '../../util/httpResponse.js'
 
+export const self = (req, res, next) => {
+    try {
+        httpResponse(req, res, 200, responseMessage.SERVICE('Seller Payout'))
+    } catch (err) {
+        httpError(next, err, req, 500)
+    }
+}
+
 const calculateEarnings = async (sellerId, fromDate = null, toDate = null) => {
     try {
         const platformSettings = await PlatformSettings.getCurrentSettings()

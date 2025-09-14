@@ -38,6 +38,9 @@ router.route('/payout/request').post(authentication, authorization([EUserRole.SE
 router.route('/payout/eligible-earnings').get(authentication, authorization([EUserRole.SELLER]), validateRequest(payoutSchemas.getEarnings, 'query'), payoutController.getEligibleEarnings)
 router.route('/payout/method').put(authentication, authorization([EUserRole.SELLER]), validateRequest(payoutSchemas.updatePayoutMethod), payoutController.updatePayoutMethod)
 
+// Payout service health check
+router.get('/payout/self', payoutController.self)
+
 // Admin only routes
 router
     .route('/admin/profiles')

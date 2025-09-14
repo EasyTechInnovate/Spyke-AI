@@ -6,7 +6,8 @@ import {
   Lock,
   BarChart3,
   Percent,
-  CreditCard
+  CreditCard,
+  DollarSign
 } from 'lucide-react';
 
 export const appConfig = {
@@ -96,6 +97,28 @@ export const appConfig = {
         'Public Profile View',
         'Seller Search',
         'Admin Operations'
+      ]
+    },
+    {
+      id: 'payout',
+      name: 'Payout System',
+      icon: DollarSign,
+      color: 'from-[#00FF89] to-[#FFC050]',
+      healthEndpoint: '/seller/payout/self',
+      description: 'Manual payout system for seller earnings management and admin control',
+      endpoints: [
+        'Seller Payout Dashboard',
+        'Earnings Calculation',
+        'Payout Request Submission',
+        'Payout History Tracking',
+        'Payment Method Management',
+        'Admin Payout Management',
+        'Payout Approval Workflow',
+        'Platform Settings Management',
+        'Payout Analytics & Reporting',
+        'Email Notifications',
+        'Commission Integration',
+        'Hold Period Management'
       ]
     },
     {
