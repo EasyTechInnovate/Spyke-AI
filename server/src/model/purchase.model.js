@@ -249,6 +249,7 @@ purchaseSchema.statics.getUserPurchases = async function (userId, options = {}) 
     }
 }
 
+
 purchaseSchema.statics.getUserPurchasesByType = async function (userId) {
     const pipeline = [
         {

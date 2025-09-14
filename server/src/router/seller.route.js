@@ -1,6 +1,8 @@
 import { Router } from 'express'
 import sellerController from '../controller/Seller/seller.controller.js'
+import * as payoutController from '../controller/Seller/payout.controller.js'
 import sellerSchemas from '../schema/seller.schema.js'
+import payoutSchemas from '../schema/payout.schema.js'
 import validateRequest from '../middleware/validateRequest.js'
 import authentication from '../middleware/authentication.js'
 import authorization from '../middleware/authorization.js'
@@ -28,6 +30,13 @@ router.route('/commission/reject').post(authentication, validateRequest(sellerSc
 router.route('/commission/counter-offer').post(authentication, validateRequest(sellerSchemas.submitCounterOffer), sellerController.submitCounterOffer)
 router.route('/stats').get(authentication, sellerController.getStats)
 router.route('/payout').put(authentication, validateRequest(sellerSchemas.updatePayoutInfo), sellerController.updatePayoutInfo)
+
+// Payout routes
+router.route('/payout/dashboard').get(authentication, authorization([EUserRole.SELLER]), validateRequest(payoutSchemas.getEarnings, 'query'), payoutController.getPayoutDashboard)
+router.route('/payout/history').get(authentication, authorization([EUserRole.SELLER]), validateRequest(payoutSchemas.getPayoutHistory, 'query'), payoutController.getPayoutHistory)
+router.route('/payout/request').post(authentication, authorization([EUserRole.SELLER]), validateRequest(payoutSchemas.requestPayout), payoutController.requestPayout)
+router.route('/payout/eligible-earnings').get(authentication, authorization([EUserRole.SELLER]), validateRequest(payoutSchemas.getEarnings, 'query'), payoutController.getEligibleEarnings)
+router.route('/payout/method').put(authentication, authorization([EUserRole.SELLER]), validateRequest(payoutSchemas.updatePayoutMethod), payoutController.updatePayoutMethod)
 
 // Admin only routes
 router

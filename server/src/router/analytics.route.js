@@ -74,4 +74,7 @@ router.route('/admin/feedback')
 router.route('/admin/traffic')
     .get(authentication, authorization([EUserRole.ADMIN]), adminAnalyticsController.getTrafficAnalytics)
 
+router.route('/admin/payouts')
+    .get(authentication, authorization([EUserRole.ADMIN]), adminAnalyticsController.getPayoutAnalytics)
+
 export default router

@@ -246,6 +246,34 @@ const sellerProfileSchema = new mongoose.Schema(
             verifiedAt: {
                 type: Date,
                 default: null
+            },
+            lastPayoutAt: {
+                type: Date,
+                default: null
+            },
+            totalPayouts: {
+                type: Number,
+                default: 0,
+                min: [0, 'Total payouts cannot be negative']
+            },
+            pendingEarnings: {
+                type: Number,
+                default: 0,
+                min: [0, 'Pending earnings cannot be negative']
+            },
+            availableForPayout: {
+                type: Number,
+                default: 0,
+                min: [0, 'Available payout amount cannot be negative']
+            },
+            onHold: {
+                type: Number,
+                default: 0,
+                min: [0, 'Hold amount cannot be negative']
+            },
+            nextPayoutEligible: {
+                type: Date,
+                default: null
             }
         },
         
@@ -502,6 +530,14 @@ sellerProfileSchema.methods.calculateAverageRating = function(newRating) {
     const currentTotal = this.stats.averageRating * this.stats.totalReviews
     this.stats.totalReviews += 1
     this.stats.averageRating = (currentTotal + newRating) / this.stats.totalReviews
+}
+
+sellerProfileSchema.methods.updatePayoutCache = function(earningsData) {
+    // Cache calculated earnings for faster dashboard loading
+    this.payoutInfo.pendingEarnings = earningsData.availableForPayout || 0
+    this.payoutInfo.availableForPayout = earningsData.availableForPayout || 0
+    this.payoutInfo.onHold = earningsData.isOnHold ? earningsData.availableForPayout : 0
+    return this.save()
 }
 
 sellerProfileSchema.statics.findApproved = function() {

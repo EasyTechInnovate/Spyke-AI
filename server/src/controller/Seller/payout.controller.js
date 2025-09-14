@@ -1,0 +1,342 @@
+import Payout from '../../model/payout.model.js'
+import SellerProfile from '../../model/seller.profile.model.js'
+import PlatformSettings from '../../model/platform.settings.model.js'
+import Purchase from '../../model/purchase.model.js'
+import responseMessage from '../../constant/responseMessage.js'
+import mongoose from 'mongoose'
+import emailService from '../../service/email.service.js'
+import emailTemplates from '../../util/email.formatter.js'
+import httpError from '../../util/httpError.js'
+import httpResponse from '../../util/httpResponse.js'
+
+const calculateEarnings = async (sellerId, fromDate = null, toDate = null) => {
+    try {
+        const platformSettings = await PlatformSettings.getCurrentSettings()
+        const seller = await SellerProfile.findById(sellerId)
+        
+        if (!seller) {
+            throw new Error('Seller not found')
+        }
+
+        const commissionRate = seller.getCurrentCommissionRate()
+        if (!commissionRate) {
+            throw new Error('Seller commission rate not set')
+        }
+
+        let matchStage = {
+            'items.sellerId': new mongoose.Types.ObjectId(sellerId),
+            paymentStatus: 'completed',
+            orderStatus: 'completed'
+        }
+
+        if (fromDate && toDate) {
+            matchStage.completedAt = {
+                $gte: new Date(fromDate),
+                $lte: new Date(toDate)
+            }
+        }
+
+        // Calculate earnings from completed purchases
+        const salesPipeline = [
+            { $match: matchStage },
+            { $unwind: '$items' },
+            { $match: { 'items.sellerId': sellerId } },
+            {
+                $group: {
+                    _id: null,
+                    totalSales: { $sum: '$items.price' },
+                    salesCount: { $sum: 1 },
+                    salesIds: { $push: '$_id' }
+                }
+            }
+        ]
+
+        const salesResult = await Purchase.aggregate(salesPipeline)
+        const salesData = salesResult[0] || { totalSales: 0, salesCount: 0, salesIds: [] }
+
+        // Calculate earnings breakdown
+        const grossEarnings = salesData.totalSales * (commissionRate / 100)
+        const platformFee = grossEarnings * (platformSettings.platformFeePercentage / 100)
+        const processingFee = platformSettings.paymentProcessingFee
+        const netEarnings = Math.max(0, grossEarnings - platformFee - processingFee)
+
+        // Get existing payouts to calculate what's already been paid
+        const existingPayouts = await Payout.find({
+            sellerId,
+            status: { $in: ['completed', 'processing', 'approved'] }
+        })
+
+        const totalPaidOut = existingPayouts.reduce((sum, payout) => sum + payout.amount, 0)
+        const availableForPayout = Math.max(0, netEarnings - totalPaidOut)
+
+        const isEligible = availableForPayout >= platformSettings.minimumPayoutThreshold
+
+        const sellerJoinDate = new Date(seller.verification.approvedAt || seller.createdAt)
+        const holdPeriodEnd = new Date(sellerJoinDate.getTime() + (platformSettings.holdPeriodNewSellers * 24 * 60 * 60 * 1000))
+        const isOnHold = new Date() < holdPeriodEnd
+
+        return {
+            totalSales: salesData.totalSales,
+            salesCount: salesData.salesCount,
+            commissionRate,
+            grossEarnings,
+            platformFeePercentage: platformSettings.platformFeePercentage,
+            platformFee,
+            processingFee,
+            netEarnings,
+            totalPaidOut,
+            availableForPayout,
+            isEligible,
+            isOnHold,
+            holdPeriodEnd: isOnHold ? holdPeriodEnd : null,
+            minimumThreshold: platformSettings.minimumPayoutThreshold,
+            salesIncluded: salesData.salesIds,
+            currency: platformSettings.currency
+        }
+    } catch (error) {
+        throw error
+    }
+}
+
+export const getPayoutDashboard = async (req, res) => {
+    try {
+        const sellerId = req.seller._id
+        const { fromDate, toDate } = req.query
+
+        const earningsData = await calculateEarnings(sellerId, fromDate, toDate)
+        
+        const recentPayouts = await Payout.find({ sellerId })
+            .populate('approvedBy', 'firstName lastName')
+            .sort({ requestedAt: -1 })
+            .limit(5)
+
+        const pendingPayouts = await Payout.find({ 
+            sellerId, 
+            status: { $in: ['pending', 'approved', 'processing'] }
+        }).sort({ requestedAt: -1 })
+
+        return httpResponse(req, res, 200, responseMessage.SUCCESS, {
+            earnings: earningsData,
+            recentPayouts,
+            pendingPayouts,
+            canRequestPayout: earningsData.isEligible && !earningsData.isOnHold && pendingPayouts.length === 0
+        })
+    } catch (error) {
+        console.error('Error in getPayoutDashboard:', error)
+        return httpError(req, res, 500, error.message)
+    }
+}
+
+export const getPayoutHistory = async (req, res) => {
+    try {
+        const sellerId = req.seller._id
+        const { page = 1, limit = 10, status } = req.query
+
+        const payouts = await Payout.getSellerPayouts(sellerId, { 
+            page: parseInt(page), 
+            limit: parseInt(limit), 
+            status 
+        })
+
+        const totalPayouts = await Payout.countDocuments({ 
+            sellerId, 
+            ...(status && { status }) 
+        })
+
+        return httpResponse(req, res, 200, responseMessage.SUCCESS, {
+            payouts,
+            pagination: {
+                currentPage: parseInt(page),
+                totalPages: Math.ceil(totalPayouts / parseInt(limit)),
+                totalItems: totalPayouts,
+                itemsPerPage: parseInt(limit)
+            }
+        })
+    } catch (error) {
+        console.error('Error in getPayoutHistory:', error)
+        return httpError(req, res, 500, error.message)
+    }
+}
+
+export const requestPayout = async (req, res) => {
+    try {
+        const sellerId = req.seller._id
+        const { notes } = req.body
+
+        const seller = await SellerProfile.findById(sellerId)
+        if (!seller) {
+            return httpError(req, res, 404, responseMessage.ERROR.NOT_FOUND('Seller'))
+        }
+
+        if (!seller.payoutInfo || !seller.payoutInfo.method) {
+            return httpError(req, res, 400, 'Payout method not configured')
+        }
+
+        const existingPendingPayout = await Payout.findOne({
+            sellerId,
+            status: { $in: ['pending', 'approved', 'processing'] }
+        })
+
+        if (existingPendingPayout) {
+            return httpError(req, res, 400, 'You already have a pending payout request')
+        }
+
+        const earningsData = await calculateEarnings(sellerId)
+
+        if (!earningsData.isEligible) {
+            return httpError(req, res, 400, `Minimum payout threshold of $${earningsData.minimumThreshold} not met`)
+        }
+
+        if (earningsData.isOnHold) {
+            return httpError(req, res, 400, `Your account is on hold until ${earningsData.holdPeriodEnd.toDateString()}`)
+        }
+
+        const payoutPeriodStart = new Date()
+        payoutPeriodStart.setDate(1)
+        payoutPeriodStart.setHours(0, 0, 0, 0)
+
+        const payoutPeriodEnd = new Date()
+        payoutPeriodEnd.setHours(23, 59, 59, 999)
+
+        const payoutDetails = { ...seller.payoutInfo }
+        delete payoutDetails.isVerified
+        delete payoutDetails.verifiedAt
+
+        const payout = new Payout({
+            sellerId,
+            amount: earningsData.availableForPayout,
+            grossAmount: earningsData.grossEarnings,
+            platformFee: earningsData.platformFee,
+            processingFee: earningsData.processingFee,
+            payoutMethod: seller.payoutInfo.method,
+            payoutDetails,
+            payoutPeriod: {
+                from: payoutPeriodStart,
+                to: payoutPeriodEnd
+            },
+            salesIncluded: earningsData.salesIncluded,
+            notes,
+            currency: earningsData.currency
+        })
+
+        await payout.save()
+
+        // Update seller's cached payout info
+        seller.payoutInfo.pendingEarnings = 0 // Will be recalculated after payout
+        seller.payoutInfo.availableForPayout = 0
+        await seller.save()
+
+        try {
+            const confirmationEmail = emailTemplates['payout-request-confirmation']({
+                sellerName: seller.fullName,
+                amount: earningsData.availableForPayout,
+                currency: earningsData.currency,
+                requestId: payout._id,
+                estimatedProcessingTime: '7 business days'
+            })
+            
+            await emailService.sendEmail(
+                seller.email,
+                confirmationEmail.subject,
+                confirmationEmail.text,
+                confirmationEmail.html
+            )
+        } catch (emailError) {
+            console.error('Email notification failed:', emailError)
+        }
+
+        try {
+            const adminUsers = await mongoose.model('User').find({ role: 'admin', isActive: true })
+            for (const admin of adminUsers) {
+                const adminEmail = emailTemplates['payout-admin-notification']({
+                    adminName: admin.firstName + ' ' + admin.lastName,
+                    sellerName: seller.fullName,
+                    sellerId: seller._id,
+                    amount: earningsData.availableForPayout,
+                    currency: earningsData.currency,
+                    requestId: payout._id,
+                    payoutMethod: seller.payoutInfo.method
+                })
+                
+                await emailService.sendEmail(
+                    admin.email,
+                    adminEmail.subject,
+                    adminEmail.text,
+                    adminEmail.html
+                )
+            }
+        } catch (emailError) {
+            console.error('Admin email notification failed:', emailError)
+        }
+
+        return httpResponse(req, res, 201, 'Payout request submitted successfully', {
+            payout: await payout.populate('sellerId', 'fullName email')
+        })
+    } catch (error) {
+        console.error('Error in requestPayout:', error)
+        return httpError(req, res, 500, error.message)
+    }
+}
+
+export const getEligibleEarnings = async (req, res) => {
+    try {
+        const sellerId = req.seller._id
+        const { fromDate, toDate } = req.query
+
+        const earningsData = await calculateEarnings(sellerId, fromDate, toDate)
+
+        return httpResponse(req, res, 200, responseMessage.success, earningsData)
+    } catch (error) {
+        console.error('Error in getEligibleEarnings:', error)
+        return httpError(req, res, 500, error.message)
+    }
+}
+
+export const updatePayoutMethod = async (req, res) => {
+    try {
+        const sellerId = req.seller._id
+        const { method, bankDetails, paypalEmail, stripeAccountId, wiseEmail } = req.body
+
+        const seller = await SellerProfile.findById(sellerId)
+        if (!seller) {
+            return httpError(req, res, 404, responseMessage.ERROR.NOT_FOUND('Seller'))
+        }
+
+        const pendingPayout = await Payout.findOne({
+            sellerId,
+            status: { $in: ['pending', 'approved', 'processing'] }
+        })
+
+        if (pendingPayout) {
+            return httpError(req, res, 400, 'Cannot update payout method while you have a pending payout')
+        }
+
+        seller.payoutInfo.method = method
+        seller.payoutInfo.isVerified = false
+        seller.payoutInfo.verifiedAt = null
+
+        switch (method) {
+            case 'bank':
+                seller.payoutInfo.bankDetails = bankDetails
+                break
+            case 'paypal':
+                seller.payoutInfo.paypalEmail = paypalEmail
+                break
+            case 'stripe':
+                seller.payoutInfo.stripeAccountId = stripeAccountId
+                break
+            case 'wise':
+                seller.payoutInfo.wiseEmail = wiseEmail
+                break
+        }
+
+        await seller.save()
+
+        return httpResponse(req, res, 200, 'Payout method updated successfully', {
+            payoutInfo: seller.payoutInfo
+        })
+    } catch (error) {
+        console.error('Error in updatePayoutMethod:', error)
+        return httpError(req, res, 500, error.message)
+    }
+}

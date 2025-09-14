@@ -7,6 +7,7 @@ import productRoutes from './product.route.js'
 import promocodeRoutes from './promocode.route.js'
 import purchaseRoutes from './purchase.route.js'
 import analyticsRoutes from './analytics.route.js'
+import adminRoutes from './admin.route.js'
 
 const router = Router()
 
@@ -18,5 +19,6 @@ router.use('/products', productRoutes)
 router.use('/promocode', promocodeRoutes)
 router.use('/purchase', purchaseRoutes)
 router.use('/analytics', analyticsRoutes)
+router.use('/admin', adminRoutes)
 
 export default router

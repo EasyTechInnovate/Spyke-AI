@@ -1,0 +1,309 @@
+### Payout System APIs
+
+@baseUrl = http://localhost:5000/v1
+@contentType = application/json
+
+@sellerEmailAddress = seller@gmail.com
+@sellerPassword = sellerPassword123
+@adminEmailAddress = admin@gmail.com
+@adminPassword = adminPassword123
+
+@sellerAccessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODZlMTY3ZmNiZDFlYWI5ZWNiNzNiMDAiLCJlbWFpbEFkZHJlc3MiOiJ0ZXN0M0BnbWFpbC5jb20iLCJyb2xlcyI6WyJ1c2VyIiwic2VsbGVyIl0sImlhdCI6MTc1MjA1NTIzNSwiZXhwIjoxNzUyMDU4ODM1fQ.P_vS4QkYzIXBg8a4t_v2OCYl89Y1LACmuUPsiY1q1Wk
+@adminAccessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODY3NTVlNGFjMGJlYjNkYjQ4NjQwZWQiLCJlbWFpbEFkZHJlc3MiOiJhZG1pbkBnbWFpbC5jb20iLCJyb2xlcyI6WyJhZG1pbiJdLCJpYXQiOjE3NTIwNTUzMzMsImV4cCI6MTc1MjA1ODkzM30.JT5RXUINibca6ggwFK1jl3ANhhwfnrxpEXltUqL0wss
+
+@payoutId = 507f1f77bcf86cd799439011
+
+###############################################################################
+### SELLER PAYOUT ROUTES
+###############################################################################
+
+### 1. Get Payout Dashboard
+GET {{baseUrl}}/seller/payout/dashboard
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+### 2. Get Payout Dashboard with Date Filter
+GET {{baseUrl}}/seller/payout/dashboard?fromDate=2024-01-01&toDate=2024-12-31
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+### 3. Get Payout History (Default)
+GET {{baseUrl}}/seller/payout/history
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+### 4. Get Payout History with Pagination
+GET {{baseUrl}}/seller/payout/history?page=1&limit=5
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+### 5. Get Payout History by Status
+GET {{baseUrl}}/seller/payout/history?status=completed&page=1&limit=10
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+### 6. Get Eligible Earnings
+GET {{baseUrl}}/seller/payout/eligible-earnings
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+### 7. Get Eligible Earnings for Date Range
+GET {{baseUrl}}/seller/payout/eligible-earnings?fromDate=2024-01-01&toDate=2024-12-31
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+### 8. Request New Payout
+POST {{baseUrl}}/seller/payout/request
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+{
+  "notes": "Monthly payout request for Q4 earnings"
+}
+
+### 9. Update Payout Method - Bank Transfer
+PUT {{baseUrl}}/seller/payout/method
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+{
+  "method": "bank",
+  "bankDetails": {
+    "accountHolderName": "John Doe",
+    "accountNumber": "1234567890",
+    "routingNumber": "021000021",
+    "bankName": "Chase Bank",
+    "swiftCode": "CHASUS33"
+  }
+}
+
+### 10. Update Payout Method - PayPal
+PUT {{baseUrl}}/seller/payout/method
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+{
+  "method": "paypal",
+  "paypalEmail": "seller@example.com"
+}
+
+### 11. Update Payout Method - Stripe
+PUT {{baseUrl}}/seller/payout/method
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+{
+  "method": "stripe",
+  "stripeAccountId": "acct_1234567890abcdef"
+}
+
+### 12. Update Payout Method - Wise
+PUT {{baseUrl}}/seller/payout/method
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+{
+  "method": "wise",
+  "wiseEmail": "seller@example.com"
+}
+
+###############################################################################
+### ADMIN PLATFORM SETTINGS
+###############################################################################
+
+### 13. Get Platform Settings
+GET {{baseUrl}}/admin/platform/settings
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+### 14. Update Platform Settings
+PUT {{baseUrl}}/admin/platform/settings
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+{
+  "platformFeePercentage": 12,
+  "minimumPayoutThreshold": 75,
+  "payoutProcessingTime": 5,
+  "paymentProcessingFee": 2.5,
+  "holdPeriodNewSellers": 21,
+  "autoPayoutEnabled": false,
+  "maxPayoutAmount": 5000,
+  "currency": "USD"
+}
+
+### 15. Update Single Setting
+PUT {{baseUrl}}/admin/platform/settings
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+{
+  "platformFeePercentage": 15
+}
+
+### 16. Reset Platform Settings to Defaults
+POST {{baseUrl}}/admin/platform/settings/reset
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+###############################################################################
+### ADMIN PAYOUT MANAGEMENT
+###############################################################################
+
+### 17. Get All Payout Requests
+GET {{baseUrl}}/admin/payouts?page=1&limit=10
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+### 18. Get Payout Requests by Status
+GET {{baseUrl}}/admin/payouts?status=pending&page=1&limit=10&sortBy=requestedAt&sortOrder=desc
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+### 19. Get Payout Requests by Seller
+GET {{baseUrl}}/admin/payouts?sellerId=507f1f77bcf86cd799439011
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+### 20. Get Payout Requests by Date Range
+GET {{baseUrl}}/admin/payouts?fromDate=2024-01-01&toDate=2024-12-31
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+### 21. Get Specific Payout Details
+GET {{baseUrl}}/admin/payouts/{{payoutId}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+### 22. Approve Payout Request
+PUT {{baseUrl}}/admin/payouts/{{payoutId}}/approve
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+{
+  "notes": "Payout approved after verification"
+}
+
+### 23. Reject Payout Request
+PUT {{baseUrl}}/admin/payouts/{{payoutId}}/reject
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+{
+  "reason": "Insufficient documentation provided"
+}
+
+### 24. Hold Payout Request
+PUT {{baseUrl}}/admin/payouts/{{payoutId}}/hold
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+{
+  "reason": "Additional verification required"
+}
+
+### 25. Release Held Payout
+PUT {{baseUrl}}/admin/payouts/{{payoutId}}/release
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+### 26. Mark Payout as Processing
+PUT {{baseUrl}}/admin/payouts/{{payoutId}}/processing
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+{
+  "transactionId": "TXN123456789",
+  "notes": "Payment initiated via bank transfer"
+}
+
+### 27. Mark Payout as Completed
+PUT {{baseUrl}}/admin/payouts/{{payoutId}}/completed
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+{
+  "transactionId": "TXN123456789",
+  "notes": "Payment completed successfully"
+}
+
+### 28. Bulk Approve Payouts
+POST {{baseUrl}}/admin/payouts/bulk-approve
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+{
+  "payoutIds": ["507f1f77bcf86cd799439011", "507f1f77bcf86cd799439012", "507f1f77bcf86cd799439013"],
+  "notes": "Bulk approved for monthly processing"
+}
+
+### 29. Get Payout Analytics
+GET {{baseUrl}}/admin/payouts/analytics?period=30
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+### 30. Get Payout Analytics with Date Range
+GET {{baseUrl}}/admin/payouts/analytics?fromDate=2024-01-01&toDate=2024-12-31
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+### 31. Get Payout Analytics via Analytics Endpoint
+GET {{baseUrl}}/analytics/admin/payouts?period=30
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+###############################################################################
+### ERROR TESTING
+###############################################################################
+
+### 32. Request Payout Without Meeting Threshold (should fail)
+POST {{baseUrl}}/seller/payout/request
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+{
+  "notes": "Trying to request payout below minimum threshold"
+}
+
+### 33. Request Payout When Already Pending (should fail)
+POST {{baseUrl}}/seller/payout/request
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+{
+  "notes": "Duplicate payout request"
+}
+
+### 34. Update Payout Method While Payout Pending (should fail)
+PUT {{baseUrl}}/seller/payout/method
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerAccessToken}}
+
+{
+  "method": "paypal",
+  "paypalEmail": "newemail@example.com"
+}
+
+### 35. Invalid Platform Fee (should fail - exceeds 50%)
+PUT {{baseUrl}}/admin/platform/settings
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+{
+  "platformFeePercentage": 60
+}
+
+### 36. Invalid Minimum Threshold (should fail - below $1)
+PUT {{baseUrl}}/admin/platform/settings
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminAccessToken}}
+
+{
+  "minimumPayoutThreshold": 0.50
+}
+
+### 37. Unauthorized Access to Admin Routes (should fail)
+GET {{baseUrl}}/admin/payouts
+
+### 38. Unauthorized Access to Seller Routes (should fail)
+GET {{baseUrl}}/seller/payout/dashboard

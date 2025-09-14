@@ -998,3 +998,4 @@ Authorization: Bearer {{adminAccessToken}}
 {
   "reason": "Profile rejected after reviewing negotiation history and portfolio quality."
 }
+

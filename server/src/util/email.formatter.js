@@ -408,6 +408,292 @@ export const emailTemplates = {
             html: baseTemplate(content, 'Login Alert - Spyke AI'),
             text: `New login to your Spyke AI account at ${loginTime} from ${loginIP}. If this wasn't you, please secure your account.`
         };
+    },
+
+    'payout-request-confirmation': (data) => {
+        const { sellerName, amount, currency, requestId, estimatedProcessingTime } = data;
+        
+        const content = `
+            <div class="content">
+                <h2>🎉 It's Your Payout Day!</h2>
+                <p>Hello ${sellerName},</p>
+                <p>Great news! Your payout request has been submitted successfully and is now being reviewed by our team.</p>
+                
+                <div class="success-box">
+                    <p><strong>Payout Details:</strong></p>
+                    <p>• Amount: ${currency} $${amount.toFixed(2)}</p>
+                    <p>• Request ID: ${requestId}</p>
+                    <p>• Estimated Processing Time: ${estimatedProcessingTime}</p>
+                </div>
+                
+                <p><strong>What happens next?</strong></p>
+                <p>Our team will review your payout request and process it according to our standard procedures. You'll receive email updates as your request progresses through our system.</p>
+                
+                <p style="text-align: center;">
+                    <a href="${config.client.url}/seller/payouts" class="button">View Payout Status</a>
+                </p>
+                
+                <div class="divider"></div>
+                
+                <p>Thank you for being a valued seller on our platform. Your contributions help make Spyke AI the premier destination for AI solutions!</p>
+            </div>
+        `;
+        
+        return {
+            subject: '🎉 It\'s Your Payout Day! Request Submitted Successfully',
+            html: baseTemplate(content, 'Payout Request - Spyke AI'),
+            text: `Your payout request for ${currency} $${amount.toFixed(2)} has been submitted successfully. Request ID: ${requestId}. Estimated processing time: ${estimatedProcessingTime}.`
+        };
+    },
+
+    'payout-admin-notification': (data) => {
+        const { adminName, sellerName, sellerId, amount, currency, requestId, payoutMethod } = data;
+        
+        const content = `
+            <div class="content">
+                <h2>New Payout Request - Admin Action Required</h2>
+                <p>Hello ${adminName},</p>
+                <p>A new payout request has been submitted and requires your review.</p>
+                
+                <div class="warning-box">
+                    <p><strong>Payout Request Details:</strong></p>
+                    <p>• Seller: ${sellerName}</p>
+                    <p>• Seller ID: ${sellerId}</p>
+                    <p>• Amount: ${currency} $${amount.toFixed(2)}</p>
+                    <p>• Payout Method: ${payoutMethod}</p>
+                    <p>• Request ID: ${requestId}</p>
+                </div>
+                
+                <p>Please review this request and take appropriate action in the admin dashboard.</p>
+                
+                <p style="text-align: center;">
+                    <a href="${config.client.url}/admin/payouts/${requestId}" class="button">Review Payout Request</a>
+                </p>
+                
+                <div class="divider"></div>
+                
+                <p><strong>Admin Actions Available:</strong></p>
+                <ul style="padding-left: 20px; margin-bottom: 20px;">
+                    <li>Approve the payout request</li>
+                    <li>Request additional information</li>
+                    <li>Put the request on hold</li>
+                    <li>Reject the request with reason</li>
+                </ul>
+            </div>
+        `;
+        
+        return {
+            subject: 'New Payout Request - Admin Action Required',
+            html: baseTemplate(content, 'Admin Notification - Spyke AI'),
+            text: `New payout request from ${sellerName} for ${currency} $${amount.toFixed(2)}. Request ID: ${requestId}. Please review in admin dashboard.`
+        };
+    },
+
+    'payout-approved': (data) => {
+        const { sellerName, amount, currency, requestId, approvedAt, estimatedProcessingTime } = data;
+        
+        const content = `
+            <div class="content">
+                <h2>✅ Payout Approved - Processing Soon!</h2>
+                <p>Hello ${sellerName},</p>
+                <p>Excellent news! Your payout request has been approved and will be processed soon.</p>
+                
+                <div class="success-box">
+                    <p><strong>Approved Payout Details:</strong></p>
+                    <p>• Amount: ${currency} $${amount.toFixed(2)}</p>
+                    <p>• Request ID: ${requestId}</p>
+                    <p>• Approved At: ${new Date(approvedAt).toLocaleString()}</p>
+                    <p>• Estimated Processing: ${estimatedProcessingTime}</p>
+                </div>
+                
+                <p><strong>Next Steps:</strong></p>
+                <p>Your payout will be processed by our finance team and sent to your registered payout method. You'll receive another notification once the payment has been initiated.</p>
+                
+                <p style="text-align: center;">
+                    <a href="${config.client.url}/seller/payouts" class="button">View Payout Status</a>
+                </p>
+                
+                <div class="divider"></div>
+                
+                <p>Thank you for your patience. We appreciate your continued contribution to the Spyke AI marketplace!</p>
+            </div>
+        `;
+        
+        return {
+            subject: '✅ Payout Approved - Processing Soon!',
+            html: baseTemplate(content, 'Payout Approved - Spyke AI'),
+            text: `Your payout request for ${currency} $${amount.toFixed(2)} has been approved! Request ID: ${requestId}. Processing will begin within ${estimatedProcessingTime}.`
+        };
+    },
+
+    'payout-rejected': (data) => {
+        const { sellerName, amount, currency, requestId, rejectionReason } = data;
+        
+        const content = `
+            <div class="content">
+                <h2>❌ Payout Request Update</h2>
+                <p>Hello ${sellerName},</p>
+                <p>We've reviewed your recent payout request and unfortunately cannot process it at this time.</p>
+                
+                <div class="warning-box">
+                    <p><strong>Request Details:</strong></p>
+                    <p>• Amount: ${currency} $${amount.toFixed(2)}</p>
+                    <p>• Request ID: ${requestId}</p>
+                    <p>• Reason: ${rejectionReason}</p>
+                </div>
+                
+                <p><strong>What you can do:</strong></p>
+                <ul style="padding-left: 20px; margin-bottom: 20px;">
+                    <li>Review the rejection reason above</li>
+                    <li>Address any issues mentioned</li>
+                    <li>Contact our support team if you need clarification</li>
+                    <li>Submit a new payout request once issues are resolved</li>
+                </ul>
+                
+                <p style="text-align: center;">
+                    <a href="${config.client.url}/seller/payouts" class="button">View Payout Dashboard</a>
+                </p>
+                
+                <div class="divider"></div>
+                
+                <p>If you have questions about this decision or need assistance, please don't hesitate to reach out to our support team.</p>
+            </div>
+        `;
+        
+        return {
+            subject: '❌ Payout Request Update',
+            html: baseTemplate(content, 'Payout Update - Spyke AI'),
+            text: `Your payout request for ${currency} $${amount.toFixed(2)} could not be processed. Reason: ${rejectionReason}. Request ID: ${requestId}.`
+        };
+    },
+
+    'payout-hold': (data) => {
+        const { sellerName, amount, currency, requestId, holdReason } = data;
+        
+        const content = `
+            <div class="content">
+                <h2>⏸️ Payout Request On Hold</h2>
+                <p>Hello ${sellerName},</p>
+                <p>Your payout request is currently on hold for additional review.</p>
+                
+                <div class="warning-box">
+                    <p><strong>Hold Details:</strong></p>
+                    <p>• Amount: ${currency} $${amount.toFixed(2)}</p>
+                    <p>• Request ID: ${requestId}</p>
+                    <p>• Hold Reason: ${holdReason}</p>
+                </div>
+                
+                <p><strong>What this means:</strong></p>
+                <p>Your payout request is temporarily paused while we conduct additional verification or review. This is a standard procedure in certain cases and does not indicate any issue with your account.</p>
+                
+                <p><strong>Next steps:</strong></p>
+                <ul style="padding-left: 20px; margin-bottom: 20px;">
+                    <li>No action is required from you at this time</li>
+                    <li>Our team will complete the review process</li>
+                    <li>You'll be notified once the hold is resolved</li>
+                    <li>Contact support if you have urgent questions</li>
+                </ul>
+                
+                <p style="text-align: center;">
+                    <a href="${config.client.url}/seller/payouts" class="button">View Payout Status</a>
+                </p>
+                
+                <div class="divider"></div>
+                
+                <p>We appreciate your patience during this review process.</p>
+            </div>
+        `;
+        
+        return {
+            subject: '⏸️ Payout Request On Hold',
+            html: baseTemplate(content, 'Payout Hold - Spyke AI'),
+            text: `Your payout request for ${currency} $${amount.toFixed(2)} is on hold for: ${holdReason}. Request ID: ${requestId}. You'll be notified when resolved.`
+        };
+    },
+
+    'payout-processing': (data) => {
+        const { sellerName, amount, currency, requestId, transactionId, estimatedCompletion } = data;
+        
+        const content = `
+            <div class="content">
+                <h2>🔄 Your Payout is Being Processed!</h2>
+                <p>Hello ${sellerName},</p>
+                <p>Great news! Your payout is now being processed by our finance team.</p>
+                
+                <div class="success-box">
+                    <p><strong>Processing Details:</strong></p>
+                    <p>• Amount: ${currency} $${amount.toFixed(2)}</p>
+                    <p>• Request ID: ${requestId}</p>
+                    <p>• Transaction Reference: ${transactionId}</p>
+                    <p>• Estimated Completion: ${estimatedCompletion}</p>
+                </div>
+                
+                <p><strong>What's happening now:</strong></p>
+                <ul style="padding-left: 20px; margin-bottom: 20px;">
+                    <li>Your payout has been initiated with our payment processor</li>
+                    <li>The funds are being transferred to your registered payout method</li>
+                    <li>You'll receive a final confirmation once completed</li>
+                </ul>
+                
+                <p style="text-align: center;">
+                    <a href="${config.client.url}/seller/payouts" class="button">Track Payout Progress</a>
+                </p>
+                
+                <div class="divider"></div>
+                
+                <p><strong>Please note:</strong> Depending on your payout method and bank, it may take additional time for the funds to appear in your account after processing is complete.</p>
+            </div>
+        `;
+        
+        return {
+            subject: '🔄 Your Payout is Being Processed!',
+            html: baseTemplate(content, 'Payout Processing - Spyke AI'),
+            text: `Your payout for ${currency} $${amount.toFixed(2)} is being processed. Transaction ID: ${transactionId}. Estimated completion: ${estimatedCompletion}.`
+        };
+    },
+
+    'payout-completed': (data) => {
+        const { sellerName, amount, currency, requestId, transactionId, completedAt } = data;
+        
+        const content = `
+            <div class="content">
+                <h2>🎉 Payout Completed Successfully!</h2>
+                <p>Hello ${sellerName},</p>
+                <p>Fantastic news! Your payout has been completed successfully.</p>
+                
+                <div class="success-box">
+                    <p><strong>Completed Payout Details:</strong></p>
+                    <p>• Amount: ${currency} $${amount.toFixed(2)}</p>
+                    <p>• Request ID: ${requestId}</p>
+                    <p>• Transaction Reference: ${transactionId}</p>
+                    <p>• Completed At: ${new Date(completedAt).toLocaleString()}</p>
+                </div>
+                
+                <p><strong>Important notes:</strong></p>
+                <ul style="padding-left: 20px; margin-bottom: 20px;">
+                    <li>The funds have been successfully transferred</li>
+                    <li>Depending on your bank/provider, it may take 1-3 business days to appear</li>
+                    <li>Keep the transaction reference for your records</li>
+                    <li>A receipt is available in your seller dashboard</li>
+                </ul>
+                
+                <p style="text-align: center;">
+                    <a href="${config.client.url}/seller/payouts" class="button">View Payout History</a>
+                </p>
+                
+                <div class="divider"></div>
+                
+                <p>Thank you for being a valued seller on Spyke AI! Keep creating amazing content, and we'll keep processing your earnings smoothly.</p>
+                
+                <p><strong>Ready for your next payout?</strong> Continue selling and earning - we'll be here when you're ready to withdraw again!</p>
+            </div>
+        `;
+        
+        return {
+            subject: '🎉 Payout Completed Successfully!',
+            html: baseTemplate(content, 'Payout Completed - Spyke AI'),
+            text: `Your payout for ${currency} $${amount.toFixed(2)} has been completed! Transaction ID: ${transactionId}. Funds should arrive within 1-3 business days.`
+        };
     }
 };
 

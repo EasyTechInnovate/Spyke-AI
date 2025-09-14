@@ -1374,5 +1374,169 @@ export default {
         } catch (err) {
             httpError(next, err, req, 500)
         }
+    },
+
+    getPayoutAnalytics: async (req, res, next) => {
+        try {
+            const { fromDate, toDate, period = '30' } = req.query
+            
+            let matchQuery = {}
+            
+            if (fromDate || toDate) {
+                matchQuery.requestedAt = {}
+                if (fromDate) matchQuery.requestedAt.$gte = new Date(fromDate)
+                if (toDate) matchQuery.requestedAt.$lte = new Date(toDate)
+            } else {
+                const daysBack = parseInt(period)
+                const startDate = new Date()
+                startDate.setDate(startDate.getDate() - daysBack)
+                matchQuery.requestedAt = { $gte: startDate }
+            }
+
+            const PayoutModel = mongoose.model('Payout')
+
+            // Payout status breakdown
+            const statusBreakdown = await PayoutModel.aggregate([
+                { $match: matchQuery },
+                {
+                    $group: {
+                        _id: '$status',
+                        count: { $sum: 1 },
+                        totalAmount: { $sum: '$amount' },
+                        avgAmount: { $avg: '$amount' }
+                    }
+                }
+            ])
+
+            // Daily payout trends
+            const dailyTrends = await PayoutModel.aggregate([
+                { $match: { ...matchQuery, status: 'completed' } },
+                {
+                    $group: {
+                        _id: {
+                            year: { $year: '$completedAt' },
+                            month: { $month: '$completedAt' },
+                            day: { $dayOfMonth: '$completedAt' }
+                        },
+                        count: { $sum: 1 },
+                        totalAmount: { $sum: '$amount' }
+                    }
+                },
+                { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 } }
+            ])
+
+            // Payout method breakdown
+            const methodBreakdown = await PayoutModel.aggregate([
+                { $match: matchQuery },
+                {
+                    $group: {
+                        _id: '$payoutMethod',
+                        count: { $sum: 1 },
+                        totalAmount: { $sum: '$amount' }
+                    }
+                }
+            ])
+
+            // Processing time analytics
+            const processingTimes = await PayoutModel.aggregate([
+                { $match: matchQuery },
+                {
+                    $addFields: {
+                        processingTime: {
+                            $cond: {
+                                if: { $and: ['$requestedAt', '$completedAt'] },
+                                then: {
+                                    $divide: [
+                                        { $subtract: ['$completedAt', '$requestedAt'] },
+                                        86400000 // Convert to days
+                                    ]
+                                },
+                                else: null
+                            }
+                        }
+                    }
+                },
+                { $match: { processingTime: { $ne: null } } },
+                {
+                    $group: {
+                        _id: null,
+                        avgProcessingTime: { $avg: '$processingTime' },
+                        minProcessingTime: { $min: '$processingTime' },
+                        maxProcessingTime: { $max: '$processingTime' }
+                    }
+                }
+            ])
+
+            // Top sellers by payout amount
+            const topSellersByPayout = await PayoutModel.aggregate([
+                { $match: { ...matchQuery, status: 'completed' } },
+                {
+                    $group: {
+                        _id: '$sellerId',
+                        totalPayouts: { $sum: '$amount' },
+                        payoutCount: { $sum: 1 }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'sellerprofiles',
+                        localField: '_id',
+                        foreignField: '_id',
+                        as: 'seller'
+                    }
+                },
+                { $unwind: '$seller' },
+                {
+                    $project: {
+                        sellerName: '$seller.fullName',
+                        totalPayouts: 1,
+                        payoutCount: 1,
+                        avgPayoutAmount: { $divide: ['$totalPayouts', '$payoutCount'] }
+                    }
+                },
+                { $sort: { totalPayouts: -1 } },
+                { $limit: 10 }
+            ])
+
+            // Platform revenue from fees
+            const platformRevenue = await PayoutModel.aggregate([
+                { $match: { ...matchQuery, status: 'completed' } },
+                {
+                    $group: {
+                        _id: null,
+                        totalPlatformFees: { $sum: '$platformFee' },
+                        totalProcessingFees: { $sum: '$processingFee' },
+                        totalPayouts: { $sum: '$amount' },
+                        count: { $sum: 1 }
+                    }
+                }
+            ])
+
+            const revenue = platformRevenue[0] || {
+                totalPlatformFees: 0,
+                totalProcessingFees: 0,
+                totalPayouts: 0,
+                count: 0
+            }
+
+            httpResponse(req, res, 200, responseMessage.SUCCESS, {
+                statusBreakdown,
+                dailyTrends,
+                methodBreakdown,
+                processingTimes: processingTimes[0] || {
+                    avgProcessingTime: 0,
+                    minProcessingTime: 0,
+                    maxProcessingTime: 0
+                },
+                topSellersByPayout,
+                platformRevenue: {
+                    ...revenue,
+                    totalRevenue: revenue.totalPlatformFees + revenue.totalProcessingFees,
+                    avgPayoutAmount: revenue.count > 0 ? revenue.totalPayouts / revenue.count : 0
+                }
+            })
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
     }
 }

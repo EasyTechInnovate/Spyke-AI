@@ -467,3 +467,13 @@ Authorization: {{adminToken}}
 GET {{baseUrl}}/analytics/admin/revenue
 Content-Type: application/json
 Authorization: {{adminToken}}
+
+### Get Payout Analytics (30 days)
+GET {{baseUrl}}/analytics/admin/payouts?period=30
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+### Get Payout Analytics with Date Range
+GET {{baseUrl}}/analytics/admin/payouts?fromDate=2024-01-01T00:00:00Z&toDate=2024-12-31T23:59:59Z
+Content-Type: application/json
+Authorization: {{adminToken}}
