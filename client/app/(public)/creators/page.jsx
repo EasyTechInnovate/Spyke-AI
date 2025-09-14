@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ErrorBoundary } from 'react-error-boundary'
 import { debounce } from '@/utils/debounce'
-import Header from '@/components/shared/layout/Header'
 import { sellerAPI } from '@/lib/api'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -121,7 +120,6 @@ function CreatorCard({ creator }) {
                 transition={{ duration: 0.2 }}
                 className="bg-[#171717] border border-gray-800 rounded-xl p-6 hover:border-[#00FF89]/30 transition-all duration-300 h-full">
                 
-                {/* Creator Header */}
                 <div className="flex items-center gap-4 mb-4">
                     <div className="relative">
                         {creator.userId?.avatar ? (
@@ -613,12 +611,10 @@ function CreatorsPageContent() {
     return (
         <ErrorBoundary FallbackComponent={CreatorsErrorBoundary}>
             <div className="min-h-screen bg-black text-white">
-                <Header />
-
                 <main className="pt-24 pb-16">
                     <DSContainer>
                         {/* Page Header following ExploreHeader pattern */}
-                        <motion.div
+                        {/* <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="mb-8 sm:mb-12 text-center">
@@ -648,7 +644,7 @@ function CreatorsPageContent() {
                                     </div>
                                 </div>
                             </DSStack>
-                        </motion.div>
+                        </motion.div> */}
 
                         {/* Controls */}
                         <CreatorControls
@@ -715,7 +711,6 @@ export default function CreatorsPage() {
         <Suspense
             fallback={
                 <div className="min-h-screen bg-black text-white">
-                    <Header />
                     <div className="pt-24 pb-16">
                         <DSContainer>
                             <DSLoadingState

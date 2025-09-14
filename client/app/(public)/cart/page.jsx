@@ -11,7 +11,6 @@ import { useCart } from '@/hooks/useCart'
 
 // Components
 import Container from '@/components/shared/layout/Container'
-import Header from '@/components/shared/layout/Header'
 import CartItem from './components/CartItem'
 import OrderSummary from './components/OrderSummary'
 import EmptyCart from './components/EmptyCart'
@@ -92,7 +91,6 @@ export default function CartPage() {
     if (cartItems.length === 0) {
         return (
             <div className="min-h-screen bg-[#121212]">
-                <Header />
                 <Container>
                     <div className="pt-24 pb-16">
                         <EmptyCart />
@@ -104,12 +102,10 @@ export default function CartPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#0A0A0A] via-[#121212] to-[#1A1A1A] text-white">
-            <Header />
 
             <main className="pt-24 pb-16">
                 <Container>
                     <div className="max-w-7xl mx-auto">
-                        {/* Page Header */}
                         <CartHeader
                             itemCount={cartItems.length}
                             total={calculations.total}

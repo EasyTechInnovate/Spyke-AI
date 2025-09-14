@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import Container from '@/components/shared/layout/Container'
-import Header from '@/components/shared/layout/Header'
 import LoadingSpinner from '@/components/shared/ui/LoadingSpinner'
 import SellerHero from '@/components/features/seller/profile/SellerHero'
 import EnhancedProductShowcase from '@/components/features/seller/profile/EnhancedProductShowcase'
@@ -12,11 +11,9 @@ import SellerAbout from '@/components/features/seller/profile/SellerAbout'
 import SellerReviews from '@/components/features/seller/profile/SellerReviews'
 import ContactWidget from '@/components/features/seller/profile/ContactWidget'
 import { useEnhancedSellerProfile } from '@/hooks/useEnhancedSellerProfile'
-import toast from '@/lib/utils/toast'
-import { MessageCircle, Star, Users, Sparkles } from 'lucide-react'
+import { Star, Users, Sparkles } from 'lucide-react'
 import { formatLocation } from '@/lib/utils/seller'
 
-import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function PublicSellerProfile() {
     const params = useParams()
     const sellerId = params.sellerId
@@ -42,7 +39,6 @@ export default function PublicSellerProfile() {
     if (loading) {
         return (
             <div className="min-h-screen bg-[#121212]">
-                <Header />
                 <Container>
                     <div className="pt-24 pb-16">
                         <div className="flex flex-col items-center justify-center py-20">
@@ -64,7 +60,6 @@ export default function PublicSellerProfile() {
     if (error || !seller) {
         return (
             <div className="min-h-screen bg-[#121212]">
-                <Header />
                 <Container>
                     <div className="pt-24 pb-16">
                         <motion.div
@@ -99,7 +94,6 @@ export default function PublicSellerProfile() {
 
     return (
         <div className="min-h-screen bg-[#121212] text-[#FFFFFF]">
-            <Header />
 
             <main className="pt-20 pb-16">
                 <div className="w-full">
