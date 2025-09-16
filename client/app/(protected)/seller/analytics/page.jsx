@@ -31,135 +31,184 @@ const getIconComponent = (iconName) => {
     return iconMap[iconName] || Clock
 }
 
-const MINIMUM_LOADING_DURATION = 1500 // 1.5 seconds minimum loading time
+const MINIMUM_LOADING_DURATION = 800 // Reduced to 800ms for better UX
 
 export default function SellerAnalytics() {
-    const [tabCache, setTabCache] = useState({})
-    const [loading, setLoading] = useState({
-        overview: false,
-        products: false,
-        sales: false,
-        revenue: false,
-        customers: false
-    })
-    const [errors, setErrors] = useState({})
+    const [dataCache, setDataCache] = useState({})
+    const [loadingStates, setLoadingStates] = useState({})
+    const [errorStates, setErrorStates] = useState({})
     const [timeRange, setTimeRange] = useState('30d')
     const [activeTab, setActiveTab] = useState('overview')
     
-    // Timer refs to track loading start times
-    const loadingTimers = useRef({})
+    // Track ongoing requests to prevent duplicates
+    const pendingRequests = useRef(new Set())
+    const abortControllers = useRef({})
 
-    const getCacheKey = useCallback((tab, range) => `${tab}_${range}`, [])
+    // Memoized cache key generator
+    const getCacheKey = useCallback((tab, range) => `${tab}:${range}`, [])
 
+    // Get current tab data from cache
     const currentTabData = useMemo(() => {
         const cacheKey = getCacheKey(activeTab, timeRange)
-        return tabCache[cacheKey] || null
-    }, [activeTab, timeRange, tabCache, getCacheKey])
+        return dataCache[cacheKey]?.data || null
+    }, [activeTab, timeRange, dataCache, getCacheKey])
 
-    const getTabAPI = useCallback((tab) => {
+    // Get current loading state
+    const isCurrentTabLoading = useMemo(() => {
+        const cacheKey = getCacheKey(activeTab, timeRange)
+        return loadingStates[cacheKey] || false
+    }, [activeTab, timeRange, loadingStates, getCacheKey])
+
+    // Get current error state
+    const currentTabError = useMemo(() => {
+        const cacheKey = getCacheKey(activeTab, timeRange)
+        return errorStates[cacheKey] || null
+    }, [activeTab, timeRange, errorStates, getCacheKey])
+
+    // Optimized API caller with request deduplication
+    const getTabAPI = useCallback((tab, range) => {
+        const apiParams = range !== '30d' ? { period: range } : {}
+        
         switch (tab) {
             case 'overview':
                 return () => analyticsAPI.seller.getDashboard()
             case 'products':
-                return () => analyticsAPI.seller.getProducts()
+                return () => analyticsAPI.seller.getProducts(apiParams)
             case 'sales':
-                return () => analyticsAPI.seller.getSales({ period: timeRange })
+                return () => analyticsAPI.seller.getSales(apiParams)
             case 'revenue':
-                return () => analyticsAPI.seller.getRevenue()
+                return () => analyticsAPI.seller.getRevenue(apiParams)
             case 'customers':
-                return () => analyticsAPI.seller.getCustomers()
+                return () => analyticsAPI.seller.getCustomers(apiParams)
             default:
                 return () => analyticsAPI.seller.getDashboard()
         }
-    }, [timeRange])
+    }, [])
 
-    const fetchTabData = useCallback(async (tab) => {
-        const cacheKey = getCacheKey(tab, timeRange)
+    // Optimized fetch function with request deduplication
+    const fetchTabData = useCallback(async (tab, range = timeRange, forceRefresh = false) => {
+        const cacheKey = getCacheKey(tab, range)
         
-        if (loading[tab] || tabCache[cacheKey]) {
+        // Prevent duplicate requests
+        if (pendingRequests.current.has(cacheKey)) {
             return
+        }
+
+        // Check cache unless force refresh
+        if (!forceRefresh && dataCache[cacheKey]?.data) {
+            return
+        }
+
+        // Cancel any existing request for this cache key
+        if (abortControllers.current[cacheKey]) {
+            abortControllers.current[cacheKey].abort()
         }
 
         try {
             const startTime = Date.now()
-            loadingTimers.current[tab] = startTime
+            const controller = new AbortController()
             
-            setLoading(prev => ({ ...prev, [tab]: true }))
-            setErrors(prev => ({ ...prev, [tab]: null }))
+            // Track this request
+            pendingRequests.current.add(cacheKey)
+            abortControllers.current[cacheKey] = controller
+            
+            // Update loading state
+            setLoadingStates(prev => ({ ...prev, [cacheKey]: true }))
+            setErrorStates(prev => ({ ...prev, [cacheKey]: null }))
 
-            const apiCall = getTabAPI(tab)
+            // Make API call
+            const apiCall = getTabAPI(tab, range)
             const data = await apiCall()
 
-            // Calculate how long to wait to meet minimum loading duration
+            // Ensure minimum loading duration for UX
             const elapsedTime = Date.now() - startTime
             const remainingTime = Math.max(0, MINIMUM_LOADING_DURATION - elapsedTime)
-
-            // Wait for remaining time if needed
+            
             if (remainingTime > 0) {
                 await new Promise(resolve => setTimeout(resolve, remainingTime))
             }
 
-            setTabCache(prev => ({ ...prev, [cacheKey]: data }))
-        } catch (err) {
-            // Ensure minimum loading time even for errors
-            const startTime = loadingTimers.current[tab]
-            if (startTime) {
-                const elapsedTime = Date.now() - startTime
-                const remainingTime = Math.max(0, MINIMUM_LOADING_DURATION - elapsedTime)
-                
-                if (remainingTime > 0) {
-                    await new Promise(resolve => setTimeout(resolve, remainingTime))
+            // Check if request was aborted
+            if (controller.signal.aborted) {
+                return
+            }
+
+            // Cache the data with timestamp
+            setDataCache(prev => ({
+                ...prev,
+                [cacheKey]: {
+                    data,
+                    timestamp: Date.now(),
+                    tab,
+                    range
                 }
-            }
-
-            console.error(`Error fetching ${tab} analytics data:`, err)
-            setErrors(prev => ({ 
-                ...prev, 
-                [tab]: `Failed to load ${tab} data: ${err.message}` 
             }))
-        } finally {
-            setLoading(prev => ({ ...prev, [tab]: false }))
-            // Clean up timer reference
-            if (loadingTimers.current[tab]) {
-                delete loadingTimers.current[tab]
+
+        } catch (error) {
+            // Only handle non-aborted errors
+            if (error.name !== 'AbortError') {
+                console.error(`Analytics API Error [${tab}:${range}]:`, error)
+                setErrorStates(prev => ({
+                    ...prev,
+                    [cacheKey]: `Failed to load ${tab} data. Please try again.`
+                }))
             }
+        } finally {
+            // Cleanup
+            pendingRequests.current.delete(cacheKey)
+            delete abortControllers.current[cacheKey]
+            setLoadingStates(prev => ({ ...prev, [cacheKey]: false }))
         }
-    }, [timeRange, loading, tabCache, getCacheKey, getTabAPI])
+    }, [timeRange, dataCache, getCacheKey, getTabAPI])
 
+    // Load data when tab or time range changes
     useEffect(() => {
-        const cacheKey = getCacheKey(activeTab, timeRange)
-        if (!tabCache[cacheKey] && !loading[activeTab]) {
-            fetchTabData(activeTab)
+        fetchTabData(activeTab, timeRange)
+    }, [activeTab, timeRange, fetchTabData])
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            // Abort all pending requests
+            Object.values(abortControllers.current).forEach(controller => {
+                controller.abort()
+            })
+            pendingRequests.current.clear()
         }
-    }, [activeTab, timeRange, tabCache, loading, fetchTabData, getCacheKey])
-
-    useEffect(() => {
-        setLoading({
-            overview: false,
-            products: false,
-            sales: false,
-            revenue: false,
-            customers: false
-        })
-        setErrors({})
-    }, [timeRange])
-
-    const refreshCurrentTab = useCallback(async () => {
-        const cacheKey = getCacheKey(activeTab, timeRange)
-        
-        setTabCache(prev => {
-            const newCache = { ...prev }
-            delete newCache[cacheKey]
-            return newCache
-        })
-        
-        await fetchTabData(activeTab)
-    }, [activeTab, timeRange, fetchTabData, getCacheKey])
-
-    const handleTabChange = useCallback((newTab) => {
-        setActiveTab(newTab)
     }, [])
 
+    // Optimized refresh handler
+    const refreshCurrentTab = useCallback(async () => {
+        await fetchTabData(activeTab, timeRange, true)
+    }, [activeTab, timeRange, fetchTabData])
+
+    // Optimized tab change handler with prefetching
+    const handleTabChange = useCallback((newTab) => {
+        setActiveTab(newTab)
+        
+        // Prefetch data for the new tab if not already cached
+        const cacheKey = getCacheKey(newTab, timeRange)
+        if (!dataCache[cacheKey]?.data && !pendingRequests.current.has(cacheKey)) {
+            fetchTabData(newTab, timeRange)
+        }
+    }, [timeRange, dataCache, getCacheKey, fetchTabData])
+
+    // Optimized time range change handler
+    const handleTimeRangeChange = useCallback((newRange) => {
+        setTimeRange(newRange)
+        
+        // Clear error states for new range
+        setErrorStates(prev => {
+            const newErrors = { ...prev }
+            SELLER_TAB_OPTIONS.forEach(tab => {
+                const cacheKey = getCacheKey(tab.value, newRange)
+                delete newErrors[cacheKey]
+            })
+            return newErrors
+        })
+    }, [getCacheKey])
+
+    // Optimized export handler
     const handleExport = useCallback(() => {
         if (!currentTabData) return
 
@@ -167,36 +216,55 @@ export default function SellerAnalytics() {
             tab: activeTab,
             timeRange,
             data: currentTabData,
-            exportedAt: new Date().toISOString()
+            exportedAt: new Date().toISOString(),
+            version: '1.0'
         }
 
-        const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-            type: 'application/json'
-        })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `seller-analytics-${activeTab}-${timeRange}-${new Date().toISOString().split('T')[0]}.json`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
+        try {
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+                type: 'application/json'
+            })
+            const url = URL.createObjectURL(blob)
+            const link = document.createElement('a')
+            
+            link.href = url
+            link.download = `seller-analytics-${activeTab}-${timeRange}-${Date.now()}.json`
+            link.style.display = 'none'
+            
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+            URL.revokeObjectURL(url)
+        } catch (error) {
+            console.error('Export failed:', error)
+        }
     }, [activeTab, timeRange, currentTabData])
 
-    const renderTabContent = () => {
-        const isLoading = loading[activeTab]
-        const error = errors[activeTab]
+    // Memoized tab status indicators
+    const tabStatuses = useMemo(() => {
+        return SELLER_TAB_OPTIONS.reduce((acc, tab) => {
+            const cacheKey = getCacheKey(tab.value, timeRange)
+            acc[tab.value] = {
+                hasData: !!dataCache[cacheKey]?.data,
+                isLoading: loadingStates[cacheKey] || false,
+                hasError: !!errorStates[cacheKey]
+            }
+            return acc
+        }, {})
+    }, [dataCache, loadingStates, errorStates, timeRange, getCacheKey])
 
-        if (isLoading && !currentTabData) {
+    // Memoized tab content renderer
+    const renderTabContent = useCallback(() => {
+        if (isCurrentTabLoading && !currentTabData) {
             return <LoadingSkeleton />
         }
 
-        if (error) {
+        if (currentTabError) {
             return (
                 <div className="flex flex-col items-center justify-center py-12">
-                    <ErrorState message={error} />
+                    <ErrorState message={currentTabError} />
                     <button
-                        onClick={() => fetchTabData(activeTab)}
+                        onClick={refreshCurrentTab}
                         className="mt-4 px-4 py-2 bg-[#00FF89] hover:bg-[#00E67A] text-black font-medium rounded-lg transition-colors">
                         Retry
                     </button>
@@ -204,57 +272,27 @@ export default function SellerAnalytics() {
             )
         }
 
+        const tabProps = {
+            analyticsData: currentTabData,
+            timeRange,
+            loading: isCurrentTabLoading
+        }
+
         switch (activeTab) {
             case 'overview':
-                return (
-                    <OverviewTab
-                        analyticsData={currentTabData}
-                        timeRange={timeRange}
-                        loading={isLoading}
-                    />
-                )
+                return <OverviewTab {...tabProps} />
             case 'products':
-                return (
-                    <ProductsTab
-                        analyticsData={currentTabData}
-                        timeRange={timeRange}
-                        loading={isLoading}
-                    />
-                )
+                return <ProductsTab {...tabProps} />
             case 'sales':
-                return (
-                    <SalesTab
-                        analyticsData={currentTabData}
-                        timeRange={timeRange}
-                        loading={isLoading}
-                    />
-                )
+                return <SalesTab {...tabProps} />
             case 'revenue':
-                return (
-                    <RevenueTab
-                        analyticsData={currentTabData}
-                        timeRange={timeRange}
-                        loading={isLoading}
-                    />
-                )
+                return <RevenueTab {...tabProps} />
             case 'customers':
-                return (
-                    <CustomersTab
-                        analyticsData={currentTabData}
-                        timeRange={timeRange}
-                        loading={isLoading}
-                    />
-                )
+                return <CustomersTab {...tabProps} />
             default:
-                return (
-                    <OverviewTab
-                        analyticsData={currentTabData}
-                        timeRange={timeRange}
-                        loading={isLoading}
-                    />
-                )
+                return <OverviewTab {...tabProps} />
         }
-    }
+    }, [activeTab, currentTabData, timeRange, isCurrentTabLoading, currentTabError, refreshCurrentTab])
 
     return (
         <div className="min-h-screen bg-gray-900">
@@ -265,11 +303,12 @@ export default function SellerAnalytics() {
             />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Controls Header */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                     <div className="flex items-center gap-4">
                         <CustomSelect
                             value={timeRange}
-                            onChange={setTimeRange}
+                            onChange={handleTimeRangeChange}
                             options={TIME_RANGE_OPTIONS}
                             label="Time Range"
                         />
@@ -279,35 +318,34 @@ export default function SellerAnalytics() {
                         <button
                             className="flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-300 hover:text-white hover:border-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={refreshCurrentTab}
-                            disabled={loading[activeTab]}>
-                            <RefreshCw className={`w-4 h-4 ${loading[activeTab] ? 'animate-spin' : ''}`} />
+                            disabled={isCurrentTabLoading}>
+                            <RefreshCw className={`w-4 h-4 ${isCurrentTabLoading ? 'animate-spin' : ''}`} />
                             Refresh
                         </button>
                         <button 
                             className="flex items-center gap-2 px-4 py-2 bg-[#00FF89] hover:bg-[#00E67A] text-black font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={handleExport}
-                            disabled={!currentTabData || loading[activeTab]}>
+                            disabled={!currentTabData || isCurrentTabLoading}>
                             <Download className="w-4 h-4" />
                             Export
                         </button>
                     </div>
                 </div>
 
+                {/* Optimized Tab Navigation */}
                 <div className="mb-8">
                     <div className="border-b border-gray-800">
                         <nav className="-mb-px flex space-x-8 overflow-x-auto">
                             {SELLER_TAB_OPTIONS.map((tab) => {
                                 const IconComponent = getIconComponent(tab.icon)
                                 const isCurrentTab = activeTab === tab.value
-                                const cacheKey = getCacheKey(tab.value, timeRange)
-                                const hasData = !!tabCache[cacheKey]
-                                const isTabLoading = loading[tab.value]
+                                const status = tabStatuses[tab.value]
                                 
                                 return (
                                     <button
                                         key={tab.value}
                                         onClick={() => handleTabChange(tab.value)}
-                                        className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-base flex items-center gap-2 relative ${
+                                        className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-base flex items-center gap-2 relative transition-colors ${
                                             isCurrentTab
                                                 ? 'border-[#00FF89] text-[#00FF89]'
                                                 : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
@@ -315,11 +353,18 @@ export default function SellerAnalytics() {
                                         <IconComponent className="w-4 h-4" />
                                         {tab.label}
                                         
-                                        {isTabLoading && (
+                                        {/* Loading indicator */}
+                                        {status.isLoading && (
                                             <div className="w-2 h-2 bg-[#00FF89] rounded-full animate-pulse" />
                                         )}
                                         
-                                        {hasData && !isTabLoading && !isCurrentTab && (
+                                        {/* Error indicator */}
+                                        {status.hasError && !status.isLoading && (
+                                            <div className="w-2 h-2 bg-red-500 rounded-full" />
+                                        )}
+                                        
+                                        {/* Data available indicator */}
+                                        {status.hasData && !status.isLoading && !status.hasError && !isCurrentTab && (
                                             <div className="w-1.5 h-1.5 bg-gray-500 rounded-full" />
                                         )}
                                     </button>
@@ -329,13 +374,14 @@ export default function SellerAnalytics() {
                     </div>
                 </div>
 
+                {/* Optimized Content Area */}
                 <AnimatePresence mode="wait">
                     <motion.div
-                        key={activeTab}
+                        key={`${activeTab}-${timeRange}`}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.3 }}>
+                        transition={{ duration: 0.2 }}>
                         {renderTabContent()}
                     </motion.div>
                 </AnimatePresence>

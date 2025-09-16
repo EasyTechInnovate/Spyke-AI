@@ -8,6 +8,7 @@ import productModel from '../../model/product.model.js'
 import purchaseModel from '../../model/purchase.model.js'
 import sellerProfileModel from '../../model/seller.profile.model.js'
 import promocodeModel from '../../model/promocode.model.js'
+import Payout from '../../model/payout.model.js'
 
 dayjs.extend(utc)
 
@@ -1393,10 +1394,8 @@ export default {
                 matchQuery.requestedAt = { $gte: startDate }
             }
 
-            const PayoutModel = mongoose.model('Payout')
-
             // Payout status breakdown
-            const statusBreakdown = await PayoutModel.aggregate([
+            const statusBreakdown = await Payout.aggregate([
                 { $match: matchQuery },
                 {
                     $group: {
@@ -1409,7 +1408,7 @@ export default {
             ])
 
             // Daily payout trends
-            const dailyTrends = await PayoutModel.aggregate([
+            const dailyTrends = await Payout.aggregate([
                 { $match: { ...matchQuery, status: 'completed' } },
                 {
                     $group: {
@@ -1426,7 +1425,7 @@ export default {
             ])
 
             // Payout method breakdown
-            const methodBreakdown = await PayoutModel.aggregate([
+            const methodBreakdown = await Payout.aggregate([
                 { $match: matchQuery },
                 {
                     $group: {
@@ -1438,7 +1437,7 @@ export default {
             ])
 
             // Processing time analytics
-            const processingTimes = await PayoutModel.aggregate([
+            const processingTimes = await Payout.aggregate([
                 { $match: matchQuery },
                 {
                     $addFields: {
@@ -1468,7 +1467,7 @@ export default {
             ])
 
             // Top sellers by payout amount
-            const topSellersByPayout = await PayoutModel.aggregate([
+            const topSellersByPayout = await Payout.aggregate([
                 { $match: { ...matchQuery, status: 'completed' } },
                 {
                     $group: {
@@ -1499,7 +1498,7 @@ export default {
             ])
 
             // Platform revenue from fees
-            const platformRevenue = await PayoutModel.aggregate([
+            const platformRevenue = await Payout.aggregate([
                 { $match: { ...matchQuery, status: 'completed' } },
                 {
                     $group: {

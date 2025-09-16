@@ -237,13 +237,48 @@ const analyticsAPI = {
             }
         },
         
+        getPayouts: async (params = {}) => {
+            try {
+                const queryString = new URLSearchParams(params).toString()
+                const response = await apiClient.get(`v1/analytics/admin/payouts${queryString ? `?${queryString}` : ''}`)
+                return response.data || response
+            } catch (error) {
+                console.error('Error fetching payout analytics:', error)
+                throw error
+            }
+        },
+
         getTraffic: async (period = '30d') => {
             try {
                 const response = await apiClient.get(`v1/analytics/admin/traffic?period=${period}`)
                 return response.data || response
             } catch (error) {
                 console.error('Error fetching traffic analytics:', error)
-                throw error
+                return {
+                    data: {
+                        period,
+                        summary: {
+                            platformViews: 0,
+                            totalViews: 0,
+                            totalSales: 0,
+                            conversionRate: 0,
+                            newUsers: 0,
+                            engagementRate: 0
+                        },
+                        topViewedProducts: [],
+                        categoryViews: [],
+                        conversion: {
+                            totalViews: 0,
+                            totalSales: 0,
+                            avgConversionRate: 0
+                        },
+                        engagement: {
+                            totalNewUsers: 0,
+                            buyerUsers: 0,
+                            engagementRate: 0
+                        }
+                    }
+                }
             }
         }
     }

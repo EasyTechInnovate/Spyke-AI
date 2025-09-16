@@ -5,7 +5,6 @@ import { motion } from 'framer-motion'
 import { Users, UserPlus, UserCheck, Activity, TrendingUp, MapPin, Calendar } from 'lucide-react'
 import { ResponsiveContainer, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip, Area, Bar, Line, PieChart, Pie, Cell, AreaChart } from 'recharts'
 
-// Utility functions for formatting
 const formatNumber = (num) => {
     return new Intl.NumberFormat('en-US').format(num || 0)
 }
@@ -33,7 +32,6 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
         const startDate = new Date()
         startDate.setDate(endDate.getDate() - (days - 1))
 
-        // Create a map for quick lookup of existing data
         const dataMap = new Map()
         dailyUsers.forEach(item => {
             const dateKey = item._id?.date || item.date
@@ -46,7 +44,6 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
             }
         })
 
-        // Generate complete date range with placeholder data for missing dates
         const trends = []
         for (let i = 0; i < days; i++) {
             const currentDate = new Date(startDate)
@@ -71,21 +68,17 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
 
     useEffect(() => {
         if (analyticsData) {
-            // Process the passed analytics data instead of making API calls
             console.log('Analytics Data received:', analyticsData)
 
-            // Extract real data from passed analytics data
             const processedData = {
                 metrics: {
                     totalUsers: analyticsData.users?.pagination?.totalCount || 0,
                     newUsers: analyticsData.registrationTrend?.length || 0,
                     activeUsers: analyticsData.users?.users?.length || 0,
-                    growthRate: 0, // Calculate from trends if needed
-                    retentionRate: 0 // Calculate from user data if needed
+                    growthRate: 0,
+                    retentionRate: 0
                 },
-                // Transform registration trends to chart format
                 trends: generateTrendsWithAllDates(analyticsData.registrationTrend || [], timeRange),
-                // User activity data
                 activityTrends: generateTrendsWithAllDates(analyticsData.registrationTrend || [], timeRange),
                 topUsers: analyticsData.users?.users?.slice(0, 10).map((user) => ({
                     _id: user._id,
@@ -131,7 +124,6 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
         )
     }
 
-    // Ensure we have valid data before destructuring
     if (!usersData) {
         return (
             <div className="space-y-6">
@@ -153,16 +145,13 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
 
     const { metrics = {}, trends = [], activityTrends = [], topUsers = [], roleDistribution = [] } = usersData
 
-    // Ensure trends is a valid array
     const validTrends = Array.isArray(trends) ? trends : []
     const validActivityTrends = Array.isArray(activityTrends) ? activityTrends : []
 
-    // Colors for charts
     const CHART_COLORS = ['#00FF89', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981', '#F97316', '#6366F1']
 
     return (
         <div className="space-y-6">
-            {/* User Metrics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -237,7 +226,6 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
                 </motion.div>
             </div>
 
-            {/* User Registration & Activity Trends */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -246,7 +234,6 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-white">User Registration & Activity Trends</h3>
                     
-                    {/* Legend */}
                     <div className="flex items-center gap-4 text-xs">
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-[#00FF89] rounded-sm opacity-80"></div>
@@ -351,7 +338,6 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
             </motion.div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Role Distribution */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -404,7 +390,6 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                 </motion.div>
 
-                {/* Top Users Table */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -441,7 +426,6 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
                 </motion.div>
             </div>
 
-            {/* User Activity Summary */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

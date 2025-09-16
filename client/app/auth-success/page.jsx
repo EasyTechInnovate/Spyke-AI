@@ -173,17 +173,11 @@ function AuthSuccessContent() {
                     )}
                 </div>
 
-                {/* Additional Info */}
                 <div className="text-center mt-6">
                     <p className="text-gray-500 text-sm">
                         You're being signed in with Google
                     </p>
-                    {/* Debug info in development */}
-                    {process.env.NODE_ENV === 'development' && (
-                        <div className="mt-2 text-xs text-gray-600">
-                            Token: {searchParams.get('token')?.substring(0, 20)}...
-                        </div>
-                    )}
+                    
                 </div>
             </div>
         </div>

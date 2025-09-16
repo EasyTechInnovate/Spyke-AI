@@ -203,6 +203,18 @@ const payoutSchemas = {
             .optional()
     }),
 
+    getPayoutAnalytics: z.object({
+        period: z.string()
+            .regex(/^\d+$/, 'Period must be a number')
+            .optional(),
+        fromDate: z.string()
+            .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/, 'Invalid from date format')
+            .optional(),
+        toDate: z.string()
+            .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/, 'Invalid to date format')
+            .optional()
+    }),
+
     // URL parameters
     payoutIdParam: z.object({
         id: z.string()

@@ -24,7 +24,14 @@ export const ANALYTICS_TABS = {
     USERS: 'users',
     SALES: 'sales',
     PRODUCTS: 'products',
-    PERFORMANCE: 'performance'
+    PAYOUTS: 'payouts',
+    SELLERS: 'sellers',
+    PROMOCODES: 'promocodes',
+    REVENUE: 'revenue',
+    USER_TRENDS: 'user-trends',
+    SELLER_TRENDS: 'seller-trends',
+    FEEDBACK: 'feedback',
+    TRAFFIC: 'traffic'
 }
 
 export const ADMIN_TAB_OPTIONS = [
@@ -32,6 +39,14 @@ export const ADMIN_TAB_OPTIONS = [
     { value: ANALYTICS_TABS.USERS, label: 'Users', icon: 'Users' },
     { value: ANALYTICS_TABS.SALES, label: 'Sales', icon: 'ShoppingCart' },
     { value: ANALYTICS_TABS.PRODUCTS, label: 'Products', icon: 'Package' },
+    { value: ANALYTICS_TABS.PAYOUTS, label: 'Payouts', icon: 'DollarSign' },
+    { value: ANALYTICS_TABS.SELLERS, label: 'Sellers', icon: 'Users' },
+    { value: ANALYTICS_TABS.PROMOCODES, label: 'Promocodes', icon: 'Activity' },
+    { value: ANALYTICS_TABS.REVENUE, label: 'Revenue', icon: 'DollarSign' },
+    { value: ANALYTICS_TABS.USER_TRENDS, label: 'User Trends', icon: 'BarChart3' },
+    { value: ANALYTICS_TABS.SELLER_TRENDS, label: 'Seller Trends', icon: 'BarChart3' },
+    { value: ANALYTICS_TABS.FEEDBACK, label: 'Feedback', icon: 'Activity' },
+    { value: ANALYTICS_TABS.TRAFFIC, label: 'Traffic', icon: 'Activity' },
 ]
 
 export const SELLER_ANALYTICS_TABS = {

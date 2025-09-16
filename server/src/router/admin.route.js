@@ -25,6 +25,12 @@ router.route('/platform/settings/reset')
 router.route('/payouts')
     .get(authentication, authorization([EUserRole.ADMIN]), validateRequest(payoutSchemas.getPayouts, 'query'), payoutController.getPayouts)
 
+router.route('/payouts/analytics')
+    .get(authentication, authorization([EUserRole.ADMIN]), validateRequest(payoutSchemas.getPayoutAnalytics, 'query'), payoutController.getPayoutAnalytics)
+
+router.route('/payouts/bulk-approve')
+    .post(authentication, authorization([EUserRole.ADMIN]), validateRequest(payoutSchemas.bulkApprovePayouts), payoutController.bulkApprovePayout)
+
 router.route('/payouts/:id')
     .get(authentication, authorization([EUserRole.ADMIN]), validateRequest(payoutSchemas.payoutIdParam, 'params'), payoutController.getPayoutDetails)
 
@@ -45,11 +51,5 @@ router.route('/payouts/:id/processing')
 
 router.route('/payouts/:id/completed')
     .put(authentication, authorization([EUserRole.ADMIN]), validateRequest(payoutSchemas.payoutIdParam, 'params'), validateRequest(payoutSchemas.markAsCompleted), payoutController.markAsCompleted)
-
-router.route('/payouts/bulk-approve')
-    .post(authentication, authorization([EUserRole.ADMIN]), validateRequest(payoutSchemas.bulkApprovePayouts), payoutController.bulkApprovePayout)
-
-router.route('/payouts/analytics')
-    .get(authentication, authorization([EUserRole.ADMIN]), validateRequest(payoutSchemas.getEarnings, 'query'), payoutController.getPayoutAnalytics)
 
 export default router

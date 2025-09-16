@@ -89,6 +89,7 @@ export default function Notification({
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
             className="max-w-sm w-full cursor-pointer"
+            style={{ fontFamily: 'var(--font-league-spartan)' }}
             onClick={() => onClick?.(id)}>
             
             <div className={`
