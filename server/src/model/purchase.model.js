@@ -160,10 +160,15 @@ purchaseSchema.methods.processRefund = function (amount, reason) {
 purchaseSchema.statics.hasPurchased = async function (userId, productId) {
     const purchase = await this.findOne({
         userId,
-        'items.productId': productId,
-        'items.accessGranted': true,
+        items: {
+            $elemMatch: {
+                productId,
+                accessGranted: true
+            }
+        },
         paymentStatus: EPaymentStatus.COMPLETED
     })
+
     return !!purchase
 }
 
@@ -172,7 +177,7 @@ purchaseSchema.statics.getUserPurchases = async function (userId, options = {}) 
     const skip = (page - 1) * limit
     
     let matchStage = {
-        userId: new mongoose.Types.ObjectId(userId),
+        userId,
         paymentStatus: EPaymentStatus.COMPLETED,
         'items.accessGranted': true
     }
@@ -254,7 +259,7 @@ purchaseSchema.statics.getUserPurchasesByType = async function (userId) {
     const pipeline = [
         {
             $match: {
-                userId: new mongoose.Types.ObjectId(userId),
+                userId,
                 paymentStatus: EPaymentStatus.COMPLETED,
                 'items.accessGranted': true
             }
