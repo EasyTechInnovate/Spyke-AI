@@ -73,12 +73,14 @@ export default function OrderSummary({
 
                 {/* Show CartPromoDisplay only if no promo is applied */}
                 {!promocodeData && (
-                    <CartPromoDisplay
-                        cartItems={cartItems}
-                        onApplyPromo={handleApplyPromo}
-                        currentPromocode={promocodeData}
-                        promoLoading={promoLoading}
-                    />
+                    <div className="max-h-80 overflow-hidden">
+                        <CartPromoDisplay
+                            cartItems={cartItems}
+                            onApplyPromo={handleApplyPromo}
+                            currentPromocode={promocodeData}
+                            promoLoading={promoLoading}
+                        />
+                    </div>
                 )}
 
                 {/* Price Breakdown */}

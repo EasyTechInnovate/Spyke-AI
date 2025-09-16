@@ -332,6 +332,11 @@ export default function ProductPage() {
                 setTimeout(() => {
                     setAddingToCart(false)
                 }, 500)
+
+                // Refresh the page to update header cart count
+                setTimeout(() => {
+                    window.location.reload()
+                }, 1000) // Give time for notification to show
             } else {
                 setAddingToCart(false)
             }

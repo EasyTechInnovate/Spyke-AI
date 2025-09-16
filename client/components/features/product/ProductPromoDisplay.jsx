@@ -2,13 +2,16 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Tag, Copy, CheckCircle, Clock, Percent, DollarSign } from 'lucide-react'
+import { Tag, Copy, CheckCircle, Clock, Percent, DollarSign, Sparkles, ChevronDown, ChevronUp } from 'lucide-react'
 import { promocodeAPI } from '@/lib/api'
 
 export default function ProductPromoDisplay({ productId, productCategory }) {
     const [promocodes, setPromocodes] = useState([])
     const [loading, setLoading] = useState(true)
     const [copiedCode, setCopiedCode] = useState(null)
+    const [showAll, setShowAll] = useState(false) // State for expand/collapse
+    
+    const MAX_INITIAL_DISPLAY = 3 // Show only 3 promos initially
 
     useEffect(() => {
         if (productId) {
@@ -21,7 +24,7 @@ export default function ProductPromoDisplay({ productId, productCategory }) {
             setLoading(true)
             const response = await promocodeAPI.getPublicPromocodes({
                 status: 'active',
-                limit: 10
+                limit: 50 // Fetch more but display smartly
             })
             
             if (response?.promocodes) {
@@ -45,7 +48,23 @@ export default function ProductPromoDisplay({ productId, productCategory }) {
                            (!promo.applicableCategories || promo.applicableCategories.length === 0)
                 })
                 
-                setPromocodes(applicablePromos.slice(0, 3)) // Show max 3 promocodes
+                // Smart sorting: prioritize by discount value and expiry date
+                const sortedPromos = applicablePromos.sort((a, b) => {
+                    // First, sort by discount value (higher is better)
+                    const aValue = a.discountType === 'percentage' ? a.discountValue : (a.discountValue * 2) // Weight fixed discounts higher
+                    const bValue = b.discountType === 'percentage' ? b.discountValue : (b.discountValue * 2)
+                    
+                    if (aValue !== bValue) return bValue - aValue
+                    
+                    // If same discount, prioritize those expiring sooner
+                    if (a.validUntil && b.validUntil) {
+                        return new Date(a.validUntil) - new Date(b.validUntil)
+                    }
+                    
+                    return 0
+                })
+                
+                setPromocodes(sortedPromos)
             }
         } catch (error) {
             console.error('Failed to fetch promocodes:', error)
@@ -73,6 +92,10 @@ export default function ProductPromoDisplay({ productId, productCategory }) {
         return days > 0 ? days : 0
     }
 
+    // Get the promos to display
+    const promosToShow = showAll ? promocodes : promocodes.slice(0, MAX_INITIAL_DISPLAY)
+    const hasMorePromos = promocodes.length > MAX_INITIAL_DISPLAY
+
     if (loading) {
         return (
             <div className="mb-6">
@@ -81,7 +104,7 @@ export default function ProductPromoDisplay({ productId, productCategory }) {
                     <h3 className="text-sm font-medium text-gray-300">Available Offers</h3>
                 </div>
                 <div className="space-y-2">
-                    {[1, 2].map((i) => (
+                    {[1, 2, 3].map((i) => (
                         <div key={i} className="bg-gray-800/50 rounded-lg p-3 animate-pulse">
                             <div className="h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
                             <div className="h-3 bg-gray-700 rounded w-1/2"></div>
@@ -102,79 +125,125 @@ export default function ProductPromoDisplay({ productId, productCategory }) {
             animate={{ opacity: 1, y: 0 }}
             className="mb-6"
         >
-            <div className="flex items-center gap-2 mb-3">
-                <Tag className="w-4 h-4 text-[#00FF89]" />
-                <h3 className="text-sm font-medium text-gray-300">Available Offers</h3>
+            <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[#00FF89]" />
+                    <h3 className="text-sm font-medium text-gray-300">Available Offers</h3>
+                    <span className="text-xs text-gray-500">({promocodes.length} available)</span>
+                </div>
+                
+                {hasMorePromos && (
+                    <button
+                        onClick={() => setShowAll(!showAll)}
+                        className="flex items-center gap-1 text-xs text-[#00FF89] hover:text-[#00DD78] transition-colors"
+                    >
+                        {showAll ? (
+                            <>
+                                Show less
+                                <ChevronUp className="w-3 h-3" />
+                            </>
+                        ) : (
+                            <>
+                                View all {promocodes.length}
+                                <ChevronDown className="w-3 h-3" />
+                            </>
+                        )}
+                    </button>
+                )}
             </div>
             
             <div className="space-y-2">
-                <AnimatePresence>
-                    {promocodes.map((promocode, index) => {
-                        const daysRemaining = getDaysRemaining(promocode.validUntil)
-                        
-                        return (
-                            <motion.div
-                                key={promocode._id}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 20 }}
-                                transition={{ delay: index * 0.1 }}
-                                className="bg-gradient-to-r from-[#00FF89]/10 to-[#FFC050]/10 border border-[#00FF89]/30 rounded-lg p-3 hover:border-[#00FF89]/50 transition-all"
-                            >
-                                <div className="flex items-center justify-between">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            {promocode.discountType === 'percentage' ? (
-                                                <Percent className="w-4 h-4 text-[#00FF89]" />
-                                            ) : (
-                                                <DollarSign className="w-4 h-4 text-[#00FF89]" />
-                                            )}
-                                            <span className="font-bold text-[#00FF89] text-sm">
-                                                {formatDiscount(promocode)}
-                                            </span>
-                                            {daysRemaining !== null && daysRemaining <= 7 && (
-                                                <div className="flex items-center gap-1 text-xs text-yellow-500">
-                                                    <Clock className="w-3 h-3" />
-                                                    <span>{daysRemaining}d left</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                        
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs text-gray-400">Use code:</span>
-                                            <code className="bg-black/30 px-2 py-1 rounded text-xs font-mono text-white">
-                                                {promocode.code}
-                                            </code>
-                                        </div>
-                                        
-                                        {promocode.description && (
-                                            <p className="text-xs text-gray-400 mt-1 line-clamp-1">
-                                                {promocode.description}
-                                            </p>
-                                        )}
-                                    </div>
-                                    
-                                    <button
-                                        onClick={() => copyToClipboard(promocode.code)}
-                                        className={`p-2 rounded-lg transition-all ${
-                                            copiedCode === promocode.code
-                                                ? 'bg-[#00FF89] text-black'
-                                                : 'bg-white/10 text-gray-300 hover:bg-[#00FF89]/20 hover:text-[#00FF89]'
-                                        }`}
-                                        title="Copy code"
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={showAll ? 'expanded' : 'collapsed'}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                        className="space-y-2 overflow-hidden"
+                        style={{ maxHeight: showAll ? '400px' : 'auto' }}
+                    >
+                        <div className={showAll ? 'overflow-y-auto space-y-2 max-h-80' : 'space-y-2'}>
+                            {promosToShow.map((promocode, index) => {
+                                const daysRemaining = getDaysRemaining(promocode.validUntil)
+                                
+                                return (
+                                    <motion.div
+                                        key={promocode._id}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: showAll ? 0 : index * 0.1 }}
+                                        className="bg-gradient-to-r from-[#00FF89]/10 to-[#FFC050]/10 border border-[#00FF89]/30 rounded-lg p-3 hover:border-[#00FF89]/50 transition-all"
                                     >
-                                        {copiedCode === promocode.code ? (
-                                            <CheckCircle className="w-4 h-4" />
-                                        ) : (
-                                            <Copy className="w-4 h-4" />
-                                        )}
-                                    </button>
-                                </div>
-                            </motion.div>
-                        )
-                    })}
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    {promocode.discountType === 'percentage' ? (
+                                                        <Percent className="w-4 h-4 text-[#00FF89]" />
+                                                    ) : (
+                                                        <DollarSign className="w-4 h-4 text-[#00FF89]" />
+                                                    )}
+                                                    <span className="font-bold text-[#00FF89] text-sm">
+                                                        {formatDiscount(promocode)}
+                                                    </span>
+                                                    {daysRemaining !== null && daysRemaining <= 7 && (
+                                                        <div className="flex items-center gap-1 text-xs text-yellow-500">
+                                                            <Clock className="w-3 h-3" />
+                                                            <span>{daysRemaining}d left</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs text-gray-400">Use code:</span>
+                                                    <code className="bg-black/30 px-2 py-1 rounded text-xs font-mono text-white">
+                                                        {promocode.code}
+                                                    </code>
+                                                </div>
+                                                
+                                                {promocode.description && (
+                                                    <p className="text-xs text-gray-400 mt-1 line-clamp-1">
+                                                        {promocode.description}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            
+                                            <button
+                                                onClick={() => copyToClipboard(promocode.code)}
+                                                className={`p-2 rounded-lg transition-all ${
+                                                    copiedCode === promocode.code
+                                                        ? 'bg-[#00FF89] text-black'
+                                                        : 'bg-white/10 text-gray-300 hover:bg-[#00FF89]/20 hover:text-[#00FF89]'
+                                                }`}
+                                                title="Copy code"
+                                            >
+                                                {copiedCode === promocode.code ? (
+                                                    <CheckCircle className="w-4 h-4" />
+                                                ) : (
+                                                    <Copy className="w-4 h-4" />
+                                                )}
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )
+                            })}
+                        </div>
+                    </motion.div>
                 </AnimatePresence>
             </div>
+            
+            {/* Summary when collapsed */}
+            {!showAll && hasMorePromos && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mt-3 p-2 bg-gray-800/30 rounded-lg border border-gray-700/50"
+                >
+                    <p className="text-xs text-gray-400 text-center">
+                        Showing top {MAX_INITIAL_DISPLAY} offers • {promocodes.length - MAX_INITIAL_DISPLAY} more available
+                    </p>
+                </motion.div>
+            )}
         </motion.div>
     )
 }
