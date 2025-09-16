@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import ProductPromoDisplay from '@/components/features/product/ProductPromoDisplay'
 import {
     Heart,
     Share2,
@@ -561,6 +562,12 @@ export default function ProductHero({
                                 )}
                             </div>
                         </motion.div>
+
+                        {/* Promocode Display */}
+                        <ProductPromoDisplay 
+                            productId={product._id}
+                            productCategory={product.category}
+                        />
 
                         {/* Seller Info */}
                         <motion.div

@@ -41,12 +41,17 @@ export default function EnhancedProductShowcase({
             }
 
             // Category filter
-            if (filters.category !== 'all' && product.category !== filters.category) {
+            if (filters?.category && filters.category !== 'all' && product.category !== filters.category) {
+                return false
+            }
+
+            // Type filter
+            if (filters?.type && filters.type !== 'all' && product.type !== filters.type) {
                 return false
             }
 
             // Price range filter
-            if (filters.priceRange !== 'all') {
+            if (filters?.priceRange && filters.priceRange !== 'all') {
                 const price = product.price || 0
                 switch (filters.priceRange) {
                     case 'free': return price === 0

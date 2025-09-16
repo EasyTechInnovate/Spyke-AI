@@ -357,9 +357,16 @@ export default function PublicSellerProfile() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                     {similarSellers.map((similarSeller) => (
                                         <SimilarSellerCard
-                                            key={similarSeller.id}
+                                            key={similarSeller.id || similarSeller._id}
                                             seller={similarSeller}
-                                            onClick={() => (window.location.href = `/profile/${similarSeller.id}`)}
+                                            onClick={() => {
+                                                const sellerId = similarSeller.id || similarSeller._id
+                                                if (sellerId) {
+                                                    window.location.href = `/profile/${sellerId}`
+                                                } else {
+                                                    console.error('No seller ID found:', similarSeller)
+                                                }
+                                            }}
                                         />
                                     ))}
                                 </div>

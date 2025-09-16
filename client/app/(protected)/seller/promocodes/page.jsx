@@ -7,12 +7,12 @@ import { Button } from '@/components/shared/ui/button'
 import Input from '@/components/shared/ui/input'
 import Card from '@/components/shared/ui/card'
 import Badge from '@/components/shared/ui/badge'
-import { 
-    Plus, 
-    Search, 
-    Edit, 
-    Trash2, 
-    ToggleLeft, 
+import {
+    Plus,
+    Search,
+    Edit,
+    Trash2,
+    ToggleLeft,
     ToggleRight,
     BarChart,
     Copy,
@@ -31,15 +31,13 @@ import PromocodeForm from '@/components/features/promocode/PromocodeForm'
 import PromocodeStats from '@/components/features/promocode/PromocodeStats'
 import PromocodeDetails from '@/components/features/promocode/PromocodeDetails'
 import LoadingSpinner from '@/components/shared/ui/LoadingSpinner'
-
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
-// Sidebar is now handled by the layout
 
 export default function PromocodesPage() {
     // Inline notification state
     const [notification, setNotification] = useState(null)
 
-    // Show inline notification messages  
+    // Show inline notification messages
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
         // Auto-dismiss after 5 seconds
@@ -52,7 +50,6 @@ export default function PromocodesPage() {
     const [sellerProfile, setSellerProfile] = useState(null)
     const [promocodes, setPromocodes] = useState([])
     const [loading, setLoading] = useState(true)
-    // isMobile state removed - handled by responsive sidebar
     const [searchTerm, setSearchTerm] = useState('')
     const [filterStatus, setFilterStatus] = useState('all')
     const [showForm, setShowForm] = useState(false)
@@ -86,8 +83,6 @@ export default function PromocodesPage() {
         fetchPromocodes()
     }, [pagination.page, filterStatus])
 
-    // Mobile check removed - handled by responsive sidebar
-
     // Keyboard shortcuts
     useEffect(() => {
         const handleKeyPress = (e) => {
@@ -113,7 +108,9 @@ export default function PromocodesPage() {
             const response = await promocodeAPI.getPromocodes({
                 page: pagination.page,
                 limit: pagination.limit,
-                status: filterStatus !== 'all' ? filterStatus : undefined,
+                // Fix: Map frontend status to backend isActive
+                ...(filterStatus === 'active' && { isActive: true }),
+                ...(filterStatus === 'inactive' && { isActive: false }),
                 search: searchTerm || undefined
             })
 
@@ -217,7 +214,7 @@ export default function PromocodesPage() {
     }
 
     // Calculate stats
-    const activeCount = promocodes.filter(p => p.isActive).length
+    const activeCount = promocodes.filter((p) => p.isActive).length
     const totalUses = promocodes.reduce((sum, p) => sum + (p.currentUsageCount || 0), 0)
     // Calculate total discount from usage history
     const totalDiscount = promocodes.reduce((sum, p) => {
@@ -238,7 +235,6 @@ export default function PromocodesPage() {
                 />
             )}
 
-            
             <div className="p-4 sm:p-6 lg:p-8">
                 {/* Header */}
                 <div className="mb-8 relative">
@@ -248,7 +244,7 @@ export default function PromocodesPage() {
                             <div className="p-3 bg-[#00FF89]/10 rounded-xl">
                                 <Tag className="w-8 h-8 text-[#00FF89]" />
                             </div>
-                            <h1 className="text-4xl font-bold text-white font-[var(--font-league-spartan)]">
+                            <h1 className="text-4xl font-bold text-white">
                                 Promocode Management
                             </h1>
                         </div>
@@ -262,12 +258,12 @@ export default function PromocodesPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-gray-500 mb-1">Total Codes</p>
-                                <p className="text-3xl font-bold text-white">{pagination.total}</p>
+                                <p className="text-3xl font-bold text-white">{promocodes.length}</p>
                             </div>
                             <Tag className="w-8 h-8 text-gray-600 group-hover:text-[#00FF89] transition-colors" />
                         </div>
                     </div>
-                    
+
                     <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6 hover:border-[#00FF89]/50 transition-all group">
                         <div className="flex items-center justify-between">
                             <div>
@@ -277,7 +273,7 @@ export default function PromocodesPage() {
                             <CheckCircle className="w-8 h-8 text-[#00FF89]" />
                         </div>
                     </div>
-                    
+
                     <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6 hover:border-[#00FF89]/50 transition-all group">
                         <div className="flex items-center justify-between">
                             <div>
@@ -287,7 +283,7 @@ export default function PromocodesPage() {
                             <BarChart className="w-8 h-8 text-[#FFC050]" />
                         </div>
                     </div>
-                    
+
                     <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6 hover:border-[#00FF89]/50 transition-all group">
                         <div className="flex items-center justify-between">
                             <div>
@@ -302,7 +298,9 @@ export default function PromocodesPage() {
                 {/* Controls */}
                 <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6 mb-8">
                     <div className="flex flex-col lg:flex-row gap-4">
-                        <form onSubmit={handleSearch} className="flex-1 flex gap-3">
+                        <form
+                            onSubmit={handleSearch}
+                            className="flex-1 flex gap-3">
                             <input
                                 id="promocode-search"
                                 type="text"
@@ -313,8 +311,7 @@ export default function PromocodesPage() {
                             />
                             <button
                                 type="submit"
-                                className="px-6 py-3 bg-[#2a2a2a] border border-gray-700 rounded-lg text-white hover:bg-[#00FF89]/10 hover:border-[#00FF89] transition-all flex items-center gap-2"
-                            >
+                                className="px-6 py-3 bg-[#2a2a2a] border border-gray-700 rounded-lg text-white hover:bg-[#00FF89]/10 hover:border-[#00FF89] transition-all flex items-center gap-2">
                                 <Search className="w-5 h-5" />
                                 Search
                             </button>
@@ -324,8 +321,7 @@ export default function PromocodesPage() {
                             <select
                                 value={filterStatus}
                                 onChange={(e) => setFilterStatus(e.target.value)}
-                                className="px-6 py-3 bg-[#2a2a2a] border border-gray-700 rounded-lg text-white focus:border-[#00FF89] focus:outline-none transition-all"
-                            >
+                                className="px-6 py-3 bg-[#2a2a2a] border border-gray-700 rounded-lg text-white focus:border-[#00FF89] focus:outline-none transition-all">
                                 <option value="all">All Status</option>
                                 <option value="active">Active Only</option>
                                 <option value="inactive">Inactive Only</option>
@@ -335,8 +331,7 @@ export default function PromocodesPage() {
                             <button
                                 onClick={() => handleCreateEdit()}
                                 className="px-6 py-3 bg-[#00FF89] text-[#121212] rounded-lg font-semibold hover:bg-[#00DD78] transition-all flex items-center gap-2 group relative"
-                                title="Create new promocode (⌘N)"
-                            >
+                                title="Create new promocode (⌘N)">
                                 <Plus className="w-5 h-5" />
                                 Create Promocode
                                 <Sparkles className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -353,8 +348,8 @@ export default function PromocodesPage() {
                             <div>
                                 <h3 className="font-semibold text-[#00FF89] mb-1">Pro Tip: Boost Your Sales with Promocodes</h3>
                                 <p className="text-gray-300">
-                                    Create time-limited offers, percentage discounts, or fixed amount promotions to incentivize purchases. 
-                                    Track performance with detailed analytics.
+                                    Create time-limited offers, percentage discounts, or fixed amount promotions to incentivize purchases. Track
+                                    performance with detailed analytics.
                                 </p>
                             </div>
                         </div>
@@ -368,7 +363,9 @@ export default function PromocodesPage() {
                             <div className="flex items-center gap-6">
                                 <div>
                                     <p className="text-xs text-gray-500">Active Codes</p>
-                                    <p className="text-lg font-bold text-[#00FF89]">{activeCount} of {pagination.total}</p>
+                                    <p className="text-lg font-bold text-[#00FF89]">
+                                        {activeCount} of {promocodes.length}
+                                    </p>
                                 </div>
                                 <div className="h-8 w-px bg-gray-700" />
                                 <div>
@@ -384,9 +381,7 @@ export default function PromocodesPage() {
                             <div className="text-right">
                                 <p className="text-xs text-gray-500">Most Used Code</p>
                                 <p className="text-sm font-medium text-white">
-                                    {promocodes.reduce((prev, current) => 
-                                        (prev.currentUsageCount > current.currentUsageCount) ? prev : current
-                                    ).code}
+                                    {promocodes.reduce((prev, current) => (prev.currentUsageCount > current.currentUsageCount ? prev : current)).code}
                                 </p>
                             </div>
                         </div>
@@ -408,8 +403,7 @@ export default function PromocodesPage() {
                         </p>
                         <button
                             onClick={() => handleCreateEdit()}
-                            className="px-6 py-3 bg-[#00FF89] text-[#121212] rounded-lg font-semibold hover:bg-[#00DD78] transition-all inline-flex items-center gap-2"
-                        >
+                            className="px-6 py-3 bg-[#00FF89] text-[#121212] rounded-lg font-semibold hover:bg-[#00DD78] transition-all inline-flex items-center gap-2">
                             <Plus className="w-5 h-5" />
                             Create Your First Promocode
                         </button>
@@ -417,23 +411,20 @@ export default function PromocodesPage() {
                 ) : (
                     <div className="grid gap-4">
                         {promocodes.map((promocode) => {
-                            const usagePercentage = promocode.usageLimit 
-                                ? Math.round((promocode.currentUsageCount / promocode.usageLimit) * 100)
-                                : 0
-                            const isExpiringSoon = promocode.validUntil && 
-                                new Date(promocode.validUntil) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-                            
+                            const usagePercentage = promocode.usageLimit ? Math.round((promocode.currentUsageCount / promocode.usageLimit) * 100) : 0
+                            const isExpiringSoon =
+                                promocode.validUntil && new Date(promocode.validUntil) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+
                             return (
-                                <div 
-                                    key={promocode._id} 
+                                <div
+                                    key={promocode._id}
                                     className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-4 hover:border-[#00FF89]/50 transition-all group relative overflow-hidden cursor-pointer"
                                     onClick={(e) => {
                                         // Don't open details if clicking on action buttons
                                         if (e.target.closest('button')) return
                                         handleShowDetails(promocode)
                                     }}
-                                    title="Click to view details"
-                                >
+                                    title="Click to view details">
                                     {/* Hover Gradient Effect */}
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00FF89]/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
                                     <div className="flex items-center gap-4">
@@ -441,26 +432,22 @@ export default function PromocodesPage() {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-3 mb-1">
                                                 <h3 className="text-lg font-bold text-white font-mono">{promocode.code}</h3>
-                                                <Badge 
+                                                <Badge
                                                     variant={promocode.isActive ? 'success' : 'secondary'}
-                                                    className="px-2 py-0.5 text-xs"
-                                                >
+                                                    className="px-2 py-0.5 text-xs">
                                                     {promocode.isActive ? 'Active' : 'Inactive'}
                                                 </Badge>
                                                 {isExpiringSoon && promocode.isActive && (
-                                                    <Badge 
+                                                    <Badge
                                                         variant="warning"
-                                                        className="px-2 py-0.5 text-xs bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
-                                                    >
+                                                        className="px-2 py-0.5 text-xs bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
                                                         <AlertCircle className="w-3 h-3 mr-1" />
                                                         Expiring Soon
                                                     </Badge>
                                                 )}
                                             </div>
-                                            
-                                            {promocode.description && (
-                                                <p className="text-sm text-gray-400 truncate">{promocode.description}</p>
-                                            )}
+
+                                            {promocode.description && <p className="text-sm text-gray-400 truncate">{promocode.description}</p>}
                                         </div>
 
                                         {/* Discount Value */}
@@ -483,21 +470,23 @@ export default function PromocodesPage() {
                                                     {promocode.currentUsageCount || 0}/{promocode.usageLimit || '∞'}
                                                 </p>
                                             </div>
-                                            
+
                                             {promocode.minimumOrderAmount && (
                                                 <div className="text-center">
                                                     <p className="text-gray-500 text-xs">Min</p>
                                                     <p className="font-semibold text-white">${promocode.minimumOrderAmount}</p>
                                                 </div>
                                             )}
-                                            
+
                                             <div className="text-center">
                                                 <p className="text-gray-500 text-xs">Expires</p>
                                                 <p className="font-semibold text-white">
-                                                    {promocode.validUntil 
-                                                        ? new Date(promocode.validUntil).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                                                        : 'Never'
-                                                    }
+                                                    {promocode.validUntil
+                                                        ? new Date(promocode.validUntil).toLocaleDateString('en-US', {
+                                                              month: 'short',
+                                                              day: 'numeric'
+                                                          })
+                                                        : 'Never'}
                                                 </p>
                                             </div>
                                         </div>
@@ -512,11 +501,11 @@ export default function PromocodesPage() {
                                                 <div className="w-full bg-gray-700 rounded-full h-1.5">
                                                     <div
                                                         className={`h-1.5 rounded-full transition-all duration-500 ${
-                                                            usagePercentage >= 80 
-                                                                ? 'bg-red-500' 
-                                                                : usagePercentage >= 50 
-                                                                ? 'bg-yellow-500' 
-                                                                : 'bg-[#00FF89]'
+                                                            usagePercentage >= 80
+                                                                ? 'bg-red-500'
+                                                                : usagePercentage >= 50
+                                                                  ? 'bg-yellow-500'
+                                                                  : 'bg-[#00FF89]'
                                                         }`}
                                                         style={{ width: `${usagePercentage}%` }}
                                                     />
@@ -534,22 +523,18 @@ export default function PromocodesPage() {
                                                         : 'bg-[#2a2a2a] border border-gray-700 text-white hover:bg-[#00FF89]/10 hover:border-[#00FF89]'
                                                 }`}
                                                 title="Copy code"
-                                            >
-                                                {copiedCode === promocode.code ? (
-                                                    <CheckCircle className="w-4 h-4" />
-                                                ) : (
-                                                    <Copy className="w-4 h-4" />
-                                                )}
+                                                aria-label={`Copy promocode ${promocode.code}`}>
+                                                {copiedCode === promocode.code ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                                             </button>
-                                            
+
                                             <button
                                                 onClick={() => handleShowStats(promocode)}
                                                 className="p-2 bg-[#2a2a2a] border border-gray-700 rounded-lg text-white hover:bg-[#00FF89]/10 hover:border-[#00FF89] transition-all"
                                                 title="View statistics"
-                                            >
+                                                aria-label={`View statistics for ${promocode.code}`}>
                                                 <BarChart className="w-4 h-4" />
                                             </button>
-                                            
+
                                             <button
                                                 onClick={() => handleToggleStatus(promocode._id, promocode.isActive)}
                                                 className={`p-2 rounded-lg transition-all ${
@@ -558,19 +543,16 @@ export default function PromocodesPage() {
                                                         : 'bg-[#2a2a2a] border border-gray-700 text-gray-400 hover:text-white hover:border-gray-600'
                                                 }`}
                                                 title={promocode.isActive ? 'Deactivate' : 'Activate'}
-                                            >
-                                                {promocode.isActive ? (
-                                                    <ToggleRight className="w-4 h-4" />
-                                                ) : (
-                                                    <ToggleLeft className="w-4 h-4" />
-                                                )}
+                                                aria-label={`${promocode.isActive ? 'Deactivate' : 'Activate'} promocode ${promocode.code}`}>
+                                                {promocode.isActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                                                <span className="sr-only">{promocode.isActive ? 'Active' : 'Inactive'}</span>
                                             </button>
-                                            
+
                                             <button
                                                 onClick={() => handleShowDetails(promocode)}
                                                 className="p-2 bg-[#2a2a2a] border border-gray-700 rounded-lg text-white hover:bg-[#00FF89]/10 hover:border-[#00FF89] transition-all"
                                                 title="View details"
-                                            >
+                                                aria-label={`View details for ${promocode.code}`}>
                                                 <MoreVertical className="w-4 h-4" />
                                             </button>
                                         </div>
@@ -593,10 +575,9 @@ export default function PromocodesPage() {
                                         <div className="flex-1">
                                             <span className="text-gray-500">Expires: </span>
                                             <span className="text-white font-medium">
-                                                {promocode.validUntil 
+                                                {promocode.validUntil
                                                     ? new Date(promocode.validUntil).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                                                    : 'Never'
-                                                }
+                                                    : 'Never'}
                                             </span>
                                         </div>
                                     </div>
@@ -615,12 +596,12 @@ export default function PromocodesPage() {
                                                 {promocode.applicableCategories.length} Categories
                                             </span>
                                         )}
-                                        {(!promocode.applicableProducts || promocode.applicableProducts.length === 0) && 
-                                         (!promocode.applicableCategories || promocode.applicableCategories.length === 0) && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded-full">
-                                                All Products
-                                            </span>
-                                        )}
+                                        {(!promocode.applicableProducts || promocode.applicableProducts.length === 0) &&
+                                            (!promocode.applicableCategories || promocode.applicableCategories.length === 0) && (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded-full">
+                                                    All Products
+                                                </span>
+                                            )}
                                     </div>
                                 </div>
                             )
@@ -634,24 +615,23 @@ export default function PromocodesPage() {
                         <button
                             disabled={pagination.page === 1}
                             onClick={() => setPagination({ ...pagination, page: pagination.page - 1 })}
-                            className="px-6 py-3 bg-[#2a2a2a] border border-gray-700 rounded-lg text-white hover:bg-[#00FF89]/10 hover:border-[#00FF89] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
+                            className="px-6 py-3 bg-[#2a2a2a] border border-gray-700 rounded-lg text-white hover:bg-[#00FF89]/10 hover:border-[#00FF89] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                             Previous
                         </button>
-                        
+
                         <div className="flex items-center gap-2">
                             {[...Array(Math.min(5, pagination.totalPages))].map((_, i) => {
-                                let pageNum;
+                                let pageNum
                                 if (pagination.totalPages <= 5) {
-                                    pageNum = i + 1;
+                                    pageNum = i + 1
                                 } else if (pagination.page <= 3) {
-                                    pageNum = i + 1;
+                                    pageNum = i + 1
                                 } else if (pagination.page >= pagination.totalPages - 2) {
-                                    pageNum = pagination.totalPages - 4 + i;
+                                    pageNum = pagination.totalPages - 4 + i
                                 } else {
-                                    pageNum = pagination.page - 2 + i;
+                                    pageNum = pagination.page - 2 + i
                                 }
-                                
+
                                 return (
                                     <button
                                         key={pageNum}
@@ -660,19 +640,17 @@ export default function PromocodesPage() {
                                             pagination.page === pageNum
                                                 ? 'bg-[#00FF89] text-[#121212]'
                                                 : 'bg-[#2a2a2a] border border-gray-700 text-white hover:border-[#00FF89]'
-                                        }`}
-                                    >
+                                        }`}>
                                         {pageNum}
                                     </button>
-                                );
+                                )
                             })}
                         </div>
-                        
+
                         <button
                             disabled={pagination.page === pagination.totalPages}
                             onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}
-                            className="px-6 py-3 bg-[#2a2a2a] border border-gray-700 rounded-lg text-white hover:bg-[#00FF89]/10 hover:border-[#00FF89] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
+                            className="px-6 py-3 bg-[#2a2a2a] border border-gray-700 rounded-lg text-white hover:bg-[#00FF89]/10 hover:border-[#00FF89] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                             Next
                         </button>
                     </div>
@@ -706,3 +684,4 @@ export default function PromocodesPage() {
         </div>
     )
 }
+

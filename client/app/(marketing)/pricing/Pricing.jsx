@@ -53,7 +53,6 @@ const plans = [
 export default function PricingPage() {
     return (
         <>
-            <Header />
             <Container className="py-20">
                 <div className="text-center mb-16">
                     <h1 className="text-4xl font-bold text-gray-900 mb-4">

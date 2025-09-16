@@ -23,6 +23,11 @@ class ProductsAPI {
         return apiClient.get(`v1/products/${slug}`)
     }
     
+    // Get single product by ID
+    async getProductById(id) {
+        return apiClient.get(`v1/products/${id}`)
+    }
+    
     async getProduct(productIdOrSlug) {
         return apiClient.get(`v1/products/${productIdOrSlug}`)
     }

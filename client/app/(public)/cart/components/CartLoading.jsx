@@ -6,7 +6,6 @@ import Container from '@/components/shared/layout/Container'
 export default function CartLoading() {
     return (
         <div className="min-h-screen bg-[#121212]">
-            <Header />
             <Container>
                 <div className="pt-24 pb-16">
                     <div className="flex items-center justify-center min-h-[400px]">

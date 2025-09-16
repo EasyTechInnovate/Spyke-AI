@@ -137,7 +137,6 @@ export default function Dashboard() {
     if (loading) {
         return (
             <div className="min-h-screen bg-black">
-                <Header />
                 <Container>
                     <div className="pt-24 pb-16">
                         <div className="flex items-center justify-center min-h-[400px]">
@@ -154,7 +153,6 @@ export default function Dashboard() {
 
     return (
         <div className="min-h-screen bg-black text-white">
-            <Header />
 
             <main className="pt-24 pb-16">
                 <Container>

@@ -22,7 +22,7 @@ export default function ProductBreadcrumb({ product }) {
 
     return (
         <section
-            className="pt-20 pb-4 border-b"
+            className="pt-4 pb-4 border-b"
             style={{ borderColor: DESIGN_TOKENS.colors.background.elevated }}>
             <DSContainer maxWidth="hero" padding="responsive">
                 <nav aria-label="Breadcrumb">

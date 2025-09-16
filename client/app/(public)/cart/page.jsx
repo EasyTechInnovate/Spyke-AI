@@ -54,14 +54,15 @@ export default function CartPage() {
         [removeFromCart]
     )
 
-    const handleApplyPromo = useCallback(async () => {
-        if (!promoCode.trim()) return
+    const handleApplyPromo = useCallback(async (code) => {
+        const codeToApply = code || promoCode?.trim()
+        if (!codeToApply) return
 
         setPromoLoading(true)
         setPromoError('')
 
         try {
-            await applyPromocode(promoCode.trim())
+            await applyPromocode(codeToApply)
             setPromoCode('')
         } catch (error) {
             setPromoError(error.message || 'Invalid promo code')
@@ -138,6 +139,7 @@ export default function CartPage() {
                                 handleApplyPromo={handleApplyPromo}
                                 handleRemovePromo={handleRemovePromo}
                                 handleCheckout={handleCheckout}
+                                cartItems={cartItems}
                             />
                         </div>
 

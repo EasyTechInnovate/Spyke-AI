@@ -29,10 +29,12 @@ import ProductHowItWorks from '@/components/product/ProductHowItWorks'
 import ProductSpecs from '@/components/product/ProductSpecs'
 import ProductFAQ from '@/components/product/ProductFAQ'
 import ProductReviews from '@/components/product/ProductReviews'
+import ProductPromoDisplay from '@/components/features/product/ProductPromoDisplay'
 import { ErrorBoundary } from 'next/dist/client/components/error-boundary'
 import ProductBreadcrumb from '@/components/product/ProductBreadcrumb'
 import ProductHero from '@/components/product/ProductHero'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
+import Notification from '@/components/shared/Notification'
 
 const PRODUCT_TABS = [
     {
@@ -114,17 +116,20 @@ const getSafeSellerData = (data) => {
 }
 
 export default function ProductPage() {
-    // Inline notification state
-    const [notification, setNotification] = useState(null)
+    // Simple notification state
+    const [notifications, setNotifications] = useState([])
 
-    // Show inline notification messages
-    const showMessage = (message, type = 'info') => {
-        setNotification({ message, type })
-        setTimeout(() => setNotification(null), 5000)
-    }
+    // Add notification function
+    const addNotification = useCallback((message, type = 'info') => {
+        const id = Date.now() + Math.random()
+        const newNotification = { id, message, type }
+        setNotifications((prev) => [...prev, newNotification])
+    }, [])
 
-    // Clear notification
-    const clearNotification = () => setNotification(null)
+    // Remove notification function
+    const removeNotification = useCallback((id) => {
+        setNotifications((prev) => prev.filter((notification) => notification.id !== id))
+    }, [])
 
     const params = useParams()
     const router = useRouter()
@@ -145,6 +150,7 @@ export default function ProductPage() {
     const [isUpvoting, setIsUpvoting] = useState(false)
     const [showCopied, setShowCopied] = useState(false)
     const [showStickyBar, setShowStickyBar] = useState(false)
+    const [addingToCart, setAddingToCart] = useState(false)
 
     // Tab state
     const [activeTab, setActiveTab] = useState('overview')
@@ -176,6 +182,7 @@ export default function ProductPage() {
         return Math.round(product.originalPrice - product.price)
     }, [product])
 
+    // Clean hasPurchased checking - only rely on API data
     const hasPurchased = useMemo(() => {
         return product?.userAccess?.hasPurchased || false
     }, [product])
@@ -285,19 +292,22 @@ export default function ProductPage() {
         }
 
         if (hasPurchased) {
-            showMessage('You already own this product', 'info')
+            addNotification('You already own this product', 'info')
             return
         }
         if (isOwner) {
-            showMessage("You can't add your own product to cart", 'info')
+            addNotification("You can't add your own product to cart", 'info')
             return
         }
 
         const alreadyInCart = mounted && !cartLoading && isInCart && (isInCart(product._id) || isInCart(product.id))
         if (alreadyInCart) {
-            showMessage('Product is already in cart', 'info')
+            addNotification('Product is already in cart', 'info')
             return
         }
+
+        // Set loading state for the button
+        setAddingToCart(true)
 
         const cartProduct = {
             id: product._id,
@@ -313,21 +323,58 @@ export default function ProductPage() {
         }
 
         try {
-            await addToCart(cartProduct)
+            const success = await addToCart(cartProduct)
+            if (success) {
+                // Show success message with e-commerce style
+                addNotification(`"${product.title}" has been added to your cart!`, 'success')
+
+                // Auto-dismiss loading state
+                setTimeout(() => {
+                    setAddingToCart(false)
+                }, 500)
+            } else {
+                setAddingToCart(false)
+            }
         } catch (error) {
             console.log('🚨 Unexpected error in handleAddToCart:', error)
-            showMessage('Failed to add to cart', 'error')
+
+            // Check for specific error messages and show appropriate notifications
+            const errorMessage = error.message || 'Failed to add to cart. Please try again.'
+
+            if (errorMessage.includes('already purchased')) {
+                addNotification('You have already purchased this product', 'warning')
+            } else if (errorMessage.includes('already in cart')) {
+                addNotification('This product is already in your cart', 'info')
+            } else if (errorMessage.includes('out of stock')) {
+                addNotification('This product is currently out of stock', 'error')
+            } else if (errorMessage.includes('unauthorized') || errorMessage.includes('authentication')) {
+                addNotification('Please sign in to add items to cart', 'warning')
+            } else {
+                addNotification(errorMessage, 'error')
+            }
+
+            setAddingToCart(false)
         }
-    }, [product, hasPurchased, isOwner, mounted, cartLoading, isInCart, addToCart, showMessage, isAuthenticated, router, productSlug])
+    }, [product, hasPurchased, isOwner, mounted, cartLoading, isInCart, addToCart, addNotification, isAuthenticated, router, productSlug])
 
     const handleBuyNow = useCallback(async () => {
+        if (!isAuthenticated) {
+            try {
+                const redirectTo = typeof window !== 'undefined' ? window.location.pathname + window.location.search : `/products/${productSlug}`
+                router.push(`/signin?redirect=${encodeURIComponent(redirectTo)}`)
+            } catch (_) {
+                router.push('/signin')
+            }
+            return
+        }
+
         if (hasPurchased) {
-            showMessage('You already own this product', 'info')
+            addNotification('You have already purchased this product', 'info')
             return
         }
 
         if (isOwner) {
-            showMessage("You can't purchase your own product", 'info')
+            addNotification("You can't purchase your own product", 'info')
             return
         }
 
@@ -352,15 +399,29 @@ export default function ProductPage() {
                     const success = await addToCart(cartProduct)
                     if (!success) return
                 } catch (error) {
-                    console.log('🚨 Unexpected error in handleBuyNow:', error)
-                    showMessage('An unexpected error occurred', 'error')
+                    console.log('🚨 Error in handleBuyNow addToCart:', error)
+
+                    // Handle specific error messages from API
+                    const errorMessage = error.message || 'Failed to add to cart'
+
+                    if (errorMessage.includes('already purchased')) {
+                        addNotification('You have already purchased this product', 'info')
+                    } else if (errorMessage.includes('already in cart')) {
+                        addNotification('This product is already in your cart', 'info')
+                    } else if (errorMessage.includes('out of stock')) {
+                        addNotification('This product is currently out of stock', 'error')
+                    } else if (errorMessage.includes('unauthorized') || errorMessage.includes('authentication')) {
+                        addNotification('Please sign in to purchase', 'warning')
+                    } else {
+                        addNotification(errorMessage, 'error')
+                    }
                     return
                 }
             }
 
             router.push('/checkout')
         }
-    }, [product, addToCart, router, mounted, cartLoading, isInCart, hasPurchased, isOwner, showMessage])
+    }, [product, addToCart, router, mounted, cartLoading, isInCart, hasPurchased, isOwner, addNotification, isAuthenticated, productSlug])
 
     const handleLike = useCallback(async () => {
         if (!isAuthenticated) {
@@ -373,9 +434,9 @@ export default function ProductPage() {
             await productsAPI.toggleFavorite(product._id, !liked)
         } catch (error) {
             setLiked(liked)
-            showMessage('Failed to update favorite', 'error')
+            addNotification('Failed to update favorite', 'error')
         }
-    }, [isAuthenticated, liked, product, requireAuth, showMessage])
+    }, [isAuthenticated, liked, product, requireAuth, addNotification])
 
     const handleUpvote = useCallback(async () => {
         if (!isAuthenticated) {
@@ -397,28 +458,23 @@ export default function ProductPage() {
                 upvotes: newUpvoted ? (prevProduct.upvotes || 0) + 1 : Math.max(0, (prevProduct.upvotes || 0) - 1)
             }))
 
-            showMessage(newUpvoted ? 'Upvoted!' : 'Removed upvote', 'success')
+            addNotification(newUpvoted ? 'Upvoted!' : 'Removed upvote', 'success')
         } catch (error) {
             setUpvoted(!newUpvoted)
-            showMessage('Failed to update upvote', 'error')
+            addNotification('Failed to update upvote', 'error')
         } finally {
             setIsUpvoting(false)
         }
-    }, [isAuthenticated, upvoted, product, requireAuth, isUpvoting, showMessage])
+    }, [isAuthenticated, upvoted, product, requireAuth, isUpvoting, addNotification])
 
     const handleDownload = useCallback(async () => {
-        if (!hasPurchased) {
-            showMessage('You need to purchase this product first', 'error')
-            return
-        }
-
         try {
-            router.push('/purchases')
-            showMessage('Redirected to your purchases', 'success')
+            // Redirect to the purchased product page
+            router.push(`/products/${productSlug}/purchased`)
         } catch (error) {
-            showMessage('Failed to access downloads', 'error')
+            addNotification('Failed to access product', 'error')
         }
-    }, [hasPurchased, router, showMessage])
+    }, [router, productSlug, addNotification])
 
     // Handle product updates from child components
     const handleProductUpdate = useCallback((updatedData) => {
@@ -449,14 +505,14 @@ export default function ProductPage() {
                 await navigator.clipboard.writeText(url)
                 setShowCopied(true)
                 setTimeout(() => setShowCopied(false), 2000)
-                showMessage('Link copied to clipboard!', 'success')
+                addNotification('Link copied to clipboard!', 'success')
             } catch (err) {
-                showMessage('Unable to copy link', 'error')
+                addNotification('Unable to copy link', 'error')
             }
         } else {
-            showMessage(`Share this link: ${url}`, 'info')
+            addNotification(`Share this link: ${url}`, 'info')
         }
-    }, [mounted, product, showMessage])
+    }, [mounted, product, addNotification])
 
     // Handle review submission
     const handleReviewSubmit = useCallback(
@@ -467,7 +523,7 @@ export default function ProductPage() {
             }
 
             if (!product?._id) {
-                showMessage('Product not found', 'error')
+                addNotification('Product not found', 'error')
                 return
             }
 
@@ -476,7 +532,7 @@ export default function ProductPage() {
                 const response = await productsAPI.addReview(product._id, reviewData)
 
                 if (response?.data) {
-                    showMessage('Review submitted successfully!', 'success')
+                    addNotification('Review submitted successfully!', 'success')
 
                     // Update the product state with the new review data
                     setProduct((prevProduct) => ({
@@ -487,26 +543,26 @@ export default function ProductPage() {
                         reviewStats: response.data.reviewStats || prevProduct.reviewStats
                     }))
                 } else {
-                    showMessage('Review submitted!', 'success')
+                    addNotification('Review submitted!', 'success')
                 }
             } catch (error) {
                 console.error('Error submitting review:', error)
 
                 if (error.status === 400) {
-                    showMessage(error.message || 'Invalid review data', 'error')
+                    addNotification(error.message || 'Invalid review data', 'error')
                 } else if (error.status === 401) {
-                    showMessage('Please log in to submit a review', 'error')
+                    addNotification('Please log in to submit a review', 'error')
                     requireAuth()
                 } else if (error.status === 403) {
-                    showMessage('You are not allowed to review this product', 'error')
+                    addNotification('You are not allowed to review this product', 'error')
                 } else if (error.status === 409) {
-                    showMessage('You have already reviewed this product', 'error')
+                    addNotification('You have already reviewed this product', 'error')
                 } else {
-                    showMessage(error.message || 'Failed to submit review. Please try again.', 'error')
+                    addNotification(error.message || 'Failed to submit review. Please try again.', 'error')
                 }
             }
         },
-        [isAuthenticated, product, requireAuth, showMessage]
+        [isAuthenticated, product, requireAuth, addNotification]
     )
 
     // Handle navigation to reviews tab
@@ -538,21 +594,23 @@ export default function ProductPage() {
             <div
                 className="min-h-screen"
                 style={{ backgroundColor: DESIGN_TOKENS.colors.background.dark }}>
-                {notification && (
-                    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4">
+                {notifications.map((notification) => (
+                    <div
+                        key={notification.id}
+                        className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4">
                         <InlineNotification
                             type={notification.type}
                             message={notification.message}
-                            onDismiss={clearNotification}
+                            onDismiss={() => removeNotification(notification.id)}
                         />
                     </div>
-                )}
+                ))}
 
                 <DSContainer
                     maxWidth="hero"
                     padding="responsive">
                     <div
-                        className="pt-20 pb-4 border-b"
+                        className="pb-4 border-b"
                         style={{ borderColor: DESIGN_TOKENS.colors.background.elevated }}>
                         <DSLoadingState
                             type="skeleton"
@@ -678,24 +736,28 @@ export default function ProductPage() {
             <div
                 className="min-h-screen"
                 style={{ backgroundColor: DESIGN_TOKENS.colors.background.dark, fontFamily: DESIGN_TOKENS.typography.fontFamily.body }}>
-                {/* Fixed Inline Notification */}
-                {notification && (
-                    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4">
-                        <InlineNotification
-                            type={notification.type}
-                            message={notification.message}
-                            onDismiss={clearNotification}
-                        />
-                    </div>
-                )}
-
+                {/* Notifications - fixed top-right, always visible regardless of scroll */}
+                <div className="fixed top-4 right-4 z-[9999] space-y-2 w-full max-w-sm pointer-events-none">
+                    <AnimatePresence>
+                        {notifications.map((notification) => (
+                            <div
+                                key={notification.id}
+                                className="pointer-events-auto">
+                                <Notification
+                                    {...notification}
+                                    onClose={removeNotification}
+                                />
+                            </div>
+                        ))}
+                    </AnimatePresence>
+                </div>
 
                 <main className="relative">
                     {/* Breadcrumb Navigation */}
                     <ProductBreadcrumb product={product} />
 
                     {/* Product Hero Section - Use ProductHero component for all screen sizes */}
-                    <section className="relative -mt-4">
+                    <section className="relative">
                         <ProductHero
                             product={product}
                             selectedImage={selectedImage}
@@ -938,7 +1000,6 @@ export default function ProductPage() {
                                                 variant="primary"
                                                 onClick={handleDownload}
                                                 className="px-6">
-                                                <Download className="w-4 h-4" />
                                                 Access Product
                                             </DSButton>
                                         ) : isOwner ? (

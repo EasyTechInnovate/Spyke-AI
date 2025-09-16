@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { motion } from 'framer-motion'
 import {
     Package,
-    Download,
     Search,
     Calendar,
     CreditCard,
@@ -20,7 +19,6 @@ import {
     SortAsc
 } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
-import Header from '@/components/shared/layout/Header'
 import { useAuth } from '@/hooks/useAuth'
 import { purchaseAPI } from '@/lib/api'
 import Link from 'next/link'
@@ -48,7 +46,7 @@ export default function PurchasesPage() {
     // Inline notification state
     const [notification, setNotification] = useState(null)
 
-    // Show inline notification messages  
+    // Show inline notification messages
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
         // Auto-dismiss after 5 seconds
@@ -105,20 +103,6 @@ export default function PurchasesPage() {
         return { totalSpent: total, counts }
     }, [purchases])
 
-    // Handle download
-    const handleDownload = async (product) => {
-        try {
-            toast.loading('Preparing download...')
-            setTimeout(() => {
-                toast.dismiss()
-                showMessage('Downloaded: ${product.title}', 'success')
-            }, 1000)
-        } catch (error) {
-            toast.dismiss()
-            showMessage('Download failed. Please try again.', 'error')
-        }
-    }
-
     // Bulk actions
     const toggleSelect = (purchaseId) => {
         const copy = new Set(selected)
@@ -150,26 +134,18 @@ export default function PurchasesPage() {
         }
     }
 
-    const handleBulkDownload = () => {
-        if (selected.size === 0) return showMessage('No items selected')
-        const items = purchases.filter((p) => selected.has(p.purchaseId))
-        items.forEach((p) => handleDownload(p.product))
-    }
-
     if (loading && purchases.length === 0) {
         return (
             <div className="min-h-screen bg-[#121212]">
-            {/* Inline Notification */}
-            {notification && (
-                <InlineNotification
-                    type={notification.type}
-                    message={notification.message}
-                    onDismiss={clearNotification}
-                />
-            )}
+                {/* Inline Notification */}
+                {notification && (
+                    <InlineNotification
+                        type={notification.type}
+                        message={notification.message}
+                        onDismiss={clearNotification}
+                    />
+                )}
 
-            
-                <Header />
                 <Container>
                     <div className="flex items-center justify-center min-h-[60vh]">
                         <Loader2 className="w-8 h-8 animate-spin text-[#00FF89]" />
@@ -181,7 +157,6 @@ export default function PurchasesPage() {
 
     return (
         <div className="min-h-screen bg-[#121212]">
-            <Header />
             <main className="pt-24 pb-16">
                 <Container>
                     {/* Page Header */}
@@ -195,7 +170,7 @@ export default function PurchasesPage() {
                             <p
                                 className="text-gray-400 max-w-2xl mx-auto text-lg"
                                 style={{ fontFamily: 'var(--font-kumbh-sans)' }}>
-                                Access and download all your purchased products. Manage licenses, invoices and quickly revisit your favorite items.
+                                Access all your purchased products. Manage licenses, invoices and quickly revisit your favorite items.
                             </p>
                         </div>
 
@@ -274,12 +249,6 @@ export default function PurchasesPage() {
                                         className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-all">
                                         {selected.size === filteredPurchases.length ? 'Unselect All' : 'Select All'}
                                     </button>
-                                    <button
-                                        onClick={handleBulkDownload}
-                                        disabled={selected.size === 0}
-                                        className="px-6 py-2 bg-[#00FF89] hover:bg-[#00FF89]/90 text-[#121212] font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                                        Download ({selected.size})
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -292,7 +261,6 @@ export default function PurchasesPage() {
                         ) : viewMode === 'list' ? (
                             <OrdersTable
                                 purchases={filteredPurchases}
-                                onDownload={handleDownload}
                                 selected={selected}
                                 onToggle={toggleSelect}
                             />
@@ -302,7 +270,6 @@ export default function PurchasesPage() {
                                     <PurchaseCard
                                         key={purchase.purchaseId}
                                         purchase={purchase}
-                                        onDownload={handleDownload}
                                         selected={selected.has(purchase.purchaseId)}
                                         onToggle={() => toggleSelect(purchase.purchaseId)}
                                     />
@@ -335,7 +302,7 @@ export default function PurchasesPage() {
 }
 
 // Enhanced Purchase Card Component
-function PurchaseCard({ purchase, onDownload, selected = false, onToggle }) {
+function PurchaseCard({ purchase, selected = false, onToggle }) {
     const { product, purchaseDate } = purchase
 
     if (!product) {
@@ -423,15 +390,13 @@ function PurchaseCard({ purchase, onDownload, selected = false, onToggle }) {
 
                 {/* Actions */}
                 <div className="flex gap-3">
-                    <button
-                        onClick={() => onDownload(product)}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#00FF89] hover:bg-[#00FF89]/90 text-[#121212] font-semibold rounded-xl transition-all">
-                        <Download className="w-4 h-4" />
-                        Download
-                    </button>
-
                     <Link
-                        href={`/products/${product.slug || product._id}`}
+                        href={`/purchased/${product.slug || product._id || 'unknown'}`}
+                        className="flex-1 px-4 py-3 bg-[#00FF89] hover:bg-[#00FF89]/90 text-[#121212] font-semibold rounded-xl transition-all text-center">
+                        Access Product
+                    </Link>
+                    <Link
+                        href={`/purchased/${product.slug || product._id || 'unknown'}`}
                         className="flex items-center justify-center px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-all">
                         <ChevronRight className="w-4 h-4" />
                     </Link>
@@ -540,7 +505,7 @@ function StatsBar({ purchases = [], stats = { totalSpent: 0, counts: {} } }) {
 }
 
 // Enhanced Orders Table
-function OrdersTable({ purchases = [], onDownload = () => {}, selected = new Set(), onToggle = () => {} }) {
+function OrdersTable({ purchases = [], selected = new Set(), onToggle = () => {} }) {
     return (
         <div className="bg-[#1f1f1f] border border-gray-800 rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
@@ -618,13 +583,8 @@ function OrdersTable({ purchases = [], onDownload = () => {}, selected = new Set
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2">
-                                            <button
-                                                onClick={() => onDownload(purchase.product)}
-                                                className="px-3 py-1 bg-[#00FF89] hover:bg-[#00FF89]/90 text-[#121212] rounded-lg text-sm font-medium transition-all">
-                                                Download
-                                            </button>
                                             <Link
-                                                href={`/products/${purchase.product?.slug || purchase.product?._id}`}
+                                                href={`/purchased/${purchase.product?.slug || purchase.product?._id}`}
                                                 className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-all">
                                                 View
                                             </Link>

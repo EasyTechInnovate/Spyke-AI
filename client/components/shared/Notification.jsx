@@ -84,10 +84,10 @@ export default function Notification({
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: -50, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            initial={{ opacity: 0, x: 400, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 400, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 400 }}
             className="max-w-sm w-full cursor-pointer"
             style={{ fontFamily: 'var(--font-league-spartan)' }}
             onClick={() => onClick?.(id)}>

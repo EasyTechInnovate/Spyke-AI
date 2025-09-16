@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { promocodeAPI } from '@/lib/api'
-import toast from '@/lib/utils/toast'
 import { Button } from '@/components/shared/ui/button'
 import Input from '@/components/shared/ui/input'
 import Card from '@/components/shared/ui/card'
@@ -17,7 +16,6 @@ import {
     ToggleRight,
     BarChart,
     Copy,
-    Filter,
     Download,
     Users
 } from 'lucide-react'

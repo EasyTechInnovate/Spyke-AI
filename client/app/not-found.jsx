@@ -9,7 +9,6 @@ export const dynamic = 'force-dynamic'
 export default function NotFound() {
   return (
     <>
-      <Header />
       <div className="min-h-screen flex flex-col items-center justify-center text-center text-white bg-[#121212] px-4 pt-20">
         <div className="max-w-2xl w-full">
           {/* 404 GIF */}

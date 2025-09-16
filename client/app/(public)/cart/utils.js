@@ -9,7 +9,15 @@
  * @returns {number} Subtotal amount
  */
 export const calculateSubtotal = (items) => {
-    return items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    if (!Array.isArray(items)) return 0
+    
+    return items.reduce((sum, item) => {
+        // Handle different data structures from API
+        const price = item.productId?.price || item.price || 0
+        const quantity = item.quantity || 1 // Default to 1 if no quantity field
+        
+        return sum + (price * quantity)
+    }, 0)
 }
 
 /**
@@ -18,34 +26,52 @@ export const calculateSubtotal = (items) => {
  * @returns {number} Total savings amount
  */
 export const calculateTotalSavings = (items) => {
+    if (!Array.isArray(items)) return 0
+    
     return items.reduce((sum, item) => {
-        const originalPrice = item.originalPrice || item.price
-        return sum + ((originalPrice - item.price) * item.quantity)
+        // Handle different data structures from API
+        const price = item.productId?.price || item.price || 0
+        const originalPrice = item.productId?.originalPrice || item.originalPrice || price
+        const quantity = item.quantity || 1
+        
+        const savings = Math.max(0, originalPrice - price)
+        return sum + (savings * quantity)
     }, 0)
 }
 
 /**
- * Calculate discount from promocode
- * @param {Object} cartData - Cart data with promocode info
+ * Calculate promocode discount amount
+ * @param {Object} cartData - Cart data containing promocode
  * @param {number} subtotal - Cart subtotal
  * @returns {number} Discount amount
  */
 export const calculatePromoDiscount = (cartData, subtotal) => {
-    // Unified promocode handling: support both `appliedPromocode` (backend) and `promocode` (guest)
-    const promo = cartData?.appliedPromocode || cartData?.promocode
-    if (!promo) return 0
-
-    // Try multiple possible field names for type/value
-    const discountType = promo.discountType || promo.type || (promo.isPercentage ? 'percentage' : undefined)
-    const rawValue = promo.discountValue ?? promo.discountAmount ?? promo.value ?? promo.amount ?? promo.discount ?? 0
-    const discountValue = Number(rawValue) || 0
-
-    if (discountType === 'percentage') {
-        return subtotal * (discountValue / 100)
+    const promocodeData = cartData?.appliedPromocode || cartData?.promocode
+    if (!promocodeData || !subtotal) return 0
+    
+    // Check if promocode has already calculated discount amount
+    if (promocodeData.discountAmount && typeof promocodeData.discountAmount === 'number') {
+        return Math.min(promocodeData.discountAmount, subtotal)
     }
-
-    // Fixed amount discount: ensure we don't exceed subtotal
-    return Math.min(discountValue, subtotal)
+    
+    // Calculate discount based on type and value
+    let discount = 0
+    const discountValue = promocodeData.discountValue || promocodeData.value || 0
+    const discountType = promocodeData.discountType || 'percentage'
+    
+    if (discountType === 'percentage') {
+        discount = (subtotal * discountValue) / 100
+        
+        // Apply maximum discount limit if specified
+        if (promocodeData.maxDiscountAmount && discount > promocodeData.maxDiscountAmount) {
+            discount = promocodeData.maxDiscountAmount
+        }
+    } else if (discountType === 'fixed') {
+        discount = Math.min(discountValue, subtotal)
+    }
+    
+    // Ensure discount doesn't exceed subtotal
+    return Math.min(discount, subtotal)
 }
 
 /**
@@ -103,7 +129,19 @@ export const getItemId = (item) => {
 export const formatPromoDisplay = (promocodeData) => {
     if (!promocodeData) return ''
     
-    // Check for percentage discount first
+    // Handle percentage discounts
+    if (promocodeData.discountType === 'percentage') {
+        const value = promocodeData.discountValue || promocodeData.discountPercentage
+        return value ? `${value}% OFF` : 'Discount Applied'
+    }
+    
+    // Handle fixed amount discounts
+    if (promocodeData.discountType === 'fixed') {
+        const value = promocodeData.discountValue || promocodeData.discountAmount
+        return value ? `$${value} OFF` : 'Discount Applied'
+    }
+    
+    // Legacy support - check for percentage discount first
     if (promocodeData.discountPercentage !== undefined && promocodeData.discountPercentage !== null) {
         return `${promocodeData.discountPercentage}% OFF`
     }

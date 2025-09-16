@@ -2,7 +2,6 @@
 
 import React, { useEffect } from 'react'
 import { Check } from 'lucide-react'
-import Header from '@/components/shared/layout/Header'
 import Container from '@/components/shared/layout/Container'
 import { MultiStepForm, FormInput, FormTextArea, FormSelect, FormTagInput, FormCheckbox, FormSearchableSelect, ImageUpload } from '@/components/shared/forms'
 import { useSellerForm } from '@/hooks/forms/useSellerForm'
@@ -285,7 +284,6 @@ export default function BecomeSellerPage() {
 
     return (
         <>
-            <Header />
 
             {/* Hero Section */}
             <section className="relative bg-black pt-24 pb-16">

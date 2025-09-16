@@ -383,30 +383,7 @@ export default function ContactUsPage() {
                                     />
                                 </div>
 
-                                <div>
-                                    <label htmlFor="attachment" className="block text-sm font-medium text-gray-300 mb-2">
-                                        Attachment (Optional)
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type="file"
-                                            id="attachment"
-                                            name="attachment"
-                                            onChange={handleFileChange}
-                                            accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
-                                            className="hidden"
-                                        />
-                                        <label
-                                            htmlFor="attachment"
-                                            className="flex items-center gap-3 px-4 py-3 bg-[#121212] border border-gray-700 rounded-lg cursor-pointer hover:border-[#00FF89] transition-colors"
-                                        >
-                                            <Upload className="w-5 h-5 text-gray-400" />
-                                            <span className="text-gray-300">
-                                                {formData.attachment ? formData.attachment.name : 'Choose file (Max 10MB)'}
-                                            </span>
-                                        </label>
-                                    </div>
-                                </div>
+                                
 
                                 <button
                                     type="submit"

@@ -186,26 +186,9 @@ function ProductMeta({ item }) {
 function QuantityControls({ quantity, onIncrease, onDecrease, canDecrease }) {
     return (
         <div className="flex items-center gap-3">
-            <span className="text-sm text-white/60 font-medium">Qty:</span>
-            <div className="flex items-center bg-white/5 rounded-xl border border-white/10">
-                <button
-                    onClick={onDecrease}
-                    disabled={!canDecrease}
-                    className="w-10 h-10 hover:bg-white/10 rounded-l-xl flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 disabled:opacity-30 disabled:cursor-not-allowed text-white/80"
-                    aria-label="Decrease quantity"
-                >
-                    <Minus className="w-4 h-4" />
-                </button>
-                <div className="w-12 h-10 flex items-center justify-center font-semibold text-white border-x border-white/10">
-                    {quantity}
-                </div>
-                <button
-                    onClick={onIncrease}
-                    className="w-10 h-10 hover:bg-white/10 rounded-r-xl flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 text-white/80"
-                    aria-label="Increase quantity"
-                >
-                    <Plus className="w-4 h-4" />
-                </button>
+            <span className="text-sm text-white/60 font-medium">Digital Product</span>
+            <div className="flex items-center bg-white/5 rounded-xl border border-white/10 px-3 py-2">
+                <span className="text-sm font-semibold text-white">Qty: 1</span>
             </div>
         </div>
     )

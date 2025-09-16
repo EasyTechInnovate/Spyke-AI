@@ -29,7 +29,6 @@ export default function SellerSuccessPage() {
 
     return (
         <>
-            <Header />
             
             <section className="min-h-screen bg-black pt-24 pb-16">
                 <Container>

@@ -58,9 +58,9 @@ export default function SellerHero({ seller, onContactClick }) {
                     <img
                         src={seller.sellerBanner}
                         alt="Seller banner"
-                        className="w-full h-full object-cover opacity-12"
+                        className="w-full h-full object-cover opacity-30"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#121212]/90 via-[#121212]/70 to-[#121212]/50" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#121212]/80 via-[#121212]/60 to-[#121212]/40" />
                 </div>
             )}
 

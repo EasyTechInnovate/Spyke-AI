@@ -64,11 +64,13 @@ export function useCart() {
           description: item.productId?.shortDescription || '',
           price: item.productId?.price || 0,
           originalPrice: item.productId?.originalPrice || item.productId?.price || 0,
-          quantity: item.quantity || 1,
+          quantity: item.quantity || 1, // Ensure quantity exists
           category: item.productId?.category || '',
           seller: item.productId?.sellerId || item.productId?.seller || { name: 'Unknown Seller' },
           image: item.productId?.thumbnail || '',
-          addedAt: item.addedAt
+          addedAt: item.addedAt,
+          // Keep original structure for calculations
+          productId: item.productId
         })) || []
 
         const newCartData = {
@@ -76,28 +78,38 @@ export function useCart() {
           items: transformedItems
         }
 
-        // Normalize appliedPromocode from backend (backend is authoritative but may return minimal fields)
+        // Handle appliedPromocode from backend
         if (newCartData.appliedPromocode) {
           const ap = { ...newCartData.appliedPromocode }
-          // Ensure numeric discountAmount exists
-          ap.discountAmount = (ap.discountAmount !== undefined && ap.discountAmount !== null) ? Number(ap.discountAmount) : 0
+          
+          // If backend only returns discountAmount: 0, it means no promocode is applied
+          if (ap.discountAmount === 0 && !ap.code && !ap.discountValue) {
+            newCartData.appliedPromocode = null
+            newCartData.promocode = null
+          } else {
+            // Ensure numeric discountAmount exists
+            ap.discountAmount = (ap.discountAmount !== undefined && ap.discountAmount !== null) ? Number(ap.discountAmount) : 0
 
-          // If backend did not specify type, infer 'fixed' when discountAmount is present
-          if (!ap.discountType) {
-            ap.discountType = typeof ap.discountAmount === 'number' ? 'fixed' : undefined
+            // If backend did not specify type, infer 'fixed' when discountAmount is present
+            if (!ap.discountType) {
+              ap.discountType = typeof ap.discountAmount === 'number' ? 'fixed' : undefined
+            }
+
+            // Provide discountValue alias used by frontend helpers
+            if (ap.discountValue === undefined || ap.discountValue === null) {
+              ap.discountValue = ap.discountAmount
+            }
+
+            // Preserve code if present, otherwise null (frontend will handle missing code gracefully)
+            ap.code = ap.code || null
+
+            newCartData.appliedPromocode = ap
+            // Also keep a `promocode` alias for legacy frontend code that reads `cartData.promocode`
+            newCartData.promocode = ap
           }
-
-          // Provide discountValue alias used by frontend helpers
-          if (ap.discountValue === undefined || ap.discountValue === null) {
-            ap.discountValue = ap.discountAmount
-          }
-
-          // Preserve code if present, otherwise null (frontend will handle missing code gracefully)
-          ap.code = ap.code || null
-
-          newCartData.appliedPromocode = ap
-          // Also keep a `promocode` alias for legacy frontend code that reads `cartData.promocode`
-          newCartData.promocode = ap
+        } else {
+          newCartData.appliedPromocode = null
+          newCartData.promocode = null
         }
 
         setCartData(newCartData)
@@ -196,7 +208,7 @@ export function useCart() {
         // Add to backend cart
         await cartAPI.addToCart(product.id || product._id, 1)
         await loadCart()
-        showMessage('Added to cart successfully!', 'success')
+        // Don't show message here - let the caller handle it for better UX
         return true
       } else {
         // Add to guest cart
@@ -229,7 +241,7 @@ export function useCart() {
 
         setCartData(newCart)
         saveGuestCart(newCart)
-        showMessage('Added to cart successfully!', 'success')
+        // Don't show message here - let the caller handle it for better UX
         return true
       }
     } catch (error) {
@@ -282,25 +294,21 @@ export function useCart() {
         }
 
         // Friendly ecommerce flow: do NOT force logout/redirect.
-        // Preserve intended return path and prompt user to sign in if they want to persist cart.
+        // Preserve intended return path
         try {
           if (typeof window !== 'undefined') {
             const returnTo = window.location.pathname || '/cart'
             localStorage.setItem('returnTo', returnTo)
           }
-
-          showMessage('Item added to your cart. Sign in to save it to your account.', 'success')
         } catch (e) {
-          // ignore toast failures
+          // ignore
         }
 
         return true // Return true since item was added to guest cart
       }
 
-      // Show the actual error message from the API
-      console.log('🚨 Showing error message:', errorMessage);
-      showMessage(errorMessage, 'error')
-      return false // Indicate failure
+      // Throw error with proper message for caller to handle
+      throw new Error(errorMessage)
     }
 
     // Update lastUpdate to trigger UI refresh
@@ -425,29 +433,29 @@ export function useCart() {
           // Extract promocode data from various possible structures
           const promocodeData = validation.promocode || validation.promo || validation.data || validation
           
-          // Try to get discount value from different possible fields
-          let discountValue = promocodeData.discountValue || 
-                             promocodeData.discount || 
-                             promocodeData.value || 
-                             promocodeData.amount || 
-                             0
-          
-          // Try to get discount type from different possible fields
-          let discountType = promocodeData.discountType || 
-                            promocodeData.type || 
-                            (promocodeData.isPercentage ? 'percentage' : 'fixed') ||
-                            'percentage'
+          // Normalize promocode data structure
+          const normalizedPromo = {
+            code: promocodeData.code || code.toUpperCase(),
+            discountType: promocodeData.discountType || 'percentage',
+            discountValue: Number(promocodeData.discountValue || promocodeData.discountAmount || promocodeData.value || 0),
+            discountAmount: Number(promocodeData.discountAmount || 0),
+            maxDiscountAmount: promocodeData.maxDiscountAmount || null,
+            minimumOrderAmount: promocodeData.minimumOrderAmount || 0,
+            description: promocodeData.description || promocodeData.name || '',
+            validUntil: promocodeData.validUntil,
+            // Maintain backward compatibility
+            discountPercentage: promocodeData.discountType === 'percentage' ? promocodeData.discountValue : null,
+            value: promocodeData.discountValue || promocodeData.value,
+            isPercentage: promocodeData.discountType === 'percentage'
+          }
           
           // Add promocode to guest cart
           const newCart = {
             ...cartData,
-            promocode: {
-              code: promocodeData.code || code.toUpperCase(),
-              discountType: discountType,
-              discountValue: Number(discountValue) || 10, // Default to 10 if no value
-              description: promocodeData.description || promocodeData.name || `${discountValue}${discountType === 'percentage' ? '%' : '$'} off`
-            }
+            promocode: normalizedPromo,
+            appliedPromocode: normalizedPromo
           }
+          
           // Applied promocode to cart
           setCartData(newCart)
           saveGuestCart(newCart)
@@ -474,11 +482,16 @@ export function useCart() {
         showMessage('Promocode removed', 'success')
       } else {
         // Remove from guest cart
-        const newCart = { ...cartData, promocode: null }
+        const newCart = { 
+          ...cartData, 
+          promocode: null, 
+          appliedPromocode: null 
+        }
         setCartData(newCart)
         saveGuestCart(newCart)
         showMessage('Promocode removed', 'success')
       }
+      setLastUpdate(Date.now())
     } catch (error) {
       // Error removing promocode
       showMessage('Failed to remove promocode', 'error')
