@@ -1,7 +1,6 @@
 import './globals.css'
 // import { Toaster } from 'sonner'
 import { appConfig } from '@/lib/config'
-import Script from 'next/script'
 import { fontVariables } from '@/lib/fonts'
 import WhatsAppButton from '@/components/shared/WhatsAppButton'
 import ConditionalFooter from '@/components/shared/layout/ConditionalFooter'
@@ -164,6 +163,10 @@ export default function RootLayout({ children }) {
             className={`${fontVariables} scroll-smooth`}>
             <head>
                 <meta charSet="utf-8" />
+
+                {/* Pinterest Domain Verification */}
+                <meta name="p:domain_verify" content="ac2574a26c2baac8234b798c9c6c2724"/>
+
                 <link
                     rel="icon"
                     href="/favicon.ico"
@@ -182,6 +185,61 @@ export default function RootLayout({ children }) {
                     rel="mask-icon"
                     href="/logo-icon.svg"
                     color="#00FF89"
+                />
+
+                {/* Google Tag Manager */}
+                <script
+                    dangerouslySetInnerHTML={{
+                        __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+                        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+                        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+                        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+                        })(window,document,'script','dataLayer','GTM-5GN3WZM9');`
+                    }}
+                />
+
+                {/* Google Analytics 4 */}
+                <script async src="https://www.googletagmanager.com/gtag/js?id=G-5F5D2WWDBN"></script>
+                <script
+                    dangerouslySetInnerHTML={{
+                        __html: `
+                        window.dataLayer = window.dataLayer || [];
+                        function gtag(){dataLayer.push(arguments);}
+                        gtag('js', new Date());
+                        gtag('config', 'G-5F5D2WWDBN');
+                        `
+                    }}
+                />
+
+                {/* Meta Pixel */}
+                <script
+                    dangerouslySetInnerHTML={{
+                        __html: `
+                        !function(f,b,e,v,n,t,s)
+                        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+                        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+                        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+                        n.queue=[];t=b.createElement(e);t.async=!0;
+                        t.src=v;s=b.getElementsByTagName(e)[0];
+                        s.parentNode.insertBefore(t,s)}(window, document,'script',
+                        'https://connect.facebook.net/en_US/fbevents.js');
+                        fbq('init', 'YOUR_PIXEL_ID');
+                        fbq('track', 'PageView');
+                        `
+                    }}
+                />
+                <noscript>
+                    <img height="1" width="1" style={{display:'none'}}
+                         src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1" />
+                </noscript>
+
+                {/* Amplitude Analytics */}
+                <script src="https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz"></script>
+                <script src="https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.8.0-min.js.gz"></script>
+                <script
+                    dangerouslySetInnerHTML={{
+                        __html: `window.amplitude.add(window.sessionReplay.plugin({sampleRate: 1}));window.amplitude.init('60f1e4c9467fa9b1c4e6748e2794dd53', {"autocapture":{"elementInteractions":true}});`
+                    }}
                 />
 
                 {/* Optional (but safe) font preconnect */}
@@ -220,7 +278,17 @@ export default function RootLayout({ children }) {
             <body
                 className={`font-league-spartan bg-brand-dark text-white antialiased min-h-screen`}
                 suppressHydrationWarning={true}>
-                
+
+                {/* Google Tag Manager (noscript) */}
+                <noscript>
+                    <iframe
+                        src="https://www.googletagmanager.com/ns.html?id=GTM-5GN3WZM9"
+                        height="0"
+                        width="0"
+                        style={{display:'none',visibility:'hidden'}}
+                    ></iframe>
+                </noscript>
+
                 <a
                     href="#main-content"
                     className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-brand-primary text-brand-primary-text px-4 py-2 rounded-md font-bold z-50">
@@ -234,12 +302,6 @@ export default function RootLayout({ children }) {
                 <ConditionalFooter />
                 <WhatsAppButton />
 
-                {process.env.NODE_ENV === 'production' && (
-                    <Script
-                        src="/scripts/analytics.js"
-                        strategy="afterInteractive"
-                    />
-                )}
             </body>
         </html>
     )
