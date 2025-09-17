@@ -18,7 +18,6 @@ import {
     Twitter,
     Linkedin,
     Instagram,
-    Upload,
     Check,
     AlertCircle
 } from 'lucide-react'
@@ -29,8 +28,7 @@ export default function ContactUsPage() {
         name: '',
         email: '',
         subject: '',
-        message: '',
-        attachment: null
+        message: ''
     })
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [submitStatus, setSubmitStatus] = useState(null)
@@ -150,34 +148,46 @@ export default function ContactUsPage() {
         }))
     }
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0]
-        if (file && file.size <= 10 * 1024 * 1024) { // 10MB limit
-            setFormData(prev => ({
-                ...prev,
-                attachment: file
-            }))
-        } else {
-            alert('File size must be less than 10MB')
-        }
-    }
 
     const handleSubmit = async (e) => {
         e.preventDefault()
         setIsSubmitting(true)
+        setSubmitStatus(null)
 
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 2000))
+            // Replace this URL with your Google Apps Script Web App URL
+            const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby7R0o7qelmwnIgtfvNqfdIVuRZ3aPO5xJt2oke4aPjuEBF1SUS5iHt1_78aFKgh6NhRA/exec'
+
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Required for Google Apps Script
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+
+            // Since we're using no-cors mode, we can't check response status
+            // We'll assume it was successful if no error was thrown
             setSubmitStatus('success')
+
+            // Reset form
             setFormData({
                 name: '',
                 email: '',
                 subject: '',
-                message: '',
-                attachment: null
+                message: ''
             })
+
+            // Track form submission with analytics
+            if (typeof window !== 'undefined' && window.spykeAnalytics) {
+                window.spykeAnalytics.trackEvent('Contact Form Submitted', {
+                    subject: formData.subject
+                })
+            }
+
         } catch (error) {
+            console.error('Error submitting form:', error)
             setSubmitStatus('error')
         } finally {
             setIsSubmitting(false)
