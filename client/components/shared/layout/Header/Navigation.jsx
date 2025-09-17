@@ -55,11 +55,13 @@ export default function Navigation({ showBecomeSeller }) {
             <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}>
-                <Link
-                    href="/hire"
+                <a
+                    href="https://forms.gle/oUBZ3DL29Y4txZ8z5"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="nav-link px-4 py-3 text-base font-medium text-white/80 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-white/10 whitespace-nowrap">
                     Hire
-                </Link>
+                </a>
             </motion.div>
 
             {showBecomeSeller && (
