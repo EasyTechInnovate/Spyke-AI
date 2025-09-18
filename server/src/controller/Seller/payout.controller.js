@@ -7,6 +7,7 @@ import emailService from '../../service/email.service.js'
 import emailTemplates from '../../util/email.formatter.js'
 import httpError from '../../util/httpError.js'
 import httpResponse from '../../util/httpResponse.js'
+import { EPaymentStatus, EOrderStatus } from '../../constant/application.js'
 
 export const self = (req, res, next) => {
     try {
@@ -20,7 +21,7 @@ const calculateEarnings = async (sellerId, fromDate = null, toDate = null) => {
     try {
         const platformSettings = await PlatformSettings.getCurrentSettings()
         const seller = await SellerProfile.findOne({ userId: sellerId })
-        
+
         if (!seller) {
             throw new Error('Seller not found')
         }
@@ -30,14 +31,16 @@ const calculateEarnings = async (sellerId, fromDate = null, toDate = null) => {
             throw new Error('Seller commission rate not set')
         }
 
+        // Fix: Use seller profile ID instead of user ID and proper enum constants
         let matchStage = {
-            'items.sellerId': sellerId,
-            paymentStatus: 'completed',
-            orderStatus: 'completed'
+            'items.sellerId': seller._id, // Use seller profile ID, not user ID
+            paymentStatus: EPaymentStatus.COMPLETED, // Use enum constant
+            orderStatus: EOrderStatus.COMPLETED // Use enum constant
         }
 
         if (fromDate && toDate) {
-            matchStage.completedAt = {
+            matchStage.purchaseDate = {
+                // Use purchaseDate instead of completedAt
                 $gte: new Date(fromDate),
                 $lte: new Date(toDate)
             }
@@ -47,7 +50,7 @@ const calculateEarnings = async (sellerId, fromDate = null, toDate = null) => {
         const salesPipeline = [
             { $match: matchStage },
             { $unwind: '$items' },
-            { $match: { 'items.sellerId': sellerId } },
+            { $match: { 'items.sellerId': seller._id } }, // Use seller profile ID
             {
                 $group: {
                     _id: null,
@@ -64,7 +67,7 @@ const calculateEarnings = async (sellerId, fromDate = null, toDate = null) => {
         // Calculate earnings breakdown
         const grossEarnings = salesData.totalSales * (commissionRate / 100)
         const platformFee = grossEarnings * (platformSettings.platformFeePercentage / 100)
-        const processingFee = platformSettings.paymentProcessingFee
+        const processingFee = platformSettings.paymentProcessingFee || 0
         const netEarnings = Math.max(0, grossEarnings - platformFee - processingFee)
 
         // Get existing payouts to calculate what's already been paid
@@ -76,10 +79,12 @@ const calculateEarnings = async (sellerId, fromDate = null, toDate = null) => {
         const totalPaidOut = existingPayouts.reduce((sum, payout) => sum + payout.amount, 0)
         const availableForPayout = Math.max(0, netEarnings - totalPaidOut)
 
-        const isEligible = availableForPayout >= platformSettings.minimumPayoutThreshold
+        const minimumThreshold = platformSettings.minimumPayoutThreshold || 50
+        const isEligible = availableForPayout >= minimumThreshold
 
         const sellerJoinDate = new Date(seller.verification.approvedAt || seller.createdAt)
-        const holdPeriodEnd = new Date(sellerJoinDate.getTime() + (platformSettings.holdPeriodNewSellers * 24 * 60 * 60 * 1000))
+        const holdPeriodDays = platformSettings.holdPeriodNewSellers || 14
+        const holdPeriodEnd = new Date(sellerJoinDate.getTime() + holdPeriodDays * 24 * 60 * 60 * 1000)
         const isOnHold = new Date() < holdPeriodEnd
 
         return {
@@ -87,7 +92,7 @@ const calculateEarnings = async (sellerId, fromDate = null, toDate = null) => {
             salesCount: salesData.salesCount,
             commissionRate,
             grossEarnings,
-            platformFeePercentage: platformSettings.platformFeePercentage,
+            platformFeePercentage: platformSettings.platformFeePercentage || 10,
             platformFee,
             processingFee,
             netEarnings,
@@ -96,9 +101,9 @@ const calculateEarnings = async (sellerId, fromDate = null, toDate = null) => {
             isEligible,
             isOnHold,
             holdPeriodEnd: isOnHold ? holdPeriodEnd : null,
-            minimumThreshold: platformSettings.minimumPayoutThreshold,
+            minimumThreshold,
             salesIncluded: salesData.salesIds,
-            currency: platformSettings.currency
+            currency: platformSettings.currency || 'USD'
         }
     } catch (error) {
         throw error
@@ -111,14 +116,11 @@ export const getPayoutDashboard = async (req, res, next) => {
         const { fromDate, toDate } = req.query
 
         const earningsData = await calculateEarnings(sellerId, fromDate, toDate)
-        
-        const recentPayouts = await Payout.find({ sellerId })
-            .populate('approvedBy', 'firstName lastName')
-            .sort({ requestedAt: -1 })
-            .limit(5)
 
-        const pendingPayouts = await Payout.find({ 
-            sellerId, 
+        const recentPayouts = await Payout.find({ sellerId }).populate('approvedBy', 'firstName lastName').sort({ requestedAt: -1 }).limit(5)
+
+        const pendingPayouts = await Payout.find({
+            sellerId,
             status: { $in: ['pending', 'approved', 'processing'] }
         }).sort({ requestedAt: -1 })
 
@@ -139,15 +141,15 @@ export const getPayoutHistory = async (req, res, next) => {
         const sellerId = req.authenticatedUser.id
         const { page = 1, limit = 10, status } = req.query
 
-        const payouts = await Payout.getSellerPayouts(sellerId, { 
-            page: parseInt(page), 
-            limit: parseInt(limit), 
-            status 
+        const payouts = await Payout.getSellerPayouts(sellerId, {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            status
         })
 
-        const totalPayouts = await Payout.countDocuments({ 
-            sellerId, 
-            ...(status && { status }) 
+        const totalPayouts = await Payout.countDocuments({
+            sellerId,
+            ...(status && { status })
         })
 
         return httpResponse(req, res, 200, responseMessage.SUCCESS, {
@@ -241,13 +243,8 @@ export const requestPayout = async (req, res, next) => {
                 requestId: payout._id,
                 estimatedProcessingTime: '7 business days'
             })
-            
-            await emailService.sendEmail(
-                seller.email,
-                confirmationEmail.subject,
-                confirmationEmail.text,
-                confirmationEmail.html
-            )
+
+            await emailService.sendEmail(seller.email, confirmationEmail.subject, confirmationEmail.text, confirmationEmail.html)
         } catch (emailError) {
             console.error('Email notification failed:', emailError)
         }
@@ -264,13 +261,8 @@ export const requestPayout = async (req, res, next) => {
                     requestId: payout._id,
                     payoutMethod: seller.payoutInfo.method
                 })
-                
-                await emailService.sendEmail(
-                    admin.email,
-                    adminEmail.subject,
-                    adminEmail.text,
-                    adminEmail.html
-                )
+
+                await emailService.sendEmail(admin.email, adminEmail.subject, adminEmail.text, adminEmail.html)
             }
         } catch (emailError) {
             console.error('Admin email notification failed:', emailError)
