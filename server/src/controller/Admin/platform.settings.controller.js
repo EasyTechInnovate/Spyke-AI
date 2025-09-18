@@ -13,7 +13,8 @@ export const self = (req, res, next) => {
 
 export const getPlatformSettings = async (req, res, next) => {
     try {
-        const settings = await PlatformSettings.getCurrentSettings()
+        const { authenticatedUser } = req
+        const settings = await PlatformSettings.getCurrentSettings(authenticatedUser.id)
         
         return httpResponse(req, res, 200, responseMessage.SUCCESS, settings)
     } catch (error) {
@@ -37,7 +38,7 @@ export const updatePlatformSettings = async (req, res, next) => {
 
         const adminId = req.authenticatedUser.id
         
-        let settings = await PlatformSettings.getCurrentSettings()
+        let settings = await PlatformSettings.getCurrentSettings(adminId)
         
         if (settings) {
             if (platformFeePercentage !== undefined) settings.platformFeePercentage = platformFeePercentage

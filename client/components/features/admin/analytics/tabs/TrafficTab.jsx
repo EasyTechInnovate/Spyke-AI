@@ -430,43 +430,109 @@ export const TrafficTab = ({ analyticsData, timeRange, loading }) => {
                 </div>
             </motion.div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.7 }}
-                    className="bg-gray-800 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Category Performance</h3>
-                    <div className="h-80 relative">
-                        {safeCategoryPerformance.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
-                                <ComposedChart data={safeCategoryPerformance} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
-                                    <XAxis
-                                        dataKey="name"
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tick={{ fill: '#9CA3AF', fontSize: 11 }}
-                                        angle={0}
-                                        textAnchor="middle"
-                                        height={80}
-                                        interval={0}
-                                    />
-                                    <YAxis
-                                        yAxisId="left"
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                                        label={{ value: 'Products', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#9CA3AF' } }}
-                                    />
-                                    <YAxis
-                                        yAxisId="right"
-                                        orientation="right"
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                                        label={{ value: 'Views', angle: 90, position: 'insideRight', style: { textAnchor: 'middle', fill: '#9CA3AF' } }}
-                                    />
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+                className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Category Performance</h3>
+                <div className="h-96 relative">
+                    {safeCategoryPerformance.length > 0 ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                            <ComposedChart data={safeCategoryPerformance} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+                                <XAxis
+                                    dataKey="name"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fill: '#9CA3AF', fontSize: 11 }}
+                                    angle={0}
+                                    textAnchor="middle"
+                                    height={80}
+                                    interval={0}
+                                />
+                                <YAxis
+                                    yAxisId="left"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                                    label={{ value: 'Products', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#9CA3AF' } }}
+                                />
+                                <YAxis
+                                    yAxisId="right"
+                                    orientation="right"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                                    label={{ value: 'Views', angle: 90, position: 'insideRight', style: { textAnchor: 'middle', fill: '#9CA3AF' } }}
+                                />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: '#1F2937',
+                                        border: '1px solid #374151',
+                                        borderRadius: '8px',
+                                        color: '#FFFFFF'
+                                    }}
+                                    formatter={(value, name) => [
+                                        name === 'views' ? formatNumber(value) : value,
+                                        name === 'views' ? 'Views' : name === 'products' ? 'Products' : 'Avg Views'
+                                    ]}
+                                />
+                                <Bar
+                                    yAxisId="left"
+                                    dataKey="products"
+                                    fill="#3B82F6"
+                                    radius={[2, 2, 0, 0]}
+                                    name="products"
+                                />
+                                <Line
+                                    yAxisId="right"
+                                    type="monotone"
+                                    dataKey="views"
+                                    stroke="#00FF89"
+                                    strokeWidth={2}
+                                    dot={{ fill: '#00FF89', r: 4 }}
+                                    name="views"
+                                />
+                            </ComposedChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-gray-400">
+                            <div className="text-center">
+                                <BarChart3 className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                                <p>No category data available</p>
+                                <p className="text-sm mt-2">Category analytics will appear here</p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </motion.div>
+
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+                className="bg-gray-800 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Device Breakdown</h3>
+                <div className="h-80 relative">
+                    {safeDeviceBreakdown.length > 0 ? (
+                        <div className="w-full h-full">
+                            <ResponsiveContainer width="100%" height="70%">
+                                <PieChart>
+                                    <Pie
+                                        data={safeDeviceBreakdown}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={50}
+                                        outerRadius={100}
+                                        dataKey="value"
+                                        label={({ name, percentage }) => `${name}: ${percentage}%`}
+                                        labelLine={false}
+                                    >
+                                        {safeDeviceBreakdown.map((entry, index) => (
+                                            <Cell key={`device-${index}`} fill={entry.color} />
+                                        ))}
+                                    </Pie>
                                     <Tooltip
                                         contentStyle={{
                                             backgroundColor: '#1F2937',
@@ -474,105 +540,37 @@ export const TrafficTab = ({ analyticsData, timeRange, loading }) => {
                                             borderRadius: '8px',
                                             color: '#FFFFFF'
                                         }}
-                                        formatter={(value, name) => [
-                                            name === 'views' ? formatNumber(value) : value,
-                                            name === 'views' ? 'Views' : name === 'products' ? 'Products' : 'Avg Views'
-                                        ]}
+                                        formatter={(value, name) => [formatNumber(value), 'Users']}
                                     />
-                                    <Bar
-                                        yAxisId="left"
-                                        dataKey="products"
-                                        fill="#3B82F6"
-                                        radius={[2, 2, 0, 0]}
-                                        name="products"
-                                    />
-                                    <Line
-                                        yAxisId="right"
-                                        type="monotone"
-                                        dataKey="views"
-                                        stroke="#00FF89"
-                                        strokeWidth={2}
-                                        dot={{ fill: '#00FF89', r: 4 }}
-                                        name="views"
-                                    />
-                                </ComposedChart>
+                                </PieChart>
                             </ResponsiveContainer>
-                        ) : (
-                            <div className="flex items-center justify-center h-full text-gray-400">
-                                <div className="text-center">
-                                    <BarChart3 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                                    <p>No category data available</p>
-                                    <p className="text-sm mt-2">Category analytics will appear here</p>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </motion.div>
-
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8 }}
-                    className="bg-gray-800 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Device Breakdown</h3>
-                    <div className="h-80 relative">
-                        {safeDeviceBreakdown.length > 0 ? (
-                            <div className="w-full h-full">
-                                <ResponsiveContainer width="100%" height="70%">
-                                    <PieChart>
-                                        <Pie
-                                            data={safeDeviceBreakdown}
-                                            cx="50%"
-                                            cy="50%"
-                                            innerRadius={50}
-                                            outerRadius={100}
-                                            dataKey="value"
-                                            label={({ name, percentage }) => `${name}: ${percentage}%`}
-                                            labelLine={false}
-                                        >
-                                            {safeDeviceBreakdown.map((entry, index) => (
-                                                <Cell key={`device-${index}`} fill={entry.color} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip
-                                            contentStyle={{
-                                                backgroundColor: '#1F2937',
-                                                border: '1px solid #374151',
-                                                borderRadius: '8px',
-                                                color: '#FFFFFF'
-                                            }}
-                                            formatter={(value, name) => [formatNumber(value), 'Users']}
-                                        />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                                <div className="grid grid-cols-3 gap-2 mt-4">
-                                    {safeDeviceBreakdown.map((device, index) => (
-                                        <div key={index} className="text-center">
-                                            <div className="flex items-center justify-center mb-1">
-                                                <div 
-                                                    className="w-3 h-3 rounded-full mr-2" 
-                                                    style={{ backgroundColor: device.color }}
-                                                ></div>
-                                                <span className="text-xs text-gray-300">{device.name}</span>
-                                            </div>
-                                            <div className="text-sm font-medium text-white">{formatNumber(device.value)}</div>
-                                            <div className="text-xs text-gray-400">{device.percentage}%</div>
+                            <div className="grid grid-cols-3 gap-2 mt-4">
+                                {safeDeviceBreakdown.map((device, index) => (
+                                    <div key={index} className="text-center">
+                                        <div className="flex items-center justify-center mb-1">
+                                            <div 
+                                                className="w-3 h-3 rounded-full mr-2" 
+                                                style={{ backgroundColor: device.color }}
+                                            ></div>
+                                            <span className="text-xs text-gray-300">{device.name}</span>
                                         </div>
-                                    ))}
-                                </div>
+                                        <div className="text-sm font-medium text-white">{formatNumber(device.value)}</div>
+                                        <div className="text-xs text-gray-400">{device.percentage}%</div>
+                                    </div>
+                                ))}
                             </div>
-                        ) : (
-                            <div className="flex items-center justify-center h-full text-gray-400">
-                                <div className="text-center">
-                                    <MousePointer className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                                    <p>No device data available</p>
-                                    <p className="text-sm mt-2">Device analytics will appear here</p>
-                                </div>
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-gray-400">
+                            <div className="text-center">
+                                <MousePointer className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                                <p>No device data available</p>
+                                <p className="text-sm mt-2">Device analytics will appear here</p>
                             </div>
-                        )}
-                    </div>
-                </motion.div>
-            </div>
+                        </div>
+                    )}
+                </div>
+            </motion.div>
 
             <motion.div
                 initial={{ opacity: 0, y: 20 }}

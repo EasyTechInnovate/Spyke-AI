@@ -75,21 +75,33 @@ const platformSettingsSchema = new mongoose.Schema(
 platformSettingsSchema.index({ isActive: 1 })
 platformSettingsSchema.index({ lastUpdatedBy: 1 })
 
-platformSettingsSchema.statics.getCurrentSettings = async function() {
+platformSettingsSchema.statics.getCurrentSettings = async function(adminUserId = null) {
     let settings = await this.findOne({ isActive: true }).populate('lastUpdatedBy', 'firstName lastName email')
 
     if (!settings) {
-        // Find the admin user by email
-        const defaultAdmin = await mongoose.model('User').findOne({
-            emailAddress: 'admin@gmail.com'
-        })
+        let defaultAdminId = null
+        
+        if (adminUserId) {
+            // Use the provided admin user ID from authenticated request
+            defaultAdminId = adminUserId
+        } else {
+            // Fallback: find any admin user if no specific user provided
+            const defaultAdmin = await mongoose.model('User').findOne({
+                roles: { $in: ['admin'] },
+                isActive: true
+            }).sort({ createdAt: 1 })
+            
+            if (defaultAdmin) {
+                defaultAdminId = defaultAdmin._id
+            }
+        }
 
-        if (!defaultAdmin) {
-            throw new Error('Admin user (admin@gmail.com) not found to create default platform settings')
+        if (!defaultAdminId) {
+            throw new Error('No admin user found to create default platform settings')
         }
 
         settings = await this.create({
-            lastUpdatedBy: defaultAdmin._id
+            lastUpdatedBy: defaultAdminId
         })
         await settings.populate('lastUpdatedBy', 'firstName lastName email')
     }
