@@ -920,6 +920,95 @@ export default {
         } catch (err) {
             httpError(next, err, req, 500)
         }
+    },
+    suspendSeller: async (req, res, next) => {
+        try {
+            const { authenticatedUser } = req
+            const { sellerId } = req.params
+            const { reason } = req.body
+
+            const sellerProfile = await sellerProfileModel.findById(sellerId)
+            if (!sellerProfile) {
+                return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('Seller profile')), req, 404)
+            }
+
+            if (!sellerProfile.isActive) {
+                return httpError(next, new Error(responseMessage.SELLER.ALREADY_SUSPENDED), req, 400)
+            }
+
+            sellerProfile.isActive = false
+            sellerProfile.suspendedAt = dayjs().utc().toDate()
+            sellerProfile.suspendedBy = authenticatedUser.id
+            sellerProfile.suspensionReason = reason
+
+            await sellerProfile.save()
+
+            await notificationService.sendToUser(
+                sellerProfile.userId,
+                'Account Suspended',
+                `Your seller account has been suspended. Reason: ${sellerProfile.suspensionReason}. Please contact support for assistance.`,
+                'warning'
+            )
+
+            httpResponse(req, res, 200, responseMessage.SELLER.SUSPENDED, {
+                sellerId,
+                suspendedAt: sellerProfile.suspendedAt,
+                reason: sellerProfile.suspensionReason
+            })
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+
+    activateSeller: async (req, res, next) => {
+        try {
+            const { authenticatedUser } = req
+            const { sellerId } = req.params
+            const { note } = req.body
+
+            const sellerProfile = await sellerProfileModel.findById(sellerId)
+            if (!sellerProfile) {
+                return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('Seller profile')), req, 404)
+            }
+
+            if (sellerProfile.isActive) {
+                return httpError(next, new Error(responseMessage.SELLER.ALREADY_ACTIVE), req, 400)
+            }
+
+            // Check if seller is properly approved before activation
+            if (sellerProfile.verification.status !== ESellerVerificationStatus.APPROVED) {
+                return httpError(next, new Error(responseMessage.SELLER.NOT_APPROVED_FOR_ACTIVATION), req, 400)
+            }
+
+            // Activate the seller
+            sellerProfile.isActive = true
+            sellerProfile.activatedAt = dayjs().utc().toDate()
+            sellerProfile.activatedBy = authenticatedUser.id
+            sellerProfile.activationNote = note
+
+            // Clear suspension fields
+            sellerProfile.suspendedAt = null
+            sellerProfile.suspendedBy = null
+            sellerProfile.suspensionReason = null
+
+            await sellerProfile.save()
+
+            // Send notification to seller
+            await notificationService.sendToUser(
+                sellerProfile.userId,
+                'Account Activated',
+                `Your seller account has been activated! You can now start selling on our platform. ${note ? `Note: ${note}` : ''}`,
+                'success'
+            )
+
+            httpResponse(req, res, 200, responseMessage.SELLER.ACTIVATED, {
+                sellerId,
+                activatedAt: sellerProfile.activatedAt,
+                note: sellerProfile.activationNote
+            })
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
     }
 }
 

@@ -84,7 +84,13 @@ export default {
         NO_SELLERS_FOUND: 'No sellers found matching your criteria',
         SEARCH_RESULTS_FOUND: (count) => `Found ${count} sellers matching your criteria`,
         COUNTER_OFFER_ACCEPTED: 'Counter offer accepted successfully',
-        NO_COUNTER_OFFER: 'No pending counter offer found'
+        NO_COUNTER_OFFER: 'No pending counter offer found',
+        
+        SUSPENDED: 'Seller account suspended successfully',
+        ACTIVATED: 'Seller account activated successfully',
+        ALREADY_SUSPENDED: 'Seller account is already suspended',
+        ALREADY_ACTIVE: 'Seller account is already active',
+        NOT_APPROVED_FOR_ACTIVATION: 'Seller must be approved before activation'
     },
 
     PRODUCT: {

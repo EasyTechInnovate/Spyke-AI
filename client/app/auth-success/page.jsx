@@ -27,16 +27,14 @@ function AuthSuccessContent() {
                 const apiClient = (await import('@/lib/api/client')).default
                 apiClient.setAuthToken(token)
                 
-                // Store token in multiple places for backend compatibility
                 const cookieOptions = 'path=/; max-age=86400; SameSite=strict; secure=' + (window.location.protocol === 'https:')
                 document.cookie = `accessToken=${token}; ${cookieOptions}`
                 document.cookie = `authToken=${token}; ${cookieOptions}`
                 localStorage.setItem('authToken', token)
                 localStorage.setItem('loginTime', new Date().toISOString())
-                // Get user profile to complete authentication
                 try {
                     const userProfile = await authAPI.getCurrentUser()
-                    
+                    console.log('Fetched user profile:', userProfile)
                     if (userProfile) {
                         
                         // Store user data and roles

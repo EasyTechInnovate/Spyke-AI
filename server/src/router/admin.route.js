@@ -1,7 +1,10 @@
 import { Router } from 'express'
 import * as payoutController from '../controller/Admin/payout.controller.js'
 import * as platformSettingsController from '../controller/Admin/platform.settings.controller.js'
+import * as userController from '../controller/Admin/user.controller.js'
+import adminController from '../controller/Analytics/admin.controller.js'
 import payoutSchemas from '../schema/payout.schema.js'
+import userSchemas from '../schema/user.schema.js'
 import validateRequest from '../middleware/validateRequest.js'
 import authentication from '../middleware/authentication.js'
 import authorization from '../middleware/authorization.js'
@@ -51,5 +54,20 @@ router.route('/payouts/:id/processing')
 
 router.route('/payouts/:id/completed')
     .put(authentication, authorization([EUserRole.ADMIN]), validateRequest(payoutSchemas.payoutIdParam, 'params'), validateRequest(payoutSchemas.markAsCompleted), payoutController.markAsCompleted)
+
+router.get('/users/self', userController.self)
+
+router.route('/users/analytics')
+    .get(authentication, authorization([EUserRole.ADMIN]), validateRequest(userSchemas.getUserManagementAnalytics, 'query'), userController.getUserManagementAnalytics)
+
+router.route('/users/suspend/:userId')
+    .post(authentication, authorization([EUserRole.ADMIN]), validateRequest(userSchemas.userIdParam, 'params'), validateRequest(userSchemas.suspendUser), userController.suspendUser)
+
+router.route('/users/activate/:userId')
+    .post(authentication, authorization([EUserRole.ADMIN]), validateRequest(userSchemas.userIdParam, 'params'), validateRequest(userSchemas.activateUser), userController.activateUser)
+
+// User order management route for admin (combined endpoint)
+router.route('/users/:userId/orders')
+    .get(authentication, authorization([EUserRole.ADMIN]), validateRequest(userSchemas.userIdParam, 'params'), adminController.getUserOrders)
 
 export default router

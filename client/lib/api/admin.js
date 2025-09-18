@@ -1,6 +1,7 @@
 // File: /lib/api/admin.js
 
 import apiClient from "./client"
+import { authAPI } from "./auth"
 
 export const adminAPI = {
     // Seller Management APIs
@@ -137,26 +138,89 @@ export const adminAPI = {
 
     // User Management APIs
     users: {
-        // Get all users
-        getAll: async (params = {}) => {
-            const { page = 1, limit = 20, role, status } = params
-            const queryParams = new URLSearchParams({ page, limit })
-            if (role) queryParams.append('role', role)
-            if (status) queryParams.append('status', status)
-
-            const res = await apiClient.get(`users/admin/all?${queryParams}`)
+        // Get user management analytics
+        getAnalytics: async (params = {}) => {
+            const { period = '30d' } = params
+            const queryParams = new URLSearchParams({ period })
+            
+            const res = await apiClient.get(`v1/admin/users/analytics?${queryParams}`)
             return res?.data
         },
 
-        // Suspend user
+        // Suspend single user
         suspend: async (userId, reason) => {
-            const res = await apiClient.post(`users/admin/suspend/${userId}`, { reason })
+            const res = await apiClient.post(`v1/admin/users/suspend/${userId}`, { 
+                reason
+            })
             return res?.data
         },
 
-        // Activate user
-        activate: async (userId) => {
-            const res = await apiClient.post(`users/admin/activate/${userId}`)
+        // Activate single user
+        activate: async (userId, activationNote = null) => {
+            const res = await apiClient.post(`v1/admin/users/activate/${userId}`, { 
+                activationNote 
+            })
+            return res?.data
+        },
+
+        // Get user details by ID (helper method)
+        getById: async (userId) => {
+            const res = await apiClient.get(`v1/admin/users/${userId}`)
+            return res?.data
+        },
+
+        // Send password reset email using existing forgot password flow
+        sendPasswordResetEmail: async (userId) => {
+            try {
+                // First get the user's email address
+                const userResponse = await apiClient.get(`v1/analytics/admin/users`)
+                const users = userResponse?.data?.users || []
+                const user = users.find(u => u._id === userId)
+                
+                if (!user) {
+                    throw new Error('User not found')
+                }
+
+                const userEmail = user.emailAddress || user.email
+                if (!userEmail) {
+                    throw new Error('User email not found')
+                }
+
+                // Use existing forgot password API
+                const result = await authAPI.forgotPassword(userEmail)
+                
+                return {
+                    success: true,
+                    message: `Password reset email sent to ${userEmail}`,
+                    email: userEmail,
+                    ...result
+                }
+            } catch (error) {
+                throw new Error(error.message || 'Failed to send password reset email')
+            }
+        },
+
+        // Get user orders/purchases (for admin viewing)
+        getOrders: async (userId, params = {}) => {
+            const { page = 1, limit = 20, type, sortBy = 'createdAt', sortOrder = 'desc' } = params
+            const queryParams = new URLSearchParams({ 
+                page: page.toString(), 
+                limit: limit.toString(),
+                sortBy,
+                sortOrder
+            })
+            
+            if (type && type !== 'all') {
+                queryParams.append('type', type)
+            }
+            
+            const res = await apiClient.get(`v1/admin/users/${userId}/orders?${queryParams}`)
+            return res?.data
+        },
+
+        // Get user details with purchase summary
+        getWithOrders: async (userId) => {
+            const res = await apiClient.get(`v1/admin/users/${userId}`)
             return res?.data
         }
     },
