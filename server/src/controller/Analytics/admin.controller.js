@@ -1,8 +1,10 @@
 import responseMessage from '../../constant/responseMessage.js'
 import httpError from '../../util/httpError.js'
 import httpResponse from '../../util/httpResponse.js'
+import quicker from '../../util/quicker.js'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc.js'
+import mongoose from 'mongoose'
 import userModel from '../../model/user.model.js'
 import productModel from '../../model/product.model.js'
 import purchaseModel from '../../model/purchase.model.js'
@@ -1533,6 +1535,75 @@ export default {
                     totalRevenue: revenue.totalPlatformFees + revenue.totalProcessingFees,
                     avgPayoutAmount: revenue.count > 0 ? revenue.totalPayouts / revenue.count : 0
                 }
+            })
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+
+    // Get user orders for admin view (combined user details + orders)
+    getUserOrders: async (req, res, next) => {
+        try {
+            const { userId } = req.params
+            const { page = 1, limit = 20, type, sortBy = 'createdAt', sortOrder = 'desc' } = req.query
+
+            // Verify user exists and get basic details
+            const user = await userModel.findById(userId).select('name emailAddress avatar roles isActive createdAt')
+            if (!user) {
+                return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('User')), req, 404)
+            }
+
+            // Get user's purchase summary and orders in parallel
+            const [purchaseSummary, ordersResult] = await Promise.all([
+                // Purchase summary aggregation
+                purchaseModel.aggregate([
+                    {
+                        $match: {
+                            userId: new mongoose.Types.ObjectId(userId),
+                            orderStatus: 'completed'
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            totalOrders: { $sum: 1 },
+                            totalSpent: { $sum: '$finalAmount' },
+                            avgOrderValue: { $avg: '$finalAmount' },
+                            firstPurchase: { $min: '$createdAt' },
+                            lastPurchase: { $max: '$createdAt' }
+                        }
+                    }
+                ]),
+                
+                // Get actual orders using the existing getUserPurchases method
+                purchaseModel.getUserPurchases(userId, {
+                    page: parseInt(page),
+                    limit: parseInt(limit),
+                    type
+                })
+            ])
+
+            const summary = purchaseSummary[0] || {
+                totalOrders: 0,
+                totalSpent: 0,
+                avgOrderValue: 0,
+                firstPurchase: null,
+                lastPurchase: null
+            }
+
+            // Combined response with user details, summary, and orders
+            httpResponse(req, res, 200, responseMessage.SUCCESS, {
+                user: {
+                    ...user.toObject(),
+                    // Add purchase statistics to user object
+                    totalPurchases: summary.totalOrders,
+                    totalSpent: summary.totalSpent,
+                    avgOrderValue: summary.avgOrderValue,
+                    firstPurchase: summary.firstPurchase,
+                    lastPurchase: summary.lastPurchase
+                },
+                // Orders data from getUserPurchases
+                ...ordersResult
             })
         } catch (err) {
             httpError(next, err, req, 500)

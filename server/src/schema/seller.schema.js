@@ -403,6 +403,20 @@ const sellerSchemas = {
 
     sellerIdParam: z.object({
         sellerId: z.string().min(1, 'Seller ID is required')
+    }),
+
+    suspendSeller: z.object({
+        reason: z.string()
+            .min(10, 'Suspension reason must be at least 10 characters long')
+            .max(1000, 'Suspension reason cannot exceed 1000 characters')
+            .trim()
+    }),
+
+    activateSeller: z.object({
+        note: z.string()
+            .max(500, 'Activation note cannot exceed 500 characters')
+            .trim()
+            .optional()
     })
 }
 

@@ -94,5 +94,27 @@ router
         validateRequest(sellerSchemas.sellerIdParam, 'params'),
         sellerController.acceptCounterOffer
     )
+
+// Admin seller account management routes
+router
+    .route('/admin/suspend/:sellerId')
+    .post(
+        authentication,
+        authorization([EUserRole.ADMIN]),
+        validateRequest(sellerSchemas.sellerIdParam, 'params'),
+        validateRequest(sellerSchemas.suspendSeller),
+        sellerController.suspendSeller
+    )
+
+router
+    .route('/admin/activate/:sellerId')
+    .post(
+        authentication,
+        authorization([EUserRole.ADMIN]),
+        validateRequest(sellerSchemas.sellerIdParam, 'params'),
+        validateRequest(sellerSchemas.activateSeller),
+        sellerController.activateSeller
+    )
+
 export default router
 

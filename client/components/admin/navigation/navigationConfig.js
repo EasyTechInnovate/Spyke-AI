@@ -7,11 +7,12 @@ import {
   ShieldCheck,
   Settings,
   Wrench,
-  DollarSign
+  DollarSign,
+  Users
 } from 'lucide-react'
 
 // Coming Soon Features Set
-export const COMING_SOON = new Set(['compliance', 'settings'])
+export const COMING_SOON = new Set(['compliance'])
 
 // Navigation items factory function
 export const createNavigationItems = (counts = { sellers:{ pending:0, active:0, payouts:0 }, products:{ pending:0, flagged:0, featured:0 } }) => [
@@ -107,7 +108,20 @@ export const createNavigationItems = (counts = { sellers:{ pending:0, active:0, 
   { 
     id: 'settings', 
     label: 'Settings', 
-    icon: Settings, 
-    href: '/admin/settings' 
+    icon: Settings,
+    subItems: [
+      {
+        id: 'user-management',
+        label: 'User Management',
+        icon: Users,
+        href: '/admin/settings/user-management'
+      },
+      {
+        id: 'seller-management',
+        label: 'Seller Management',
+        icon: UserCheck,
+        href: '/admin/settings/seller-management'
+      }
+    ]
   }
 ]
