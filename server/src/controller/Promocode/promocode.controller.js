@@ -385,5 +385,96 @@ export default {
         } catch (err) {
             httpError(next, err, req, 500)
         }
+    },
+
+    getApplicablePromocodes: async (req, res, next) => {
+        try {
+            const { productIds } = req.query
+
+            if (!productIds) {
+                return httpError(next, new Error('Product IDs are required'), req, 400)
+            }
+
+            const productIdArray = productIds.split(',').filter(id => id.trim())
+
+            if (productIdArray.length === 0) {
+                return httpError(next, new Error('Valid product IDs are required'), req, 400)
+            }
+
+            const products = await Product.find({
+                _id: { $in: productIdArray },
+                status: 'published'
+            }).select('_id category industry')
+
+            if (products.length === 0) {
+                return httpError(next, new Error('No valid products found'), req, 404)
+            }
+
+            const validProductIds = products.map(p => p._id)
+            const categories = [...new Set(products.map(p => p.category))]
+            const industries = [...new Set(products.map(p => p.industry))]
+
+            const query = {
+                isActive: true,
+                isPublic: true,
+                validFrom: { $lte: new Date() },
+                validUntil: { $gte: new Date() },
+                $or: [
+                    { isGlobal: true },
+                    { applicableProducts: { $in: validProductIds } },
+                    { applicableCategories: { $in: categories } },
+                    { applicableIndustries: { $in: industries } }
+                ]
+            }
+
+            const promocodes = await Promocode.find(query)
+                .select('code description discountType discountValue maxDiscountAmount minimumOrderAmount isGlobal applicableProducts applicableCategories applicableIndustries validUntil')
+                .sort({ discountValue: -1 })
+                .lean()
+
+            const categorizedPromocodes = {
+                global: [],
+                productSpecific: [],
+                categorySpecific: [],
+                industrySpecific: []
+            }
+
+            promocodes.forEach(promo => {
+                if (promo.isGlobal) {
+                    categorizedPromocodes.global.push(promo)
+                } else if (promo.applicableProducts && promo.applicableProducts.length > 0) {
+                    const applicableToProducts = promo.applicableProducts.some(pid =>
+                        validProductIds.some(vpid => vpid.toString() === pid.toString())
+                    )
+                    if (applicableToProducts) {
+                        categorizedPromocodes.productSpecific.push(promo)
+                    }
+                } else if (promo.applicableCategories && promo.applicableCategories.length > 0) {
+                    const applicableToCategories = promo.applicableCategories.some(cat =>
+                        categories.includes(cat)
+                    )
+                    if (applicableToCategories) {
+                        categorizedPromocodes.categorySpecific.push(promo)
+                    }
+                } else if (promo.applicableIndustries && promo.applicableIndustries.length > 0) {
+                    const applicableToIndustries = promo.applicableIndustries.some(ind =>
+                        industries.includes(ind)
+                    )
+                    if (applicableToIndustries) {
+                        categorizedPromocodes.industrySpecific.push(promo)
+                    }
+                }
+            })
+
+            const result = {
+                requestedProducts: validProductIds,
+                applicablePromocodes: categorizedPromocodes,
+                totalCount: promocodes.length
+            }
+
+            httpResponse(req, res, 200, responseMessage.SUCCESS, result)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
     }
 }

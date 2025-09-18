@@ -12,6 +12,14 @@ Content-Type: application/json
 GET {{baseUrl}}/promocode/public?page=1&limit=10
 Content-Type: application/json
 
+### 2.1. Get Applicable Promocodes for Products (No Auth Required)
+GET {{baseUrl}}/promocode/applicable?productIds=PRODUCT_ID_1,PRODUCT_ID_2,PRODUCT_ID_3
+Content-Type: application/json
+
+### 2.2. Get Applicable Promocodes for Single Product
+GET {{baseUrl}}/promocode/applicable?productIds=SINGLE_PRODUCT_ID
+Content-Type: application/json
+
 ### 3. Create Promocode as Seller (Percentage Discount)
 POST {{baseUrl}}/promocode
 Content-Type: application/json
@@ -294,6 +302,62 @@ GET {{baseUrl}}/promocode?page=1&limit=20
 Content-Type: application/json
 Authorization: {{authToken}}
 
+### --- NEW API TESTING ---
+
+### 30. Test Applicable Promocodes API - Multiple Products
+GET {{baseUrl}}/promocode/applicable?productIds=68adfd2c8a75b5e275f1093d,68adfd2c8a75b5e275f1093e,68adfd2c8a75b5e275f1093f
+Content-Type: application/json
+
+### 31. Test Applicable Promocodes API - Single Product
+GET {{baseUrl}}/promocode/applicable?productIds=68adfd2c8a75b5e275f1093d
+Content-Type: application/json
+
+### 32. Test Applicable Promocodes API - Invalid Product ID
+GET {{baseUrl}}/promocode/applicable?productIds=invalid_id
+Content-Type: application/json
+
+### 33. Test Applicable Promocodes API - Empty Product IDs
+GET {{baseUrl}}/promocode/applicable?productIds=
+Content-Type: application/json
+
+### 34. Test Applicable Promocodes API - No Query Parameter
+GET {{baseUrl}}/promocode/applicable
+Content-Type: application/json
+
+### --- MULTI-PRODUCT CART SCENARIO ---
+
+### 35. Add Multiple Products to Cart
+POST {{baseUrl}}/purchase/cart/add
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "productId": "PRODUCT_ID_1"
+}
+
+###
+POST {{baseUrl}}/purchase/cart/add
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "productId": "PRODUCT_ID_2"
+}
+
+### 36. Get Applicable Promocodes for Current Cart Items
+# Note: Replace with actual product IDs from your cart
+GET {{baseUrl}}/promocode/applicable?productIds=PRODUCT_ID_1,PRODUCT_ID_2
+Content-Type: application/json
+
+### 37. Apply Best Promocode to Cart
+POST {{baseUrl}}/purchase/cart/promocode
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "code": "BEST_APPLICABLE_CODE_FROM_STEP_36"
+}
+
 ### TESTING NOTES:
 # 1. Replace all REPLACE_WITH_* placeholders with actual IDs
 # 2. Update authToken with valid seller JWT
@@ -305,3 +369,12 @@ Authorization: {{authToken}}
 # 8. Verify integration with cart and purchase system
 # 9. Check that usage limits are properly enforced
 # 10. Verify category and product-specific restrictions
+
+### NEW API WORKFLOW:
+# 1. Create different types of promocodes (global, product-specific, category-specific)
+# 2. Add multiple products to cart
+# 3. Use /applicable API to get all valid promocodes for cart items
+# 4. Frontend can display available promocodes to user
+# 5. User selects best promocode
+# 6. Apply selected promocode using existing /cart/promocode endpoint
+# 7. User can see discount applied to their cart total

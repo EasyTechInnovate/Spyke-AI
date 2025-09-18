@@ -21,6 +21,11 @@ router.get(
   promocodeController.getPublicPromocodes
 )
 
+router.get(
+  '/applicable',
+  promocodeController.getApplicablePromocodes
+)
+
 router.post(
   '/',
   authenticate,
