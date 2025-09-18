@@ -306,14 +306,14 @@ export default function SellerManagementPage() {
         try {
             if (confirmModal.type === 'suspend') {
                 // Note: This endpoint may need to be implemented on the backend
-                await apiClient.post(`/v1/seller/admin/suspend/${confirmModal.sellerId}`, { 
-                    reason: data.reason || 'Seller suspended by administrator' 
+                await apiClient.post(`/v1/seller/admin/suspend/${confirmModal.sellerId}`, {
+                    reason: data.reason || 'Seller suspended by administrator'
                 })
                 showMessage(`Seller "${confirmModal.sellerName}" has been suspended`, 'success')
             } else if (confirmModal.type === 'activate') {
                 // Note: This endpoint may need to be implemented on the backend
-                await apiClient.post(`/v1/seller/admin/activate/${confirmModal.sellerId}`, { 
-                    note: data.activationNote 
+                await apiClient.post(`/v1/seller/admin/activate/${confirmModal.sellerId}`, {
+                    note: data.activationNote
                 })
                 showMessage(`Seller "${confirmModal.sellerName}" has been activated`, 'success')
             }
@@ -332,20 +332,6 @@ export default function SellerManagementPage() {
     const handleSellerAction = async (action, sellerId) => {
         if (action === 'suspend' || action === 'activate') {
             handleSingleSellerAction(action, sellerId)
-        } else if (action === 'send-reset-email') {
-            // Handle password reset for seller
-            setActionLoading(true)
-            try {
-                const seller = sellers.find(s => s._id === sellerId)
-                const result = await adminAPI.users.sendPasswordResetEmail(seller.userId)
-                showMessage(`Password reset email sent to ${result.email}`, 'success', 'Email Sent')
-            } catch (error) {
-                console.error('Failed to send password reset email:', error)
-                showMessage(error.message || 'Failed to send password reset email', 'error', 'Reset Failed')
-            } finally {
-                setActionLoading(false)
-                setShowActionDropdown(null)
-            }
         } else {
             // Handle other actions
             setActionLoading(true)
@@ -570,19 +556,15 @@ export default function SellerManagementPage() {
                                                 <td className="p-4">
                                                     <div className="relative">
                                                         <button
-                                                            onClick={() => setShowActionDropdown(showActionDropdown === seller._id ? null : seller._id)}
+                                                            onClick={() =>
+                                                                setShowActionDropdown(showActionDropdown === seller._id ? null : seller._id)
+                                                            }
                                                             className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors">
                                                             <MoreHorizontal className="w-4 h-4" />
                                                         </button>
 
                                                         {showActionDropdown === seller._id && (
                                                             <div className="absolute right-0 top-full mt-1 w-48 bg-[#121212] border border-gray-700 rounded-lg shadow-xl z-10">
-                                                                <button
-                                                                    onClick={() => handleSellerAction('send-reset-email', seller._id)}
-                                                                    className="w-full flex items-center gap-2 px-4 py-2 text-left text-gray-300 hover:text-white hover:bg-gray-800 transition-colors">
-                                                                    <Mail className="w-4 h-4" />
-                                                                    Send Reset Email
-                                                                </button>
                                                                 <button
                                                                     onClick={() => handleSellerAction('view-products', seller._id)}
                                                                     className="w-full flex items-center gap-2 px-4 py-2 text-left text-gray-300 hover:text-white hover:bg-gray-800 transition-colors">
@@ -625,8 +607,8 @@ export default function SellerManagementPage() {
                     <div className="border-t border-gray-800 px-6 py-4">
                         <div className="flex items-center justify-between">
                             <div className="text-gray-400 text-sm">
-                                Showing {(currentPage - 1) * sellersPerPage + 1} to {Math.min(currentPage * sellersPerPage, totalSellers)} of {totalSellers}{' '}
-                                sellers
+                                Showing {(currentPage - 1) * sellersPerPage + 1} to {Math.min(currentPage * sellersPerPage, totalSellers)} of{' '}
+                                {totalSellers} sellers
                             </div>
                             <div className="flex items-center gap-2">
                                 <button

@@ -54,6 +54,7 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
 
     // Use the first available image
     const productImage = image || thumbnail || images?.[0] || '/images/placeholder-product.svg'
+    console.log('Product Image:', productImage) 
 
     // Calculate discount percentage and pricing
     const actualDiscountPrice = discountPrice || (originalPrice && originalPrice > price ? price : null)
