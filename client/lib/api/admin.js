@@ -474,6 +474,7 @@ export const adminAPI = {
         }
     },
 
+    // Payout Management APIs
     payouts: {
         // List payouts with filters
         getPayouts: async (params = {}) => {
@@ -490,46 +491,55 @@ export const adminAPI = {
             const res = await apiClient.get(`v1/admin/payouts${query.toString() ? `?${query}` : ''}`)
             return res?.data
         },
+
         // Single payout details
         getDetails: async (payoutId) => {
             const res = await apiClient.get(`v1/admin/payouts/${payoutId}`)
             return res?.data
         },
+
         // Approve payout
         approve: async (payoutId, { notes } = {}) => {
             const res = await apiClient.put(`v1/admin/payouts/${payoutId}/approve`, { notes })
             return res?.data
         },
+
         // Reject payout with reason
         reject: async (payoutId, reason) => {
             const res = await apiClient.put(`v1/admin/payouts/${payoutId}/reject`, { reason })
             return res?.data
         },
+
         // Put payout on hold
         hold: async (payoutId, reason) => {
             const res = await apiClient.put(`v1/admin/payouts/${payoutId}/hold`, { reason })
             return res?.data
         },
+
         // Release payout from hold
         release: async (payoutId) => {
             const res = await apiClient.put(`v1/admin/payouts/${payoutId}/release`)
             return res?.data
         },
+
         // Mark as processing (optionally supply transactionId / notes)
         markProcessing: async (payoutId, { transactionId, notes } = {}) => {
             const res = await apiClient.put(`v1/admin/payouts/${payoutId}/processing`, { transactionId, notes })
             return res?.data
         },
+
         // Mark as completed
         markCompleted: async (payoutId, { transactionId, notes } = {}) => {
             const res = await apiClient.put(`v1/admin/payouts/${payoutId}/completed`, { transactionId, notes })
             return res?.data
         },
+
         // Bulk approve payouts
         bulkApprove: async (payoutIds = [], notes) => {
             const res = await apiClient.post('v1/admin/payouts/bulk-approve', { payoutIds, notes })
             return res?.data
         },
+
         // Analytics (earnings over date range)
         analytics: async (params = {}) => {
             const { fromDate, toDate } = params
@@ -539,6 +549,7 @@ export const adminAPI = {
             const res = await apiClient.get(`v1/admin/payouts/analytics${query.toString() ? `?${query}` : ''}`)
             return res?.data
         },
+
         // Platform payout settings
         settings: {
             get: async () => {
