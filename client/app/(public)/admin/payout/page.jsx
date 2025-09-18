@@ -1,88 +1,15 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react'
-import { PageHeader, LoadingSkeleton, EmptyState, QuickActionsBar, StatsGrid } from '@/components/admin'
-import { DollarSign, RefreshCw, Search, Filter, CheckCircle2, Clock, AlertCircle, X } from 'lucide-react'
+import { PageHeader, LoadingSkeleton, EmptyState, QuickActionsBar } from '@/components/admin'
+import { DollarSign, RefreshCw, Search, Filter, X } from 'lucide-react'
 import { adminAPI } from '@/lib/api/admin'
-import { Loader2, XCircle, Shield, CheckCircle, RefreshCw as ProcessingIcon } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { useNotificationProvider } from '@/components/shared/notifications/NotificationProvider'
 import { FixedSizeList as List } from 'react-window'
 
-// Performance constants
 const VIRTUALIZATION_THRESHOLD = 60
-const ROW_HEIGHT = 100 // approximate fixed row height (px)
-
-const mockPayoutResponse = {
-    payouts: [
-        {
-            id: 'mock-pend-1',
-            sellerName: 'Alice Johnson',
-            sellerEmail: 'alice@example.com',
-            amount: 120.5,
-            currency: 'USD',
-            method: 'bank',
-            status: 'pending',
-            requestedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-            updatedAt: new Date(Date.now() - 86400000 * 2).toISOString()
-        },
-        {
-            id: 'mock-pend-2',
-            sellerName: 'Brian Lee',
-            sellerEmail: 'brian@example.com',
-            amount: 89.99,
-            currency: 'USD',
-            method: 'paypal',
-            status: 'pending',
-            requestedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-            updatedAt: new Date(Date.now() - 86400000 * 3).toISOString()
-        },
-        {
-            id: 'mock-approved-1',
-            sellerName: 'Carla Mendes',
-            sellerEmail: 'carla@example.com',
-            amount: 340.0,
-            currency: 'USD',
-            method: 'bank',
-            status: 'approved',
-            requestedAt: new Date(Date.now() - 86400000 * 4).toISOString(),
-            updatedAt: new Date(Date.now() - 86400000 * 1.5).toISOString()
-        },
-        {
-            id: 'mock-processing-1',
-            sellerName: 'David Park',
-            sellerEmail: 'david@example.com',
-            amount: 215.45,
-            currency: 'USD',
-            method: 'crypto',
-            status: 'processing',
-            requestedAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-            updatedAt: new Date(Date.now() - 86400000 * 0.5).toISOString()
-        },
-        {
-            id: 'mock-hold-1',
-            sellerName: 'Evelyn Stone',
-            sellerEmail: 'evelyn@example.com',
-            amount: 150,
-            currency: 'USD',
-            method: 'bank',
-            status: 'failed',
-            failureReason: 'Verification pending',
-            requestedAt: new Date(Date.now() - 86400000 * 6).toISOString(),
-            updatedAt: new Date(Date.now() - 86400000 * 0.8).toISOString()
-        },
-        {
-            id: 'mock-completed-1',
-            sellerName: 'Frank Wu',
-            sellerEmail: 'frank@example.com',
-            amount: 560.75,
-            currency: 'USD',
-            method: 'paypal',
-            status: 'completed',
-            requestedAt: new Date(Date.now() - 86400000 * 7).toISOString(),
-            updatedAt: new Date(Date.now() - 86400000 * 0.2).toISOString()
-        }
-    ]
-}
+const ROW_HEIGHT = 100
 
 export default function AdminPayoutPage() {
     const [loading, setLoading] = useState(true)
@@ -120,23 +47,21 @@ export default function AdminPayoutPage() {
         window.addEventListener('resize', onResize)
         return () => window.removeEventListener('resize', onResize)
     }, [])
+
     const virtualListHeight = useMemo(() => {
-        // Leave space for header / filters; clamp sensible bounds
         const h = viewportH - 420
         return Math.max(320, Math.min(900, h))
     }, [viewportH])
 
     const mapToDisplayStatus = useCallback((p) => {
-        if (p.status === 'failed' && p.failureReason) return { ...p, displayStatus: 'hold' }
-        return { ...p, displayStatus: p.status }
-    }, [])
-
-    const loadMockPayoutData = useCallback(() => {
-        const mapped = mockPayoutResponse.payouts.map((p) => ({ ...p, displayStatus: p.status === 'failed' && p.failureReason ? 'hold' : p.status }))
-        setPayoutList(mapped)
-        setTotalPages(1)
-        setPage(1)
-        setLoading(false)
+        // Ensure both _id and id exist for compatibility
+        const payout = {
+            ...p,
+            id: p.id || p._id,
+            _id: p._id || p.id,
+            displayStatus: p.status === 'failed' && p.failureReason ? 'hold' : p.status
+        }
+        return payout
     }, [])
 
     const fetchPayoutList = useCallback(
@@ -152,10 +77,13 @@ export default function AdminPayoutPage() {
                 }
                 if (fromDate) params.fromDate = new Date(fromDate + 'T00:00:00.000Z').toISOString()
                 if (toDate) params.toDate = new Date(toDate + 'T23:59:59.999Z').toISOString()
+
                 const res = await adminAPI.payouts.getPayouts(params)
                 if (reqId !== latestRequestIdRef.current) return
+
                 const records = (res?.payouts || res?.data || []).map(mapToDisplayStatus)
                 const meta = res?.meta || res?.pagination || {}
+
                 setPayoutList(records)
                 setTotalPages(meta.totalPages || meta.pages || 1)
                 if (meta.totalItems || meta.total) setTotalItems(meta.totalItems || meta.total)
@@ -172,7 +100,8 @@ export default function AdminPayoutPage() {
 
     const fetchPayoutDetails = useCallback(
         async (payoutId) => {
-            if (payoutDetailsCache[payoutId]) return
+            if (!payoutId || payoutDetailsCache[payoutId]) return
+
             setDetailsLoadingId(payoutId)
             setDetailsErrorId(null)
             try {
@@ -190,15 +119,6 @@ export default function AdminPayoutPage() {
     )
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const params = new URLSearchParams(window.location.search)
-            if (params.get('mockPayouts') === '1') {
-                loadMockPayoutData()
-            }
-        }
-    }, [loadMockPayoutData])
-
-    useEffect(() => {
         fetchPayoutList({})
     }, [fetchPayoutList])
 
@@ -209,10 +129,18 @@ export default function AdminPayoutPage() {
 
     const handleToggleRow = useCallback(
         (payoutId) => {
+            if (!payoutId) {
+                console.error('Payout ID is missing')
+                showError?.('Invalid payout data')
+                return
+            }
+
             setExpandedId((prev) => (prev === payoutId ? null : payoutId))
-            if (expandedId !== payoutId && !payoutDetailsCache[payoutId]) fetchPayoutDetails(payoutId)
+            if (expandedId !== payoutId && !payoutDetailsCache[payoutId]) {
+                fetchPayoutDetails(payoutId)
+            }
         },
-        [fetchPayoutDetails, payoutDetailsCache, expandedId]
+        [fetchPayoutDetails, payoutDetailsCache, expandedId, showError]
     )
 
     const filteredPayoutList = useMemo(() => {
@@ -231,18 +159,26 @@ export default function AdminPayoutPage() {
         )
     }, [payoutList, statusFilter, debouncedQuery])
 
-    const statusCounts = useMemo(
-        () =>
-            payoutList.reduce(
-                (acc, p) => {
-                    acc.all++
-                    acc[p.displayStatus] = (acc[p.displayStatus] || 0) + 1
-                    return acc
-                },
-                { all: 0 }
-            ),
-        [payoutList]
-    )
+    const statusCounts = useMemo(() => {
+        const counts = { all: 0, pending: 0, approved: 0, processing: 0, completed: 0, hold: 0, failed: 0 }
+        payoutList.forEach((p) => {
+            counts.all++
+            const status = p.displayStatus || 'pending'
+            if (counts.hasOwnProperty(status)) {
+                counts[status]++
+            } else {
+                // Handle any unexpected status by mapping to closest match
+                if (status.includes('fail') || status.includes('reject')) {
+                    counts.failed++
+                } else if (status.includes('hold') || status.includes('pause')) {
+                    counts.hold++
+                } else {
+                    counts.pending++
+                }
+            }
+        })
+        return counts
+    }, [payoutList])
 
     const aggregateTotals = useMemo(() => {
         const base = { totalAmount: 0, pendingAmount: 0, processingAmount: 0, completedAmount: 0 }
@@ -407,15 +343,6 @@ export default function AdminPayoutPage() {
                 title="Payout Management"
                 subtitle="Track and manage seller payouts and withdrawal requests"
                 actions={[
-                    process.env.NODE_ENV !== 'production' && (
-                        <button
-                            key="mock"
-                            type="button"
-                            onClick={loadMockPayoutData}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-[#352a14] hover:bg-[#423016] border border-[#4a3614] rounded-lg text-sm text-[#FFC050] transition-colors">
-                            Load Mock Payouts
-                        </button>
-                    ),
                     <button
                         key="refresh"
                         type="button"
@@ -424,10 +351,72 @@ export default function AdminPayoutPage() {
                         <RefreshCw className="w-4 h-4" />
                         Refresh
                     </button>
-                ].filter(Boolean)}
+                ]}
             />
 
             <PayoutAggregatesBar totals={aggregateTotals} />
+
+            {/* Status Filter Tabs */}
+            <div className="bg-[#0f0f0f] border border-gray-800 rounded-xl p-4">
+                <div className="flex flex-wrap items-center gap-2">
+                    <Filter className="w-4 h-4 text-gray-500" />
+                    <FilterTab
+                        id="all"
+                        label="All"
+                        active={statusFilter}
+                        count={statusCounts.all}
+                        onSelect={setStatusFilter}
+                    />
+                    <FilterTab
+                        id="pending"
+                        label="Pending"
+                        active={statusFilter}
+                        count={statusCounts.pending}
+                        tone="amber"
+                        onSelect={setStatusFilter}
+                    />
+                    <FilterTab
+                        id="approved"
+                        label="Approved"
+                        active={statusFilter}
+                        count={statusCounts.approved}
+                        tone="green"
+                        onSelect={setStatusFilter}
+                    />
+                    <FilterTab
+                        id="processing"
+                        label="Processing"
+                        active={statusFilter}
+                        count={statusCounts.processing}
+                        tone="blue"
+                        onSelect={setStatusFilter}
+                    />
+                    <FilterTab
+                        id="completed"
+                        label="Completed"
+                        active={statusFilter}
+                        count={statusCounts.completed}
+                        tone="green"
+                        onSelect={setStatusFilter}
+                    />
+                    <FilterTab
+                        id="hold"
+                        label="On Hold"
+                        active={statusFilter}
+                        count={statusCounts.hold}
+                        tone="amber"
+                        onSelect={setStatusFilter}
+                    />
+                    <FilterTab
+                        id="failed"
+                        label="Failed"
+                        active={statusFilter}
+                        count={statusCounts.failed}
+                        tone="red"
+                        onSelect={setStatusFilter}
+                    />
+                </div>
+            </div>
 
             <QuickActionsBar>
                 <div className="w-full flex flex-col gap-4">
@@ -896,9 +885,7 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                 {/* Header - Mobile optimized */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800 bg-[#121212] sticky top-0 z-10">
                     <div className="flex flex-col min-w-0 flex-1 mr-3">
-                        <h3 className="text-xl sm:text-2xl font-bold text-white tracking-wide truncate">
-                            Payout Detail
-                        </h3>
+                        <h3 className="text-xl sm:text-2xl font-bold text-white tracking-wide truncate">Payout Detail</h3>
                         <span className="text-xs text-gray-400 truncate font-mono">ID: {payout.id}</span>
                     </div>
                     <button
@@ -917,11 +904,10 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                             {/* Progress bar background */}
                             <div className="absolute top-4 left-6 right-6 h-0.5 bg-gray-700 rounded-full"></div>
                             {/* Active progress bar */}
-                            <div 
+                            <div
                                 className="absolute top-4 left-6 h-0.5 bg-[#00FF89] rounded-full transition-all duration-500"
-                                style={{ width: `${(currentIndex / (timeline.length - 1)) * 100}%` }}
-                            ></div>
-                            
+                                style={{ width: `${(currentIndex / (timeline.length - 1)) * 100}%` }}></div>
+
                             {timeline.map((step, i) => {
                                 const done = i <= currentIndex
                                 const isCurrent = i === currentIndex
@@ -933,7 +919,7 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                                     : done
                                       ? 'bg-[#00FF89] text-black border-2 border-[#00FF89] shadow-lg shadow-[#00FF89]/30'
                                       : 'bg-gray-800 text-gray-500 border-2 border-gray-600'
-                                      
+
                                 const labelClass = isHold
                                     ? isCurrent
                                         ? 'text-[#FFC050] font-semibold'
@@ -941,21 +927,24 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                                     : done
                                       ? 'text-[#00FF89] font-semibold'
                                       : 'text-gray-500'
-                                      
+
                                 const stepLabels = {
                                     pending: 'Pending',
-                                    approved: 'Approved', 
+                                    approved: 'Approved',
                                     processing: 'Processing',
                                     completed: 'Completed',
                                     hold: 'On Hold'
                                 }
-                                      
+
                                 return (
-                                    <div key={step} className="flex flex-col items-center relative z-10">
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${circleBase}`}>
+                                    <div
+                                        key={step}
+                                        className="flex flex-col items-center relative z-10">
+                                        <div
+                                            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${circleBase}`}>
                                             {isCurrent && (isHold ? '⚠' : '●')}
                                             {done && !isCurrent && '✓'}
-                                            {!done && !isCurrent && (i + 1)}
+                                            {!done && !isCurrent && i + 1}
                                         </div>
                                         <span className={`text-[10px] mt-2 capitalize tracking-wide text-center leading-tight ${labelClass}`}>
                                             {stepLabels[step] || step}
@@ -975,7 +964,9 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                         <div className="space-y-4">
                             <div className="flex items-center justify-between py-2 border-b border-gray-700/50">
                                 <span className="text-sm text-gray-400 font-medium">Amount</span>
-                                <span className="text-2xl font-bold text-white">${payout.amount?.toFixed(2)} <span className="text-sm text-gray-400 font-normal">{payout.currency}</span></span>
+                                <span className="text-2xl font-bold text-white">
+                                    ${payout.amount?.toFixed(2)} <span className="text-sm text-gray-400 font-normal">{payout.currency}</span>
+                                </span>
                             </div>
                             <div className="flex items-center justify-between py-2 border-b border-gray-700/50">
                                 <span className="text-sm text-gray-400 font-medium">Seller</span>
@@ -992,7 +983,8 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                             <div className="flex items-center justify-between py-2">
                                 <span className="text-sm text-gray-400 font-medium">Requested</span>
                                 <span className="text-xs text-gray-300 font-mono text-right leading-tight">
-                                    {new Date(payout.requestedAt || payout.createdAt).toLocaleDateString()}<br/>
+                                    {new Date(payout.requestedAt || payout.createdAt).toLocaleDateString()}
+                                    <br />
                                     <span className="text-gray-500">{new Date(payout.requestedAt || payout.createdAt).toLocaleTimeString()}</span>
                                 </span>
                             </div>
@@ -1003,7 +995,7 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                     {detailsLoading && (
                         <div className="bg-[#1a1a1a] rounded-xl p-4 border border-gray-800">
                             <div className="flex items-center gap-3 text-sm text-gray-400">
-                                <Loader2 className="w-5 h-5 animate-spin text-[#00FF89]" /> 
+                                <Loader2 className="w-5 h-5 animate-spin text-[#00FF89]" />
                                 <span>Loading additional details...</span>
                             </div>
                         </div>
@@ -1016,9 +1008,18 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                             <div className="bg-[#1a1a1a] rounded-xl p-4 border border-gray-800">
                                 <h4 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Transaction Details</h4>
                                 <div className="grid grid-cols-1 gap-3">
-                                    <InfoRow label="Transaction ID" value={transactionId || 'Not assigned'} />
-                                    <InfoRow label="Approver" value={approver ? (approver.name || approver.email || approver.id) : 'Pending approval'} />
-                                    <InfoRow label="Notes" value={notes || 'No notes available'} />
+                                    <InfoRow
+                                        label="Transaction ID"
+                                        value={transactionId || 'Not assigned'}
+                                    />
+                                    <InfoRow
+                                        label="Approver"
+                                        value={approver ? approver.name || approver.email || approver.id : 'Pending approval'}
+                                    />
+                                    <InfoRow
+                                        label="Notes"
+                                        value={notes || 'No notes available'}
+                                    />
                                 </div>
                             </div>
 
@@ -1030,14 +1031,22 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                                     </h4>
                                     <div className="max-h-48 overflow-auto space-y-2">
                                         {salesIncluded.map((s) => (
-                                            <div key={s.id || s.saleId} className="flex items-center justify-between p-3 bg-[#0f0f0f] rounded-lg border border-gray-800/50">
+                                            <div
+                                                key={s.id || s.saleId}
+                                                className="flex items-center justify-between p-3 bg-[#0f0f0f] rounded-lg border border-gray-800/50">
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm text-gray-200 font-medium truncate" title={s.productName || s.title}>
+                                                    <p
+                                                        className="text-sm text-gray-200 font-medium truncate"
+                                                        title={s.productName || s.title}>
                                                         {s.productName || s.title || 'Sale'}
                                                     </p>
-                                                    <p className="text-xs text-gray-500 font-mono">#{(s.id || s.saleId || '').toString().slice(-8)}</p>
+                                                    <p className="text-xs text-gray-500 font-mono">
+                                                        #{(s.id || s.saleId || '').toString().slice(-8)}
+                                                    </p>
                                                 </div>
-                                                <span className="text-sm font-bold text-[#00FF89] ml-3">${Number(s.amount || s.total || 0).toFixed(2)}</span>
+                                                <span className="text-sm font-bold text-[#00FF89] ml-3">
+                                                    ${Number(s.amount || s.total || 0).toFixed(2)}
+                                                </span>
                                             </div>
                                         ))}
                                     </div>
@@ -1050,12 +1059,18 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                                     <h4 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Activity Log</h4>
                                     <div className="space-y-3 max-h-40 overflow-auto">
                                         {audit.slice(0, 6).map((ev, idx) => (
-                                            <div key={idx} className="flex items-start gap-3 p-3 bg-[#0f0f0f] rounded-lg border border-gray-800/50">
+                                            <div
+                                                key={idx}
+                                                className="flex items-start gap-3 p-3 bg-[#0f0f0f] rounded-lg border border-gray-800/50">
                                                 <span className="w-2 h-2 bg-[#00FF89] rounded-full mt-2 flex-shrink-0"></span>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-sm text-gray-300 font-medium">{ev.action || ev.status || 'Activity'}</p>
-                                                    {ev.by && <p className="text-xs text-gray-500 mt-1">by {ev.by.name || ev.by.email || ev.by.id}</p>}
-                                                    {ev.at && <p className="text-xs text-gray-600 mt-1 font-mono">{new Date(ev.at).toLocaleString()}</p>}
+                                                    {ev.by && (
+                                                        <p className="text-xs text-gray-500 mt-1">by {ev.by.name || ev.by.email || ev.by.id}</p>
+                                                    )}
+                                                    {ev.at && (
+                                                        <p className="text-xs text-gray-600 mt-1 font-mono">{new Date(ev.at).toLocaleString()}</p>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}
@@ -1078,13 +1093,13 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                                     className={`flex-1 min-w-0 px-4 py-3 rounded-lg text-sm font-semibold border transition-all duration-200 ${
                                         updatingId === payout.id ? 'opacity-50 cursor-wait' : ''
                                     } ${
-                                        a.tone === 'green' 
-                                            ? 'bg-[#113226] text-[#00FF89] border-[#1d5d45] hover:bg-[#154633] shadow-lg shadow-[#00FF89]/10' 
-                                            : a.tone === 'amber' 
-                                            ? 'bg-[#352a14] text-[#FFC050] border-[#4a3614] hover:bg-[#423016] shadow-lg shadow-[#FFC050]/10' 
-                                            : a.tone === 'red' 
-                                            ? 'bg-[#3a1515] text-red-300 border-red-800/40 hover:bg-[#4a1c1c] shadow-lg shadow-red-500/10' 
-                                            : 'bg-[#1e293b] text-sky-300 border-sky-800/40 hover:bg-[#243349] shadow-lg shadow-sky-500/10'
+                                        a.tone === 'green'
+                                            ? 'bg-[#113226] text-[#00FF89] border-[#1d5d45] hover:bg-[#154633] shadow-lg shadow-[#00FF89]/10'
+                                            : a.tone === 'amber'
+                                              ? 'bg-[#352a14] text-[#FFC050] border-[#4a3614] hover:bg-[#423016] shadow-lg shadow-[#FFC050]/10'
+                                              : a.tone === 'red'
+                                                ? 'bg-[#3a1515] text-red-300 border-red-800/40 hover:bg-[#4a1c1c] shadow-lg shadow-red-500/10'
+                                                : 'bg-[#1e293b] text-sky-300 border-sky-800/40 hover:bg-[#243349] shadow-lg shadow-sky-500/10'
                                     }`}>
                                     {updatingId === payout.id ? (
                                         <div className="flex items-center justify-center gap-2">
@@ -1109,7 +1124,9 @@ function InfoRow({ label, value }) {
     return (
         <div className="flex items-center justify-between py-2">
             <span className="text-sm text-gray-400 font-medium">{label}</span>
-            <span className="text-sm text-gray-200 font-mono text-right max-w-[60%] truncate" title={value}>
+            <span
+                className="text-sm text-gray-200 font-mono text-right max-w-[60%] truncate"
+                title={value}>
                 {value}
             </span>
         </div>
