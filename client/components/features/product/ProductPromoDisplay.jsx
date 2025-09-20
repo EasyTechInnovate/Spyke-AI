@@ -25,10 +25,9 @@ export default function ProductPromoDisplay({ product }) {
     const fetchProductPromocodes = async () => {
         try {
             setLoading(true)
-            console.log('Fetching promocodes for product:', product._id)
             
             const response = await promocodeAPI.getApplicablePromocodes(product._id)
-            console.log('Promocode API response:', response)
+            console.log('📊 Promocode API response:', response)
             
             if (response.success && response.data?.applicablePromocodes) {
                 const allApplicable = [
@@ -38,9 +37,16 @@ export default function ProductPromoDisplay({ product }) {
                     ...(response.data.applicablePromocodes.industrySpecific || [])
                 ]
 
-                console.log('Found applicable promocodes:', allApplicable.length)
+                const validPromocodes = allApplicable.filter(promo => {
+                    const productPrice = product?.price || 0
+                    const minimumRequired = promo.minimumOrderAmount || 0
+                    const isValid = productPrice >= minimumRequired
 
-                const sortedPromos = allApplicable.sort((a, b) => {
+                    console.log(`✅ Promo ${promo.code}: price=${productPrice}, minimum=${minimumRequired}, valid=${isValid}`)
+                    return isValid
+                })
+
+                const sortedPromos = validPromocodes.sort((a, b) => {
                     const aValue = calculatePotentialSavings(a)
                     const bValue = calculatePotentialSavings(b)
                     return bValue - aValue
@@ -49,12 +55,10 @@ export default function ProductPromoDisplay({ product }) {
                 setPromocodes(sortedPromos)
                 setBestDeal(sortedPromos[0] || null)
             } else {
-                console.log('No applicable promocodes found or API error:', response)
                 setPromocodes([])
                 setBestDeal(null)
             }
         } catch (error) {
-            console.error('Failed to fetch product promocodes:', error)
             setPromocodes([])
             setBestDeal(null)
         } finally {
@@ -65,6 +69,7 @@ export default function ProductPromoDisplay({ product }) {
     const calculatePotentialSavings = (promocode) => {
         const productPrice = product?.price || 0
         
+        // Don't filter here, just calculate savings
         if (productPrice < (promocode.minimumOrderAmount || 0)) return 0
         
         if (promocode.discountType === 'percentage') {
