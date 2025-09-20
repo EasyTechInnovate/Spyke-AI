@@ -565,8 +565,7 @@ export default function ProductHero({
 
                         {/* Promocode Display */}
                         <ProductPromoDisplay 
-                            productId={product._id}
-                            productCategory={product.category}
+                            product={product}
                         />
 
                         {/* Seller Info */}

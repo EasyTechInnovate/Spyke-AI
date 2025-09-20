@@ -21,7 +21,7 @@ import {
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { useCart } from '@/hooks/useCart'
-import { productsAPI, promocodeAPI } from '@/lib/api'
+import { productsAPI } from '@/lib/api'
 import { DESIGN_TOKENS, DSContainer, DSHeading, DSText, DSButton, DSLoadingState } from '@/lib/design-system'
 import ProductOverview from '@/components/product/ProductOverview'
 import ProductFeatures from '@/components/product/ProductFeatures'
@@ -157,7 +157,6 @@ export default function ProductPage() {
 
     // Data state
     const [relatedProducts, setRelatedProducts] = useState([])
-    const [availablePromocodes, setAvailablePromocodes] = useState([])
 
     // Refs
     const ctaRef = useRef(null)
@@ -233,24 +232,8 @@ export default function ProductPage() {
                         }
                     }
 
-                    // Fetch available promocodes
-                    try {
-                        const promoResponse = await promocodeAPI.getPublicPromocodes({
-                            status: 'active',
-                            limit: 5
-                        })
-                        if (promoResponse?.promocodes) {
-                            const applicablePromos = promoResponse.promocodes.filter((promo) => {
-                                if (!promo.applicableProducts || promo.applicableProducts.length === 0) {
-                                    return true
-                                }
-                                return promo.applicableProducts.includes(response.data._id)
-                            })
-                            setAvailablePromocodes(applicablePromos)
-                        }
-                    } catch (promoError) {
-                        console.warn('Failed to fetch promocodes:', promoError)
-                    }
+                    // Note: Promocodes are now handled by the ProductPromoDisplay component
+                    // which uses the smart applicable API instead of manual filtering
                 } else {
                     console.error('No product data in response:', response)
                     setError('Product not found')

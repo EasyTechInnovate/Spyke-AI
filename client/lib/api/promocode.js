@@ -113,6 +113,27 @@ const promocodeAPI = {
         }
     },
 
+    // Get applicable promocodes for specific products (public endpoint)
+    getApplicablePromocodes: async (productIds) => {
+        try {
+            const queryParams = new URLSearchParams()
+            
+            if (Array.isArray(productIds)) {
+                queryParams.append('productIds', productIds.join(','))
+            } else if (productIds) {
+                queryParams.append('productIds', productIds)
+            }
+            
+            const queryString = queryParams.toString()
+            const endpoint = queryString ? `v1/promocode/applicable?${queryString}` : 'v1/promocode/applicable'
+            
+            const response = await apiClient.get(endpoint)
+            return response.data || response
+        } catch (error) {
+            throw error
+        }
+    },
+
     // Helper function to format discount display
     formatDiscount: (promocode) => {
         if (promocode.discountType === 'percentage') {
