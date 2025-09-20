@@ -59,9 +59,31 @@ export const createPromocodeSchema = z.object({
 })
 
 export const updatePromocodeSchema = z.object({
+  code: z.string()
+    .min(3, 'Code must be at least 3 characters')
+    .max(20, 'Code must be less than 20 characters')
+    .regex(/^[A-Z0-9_-]+$/i, 'Code can only contain letters, numbers, hyphens and underscores')
+    .optional(),
+  
   description: z.string()
     .min(10, 'Description must be at least 10 characters')
     .max(200, 'Description must be less than 200 characters')
+    .optional(),
+  
+  discountType: z.enum(['percentage', 'fixed'], {
+    errorMap: () => ({ message: 'Discount type must be either percentage or fixed' })
+  }).optional(),
+  
+  discountValue: z.number()
+    .min(0, 'Discount value must be positive')
+    .refine((val, ctx) => {
+      // If discountType is percentage, limit to 100
+      const discountType = ctx.parent?.discountType || 'percentage'
+      if (discountType === 'percentage' && val > 100) {
+        return false
+      }
+      return true
+    }, { message: 'Percentage discount cannot exceed 100%' })
     .optional(),
   
   maxDiscountAmount: z.number()
@@ -84,6 +106,8 @@ export const updatePromocodeSchema = z.object({
     z.enum(Object.values(EProductIndustry))
   ).optional(),
   
+  isGlobal: z.boolean().optional(),
+  
   usageLimit: z.number()
     .min(1, 'Usage limit must be at least 1')
     .optional(),
@@ -97,6 +121,8 @@ export const updatePromocodeSchema = z.object({
   validUntil: z.string().datetime({
     message: 'Valid until must be a valid date'
   }).optional(),
+  
+  isActive: z.boolean().optional(),
   
   isPublic: z.boolean().optional()
 })

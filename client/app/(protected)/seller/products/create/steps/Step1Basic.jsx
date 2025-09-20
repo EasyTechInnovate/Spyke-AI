@@ -10,7 +10,6 @@ import IndustryDropdown from '@/components/shared/IndustryDropdown'
 import CustomSelect from '@/components/shared/CustomSelect'
 import { getEnhancedErrorMessage } from '@/lib/utils/errorMessages'
 
-// Use the existing product types from create constants but ensure they match filter types
 const PRODUCT_TYPES = CREATE_PRODUCT_TYPES
 
 const iconMap = {

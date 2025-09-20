@@ -110,21 +110,22 @@ export const VALIDATION_LIMITS = {
   TITLE: { MIN: 1, MAX: 100 },
   SHORT_DESCRIPTION: { MIN: 10, MAX: 200 },
   FULL_DESCRIPTION: { MIN: 50, MAX: 5000 },
-  HOW_IT_WORKS_MIN_STEPS: 3,
+  HOW_IT_WORKS_MIN_STEPS: 1,
+  TAGS_MIN: 1,
   TAGS_MAX: 10,
-  IMAGES_MAX: 10,
-  ADDITIONAL_IMAGES_MAX: 8, // Maximum additional images that can be uploaded
-  PRODUCT_TAGS_MAX: 15, // Maximum product tags
-  SEO_KEYWORDS_MAX: 10, // Maximum SEO keywords
+  FAQ_MIN: 1,
   FAQ_MAX: 20,
+  IMAGES_MAX: 10,
+  ADDITIONAL_IMAGES_MAX: 8,
+  PRODUCT_TAGS_MAX: 15,
+  SEO_KEYWORDS_MAX: 10,
   BENEFITS_MAX: 10,
   USE_CASES_MAX: 10,
   VIDEO_MAX_SIZE_MB: 150,
   VIDEO_MAX_DURATION_SECONDS: 300,
-  SUPPORT_MIN_LENGTH: 20 // Add missing constant for support field validation
+  SUPPORT_MIN_LENGTH: 20
 }
 
-// Helper text and tips for each step
 export const STEP_HELPERS = {
   1: {
     title: 'Essential Information',
@@ -175,7 +176,6 @@ export const STEP_HELPERS = {
   }
 }
 
-// Smart suggestions based on combinations
 export const SMART_SUGGESTIONS = {
   getToolsByCategory: (category) => {
     const categoryMap = {
@@ -197,7 +197,6 @@ export const SMART_SUGGESTIONS = {
     return typeMap[type] || 'under_30_mins'
   }
   
-  // getDeliveryMethodByType function removed since deliveryMethod field no longer exists
 }
 
 export default {

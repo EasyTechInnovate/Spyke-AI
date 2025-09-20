@@ -192,98 +192,52 @@ export const useProductCreateStore = create(
 
                 // Enhanced validation with race condition prevention
                 validateTouchedFields: () => {
-                    const currentValidationId = ++validationCounter
                     const state = get()
                     const errors = {}
                     const touched = state.touchedFields
 
                     // Only validate fields that have been touched
                     if (touched.title && !state.title.trim()) {
-                        errors.title = 'required'
-                    } else if (touched.title && state.title.length < VALIDATION_LIMITS.TITLE.MIN) {
-                        errors.title = 'minLength'
+                        errors.title = 'Title is required'
                     } else if (touched.title && state.title.length > VALIDATION_LIMITS.TITLE.MAX) {
-                        errors.title = 'maxLength'
+                        errors.title = `Title must be less than ${VALIDATION_LIMITS.TITLE.MAX} characters`
                     }
 
                     if (touched.type && !state.type) {
-                        errors.type = 'required'
+                        errors.type = 'Product type is required'
                     }
 
                     if (touched.category && !state.category) {
-                        errors.category = 'required'
+                        errors.category = 'Category is required'
                     }
 
                     if (touched.industry && !state.industry) {
-                        errors.industry = 'required'
+                        errors.industry = 'Industry is required'
                     }
 
                     if (touched.shortDescription && !state.shortDescription.trim()) {
-                        errors.shortDescription = 'required'
+                        errors.shortDescription = 'Short description is required'
                     } else if (touched.shortDescription && state.shortDescription.length < VALIDATION_LIMITS.SHORT_DESCRIPTION.MIN) {
-                        errors.shortDescription = 'minLength'
+                        errors.shortDescription = `Short description must be at least ${VALIDATION_LIMITS.SHORT_DESCRIPTION.MIN} characters`
                     } else if (touched.shortDescription && state.shortDescription.length > VALIDATION_LIMITS.SHORT_DESCRIPTION.MAX) {
-                        errors.shortDescription = 'maxLength'
+                        errors.shortDescription = `Short description must be less than ${VALIDATION_LIMITS.SHORT_DESCRIPTION.MAX} characters`
                     }
 
                     if (touched.fullDescription && !state.fullDescription.trim()) {
-                        errors.fullDescription = 'required'
+                        errors.fullDescription = 'Full description is required'
                     } else if (touched.fullDescription && state.fullDescription.length < VALIDATION_LIMITS.FULL_DESCRIPTION.MIN) {
-                        errors.fullDescription = 'minLength'
-                    } else if (touched.fullDescription && state.fullDescription.length > VALIDATION_LIMITS.FULL_DESCRIPTION.MAX) {
-                        errors.fullDescription = 'maxLength'
-                    }
-
-                    if (touched.toolsConfiguration && !state.toolsConfiguration.trim()) {
-                        errors.toolsConfiguration = 'required'
-                    }
-
-                    if (touched.setupTimeEstimate && !state.setupTimeEstimate) {
-                        errors.setupTimeEstimate = 'required'
+                        errors.fullDescription = `Full description must be at least ${VALIDATION_LIMITS.FULL_DESCRIPTION.MIN} characters`
                     }
 
                     if (touched.supportAndMaintenance && !state.supportAndMaintenance.trim()) {
-                        errors.supportAndMaintenance = 'required'
+                        errors.supportAndMaintenance = 'Support and maintenance information is required'
                     } else if (touched.supportAndMaintenance && state.supportAndMaintenance.length < VALIDATION_LIMITS.SUPPORT_MIN_LENGTH) {
-                        errors.supportAndMaintenance = 'minLength'
+                        errors.supportAndMaintenance = `Support information must be at least ${VALIDATION_LIMITS.SUPPORT_MIN_LENGTH} characters`
                     }
 
-                    if (touched.productTags && state.productTags.length === 0) {
-                        errors.productTags = 'required'
-                    } else if (touched.productTags && state.productTags.length > VALIDATION_LIMITS.PRODUCT_TAGS_MAX) {
-                        errors.productTags = 'maxItems'
-                    }
-
-                    if (touched.howItWorks) {
-                        const validSteps = state.howItWorks.filter((step) => step.title.trim() && step.detail.trim())
-                        if (validSteps.length < VALIDATION_LIMITS.HOW_IT_WORKS_MIN_STEPS) {
-                            errors.howItWorks = 'minSteps'
-                        }
-                    }
-
-                    if (touched.faq) {
-                        const validFaqs = state.faq.filter((faq) => faq.question.trim() && faq.answer.trim())
-                        if (validFaqs.length === 0) {
-                            errors.faq = 'required'
-                        }
-                    }
-
-                    // Use setTimeout to prevent race conditions
-                    setTimeout(() => {
-                        // Only apply validation if this is still the latest validation
-                        if (currentValidationId === validationCounter) {
-                            set((state) => {
-                                // Only update errors for touched fields, keep existing errors for untouched fields
-                                state.errors = { ...state.errors, ...errors }
-                                // Clear errors for touched fields that are now valid
-                                Object.keys(touched).forEach((field) => {
-                                    if (!errors[field]) {
-                                        delete state.errors[field]
-                                    }
-                                })
-                            })
-                        }
-                    }, 0)
+                    set((state) => {
+                        state.errors = { ...state.errors, ...errors }
+                    })
                 },
 
                 setStep: (step) =>
