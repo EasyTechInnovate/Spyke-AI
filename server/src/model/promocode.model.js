@@ -267,7 +267,7 @@ promocodeSchema.statics.getSellerPromocodes = async function (sellerId, options 
             .skip(skip)
             .limit(limit)
             .populate('createdBy', 'name email')
-            .populate('applicableProducts', 'title slug')
+            .populate('applicableProducts', 'title price thumbnail slug')
             .lean(),
         this.countDocuments(query)
     ])
