@@ -25,7 +25,8 @@ import {
     CheckCircle,
     AlertCircle,
     Sparkles,
-    MoreVertical
+    MoreVertical,
+    ChevronDown
 } from 'lucide-react'
 import PromocodeForm from '@/components/features/promocode/PromocodeForm'
 import PromocodeStats from '@/components/features/promocode/PromocodeStats'
@@ -57,6 +58,8 @@ export default function PromocodesPage() {
     const [showDetails, setShowDetails] = useState(false)
     const [selectedPromocode, setSelectedPromocode] = useState(null)
     const [copiedCode, setCopiedCode] = useState(null)
+    const [expandedProducts, setExpandedProducts] = useState(new Set())
+    const [expandedCategories, setExpandedCategories] = useState(new Set())
     const [pagination, setPagination] = useState({
         page: 1,
         limit: 10,
@@ -213,6 +216,27 @@ export default function PromocodesPage() {
         setShowStats(true)
     }
 
+    // Helper functions for expanding/collapsing sections
+    const toggleProductsExpanded = (promocodeId) => {
+        const newExpanded = new Set(expandedProducts)
+        if (newExpanded.has(promocodeId)) {
+            newExpanded.delete(promocodeId)
+        } else {
+            newExpanded.add(promocodeId)
+        }
+        setExpandedProducts(newExpanded)
+    }
+
+    const toggleCategoriesExpanded = (promocodeId) => {
+        const newExpanded = new Set(expandedCategories)
+        if (newExpanded.has(promocodeId)) {
+            newExpanded.delete(promocodeId)
+        } else {
+            newExpanded.add(promocodeId)
+        }
+        setExpandedCategories(newExpanded)
+    }
+
     // Calculate stats
     const activeCount = promocodes.filter((p) => p.isActive).length
     const totalUses = promocodes.reduce((sum, p) => sum + (p.currentUsageCount || 0), 0)
@@ -334,7 +358,6 @@ export default function PromocodesPage() {
                                 title="Create new promocode (⌘N)">
                                 <Plus className="w-5 h-5" />
                                 Create Promocode
-                                <Sparkles className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                             </button>
                         </div>
                     </div>
@@ -585,23 +608,77 @@ export default function PromocodesPage() {
                                     {/* Tags */}
                                     <div className="flex flex-wrap gap-2 mt-2">
                                         {promocode.applicableProducts && promocode.applicableProducts.length > 0 && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#00FF89]/10 text-[#00FF89] text-xs rounded-full">
-                                                <Tag className="w-3 h-3" />
-                                                {promocode.applicableProducts.length} Products
-                                            </span>
+                                            <div>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        toggleProductsExpanded(promocode._id);
+                                                    }}
+                                                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#00FF89]/10 text-[#00FF89] text-xs rounded-full hover:bg-[#00FF89]/20 transition-all"
+                                                >
+                                                    <Tag className="w-3 h-3" />
+                                                    {promocode.applicableProducts.length} Products
+                                                    <ChevronDown 
+                                                        className={`w-3 h-3 transition-transform ${
+                                                            expandedProducts.has(promocode._id) ? 'rotate-180' : ''
+                                                        }`} 
+                                                    />
+                                                </button>
+                                                {/* Expandable content */}
+                                                {expandedProducts.has(promocode._id) && (
+                                                    <div className="mt-2 p-3 bg-[#0a0a0a] border border-gray-700 rounded-lg text-xs animate-in slide-in-from-top-2 duration-200">
+                                                        <div className="text-gray-400 mb-2">Applicable Products:</div>
+                                                        <div className="space-y-1 max-h-32 overflow-y-auto">
+                                                            {promocode.applicableProducts.map((product, index) => (
+                                                                <div key={product._id || index} className="text-white flex items-center gap-2">
+                                                                    <span className="w-1 h-1 bg-[#00FF89] rounded-full flex-shrink-0"></span>
+                                                                    {typeof product === 'object' ? product.title : 'Product'}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         )}
                                         {promocode.applicableCategories && promocode.applicableCategories.length > 0 && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#FFC050]/10 text-[#FFC050] text-xs rounded-full">
-                                                <Filter className="w-3 h-3" />
-                                                {promocode.applicableCategories.length} Categories
+                                            <div>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        toggleCategoriesExpanded(promocode._id);
+                                                    }}
+                                                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#FFC050]/10 text-[#FFC050] text-xs rounded-full hover:bg-[#FFC050]/20 transition-all"
+                                                >
+                                                    <Filter className="w-3 h-3" />
+                                                    {promocode.applicableCategories.length} Categories
+                                                    <ChevronDown 
+                                                        className={`w-3 h-3 transition-transform ${
+                                                            expandedCategories.has(promocode._id) ? 'rotate-180' : ''
+                                                        }`} 
+                                                    />
+                                                </button>
+                                                {/* Expandable content */}
+                                                {expandedCategories.has(promocode._id) && (
+                                                    <div className="mt-2 p-3 bg-[#0a0a0a] border border-gray-700 rounded-lg text-xs animate-in slide-in-from-top-2 duration-200">
+                                                        <div className="text-gray-400 mb-2">Applicable Categories:</div>
+                                                        <div className="space-y-1">
+                                                            {promocode.applicableCategories.map((category, index) => (
+                                                                <div key={index} className="text-white flex items-center gap-2">
+                                                                    <span className="w-1 h-1 bg-[#FFC050] rounded-full flex-shrink-0"></span>
+                                                                    {category}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                        {(!promocode.applicableProducts || promocode.applicableProducts.length === 0) && 
+                                         (!promocode.applicableCategories || promocode.applicableCategories.length === 0) && (
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded-full">
+                                                All Products
                                             </span>
                                         )}
-                                        {(!promocode.applicableProducts || promocode.applicableProducts.length === 0) &&
-                                            (!promocode.applicableCategories || promocode.applicableCategories.length === 0) && (
-                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded-full">
-                                                    All Products
-                                                </span>
-                                            )}
                                     </div>
                                 </div>
                             )
