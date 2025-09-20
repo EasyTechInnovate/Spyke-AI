@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { authAPI } from '@/lib/api/auth'
 import { useImageUpload } from '@/hooks/useImageUpload'
 import { getUserLocation } from '@/lib/utils/getUserLocation'
+import geocodingService from '@/lib/utils/geocoding'
 
 export default function ProfileSection({ onSuccess, onError }) {
     const { user, updateProfile, checkAuthStatus } = useAuth()
@@ -17,6 +18,8 @@ export default function ProfileSection({ onSuccess, onError }) {
     const [showCitySearch, setShowCitySearch] = useState(false)
     const [validationErrors, setValidationErrors] = useState({})
     const [isEditMode, setIsEditMode] = useState(false)
+    const [locationName, setLocationName] = useState('')
+    const [loadingLocationName, setLoadingLocationName] = useState(false)
 
     const [profileData, setProfileData] = useState({
         name: user?.name || '',
@@ -113,16 +116,11 @@ export default function ProfileSection({ onSuccess, onError }) {
 
         return phone.toString()
     }
-
-    // Helper function to get current values for display
     const getCurrentValues = () => {
-        // Function to get readable location from user data
         const getLocationDisplay = () => {
-            // If we have coordinates, show them
             if (user?.userLocation?.lat && user?.userLocation?.long) {
-                const lat = user.userLocation.lat
-                const long = user.userLocation.long
-                return `${lat.toFixed(4)}, ${long.toFixed(4)}`
+                // Return cached location name or coordinates as fallback
+                return locationName || `${user.userLocation.lat.toFixed(4)}, ${user.userLocation.long.toFixed(4)}`
             }
             return 'Not set'
         }
@@ -134,6 +132,29 @@ export default function ProfileSection({ onSuccess, onError }) {
             location: getLocationDisplay()
         }
     }
+
+    // Load location name when user data is available
+    useEffect(() => {
+        const loadLocationName = async () => {
+            if (user?.userLocation?.lat && user?.userLocation?.long && !locationName && !loadingLocationName) {
+                setLoadingLocationName(true)
+                try {
+                    const lat = user.userLocation.lat
+                    const lng = user.userLocation.long
+                    const address = await geocodingService.getLocationName(lat, lng)
+                    if (address) {
+                        setLocationName(address)
+                    }
+                } catch (error) {
+                    console.error('Failed to get location name:', error)
+                } finally {
+                    setLoadingLocationName(false)
+                }
+            }
+        }
+
+        loadLocationName()
+    }, [user, locationName, loadingLocationName])
 
     const currentValues = getCurrentValues()
 
@@ -191,12 +212,7 @@ export default function ProfileSection({ onSuccess, onError }) {
     // Reverse geocoding to get address from lat/long
     const reverseGeocode = async (lat, lng) => {
         try {
-            // Using a free geocoding service (you might want to use Google Maps API with your key)
-            const response = await fetch(
-                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`
-            )
-            const data = await response.json()
-            return `${data.city || data.locality || ''}, ${data.countryName || ''}`.trim().replace(/^,|,$/, '')
+            return await geocodingService.getLocationName(lat, lng)
         } catch (error) {
             console.error('Reverse geocoding failed:', error)
             return null
@@ -211,19 +227,7 @@ export default function ProfileSection({ onSuccess, onError }) {
         }
 
         try {
-            // Using OpenStreetMap Nominatim API (free)
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`
-            )
-            const data = await response.json()
-
-            const results = data.map((item) => ({
-                display_name: item.display_name,
-                lat: parseFloat(item.lat),
-                long: parseFloat(item.lon),
-                address: item.display_name
-            }))
-
+            const results = await geocodingService.searchPlaces(query, 5)
             setCitySearchResults(results)
         } catch (error) {
             console.error('City search failed:', error)
