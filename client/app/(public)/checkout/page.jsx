@@ -76,13 +76,6 @@ export default function CheckoutPage() {
     }, [cartLoading])
 
     useEffect(() => {
-        // Check if user is authenticated when trying to access checkout
-        if (hasCheckedCart && !cartLoading && !initialLoad && !isAuthenticated) {
-            // If not authenticated, redirect to sign up page
-            router.push('/auth/signup?redirect=/checkout')
-            return
-        }
-
         // Add a small delay to ensure cart has fully loaded after auth changes
         const timer = setTimeout(() => {
             // If skipCartRedirect is set (we're navigating to success), avoid auto-redirect to /cart
@@ -92,7 +85,7 @@ export default function CheckoutPage() {
         }, 500) // 500ms delay to handle auth transitions
 
         return () => clearTimeout(timer)
-    }, [cartItems.length, cartLoading, hasCheckedCart, initialLoad, router, skipCartRedirect, isAuthenticated])
+    }, [cartItems.length, cartLoading, hasCheckedCart, initialLoad, router, skipCartRedirect])
 
     // Calculate totals
     const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)

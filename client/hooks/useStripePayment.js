@@ -16,13 +16,7 @@ export function useStripePayment() {
   const { user } = useAuth()
   const { addNotification } = useNotifications()
 
-  // Create payment intent
   const createPaymentIntent = useCallback(async (amount) => {
-    if (!user) {
-      setError('User not authenticated')
-      return null
-    }
-
     setIsLoading(true)
     setError(null)
 
@@ -54,7 +48,6 @@ export function useStripePayment() {
     }
   }, [user, addNotification])
 
-  // Handle successful payment
   const handlePaymentSuccess = useCallback(async (paymentIntentData) => {
     setIsProcessing(true)
     setError(null)
@@ -69,7 +62,6 @@ export function useStripePayment() {
           message: 'Your purchase has been completed successfully.'
         })
 
-        // Redirect to success page
         router.push('/checkout/success?payment_intent=' + paymentIntentData.id)
         return true
       } else {
@@ -89,7 +81,6 @@ export function useStripePayment() {
     }
   }, [router, addNotification])
 
-  // Handle payment error
   const handlePaymentError = useCallback((error) => {
     setError(error.message || 'Payment failed')
     addNotification({
@@ -99,7 +90,6 @@ export function useStripePayment() {
     })
   }, [addNotification])
 
-  // Reset payment state
   const resetPayment = useCallback(() => {
     setPaymentIntent(null)
     setError(null)
@@ -108,13 +98,11 @@ export function useStripePayment() {
   }, [])
 
   return {
-    // State
     isLoading,
     isProcessing,
     paymentIntent,
     error,
     
-    // Actions
     createPaymentIntent,
     handlePaymentSuccess,
     handlePaymentError,
