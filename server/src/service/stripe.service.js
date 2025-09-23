@@ -27,6 +27,7 @@ class StripeService {
     async retrievePaymentIntent(paymentIntentId) {
         try {
             const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
+
             return paymentIntent
         } catch (error) {
             throw new Error(`Failed to retrieve payment intent: ${error.message}`)
@@ -39,6 +40,51 @@ class StripeService {
             return paymentIntent
         } catch (error) {
             throw new Error(`Failed to confirm payment intent: ${error.message}`)
+        }
+    }
+
+    async createCheckoutSession(amount, metadata = {}, successUrl, cancelUrl) {
+        try {
+            const successUrlWithSession = successUrl.includes('?') 
+                ? `${successUrl}&session_id={CHECKOUT_SESSION_ID}`
+                : `${successUrl}?session_id={CHECKOUT_SESSION_ID}`
+
+            const session = await stripe.checkout.sessions.create({
+                payment_method_types: ['card'],
+                line_items: [
+                    {
+                        price_data: {
+                            currency: 'usd',
+                            product_data: {
+                                name: 'Purchase',
+                            },
+                            unit_amount: Math.round(amount * 100),
+                        },
+                        quantity: 1,
+                    },
+                ],
+                mode: 'payment',
+                success_url: successUrlWithSession,
+                cancel_url: cancelUrl,
+                metadata
+            })
+
+            return {
+                sessionId: session.id,
+                url: session.url
+            }
+        } catch (error) {
+            throw new Error(`Failed to create checkout session: ${error.message}`)
+        }
+    }
+
+    async retrieveCheckoutSession(sessionId) {
+        try {
+            const session = await stripe.checkout.sessions.retrieve(sessionId)
+
+            return session
+        } catch (error) {
+            throw new Error(`Failed to retrieve checkout session: ${error.message}`)
         }
     }
 
@@ -91,6 +137,7 @@ class StripeService {
                 signature,
                 process.env.STRIPE_WEBHOOK_SECRET
             )
+
             return event
         } catch (error) {
             throw new Error(`Webhook signature verification failed: ${error.message}`)
@@ -119,6 +166,10 @@ class StripeService {
 
     isPaymentSuccessful(paymentIntent) {
         return paymentIntent.status === 'succeeded'
+    }
+
+    isCheckoutSessionSuccessful(session) {
+        return session.status === 'complete' && session.payment_status === 'paid'
     }
 
     getPaymentStatus(paymentIntent) {

@@ -93,6 +93,20 @@ router.post(
 )
 
 router.post(
+  '/checkout-session',
+  authenticate,
+  rateLimiter,
+  purchaseController.createCheckoutSession
+)
+
+router.post(
+  '/confirm-checkout-session',
+  authenticate,
+  rateLimiter,
+  purchaseController.confirmCheckoutSession
+)
+
+router.post(
   '/payment-intent',
   authenticate,
   rateLimiter,

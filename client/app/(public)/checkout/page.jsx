@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
@@ -25,40 +25,25 @@ import {
 } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
 import { useCart } from '@/hooks/useCart'
-import { cartAPI } from '@/lib/api'
+import { paymentAPI, cartAPI } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
 import Link from 'next/link'
 import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
-import StripePaymentForm from '@/components/features/payment/StripePaymentForm'
-import { useStripePayment } from '@/hooks/useStripePayment'
 
 export default function CheckoutPage() {
-    // Inline notification state
     const [notification, setNotification] = useState(null)
 
-    // Show inline notification messages
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
-        // Auto-dismiss after 5 seconds
         setTimeout(() => setNotification(null), 5000)
     }
 
-    // Clear notification
     const clearNotification = () => setNotification(null)
 
     const router = useRouter()
     const { isAuthenticated } = useAuth()
     const { cartItems, cartData, loading: cartLoading, clearCart, removeFromCart } = useCart()
-    
-    // Stripe payment hook
-    const { 
-        createPaymentIntent, 
-        paymentStatus, 
-        paymentError, 
-        isProcessing, 
-        resetPayment 
-    } = useStripePayment()
 
     const [loading, setLoading] = useState(false)
     const [initialLoad, setInitialLoad] = useState(true)
@@ -66,7 +51,7 @@ export default function CheckoutPage() {
     const [skipCartRedirect, setSkipCartRedirect] = useState(false)
     const [step, setStep] = useState(1) // 1: Review, 2: Payment
     const [paymentMethod, setPaymentMethod] = useState('manual')
-    const [clientSecret, setClientSecret] = useState(null)
+    
 
     useEffect(() => {
         if (!cartLoading) {
@@ -81,18 +66,15 @@ export default function CheckoutPage() {
             return
         }
 
-        // Add a small delay to ensure cart has fully loaded after auth changes
         const timer = setTimeout(() => {
-            // If skipCartRedirect is set (we're navigating to success), avoid auto-redirect to /cart
             if (hasCheckedCart && !cartLoading && !initialLoad && !skipCartRedirect && cartItems.length === 0) {
                 router.push('/cart')
             }
-        }, 500) // 500ms delay to handle auth transitions
+        }, 500)
 
         return () => clearTimeout(timer)
     }, [cartItems.length, cartLoading, hasCheckedCart, initialLoad, router, skipCartRedirect, isAuthenticated])
 
-    // Calculate totals
     const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
     const discount = cartData.appliedPromocode
         ? cartData.appliedPromocode.discountType === 'percentage'
@@ -101,7 +83,6 @@ export default function CheckoutPage() {
         : 0
     const total = Math.max(0, subtotal - discount)
 
-    // Handle item removal in checkout
     const handleRemoveItem = async (itemId) => {
         try {
             await removeFromCart(itemId)
@@ -111,24 +92,13 @@ export default function CheckoutPage() {
         }
     }
 
-    // Handle step navigation
+    const handlePaymentMethodChange = async (newPaymentMethod) => {
+        setPaymentMethod(newPaymentMethod)
+    }
+
     const handleNextStep = async () => {
         if (step === 1) {
-            // If Stripe is selected, create payment intent before moving to payment step
-            if (paymentMethod === 'stripe') {
-                try {
-                    setLoading(true)
-                    const { clientSecret: secret } = await createPaymentIntent(total)
-                    setClientSecret(secret)
-                    setStep(2)
-                } catch (error) {
-                    showMessage('Failed to initialize payment. Please try again.', 'error')
-                } finally {
-                    setLoading(false)
-                }
-            } else {
-                setStep(2)
-            }
+            setStep(2)
         }
     }
 
@@ -136,21 +106,14 @@ export default function CheckoutPage() {
         if (step > 1) setStep(step - 1)
     }
 
-    // Handle checkout
     const handleCheckout = async () => {
         setLoading(true)
 
         try {
-            if (paymentMethod === 'stripe') {
-                showMessage('Processing Stripe payment...', 'info')
-                return
-            }
-
             const purchaseData = {
                 paymentMethod: paymentMethod,
                 paymentReference: `${paymentMethod.toUpperCase()}-${Date.now()}`
             }
-
             const result = await cartAPI.createPurchase(purchaseData)
 
             const purchaseId =
@@ -160,51 +123,16 @@ export default function CheckoutPage() {
                 throw new Error('Failed to create purchase - no purchase ID returned')
             }
 
-            // Complete the checkout process
             await completeCheckout(purchaseId, paymentMethod)
 
         } catch (error) {
-            console.error('Checkout error:', error)
             showMessage(error.message || 'Checkout failed. Please try again.', 'error')
         } finally {
             setLoading(false)
         }
     }
 
-    // Handle successful Stripe payment
-    const handleStripePaymentSuccess = async (paymentIntentId) => {
-        try {
-            setLoading(true)
-            
-            // Create purchase with Stripe payment details
-            const purchaseData = {
-                paymentMethod: 'stripe',
-                paymentReference: paymentIntentId
-            }
-
-            const result = await cartAPI.createPurchase(purchaseData)
-            
-            const purchaseId =
-                result?.purchaseId || result?._id || result?.data?.purchaseId || result?.completed?.data?.purchaseId || result?.completed?.purchaseId
-
-            if (!purchaseId) {
-                throw new Error('Failed to create purchase - no purchase ID returned')
-            }
-
-            // Complete the checkout process
-            await completeCheckout(purchaseId, 'stripe')
-            
-        } catch (error) {
-            console.error('Stripe checkout error:', error)
-            showMessage(error.message || 'Failed to complete order. Please contact support.', 'error')
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    // Complete checkout process (shared logic)
     const completeCheckout = async (purchaseId, method) => {
-        // Prepare success page data
         const successData = {
             orderId: purchaseId,
             isManual: method === 'manual',
@@ -360,24 +288,11 @@ export default function CheckoutPage() {
                                 )}
 
                                 {step === 2 && (
-                                    <>
-                                        <PaymentMethodStep
-                                            paymentMethod={paymentMethod}
-                                            setPaymentMethod={setPaymentMethod}
-                                        />
-                                        
-                                        {/* Stripe Payment Form */}
-                                        {paymentMethod === 'stripe' && clientSecret && (
-                                            <div className="mt-8">
-                                                <StripePaymentForm
-                                                    clientSecret={clientSecret}
-                                                    amount={total}
-                                                    onSuccess={handleStripePaymentSuccess}
-                                                    onError={(error) => showMessage(error, 'error')}
-                                                />
-                                            </div>
-                                        )}
-                                    </>
+                                    <PaymentMethodStep
+                                        paymentMethod={paymentMethod}
+                                        setPaymentMethod={setPaymentMethod}
+                                        onPaymentMethodChange={handlePaymentMethodChange}
+                                    />
                                 )}
 
                                 {/* Navigation Buttons - Improved spacing and states */}
@@ -412,18 +327,13 @@ export default function CheckoutPage() {
                                     ) : (
                                         <button
                                             onClick={handleCheckout}
-                                            disabled={loading || (paymentMethod === 'stripe' && !clientSecret)}
+                                            disabled={loading}
                                             className="flex items-center justify-center gap-2 px-6 py-3 bg-brand-primary text-black font-semibold rounded-xl hover:bg-brand-primary/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/50 focus:ring-offset-2 focus:ring-offset-gray-900 order-1 sm:order-2"
                                             aria-label={loading ? 'Processing purchase' : 'Complete purchase'}>
                                             {loading ? (
                                                 <>
                                                     <Loader2 className="w-4 h-4 animate-spin" />
                                                     Processing...
-                                                </>
-                                            ) : paymentMethod === 'stripe' ? (
-                                                <>
-                                                    <CreditCard className="w-4 h-4" />
-                                                    Pay with Stripe
                                                 </>
                                             ) : (
                                                 <>
@@ -642,8 +552,7 @@ function ReviewStep({ cartItems, total, subtotal, discount, promocode, onRemoveI
     )
 }
 
-// Payment Method Step Component
-function PaymentMethodStep({ paymentMethod, setPaymentMethod }) {
+function PaymentMethodStep({ paymentMethod, setPaymentMethod, onPaymentMethodChange }) {
     const paymentOptions = [
         {
             id: 'manual',
@@ -698,7 +607,15 @@ function PaymentMethodStep({ paymentMethod, setPaymentMethod }) {
                                 name="paymentMethod"
                                 value={option.id}
                                 checked={paymentMethod === option.id}
-                                onChange={(e) => !option.comingSoon && setPaymentMethod(e.target.value)}
+                                onChange={(e) => {
+                                    if (!option.comingSoon) {
+                                        const newMethod = e.target.value
+                                        setPaymentMethod(newMethod)
+                                        if (onPaymentMethodChange) {
+                                            onPaymentMethodChange(newMethod)
+                                        }
+                                    }
+                                }}
                                 disabled={option.comingSoon}
                                 className="sr-only"
                             />

@@ -8,6 +8,7 @@ import ConditionalHeader from '@/components/shared/layout/ConditionalHeader'
 import { NotificationProvider } from '@/components/shared/NotificationProvider'
 import StripeProvider from '@/components/providers/StripeProvider'
 
+
 const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
@@ -297,11 +298,11 @@ export default function RootLayout({ children }) {
                 </a>
 
                 <ConditionalHeader />
-                <NotificationProvider>
-                    <StripeProvider>
+                <StripeProvider>
+                    <NotificationProvider>
                         <main id="main-content">{children}</main>
-                    </StripeProvider>
-                </NotificationProvider>
+                    </NotificationProvider>
+                </StripeProvider>
                 <ConditionalFooter />
                 <WhatsAppButton />
 

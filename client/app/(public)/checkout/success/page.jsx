@@ -8,6 +8,7 @@ import { CheckCircle, Package, Mail, ArrowRight, Download, Loader2, AlertCircle 
 import Container from '@/components/shared/layout/Container'
 import Header from '@/components/shared/layout/Header'
 import Link from 'next/link'
+import { cartAPI } from '@/lib/api'
 import confetti from 'canvas-confetti'
 
 function CheckoutSuccessContent() {
@@ -15,6 +16,7 @@ function CheckoutSuccessContent() {
     const searchParams = useSearchParams()
 
     const orderId = searchParams.get('orderId')
+    const sessionId = searchParams.get('session_id')
     const isManualPayment = searchParams.get('manual') === 'true'
     const orderTotal = searchParams.get('total')
     const orderItems = searchParams.get('items')
@@ -24,7 +26,6 @@ function CheckoutSuccessContent() {
     const [error, setError] = useState(null)
 
     useEffect(() => {
-        // Trigger confetti animation
         const triggerConfetti = () => {
             confetti({
                 particleCount: 100,
@@ -34,9 +35,54 @@ function CheckoutSuccessContent() {
             })
         }
 
-        // Load order details
         const loadOrderDetails = async () => {
             try {
+                if (sessionId) {
+                    try {
+                        const { paymentAPI } = await import('@/lib/api')
+                        const result = await paymentAPI?.confirmCheckoutSession(sessionId)
+                        if (!result) {
+                            console.error('Session confirmation failed:', result?.message || 'Unknown error')
+                            throw new Error(result?.message || 'Session validation failed')
+                        }
+
+                        const responseData = result
+                        const orderData = {
+                            orderId: responseData?.purchaseId,
+                            items: responseData?.items || [],
+                            total: responseData?.finalAmount,
+                            subtotal: responseData?.totalAmount,
+                            discount: responseData?.discountAmount || 0,
+                            paymentMethod: responseData?.paymentMethod || 'stripe_checkout',
+                            appliedPromocode: responseData?.appliedPromocode || null,
+                        }
+                        setOrderDetails(orderData)
+
+                        // Store in sessionStorage for consistency
+                        sessionStorage.setItem('lastOrderDetails', JSON.stringify(orderData))
+
+                        // Clear cart after successful payment
+                        try {
+                            await cartAPI.clearCart()
+                        } catch (error) {
+                            console.error('Failed to clear cart:', error)
+                        }
+
+                        setLoading(false)
+                        triggerConfetti()
+                        return
+                    } catch (apiError) {
+                        console.error('Error confirming checkout session:', apiError)
+                        console.error('Session ID:', sessionId)
+                        console.error('Error details:', {
+                            message: apiError.message,
+                            stack: apiError.stack,
+                            response: apiError.response?.data
+                        })
+                        throw apiError
+                    }
+                }
+
                 // Try to get stored order details from sessionStorage first
                 const storedDetails = sessionStorage.getItem('lastOrderDetails')
                 if (storedDetails) {
@@ -50,15 +96,13 @@ function CheckoutSuccessContent() {
                         return
                     }
                 }
-
-                // Fallback: construct order details from URL params
                 const fallbackDetails = {
                     orderId: orderId || 'Unknown',
                     total: orderTotal ? parseFloat(orderTotal) : 0,
                     itemCount: orderItems ? parseInt(orderItems) : 0,
-                    email: 'user@example.com', // This would come from user context in real app
+                    email: 'user@example.com',
                     paymentMethod: isManualPayment ? 'manual' : 'unknown',
-                    items: [] // Empty for now, could fetch from API
+                    items: []
                 }
 
                 setOrderDetails(fallbackDetails)
@@ -71,10 +115,9 @@ function CheckoutSuccessContent() {
             }
         }
 
-        // Delay for better UX
         const timer = setTimeout(loadOrderDetails, 800)
         return () => clearTimeout(timer)
-    }, [orderId, isManualPayment, orderTotal, orderItems])
+    }, [orderId, sessionId, isManualPayment, orderTotal, orderItems])
 
     if (loading) {
         return (

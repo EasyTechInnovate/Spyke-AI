@@ -3,10 +3,32 @@ import apiClient from './client'
 export const paymentAPI = {
   createPaymentIntent: async () => {
     try {
-      const response = await apiClient.post('/purchase/payment-intent')
+      const response = await apiClient.post('/v1/payment-intent')
       return response.data
     } catch (error) {
-      console.error('Failed to create payment intent:', error)
+      throw error
+    }
+  },
+
+  createCheckoutSession: async (successUrl, cancelUrl) => {
+    try {
+      const response = await apiClient.post('/v1/purchase/checkout-session', {
+        successUrl,
+        cancelUrl
+      })
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  confirmCheckoutSession: async (sessionId) => {
+    try {
+      const response = await apiClient.post('/v1/purchase/confirm-checkout-session', {
+        sessionId
+      })
+      return response.data
+    } catch (error) {
       throw error
     }
   },
@@ -18,7 +40,6 @@ export const paymentAPI = {
       })
       return response.data
     } catch (error) {
-      console.error('Failed to confirm Stripe payment:', error)
       throw error
     }
   },
@@ -28,7 +49,6 @@ export const paymentAPI = {
       const response = await apiClient.get('/purchase/cart')
       return response.data
     } catch (error) {
-      console.error('Failed to get cart:', error)
       throw error
     }
   },
@@ -38,7 +58,6 @@ export const paymentAPI = {
       const response = await apiClient.post('/purchase/complete-payment', paymentData)
       return response.data
     } catch (error) {
-      console.error('Failed to complete payment:', error)
       throw error
     }
   },
@@ -48,7 +67,6 @@ export const paymentAPI = {
       const response = await apiClient.post('/purchase/confirm-payment', paymentData)
       return response.data
     } catch (error) {
-      console.error('Failed to confirm payment:', error)
       throw error
     }
   }
