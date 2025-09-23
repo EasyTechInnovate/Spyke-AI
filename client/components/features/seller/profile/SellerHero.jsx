@@ -1,5 +1,4 @@
 'use client'
-
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
@@ -23,36 +22,24 @@ import {
     Eye
 } from 'lucide-react'
 import { formatNumber, formatRating } from '@/lib/utils/seller'
-
 export default function SellerHero({ seller, onContactClick }) {
     const [imageLoaded, setImageLoaded] = useState(false)
     const [isFollowing, setIsFollowing] = useState(false)
     const [bioExpanded, setBioExpanded] = useState(false)
-
-    // Ensure sellerLevel is rendered as text when it may be an object
     const sellerLevelText = seller && typeof seller.sellerLevel === 'object' && seller.sellerLevel !== null
         ? seller.sellerLevel.level
         : seller?.sellerLevel
-
-    // Debug logs for incoming props
     if (typeof window !== 'undefined') {
         console.debug('[SellerHero] props received', { id: seller?.id || seller?._id, sellerLevel: seller?.sellerLevel, sellerLevelText })
     }
-
-    // Normalize location: accept either { country, timezone } or string
     const sellerLocation = seller?.location?.country || (typeof seller?.location === 'string' ? seller.location : '')
-
     if (!seller) return null
-
     return (
         <div className="relative overflow-hidden">
-            {/* Theme-based Background */}
             <div className="absolute inset-0 bg-[#121212]">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(0,255,137,0.08),transparent_50%)]" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(255,192,80,0.06),transparent_50%)]" />
             </div>
-
-            {/* Background Banner with Overlay */}
             {seller.sellerBanner && (
                 <div className="absolute inset-0">
                     <img
@@ -63,30 +50,23 @@ export default function SellerHero({ seller, onContactClick }) {
                     <div className="absolute inset-0 bg-gradient-to-r from-[#121212]/80 via-[#121212]/60 to-[#121212]/40" />
                 </div>
             )}
-
             <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: 'easeOut' }}
                 className="relative">
-                {/* Background remains full-bleed via absolute elements above; constrain the inner content for readability */}
                 <div className="w-full py-8 sm:py-12">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6">
                         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-8 items-start">
-                            {/* Main Profile Section */}
                             <div className="xl:col-span-8 space-y-6 lg:space-y-8">
-                                {/* Profile Header */}
                                 <div className="flex flex-col sm:flex-row lg:flex-row gap-6 lg:gap-8">
-                                    {/* Avatar Section */}
                                     <motion.div
                                         initial={{ scale: 0.9, opacity: 0 }}
                                         animate={{ scale: 1, opacity: 1 }}
                                         transition={{ delay: 0.2, duration: 0.5 }}
                                         className="relative group flex-shrink-0 self-center sm:self-start">
                                         <div className="relative">
-                                            {/* Theme-based Animated Ring */}
                                             <div className="absolute -inset-2 bg-gradient-to-r from-[#00FF89] via-[#FFC050] to-[#00FF89] rounded-3xl opacity-70 group-hover:opacity-100 transition-opacity duration-300 animate-pulse" />
-
                                             <div className="relative w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-3xl overflow-hidden bg-gradient-to-br from-[#00FF89] to-[#FFC050]">
                                                 {seller.avatar ? (
                                                     <img
@@ -107,8 +87,6 @@ export default function SellerHero({ seller, onContactClick }) {
                                                     </div>
                                                 )}
                                             </div>
-
-                                            {/* Online Status */}
                                             {seller.isOnline && (
                                                 <div className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2">
                                                     <div className="relative w-6 h-6 sm:w-8 sm:h-8 bg-[#00FF89] rounded-full border-2 sm:border-4 border-[#121212] flex items-center justify-center">
@@ -119,10 +97,7 @@ export default function SellerHero({ seller, onContactClick }) {
                                             )}
                                         </div>
                                     </motion.div>
-
-                                    {/* Profile Info */}
                                     <div className="flex-1 space-y-4 lg:space-y-6 min-w-0">
-                                        {/* Name and Badges */}
                                         <motion.div
                                             initial={{ opacity: 0, x: -20 }}
                                             animate={{ opacity: 1, x: 0 }}
@@ -137,10 +112,7 @@ export default function SellerHero({ seller, onContactClick }) {
                                                         <Shield className="inline-block w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 ml-2 lg:ml-3 text-[#00FF89] flex-shrink-0" />
                                                     )}
                                                 </h1>
-
-                                                {/* Theme-based Badge Row */}
                                                 <div className="flex flex-wrap items-center gap-2 lg:gap-3">
-                                                    {/* Seller Level Badge */}
                                                     <div className="flex items-center gap-1.5 lg:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-[#00FF89]/20 to-[#FFC050]/20 border border-[#00FF89]/30 rounded-lg sm:rounded-xl">
                                                         <Trophy className="w-3 h-3 sm:w-4 sm:h-4 text-[#FFC050] icon-decorative" aria-hidden="true" />
                                                         <span
@@ -149,8 +121,6 @@ export default function SellerHero({ seller, onContactClick }) {
                                                             {sellerLevelText || 'Pro Seller'}
                                                         </span>
                                                     </div>
-
-                                                    {/* Rating Badge */}
                                                     {seller.averageRating != null && (
                                                         <div className="flex items-center gap-1 lg:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-[#FFC050]/20 border border-[#FFC050]/30 rounded-lg sm:rounded-xl">
                                                             <Star className="w-3 h-3 sm:w-4 sm:h-4 text-[#FFC050] fill-current icon-decorative" aria-hidden="true" />
@@ -162,8 +132,6 @@ export default function SellerHero({ seller, onContactClick }) {
                                                             <span className="sr-only">Average rating</span>
                                                         </div>
                                                     )}
-
-                                                    {/* Sales Badge */}
                                                     {seller.totalSales > 0 && (
                                                         <div className="flex items-center gap-1 lg:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-[#FFFFFF]/10 border border-[#FFFFFF]/20 rounded-lg sm:rounded-xl">
                                                             <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-[#FFFFFF] icon-decorative" aria-hidden="true" />
@@ -176,8 +144,6 @@ export default function SellerHero({ seller, onContactClick }) {
                                                     )}
                                                 </div>
                                             </div>
-
-                                            {/* Bio */}
                                             {seller.bio && (
                                                 <div>
                                                     <p className={`text-sm sm:text-base leading-relaxed font-[var(--font-kumbh-sans)] ${bioExpanded ? '' : 'line-clamp-3'} text-[#9ca3af]`}>{seller.bio}</p>
@@ -192,8 +158,6 @@ export default function SellerHero({ seller, onContactClick }) {
                                                     )}
                                                 </div>
                                             )}
-
-                                            {/* Location and Info */}
                                             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-sm text-[#9ca3af]">
                                                 {sellerLocation && (
                                                     <div className="flex items-center gap-2">
@@ -201,12 +165,10 @@ export default function SellerHero({ seller, onContactClick }) {
                                                         <span className="font-[var(--font-kumbh-sans)] truncate">{sellerLocation}</span>
                                                     </div>
                                                 )}
-
                                                 <div className="flex items-center gap-2">
                                                     <Clock className="w-4 h-4 text-[#00FF89] flex-shrink-0 icon-decorative" aria-hidden="true" />
                                                     <span className="font-[var(--font-kumbh-sans)]">Responds in {seller.responseTime || '< 24h'}</span>
                                                 </div>
-
                                                 {seller.languages && seller.languages.length > 0 && (
                                                     <div className="flex items-center gap-2">
                                                         <Globe className="w-4 h-4 text-[#00FF89] flex-shrink-0" />
@@ -217,8 +179,6 @@ export default function SellerHero({ seller, onContactClick }) {
                                                     </div>
                                                 )}
                                             </div>
-
-                                            {/* Action Buttons */}
                                             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
                                                 <motion.button
                                                     whileHover={{ scale: 1.02 }}
@@ -230,7 +190,6 @@ export default function SellerHero({ seller, onContactClick }) {
                                                     <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 icon-decorative" aria-hidden="true" />
                                                     <span className="text-sm sm:text-base">Contact Seller</span>
                                                 </motion.button>
-
                                                 <motion.button
                                                     whileHover={{ scale: 1.02 }}
                                                     whileTap={{ scale: 0.98 }}
@@ -250,8 +209,6 @@ export default function SellerHero({ seller, onContactClick }) {
                                         </motion.div>
                                     </div>
                                 </div>
-
-                                {/* Stats Row */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -300,9 +257,6 @@ export default function SellerHero({ seller, onContactClick }) {
                                     })}
                                 </motion.div>
                             </div>
-
-                            {/* Sidebar - Contact Widget */}
-                            
                         </div>
                     </div>
                 </div>
@@ -310,4 +264,3 @@ export default function SellerHero({ seller, onContactClick }) {
         </div>
     )
 }
-

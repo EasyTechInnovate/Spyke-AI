@@ -1,5 +1,4 @@
 import { User, Store } from 'lucide-react'
-
 export default function RoleSwitcher({ currentRole, onSwitch, className = "" }) {
     return (
         <div className={`flex gap-2 ${className}`}>

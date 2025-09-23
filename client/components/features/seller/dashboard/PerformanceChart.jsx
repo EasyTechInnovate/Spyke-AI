@@ -1,10 +1,7 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts'
 import { BarChart3, Eye, ShoppingCart, MousePointer, Search, ChevronDown, Package, Calendar, X } from 'lucide-react'
-
-// Custom Tooltip Component
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
         return (
@@ -31,29 +28,20 @@ const CustomTooltip = ({ active, payload, label }) => {
     }
     return null
 }
-
-// Product Selector Component
 const ProductSelector = ({ products, selectedProduct, onSelect, className = '' }) => {
     const [isOpen, setIsOpen] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
-
-    // Filter products based on search term and ensure uniqueness
     const uniqueProducts = Array.from(new Map(products.map((product) => [product.id, product])).values())
-
     const filteredProducts = uniqueProducts.filter((product) => product.title.toLowerCase().includes(searchTerm.toLowerCase()))
-
     const handleSelect = (product) => {
         onSelect(product)
         setIsOpen(false)
         setSearchTerm('')
     }
-
     const handleClose = () => {
         setIsOpen(false)
         setSearchTerm('')
     }
-
-    // Get product type color
     const getTypeColor = (type) => {
         const colors = {
             prompt: 'text-blue-400',
@@ -62,7 +50,6 @@ const ProductSelector = ({ products, selectedProduct, onSelect, className = '' }
         }
         return colors[type] || 'text-gray-400'
     }
-
     return (
         <div className={`relative ${className}`}>
             <button
@@ -71,18 +58,13 @@ const ProductSelector = ({ products, selectedProduct, onSelect, className = '' }
                 <span className="truncate pr-2">{selectedProduct ? selectedProduct.title : 'AI-Powered'}</span>
                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </button>
-
             {isOpen && (
                 <>
-                    {/* Backdrop */}
                     <div
                         className="fixed inset-0 bg-black/20 z-40"
                         onClick={handleClose}
                     />
-
-                    {/* Dropdown */}
                     <div className="absolute top-full left-0 right-0 mt-2 bg-[#2a2a2a] border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
-                        {/* Search Input */}
                         <div className="p-3 border-b border-gray-700">
                             <div className="relative">
                                 <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
@@ -96,8 +78,6 @@ const ProductSelector = ({ products, selectedProduct, onSelect, className = '' }
                                 />
                             </div>
                         </div>
-
-                        {/* Product List */}
                         <div className="max-h-60 overflow-y-auto">
                             {filteredProducts.length > 0 ? (
                                 filteredProducts.map((product) => (
@@ -133,20 +113,15 @@ const ProductSelector = ({ products, selectedProduct, onSelect, className = '' }
         </div>
     )
 }
-
-// Date Range Selector Component
 const DateRangeSelector = ({ value, onChange, className = '' }) => {
     const [isOpen, setIsOpen] = useState(false)
-
     const ranges = [
         { key: '7d', label: 'Last 7 days' },
         { key: '14d', label: 'Last 14 days' },
         { key: '30d', label: 'Last 30 days' },
         { key: '90d', label: 'Last 3 months' }
     ]
-
     const currentRange = ranges.find((r) => r.key === value) || ranges[0]
-
     return (
         <div className={`relative ${className}`}>
             <button
@@ -156,7 +131,6 @@ const DateRangeSelector = ({ value, onChange, className = '' }) => {
                 <span>{currentRange.label}</span>
                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </button>
-
             {isOpen && (
                 <>
                     <div
@@ -183,11 +157,8 @@ const DateRangeSelector = ({ value, onChange, className = '' }) => {
         </div>
     )
 }
-
-// Metric Selector Button Component
 const MetricButton = ({ metric, isSelected, onClick }) => {
     const IconComponent = metric.icon
-
     return (
         <button
             onClick={() => onClick(metric.key)}
@@ -201,47 +172,32 @@ const MetricButton = ({ metric, isSelected, onClick }) => {
         </button>
     )
 }
-
 export default function PerformanceChart({ topProducts = [], allProducts = [], className = '' }) {
     const [selectedMetrics, setSelectedMetrics] = useState(['views'])
     const [selectedProduct, setSelectedProduct] = useState(null)
     const [viewMode, setViewMode] = useState('single')
     const [dateRange, setDateRange] = useState('7d')
-
-    // Initialize with first product if available
     useEffect(() => {
         if (!selectedProduct && topProducts.length > 0) {
             setSelectedProduct(topProducts[0])
         }
     }, [topProducts, selectedProduct])
-
     const generateProductTimeData = (product, days = 7) => {
         if (!product) return []
-
         const ranges = { '7d': 7, '14d': 14, '30d': 30, '90d': 90 }
         const dayCount = ranges[days] || 7
-
-        // Use actual product data
         const totalViews = product.views || 0
         const totalSales = product.sales || 0
         const productPrice = product.price || 0
-
         return Array.from({ length: dayCount }, (_, i) => {
             const date = new Date()
             date.setDate(date.getDate() - (dayCount - 1 - i))
-            const viewsWeight = Math.random() * 0.8 + 0.6 // 0.6 to 1.4 multiplier
-            const salesWeight = Math.random() * 0.9 + 0.7 // 0.7 to 1.6 multiplier
-            
-            // Calculate daily values with better distribution
+            const viewsWeight = Math.random() * 0.8 + 0.6 
+            const salesWeight = Math.random() * 0.9 + 0.7 
             const dailyViews = Math.max(1, Math.floor((totalViews / dayCount) * viewsWeight))
             const dailySales = Math.max(0, Math.floor((totalSales / dayCount) * salesWeight))
-            
-            // Calculate conversion rate
             const conversionRate = dailyViews > 0 ? Math.min(100, (dailySales / dailyViews) * 100) : 0
-            
-            // Calculate daily revenue
             const dailyRevenue = dailySales * productPrice
-
             return {
                 date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
                 fullDate: date.toLocaleDateString(),
@@ -252,13 +208,11 @@ export default function PerformanceChart({ topProducts = [], allProducts = [], c
             }
         })
     }
-
     const metrics = [
         { key: 'views', label: 'Views', color: '#00FF89', icon: Eye },
         { key: 'sales', label: 'Sales', color: '#3B82F6', icon: ShoppingCart },
         { key: 'conversions', label: 'Conversion %', color: '#8B5CF6', icon: MousePointer }
     ]
-
     const toggleMetric = (metricKey) => {
         setSelectedMetrics((prev) => {
             if (prev.includes(metricKey)) {
@@ -268,23 +222,17 @@ export default function PerformanceChart({ topProducts = [], allProducts = [], c
             }
         })
     }
-
     const chartData = selectedProduct ? generateProductTimeData(selectedProduct, dateRange) : []
-
-    // Calculate summary stats
     const calculateStats = () => {
         if (!selectedProduct || !chartData.length) {
             return { primary: '151', secondary: '$2093', product: 'AI-Powered' }
         }
-
         const totalViews = chartData.reduce((sum, item) => sum + item.views, 0)
         const totalSales = chartData.reduce((sum, item) => sum + item.sales, 0)
         const totalRevenue = chartData.reduce((sum, item) => sum + item.revenue, 0)
         const avgConversion = chartData.length > 0 ? (chartData.reduce((sum, item) => sum + item.conversions, 0) / chartData.length).toFixed(1) : 0
-
         const primaryMetric = selectedMetrics[0]
         let primaryValue
-
         switch (primaryMetric) {
             case 'views':
                 primaryValue = totalViews
@@ -298,19 +246,15 @@ export default function PerformanceChart({ topProducts = [], allProducts = [], c
             default:
                 primaryValue = totalViews
         }
-
         return {
             primary: primaryValue,
             secondary: `$${totalRevenue.toFixed(0)}`,
             product: selectedProduct.title
         }
     }
-
     const stats = calculateStats()
-
     return (
         <div className={`bg-[#1f1f1f] border border-gray-800 rounded-2xl ${className}`}>
-            {/* Header */}
             <div className="p-6 border-b border-gray-800">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
@@ -322,14 +266,11 @@ export default function PerformanceChart({ topProducts = [], allProducts = [], c
                             <p className="text-sm text-gray-400">Analyze individual product trends</p>
                         </div>
                     </div>
-
                     <DateRangeSelector
                         value={dateRange}
                         onChange={setDateRange}
                     />
                 </div>
-
-                {/* View Mode and Product Selector */}
                 <div className="flex items-center gap-4 mb-6">
                     <div className="flex gap-2">
                         <button
@@ -351,7 +292,6 @@ export default function PerformanceChart({ topProducts = [], allProducts = [], c
                             Single Product
                         </button>
                     </div>
-
                     {viewMode === 'single' && (
                         <div className="flex-1 max-w-sm">
                             <ProductSelector
@@ -362,8 +302,6 @@ export default function PerformanceChart({ topProducts = [], allProducts = [], c
                         </div>
                     )}
                 </div>
-
-                {/* Metric Selector */}
                 <div className="mb-6">
                     <div className="flex items-center justify-between mb-3">
                         <span className="text-sm text-gray-400">Metrics:</span>
@@ -379,8 +317,6 @@ export default function PerformanceChart({ topProducts = [], allProducts = [], c
                         ))}
                     </div>
                 </div>
-
-                {/* Stats */}
                 <div className="grid grid-cols-3 gap-4">
                     <div className="bg-[#2a2a2a] rounded-lg p-4 border border-gray-700">
                         <div className="flex items-center gap-2 mb-2">
@@ -409,8 +345,6 @@ export default function PerformanceChart({ topProducts = [], allProducts = [], c
                     </div>
                 </div>
             </div>
-
-            {/* Chart */}
             <div className="p-6">
                 {chartData.length > 0 ? (
                     <div className="h-80">
@@ -475,4 +409,3 @@ export default function PerformanceChart({ topProducts = [], allProducts = [], c
         </div>
     )
 }
-

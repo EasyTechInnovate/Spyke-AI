@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -7,7 +6,6 @@ import {
     Search, Filter, Grid3X3, List, Star, Eye, ShoppingCart, 
     DollarSign, Clock, Tag, Zap, TrendingUp, Heart, Package
 } from 'lucide-react'
-
 export default function EnhancedProductShowcase({ 
     products = [], 
     filters, 
@@ -17,17 +15,12 @@ export default function EnhancedProductShowcase({
     const [viewMode, setViewMode] = useState('grid')
     const [searchQuery, setSearchQuery] = useState('')
     const [showFilters, setShowFilters] = useState(false)
-
-    // Get unique categories for filtering
     const categories = useMemo(() => {
         const cats = new Set(products.map(p => p.category).filter(Boolean))
         return ['all', ...Array.from(cats)]
     }, [products])
-
-    // Filter and search products
     const filteredProducts = useMemo(() => {
         return products.filter(product => {
-            // Text search
             if (searchQuery) {
                 const query = searchQuery.toLowerCase()
                 const searchableText = [
@@ -36,21 +29,14 @@ export default function EnhancedProductShowcase({
                     product.category,
                     ...(product.tags || [])
                 ].join(' ').toLowerCase()
-                
                 if (!searchableText.includes(query)) return false
             }
-
-            // Category filter
             if (filters?.category && filters.category !== 'all' && product.category !== filters.category) {
                 return false
             }
-
-            // Type filter
             if (filters?.type && filters.type !== 'all' && product.type !== filters.type) {
                 return false
             }
-
-            // Price range filter
             if (filters?.priceRange && filters.priceRange !== 'all') {
                 const price = product.price || 0
                 switch (filters.priceRange) {
@@ -61,12 +47,9 @@ export default function EnhancedProductShowcase({
                     default: return true
                 }
             }
-
             return true
         })
     }, [products, searchQuery, filters])
-
-    // Sort products
     const sortedProducts = useMemo(() => {
         return [...filteredProducts].sort((a, b) => {
             switch (filters.sortBy) {
@@ -80,7 +63,6 @@ export default function EnhancedProductShowcase({
             }
         })
     }, [filteredProducts, filters.sortBy])
-
     if (products.length === 0) {
         return (
             <div className="text-center py-16">
@@ -92,18 +74,14 @@ export default function EnhancedProductShowcase({
             </div>
         )
     }
-
     return (
-        // Constrain inner content to match page layout while keeping hero background full-bleed
         <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
-            {/* Search and Filters Header */}
             <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-[#1f1f1f] rounded-2xl p-6 border border-[#6b7280]/20"
             >
                 <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-start">
-                    {/* Enhanced Search Bar */}
                     <div className="flex-1 relative group">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6b7280] group-focus-within:text-[#00FF89] transition-colors" />
                         <input
@@ -128,10 +106,7 @@ export default function EnhancedProductShowcase({
                             </motion.div>
                         )}
                     </div>
-
-                    {/* Quick Filters - responsive: stacked on small screens, inline on md+ */}
                     <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-                        {/* Category Filter */}
                         <PortalSelect
                             className="h-12 w-full md:w-auto"
                             options={categories.map(c => ({ value: c, label: c === 'all' ? 'All Categories' : c.replace('_', ' ') }))}
@@ -140,8 +115,6 @@ export default function EnhancedProductShowcase({
                             placeholder="All Categories"
                             minWidth="140px"
                         />
-
-                        {/* Sort */}
                         <PortalSelect
                             className="h-12 w-full md:w-auto"
                             options={[
@@ -156,8 +129,6 @@ export default function EnhancedProductShowcase({
                             placeholder="Newest First"
                             minWidth="160px"
                         />
-
-                        {/* Advanced Filters Toggle */}
                         <motion.button
                             whileHover={{ scale: 1.03 }}
                             whileTap={{ scale: 0.97 }}
@@ -172,8 +143,6 @@ export default function EnhancedProductShowcase({
                             <Filter className="w-4 h-4" />
                             <span>Filters</span>
                         </motion.button>
-
-                        {/* View Mode Toggle (compact) */}
                         <div className="flex items-center border-2 border-[#6b7280]/30 rounded-xl overflow-hidden mt-2 sm:mt-0 md:mt-0">
                             <button
                                 onClick={() => setViewMode('grid')}
@@ -198,8 +167,6 @@ export default function EnhancedProductShowcase({
                         </div>
                     </div>
                 </div>
-
-                {/* Advanced Filters Panel */}
                 <AnimatePresence>
                     {showFilters && (
                         <motion.div
@@ -210,7 +177,6 @@ export default function EnhancedProductShowcase({
                             className="mt-6 pt-6 border-t border-[#6b7280]/20"
                         >
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {/* Price Range */}
                                 <div>
                                     <label className="block text-sm text-[#FFFFFF] mb-3" style={{ fontFamily: 'var(--font-kumbh-sans)', fontWeight: '600' }}>
                                         Price Range
@@ -227,8 +193,6 @@ export default function EnhancedProductShowcase({
                                         <option value="over-50" className="bg-[#121212]">Over $50</option>
                                     </select>
                                 </div>
-
-                                {/* Type Filter */}
                                 <div>
                                     <label className="block text-sm text-[#FFFFFF] mb-3" style={{ fontFamily: 'var(--font-kumbh-sans)', fontWeight: '600' }}>
                                         Product Type
@@ -245,8 +209,6 @@ export default function EnhancedProductShowcase({
                                         <option value="bundle" className="bg-[#121212]">Bundle</option>
                                     </select>
                                 </div>
-
-                                {/* Clear Filters */}
                                 <div className="flex items-end">
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}
@@ -271,8 +233,6 @@ export default function EnhancedProductShowcase({
                     )}
                 </AnimatePresence>
             </motion.div>
-
-            {/* Results Header */}
             <div className="flex items-center justify-between">
                 <div className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">
                     <span className="font-semibold text-[#FFFFFF] text-lg">{sortedProducts.length}</span> 
@@ -281,8 +241,6 @@ export default function EnhancedProductShowcase({
                         <span> for "<span className="text-[#00FF89] font-medium">{searchQuery}</span>"</span>
                     )}
                 </div>
-                
-                {/* Quick Stats */}
                 <div className="hidden md:flex items-center gap-6 text-sm text-[#6b7280]">
                     <div className="flex items-center gap-2 bg-[#1f1f1f] px-3 py-2 rounded-lg border border-[#6b7280]/20">
                         <DollarSign className="w-4 h-4 text-[#FFC050]" />
@@ -298,8 +256,6 @@ export default function EnhancedProductShowcase({
                     </div>
                 </div>
             </div>
-
-            {/* Products Grid/List */}
             <AnimatePresence mode="wait">
                 <motion.div
                     key={`${viewMode}-${filters.category}-${filters.sortBy}`}
@@ -324,8 +280,6 @@ export default function EnhancedProductShowcase({
                     ))}
                 </motion.div>
             </AnimatePresence>
-
-            {/* Load More */}
             {sortedProducts.length >= 12 && (
                 <div className="text-center pt-8">
                     <motion.button 
@@ -340,13 +294,10 @@ export default function EnhancedProductShowcase({
         </div>
     )
 }
-
-// Portal-backed select: renders options into document.body and positions below the trigger
 function PortalSelect({ options = [], value, onChange, className = '', placeholder = '', minWidth }) {
     const [open, setOpen] = useState(false)
     const triggerRef = useRef(null)
     const [pos, setPos] = useState({ top: 0, left: 0, width: 0 })
-
     useEffect(() => {
         function updatePosition() {
             const el = triggerRef.current
@@ -358,7 +309,6 @@ function PortalSelect({ options = [], value, onChange, className = '', placehold
                 width: rect.width
             })
         }
-
         if (open) {
             updatePosition()
             window.addEventListener('resize', updatePosition)
@@ -369,7 +319,6 @@ function PortalSelect({ options = [], value, onChange, className = '', placehold
             window.removeEventListener('scroll', updatePosition, true)
         }
     }, [open])
-
     useEffect(() => {
         function onDocClick(e) {
             if (!triggerRef.current) return
@@ -378,7 +327,6 @@ function PortalSelect({ options = [], value, onChange, className = '', placehold
         if (open) document.addEventListener('mousedown', onDocClick)
         return () => document.removeEventListener('mousedown', onDocClick)
     }, [open])
-
     return (
         <div className={`relative ${className}`} ref={triggerRef} style={{ minWidth }}>
             <button
@@ -390,7 +338,6 @@ function PortalSelect({ options = [], value, onChange, className = '', placehold
                     <path d="M5 7l5 5 5-5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
             </button>
-
             {open && typeof document !== 'undefined' && createPortal(
                 <div
                     className="bg-[#121212] border border-[#6b7280]/30 rounded-xl shadow-2xl overflow-hidden text-[#FFFFFF]"
@@ -409,12 +356,10 @@ function PortalSelect({ options = [], value, onChange, className = '', placehold
         </div>
     )
 }
-
 function ProductCard({ product, viewMode, onClick, delay = 0 }) {
     const [isHovered, setIsHovered] = useState(false)
     const [imageLoaded, setImageLoaded] = useState(false)
     const [isLiked, setIsLiked] = useState(false)
-
     if (viewMode === 'list') {
         return (
             <motion.div
@@ -427,7 +372,6 @@ function ProductCard({ product, viewMode, onClick, delay = 0 }) {
                 onMouseLeave={() => setIsHovered(false)}
             >
                 <div className="flex gap-6">
-                    {/* Product Image */}
                     <div className="w-24 h-24 bg-[#121212] rounded-xl overflow-hidden flex-shrink-0 border border-[#6b7280]/20">
                         {product.thumbnail ? (
                             <img
@@ -444,8 +388,6 @@ function ProductCard({ product, viewMode, onClick, delay = 0 }) {
                             </div>
                         )}
                     </div>
-
-                    {/* Product Info */}
                     <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-4">
                             <div className="flex-1 min-w-0">
@@ -455,8 +397,6 @@ function ProductCard({ product, viewMode, onClick, delay = 0 }) {
                                 <p className="text-[#9ca3af] text-sm line-clamp-2 mb-3 font-[var(--font-kumbh-sans)]">
                                     {product.shortDescription}
                                 </p>
-                                
-                                {/* Tags */}
                                 <div className="flex items-center gap-2">
                                     <span className="px-3 py-1 bg-[#00FF89]/10 text-[#00FF89] rounded-lg text-xs font-medium border border-[#00FF89]/20">
                                         {product.category}
@@ -468,8 +408,6 @@ function ProductCard({ product, viewMode, onClick, delay = 0 }) {
                                     )}
                                 </div>
                             </div>
-
-                            {/* Price & Actions */}
                             <div className="text-right">
                                 <div className="text-xl text-[#FFFFFF] mb-1" style={{ fontFamily: 'var(--font-league-spartan)', fontWeight: 'bold' }}>
                                     {product.price > 0 ? `$${product.price}` : 'Free'}
@@ -479,7 +417,6 @@ function ProductCard({ product, viewMode, onClick, delay = 0 }) {
                                         ${product.originalPrice}
                                     </div>
                                 )}
-                                
                                 <div className="flex items-center gap-3 mt-3">
                                     {product.rating > 0 && (
                                         <div className="flex items-center gap-1 text-[#FFC050] text-sm">
@@ -506,8 +443,6 @@ function ProductCard({ product, viewMode, onClick, delay = 0 }) {
             </motion.div>
         )
     }
-
-    // Grid Card
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -518,7 +453,6 @@ function ProductCard({ product, viewMode, onClick, delay = 0 }) {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            {/* Product Image */}
             <div className="aspect-video sm:aspect-[4/3] bg-[#121212] relative overflow-hidden">
                 {product.thumbnail ? (
                     <img
@@ -534,8 +468,6 @@ function ProductCard({ product, viewMode, onClick, delay = 0 }) {
                         <Zap className="w-12 h-12 text-[#00FF89]" />
                     </div>
                 )}
-                
-                {/* Overlay Actions */}
                 <div className={`absolute inset-0 bg-[#121212]/60 flex items-center justify-center gap-3 transition-all duration-300 ${
                     isHovered ? 'opacity-100' : 'opacity-0'
                 }`}>
@@ -566,16 +498,12 @@ function ProductCard({ product, viewMode, onClick, delay = 0 }) {
                         <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
                     </motion.button>
                 </div>
-
-                {/* Price Badge */}
                 <div className="absolute top-4 right-4">
                     <span className="px-3 py-2 bg-[#121212]/80 backdrop-blur-sm text-[#FFFFFF] rounded-xl text-sm border border-[#6b7280]/20" style={{ fontFamily: 'var(--font-league-spartan)', fontWeight: 'bold' }}>
                         {product.price > 0 ? `$${product.price}` : 'Free'}
                     </span>
                 </div>
             </div>
-
-            {/* Product Info */}
             <div className="p-5">
                 <div className="flex items-start justify-between gap-2 mb-3">
                     <h3 className="text-[#FFFFFF] line-clamp-2 flex-1" style={{ fontFamily: 'var(--font-league-spartan)', fontWeight: 'bold' }}>
@@ -588,12 +516,9 @@ function ProductCard({ product, viewMode, onClick, delay = 0 }) {
                         </div>
                     )}
                 </div>
-
                 <p className="text-[#9ca3af] text-sm line-clamp-2 mb-4 font-[var(--font-kumbh-sans)]">
                     {product.shortDescription}
                 </p>
-
-                {/* Footer */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <span className="px-2 py-1 bg-[#00FF89]/10 text-[#00FF89] rounded-lg text-xs font-medium border border-[#00FF89]/20">
@@ -606,7 +531,6 @@ function ProductCard({ product, viewMode, onClick, delay = 0 }) {
                             </div>
                         )}
                     </div>
-                    
                     {product.originalPrice && product.originalPrice > product.price && (
                         <span className="text-xs text-[#6b7280] line-through font-[var(--font-kumbh-sans)]">
                             ${product.originalPrice}

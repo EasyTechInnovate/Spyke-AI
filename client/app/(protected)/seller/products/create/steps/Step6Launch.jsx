@@ -1,12 +1,9 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import { useState, useMemo } from 'react'
 import { Plus, X, HelpCircle, Save, Check, MessageSquare, Shield, Users, BookOpen, Info } from 'lucide-react'
 import { useProductCreateStore } from '@/store/productCreate'
 import { VALIDATION_LIMITS } from '@/lib/constants/productCreate'
-
-// Enhanced tooltips with contextual help
 const FIELD_HELP = {
     supportAndMaintenance: {
         title: "Support & Maintenance Guide",
@@ -39,8 +36,6 @@ const FIELD_HELP = {
         examples: ["See first results within 24 hours of setup", "Typically increase qualified leads by 50% in first month"]
     }
 }
-
-// Enhanced error messages
 const getEnhancedErrorMessage = (field, error) => {
     const errorMap = {
         supportAndMaintenance: {
@@ -62,14 +57,10 @@ const getEnhancedErrorMessage = (field, error) => {
             'maxItems': 'Focus on the most important benefits to avoid overwhelming customers.'
         }
     }
-
     return errorMap[field]?.[error] || error
 }
-
-// Tooltip component (reused from Step1)
 const Tooltip = ({ content, examples }) => {
     const [isVisible, setIsVisible] = useState(false)
-
     return (
         <div className="relative inline-block">
             <button
@@ -81,7 +72,6 @@ const Tooltip = ({ content, examples }) => {
                 className="p-1 text-gray-400 hover:text-[#00FF89] transition-colors">
                 <HelpCircle className="w-4 h-4" />
             </button>
-
             {isVisible && (
                 <motion.div
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -107,13 +97,10 @@ const Tooltip = ({ content, examples }) => {
         </div>
     )
 }
-
-// Auto-save indicator (reused from Step1)
 const AutoSaveIndicator = () => {
     const lastSaved = useProductCreateStore((state) => state.lastSaved)
     const isDirty = useProductCreateStore((state) => state.isDirty)
     const [showSaved, setShowSaved] = useState(false)
-
     const status = useMemo(() => {
         if (isDirty) return { icon: Save, text: 'Unsaved changes', color: 'text-yellow-400' }
         if (lastSaved) {
@@ -123,7 +110,6 @@ const AutoSaveIndicator = () => {
         }
         return { icon: Save, text: 'Auto-save enabled', color: 'text-gray-400' }
     }, [lastSaved, isDirty, showSaved])
-
     return (
         <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -134,7 +120,6 @@ const AutoSaveIndicator = () => {
         </motion.div>
     )
 }
-
 export default function Step6FinalDetails() {
     const targetAudience = useProductCreateStore((state) => state.targetAudience)
     const keyBenefits = useProductCreateStore((state) => state.keyBenefits)
@@ -144,37 +129,28 @@ export default function Step6FinalDetails() {
     const faq = useProductCreateStore((state) => state.faq)
     const errors = useProductCreateStore((state) => state.errors)
     const touchedFields = useProductCreateStore((state) => state.touchedFields)
-
     const setField = useProductCreateStore((state) => state.setField)
     const addToArray = useProductCreateStore((state) => state.addToArray)
     const removeFromArray = useProductCreateStore((state) => state.removeFromArray)
     const updateArrayItem = useProductCreateStore((state) => state.updateArrayItem)
     const markFieldTouched = useProductCreateStore((state) => state.markFieldTouched)
     const validateTouchedFields = useProductCreateStore((state) => state.validateTouchedFields)
-
     const handleFieldBlur = (fieldName) => {
         markFieldTouched(fieldName)
         validateTouchedFields()
     }
-
     const showError = (fieldName) => {
         return touchedFields[fieldName] && errors[fieldName]
     }
-
     return (
         <div className="space-y-10">
-            {/* Auto-save indicator */}
             <div className="flex justify-end">
                 <AutoSaveIndicator />
             </div>
-
-            {/* Visual break - Welcome section */}
             <div className="text-center pb-6 border-b border-gray-700/50">
                 <h2 className="text-2xl font-semibold text-white mb-2">Final Details & Support</h2>
                 <p className="text-lg text-gray-400">Complete your product with essential details and customer support information</p>
             </div>
-
-            {/* Customer Info Section */}
             <div className="flex items-center my-8">
                 <div className="flex-1 border-t border-gray-700"></div>
                 <div className="px-4 text-base text-gray-400 flex items-center space-x-2">
@@ -183,8 +159,6 @@ export default function Step6FinalDetails() {
                 </div>
                 <div className="flex-1 border-t border-gray-700"></div>
             </div>
-
-            {/* Target Audience */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -216,8 +190,6 @@ export default function Step6FinalDetails() {
                     </div>
                 )}
             </motion.div>
-
-            {/* Key Benefits */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -269,16 +241,12 @@ export default function Step6FinalDetails() {
                     </div>
                 )}
             </motion.div>
-
-            {/* Visual break */}
             <div className="border-l-4 border-[#00FF89]/30 pl-6 py-4 bg-gray-800/20 rounded-r-lg">
                 <p className="text-base text-gray-300">
                     <Info className="w-4 h-4 inline mr-2" />
                     <span className="font-medium">Pro tip:</span> Focus on specific, measurable benefits that customers care about most
                 </p>
             </div>
-
-            {/* Use Case Examples */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -325,8 +293,6 @@ export default function Step6FinalDetails() {
                     </button>
                 </div>
             </motion.div>
-
-            {/* Expected Outcomes */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -373,8 +339,6 @@ export default function Step6FinalDetails() {
                     </button>
                 </div>
             </motion.div>
-
-            {/* Support Section */}
             <div className="flex items-center my-8">
                 <div className="flex-1 border-t border-gray-700"></div>
                 <div className="px-4 text-base text-gray-400 flex items-center space-x-2">
@@ -383,8 +347,6 @@ export default function Step6FinalDetails() {
                 </div>
                 <div className="flex-1 border-t border-gray-700"></div>
             </div>
-
-            {/* Support and Maintenance */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -415,8 +377,6 @@ export default function Step6FinalDetails() {
                     </div>
                 )}
             </motion.div>
-
-            {/* FAQ Section */}
             <div className="flex items-center my-8">
                 <div className="flex-1 border-t border-gray-700"></div>
                 <div className="px-4 text-base text-gray-400 flex items-center space-x-2">
@@ -425,8 +385,6 @@ export default function Step6FinalDetails() {
                 </div>
                 <div className="flex-1 border-t border-gray-700"></div>
             </div>
-
-            {/* FAQ */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -501,8 +459,6 @@ export default function Step6FinalDetails() {
                     </div>
                 )}
             </motion.div>
-
-            {/* Final Details Summary */}
             {(targetAudience || keyBenefits.length > 0 || supportAndMaintenance || faq.length > 0) && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}

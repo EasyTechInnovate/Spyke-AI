@@ -1,33 +1,22 @@
 'use client'
-
 import { useState } from 'react'
 import { Mail, Send, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/shared/ui/button'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function NewsletterCTA({ blogPostSlug }) {
-    // Inline notification state
     const [notification, setNotification] = useState(null)
-
-    // Show inline notification messages  
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
-        // Auto-dismiss after 5 seconds
         setTimeout(() => setNotification(null), 5000)
     }
-
-    // Clear notification
     const clearNotification = () => setNotification(null)
-
   const [email, setEmail] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubscribed, setIsSubscribed] = useState(false)
-
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!email.trim()) return
-
     setIsSubmitting(true)
-
     try {
       const response = await fetch('/api/newsletter', {
         method: 'POST',
@@ -40,9 +29,7 @@ export default function NewsletterCTA({ blogPostSlug }) {
           blogPostSlug
         }),
       })
-
       const data = await response.json()
-
       if (response.ok) {
         setIsSubscribed(true)
         showMessage('Successfully subscribed! Check your email for confirmation.', 'success')
@@ -57,11 +44,9 @@ export default function NewsletterCTA({ blogPostSlug }) {
       setIsSubmitting(false)
     }
   }
-
   if (isSubscribed) {
     return (
       <div className="bg-gradient-to-r from-brand-primary/10 to-brand-secondary/10 rounded-2xl p-8 border border-brand-primary/20">
-            {/* Inline Notification */}
             {notification && (
                 <InlineNotification
                     type={notification.type}
@@ -69,8 +54,6 @@ export default function NewsletterCTA({ blogPostSlug }) {
                     onDismiss={clearNotification}
                 />
             )}
-
-            
         <div className="text-center">
           <div className="w-16 h-16 bg-brand-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-8 h-8 text-brand-primary" />
@@ -85,24 +68,18 @@ export default function NewsletterCTA({ blogPostSlug }) {
       </div>
     )
   }
-
   return (
     <div className="bg-gradient-to-r from-brand-primary/10 to-brand-secondary/10 rounded-2xl p-8 border border-brand-primary/20">
       <div className="max-w-2xl mx-auto text-center">
-        {/* Icon */}
         <div className="w-16 h-16 bg-brand-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
           <Mail className="w-8 h-8 text-brand-primary" />
         </div>
-
-        {/* Heading */}
         <h3 className="text-3xl font-league-spartan font-bold mb-4">
           Get Weekly AI Ideas
         </h3>
         <p className="text-gray-300 text-lg mb-8">
           Join 10,000+ entrepreneurs who get actionable AI automation tips, case studies, and exclusive strategies delivered to their inbox every week.
         </p>
-
-        {/* Form */}
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
           <div className="flex-1 relative">
             <input
@@ -132,8 +109,6 @@ export default function NewsletterCTA({ blogPostSlug }) {
             )}
           </Button>
         </form>
-
-        {/* Benefits */}
         <div className="mt-6 flex flex-wrap justify-center gap-6 text-sm text-gray-400">
           <div className="flex items-center gap-2">
             <CheckCircle className="w-4 h-4 text-brand-primary" />
@@ -148,8 +123,6 @@ export default function NewsletterCTA({ blogPostSlug }) {
             <span>Unsubscribe anytime</span>
           </div>
         </div>
-
-        {/* Social Proof */}
         <div className="mt-8 pt-6 border-t border-white/10">
           <p className="text-gray-400 text-sm">
             Trusted by entrepreneurs from companies like:

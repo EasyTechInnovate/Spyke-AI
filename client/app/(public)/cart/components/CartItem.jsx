@@ -1,5 +1,4 @@
 'use client'
-
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -8,17 +7,14 @@ import { Plus, Minus, Package, Trash2, Heart, ExternalLink } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { calculateDiscountPercentage, formatCurrency, getItemId } from '../utils'
 import { CART_CONFIG } from '../constants'
-
 export default function CartItem({ item, index, onUpdateQuantity, onRemove }) {
     const router = useRouter()
     const { isAuthenticated } = useAuth()
     const [isRemoving, setIsRemoving] = useState(false)
-    
     const itemId = getItemId(item)
     const discountPercentage = calculateDiscountPercentage(item.originalPrice, item.price)
     const subtotal = item.price * item.quantity
     const originalSubtotal = (item.originalPrice || item.price) * item.quantity
-
     const handleQuantityUpdate = (change) => {
         const newQuantity = item.quantity + change
         if (newQuantity >= CART_CONFIG.validation.minQuantity && 
@@ -26,18 +22,15 @@ export default function CartItem({ item, index, onUpdateQuantity, onRemove }) {
             onUpdateQuantity(itemId, newQuantity)
         }
     }
-
     const handleRemove = () => {
         setIsRemoving(true)
         setTimeout(() => {
             onRemove(itemId)
         }, CART_CONFIG.animations.removeTransition.duration * 1000)
     }
-
     const navigateToProduct = () => {
         router.push(`/products/${item.productId}`)
     }
-
     return (
         <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -52,26 +45,18 @@ export default function CartItem({ item, index, onUpdateQuantity, onRemove }) {
             className="group bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/[0.07] transition-all duration-300 hover:border-white/20"
         >
             <div className="flex flex-col lg:flex-row gap-6">
-                {/* Product Image */}
                 <ProductImage 
                     item={item} 
                     discountPercentage={discountPercentage}
                     onClick={navigateToProduct}
                 />
-
-                {/* Product Details */}
                 <div className="flex-1 space-y-4">
-                    {/* Header */}
                     <ProductHeader 
                         item={item}
                         onNavigate={navigateToProduct}
                         onRemove={handleRemove}
                     />
-
-                    {/* Meta Information */}
                     <ProductMeta item={item} />
-
-                    {/* Controls Row */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">
                         <QuantityControls 
                             quantity={item.quantity}
@@ -79,7 +64,6 @@ export default function CartItem({ item, index, onUpdateQuantity, onRemove }) {
                             onDecrease={() => handleQuantityUpdate(-1)}
                             canDecrease={item.quantity > CART_CONFIG.validation.minQuantity}
                         />
-                         
                         <PriceDisplay 
                             subtotal={subtotal}
                             originalSubtotal={originalSubtotal}
@@ -91,8 +75,6 @@ export default function CartItem({ item, index, onUpdateQuantity, onRemove }) {
         </motion.div>
     )
 }
-
-// Sub-components for better organization
 function ProductImage({ item, discountPercentage, onClick }) {
     return (
         <div className="relative">
@@ -113,14 +95,10 @@ function ProductImage({ item, discountPercentage, onClick }) {
                         <Package className="w-10 h-10 text-white/30" />
                     </div>
                 )}
-                
-                {/* Hover overlay */}
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/image:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                     <ExternalLink className="w-6 h-6 text-white" />
                 </div>
             </div>
-            
-            {/* Discount badge */}
             {discountPercentage > 0 && (
                 <div className="absolute -top-2 -right-2 bg-gradient-to-r from-[#FFC050] to-[#FFD700] text-black text-xs px-3 py-1.5 rounded-full font-semibold shadow-lg">
                     -{discountPercentage}%
@@ -129,7 +107,6 @@ function ProductImage({ item, discountPercentage, onClick }) {
         </div>
     )
 }
-
 function ProductHeader({ item, onNavigate, onRemove }) {
     return (
         <div className="space-y-2">
@@ -147,7 +124,6 @@ function ProductHeader({ item, onNavigate, onRemove }) {
                         </p>
                     )}
                 </div>
-                
                 <div className="flex items-center gap-1">
                     <button
                         className="text-white/40 hover:text-[#00FF89] transition-colors p-2 rounded-lg hover:bg-white/5"
@@ -167,7 +143,6 @@ function ProductHeader({ item, onNavigate, onRemove }) {
         </div>
     )
 }
-
 function ProductMeta({ item }) {
     return (
         <div className="flex flex-wrap items-center gap-3 text-sm">
@@ -182,7 +157,6 @@ function ProductMeta({ item }) {
         </div>
     )
 }
-
 function QuantityControls({ quantity, onIncrease, onDecrease, canDecrease }) {
     return (
         <div className="flex items-center gap-3">
@@ -193,10 +167,8 @@ function QuantityControls({ quantity, onIncrease, onDecrease, canDecrease }) {
         </div>
     )
 }
-
 function PriceDisplay({ subtotal, originalSubtotal, discountPercentage }) {
     const hasDiscount = originalSubtotal > subtotal
-    
     return (
         <div className="text-right">
             <div className="flex items-center gap-3 justify-end">

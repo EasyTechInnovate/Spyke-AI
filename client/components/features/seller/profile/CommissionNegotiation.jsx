@@ -1,16 +1,12 @@
 'use client'
-
 import { useState, useRef, useEffect } from 'react'
 import { DollarSign, Check, X, AlertTriangle, Clock, HelpCircle } from 'lucide-react'
 import { Card, CardHeader, CardContent, CardFooter } from './Cards'
-
 export function CommissionNegotiation({ negotiationState, onAccept, onCounter, onReject, processing, formatCurrency }) {
   const [showCounterModal, setShowCounterModal] = useState(false)
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [localProcessing, setLocalProcessing] = useState(false)
-
   if (!negotiationState) return null
-
   const { 
     canNegotiate, 
     isCounterOffered, 
@@ -21,12 +17,9 @@ export function CommissionNegotiation({ negotiationState, onAccept, onCounter, o
     maxRounds,
     counterReason,
     lastActivity,
-    status // Add status to track current state
+    status 
   } = negotiationState
-
   const isProcessing = processing || localProcessing
-
-  // Handle accepted state
   if (isAccepted || status === 'accepted') {
     return (
       <Card variant="elevated" className="border-emerald-500/30 bg-emerald-500/5">
@@ -46,8 +39,6 @@ export function CommissionNegotiation({ negotiationState, onAccept, onCounter, o
       </Card>
     )
   }
-
-  // Handle counter offered state (seller waiting for admin response)
   if (isCounterOffered || status === 'counter_offered') {
     return (
       <Card variant="elevated" className="border-amber-500/30 bg-amber-500/5">
@@ -64,7 +55,6 @@ export function CommissionNegotiation({ negotiationState, onAccept, onCounter, o
             </div>
           </div>
         </CardHeader>
-        
         <CardContent className="space-y-4">
           {counterReason && (
             <div className="bg-[#121212] rounded-lg p-4">
@@ -72,14 +62,12 @@ export function CommissionNegotiation({ negotiationState, onAccept, onCounter, o
               <p className="text-sm text-white">{counterReason}</p>
             </div>
           )}
-          
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-400">Round {negotiationRound}/{maxRounds}</span>
             <span className="text-gray-400">
               Submitted {new Date(lastActivity).toLocaleDateString()}
             </span>
           </div>
-          
           <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
             <p className="text-xs text-amber-300">
               ⏳ We typically respond within 1-2 business days. You'll receive an email notification when we respond.
@@ -89,8 +77,6 @@ export function CommissionNegotiation({ negotiationState, onAccept, onCounter, o
       </Card>
     )
   }
-
-  // Handle rejected state
   if (status === 'rejected') {
     return (
       <Card variant="elevated" className="border-red-500/30 bg-red-500/5">
@@ -110,11 +96,7 @@ export function CommissionNegotiation({ negotiationState, onAccept, onCounter, o
       </Card>
     )
   }
-
-  // Handle pending/new offer state
   const showActionButtons = canNegotiate && !isCounterOffered && !isAccepted && status !== 'counter_offered'
-
-  // Enhanced handlers with proper loading states
   const handleAccept = async () => {
     if (isProcessing) return
     setLocalProcessing(true)
@@ -124,7 +106,6 @@ export function CommissionNegotiation({ negotiationState, onAccept, onCounter, o
       setLocalProcessing(false)
     }
   }
-
   const handleCounter = async (data) => {
     if (isProcessing) return
     setLocalProcessing(true)
@@ -135,7 +116,6 @@ export function CommissionNegotiation({ negotiationState, onAccept, onCounter, o
       setLocalProcessing(false)
     }
   }
-
   const handleReject = async (reason) => {
     if (isProcessing) return
     setLocalProcessing(true)
@@ -146,7 +126,6 @@ export function CommissionNegotiation({ negotiationState, onAccept, onCounter, o
       setLocalProcessing(false)
     }
   }
-
   return (
     <>
       <Card variant="elevated" className="border-[#00FF89]/30 bg-[#00FF89]/5">
@@ -164,7 +143,6 @@ export function CommissionNegotiation({ negotiationState, onAccept, onCounter, o
             </div>
           </div>
         </CardHeader>
-
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center p-3 rounded-lg bg-white/5">
@@ -176,12 +154,10 @@ export function CommissionNegotiation({ negotiationState, onAccept, onCounter, o
               <p className="text-xs text-gray-400">Per $100 Sale</p>
             </div>
           </div>
-
           <div className="text-sm text-gray-400">
             Platform takes {currentRate}% to cover infrastructure, payments, support, and marketing.
           </div>
         </CardContent>
-
         {showActionButtons && (
           <CardFooter>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
@@ -202,7 +178,6 @@ export function CommissionNegotiation({ negotiationState, onAccept, onCounter, o
                   </>
                 )}
               </button>
-
               <button
                 onClick={() => setShowCounterModal(true)}
                 disabled={isProcessing || negotiationRound >= maxRounds}
@@ -211,7 +186,6 @@ export function CommissionNegotiation({ negotiationState, onAccept, onCounter, o
                 <AlertTriangle className="w-4 h-4" />
                 Counter
               </button>
-
               <button
                 onClick={() => setShowRejectModal(true)}
                 disabled={isProcessing}
@@ -221,7 +195,6 @@ export function CommissionNegotiation({ negotiationState, onAccept, onCounter, o
                 Reject
               </button>
             </div>
-
             {negotiationRound >= maxRounds && (
               <p className="text-xs text-amber-400 mt-2">
                 Maximum negotiation rounds reached. Please accept or wait for admin response.
@@ -230,8 +203,6 @@ export function CommissionNegotiation({ negotiationState, onAccept, onCounter, o
           </CardFooter>
         )}
       </Card>
-
-      {/* Modals */}
       {showCounterModal && (
         <CounterOfferModal
           currentRate={currentRate}
@@ -240,7 +211,6 @@ export function CommissionNegotiation({ negotiationState, onAccept, onCounter, o
           processing={isProcessing}
         />
       )}
-
       {showRejectModal && (
         <RejectOfferModal
           onClose={() => setShowRejectModal(false)}
@@ -251,10 +221,8 @@ export function CommissionNegotiation({ negotiationState, onAccept, onCounter, o
     </>
   )
 }
-
 function CommissionTooltip({ rate, formatCurrency }) {
   const [showTooltip, setShowTooltip] = useState(false)
-
   return (
     <div className="relative">
       <button
@@ -264,7 +232,6 @@ function CommissionTooltip({ rate, formatCurrency }) {
       >
         <HelpCircle className="w-4 h-4" />
       </button>
-
       {showTooltip && (
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-[#121212] border border-white/20 rounded-lg shadow-xl z-50">
           <div className="text-xs text-white">
@@ -292,16 +259,13 @@ function CommissionTooltip({ rate, formatCurrency }) {
     </div>
   )
 }
-
 function CounterOfferModal({ currentRate, onClose, onSubmit, processing }) {
   const [counterRate, setCounterRate] = useState('')
   const [reason, setReason] = useState('')
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
-
   const validateForm = () => {
     const newErrors = {}
-    
     if (!counterRate || isNaN(counterRate)) {
       newErrors.counterRate = 'Please enter a valid commission rate'
     } else if (parseFloat(counterRate) < 1 || parseFloat(counterRate) > 50) {
@@ -309,43 +273,31 @@ function CounterOfferModal({ currentRate, onClose, onSubmit, processing }) {
     } else if (parseFloat(counterRate) >= currentRate) {
       newErrors.counterRate = `Counter offer must be lower than current ${currentRate}%`
     }
-    
     if (!reason.trim()) {
       newErrors.reason = 'Please provide a reason for your counter offer'
     } else if (reason.trim().length < 10) {
       newErrors.reason = 'Reason must be at least 10 characters'
     }
-    
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
-    // Prevent duplicate submissions
     if (isSubmitting || processing) return
-    
     if (!validateForm()) return
-    
     setIsSubmitting(true)
-    
     try {
       await onSubmit({
         counterRate: parseFloat(counterRate),
         reason: reason.trim()
       })
-      // Don't close modal here - let parent handle success and close
     } catch (error) {
       console.error('Counter offer submission failed:', error)
-      // Keep modal open on error so user can retry
     } finally {
       setIsSubmitting(false)
     }
   }
-
   const isDisabled = isSubmitting || processing
-
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-[#1a1a1a] rounded-xl p-6 w-full max-w-md border border-white/10">
@@ -359,7 +311,6 @@ function CounterOfferModal({ currentRate, onClose, onSubmit, processing }) {
             <X className="w-5 h-5" />
           </button>
         </div>
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -385,7 +336,6 @@ function CounterOfferModal({ currentRate, onClose, onSubmit, processing }) {
               <p className="text-red-400 text-xs mt-1">{errors.counterRate}</p>
             )}
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Reason for Counter Offer
@@ -404,7 +354,6 @@ function CounterOfferModal({ currentRate, onClose, onSubmit, processing }) {
               <p className="text-red-400 text-xs mt-1">{errors.reason}</p>
             )}
           </div>
-
           <div className="flex gap-3 pt-4">
             <button
               type="button"
@@ -434,12 +383,10 @@ function CounterOfferModal({ currentRate, onClose, onSubmit, processing }) {
     </div>
   )
 }
-
 function RejectOfferModal({ onClose, onSubmit, processing }) {
   const [reason, setReason] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
-
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape') onClose()
@@ -447,14 +394,12 @@ function RejectOfferModal({ onClose, onSubmit, processing }) {
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
   }, [onClose])
-
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (reason.trim().length < 5) {
       setError('Please provide at least 5 characters')
       return
     }
-
     setSubmitting(true)
     try {
       await onSubmit(reason.trim())
@@ -462,16 +407,13 @@ function RejectOfferModal({ onClose, onSubmit, processing }) {
       setSubmitting(false)
     }
   }
-
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-[#1f1f1f] border border-red-500/30 rounded-2xl p-6 max-w-sm w-full">
         <h3 className="text-xl font-bold text-red-400 mb-4">Reject Offer</h3>
-        
         <p className="text-sm text-gray-400 mb-4">
           Please provide a brief reason for rejecting this commission offer.
         </p>
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <textarea
             value={reason}
@@ -483,7 +425,6 @@ function RejectOfferModal({ onClose, onSubmit, processing }) {
             placeholder="Reason for rejection..."
           />
           {error && <p className="text-red-400 text-xs">{error}</p>}
-
           <div className="flex gap-3">
             <button
               type="submit"

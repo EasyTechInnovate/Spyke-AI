@@ -540,7 +540,7 @@ export const parseApiError = (error) => {
 }
 
 // Default export
-export default {
+const reviewValidationUtils = {
     REVIEW_VALIDATION_RULES,
     REVIEW_ERROR_MESSAGES,
     COMPONENT_VALIDATION_CONFIGS,
@@ -557,3 +557,5 @@ export default {
     getCharacterCount,
     parseApiError
 }
+
+export default reviewValidationUtils

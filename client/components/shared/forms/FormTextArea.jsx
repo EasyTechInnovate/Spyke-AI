@@ -1,29 +1,5 @@
 'use client'
-
 import React from 'react'
-
-/**
- * @typedef {Object} FormTextAreaProps
- * @property {string} [label] - Field label
- * @property {string} name - Field name
- * @property {string} [value=''] - Field value
- * @property {function} onChange - Change handler
- * @property {string} [error] - Error message
- * @property {string} [placeholder] - Placeholder text
- * @property {string} [helperText] - Helper text
- * @property {boolean} [required] - Whether field is required
- * @property {string} [className] - Additional CSS classes
- * @property {number} [maxLength] - Maximum length
- * @property {number} [minLength] - Minimum length
- * @property {number} [rows=4] - Number of rows
- * @property {boolean} [disabled] - Whether field is disabled
- * @property {boolean} [showCharCount=true] - Whether to show character count
- */
-
-/**
- * Reusable form textarea component
- * @param {FormTextAreaProps} props
- */
 export default function FormTextArea({
     label,
     name,
@@ -48,7 +24,6 @@ export default function FormTextArea({
         ${error ? 'border-red-500' : 'border-gray-700'}
         ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
     `
-
     return (
         <div className={className}>
             {label && (
@@ -61,7 +36,6 @@ export default function FormTextArea({
                     )}
                 </label>
             )}
-            
             <textarea
                 name={name}
                 value={value}
@@ -73,15 +47,12 @@ export default function FormTextArea({
                 disabled={disabled}
                 {...rest}
             />
-            
             {helperText && !error && (
                 <p className="mt-1 text-sm text-gray-500">{helperText}</p>
             )}
-            
             {error && (
                 <p className="mt-1 text-sm text-red-400">{error}</p>
             )}
-            
             {minLength && value.length < minLength && value.length > 0 && (
                 <p className="mt-1 text-sm text-yellow-400">
                     Minimum {minLength} characters required ({minLength - value.length} more)

@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react'
 import { PageHeader, LoadingSkeleton, EmptyState, QuickActionsBar } from '@/components/admin'
 import { DollarSign, RefreshCw, Search, Filter, X } from 'lucide-react'
@@ -7,10 +6,8 @@ import { adminAPI } from '@/lib/api/admin'
 import { Loader2 } from 'lucide-react'
 import { useNotificationProvider } from '@/components/shared/notifications/NotificationProvider'
 import { FixedSizeList as List } from 'react-window'
-
 const VIRTUALIZATION_THRESHOLD = 60
 const ROW_HEIGHT = 100
-
 export default function AdminPayoutPage() {
     const [loading, setLoading] = useState(true)
     const [payoutList, setPayoutList] = useState([])
@@ -37,24 +34,18 @@ export default function AdminPayoutPage() {
     const [totalItems, setTotalItems] = useState(0)
     const [reasonTouched, setReasonTouched] = useState(false)
     const { showSuccess, showError } = useNotificationProvider?.() || {}
-
     const latestRequestIdRef = useRef(0)
-
-    // Track viewport height for virtualization container sizing
     const [viewportH, setViewportH] = useState(typeof window !== 'undefined' ? window.innerHeight : 900)
     useEffect(() => {
         const onResize = () => setViewportH(window.innerHeight)
         window.addEventListener('resize', onResize)
         return () => window.removeEventListener('resize', onResize)
     }, [])
-
     const virtualListHeight = useMemo(() => {
         const h = viewportH - 420
         return Math.max(320, Math.min(900, h))
     }, [viewportH])
-
     const mapToDisplayStatus = useCallback((p) => {
-        // Ensure both _id and id exist for compatibility
         const payout = {
             ...p,
             id: p.id || p._id,
@@ -63,7 +54,6 @@ export default function AdminPayoutPage() {
         }
         return payout
     }, [])
-
     const fetchPayoutList = useCallback(
         async ({ manual = false } = {}) => {
             if (manual) setListOpacity(0.6)
@@ -77,13 +67,10 @@ export default function AdminPayoutPage() {
                 }
                 if (fromDate) params.fromDate = new Date(fromDate + 'T00:00:00.000Z').toISOString()
                 if (toDate) params.toDate = new Date(toDate + 'T23:59:59.999Z').toISOString()
-
                 const res = await adminAPI.payouts.getPayouts(params)
                 if (reqId !== latestRequestIdRef.current) return
-
                 const records = (res?.payouts || res?.data || []).map(mapToDisplayStatus)
                 const meta = res?.meta || res?.pagination || {}
-
                 setPayoutList(records)
                 setTotalPages(meta.totalPages || meta.pages || 1)
                 if (meta.totalItems || meta.total) setTotalItems(meta.totalItems || meta.total)
@@ -97,11 +84,9 @@ export default function AdminPayoutPage() {
         },
         [page, pageSize, statusFilter, fromDate, toDate, filtersKey, mapToDisplayStatus]
     )
-
     const fetchPayoutDetails = useCallback(
         async (payoutId) => {
             if (!payoutId || payoutDetailsCache[payoutId]) return
-
             setDetailsLoadingId(payoutId)
             setDetailsErrorId(null)
             try {
@@ -117,16 +102,13 @@ export default function AdminPayoutPage() {
         },
         [payoutDetailsCache, showError]
     )
-
     useEffect(() => {
         fetchPayoutList({})
     }, [fetchPayoutList])
-
     useEffect(() => {
         const id = setTimeout(() => setDebouncedQuery(searchQuery.trim().toLowerCase()), 220)
         return () => clearTimeout(id)
     }, [searchQuery])
-
     const handleToggleRow = useCallback(
         (payoutId) => {
             if (!payoutId) {
@@ -134,7 +116,6 @@ export default function AdminPayoutPage() {
                 showError?.('Invalid payout data')
                 return
             }
-
             setExpandedId((prev) => (prev === payoutId ? null : payoutId))
             if (expandedId !== payoutId && !payoutDetailsCache[payoutId]) {
                 fetchPayoutDetails(payoutId)
@@ -142,7 +123,6 @@ export default function AdminPayoutPage() {
         },
         [fetchPayoutDetails, payoutDetailsCache, expandedId, showError]
     )
-
     const filteredPayoutList = useMemo(() => {
         let data = payoutList
         if (statusFilter !== 'all') {
@@ -158,7 +138,6 @@ export default function AdminPayoutPage() {
                 p.method.toLowerCase().includes(q)
         )
     }, [payoutList, statusFilter, debouncedQuery])
-
     const statusCounts = useMemo(() => {
         const counts = { all: 0, pending: 0, approved: 0, processing: 0, completed: 0, hold: 0, failed: 0 }
         payoutList.forEach((p) => {
@@ -167,7 +146,6 @@ export default function AdminPayoutPage() {
             if (counts.hasOwnProperty(status)) {
                 counts[status]++
             } else {
-                // Handle any unexpected status by mapping to closest match
                 if (status.includes('fail') || status.includes('reject')) {
                     counts.failed++
                 } else if (status.includes('hold') || status.includes('pause')) {
@@ -179,7 +157,6 @@ export default function AdminPayoutPage() {
         })
         return counts
     }, [payoutList])
-
     const aggregateTotals = useMemo(() => {
         const base = { totalAmount: 0, pendingAmount: 0, processingAmount: 0, completedAmount: 0 }
         payoutList.forEach((p) => {
@@ -192,7 +169,6 @@ export default function AdminPayoutPage() {
         const completionRate = base.totalAmount > 0 ? Math.round((base.completedAmount / base.totalAmount) * 100) : 0
         return { ...base, completionRate }
     }, [payoutList])
-
     const highlight = useCallback(
         (text) => {
             if (!debouncedQuery) return text
@@ -209,13 +185,10 @@ export default function AdminPayoutPage() {
         },
         [debouncedQuery]
     )
-
     const toggleSelect = useCallback((id) => {
         setSelectedPayoutIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
     }, [])
-
     const clearSelection = () => setSelectedPayoutIds([])
-
     const allVisibleSelected = useMemo(
         () => filteredPayoutList.length > 0 && filteredPayoutList.every((p) => selectedPayoutIds.includes(p.id)),
         [filteredPayoutList, selectedPayoutIds]
@@ -224,7 +197,6 @@ export default function AdminPayoutPage() {
         setSelectedPayoutIds(filteredPayoutList.map((p) => p.id))
     }, [filteredPayoutList])
     const deselectAll = useCallback(() => setSelectedPayoutIds([]), [])
-
     const handleReasonSubmit = async () => {
         const { action, payoutId } = actionReasonModal
         const reasonRequired = action === 'reject' || action === 'hold'
@@ -270,7 +242,6 @@ export default function AdminPayoutPage() {
             setReasonTouched(false)
         }
     }
-
     const handleTransactionSubmit = async () => {
         const { action, payoutId } = transactionModal
         try {
@@ -297,7 +268,6 @@ export default function AdminPayoutPage() {
             setTransactionForm({ transactionId: '', notes: '' })
         }
     }
-
     const handleStatusUpdate = useCallback(
         async (id, nextStatus, currentDisplayStatus) => {
             if (['reject', 'hold', 'bulkApprove'].includes(nextStatus)) {
@@ -336,7 +306,6 @@ export default function AdminPayoutPage() {
         },
         [showSuccess, showError]
     )
-
     return (
         <div className="space-y-6">
             <PageHeader
@@ -353,10 +322,7 @@ export default function AdminPayoutPage() {
                     </button>
                 ]}
             />
-
             <PayoutAggregatesBar totals={aggregateTotals} />
-
-            {/* Status Filter Tabs */}
             <div className="bg-[#0f0f0f] border border-gray-800 rounded-xl p-4">
                 <div className="flex flex-wrap items-center gap-2">
                     <Filter className="w-4 h-4 text-gray-500" />
@@ -417,7 +383,6 @@ export default function AdminPayoutPage() {
                     />
                 </div>
             </div>
-
             <QuickActionsBar>
                 <div className="w-full flex flex-col gap-4">
                     <div className="grid w-full gap-4 md:grid-cols-[1fr_repeat(2,_170px)_auto_auto]">
@@ -478,7 +443,6 @@ export default function AdminPayoutPage() {
                     </div>
                 </div>
             </QuickActionsBar>
-
             {filteredPayoutList.length > 0 && selectedPayoutIds.length === 0 && (
                 <div className="bg-[#101010] border border-gray-800 rounded-xl p-4 flex flex-wrap items-center gap-3 text-sm text-gray-300">
                     <span className="font-medium">{filteredPayoutList.length} payouts</span>
@@ -489,7 +453,6 @@ export default function AdminPayoutPage() {
                     </button>
                 </div>
             )}
-
             {selectedPayoutIds.length > 0 && (
                 <div className="bg-[#101010] border border-gray-800 rounded-xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div className="text-sm text-gray-300 flex items-center gap-3 flex-wrap">
@@ -522,7 +485,6 @@ export default function AdminPayoutPage() {
                     </div>
                 </div>
             )}
-
             <section
                 aria-busy={loading}
                 className="transition-opacity duration-200"
@@ -582,7 +544,6 @@ export default function AdminPayoutPage() {
                                 ))
                             )}
                         </div>
-                        {/* Pagination Controls */}
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 text-sm">
                             <div className="flex items-center gap-3">
                                 <label className="text-gray-400">Rows</label>
@@ -635,7 +596,6 @@ export default function AdminPayoutPage() {
                     </>
                 )}
             </section>
-            {/* Side Detail Panel */}
             {expandedId && (
                 <PayoutDetailPanel
                     payout={payoutList.find((p) => p.id === expandedId)}
@@ -647,8 +607,6 @@ export default function AdminPayoutPage() {
                     updatingId={updatingId}
                 />
             )}
-
-            {/* Action Reason Modal */}
             {actionReasonModal.open && (
                 <Modal onClose={() => setActionReasonModal({ open: false, action: null, payoutId: null })}>
                     <div className="space-y-4">
@@ -690,8 +648,6 @@ export default function AdminPayoutPage() {
                     </div>
                 </Modal>
             )}
-
-            {/* Transaction Modal */}
             {transactionModal.open && (
                 <Modal onClose={() => setTransactionModal({ open: false, action: null, payoutId: null })}>
                     <div className="space-y-4">
@@ -738,7 +694,6 @@ export default function AdminPayoutPage() {
         </div>
     )
 }
-
 function PayoutAggregatesBar({ totals }) {
     return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -764,7 +719,6 @@ function PayoutAggregatesBar({ totals }) {
         </div>
     )
 }
-
 function MetricCard({ label, value, tone }) {
     const toneMap = {
         amber: 'from-[#352a14] to-[#2a1f0c] text-[#FFC050] border-[#4a3614]',
@@ -782,7 +736,6 @@ function MetricCard({ label, value, tone }) {
         </div>
     )
 }
-
 function FilterTab({ id, label, active, onSelect, tone = 'neutral', count }) {
     const isActive = active === id
     const toneClass =
@@ -805,7 +758,6 @@ function FilterTab({ id, label, active, onSelect, tone = 'neutral', count }) {
         </button>
     )
 }
-
 function PayoutRow({ payout, isActive, onToggle, updating, onUpdateStatus, highlight, selected, onSelect }) {
     const dateStr = new Date(payout.requestedAt || payout.createdAt).toLocaleDateString()
     return (
@@ -845,7 +797,6 @@ function PayoutRow({ payout, isActive, onToggle, updating, onUpdateStatus, highl
     )
 }
 const MemoizedPayoutRow = memo(PayoutRow)
-
 function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateStatus, updatingId }) {
     if (!payout) return null
     let timeline = ['pending', 'approved', 'processing', 'completed']
@@ -875,14 +826,11 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
         <div
             className="fixed inset-0 z-40 flex"
             style={{ fontFamily: 'var(--font-league-spartan)' }}>
-            {/* Desktop overlay - hidden on mobile */}
             <div
                 className="flex-1 bg-black/40 backdrop-blur-sm lg:block hidden"
                 onClick={onClose}
             />
-            {/* Panel - full width on mobile, sidebar on desktop */}
             <div className="relative w-full lg:w-[480px] xl:w-[520px] 2xl:w-[560px] h-full bg-[#121212] lg:border-l border-gray-800 flex flex-col">
-                {/* Header - Mobile optimized */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800 bg-[#121212] sticky top-0 z-10">
                     <div className="flex flex-col min-w-0 flex-1 mr-3">
                         <h3 className="text-xl sm:text-2xl font-bold text-white tracking-wide truncate">Payout Detail</h3>
@@ -894,20 +842,14 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                         <X className="w-5 h-5" />
                     </button>
                 </div>
-
-                {/* Content - Scrollable */}
                 <div className="overflow-y-auto flex-1 px-4 py-4 space-y-6">
-                    {/* Timeline - Mobile friendly */}
                     <div className="bg-[#1a1a1a] rounded-xl p-4 border border-gray-800">
                         <h4 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Progress</h4>
                         <div className="flex items-center justify-between relative">
-                            {/* Progress bar background */}
                             <div className="absolute top-4 left-6 right-6 h-0.5 bg-gray-700 rounded-full"></div>
-                            {/* Active progress bar */}
                             <div
                                 className="absolute top-4 left-6 h-0.5 bg-[#00FF89] rounded-full transition-all duration-500"
                                 style={{ width: `${(currentIndex / (timeline.length - 1)) * 100}%` }}></div>
-
                             {timeline.map((step, i) => {
                                 const done = i <= currentIndex
                                 const isCurrent = i === currentIndex
@@ -919,7 +861,6 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                                     : done
                                       ? 'bg-[#00FF89] text-black border-2 border-[#00FF89] shadow-lg shadow-[#00FF89]/30'
                                       : 'bg-gray-800 text-gray-500 border-2 border-gray-600'
-
                                 const labelClass = isHold
                                     ? isCurrent
                                         ? 'text-[#FFC050] font-semibold'
@@ -927,7 +868,6 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                                     : done
                                       ? 'text-[#00FF89] font-semibold'
                                       : 'text-gray-500'
-
                                 const stepLabels = {
                                     pending: 'Pending',
                                     approved: 'Approved',
@@ -935,7 +875,6 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                                     completed: 'Completed',
                                     hold: 'On Hold'
                                 }
-
                                 return (
                                     <div
                                         key={step}
@@ -954,8 +893,6 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                             })}
                         </div>
                     </div>
-
-                    {/* Payout Summary Card - Mobile optimized */}
                     <div className="bg-gradient-to-br from-[#1a1a1a] to-[#141414] rounded-xl p-4 border border-gray-800 shadow-lg">
                         <h4 className="text-sm font-semibold text-gray-300 mb-4 uppercase tracking-wider flex items-center gap-2">
                             <DollarSign className="w-4 h-4 text-[#00FF89]" />
@@ -990,8 +927,6 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                             </div>
                         </div>
                     </div>
-
-                    {/* Loading/Error States */}
                     {detailsLoading && (
                         <div className="bg-[#1a1a1a] rounded-xl p-4 border border-gray-800">
                             <div className="flex items-center gap-3 text-sm text-gray-400">
@@ -1000,11 +935,8 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                             </div>
                         </div>
                     )}
-
-                    {/* Additional Details */}
                     {details && !detailsLoading && !error && (
                         <div className="space-y-4">
-                            {/* Transaction Info */}
                             <div className="bg-[#1a1a1a] rounded-xl p-4 border border-gray-800">
                                 <h4 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Transaction Details</h4>
                                 <div className="grid grid-cols-1 gap-3">
@@ -1022,8 +954,6 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                                     />
                                 </div>
                             </div>
-
-                            {/* Sales Included */}
                             {salesIncluded.length > 0 && (
                                 <div className="bg-[#1a1a1a] rounded-xl p-4 border border-gray-800">
                                     <h4 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">
@@ -1052,8 +982,6 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                                     </div>
                                 </div>
                             )}
-
-                            {/* Audit Trail */}
                             {Array.isArray(audit) && audit.length > 0 && (
                                 <div className="bg-[#1a1a1a] rounded-xl p-4 border border-gray-800">
                                     <h4 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Activity Log</h4>
@@ -1080,8 +1008,6 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                         </div>
                     )}
                 </div>
-
-                {/* Action Buttons - Sticky bottom */}
                 {actions.length > 0 && (
                     <div className="px-4 py-4 border-t border-gray-800 bg-[#121212] sticky bottom-0">
                         <div className="flex flex-wrap gap-2">
@@ -1118,8 +1044,6 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
         </div>
     )
 }
-
-// Helper component for consistent info display
 function InfoRow({ label, value }) {
     return (
         <div className="flex items-center justify-between py-2">
@@ -1132,7 +1056,6 @@ function InfoRow({ label, value }) {
         </div>
     )
 }
-
 function StatusBadge({ status }) {
     const map = {
         completed: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
@@ -1152,7 +1075,6 @@ function StatusBadge({ status }) {
     )
 }
 const MemoizedStatusBadge = memo(StatusBadge)
-
 function Modal({ children, onClose }) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
@@ -1171,4 +1093,3 @@ function Modal({ children, onClose }) {
         </div>
     )
 }
-

@@ -1,8 +1,6 @@
 'use client'
-
 import { motion, AnimatePresence } from 'framer-motion'
 import { AlertTriangle, CheckCircle, X, Loader2 } from 'lucide-react'
-
 export default function ConfirmationModal({
   isOpen,
   onClose,
@@ -11,12 +9,11 @@ export default function ConfirmationModal({
   message,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
-  type = 'default', // 'default', 'danger', 'success', 'warning'
+  type = 'default', 
   loading = false,
   icon: CustomIcon = null
 }) {
   if (!isOpen) return null
-
   const getTypeStyles = () => {
     switch (type) {
       case 'danger':
@@ -53,19 +50,15 @@ export default function ConfirmationModal({
         }
     }
   }
-
   const styles = getTypeStyles()
   const IconComponent = CustomIcon || styles.defaultIcon
-
   const handleConfirm = async () => {
     try {
       await onConfirm()
     } catch (error) {
-      // Error handling is done by parent component
       console.error('Confirmation action failed:', error)
     }
   }
-
   return (
     <AnimatePresence>
       <motion.div
@@ -82,7 +75,6 @@ export default function ConfirmationModal({
           transition={{ type: 'spring', duration: 0.3 }}
           className="bg-[#1f1f1f] border border-[#00FF89]/20 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6"
         >
-          {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className={`p-3 rounded-full ${styles.iconBg}`}>
@@ -99,13 +91,9 @@ export default function ConfirmationModal({
               </button>
             )}
           </div>
-
-          {/* Message */}
           <div className="mb-6">
             <p className="text-gray-300 leading-relaxed">{message}</p>
           </div>
-
-          {/* Actions */}
           <div className="flex gap-3">
             <button
               onClick={onClose}

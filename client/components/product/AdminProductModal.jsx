@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -25,7 +24,6 @@ import {
 import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 import { productsAPI } from '@/lib/api'
 import toast from '@/lib/utils/toast'
-
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
 const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
     const [activeTab, setActiveTab] = useState('overview')
@@ -33,14 +31,11 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
     const [rejectionReason, setRejectionReason] = useState('')
     const [loading, setLoading] = useState(false)
     const [showRejectModal, setShowRejectModal] = useState(false)
-
     if (!isOpen || !product) return null
-
     const handleQuickAction = async (action, notes = '') => {
         setLoading(true)
         try {
             let updateData = {}
-
             switch (action) {
                 case 'verify':
                     updateData = { isVerified: true }
@@ -55,19 +50,14 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
                     updateData = { isVerified: false, isTested: false, rejectionReason: notes }
                     break
             }
-
             if (notes) updateData.adminNotes = notes
-
             await productsAPI.verifyProduct(product._id, updateData)
-
             showMessage('Product ${action}d successfully', 'success')
             onProductUpdate?.(product._id, updateData)
-            
             if (action === 'reject') {
                 setShowRejectModal(false)
                 setRejectionReason('')
             }
-            
             onClose()
         } catch (error) {
             showMessage('Failed to ${action} product', 'error')
@@ -75,11 +65,9 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
             setLoading(false)
         }
     }
-
     const handleRejectClick = () => {
         setShowRejectModal(true)
     }
-
     const handleRejectSubmit = () => {
         if (!rejectionReason.trim()) {
             showMessage('Please provide a reason for rejection', 'error')
@@ -87,17 +75,14 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
         }
         handleQuickAction('reject', rejectionReason)
     }
-
     const getUrgencyIndicator = () => {
         const hoursDiff = (Date.now() - new Date(product.createdAt)) / (1000 * 60 * 60)
         if (hoursDiff > 72) return { color: 'text-red-400', bg: 'bg-red-500/10', text: 'URGENT', icon: AlertTriangle }
         if (hoursDiff > 48) return { color: 'text-yellow-400', bg: 'bg-yellow-500/10', text: 'Priority', icon: Clock }
         return { color: 'text-green-400', bg: 'bg-green-500/10', text: 'Normal', icon: CheckCircle }
     }
-
     const urgency = getUrgencyIndicator()
     const UrgencyIcon = urgency.icon
-
     const tabs = [
         { id: 'overview', label: 'Overview', icon: Package },
         { id: 'content', label: 'Content Review', icon: Eye },
@@ -105,7 +90,6 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
         { id: 'seller', label: 'Seller Info', icon: User },
         { id: 'history', label: 'History', icon: Clock }
     ]
-
     return (
         <AnimatePresence>
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
@@ -114,7 +98,6 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     className="bg-gray-900 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden border border-gray-700">
-                    {/* Header */}
                     <div className="bg-gradient-to-r from-brand-primary/20 via-purple-600/20 to-brand-primary/20 p-6 border-b border-gray-700">
                         <div className="flex items-start justify-between">
                             <div className="flex-1 min-w-0">
@@ -127,8 +110,6 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
                                     </div>
                                 </div>
                                 <p className="text-gray-400 line-clamp-2">{product.shortDescription}</p>
-
-                                {/* Status indicators */}
                                 <div className="flex items-center gap-4 mt-4">
                                     <div
                                         className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs ${product.isVerified ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
@@ -146,7 +127,6 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
                                     </div>
                                 </div>
                             </div>
-
                             <button
                                 onClick={onClose}
                                 className="p-2 hover:bg-gray-800 rounded-lg transition-colors text-gray-400 hover:text-white">
@@ -154,9 +134,7 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
                             </button>
                         </div>
                     </div>
-
                     <div className="flex h-[calc(90vh-200px)]">
-                        {/* Sidebar Tabs */}
                         <div className="w-64 bg-gray-800/50 border-r border-gray-700 p-4">
                             <div className="space-y-2">
                                 {tabs.map((tab) => {
@@ -176,11 +154,8 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
                                     )
                                 })}
                             </div>
-
-                            {/* Quick Actions */}
                             <div className="mt-8 space-y-2">
                                 <h3 className="text-sm font-medium text-gray-400 mb-3">Quick Actions</h3>
-
                                 {!product.isVerified && (
                                     <button
                                         onClick={() => handleQuickAction('verify', 'Quick verification')}
@@ -190,7 +165,6 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
                                         Verify
                                     </button>
                                 )}
-
                                 {!product.isTested && (
                                     <button
                                         onClick={() => handleQuickAction('test', 'Quick testing approval')}
@@ -200,7 +174,6 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
                                         Mark Tested
                                     </button>
                                 )}
-
                                 {!product.isVerified || !product.isTested ? (
                                     <button
                                         onClick={() => handleQuickAction('approve', 'Full approval - verified and tested')}
@@ -215,7 +188,6 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
                                         Fully Approved
                                     </div>
                                 )}
-
                                 <button
                                     onClick={handleRejectClick}
                                     disabled={loading}
@@ -225,12 +197,9 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
                                 </button>
                             </div>
                         </div>
-
-                        {/* Main Content */}
                         <div className="flex-1 p-6 overflow-y-auto">
                             {activeTab === 'overview' && (
                                 <div className="space-y-6">
-                                    {/* Product Image and Basic Info */}
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                         <div>
                                             <OptimizedImage
@@ -262,7 +231,6 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
                                                     <div className="text-white font-medium">{product.industry}</div>
                                                 </div>
                                             </div>
-
                                             <div className="bg-gray-800/50 p-4 rounded-lg">
                                                 <div className="text-gray-400 text-sm mb-2">Stats</div>
                                                 <div className="flex gap-4 text-sm">
@@ -282,8 +250,6 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
                                             </div>
                                         </div>
                                     </div>
-
-                                    {/* Description */}
                                     <div className="bg-gray-800/30 p-6 rounded-lg">
                                         <h3 className="text-lg font-semibold text-white mb-4">Product Description</h3>
                                         <p className="text-gray-300 leading-relaxed">{product.fullDescription}</p>
@@ -294,8 +260,6 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
                     </div>
                 </motion.div>
             </div>
-
-            {/* Reject Modal */}
             {showRejectModal && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm">
                     <motion.div
@@ -315,7 +279,6 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
                                     </p>
                                 </div>
                             </div>
-
                             <div className="bg-gray-800/30 p-4 rounded-lg mb-4">
                                 <div className="text-sm text-gray-400 mb-2">Product</div>
                                 <div className="text-white font-medium">{product.title}</div>
@@ -323,7 +286,6 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
                                     by {product.sellerId?.fullName || 'Unknown Seller'}
                                 </div>
                             </div>
-
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-400 mb-2">
                                     Reason for rejection <span className="text-red-400">*</span>
@@ -336,7 +298,6 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
                                     rows={4}
                                 />
                             </div>
-
                             <div className="flex gap-3">
                                 <button
                                     onClick={handleRejectSubmit}
@@ -361,6 +322,4 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
         </AnimatePresence>
     )
 }
-
 export default AdminProductModal
-

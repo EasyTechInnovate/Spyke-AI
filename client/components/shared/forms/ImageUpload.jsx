@@ -1,23 +1,6 @@
 import React, { useRef } from 'react'
 import { Upload, X, Loader2, Image as ImageIcon, AlertCircle } from 'lucide-react'
 import { useImageUpload } from '@/hooks/useImageUpload'
-
-/**
- * Reusable Image Upload Component
- * @param {Object} props
- * @param {string} props.label - Label for the upload field
- * @param {string} props.value - Current image URL
- * @param {function} props.onChange - Callback when image URL changes
- * @param {string} props.category - Upload category (e.g., 'seller-banners')
- * @param {number} props.maxSize - Max file size in MB
- * @param {string[]} props.acceptedFormats - Accepted file formats
- * @param {boolean} props.required - Whether the field is required
- * @param {string} props.error - Error message to display
- * @param {string} props.placeholder - Placeholder text
- * @param {string} props.helperText - Helper text
- * @param {Object} props.className - Additional CSS classes
- * @param {boolean} props.showPreview - Whether to show image preview (default: true)
- */
 const ImageUpload = ({
     label,
     value,
@@ -33,7 +16,6 @@ const ImageUpload = ({
     showPreview = true
 }) => {
     const fileInputRef = useRef(null)
-    
     const { uploading, progress, uploadImage, error: uploadError } = useImageUpload({
         category,
         maxSize,
@@ -47,29 +29,22 @@ const ImageUpload = ({
             console.error('Image upload failed:', errorMessage)
         }
     })
-
     const handleFileSelect = async (e) => {
         const file = e.target.files[0]
         if (!file) return
-
         try {
             await uploadImage(file)
         } catch (err) {
-            // Error is already handled by the hook
         }
-        
-        // Clear the file input to allow re-uploading the same file
         if (fileInputRef.current) {
             fileInputRef.current.value = ''
         }
     }
-
     const handleUrlChange = (e) => {
         if (onChange) {
             onChange(e)
         }
     }
-
     const handleRemoveImage = () => {
         if (onChange) {
             onChange({ target: { value: '' } })
@@ -78,9 +53,7 @@ const ImageUpload = ({
             fileInputRef.current.value = ''
         }
     }
-
     const displayError = error || uploadError
-
     return (
         <div className={`space-y-3 ${className}`}>
             {label && (
@@ -88,8 +61,6 @@ const ImageUpload = ({
                     {label} {required && <span className="text-red-400">*</span>}
                 </label>
             )}
-
-            {/* Image Preview */}
             {showPreview && value && (
                 <div className="relative inline-block">
                     <img
@@ -110,10 +81,7 @@ const ImageUpload = ({
                     </button>
                 </div>
             )}
-
-            {/* Upload Section */}
             <div className="space-y-3">
-                {/* File Upload Button */}
                 <div className="flex items-center gap-3">
                     <input
                         ref={fileInputRef}
@@ -137,7 +105,6 @@ const ImageUpload = ({
                         )}
                         {uploading ? 'Uploading...' : 'Upload Image'}
                     </label>
-                    
                     {uploading && (
                         <div className="flex items-center gap-2 text-sm text-gray-400">
                             <span>{progress}%</span>
@@ -150,8 +117,6 @@ const ImageUpload = ({
                         </div>
                     )}
                 </div>
-
-                {/* URL Input */}
                 <div className="relative">
                     <input
                         type="url"
@@ -176,18 +141,12 @@ const ImageUpload = ({
                     )}
                 </div>
             </div>
-
-            {/* Helper Text */}
             {helperText && !displayError && (
                 <p className="text-xs text-gray-400">{helperText}</p>
             )}
-
-            {/* File Format Info */}
             <p className="text-xs text-gray-500">
                 Max size: {maxSize}MB | Formats: {acceptedFormats.map(f => f.replace('.', '').toUpperCase()).join(', ')}
             </p>
-
-            {/* Error Message */}
             {displayError && (
                 <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
                     <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
@@ -197,5 +156,4 @@ const ImageUpload = ({
         </div>
     )
 }
-
 export default ImageUpload

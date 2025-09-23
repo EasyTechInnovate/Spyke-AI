@@ -1,9 +1,7 @@
 'use client'
-
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Bell } from 'lucide-react'
-
 export default function CommunicationSection({ onSuccess }) {
   const [communicationPrefs, setCommunicationPrefs] = useState({
     marketingEmails: true,
@@ -11,12 +9,10 @@ export default function CommunicationSection({ onSuccess }) {
     orderUpdates: true,
     feedbackRequests: false
   })
-
   const handlePreferenceChange = (key, value) => {
     setCommunicationPrefs(prev => ({ ...prev, [key]: value }))
     onSuccess('Communication preferences updated!')
   }
-
   const preferences = [
     { 
       key: 'marketingEmails', 
@@ -39,7 +35,6 @@ export default function CommunicationSection({ onSuccess }) {
       description: 'Participate in surveys and product feedback' 
     }
   ]
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -55,7 +50,6 @@ export default function CommunicationSection({ onSuccess }) {
           <p className="text-gray-300">Manage your email notifications and feedback options</p>
         </div>
       </div>
-
       <div className="space-y-6">
         {preferences.map((pref) => (
           <div key={pref.key} className="flex items-center justify-between p-4 bg-[#121212] rounded-xl border border-gray-700">

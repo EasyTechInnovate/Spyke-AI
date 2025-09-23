@@ -1,14 +1,11 @@
 'use client'
-
 import React from 'react'
 import { CheckCircle2, Clock, Mail, FileText, ArrowRight, Home } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/shared/layout/Header'
 import Container from '@/components/shared/layout/Container'
-
 export default function SellerSuccessPage() {
     const router = useRouter()
-
     const nextSteps = [
         {
             icon: <Mail className="w-5 h-5" />,
@@ -26,15 +23,11 @@ export default function SellerSuccessPage() {
             description: "Once approved, you'll receive access to your seller dashboard."
         }
     ]
-
     return (
         <>
-            
             <section className="min-h-screen bg-black pt-24 pb-16">
                 <Container>
                     <div className="max-w-2xl mx-auto text-center">
-                        
-                        {/* Success Icon */}
                         <div className="flex justify-center mb-8">
                             <div className="relative">
                                 <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center">
@@ -45,17 +38,12 @@ export default function SellerSuccessPage() {
                                 </div>
                             </div>
                         </div>
-
-                        {/* Success Message */}
                         <h1 className="text-4xl md:text-5xl font-kumbh-sans font-bold mb-4 text-white">
                             Profile Created Successfully!
                         </h1>
-                        
                         <p className="text-xl text-gray-300 mb-8">
                             Thank you for joining Spyke AI as a seller. Your profile has been submitted for review.
                         </p>
-
-                        {/* Under Review Notice */}
                         <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-6 mb-10">
                             <div className="flex items-center justify-center gap-3 mb-4">
                                 <Clock className="w-6 h-6 text-orange-400" />
@@ -67,8 +55,6 @@ export default function SellerSuccessPage() {
                                 takes 1-3 business days.
                             </p>
                         </div>
-
-                        {/* Next Steps */}
                         <div className="text-left mb-10">
                             <h3 className="text-2xl font-semibold text-white mb-6 text-center">What Happens Next?</h3>
                             <div className="space-y-4">
@@ -90,8 +76,6 @@ export default function SellerSuccessPage() {
                                 ))}
                             </div>
                         </div>
-
-                        {/* Important Notice */}
                         <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-6 mb-8">
                             <h3 className="text-lg font-semibold text-blue-400 mb-3">Important Notice</h3>
                             <ul className="text-left text-gray-300 space-y-2 text-sm">
@@ -109,8 +93,6 @@ export default function SellerSuccessPage() {
                                 </li>
                             </ul>
                         </div>
-
-                        {/* Action Buttons */}
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <button
                                 onClick={() => router.push('/')}
@@ -119,7 +101,6 @@ export default function SellerSuccessPage() {
                                 <Home className="w-4 h-4" />
                                 Back to Home
                             </button>
-                            
                             <button
                                 onClick={() => router.push('/explore')}
                                 className="flex items-center justify-center gap-2 px-6 py-3 bg-brand-primary hover:bg-brand-primary/90 rounded-lg text-white font-medium transition-all"
@@ -128,8 +109,6 @@ export default function SellerSuccessPage() {
                                 <ArrowRight className="w-4 h-4" />
                             </button>
                         </div>
-
-                        {/* Contact Information */}
                         <div className="mt-10 pt-8 border-t border-gray-800">
                             <p className="text-gray-400 text-sm">
                                 Questions about your application? Contact us at{' '}

@@ -1,17 +1,12 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ShoppingCart } from 'lucide-react'
-
 export default function CartButton({ count = 0 }) {
     const [mounted, setMounted] = useState(false)
-
-    // Prevent hydration mismatch by only showing count after client mount
     useEffect(() => {
         setMounted(true)
     }, [])
-
     return (
         <Link
             href="/cart"

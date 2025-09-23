@@ -1,10 +1,8 @@
 'use client'
-
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, ChevronDown, X, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
 export default function CustomSelect({
     value,
     onChange,
@@ -18,13 +16,11 @@ export default function CustomSelect({
     maxHeight = 'max-h-60',
     showSelectedCount = false,
     allowClear = false,
-    type = 'user' // New prop with default 'user'
+    type = 'user' 
 }) {
     const [isOpen, setIsOpen] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
     const dropdownRef = useRef(null)
-
-    // Theme configurations for different types
     const themes = {
         user: {
             button: 'bg-[#121212]/50 border-gray-600/50 focus:ring-[#00FF89]/50 focus:border-[#00FF89]/50 hover:border-gray-500',
@@ -81,22 +77,16 @@ export default function CustomSelect({
             separatorBorder: 'border-green-500/20'
         }
     }
-
     const currentTheme = themes[type] || themes.user
-
     const filteredOptions = options.filter(
         (option) =>
             option.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (option.searchText && option.searchText.includes(searchTerm.toLowerCase()))
     )
-
-    // Handle single vs multiple selection
     const selectedOptions = multiple
         ? options.filter((opt) => (Array.isArray(value) ? value.includes(opt.value) : false))
         : options.filter((opt) => opt.value === value)
-
     const selectedOption = multiple ? null : options.find((opt) => opt.value === value)
-
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -104,11 +94,9 @@ export default function CustomSelect({
                 setSearchTerm('')
             }
         }
-
         document.addEventListener('mousedown', handleClickOutside)
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
-
     const handleSelect = (selectedValue) => {
         if (multiple) {
             const currentValues = Array.isArray(value) ? value : []
@@ -123,17 +111,14 @@ export default function CustomSelect({
         }
         onBlur?.()
     }
-
     const handleClear = (e) => {
         e.stopPropagation()
         onChange(multiple ? [] : '')
         onBlur?.()
     }
-
     const isSelected = (option) => {
         return multiple ? Array.isArray(value) && value.includes(option.value) : value === option.value
     }
-
     return (
         <div
             className={cn('relative', className)}
@@ -150,7 +135,6 @@ export default function CustomSelect({
                 )}>
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                     {multiple ? (
-                        // Multiple selection display
                         selectedOptions.length > 0 ? (
                             <div className="flex items-center gap-2 flex-wrap">
                                 {showSelectedCount && selectedOptions.length > 3 ? (
@@ -183,7 +167,7 @@ export default function CustomSelect({
                         ) : (
                             <span className="text-gray-400 text-sm">{placeholder}</span>
                         )
-                    ) : // Single selection display
+                    ) : 
                     selectedOption ? (
                         <>
                             {selectedOption.icon && (
@@ -195,7 +179,6 @@ export default function CustomSelect({
                         <span className="text-gray-400 text-sm">{placeholder}</span>
                     )}
                 </div>
-
                 <div className="flex items-center gap-2 flex-shrink-0">
                     {allowClear && (selectedOption || (multiple && selectedOptions.length > 0)) && (
                         <button
@@ -208,7 +191,6 @@ export default function CustomSelect({
                     <ChevronDown className={cn('w-4 h-4 text-gray-400 transition-transform duration-200', isOpen && 'rotate-180')} />
                 </div>
             </button>
-
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
@@ -227,7 +209,6 @@ export default function CustomSelect({
                             position: 'absolute',
                             zIndex: 99999
                         }}>
-                        {/* Search Input */}
                         {searchable && (
                             <div className="p-3 border-b sticky top-0" style={{ backgroundColor: currentTheme.dropdown, borderColor: currentTheme.footerBg }}>
                                 <div className="relative">
@@ -242,8 +223,6 @@ export default function CustomSelect({
                                 </div>
                             </div>
                         )}
-
-                        {/* Options */}
                         <div className="max-h-48 overflow-y-auto">
                             {filteredOptions.length > 0 ? (
                                 filteredOptions.map((option) => {
@@ -277,8 +256,6 @@ export default function CustomSelect({
                                 </div>
                             )}
                         </div>
-
-                        {/* Footer with selection count for multiple */}
                         {multiple && selectedOptions.length > 0 && (
                             <div className="p-3 border-t sticky bottom-0" style={{ backgroundColor: currentTheme.footerBg, borderColor: currentTheme.footerBg }}>
                                 <div className="flex items-center justify-between text-sm">

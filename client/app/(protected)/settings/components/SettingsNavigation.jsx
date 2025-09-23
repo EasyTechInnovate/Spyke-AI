@@ -1,5 +1,4 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import { 
   User, 
@@ -10,7 +9,6 @@ import {
   LogOut
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
-
 export default function SettingsNavigation({ activeSection, onSectionChange }) {
   const sections = [
     { id: 'profile', label: 'Profile', icon: User, enabled: true },
@@ -20,7 +18,6 @@ export default function SettingsNavigation({ activeSection, onSectionChange }) {
     { id: 'communication', label: 'Communication', icon: Bell, enabled: false, comingSoon: true },
     { id: 'sessions', label: 'Active Sessions', icon: LogOut, enabled: false, comingSoon: true }
   ]
-
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -32,7 +29,6 @@ export default function SettingsNavigation({ activeSection, onSectionChange }) {
           {sections.map((section) => {
             const Icon = section.icon
             const isDisabled = !section.enabled
-            
             return (
               <button
                 key={section.id}

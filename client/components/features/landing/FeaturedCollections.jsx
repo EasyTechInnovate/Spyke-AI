@@ -1,19 +1,14 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import { TrendingUp, Award, Zap, Package, ArrowRight, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-
-// Use the same background effects as hero section
 const BackgroundEffectsLight = dynamic(() => import('./hero/BackgroundEffectsLight'), {
   ssr: false,
   loading: () => null
 })
-
 const BRAND = '#00FF89'
 const AMBER = '#FFC050'
-
 const collections = [
   {
     id: 'top-sales-agents',
@@ -60,41 +55,31 @@ const collections = [
     stats: 'Under $20'
   }
 ]
-
 export default function FeaturedCollections() {
   return (
     <section className="relative overflow-hidden bg-black">
-      {/* Consistent Background Effects */}
       <BackgroundEffectsLight />
-
       <div className="relative z-10 px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
         <div className="max-w-7xl mx-auto">
-          {/* Section Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
             className="text-center mb-12 sm:mb-16">
-            
-            {/* Badge */}
             <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-[#00FF89]/10 border border-[#00FF89]/20 rounded-full mb-4 sm:mb-6">
               <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-[#00FF89]" />
               <span className="text-xs sm:text-sm font-medium text-[#00FF89]">
                 Curated Collections
               </span>
             </div>
-            
             <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-3 sm:mb-4">
               Featured Collections
             </h2>
-            
             <p className="text-base sm:text-lg text-gray-400 max-w-2xl mx-auto">
               Curated collections to help you find the perfect AI tools
             </p>
           </motion.div>
-
-          {/* Collections Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             {collections.map((collection, index) => (
               <motion.div
@@ -103,28 +88,19 @@ export default function FeaturedCollections() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}>
-                
                 <Link
                   href={collection.link}
                   className="group block h-full">
-                  
                   <div className="relative h-full bg-[#171717] border border-gray-800 rounded-xl sm:rounded-2xl overflow-hidden hover:border-gray-700 transition-all duration-300 hover:transform hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20">
-                    
-                    {/* Gradient Background */}
                     <div 
                       className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                       style={{ backgroundColor: collection.bgColor }}
                     />
-                    
-                    {/* Border Glow Effect */}
                     <div 
                       className="absolute inset-0 border border-transparent group-hover:border-opacity-50 rounded-xl sm:rounded-2xl transition-all duration-300"
                       style={{ borderColor: collection.borderColor }}
                     />
-                    
-                    {/* Content */}
                     <div className="relative p-4 sm:p-6 flex flex-col h-full min-h-[200px] sm:min-h-[220px]">
-                      {/* Icon */}
                       <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl mb-3 sm:mb-4 overflow-hidden">
                         <div 
                           className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity"
@@ -141,8 +117,6 @@ export default function FeaturedCollections() {
                           />
                         </div>
                       </div>
-                      
-                      {/* Title & Description */}
                       <div className="flex-1 mb-4">
                         <h3 className="text-lg sm:text-xl font-semibold text-white mb-2 group-hover:text-gray-100 transition-colors">
                           {collection.title}
@@ -151,8 +125,6 @@ export default function FeaturedCollections() {
                           {collection.description}
                         </p>
                       </div>
-                      
-                      {/* Bottom Section */}
                       <div className="flex items-center justify-between pt-2 border-t border-gray-800/50 group-hover:border-gray-700 transition-colors">
                         <span 
                           className="text-sm sm:text-base font-medium"

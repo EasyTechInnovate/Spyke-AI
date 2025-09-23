@@ -1,5 +1,4 @@
 'use client'
-
 import React, { useState, useCallback, useRef, useEffect, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Star, Send, Loader2, Camera, X, Edit3, ChevronDown } from 'lucide-react'
@@ -7,7 +6,6 @@ import { cn } from '@/lib/utils'
 import { useReviewValidation } from '@/hooks/useReviewValidation'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
 import Modal from '@/components/shared/ui/Modal'
-
 const VARIANTS = {
     quickReview: {
         type: 'quickReview',
@@ -59,8 +57,6 @@ const VARIANTS = {
         instantSubmit: true
     }
 }
-
-// Memoized Star Rating Component
 const StarRating = memo(function StarRating({ 
     rating, 
     hoveredRating, 
@@ -76,15 +72,12 @@ const StarRating = memo(function StarRating({
         lg: 'w-8 h-8 sm:w-9 sm:h-9',
         xl: 'w-10 h-10 sm:w-12 sm:h-12'
     }
-
-    // Mobile-friendly touch target sizes (minimum 44px)
     const touchClasses = {
         sm: 'p-2.5 sm:p-2',
         md: 'p-3 sm:p-2.5',
         lg: 'p-3.5 sm:p-3',
         xl: 'p-4 sm:p-3.5'
     }
-
     const getRatingDescription = (rating) => {
         const descriptions = {
             1: 'Poor',
@@ -95,7 +88,6 @@ const StarRating = memo(function StarRating({
         }
         return descriptions[rating] || ''
     }
-
     return (
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <div
@@ -121,7 +113,6 @@ const StarRating = memo(function StarRating({
                     </button>
                 ))}
             </div>
-
             {(rating > 0 || hoveredRating > 0) && (
                 <span className="text-sm sm:text-base text-gray-400 select-none text-center sm:text-left font-medium">
                     {getRatingDescription(hoveredRating || rating)}
@@ -130,8 +121,6 @@ const StarRating = memo(function StarRating({
         </div>
     )
 })
-
-// Memoized Image Upload Component
 const ImageUpload = memo(function ImageUpload({ 
     images, 
     showImageUpload, 
@@ -151,7 +140,6 @@ const ImageUpload = memo(function ImageUpload({
                     {images.length > 0 ? `${images.length} photo${images.length > 1 ? 's' : ''}` : 'Add photos'}
                 </button>
             </div>
-
             <AnimatePresence>
                 {showImageUpload && (
                     <motion.div
@@ -177,7 +165,6 @@ const ImageUpload = memo(function ImageUpload({
                                     </button>
                                 </div>
                             ))}
-
                             {images.length < (requirements.images?.maxCount || 5) && (
                                 <label className="w-24 h-24 sm:w-20 sm:h-20 border-2 border-dashed border-gray-700 rounded-lg flex items-center justify-center cursor-pointer hover:border-gray-600 transition-colors flex-shrink-0 touch-manipulation">
                                     <input
@@ -200,8 +187,6 @@ const ImageUpload = memo(function ImageUpload({
         </div>
     )
 })
-
-// Memoized Confirmation Dialog
 const ConfirmationDialog = memo(function ConfirmationDialog({ 
     isOpen, 
     rating, 
@@ -210,7 +195,6 @@ const ConfirmationDialog = memo(function ConfirmationDialog({
     onConfirm 
 }) {
     if (!isOpen) return null
-
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -250,34 +234,20 @@ const ConfirmationDialog = memo(function ConfirmationDialog({
         </motion.div>
     )
 })
-
-// Main UnifiedReviewForm component with memoization
 const UnifiedReviewForm = memo(function UnifiedReviewForm({
-    // Core props
     productId,
     productTitle,
     onReviewSubmit,
     onClose,
     onCancel,
-
-    // Variant selection
-    variant = 'quickReview', // quickReview, inlineForm, fullModal, modernModal, oneClick
-
-    // Modal props (when modal variant)
+    variant = 'quickReview', 
     isOpen = false,
-
-    // Customization
     className,
     placeholder,
     showHeader = true,
-
-    // Override variant settings
     customConfig = {}
 }) {
-    // Merge variant config with custom overrides
     const config = { ...VARIANTS[variant], ...customConfig }
-
-    // Centralized validation
     const {
         validate,
         validateField,
@@ -289,8 +259,6 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
         getValidationRequirements,
         parseError
     } = useReviewValidation(config.type)
-
-    // Component state
     const [rating, setRating] = useState(0)
     const [hoveredRating, setHoveredRating] = useState(0)
     const [comment, setComment] = useState('')
@@ -302,34 +270,24 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
     const [showImageUpload, setShowImageUpload] = useState(false)
     const [notification, setNotification] = useState(null)
     const [showConfirmDialog, setShowConfirmDialog] = useState(false)
-
     const inputRef = useRef(null)
     const textareaRef = useRef(null)
-
-    // Get validation requirements
     const requirements = getValidationRequirements()
-
-    // Memoized callbacks to prevent unnecessary re-renders
     const showMessage = useCallback((message, type = 'info') => {
         setNotification({ message, type })
         setTimeout(() => setNotification(null), 5000)
     }, [])
-
     const clearNotification = useCallback(() => setNotification(null), [])
-
     const generateTitle = useCallback((text) => {
         if (!text) return ''
         const firstSentence = text.match(/^[^.!?]+[.!?]/)?.[0] || text
         return firstSentence.slice(0, 50).trim() + (firstSentence.length > 50 ? '...' : '')
     }, [])
-
     const handleRatingClick = useCallback(
         async (value) => {
             setRating(value)
             clearFieldError('rating')
             validateField('rating', value, { rating: value, comment, title })
-
-            // One-click instant submit for 5 stars
             if (config.instantSubmit && value === 5) {
                 setIsSubmitting(true)
                 try {
@@ -348,8 +306,6 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
                 }
                 return
             }
-
-            // Expand for expandable variants
             if (config.expandable) {
                 setIsExpanded(true)
                 setTimeout(() => {
@@ -359,30 +315,24 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
         },
         [config.instantSubmit, config.expandable, comment, title, onReviewSubmit, onClose, validateField, clearFieldError, parseError, showMessage]
     )
-
     const handleStarMouseEnter = useCallback((value) => {
         setHoveredRating(value)
     }, [])
-
     const handleStarMouseLeave = useCallback(() => {
         setHoveredRating(0)
     }, [])
-
     const handleCommentChange = useCallback(
         (e) => {
             const value = e.target.value
             setComment(value)
             clearFieldError('comment')
             validateField('comment', value, { rating, comment: value, title })
-
-            // Auto-generate title if enabled
             if (config.autoTitle && value.length > 10) {
                 setTitle(generateTitle(value))
             }
         },
         [rating, title, config.autoTitle, generateTitle, validateField, clearFieldError]
     )
-
     const handleTitleChange = useCallback(
         (e) => {
             const value = e.target.value
@@ -392,23 +342,19 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
         },
         [rating, comment, validateField, clearFieldError]
     )
-
     const handleImageUpload = useCallback(
         (e) => {
             const files = Array.from(e.target.files || [])
             const maxImages = requirements.images?.maxCount || 5
             const validFiles = files.slice(0, maxImages - images.length)
-
             const newImages = validFiles.map((file) => ({
                 file,
                 preview: URL.createObjectURL(file)
             }))
-
             setImages(prev => [...prev, ...newImages])
         },
         [images, requirements.images]
     )
-
     const handleRemoveImage = useCallback(
         (index) => {
             setImages(prev => {
@@ -420,25 +366,21 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
         },
         []
     )
-
     const handleToggleImageUpload = useCallback(() => {
         setShowImageUpload(prev => !prev)
     }, [])
-
     const handleSubmitWithoutComment = useCallback(async () => {
         if (rating === 0) {
             showMessage('Please select a rating first', 'error')
             return
         }
-
         const reviewData = {
             rating,
-            comment: '', // Empty comment
+            comment: '', 
             ...(config.showTitle && { title: `${rating}-star rating` }),
             ...(config.showRecommendation && { wouldRecommend: rating >= 4 }),
             ...(config.showImages && { images: [] })
         }
-
         setIsSubmitting(true)
         try {
             await onReviewSubmit(reviewData)
@@ -459,7 +401,6 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
             setIsSubmitting(false)
         }
     }, [rating, config, onReviewSubmit, onClose, parseError, showMessage])
-
     const handleQuickSubmit = useCallback(() => {
         if (rating === 0) {
             showMessage('Please select a rating first', 'error')
@@ -467,26 +408,20 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
         }
         setShowConfirmDialog(true)
     }, [rating, showMessage])
-
     const handleConfirmDialogClose = useCallback(() => {
         setShowConfirmDialog(false)
     }, [])
-
     const handleConfirmDialogConfirm = useCallback(() => {
         setShowConfirmDialog(false)
         handleSubmitWithoutComment()
     }, [handleSubmitWithoutComment])
-
     const handleSubmit = useCallback(
         async (e) => {
             e.preventDefault()
-
-            // If no comment and this is quick review, show popup
             if (config.expandable && variant === 'quickReview' && comment.trim().length === 0 && rating > 0) {
                 handleQuickSubmit()
                 return
             }
-
             const reviewData = {
                 rating,
                 comment: comment.trim(),
@@ -494,32 +429,21 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
                 ...(config.showRecommendation && { wouldRecommend }),
                 ...(config.showImages && { images: images.map((img) => img.file) })
             }
-
-            // Add auto-generated title if needed
             if (config.autoTitle && !reviewData.title && comment.trim()) {
                 reviewData.title = generateTitle(comment)
             }
-
-            // For empty comments, add a default title
             if (!reviewData.title && !comment.trim()) {
                 reviewData.title = `${rating}-star rating`
             }
-
-            // Use centralized validation
             const { isValid, sanitizedData, errors: validationErrors } = prepareForSubmission(reviewData)
-
             if (!isValid) {
                 const firstError = Object.values(validationErrors)[0]
                 showMessage(firstError, 'error')
                 return
             }
-
             setIsSubmitting(true)
-
             try {
                 await onReviewSubmit(sanitizedData)
-
-                // Success - reset form
                 showMessage('Thanks for your review!', 'success')
                 setTimeout(() => {
                     setRating(0)
@@ -554,7 +478,6 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
             handleQuickSubmit
         ]
     )
-
     const handleKeyDown = useCallback(
         (e) => {
             if (config.submitOnEnter && e.key === 'Enter' && !e.shiftKey) {
@@ -564,22 +487,15 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
         },
         [config.submitOnEnter, handleSubmit]
     )
-
-    // Cleanup effect
     useEffect(() => {
         return () => {
             images.forEach((img) => URL.revokeObjectURL(img.preview))
         }
     }, [images])
-
-    // Get character count info
     const commentCharInfo = getFieldCharacterCount(comment, 'comment')
     const titleCharInfo = config.showTitle ? getFieldCharacterCount(title, 'title') : null
-
-    // Main form content
     const renderFormContent = () => (
         <div>
-            {/* Notification */}
             {notification && (
                 <InlineNotification
                     type={notification.type}
@@ -587,8 +503,6 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
                     onDismiss={clearNotification}
                 />
             )}
-
-            {/* Header - Mobile Optimized */}
             {showHeader && !config.modal && (
                 <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-4 mb-6 sm:mb-6">
                     <div className="flex items-center gap-3 sm:gap-3 min-w-0 flex-1">
@@ -618,17 +532,13 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
                     )}
                 </div>
             )}
-
             <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-4">
-                {/* Product info for modals */}
                 {config.modal && productTitle && (
                     <div className="text-center mb-6">
                         <p className="text-sm text-gray-500">Reviewing</p>
                         <p className="font-medium text-white line-clamp-1 text-base">{productTitle}</p>
                     </div>
                 )}
-
-                {/* Rating - Mobile Optimized */}
                 <div className={cn(
                     'text-center',
                     config.expandable && !isExpanded && 'flex flex-col xs:flex-row xs:items-center xs:justify-between gap-3 xs:gap-4'
@@ -649,8 +559,6 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
                     </div>
                     {errors.rating && <p className="text-xs text-red-400 mt-2 order-3">{errors.rating}</p>}
                 </div>
-
-                {/* Expandable content */}
                 <AnimatePresence>
                     {isExpanded && (
                         <motion.div
@@ -659,8 +567,6 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
                             exit={{ height: 0, opacity: 0 }}
                             transition={{ duration: 0.3, ease: 'easeOut' }}
                             className="overflow-hidden space-y-5 sm:space-y-4">
-                            
-                            {/* Title (if enabled) */}
                             {config.showTitle && (
                                 <div>
                                     <label className="block text-sm font-medium text-gray-300 mb-2">Review Title *</label>
@@ -683,8 +589,6 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
                                     )}
                                 </div>
                             )}
-
-                            {/* Comment - Mobile Optimized */}
                             <div>
                                 <div className="relative">
                                     {config.expandable && variant === 'quickReview' ? (
@@ -715,8 +619,6 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
                                             maxLength={requirements.comment?.maxLength || 500}
                                         />
                                     )}
-
-                                    {/* Floating submit button for quick review - Better mobile positioning */}
                                     {config.expandable && variant === 'quickReview' && commentCharInfo.isValid && (
                                         <AnimatePresence>
                                             <motion.button
@@ -738,9 +640,7 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
                                         </AnimatePresence>
                                     )}
                                 </div>
-
                                 {errors.comment && <p className="text-xs text-red-400 mt-1">{errors.comment}</p>}
-
                                 <div className="flex justify-between items-center mt-2 text-xs">
                                     {config.submitOnEnter && <span className="text-gray-500">Press Enter to submit</span>}
                                     <span
@@ -756,8 +656,6 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
                                     </span>
                                 </div>
                             </div>
-
-                            {/* Recommendation (if enabled) - Mobile Optimized */}
                             {config.showRecommendation && (
                                 <div>
                                     <label className="block text-sm font-medium text-gray-300 mb-3">Would you recommend this product?</label>
@@ -782,8 +680,6 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
                                     </div>
                                 </div>
                             )}
-
-                            {/* Image upload (if enabled) */}
                             {config.showImages && (
                                 <ImageUpload
                                     images={images}
@@ -794,11 +690,8 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
                                     onToggleImageUpload={handleToggleImageUpload}
                                 />
                             )}
-
-                            {/* Submit button (for non-quick variants) - Mobile Optimized */}
                             {!config.submitOnEnter && (
                                 <div className="space-y-3">
-                                    {/* Main submit button */}
                                     <button
                                         type="submit"
                                         disabled={isSubmitting || rating === 0}
@@ -820,8 +713,6 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
                                             </>
                                         )}
                                     </button>
-
-                                    {/* Quick submit without comment option */}
                                     {rating > 0 && comment.trim().length === 0 && (
                                         <button
                                             type="button"
@@ -839,8 +730,6 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
             </form>
         </div>
     )
-
-    // Modal variant
     if (config.modal) {
         return (
             <>
@@ -862,8 +751,6 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
             </>
         )
     }
-
-    // Inline variant
     return (
         <>
             <motion.div
@@ -884,7 +771,6 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
                 onClose={handleConfirmDialogClose}
                 onConfirm={handleConfirmDialogConfirm}
             />
-            
             <style jsx>{`
                 .drop-shadow-glow {
                     filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.4));
@@ -893,6 +779,4 @@ const UnifiedReviewForm = memo(function UnifiedReviewForm({
         </>
     )
 })
-
 export default UnifiedReviewForm
-

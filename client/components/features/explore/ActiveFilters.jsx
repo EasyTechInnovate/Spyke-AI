@@ -1,7 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { CATEGORIES, PRODUCT_TYPES, INDUSTRIES, SETUP_TIMES } from '@/data/explore/constants'
-
 export default function ActiveFilters({ filters, onFilterChange }) {
     const hasActiveFilters = filters.category !== 'all' || 
         filters.type !== 'all' || 
@@ -11,9 +10,7 @@ export default function ActiveFilters({ filters, onFilterChange }) {
         filters.verifiedOnly || 
         filters.search ||
         (filters.priceRange && (filters.priceRange[0] > 0 || filters.priceRange[1] < 1000))
-
     if (!hasActiveFilters) return null
-
     return (
         <AnimatePresence>
             <motion.div
@@ -27,56 +24,48 @@ export default function ActiveFilters({ filters, onFilterChange }) {
                         onRemove={() => onFilterChange({ ...filters, category: 'all' })}
                     />
                 )}
-
                 {filters.type !== 'all' && (
                     <FilterBadge
                         label={PRODUCT_TYPES.find((t) => t.id === filters.type)?.name || filters.type}
                         onRemove={() => onFilterChange({ ...filters, type: 'all' })}
                     />
                 )}
-
                 {filters.industry !== 'all' && (
                     <FilterBadge
                         label={INDUSTRIES.find((i) => i.id === filters.industry)?.name || filters.industry}
                         onRemove={() => onFilterChange({ ...filters, industry: 'all' })}
                     />
                 )}
-
                 {filters.setupTime !== 'all' && (
                     <FilterBadge
                         label={SETUP_TIMES.find((s) => s.id === filters.setupTime)?.name || filters.setupTime}
                         onRemove={() => onFilterChange({ ...filters, setupTime: 'all' })}
                     />
                 )}
-
                 {filters.priceRange && (filters.priceRange[0] > 0 || filters.priceRange[1] < 1000) && (
                     <FilterBadge
                         label={`Price: $${filters.priceRange[0]}-$${filters.priceRange[1]}`}
                         onRemove={() => onFilterChange({ ...filters, priceRange: [0, 1000] })}
                     />
                 )}
-
                 {filters.rating > 0 && (
                     <FilterBadge
                         label={`${filters.rating}+ stars`}
                         onRemove={() => onFilterChange({ ...filters, rating: 0 })}
                     />
                 )}
-
                 {filters.verifiedOnly && (
                     <FilterBadge
                         label="Verified sellers"
                         onRemove={() => onFilterChange({ ...filters, verifiedOnly: false })}
                     />
                 )}
-
                 {filters.search && (
                     <FilterBadge
                         label={`Search: ${filters.search}`}
                         onRemove={() => onFilterChange({ ...filters, search: '' })}
                     />
                 )}
-
                 <button
                     onClick={() =>
                         onFilterChange({
@@ -97,7 +86,6 @@ export default function ActiveFilters({ filters, onFilterChange }) {
         </AnimatePresence>
     )
 }
-
 function FilterBadge({ label, onRemove }) {
     return (
         <span className="inline-flex items-center gap-1 px-3 py-1 bg-brand-primary/20 text-brand-primary rounded-full text-sm">

@@ -1,9 +1,7 @@
 'use client'
-
 import { forwardRef } from 'react'
 import { cn } from '@/lib/utils/cn'
 import { Loader2 } from 'lucide-react'
-
 const buttonVariants = {
   variant: {
     primary: 'bg-[#00FF89] text-black hover:bg-[#00FF89]/90 focus:ring-[#00FF89]/20',
@@ -19,7 +17,6 @@ const buttonVariants = {
     xl: 'px-8 py-4 text-lg h-14'
   }
 }
-
 const Button = forwardRef(({
   className,
   variant = 'primary',
@@ -33,17 +30,11 @@ const Button = forwardRef(({
     <button
       ref={ref}
       className={cn(
-        // Base styles
         'inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all duration-200',
         'focus:outline-none focus:ring-2',
         'disabled:opacity-50 disabled:cursor-not-allowed',
-        
-        // Variant styles
         buttonVariants.variant[variant],
-        
-        // Size styles
         buttonVariants.size[size],
-        
         className
       )}
       disabled={disabled || loading}
@@ -54,7 +45,5 @@ const Button = forwardRef(({
     </button>
   )
 })
-
 Button.displayName = 'Button'
-
 export { Button, buttonVariants }

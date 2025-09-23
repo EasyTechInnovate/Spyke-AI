@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Head from 'next/head'
@@ -41,7 +40,6 @@ import CommissionProgressStepper from '@/components/features/seller/dashboard/Co
 import { CommissionNegotiation } from '@/components/features/seller/profile/CommissionNegotiation'
 import DocumentUploadModal from '@/components/features/seller/SellerDocumentUpload'
 import CommissionNegotiationHistory from '@/components/features/seller/dashboard/CommissionNegotiationHistory'
-
 export default function SellerProfile() {
     const router = useRouter()
     const [loading, setLoading] = useState(true)
@@ -50,12 +48,10 @@ export default function SellerProfile() {
     const [showUpload, setShowUpload] = useState(false)
     const [notification, setNotification] = useState(null)
     const [processingCommission, setProcessingCommission] = useState(false)
-
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
         setTimeout(() => setNotification(null), 5000)
     }
-
     const loadProfile = useCallback(async () => {
         try {
             setLoading(true)
@@ -68,11 +64,9 @@ export default function SellerProfile() {
             setLoading(false)
         }
     }, [])
-
     useEffect(() => {
         loadProfile()
     }, [loadProfile])
-
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('en-IN', {
             style: 'currency',
@@ -80,7 +74,6 @@ export default function SellerProfile() {
             maximumFractionDigits: 0
         }).format(amount)
     }
-
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
@@ -88,8 +81,6 @@ export default function SellerProfile() {
             day: 'numeric'
         })
     }
-
-    // Commission negotiation handlers
     const handleAcceptCommission = async () => {
         try {
             setProcessingCommission(true)
@@ -102,7 +93,6 @@ export default function SellerProfile() {
             setProcessingCommission(false)
         }
     }
-
     const handleCounterOffer = async ({ counterRate, reason }) => {
         try {
             setProcessingCommission(true)
@@ -115,7 +105,6 @@ export default function SellerProfile() {
             setProcessingCommission(false)
         }
     }
-
     const handleRejectCommission = async (reason) => {
         try {
             setProcessingCommission(true)
@@ -128,8 +117,6 @@ export default function SellerProfile() {
             setProcessingCommission(false)
         }
     }
-
-    // Document submission handler
     const handleDocumentSubmission = async (documents) => {
         try {
             await sellerAPI.submitVerification(documents)
@@ -140,7 +127,6 @@ export default function SellerProfile() {
             showMessage(error.message || 'Failed to submit documents', 'error')
         }
     }
-
     if (loading) {
         return (
             <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
@@ -151,7 +137,6 @@ export default function SellerProfile() {
             </div>
         )
     }
-
     if (error || !seller) {
         return (
             <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
@@ -168,13 +153,10 @@ export default function SellerProfile() {
             </div>
         )
     }
-
     const isApproved = seller.verification?.status === VERIFICATION_STATUSES.APPROVED
     const commissionAccepted = seller.commissionOffer?.status === COMMISSION_STATUSES.ACCEPTED
     const canSell = isApproved && commissionAccepted
     const isCommissionOffered = seller.verification?.status === VERIFICATION_STATUSES.COMMISSION_OFFERED
-
-    // Prepare negotiation state for CommissionNegotiation component
     const negotiationState = isCommissionOffered
         ? {
               canNegotiate: true,
@@ -189,7 +171,6 @@ export default function SellerProfile() {
               status: seller.commissionOffer?.status
           }
         : null
-
     return (
         <div className={`${leagueSpartan.className} min-h-screen bg-[#0a0a0a] text-white`}>
             <Head>
@@ -203,8 +184,6 @@ export default function SellerProfile() {
                     content="width=device-width, initial-scale=1"
                 />
             </Head>
-
-            {/* Global Notification */}
             {notification && (
                 <div className="fixed top-4 right-4 z-50 max-w-sm">
                     <InlineNotification
@@ -214,15 +193,10 @@ export default function SellerProfile() {
                     />
                 </div>
             )}
-
-            {/* Hero Section */}
             <section className="relative">
-                {/* Profile Content */}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-8">
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                        {/* Profile Info */}
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-                            {/* Avatar */}
                             <div className="relative">
                                 <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-[#00FF89] to-blue-500 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-bold text-black">
                                     {seller.fullName?.charAt(0) || 'S'}
@@ -231,8 +205,6 @@ export default function SellerProfile() {
                                     <Edit3 className="w-4 h-4 text-black" />
                                 </button>
                             </div>
-
-                            {/* Name and Details */}
                             <div className="flex-1 min-w-0">
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
                                     <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">{seller.fullName}</h1>
@@ -241,7 +213,6 @@ export default function SellerProfile() {
                                         size="large"
                                     />
                                 </div>
-
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-300 mb-4">
                                     <div className="flex items-center gap-2">
                                         <Mail className="w-4 h-4" />
@@ -258,8 +229,6 @@ export default function SellerProfile() {
                                         <span className="text-sm">Since {formatDate(seller.createdAt)}</span>
                                     </div>
                                 </div>
-
-                                {/* Specializations */}
                                 <div className="flex flex-wrap gap-2">
                                     {seller.niches?.map((niche) => (
                                         <span
@@ -278,8 +247,6 @@ export default function SellerProfile() {
                                 </div>
                             </div>
                         </div>
-
-                        {/* Action Buttons */}
                         <div className="flex flex-col sm:flex-row gap-3 lg:flex-shrink-0">
                             <button className="flex items-center justify-center gap-2 px-6 py-3 bg-[#1f1f1f] border border-gray-700 rounded-xl hover:border-gray-600 transition-colors">
                                 <Settings className="w-5 h-5" />
@@ -306,10 +273,7 @@ export default function SellerProfile() {
                     </div>
                 </div>
             </section>
-
-            {/* Main Content */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-                {/* Verification & Commission Progress */}
                 <div className="mb-8">
                     <CommissionProgressStepper
                         verificationStatus={seller.verification?.status}
@@ -318,11 +282,8 @@ export default function SellerProfile() {
                         acceptedAt={seller.commissionOffer?.acceptedAt}
                     />
                 </div>
-
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                    {/* Main Content Area */}
                     <div className="xl:col-span-2 space-y-8">
-                        {/* Commission Negotiation Section */}
                         {negotiationState && (
                             <section>
                                 <h2 className="text-xl font-semibold text-white mb-6">Commission Negotiation</h2>
@@ -336,8 +297,6 @@ export default function SellerProfile() {
                                 />
                             </section>
                         )}
-
-                        {/* Stats Overview */}
                         <section>
                             <h2 className="text-xl font-semibold text-white mb-6">Performance Overview</h2>
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -367,8 +326,6 @@ export default function SellerProfile() {
                                 />
                             </div>
                         </section>
-
-                        {/* About Section */}
                         {seller.bio && (
                             <section>
                                 <h2 className="text-xl font-semibold text-white mb-4">About</h2>
@@ -377,8 +334,6 @@ export default function SellerProfile() {
                                 </div>
                             </section>
                         )}
-
-                        {/* Quick Actions Grid */}
                         <section>
                             <h2 className="text-xl font-semibold text-white mb-6">Quick Actions</h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -433,39 +388,24 @@ export default function SellerProfile() {
                             </div>
                         </section>
                     </div>
-
-                    {/* Sidebar */}
                     <div className="space-y-6">
-                        {/* Commission Negotiation History */}
                         {isCommissionOffered && (
                             <CommissionNegotiationHistory
                                 commissionOffer={seller.commissionOffer}
                                 verificationStatus={seller.verification?.status}
                             />
                         )}
-
-                        {/* Business Information */}
                         <BusinessInfoCard seller={seller} />
-
-                        {/* Payout Information */}
                         <PayoutInfoCard
                             seller={seller}
                             formatCurrency={formatCurrency}
                         />
-
-                        {/* Website & Links */}
                         {(seller.websiteUrl || seller.portfolioLinks?.length > 0) && <LinksCard seller={seller} />}
-
-                        {/* Social Handles */}
                         {Object.values(seller.socialHandles || {}).some((handle) => handle) && <SocialHandlesCard seller={seller} />}
-
-                        {/* Recent Activity */}
                         <RecentActivityCard />
                     </div>
                 </div>
             </div>
-
-            {/* Document Upload Modal */}
             <DocumentUploadModal
                 isOpen={showUpload}
                 onClose={() => setShowUpload(false)}
@@ -474,9 +414,6 @@ export default function SellerProfile() {
         </div>
     )
 }
-
-/* ========================= COMPONENTS ========================= */
-
 const StatsCard = ({ icon: Icon, label, value, color, trend }) => {
     const colors = {
         emerald: 'from-[#00FF89]/20 to-[#00FF89]/5 border-[#00FF89]/30 text-[#00FF89]',
@@ -484,7 +421,6 @@ const StatsCard = ({ icon: Icon, label, value, color, trend }) => {
         purple: 'from-purple-500/20 to-purple-500/5 border-purple-500/30 text-purple-400',
         amber: 'from-amber-500/20 to-amber-500/5 border-amber-500/30 text-amber-400'
     }
-
     return (
         <div className="bg-[#1f1f1f] border border-gray-800 rounded-2xl p-6 hover:border-gray-700 transition-colors">
             <div className="flex items-start justify-between mb-4">
@@ -505,7 +441,6 @@ const StatsCard = ({ icon: Icon, label, value, color, trend }) => {
         </div>
     )
 }
-
 const ActionCard = ({ icon: Icon, title, description, href, enabled, gradient }) => {
     const cardContent = (
         <div
@@ -533,7 +468,6 @@ const ActionCard = ({ icon: Icon, title, description, href, enabled, gradient })
             </div>
         </div>
     )
-
     if (enabled) {
         return (
             <Link
@@ -543,10 +477,8 @@ const ActionCard = ({ icon: Icon, title, description, href, enabled, gradient })
             </Link>
         )
     }
-
     return cardContent
 }
-
 const BusinessInfoCard = ({ seller }) => (
     <div className="bg-[#1f1f1f] border border-gray-800 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-4">
@@ -570,7 +502,6 @@ const BusinessInfoCard = ({ seller }) => (
                     )}
                 </div>
             </div>
-
             <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-400">Custom Automation</span>
                 <div className="flex items-center gap-2">
@@ -587,7 +518,6 @@ const BusinessInfoCard = ({ seller }) => (
                     )}
                 </div>
             </div>
-
             {seller.location?.timezone && (
                 <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-400">Timezone</span>
@@ -597,35 +527,29 @@ const BusinessInfoCard = ({ seller }) => (
         </div>
     </div>
 )
-
 const PayoutInfoCard = ({ seller, formatCurrency }) => (
     <div className="bg-[#1f1f1f] border border-gray-800 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-4">
             <CreditCard className="w-5 h-5 text-[#00FF89]" />
             <h3 className="font-semibold text-white">Payout Information</h3>
         </div>
-
-        {/* Available Balance */}
         <div className="p-4 rounded-xl border border-[#00FF89]/20 bg-[#00FF89]/5 mb-4">
             <div className="flex items-center justify-between">
                 <span className="text-sm text-[#00FF89]/80">Available Balance</span>
                 <span className="text-xl font-bold text-[#00FF89]">{formatCurrency(seller.stats?.totalEarnings || 0)}</span>
             </div>
         </div>
-
         <div className="space-y-3">
             <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-400">Method</span>
                 <span className="text-sm text-white capitalize">{seller.payoutInfo?.method || 'Not Set'}</span>
             </div>
-
             {seller.payoutInfo?.paypalEmail && (
                 <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-400">PayPal Email</span>
                     <span className="text-sm text-white truncate max-w-32">{seller.payoutInfo.paypalEmail}</span>
                 </div>
             )}
-
             <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-400">Status</span>
                 <div className="flex items-center gap-2">
@@ -645,7 +569,6 @@ const PayoutInfoCard = ({ seller, formatCurrency }) => (
         </div>
     </div>
 )
-
 const LinksCard = ({ seller }) => (
     <div className="bg-[#1f1f1f] border border-gray-800 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-4">
@@ -679,7 +602,6 @@ const LinksCard = ({ seller }) => (
         </div>
     </div>
 )
-
 const SocialHandlesCard = ({ seller }) => {
     const socialPlatforms = [
         { key: 'linkedin', icon: '💼', label: 'LinkedIn' },
@@ -687,11 +609,8 @@ const SocialHandlesCard = ({ seller }) => {
         { key: 'instagram', icon: '📸', label: 'Instagram' },
         { key: 'youtube', icon: '📺', label: 'YouTube' }
     ]
-
     const activeSocials = socialPlatforms.filter((platform) => seller.socialHandles?.[platform.key])
-
     if (activeSocials.length === 0) return null
-
     return (
         <div className="bg-[#1f1f1f] border border-gray-800 rounded-2xl p-6">
             <div className="flex items-center gap-2 mb-4">
@@ -715,7 +634,6 @@ const SocialHandlesCard = ({ seller }) => {
         </div>
     )
 }
-
 const RecentActivityCard = () => (
     <div className="bg-[#1f1f1f] border border-gray-800 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-4">
@@ -731,4 +649,3 @@ const RecentActivityCard = () => (
         </div>
     </div>
 )
-

@@ -1,42 +1,33 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { Search, Filter, ChevronDown, Calendar, User, Clock, Folder, Users, Tag, Star, TrendingUp, BarChart3, Archive, Zap } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/shared/ui/button'
 import { urlFor } from '@/sanity/lib/image'
-
-// Email subscription component with validation
 function WeeklyIdeasForm() {
     const [email, setEmail] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [message, setMessage] = useState('')
     const [messageType, setMessageType] = useState('')
-
     const validateEmail = (email) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         return emailRegex.test(email)
     }
-
     const handleSubmit = async (e) => {
         e.preventDefault()
-
         if (!email.trim()) {
             setMessage('Please enter your email address')
             setMessageType('error')
             return
         }
-
         if (!validateEmail(email)) {
             setMessage('Please enter a valid email address')
             setMessageType('error')
             return
         }
-
         setIsSubmitting(true)
         setMessage('')
-
         try {
             const response = await fetch('/api/newsletter', {
                 method: 'POST',
@@ -48,9 +39,7 @@ function WeeklyIdeasForm() {
                     source: 'weekly_ideas'
                 })
             })
-
             const data = await response.json()
-
             if (response.ok) {
                 setMessage('Successfully subscribed! Check your email for confirmation.')
                 setMessageType('success')
@@ -66,7 +55,6 @@ function WeeklyIdeasForm() {
             setIsSubmitting(false)
         }
     }
-
     return (
         <div>
             <form
@@ -98,12 +86,10 @@ function WeeklyIdeasForm() {
                     )}
                 </Button>
             </form>
-
             {message && <div className={`mt-3 text-sm ${messageType === 'error' ? 'text-red-400' : 'text-green-400'}`}>{message}</div>}
         </div>
     )
 }
-
 export default function BlogListingPage() {
     const [posts, setPosts] = useState([])
     const [categories, setCategories] = useState([])
@@ -121,16 +107,12 @@ export default function BlogListingPage() {
         limit: 12
     })
     const [pagination, setPagination] = useState({})
-
-    // Fetch blog data
     useEffect(() => {
         fetchBlogData()
     }, [filters])
-
     useEffect(() => {
         fetchFilterOptions()
     }, [])
-
     const fetchBlogData = async () => {
         setLoading(true)
         try {
@@ -138,7 +120,6 @@ export default function BlogListingPage() {
             Object.entries(filters).forEach(([key, value]) => {
                 if (value) params.append(key, value)
             })
-
             const response = await fetch(`/api/blog/posts?${params}`)
             const data = await response.json()
             setPosts(data.posts || [])
@@ -149,7 +130,6 @@ export default function BlogListingPage() {
             setLoading(false)
         }
     }
-
     const fetchFilterOptions = async () => {
         try {
             const [categoriesRes, authorsRes, tagsRes] = await Promise.all([
@@ -157,9 +137,7 @@ export default function BlogListingPage() {
                 fetch('/api/blog/authors'),
                 fetch('/api/blog/tags')
             ])
-
             const [categoriesData, authorsData, tagsData] = await Promise.all([categoriesRes.json(), authorsRes.json(), tagsRes.json()])
-
             setCategories(categoriesData.categories || [])
             setAuthors(authorsData.authors || [])
             setTags(tagsData.tags || [])
@@ -167,46 +145,38 @@ export default function BlogListingPage() {
             console.error('Error fetching filter options:', error)
         }
     }
-
     const handleFilterChange = (key, value) => {
         setFilters((prev) => ({
             ...prev,
             [key]: value,
-            page: 1 // Reset to first page when filters change
+            page: 1 
         }))
     }
-
     const handleSearch = async (e) => {
         e.preventDefault()
         if (!filters.search.trim()) {
-            // If search is empty, fetch all posts with current filters
             fetchBlogData()
             return
         }
-
         setSearchLoading(true)
         try {
             const response = await fetch(`/api/blog/search?q=${encodeURIComponent(filters.search)}&limit=12`)
             const data = await response.json()
-
             if (data.posts && data.posts.length > 0) {
                 setPosts(data.posts)
                 setPagination({ current: 1, total: 1, count: data.count, totalPosts: data.count })
             } else {
-                // Show no results message but keep the search term
                 setPosts([])
                 setPagination({ current: 1, total: 1, count: 0, totalPosts: 0 })
             }
         } catch (error) {
             console.error('Error searching posts:', error)
-            // On error, show no results
             setPosts([])
             setPagination({ current: 1, total: 1, count: 0, totalPosts: 0 })
         } finally {
             setSearchLoading(false)
         }
     }
-
     const clearFilters = () => {
         setFilters({
             category: '',
@@ -218,7 +188,6 @@ export default function BlogListingPage() {
             limit: 12
         })
     }
-
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
@@ -226,7 +195,6 @@ export default function BlogListingPage() {
             day: 'numeric'
         })
     }
-
     const getCategoryColor = (color) => {
         const colors = {
             blue: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
@@ -238,7 +206,6 @@ export default function BlogListingPage() {
         }
         return colors[color] || colors.gray
     }
-
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white">
             <div className="pt-24 bg-gradient-to-b from-[#0a0a0a] via-[#111111] to-[#121212]">
@@ -269,7 +236,6 @@ export default function BlogListingPage() {
                                 </div>
                             </div>
                         </div>
-
                         <div className="flex-shrink-0 w-full lg:w-96">
                             <form
                                 onSubmit={handleSearch}
@@ -293,7 +259,6 @@ export default function BlogListingPage() {
                             </form>
                         </div>
                     </div>
-
                     <div className="mt-8 p-6 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10">
                         <div className="flex flex-col lg:flex-row gap-6">
                             <div className="flex flex-wrap gap-4 flex-1">
@@ -320,7 +285,6 @@ export default function BlogListingPage() {
                                     </select>
                                     <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                                 </div>
-
                                 <div className="relative min-w-[160px]">
                                     <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-teal-500/10 rounded-lg opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
                                     <select
@@ -344,7 +308,6 @@ export default function BlogListingPage() {
                                     </select>
                                     <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                                 </div>
-
                                 <div className="relative min-w-[160px]">
                                     <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-red-500/10 rounded-lg opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
                                     <select
@@ -368,7 +331,6 @@ export default function BlogListingPage() {
                                     </select>
                                     <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                                 </div>
-
                                 <div className="relative min-w-[160px]">
                                     <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
                                     <select
@@ -399,7 +361,6 @@ export default function BlogListingPage() {
                                     <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                                 </div>
                             </div>
-
                             {(filters.category || filters.author || filters.tag || filters.search) && (
                                 <Button
                                     onClick={clearFilters}
@@ -413,7 +374,6 @@ export default function BlogListingPage() {
                     </div>
                 </div>
             </div>
-
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 {loading ? (
                     <div className="space-y-8">
@@ -499,14 +459,12 @@ export default function BlogListingPage() {
                                 </button>
                             </div>
                         </div>
-
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
                             {posts.map((post, index) => (
                                 <article
                                     key={post._id}
                                     className="group relative h-[600px]">
                                     <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/5 to-brand-secondary/5 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform scale-105"></div>
-
                                     <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all duration-500 group-hover:transform group-hover:scale-[1.02] h-full flex flex-col">
                                         <div className="relative h-56 overflow-hidden flex-shrink-0">
                                             {post.featuredImage ? (
@@ -523,9 +481,7 @@ export default function BlogListingPage() {
                                                     <div className="text-5xl font-league-spartan font-bold text-white/30">{post.title.charAt(0)}</div>
                                                 </div>
                                             )}
-
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
                                             {post.featured && (
                                                 <div className="absolute top-4 left-4">
                                                     <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
@@ -534,7 +490,6 @@ export default function BlogListingPage() {
                                                     </span>
                                                 </div>
                                             )}
-
                                             {post.estimatedReadingTime && (
                                                 <div className="absolute top-4 right-4">
                                                     <span className="bg-black/70 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full flex items-center gap-1">
@@ -544,7 +499,6 @@ export default function BlogListingPage() {
                                                 </div>
                                             )}
                                         </div>
-
                                         <div className="p-6 flex flex-col flex-1">
                                             {post.category && (
                                                 <div className="mb-4">
@@ -555,13 +509,10 @@ export default function BlogListingPage() {
                                                     </span>
                                                 </div>
                                             )}
-
                                             <h2 className="font-league-spartan font-bold text-xl mb-3 line-clamp-2 group-hover:text-brand-primary transition-colors duration-300">
                                                 {post.title}
                                             </h2>
-
                                             <p className="text-gray-400 text-sm line-clamp-3 mb-4 leading-relaxed">{post.summary}</p>
-
                                             {post.tags && post.tags.length > 0 && (
                                                 <div className="flex flex-wrap gap-2 mb-6">
                                                     {post.tags.slice(0, 3).map((tag) => (
@@ -576,9 +527,7 @@ export default function BlogListingPage() {
                                                     )}
                                                 </div>
                                             )}
-
                                             <div className="flex-1"></div>
-
                                             <div className="space-y-4 mt-auto">
                                                 <div className="flex items-center gap-3 pt-4 border-t border-white/10">
                                                     {post.author?.avatar ? (
@@ -604,7 +553,6 @@ export default function BlogListingPage() {
                                                         </div>
                                                     </div>
                                                 </div>
-
                                                 <Link
                                                     href={`/blog/${post.slug.current}`}
                                                     className="inline-flex items-center justify-center w-full bg-white/5 hover:bg-brand-primary/10 border border-white/10 hover:border-brand-primary/30 text-white hover:text-brand-primary font-medium text-sm py-3 px-4 rounded-lg transition-all duration-300 group/btn">
@@ -628,7 +576,6 @@ export default function BlogListingPage() {
                                 </article>
                             ))}
                         </div>
-
                         {pagination.total > 1 && (
                             <div className="flex justify-center items-center gap-3 py-8">
                                 <Button
@@ -650,7 +597,6 @@ export default function BlogListingPage() {
                                     </svg>
                                     Previous
                                 </Button>
-
                                 <div className="flex gap-2">
                                     {[...Array(Math.min(5, pagination.total))].map((_, i) => {
                                         let page
@@ -663,7 +609,6 @@ export default function BlogListingPage() {
                                         } else {
                                             page = pagination.current - 2 + i
                                         }
-
                                         return (
                                             <Button
                                                 key={page}
@@ -678,7 +623,6 @@ export default function BlogListingPage() {
                                             </Button>
                                         )
                                     })}
-
                                     {pagination.total > 5 && pagination.current < pagination.total - 2 && (
                                         <>
                                             <span className="flex items-center text-gray-500">...</span>
@@ -691,7 +635,6 @@ export default function BlogListingPage() {
                                         </>
                                     )}
                                 </div>
-
                                 <Button
                                     variant="ghost"
                                     disabled={pagination.current >= pagination.total}
@@ -716,7 +659,6 @@ export default function BlogListingPage() {
                     </>
                 )}
             </div>
-
             <div className="relative overflow-hidden bg-gradient-to-r from-[#0a0a0a] via-[#111111] to-[#0a0a0a] border-t border-white/10 mb-16">
                 <div className="absolute inset-0 opacity-5">
                     <div
@@ -725,7 +667,6 @@ export default function BlogListingPage() {
                             backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
                         }}></div>
                 </div>
-
                 <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
                     <div className="space-y-6 mb-12">
                         <div className="inline-flex items-center gap-2 bg-brand-primary/10 border border-brand-primary/20 text-brand-primary px-4 py-2 rounded-full text-sm font-medium">
@@ -738,11 +679,9 @@ export default function BlogListingPage() {
                             delivered weekly.
                         </p>
                     </div>
-
                     <div className="max-w-md mx-auto mb-8">
                         <WeeklyIdeasForm />
                     </div>
-
                     <div className="flex flex-wrap justify-center gap-8 text-sm text-gray-400">
                         <div className="flex items-center gap-3">
                             <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-green-500 rounded-full"></div>
@@ -762,4 +701,3 @@ export default function BlogListingPage() {
         </div>
     )
 }
-

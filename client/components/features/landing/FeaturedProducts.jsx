@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, memo, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight, Star, Eye, CheckCircle, Sparkles, Loader2, Activity, Heart, Package } from 'lucide-react'
@@ -9,19 +8,12 @@ import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import { useCart } from '@/hooks/useCart'
 import { productsAPI } from '@/lib/api'
-
-// Import Design System Components
 import { DSStack, DSHeading, DSText, DSButton, DSBadge, DSLoadingState } from '@/lib/design-system'
-
-
-// Use the same background effects as hero section
 const BackgroundEffectsLight = dynamic(() => import('./hero/BackgroundEffectsLight'), {
     ssr: false,
     loading: () => null
 })
-
 const getBadgeForProduct = (product) => {
-    // Priority-based badge system - only return the highest priority badge
     if (product.sales > 100) return { text: 'Bestseller', variant: 'warning', priority: 1 }
     if (product.averageRating >= 4.8) return { text: 'Top Rated', variant: 'success', priority: 2 }
     if (product.isVerified && product.isTested) return { text: 'Verified', variant: 'primary', priority: 3 }
@@ -29,7 +21,6 @@ const getBadgeForProduct = (product) => {
     if (product.createdAt && new Date(product.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) return { text: 'New', variant: 'primary', priority: 5 }
     return null
 }
-
 const formatPrice = (price) => {
     if (price === 0) return 'Free'
     return new Intl.NumberFormat('en-US', {
@@ -37,7 +28,6 @@ const formatPrice = (price) => {
         currency: 'USD'
     }).format(price)
 }
-
 const getTypeDisplay = (type) => {
     const typeMap = {
         prompt: 'AI Prompt',
@@ -47,25 +37,20 @@ const getTypeDisplay = (type) => {
     }
     return typeMap[type] || type
 }
-
 const FeaturedProducts = memo(function FeaturedProducts() {
     const router = useRouter()
     const [featuredProducts, setFeaturedProducts] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
-
-    // Fetch featured products using the proper backend API
     useEffect(() => {
         const fetchFeaturedProducts = async () => {
             try {
                 setLoading(true)
                 setError(null)
-                
                 const response = await productsAPI.getFeaturedProducts({
                     limit: 8,
                     minRating: 3.5
                 })
-                
                 if (response?.data) {
                     setFeaturedProducts(response.data)
                 } else {
@@ -78,19 +63,14 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                 setLoading(false)
             }
         }
-
         fetchFeaturedProducts()
     }, [])
-
     const handleProductClick = (product) => {
         router.push(`/products/${product.slug || product.id || product._id}`)
     }
-
     return (
         <section className="relative overflow-hidden bg-black">
-            {/* Consistent Background Effects */}
             <BackgroundEffectsLight />
-
             <div className="relative z-10 py-12 sm:py-16 lg:py-20">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <motion.div
@@ -99,28 +79,24 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                         viewport={{ once: true }}
                         transition={{ duration: 0.5 }}
                         className="text-center mb-12 sm:mb-16">
-
                         <DSBadge
                             variant="primary"
                             icon={Sparkles}
                             className="mb-4 sm:mb-6">
                             Featured Products
                         </DSBadge>
-
                         <DSHeading
                             level={2}
                             variant="hero"
                             className="mb-3 sm:mb-4">
                             <span style={{ color: 'white' }}>Handpicked AI Solutions</span>
                         </DSHeading>
-
                         <DSText
                             variant="subhero"
                             style={{ color: '#9ca3af' }}>
                             Discover verified AI tools and prompts chosen by our algorithm for quality and performance
                         </DSText>
                     </motion.div>
-
                     <div className="mb-8 sm:mb-12">
                         {loading ? (
                             <DSLoadingState
@@ -137,15 +113,12 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                                     <div className="w-12 h-12 sm:w-16 sm:h-16 bg-red-500/10 rounded-xl flex items-center justify-center border border-red-500/20">
                                         <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-red-400" />
                                     </div>
-
                                     <DSHeading level={3} className="text-white mb-2">
                                         Unable to Load Featured Products
                                     </DSHeading>
-
                                     <DSText style={{ color: '#9ca3af' }} className="mb-4">
                                         We're having trouble loading our featured products. Please try again or browse all products.
                                     </DSText>
-
                                     <div className="flex flex-col sm:flex-row gap-3">
                                         <DSButton
                                             variant="primary"
@@ -153,7 +126,6 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                                             onClick={() => window.location.reload()}>
                                             Try Again
                                         </DSButton>
-                                        
                                         <Link href="/explore">
                                             <DSButton
                                                 variant="secondary"
@@ -174,15 +146,12 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                                     <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-800/50 rounded-xl flex items-center justify-center border border-gray-700/50">
                                         <Package className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
                                     </div>
-
                                     <DSHeading level={3} className="text-white mb-2">
                                         No Featured Products Available
                                     </DSHeading>
-
                                     <DSText style={{ color: '#9ca3af' }} className="mb-4">
                                         We're working on curating amazing products for you. Check out our full catalog in the meantime.
                                     </DSText>
-
                                     <Link href="/explore">
                                         <DSButton
                                             variant="primary"
@@ -223,7 +192,6 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                             )
                         )}
                     </div>
-
                     {featuredProducts.length > 0 && (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
@@ -247,14 +215,11 @@ const FeaturedProducts = memo(function FeaturedProducts() {
         </section>
     )
 })
-
 function ProductCard({ product, onClick }) {
     const [isImageLoading, setIsImageLoading] = useState(true)
     const [imageError, setImageError] = useState(false)
     const [isLiked, setIsLiked] = useState(false)
     const { addToCart } = useCart()
-
-    // Safe data extraction with fallbacks (matching ProductCardLite)
     const {
         _id: id,
         slug,
@@ -272,7 +237,7 @@ function ProductCard({ product, onClick }) {
         industry,
         tags = [],
         seller = {},
-        sellerId, // API shape
+        sellerId, 
         sales = 0,
         isFeatured = false,
         isNew = false,
@@ -282,46 +247,30 @@ function ProductCard({ product, onClick }) {
         averageRating: productAverageRating,
         totalReviews: productTotalReviews
     } = product || {}
-
-    // Normalized seller data (prefer explicit seller else sellerId)
     const sellerInfo = seller?.name || seller?.fullName ? seller : sellerId || {}
     const sellerDisplayName = sellerInfo.name || sellerInfo.fullName || ''
     const sellerVerified = sellerInfo.verified || sellerInfo.verification?.status === 'approved'
-
-    // Ratings: product rating independent from seller rating
     const productRating =
         typeof productAverageRating === 'number' && productAverageRating > 0 ? productAverageRating : legacyRating > 0 ? legacyRating : 0
-
     const description = (shortDescription || product?.description || fullDescription || 'No description available').trim()
-
-    // Use the first available image
     const productImage = image || thumbnail || images?.[0] || '/images/placeholder-product.svg'
-
-    // Calculate discount percentage
     const actualDiscountPrice = discountPrice || (originalPrice && originalPrice > price ? price : null)
     const actualOriginalPrice = originalPrice || (discountPrice ? price : null)
     const discountPercentage = actualOriginalPrice && actualDiscountPrice && actualOriginalPrice > actualDiscountPrice ?
         Math.round(((actualOriginalPrice - actualDiscountPrice) / actualOriginalPrice) * 100) : 0
-
-    // Format price display
     const formatPrice = (price) => {
         if (price === 0) return 'Free'
         return `$${price.toFixed(2)}`
     }
-
-    // Check if product is new (within 30 days)
     const isNewProduct = isNew || (createdAt && new Date(createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
-
     const handleLike = (e) => {
         e.preventDefault()
         e.stopPropagation()
         setIsLiked(!isLiked)
     }
-
     const handleAddToCart = async (e) => {
         e.stopPropagation()
         e.preventDefault()
-
         const cartProduct = {
             id: id,
             title: title,
@@ -330,14 +279,12 @@ function ProductCard({ product, onClick }) {
             shortDescription: description,
             type: type
         }
-
         try {
             await addToCart(cartProduct)
         } catch (error) {
             console.error('Error adding to cart:', error)
         }
     }
-
     const microMeta = (
         <div className="flex items-center gap-3 text-[14px] md:text-[13px] font-medium text-gray-500 leading-tight">
             {sellerDisplayName ? (
@@ -350,11 +297,8 @@ function ProductCard({ product, onClick }) {
             )}
         </div>
     )
-
-    // Derive display tags: real tags only
     const displayTags = tags.slice(0, 2)
     const extraTagCount = tags.length > 2 ? tags.length - 2 : 0
-
     return (
         <motion.div
             layout
@@ -382,7 +326,6 @@ function ProductCard({ product, onClick }) {
                 tabIndex={0}
                 role="button"
                 aria-label={`View product: ${title}`}>
-
                 <div className="relative aspect-[16/9] bg-[#1b1b1b] overflow-hidden">
                     {!imageError ? (
                         <Image
@@ -405,11 +348,7 @@ function ProductCard({ product, onClick }) {
                         </div>
                     )}
                     {isImageLoading && <div className="absolute inset-0 bg-gray-700/30 animate-pulse" />}
-
-                    {/* Subtle gradient */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent opacity-60 pointer-events-none" />
-
-                    {/* Badges */}
                     <div className="absolute top-2 left-2 flex flex-col gap-1">
                         {isFeatured && (
                             <span className="px-3.5 py-1 rounded-full bg-black/55 backdrop-blur text-[14px] font-semibold tracking-wide text-[#00FF89] border border-[#00FF89]/30">
@@ -427,19 +366,14 @@ function ProductCard({ product, onClick }) {
                             </span>
                         )}
                     </div>
-
-                    {/* Like & Cart */}
                     <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                             onClick={handleLike}
                             className="p-1.5 rounded-md bg-black/45 backdrop-blur hover:bg-black/65 transition">
                             <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-200'}`} />
                         </button>
-
                     </div>
                 </div>
-
-                {/* Body */}
                 <div className="p-6 flex flex-col flex-1">
                     <div className="mb-2">
                         <h3 className="font-semibold text-[18px] md:text-[18px] leading-snug text-white line-clamp-2 group-hover:text-[#00FF89] transition-colors">{title}</h3>
@@ -483,5 +417,4 @@ function ProductCard({ product, onClick }) {
         </motion.div>
     )
 }
-
 export default FeaturedProducts

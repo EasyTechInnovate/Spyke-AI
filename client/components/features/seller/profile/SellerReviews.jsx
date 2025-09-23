@@ -1,24 +1,17 @@
 'use client'
-
 import { useState } from 'react'
 import { Star, ThumbsUp, MessageSquare, Filter } from 'lucide-react'
-
 export default function SellerReviews({ reviews = [], sellerId }) {
-    const [sortBy, setSortBy] = useState('newest') // 'newest', 'oldest', 'highest', 'lowest'
-    const [filterRating, setFilterRating] = useState('all') // 'all', '5', '4', '3', '2', '1'
-
-    // Calculate rating distribution
+    const [sortBy, setSortBy] = useState('newest') 
+    const [filterRating, setFilterRating] = useState('all') 
     const ratingDistribution = [5, 4, 3, 2, 1].map(rating => {
         const count = reviews.filter(review => Math.floor(review.rating) === rating).length
         const percentage = reviews.length > 0 ? (count / reviews.length) * 100 : 0
         return { rating, count, percentage }
     })
-
     const averageRating = reviews.length > 0 
         ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
         : 0
-
-    // Filter and sort reviews
     const filteredReviews = reviews
         .filter(review => filterRating === 'all' || Math.floor(review.rating) === parseInt(filterRating))
         .sort((a, b) => {
@@ -34,7 +27,6 @@ export default function SellerReviews({ reviews = [], sellerId }) {
                     return new Date(b.createdAt) - new Date(a.createdAt)
             }
         })
-
     if (reviews.length === 0) {
         return (
             <div className="text-center py-16">
@@ -46,13 +38,10 @@ export default function SellerReviews({ reviews = [], sellerId }) {
             </div>
         )
     }
-
     return (
         <div className="space-y-6">
-            {/* Rating Overview */}
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
                 <div className="grid md:grid-cols-2 gap-8">
-                    {/* Average Rating */}
                     <div className="text-center md:text-left">
                         <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
                             <span className="text-4xl font-bold text-white">
@@ -77,8 +66,6 @@ export default function SellerReviews({ reviews = [], sellerId }) {
                             </div>
                         </div>
                     </div>
-
-                    {/* Rating Distribution */}
                     <div className="space-y-2">
                         {ratingDistribution.map(({ rating, count, percentage }) => (
                             <div key={rating} className="flex items-center gap-3">
@@ -96,11 +83,8 @@ export default function SellerReviews({ reviews = [], sellerId }) {
                     </div>
                 </div>
             </div>
-
-            {/* Controls */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    {/* Rating Filter */}
                     <select
                         value={filterRating}
                         onChange={(e) => setFilterRating(e.target.value)}
@@ -113,8 +97,6 @@ export default function SellerReviews({ reviews = [], sellerId }) {
                         <option value="2">2 Stars</option>
                         <option value="1">1 Star</option>
                     </select>
-
-                    {/* Sort */}
                     <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value)}
@@ -126,20 +108,15 @@ export default function SellerReviews({ reviews = [], sellerId }) {
                         <option value="lowest">Lowest Rated</option>
                     </select>
                 </div>
-
                 <span className="text-sm text-gray-400">
                     {filteredReviews.length} of {reviews.length} reviews
                 </span>
             </div>
-
-            {/* Reviews List */}
             <div className="space-y-4">
                 {filteredReviews.map((review) => (
                     <ReviewCard key={review.id} review={review} />
                 ))}
             </div>
-
-            {/* Load More */}
             {filteredReviews.length >= 10 && (
                 <div className="text-center">
                     <button className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors">
@@ -150,7 +127,6 @@ export default function SellerReviews({ reviews = [], sellerId }) {
         </div>
     )
 }
-
 function ReviewCard({ review }) {
     const {
         id,
@@ -163,24 +139,20 @@ function ReviewCard({ review }) {
         helpful = 0,
         verified = false
     } = review
-
     const timeAgo = new Date(createdAt).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric'
     })
-
     return (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
             <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                    {/* Reviewer Avatar */}
                     <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center">
                         <span className="text-sm font-medium text-white">
                             {reviewer?.name?.charAt(0) || 'U'}
                         </span>
                     </div>
-                    
                     <div>
                         <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium text-white">
@@ -209,20 +181,14 @@ function ReviewCard({ review }) {
                         </div>
                     </div>
                 </div>
-
                 <button className="text-gray-400 hover:text-white transition-colors">
                     <ThumbsUp className="w-4 h-4" />
                 </button>
             </div>
-
-            {/* Review Content */}
             {title && (
                 <h4 className="font-semibold text-white mb-2">{title}</h4>
             )}
-            
             <p className="text-gray-300 leading-relaxed mb-4">{comment}</p>
-
-            {/* Product Info */}
             {product && (
                 <div className="flex items-center justify-between pt-4 border-t border-gray-800">
                     <div className="text-sm text-gray-400">

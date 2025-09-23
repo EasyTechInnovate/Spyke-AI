@@ -1,9 +1,7 @@
 'use client'
-
 import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { ShoppingCart, Loader2 } from 'lucide-react'
-
 export default function AuthButton({ 
   children, 
   onClick, 
@@ -17,17 +15,13 @@ export default function AuthButton({
 }) {
   const { isAuthenticated, requireAuth } = useAuth()
   const [loading, setLoading] = useState(false)
-
   const handleClick = async (e) => {
     e.preventDefault()
-    
     if (disabled || loading) return
-
     if (requiresAuth && !isAuthenticated) {
       requireAuth()
       return
     }
-
     if (onClick) {
       setLoading(true)
       try {
@@ -39,7 +33,6 @@ export default function AuthButton({
       }
     }
   }
-
   const getVariantClasses = () => {
     switch (variant) {
       case 'primary':
@@ -54,7 +47,6 @@ export default function AuthButton({
         return 'bg-brand-primary text-black hover:bg-brand-primary/90 font-semibold'
     }
   }
-
   const baseClasses = `
     inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl 
     transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]
@@ -62,7 +54,6 @@ export default function AuthButton({
     ${getVariantClasses()}
     ${className}
   `
-
   return (
     <button
       onClick={handleClick}

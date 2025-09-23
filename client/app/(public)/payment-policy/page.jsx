@@ -1,16 +1,13 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import Container from '@/components/shared/layout/Container'
 import { Calendar, Mail, Globe, DollarSign, CreditCard, Clock, TrendingUp, Shield, AlertTriangle } from 'lucide-react'
-
 export default function PaymentPolicyPage() {
     const fadeInUp = {
         initial: { opacity: 0, y: 20 },
         animate: { opacity: 1, y: 0 },
         transition: { duration: 0.6 }
     }
-
     const staggerContainer = {
         animate: {
             transition: {
@@ -18,7 +15,6 @@ export default function PaymentPolicyPage() {
             }
         }
     }
-
     const paymentHighlights = [
         {
             icon: Clock,
@@ -45,7 +41,6 @@ export default function PaymentPolicyPage() {
             type: 'success'
         }
     ]
-
     const payoutSchedule = [
         {
             period: '1st - 15th of the month',
@@ -58,7 +53,6 @@ export default function PaymentPolicyPage() {
             description: 'For sales generated in second half of month'
         }
     ]
-
     const withdrawalMethods = [
         {
             method: 'Bank Transfer',
@@ -76,10 +70,8 @@ export default function PaymentPolicyPage() {
             processing: '2-3 business days'
         }
     ]
-
     return (
         <div className="min-h-screen bg-[#121212] text-white">
-            {/* Header Section */}
             <section className="relative py-16 border-b border-gray-800">
                 <Container>
                     <motion.div
@@ -92,22 +84,18 @@ export default function PaymentPolicyPage() {
                             className="text-4xl md:text-5xl font-bold text-white mb-4 font-league-spartan">
                             Payment Policy
                         </motion.h1>
-
                         <motion.div
                             variants={fadeInUp}
                             className="flex items-center justify-center gap-2 text-gray-400 mb-6">
                             <Calendar className="w-4 h-4" />
                             <span className="text-sm">Effective Date: August 26, 2025</span>
                         </motion.div>
-
                         <motion.p
                             variants={fadeInUp}
                             className="text-lg text-gray-300 leading-relaxed mb-8">
                             At SpykeAI, we are committed to ensuring transparent and timely payments to our sellers. This Payment Policy outlines the
                             terms, schedule, and process for revenue disbursements to sellers on our marketplace.
                         </motion.p>
-
-                        {/* Payment Highlights */}
                         <motion.div
                             variants={fadeInUp}
                             className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
@@ -125,7 +113,6 @@ export default function PaymentPolicyPage() {
                                         : highlight.type === 'warning'
                                           ? 'text-yellow-500'
                                           : 'text-[#00FF89]'
-
                                 return (
                                     <div
                                         key={index}
@@ -140,8 +127,6 @@ export default function PaymentPolicyPage() {
                     </motion.div>
                 </Container>
             </section>
-
-            {/* Main Content */}
             <section className="py-16">
                 <Container>
                     <motion.div
@@ -150,7 +135,6 @@ export default function PaymentPolicyPage() {
                         animate="animate"
                         variants={staggerContainer}>
                         <div className="prose prose-lg prose-invert max-w-none">
-                            {/* Section 1 */}
                             <motion.div
                                 variants={fadeInUp}
                                 className="mb-12">
@@ -174,8 +158,6 @@ export default function PaymentPolicyPage() {
                                     </div>
                                 </div>
                             </motion.div>
-
-                            {/* Section 2 */}
                             <motion.div
                                 variants={fadeInUp}
                                 className="mb-12">
@@ -202,8 +184,6 @@ export default function PaymentPolicyPage() {
                                     ))}
                                 </div>
                             </motion.div>
-
-                            {/* Section 3 */}
                             <motion.div
                                 variants={fadeInUp}
                                 className="mb-12">
@@ -225,8 +205,6 @@ export default function PaymentPolicyPage() {
                                     </div>
                                 </div>
                             </motion.div>
-
-                            {/* Section 4 */}
                             <motion.div
                                 variants={fadeInUp}
                                 className="mb-12">
@@ -260,8 +238,6 @@ export default function PaymentPolicyPage() {
                                     ))}
                                 </div>
                             </motion.div>
-
-                            {/* Section 5 */}
                             <motion.div
                                 variants={fadeInUp}
                                 className="mb-12">
@@ -286,8 +262,6 @@ export default function PaymentPolicyPage() {
                                     </div>
                                 </div>
                             </motion.div>
-
-                            {/* Section 6 */}
                             <motion.div
                                 variants={fadeInUp}
                                 className="mb-12">
@@ -313,8 +287,6 @@ export default function PaymentPolicyPage() {
                                     </div>
                                 </div>
                             </motion.div>
-
-                            {/* Section 7 */}
                             <motion.div
                                 variants={fadeInUp}
                                 className="mb-12">
@@ -339,8 +311,6 @@ export default function PaymentPolicyPage() {
                                     </div>
                                 </div>
                             </motion.div>
-
-                            {/* Section 8 */}
                             <motion.div
                                 variants={fadeInUp}
                                 className="mb-12">
@@ -352,8 +322,6 @@ export default function PaymentPolicyPage() {
                                     </p>
                                 </div>
                             </motion.div>
-
-                            {/* Contact Section */}
                             <motion.div
                                 variants={fadeInUp}
                                 className="mb-12">

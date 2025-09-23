@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { motion } from 'framer-motion'
 import {
@@ -14,48 +13,33 @@ import {
     Layers,
     Loader2,
     List,
-    Grid as GridIcon,
-    Filter,
-    SortAsc
-} from 'lucide-react'
+    Grid as GridIcon} from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
 import { useAuth } from '@/hooks/useAuth'
 import { purchaseAPI } from '@/lib/api'
 import Link from 'next/link'
 import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 import ImagePlaceholder from '@/components/shared/ui/ImagePlaceholder'
-
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
-// Product type icons
 const typeIcons = {
     prompt: FileText,
     automation: Zap,
     agent: Bot,
     bundle: Layers
 }
-
-// Product type colors following theme
 const typeColors = {
     prompt: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
     automation: 'text-purple-400 bg-purple-400/10 border-purple-400/20',
     agent: 'text-[#00FF89] bg-[#00FF89]/10 border-[#00FF89]/20',
     bundle: 'text-[#FFC050] bg-[#FFC050]/10 border-[#FFC050]/20'
 }
-
 export default function PurchasesPage() {
-    // Inline notification state
     const [notification, setNotification] = useState(null)
-
-    // Show inline notification messages
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
-        // Auto-dismiss after 5 seconds
         setTimeout(() => setNotification(null), 5000)
     }
-
-    // Clear notification
     const clearNotification = () => setNotification(null)
-
     const { user } = useAuth()
     const [purchases, setPurchases] = useState([])
     const [loading, setLoading] = useState(true)
@@ -63,16 +47,13 @@ export default function PurchasesPage() {
     const [searchTerm, setSearchTerm] = useState('')
     const [page, setPage] = useState(1)
     const [pagination, setPagination] = useState(null)
-    const [viewMode, setViewMode] = useState('grid') // 'grid' | 'list'
-    const [sort, setSort] = useState('recent') // 'recent' | 'price-asc' | 'price-desc'
+    const [viewMode, setViewMode] = useState('grid') 
+    const [sort, setSort] = useState('recent') 
     const [selected, setSelected] = useState(new Set())
     const [showMobileFilters, setShowMobileFilters] = useState(false)
-
-    // Load purchases
     useEffect(() => {
         loadPurchases()
     }, [page, filter])
-
     const loadPurchases = async () => {
         setLoading(true)
         try {
@@ -91,8 +72,6 @@ export default function PurchasesPage() {
             setLoading(false)
         }
     }
-
-    // Derived stats
     const stats = useMemo(() => {
         const total = purchases.reduce((s, p) => s + (p.product?.price || 0), 0)
         const counts = purchases.reduce((acc, p) => {
@@ -102,16 +81,12 @@ export default function PurchasesPage() {
         }, {})
         return { totalSpent: total, counts }
     }, [purchases])
-
-    // Bulk actions
     const toggleSelect = (purchaseId) => {
         const copy = new Set(selected)
         if (copy.has(purchaseId)) copy.delete(purchaseId)
         else copy.add(purchaseId)
         setSelected(copy)
     }
-
-    // Search + sort
     const filteredPurchases = purchases
         .filter((purchase) => {
             const title = purchase.product?.title || ''
@@ -124,7 +99,6 @@ export default function PurchasesPage() {
             if (sort === 'price-desc') return (b.product.price || 0) - (a.product.price || 0)
             return 0
         })
-
     const toggleSelectAll = () => {
         const displayed = filteredPurchases
         if (selected.size === displayed.length) {
@@ -133,11 +107,9 @@ export default function PurchasesPage() {
             setSelected(new Set(displayed.map((p) => p.purchaseId)))
         }
     }
-
     if (loading && purchases.length === 0) {
         return (
             <div className="min-h-screen bg-[#121212]">
-                {/* Inline Notification */}
                 {notification && (
                     <InlineNotification
                         type={notification.type}
@@ -145,7 +117,6 @@ export default function PurchasesPage() {
                         onDismiss={clearNotification}
                     />
                 )}
-
                 <Container>
                     <div className="flex items-center justify-center min-h-[60vh]">
                         <Loader2 className="w-8 h-8 animate-spin text-[#00FF89]" />
@@ -154,12 +125,10 @@ export default function PurchasesPage() {
             </div>
         )
     }
-
     return (
         <div className="min-h-screen bg-[#121212]">
             <main className="pt-24 pb-16">
                 <Container>
-                    {/* Page Header */}
                     <div className="mb-8">
                         <div className="text-center mb-8">
                             <h1
@@ -173,8 +142,6 @@ export default function PurchasesPage() {
                                 Access all your purchased products. Manage licenses, invoices and quickly revisit your favorite items.
                             </p>
                         </div>
-
-                        {/* Stats Cards */}
                         <div className="mb-8">
                             <StatsBar
                                 purchases={purchases}
@@ -182,14 +149,10 @@ export default function PurchasesPage() {
                             />
                         </div>
                     </div>
-
-                    {/* Main Content */}
                     <div className="space-y-6">
-                        {/* Filters and Controls */}
                         <div className="bg-[#1f1f1f] border border-gray-800 rounded-2xl p-6">
                             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                                 <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
-                                    {/* Search */}
                                     <div className="relative w-full lg:w-80">
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                                         <input
@@ -200,8 +163,6 @@ export default function PurchasesPage() {
                                             className="w-full pl-10 pr-4 py-3 bg-[#121212] border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00FF89] focus:border-transparent transition-all"
                                         />
                                     </div>
-
-                                    {/* Filters */}
                                     <div className="flex items-center gap-3">
                                         <select
                                             value={filter}
@@ -216,7 +177,6 @@ export default function PurchasesPage() {
                                             <option value="agent">Agents</option>
                                             <option value="bundle">Bundles</option>
                                         </select>
-
                                         <select
                                             value={sort}
                                             onChange={(e) => setSort(e.target.value)}
@@ -227,9 +187,7 @@ export default function PurchasesPage() {
                                         </select>
                                     </div>
                                 </div>
-
                                 <div className="flex items-center gap-3">
-                                    {/* View Toggle */}
                                     <div className="flex items-center bg-[#121212] border border-gray-700 rounded-xl p-1">
                                         <button
                                             onClick={() => setViewMode('grid')}
@@ -242,8 +200,6 @@ export default function PurchasesPage() {
                                             <List className="w-4 h-4" />
                                         </button>
                                     </div>
-
-                                    {/* Bulk Actions */}
                                     <button
                                         onClick={toggleSelectAll}
                                         className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-all">
@@ -252,8 +208,6 @@ export default function PurchasesPage() {
                                 </div>
                             </div>
                         </div>
-
-                        {/* Content */}
                         {loading ? (
                             <LoadingState />
                         ) : filteredPurchases.length === 0 ? (
@@ -276,8 +230,6 @@ export default function PurchasesPage() {
                                 ))}
                             </div>
                         )}
-
-                        {/* Pagination */}
                         {pagination && pagination.totalPages > 1 && (
                             <div className="flex justify-center gap-2 mt-8">
                                 {Array.from({ length: pagination.totalPages }, (_, i) => (
@@ -300,11 +252,8 @@ export default function PurchasesPage() {
         </div>
     )
 }
-
-// Enhanced Purchase Card Component
 function PurchaseCard({ purchase, selected = false, onToggle }) {
     const { product, purchaseDate } = purchase
-
     if (!product) {
         return (
             <motion.div className="bg-[#1f1f1f] border border-gray-800 rounded-2xl p-4">
@@ -312,17 +261,14 @@ function PurchaseCard({ purchase, selected = false, onToggle }) {
             </motion.div>
         )
     }
-
     const Icon = typeIcons[product.type] || Package
     const colorClass = typeColors[product.type] || 'text-gray-400 bg-gray-400/10 border-gray-400/20'
-
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -5 }}
             className="bg-[#1f1f1f] border border-gray-800 rounded-2xl overflow-hidden hover:border-[#00FF89]/50 transition-all duration-300 group">
-            {/* Image/Preview */}
             <div className="h-48 bg-gradient-to-br from-gray-900 to-gray-800 relative overflow-hidden">
                 {product.thumbnail ? (
                     typeof OptimizedImage === 'function' ? (
@@ -340,16 +286,12 @@ function PurchaseCard({ purchase, selected = false, onToggle }) {
                         <Icon className="w-16 h-16 text-gray-600" />
                     </div>
                 )}
-
-                {/* Type Badge */}
                 <div className={`absolute top-4 left-4 px-3 py-1 rounded-lg border ${colorClass} backdrop-blur-sm`}>
                     <div className="flex items-center gap-2">
                         <Icon className="w-4 h-4" />
                         <span className="text-xs font-medium capitalize">{product.type}</span>
                     </div>
                 </div>
-
-                {/* Selection Checkbox */}
                 <div className="absolute top-4 right-4">
                     <input
                         type="checkbox"
@@ -358,25 +300,19 @@ function PurchaseCard({ purchase, selected = false, onToggle }) {
                         className="w-5 h-5 rounded border-2 border-gray-600 bg-[#121212] checked:bg-[#00FF89] checked:border-[#00FF89] focus:ring-[#00FF89] focus:ring-2"
                     />
                 </div>
-
-                {/* Overlay on hover */}
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
-
-            {/* Content */}
             <div className="p-6">
                 <h3
                     className="text-xl font-bold text-white mb-2 line-clamp-2"
                     style={{ fontFamily: 'var(--font-league-spartan)' }}>
                     {product.title}
                 </h3>
-
                 <div className="flex items-center gap-4 text-sm text-gray-400 mb-4">
                     <span className="capitalize">{product.category?.replace('_', ' ')}</span>
                     <span>•</span>
                     <span className="capitalize">{product.industry?.replace('_', ' ')}</span>
                 </div>
-
                 <div className="space-y-3 mb-6">
                     <div className="flex items-center gap-2 text-sm text-gray-400">
                         <Calendar className="w-4 h-4" />
@@ -387,8 +323,6 @@ function PurchaseCard({ purchase, selected = false, onToggle }) {
                         <span className="text-[#00FF89] font-semibold">${product.price}</span>
                     </div>
                 </div>
-
-                {/* Actions */}
                 <div className="flex gap-3">
                     <Link
                         href={`/purchased/${product.slug || product._id || 'unknown'}`}
@@ -401,8 +335,6 @@ function PurchaseCard({ purchase, selected = false, onToggle }) {
                         <ChevronRight className="w-4 h-4" />
                     </Link>
                 </div>
-
-                {/* Footer Info */}
                 <div className="mt-4 pt-4 border-t border-gray-800 flex items-center justify-between text-xs">
                     <Link
                         href="#"
@@ -415,23 +347,18 @@ function PurchaseCard({ purchase, selected = false, onToggle }) {
         </motion.div>
     )
 }
-
-// Enhanced Stats Bar
 function StatsBar({ purchases = [], stats = { totalSpent: 0, counts: {} } }) {
     const total = purchases.length || 0
     const spent = stats.totalSpent || 0
     const avg = total > 0 ? spent / total : 0
-
     const currencyFormatter = (v) =>
         new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD',
             maximumFractionDigits: 2
         }).format(Number(v))
-
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Total Purchases */}
             <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -470,8 +397,6 @@ function StatsBar({ purchases = [], stats = { totalSpent: 0, counts: {} } }) {
                     </div>
                 </div>
             </motion.div>
-
-            {/* Total Spent */}
             <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -503,8 +428,6 @@ function StatsBar({ purchases = [], stats = { totalSpent: 0, counts: {} } }) {
         </div>
     )
 }
-
-// Enhanced Orders Table
 function OrdersTable({ purchases = [], selected = new Set(), onToggle = () => {} }) {
     return (
         <div className="bg-[#1f1f1f] border border-gray-800 rounded-2xl overflow-hidden">
@@ -599,8 +522,6 @@ function OrdersTable({ purchases = [], selected = new Set(), onToggle = () => {}
         </div>
     )
 }
-
-// Loading State
 function LoadingState() {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -623,8 +544,6 @@ function LoadingState() {
         </div>
     )
 }
-
-// Empty State
 function EmptyState({ filter }) {
     return (
         <motion.div
@@ -663,39 +582,30 @@ function EmptyState({ filter }) {
         </motion.div>
     )
 }
-
-// Animated Number Component
 function AnimatedNumber({ value = 0, duration = 800, formatter = (v) => Math.round(v) }) {
     const [display, setDisplay] = useState(0)
     const prevRef = useRef(0)
-
     useEffect(() => {
         const startVal = prevRef.current
         const endVal = Number(value)
         const delta = endVal - startVal
-
         if (delta === 0) {
             setDisplay(endVal)
             return
         }
-
         let startTime = null
         const animate = (currentTime) => {
             if (!startTime) startTime = currentTime
             const progress = Math.min((currentTime - startTime) / duration, 1)
             const current = startVal + delta * progress
             setDisplay(current)
-
             if (progress < 1) {
                 requestAnimationFrame(animate)
             } else {
                 prevRef.current = endVal
             }
         }
-
         requestAnimationFrame(animate)
     }, [value, duration])
-
     return <span>{formatter(display)}</span>
 }
-

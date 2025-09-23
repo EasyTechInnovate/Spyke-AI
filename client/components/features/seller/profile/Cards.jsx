@@ -1,19 +1,16 @@
 'use client'
-
 const cardVariants = {
   default: 'bg-[--bg-surface] border border-white/10',
   elevated: 'bg-[--bg-surface] border border-white/10 shadow-lg shadow-black/20',
   outline: 'bg-transparent border border-white/20',
   ghost: 'bg-transparent border-0'
 }
-
 const paddingVariants = {
   none: '',
   sm: 'p-3',
   md: 'p-4 lg:p-6',
   lg: 'p-6 lg:p-8'
 }
-
 const colorVariants = {
   primary: 'text-[--brand-primary] bg-[--brand-primary]/10',
   secondary: 'text-[--brand-secondary] bg-[--brand-secondary]/10',
@@ -22,7 +19,6 @@ const colorVariants = {
   error: 'text-red-400 bg-red-400/10',
   info: 'text-blue-400 bg-blue-400/10'
 }
-
 export function Card({ children, className = '', variant = 'default', padding = 'md' }) {
   return (
     <div className={`rounded-xl transition-all ${cardVariants[variant]} ${paddingVariants[padding]} ${className}`}>
@@ -30,7 +26,6 @@ export function Card({ children, className = '', variant = 'default', padding = 
     </div>
   )
 }
-
 export function CardHeader({ children, className = '' }) {
   return (
     <div className={`pb-4 ${className}`}>
@@ -38,7 +33,6 @@ export function CardHeader({ children, className = '' }) {
     </div>
   )
 }
-
 export function CardContent({ children, className = '' }) {
   return (
     <div className={className}>
@@ -46,7 +40,6 @@ export function CardContent({ children, className = '' }) {
     </div>
   )
 }
-
 export function CardFooter({ children, className = '' }) {
   return (
     <div className={`pt-4 ${className}`}>
@@ -54,7 +47,6 @@ export function CardFooter({ children, className = '' }) {
     </div>
   )
 }
-
 export function StatCard({ 
   label, 
   value, 
@@ -67,7 +59,6 @@ export function StatCard({
 }) {
   const isClickable = !!onClick
   const Component = isClickable ? 'button' : 'div'
-
   if (loading) {
     return (
       <Card className="animate-pulse">
@@ -81,7 +72,6 @@ export function StatCard({
       </Card>
     )
   }
-
   return (
     <Card className={isClickable ? 'hover:scale-[1.02] cursor-pointer' : ''}>
       <Component 
@@ -112,7 +102,6 @@ export function StatCard({
     </Card>
   )
 }
-
 export function MetricCard({ 
   label, 
   value, 
@@ -127,7 +116,6 @@ export function MetricCard({
     md: 'text-xl lg:text-2xl',
     lg: 'text-2xl lg:text-3xl'
   }
-
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -139,16 +127,13 @@ export function MetricCard({
           />
         )}
       </div>
-      
       <div className="space-y-1">
         <p className={`font-bold text-[--text-primary] ${sizeClasses[size]}`}>
           {value}
         </p>
-        
         {subValue && (
           <p className="text-sm text-[--text-secondary]">{subValue}</p>
         )}
-        
         {trend && (
           <div className="flex items-center gap-1">
             <span 

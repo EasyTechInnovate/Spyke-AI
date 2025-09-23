@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -8,27 +7,18 @@ import Header from '@/components/shared/layout/Header'
 import { CheckCircle, XCircle, Loader2, ArrowRight, Mail, Shield, Sparkles } from 'lucide-react'
 import { authAPI } from '@/lib/api/auth'
 import toast from '@/lib/utils/toast'
-
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function EmailConfirmPage({ token, code }) {
-    // Inline notification state
     const [notification, setNotification] = useState(null)
-
-    // Show inline notification messages  
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
-        // Auto-dismiss after 5 seconds
         setTimeout(() => setNotification(null), 5000)
     }
-
-    // Clear notification
     const clearNotification = () => setNotification(null)
-
     const router = useRouter()
-    const [status, setStatus] = useState('loading') // 'loading', 'success', 'error', 'redirecting'
+    const [status, setStatus] = useState('loading') 
     const [countdown, setCountdown] = useState(10)
     const [errorMessage, setErrorMessage] = useState('')
-
     useEffect(() => {
         const confirmEmail = async () => {
             if (!token || !code) {
@@ -36,15 +26,10 @@ export default function EmailConfirmPage({ token, code }) {
                 setErrorMessage('Invalid confirmation link. Please check your email and try again.')
                 return
             }
-
             try {
-                // Call the confirmation API
                 await authAPI.confirmAccount(token, code)
-
                 setStatus('success')
                 showMessage('Email confirmed successfully! Redirecting to login...', 'success')
-
-                // Start countdown
                 const countdownInterval = setInterval(() => {
                     setCountdown((prev) => {
                         if (prev <= 1) {
@@ -56,7 +41,6 @@ export default function EmailConfirmPage({ token, code }) {
                         return prev - 1
                     })
                 }, 1000)
-
                 return () => clearInterval(countdownInterval)
             } catch (error) {
                 setStatus('error')
@@ -65,10 +49,8 @@ export default function EmailConfirmPage({ token, code }) {
                 showMessage(message, 'error')
             }
         }
-
         confirmEmail()
     }, [token, code, router])
-
     const getStatusIcon = () => {
         switch (status) {
             case 'loading':
@@ -83,7 +65,6 @@ export default function EmailConfirmPage({ token, code }) {
                 return <Loader2 className="w-16 h-16 text-[#00FF89] animate-spin" />
         }
     }
-
     const getStatusMessage = () => {
         switch (status) {
             case 'loading':
@@ -113,12 +94,9 @@ export default function EmailConfirmPage({ token, code }) {
                 }
         }
     }
-
     const statusMessage = getStatusMessage()
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#121212] to-[#1a1a1a] relative overflow-hidden font-league-spartan">
-            {/* Inline Notification */}
             {notification && (
                 <InlineNotification
                     type={notification.type}
@@ -126,18 +104,10 @@ export default function EmailConfirmPage({ token, code }) {
                     onDismiss={clearNotification}
                 />
             )}
-
-            
-            {/* Animated background effects */}
             <div className="absolute inset-0 overflow-hidden">
-                {/* Primary gradient orbs */}
                 <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-[#00FF89]/20 to-[#00D4FF]/20 rounded-full blur-3xl animate-pulse opacity-60" />
                 <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-r from-[#FF6B6B]/15 to-[#4ECDC4]/15 rounded-full blur-3xl animate-pulse opacity-40" />
-
-                {/* Animated grid pattern */}
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,137,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,137,0.03)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_100%)]" />
-
-                {/* Floating particles */}
                 <div
                     className="absolute top-20 left-20 w-2 h-2 bg-[#00FF89]/40 rounded-full animate-bounce"
                     style={{ animationDelay: '0s', animationDuration: '3s' }}
@@ -151,37 +121,24 @@ export default function EmailConfirmPage({ token, code }) {
                     style={{ animationDelay: '2s', animationDuration: '5s' }}
                 />
             </div>
-
             <Header />
-
             <main className="relative pt-16 sm:pt-20 lg:pt-24 pb-8 sm:pb-12 lg:pb-16">
                 <Container>
                     <div className="flex min-h-[calc(100vh-120px)] sm:min-h-[calc(100vh-140px)] lg:min-h-[calc(100vh-160px)] items-center justify-center px-4 sm:px-6 lg:px-8">
                         <div className="w-full max-w-2xl mx-auto">
-                            {/* Main confirmation card */}
                             <div className="relative">
-                                {/* Glow effect */}
                                 <div className="absolute -inset-1 bg-gradient-to-r from-[#00FF89]/20 via-[#00D4FF]/20 to-[#00FF89]/20 rounded-2xl blur-xl opacity-60" />
-
                                 <div className="relative bg-[#1a1a1a]/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 sm:p-12 shadow-2xl text-center">
-                                    {/* Status Icon */}
                                     <div className="mb-8 flex justify-center">{getStatusIcon()}</div>
-
-                                    {/* Status Message */}
                                     <div className="mb-8">
                                         <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">{statusMessage.title}</h1>
                                         <p className="text-lg text-gray-300 leading-relaxed">{statusMessage.subtitle}</p>
                                     </div>
-
-                                    {/* Success State Content */}
                                     {status === 'success' && (
                                         <div className="space-y-6">
-                                            {/* Countdown */}
                                             <div className="bg-[#00FF89]/10 border border-[#00FF89]/20 rounded-xl p-4">
                                                 <p className="text-[#00FF89] font-medium">Redirecting to login page in {countdown} seconds</p>
                                             </div>
-
-                                            {/* Features Preview */}
                                             <div className="grid sm:grid-cols-3 gap-4">
                                                 <div className="bg-[#121212]/50 border border-gray-700/50 rounded-xl p-4">
                                                     <Mail className="w-8 h-8 text-[#00FF89] mx-auto mb-2" />
@@ -199,8 +156,6 @@ export default function EmailConfirmPage({ token, code }) {
                                                     <p className="text-xs text-gray-400">Access exclusive content</p>
                                                 </div>
                                             </div>
-
-                                            {/* Manual Login Button */}
                                             <Link
                                                 href="/signin"
                                                 className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#00FF89] to-[#00D4FF] text-[#121212] rounded-xl font-bold text-lg transition-all duration-300 hover:from-[#00D4FF] hover:to-[#00FF89] transform hover:scale-[1.02] hover:shadow-lg hover:shadow-[#00FF89]/25">
@@ -209,8 +164,6 @@ export default function EmailConfirmPage({ token, code }) {
                                             </Link>
                                         </div>
                                     )}
-
-                                    {/* Error State Content */}
                                     {status === 'error' && (
                                         <div className="space-y-6">
                                             <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
@@ -220,7 +173,6 @@ export default function EmailConfirmPage({ token, code }) {
                                                         : 'The confirmation link may have expired or is invalid. Please try requesting a new confirmation email.'}
                                                 </p>
                                             </div>
-
                                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                                 <Link
                                                     href="/signin"
@@ -236,8 +188,6 @@ export default function EmailConfirmPage({ token, code }) {
                                             </div>
                                         </div>
                                     )}
-
-                                    {/* Loading State */}
                                     {status === 'loading' && (
                                         <div className="space-y-4">
                                             <div className="bg-[#00FF89]/10 border border-[#00FF89]/20 rounded-xl p-4">
@@ -247,8 +197,6 @@ export default function EmailConfirmPage({ token, code }) {
                                     )}
                                 </div>
                             </div>
-
-                            {/* Footer Links */}
                             <div className="mt-8 text-center">
                                 <p className="text-gray-400 text-sm">
                                     Need help?{' '}

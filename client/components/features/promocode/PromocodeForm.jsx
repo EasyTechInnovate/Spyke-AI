@@ -1,12 +1,10 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { promocodeAPI, productsAPI } from '@/lib/api'
 import { categoryAPI } from '@/lib/api/toolsNiche'
 import { useNotifications } from '@/hooks/useNotifications'
 import { X, Calendar, Tag, Target, Filter, Percent, DollarSign, AlertCircle, CheckCircle } from 'lucide-react'
 import Notification from '@/components/shared/Notification'
-
 export default function PromocodeForm({ promocode, onClose }) {
     const { addNotification, notifications, removeNotification } = useNotifications()
     const isEditing = !!promocode
@@ -34,7 +32,6 @@ export default function PromocodeForm({ promocode, onClose }) {
     const [showSelectedOnly, setShowSelectedOnly] = useState(false)
     const [currentCategoryPage, setCurrentCategoryPage] = useState(1)
     const CATEGORIES_PER_PAGE = 10
-
     const showMessage = (message, type = 'info') => {
         addNotification({
             message,
@@ -42,18 +39,15 @@ export default function PromocodeForm({ promocode, onClose }) {
             duration: 4000
         })
     }
-
     const getInputErrorStyles = (fieldName) => {
         const hasError = errors[fieldName] && touched[fieldName]
         return hasError
             ? 'border-red-500 bg-red-500/5 focus:border-red-500 focus:ring-red-500/30'
             : 'border-gray-700 bg-[#1f1f1f] focus:border-[#00FF89] focus:ring-[#00FF89]/30'
     }
-
     const handleFieldBlur = (fieldName) => {
         setTouched((prev) => ({ ...prev, [fieldName]: true }))
     }
-
     useEffect(() => {
         if (promocode) {
             setFormData({
@@ -72,11 +66,9 @@ export default function PromocodeForm({ promocode, onClose }) {
                 status: promocode.isActive ? 'active' : 'inactive'
             })
         }
-
         fetchSellerProducts()
         fetchCategories()
     }, [promocode])
-
     const fetchSellerProducts = async () => {
         try {
             setLoadingProducts(true)
@@ -90,17 +82,14 @@ export default function PromocodeForm({ promocode, onClose }) {
             setLoadingProducts(false)
         }
     }
-
     const fetchCategories = async () => {
         try {
             setLoadingCategories(true)
             const response = await categoryAPI.getCategories()
             let categoriesData = response?.data?.categories || response?.categories || response?.data || []
-
             if (!Array.isArray(categoriesData)) {
                 categoriesData = []
             }
-
             const formattedCategories = categoriesData
                 .map((cat) => ({
                     id: cat._id || cat.id,
@@ -109,7 +98,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                     isActive: cat.isActive !== false
                 }))
                 .filter((cat) => cat.isActive)
-
             setCategories(formattedCategories)
         } catch (error) {
             console.error('Error fetching categories:', error)
@@ -118,17 +106,14 @@ export default function PromocodeForm({ promocode, onClose }) {
             setLoadingCategories(false)
         }
     }
-
     const handleInputChange = (e) => {
         const { name, value } = e.target
         setFormData((prev) => ({ ...prev, [name]: value }))
         setTouched((prev) => ({ ...prev, [name]: true }))
-
         if (errors[name]) {
             setErrors((prev) => ({ ...prev, [name]: '' }))
         }
     }
-
     const handleProductToggle = (productId) => {
         setFormData((prev) => ({
             ...prev,
@@ -137,7 +122,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                 : [...prev.applicableProducts, productId]
         }))
     }
-
     const handleCategoryToggle = (categoryValue) => {
         setFormData((prev) => ({
             ...prev,
@@ -146,51 +130,42 @@ export default function PromocodeForm({ promocode, onClose }) {
                 : [...prev.applicableCategories, categoryValue]
         }))
     }
-
     const selectAllProducts = () => {
         setFormData((prev) => ({
             ...prev,
             applicableProducts: sellerProducts.map((p) => p._id)
         }))
     }
-
     const clearAllProducts = () => {
         setFormData((prev) => ({
             ...prev,
             applicableProducts: []
         }))
     }
-
     const validateForm = () => {
         const newErrors = {}
-
         if (!formData.code.trim()) {
             newErrors.code = 'Promocode is required'
         } else if (!/^[A-Z0-9_-]+$/i.test(formData.code.trim())) {
             newErrors.code = 'Code can only contain letters, numbers, hyphens and underscores'
         }
-
         if (!formData.discountValue || formData.discountValue <= 0) {
             newErrors.discountValue = 'Discount value is required and must be greater than 0'
         } else if (formData.discountType === 'percentage' && formData.discountValue > 100) {
             newErrors.discountValue = 'Percentage discount cannot exceed 100%'
         }
-
         if (formData.description && formData.description.trim().length > 0 && formData.description.trim().length < 10) {
             newErrors.description = 'Description must be at least 10 characters'
         }
-
         if (formData.minPurchaseAmount && formData.minPurchaseAmount < 0) {
             newErrors.minPurchaseAmount = 'Minimum purchase amount cannot be negative'
         }
-
         if (formData.validFrom) {
             const fromDate = new Date(formData.validFrom)
             if (isNaN(fromDate.getTime())) {
                 newErrors.validFrom = 'Invalid date format'
             }
         }
-
         if (formData.validUntil) {
             const untilDate = new Date(formData.validUntil)
             if (isNaN(untilDate.getTime())) {
@@ -202,25 +177,19 @@ export default function PromocodeForm({ promocode, onClose }) {
                 }
             }
         }
-
         setErrors(newErrors)
-
         const allFieldsTouched = Object.keys(formData).reduce((acc, key) => {
             acc[key] = true
             return acc
         }, {})
         setTouched(allFieldsTouched)
-
         return Object.keys(newErrors).length === 0
     }
-
     const handleSubmit = async (e) => {
         e.preventDefault()
-
         if (!validateForm()) {
             return
         }
-
         setLoading(true)
         try {
             const payload = {
@@ -236,7 +205,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                 validUntil: formData.validUntil ? new Date(formData.validUntil).toISOString() : new Date().toISOString(),
                 isActive: formData.status === 'active'
             }
-
             if (isEditing) {
                 await promocodeAPI.updatePromocode(promocode._id, payload)
                 showMessage('Promocode updated successfully', 'success')
@@ -244,7 +212,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                 await promocodeAPI.createPromocode(payload)
                 showMessage('Promocode created successfully', 'success')
             }
-
             onClose(true)
         } catch (error) {
             if (error.response?.data?.message) {
@@ -257,20 +224,16 @@ export default function PromocodeForm({ promocode, onClose }) {
             setLoading(false)
         }
     }
-
     const filteredCategories = categories.filter((category) => {
         const matchesSearch = category.name.toLowerCase().includes(categorySearch.toLowerCase())
         const isSelected = formData.applicableCategories.includes(category.value)
         return matchesSearch && (!showSelectedOnly || isSelected)
     })
-
     useEffect(() => {
         setCurrentCategoryPage(1)
     }, [categorySearch, showSelectedOnly])
-
     const totalCategoryPages = Math.ceil(filteredCategories.length / CATEGORIES_PER_PAGE)
     const paginatedCategories = filteredCategories.slice((currentCategoryPage - 1) * CATEGORIES_PER_PAGE, currentCategoryPage * CATEGORIES_PER_PAGE)
-
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="fixed top-4 right-4 z-50 space-y-2">
@@ -282,7 +245,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                     />
                 ))}
             </div>
-
             <div className="w-full max-w-5xl max-h-[95vh] bg-[#121212] border border-gray-800 rounded-2xl shadow-2xl overflow-hidden">
                 <div className="bg-[#1f1f1f] border-b border-gray-800 p-6">
                     <div className="flex items-center justify-between">
@@ -307,7 +269,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                         </button>
                     </div>
                 </div>
-
                 <div className="p-6 overflow-y-auto max-h-[calc(95vh-8rem)]">
                     <form
                         onSubmit={handleSubmit}
@@ -319,7 +280,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                                 </div>
                                 <h3 className="text-xl font-semibold text-white">Basic Information</h3>
                             </div>
-
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
@@ -343,7 +303,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                                         </div>
                                     )}
                                 </div>
-
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-300">Status</label>
                                     <select
@@ -356,7 +315,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                                     </select>
                                 </div>
                             </div>
-
                             <div className="mt-6 space-y-2">
                                 <label className="text-sm font-medium text-gray-300">Description</label>
                                 <textarea
@@ -376,7 +334,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                                 )}
                             </div>
                         </div>
-
                         <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="p-2 bg-[#FFC050]/10 rounded-lg">
@@ -388,7 +345,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                                 </div>
                                 <h3 className="text-xl font-semibold text-white">Discount Settings</h3>
                             </div>
-
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-300">
@@ -404,7 +360,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                                         <option value="fixed">Fixed Amount Off</option>
                                     </select>
                                 </div>
-
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
                                         Discount Value {formData.discountType === 'percentage' ? '(%)' : '($)'}{' '}
@@ -434,7 +389,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                                     )}
                                 </div>
                             </div>
-
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-300">Maximum Uses</label>
@@ -449,7 +403,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                                         className={`w-full px-4 py-3 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${getInputErrorStyles('maxUses')}`}
                                     />
                                 </div>
-
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-300">Minimum Purchase Amount ($)</label>
                                     <input
@@ -472,7 +425,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                                 </div>
                             </div>
                         </div>
-
                         <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="p-2 bg-gray-600/20 rounded-lg">
@@ -480,7 +432,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                                 </div>
                                 <h3 className="text-xl font-semibold text-white">Validity Period</h3>
                             </div>
-
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-300">Valid From</label>
@@ -499,7 +450,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                                         </div>
                                     )}
                                 </div>
-
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-300">Valid Until</label>
                                     <input
@@ -519,7 +469,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                                 </div>
                             </div>
                         </div>
-
                         <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="p-2 bg-gray-600/20 rounded-lg">
@@ -530,7 +479,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                                     {formData.applicableProducts.length} selected
                                 </span>
                             </div>
-
                             <div className="flex gap-3 mb-4">
                                 <button
                                     type="button"
@@ -545,7 +493,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                                     Clear All
                                 </button>
                             </div>
-
                             <div className="bg-[#121212] border border-gray-700 rounded-xl p-4 max-h-64 overflow-y-auto">
                                 {loadingProducts ? (
                                     <div className="text-center text-gray-500 py-8">
@@ -577,8 +524,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                             </div>
                             <p className="text-xs text-gray-500 mt-2">Leave empty to apply to all your products</p>
                         </div>
-
-                        {/* Applicable Categories Section */}
                         <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="p-2 bg-gray-600/20 rounded-lg">
@@ -589,8 +534,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                                     {formData.applicableCategories.length} selected
                                 </span>
                             </div>
-
-                            {/* Category Search and Controls */}
                             <div className="space-y-4 mb-4">
                                 <div className="flex gap-3">
                                     <div className="flex-1 relative">
@@ -622,8 +565,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                                         Clear All
                                     </button>
                                 </div>
-
-                                {/* Quick Filter Buttons */}
                                 <div className="flex flex-wrap gap-2">
                                     <button
                                         type="button"
@@ -640,7 +581,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                                     </span>
                                 </div>
                             </div>
-
                             <div className="bg-[#121212] border border-gray-700 rounded-xl overflow-hidden">
                                 {loadingCategories ? (
                                     <div className="text-center text-gray-500 py-8">
@@ -653,7 +593,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                                     </div>
                                 ) : (
                                     <>
-                                        {/* Categories List with Virtual Scrolling */}
                                         <div className="max-h-64 overflow-y-auto">
                                             <div className="p-4 space-y-2">
                                                 {paginatedCategories.map((category) => {
@@ -682,8 +621,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                                                 })}
                                             </div>
                                         </div>
-
-                                        {/* Pagination */}
                                         {filteredCategories.length > CATEGORIES_PER_PAGE && (
                                             <div className="border-t border-gray-700 p-4 bg-[#1a1a1a]">
                                                 <div className="flex items-center justify-between">
@@ -719,7 +656,6 @@ export default function PromocodeForm({ promocode, onClose }) {
                             </div>
                             <p className="text-xs text-gray-500 mt-2">Leave empty to apply to all categories</p>
                         </div>
-
                         <div className="flex gap-4 pt-6 border-t border-gray-800">
                             <button
                                 type="button"
@@ -748,4 +684,3 @@ export default function PromocodeForm({ promocode, onClose }) {
         </div>
     )
 }
-

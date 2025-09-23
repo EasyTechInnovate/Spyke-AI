@@ -1,31 +1,23 @@
 'use client'
-
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ShoppingCart, ArrowRight, ArrowLeft } from 'lucide-react'
 import { EMPTY_CART_MESSAGES } from '../constants'
-
 export default function EmptyCart() {
     const { title, subtitle, primaryAction, secondaryAction } = EMPTY_CART_MESSAGES
-
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="max-w-2xl mx-auto text-center"
         >
-            {/* Icon */}
             <EmptyCartIcon />
-
-            {/* Content */}
             <h1 className="text-3xl font-bold text-white mb-4">
                 {title}
             </h1>
             <p className="text-gray-400 mb-8 max-w-md mx-auto">
                 {subtitle}
             </p>
-
-            {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                     href={primaryAction.href}
@@ -45,7 +37,6 @@ export default function EmptyCart() {
         </motion.div>
     )
 }
-
 function EmptyCartIcon() {
     return (
         <div className="relative w-32 h-32 mx-auto mb-8">

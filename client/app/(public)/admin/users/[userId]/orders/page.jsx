@@ -1,29 +1,23 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, ShoppingBag, Package, Search, DollarSign, FileText, Zap, Bot, Layers, RefreshCw, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { adminAPI } from '@/lib/api/admin'
 import Notification from '@/components/shared/Notification'
-
 const BRAND = '#00FF89'
-
-// Product type icons and colors
 const typeIcons = {
     prompt: FileText,
     automation: Zap,
     agent: Bot,
     bundle: Layers
 }
-
 const typeColors = {
     prompt: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
     automation: 'text-purple-400 bg-purple-400/10 border-purple-400/20',
     agent: 'text-[#00FF89] bg-[#00FF89]/10 border-[#00FF89]/20',
     bundle: 'text-[#FFC050] bg-[#FFC050]/10 border-[#FFC050]/20'
 }
-
 function LoadingState() {
     return (
         <div className="flex items-center justify-center py-16">
@@ -34,7 +28,6 @@ function LoadingState() {
         </div>
     )
 }
-
 function EmptyState() {
     return (
         <div className="text-center py-16">
@@ -46,11 +39,9 @@ function EmptyState() {
         </div>
     )
 }
-
 function OrderCard({ order }) {
     const Icon = typeIcons[order.product?.type] || Package
     const colorClass = typeColors[order.product?.type] || 'text-gray-400 bg-gray-400/10 border-gray-400/20'
-
     return (
         <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6 hover:border-[#00FF89]/30 transition-all">
             <div className="flex items-start justify-between mb-4">
@@ -68,7 +59,6 @@ function OrderCard({ order }) {
                     <div className="text-gray-400 text-sm">Order #{String(order.purchaseId || order._id).slice(-6)}</div>
                 </div>
             </div>
-
             <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                     <div className="text-gray-400 text-xs mb-1">Purchase Date</div>
@@ -87,14 +77,12 @@ function OrderCard({ order }) {
                     </div>
                 </div>
             </div>
-
             {order.product?.category && (
                 <div className="mb-4">
                     <div className="text-gray-400 text-xs mb-1">Category</div>
                     <div className="text-white text-sm capitalize">{order.product.category}</div>
                 </div>
             )}
-
             <div className="flex items-center justify-between pt-4 border-t border-gray-800">
                 <Link
                     href={`/products/${order.product?.slug || order.product?._id}`}
@@ -107,10 +95,8 @@ function OrderCard({ order }) {
         </div>
     )
 }
-
 function UserInfo({ user, orderStats }) {
     if (!user) return null
-
     return (
         <div className="bg-[#1a1a1a] border border-gray-800 rounded-xl p-6 mb-6">
             <div className="flex items-center gap-4 mb-4">
@@ -131,7 +117,6 @@ function UserInfo({ user, orderStats }) {
                     </div>
                 </div>
             </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-[#121212] rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
@@ -160,12 +145,10 @@ function UserInfo({ user, orderStats }) {
         </div>
     )
 }
-
 export default function AdminUserOrdersPage() {
     const params = useParams()
     const router = useRouter()
     const userId = params.userId
-
     const [orders, setOrders] = useState([])
     const [user, setUser] = useState(null)
     const [loading, setLoading] = useState(true)
@@ -174,45 +157,33 @@ export default function AdminUserOrdersPage() {
     const [currentPage, setCurrentPage] = useState(1)
     const [totalPages, setTotalPages] = useState(1)
     const [notifications, setNotifications] = useState([])
-
     const showMessage = (message, type = 'info', title = null) => {
         const id = Date.now()
         const notification = { id, type, message, title, duration: 4000 }
         setNotifications((prev) => [...prev, notification])
     }
-
     const removeNotification = (id) => {
         setNotifications((prev) => prev.filter((notification) => notification.id !== id))
     }
-
     const fetchUserAndOrders = async (page = 1) => {
         try {
             setLoading(true)
-
             console.log('Fetching user orders for userId:', userId, 'page:', page, 'filterType:', filterType)
             const response = await adminAPI.users.getOrders(userId, {
                 page,
                 limit: 20,
                 type: filterType !== 'all' ? filterType : undefined
             })
-
             console.log('Combined response:', response)
-
-            // Extract user data (now includes purchase summary)
             setUser(response?.user || null)
-
-            // Extract orders data
             const ordersData = response?.purchases || []
             console.log('Extracted orders data:', ordersData)
             setOrders(ordersData)
             setTotalPages(response?.pagination?.totalPages || 1)
-
         } catch (error) {
             console.error('Failed to fetch user orders:', error)
             console.error('Error details:', error.response?.data || error.message)
             showMessage('Failed to load user orders', 'error')
-            
-            // Fallback: Set empty state
             setUser(null)
             setOrders([])
             setTotalPages(1)
@@ -220,36 +191,28 @@ export default function AdminUserOrdersPage() {
             setLoading(false)
         }
     }
-
     useEffect(() => {
         if (userId) {
             fetchUserAndOrders(1)
         }
     }, [userId, filterType])
-
     useEffect(() => {
         if (currentPage !== 1) {
             fetchUserAndOrders(currentPage)
         }
     }, [currentPage])
-
-    // Filter orders based on search term
     const filteredOrders = orders.filter((order) => {
         if (!searchTerm) return true
         const title = order.product?.title || ''
         const category = order.product?.category || ''
         return title.toLowerCase().includes(searchTerm.toLowerCase()) || category.toLowerCase().includes(searchTerm.toLowerCase())
     })
-
-    // Calculate order statistics
     const orderStats = {
         totalOrders: orders.length,
         totalSpent: orders.reduce((sum, order) => sum + (order.product?.price || 0), 0)
     }
-
     return (
         <div className="min-h-screen bg-[#121212]">
-            {/* Header */}
             <div className="border-b border-gray-800 bg-[#1a1a1a]">
                 <div className="px-6 py-4">
                     <div className="flex items-center gap-4 mb-4">
@@ -269,8 +232,6 @@ export default function AdminUserOrdersPage() {
                             <p className="text-gray-400">View and manage user purchases</p>
                         </div>
                     </div>
-
-                    {/* Search and Filters */}
                     <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                         <div className="flex flex-col sm:flex-row gap-3 flex-1">
                             <div className="relative flex-1 max-w-md">
@@ -304,8 +265,6 @@ export default function AdminUserOrdersPage() {
                     </div>
                 </div>
             </div>
-
-            {/* Notifications */}
             <div className="fixed top-6 right-6 z-50 space-y-3 pointer-events-none">
                 <div className="pointer-events-auto">
                     {notifications.map((notification) => (
@@ -321,16 +280,11 @@ export default function AdminUserOrdersPage() {
                     ))}
                 </div>
             </div>
-
-            {/* Content */}
             <div className="p-6">
-                {/* User Info */}
                 <UserInfo
                     user={user}
                     orderStats={orderStats}
                 />
-
-                {/* Orders Section */}
                 <div className="bg-[#1a1a1a] border border-gray-800 rounded-xl overflow-hidden">
                     <div className="px-6 py-4 border-b border-gray-800">
                         <div className="flex items-center justify-between">
@@ -342,7 +296,6 @@ export default function AdminUserOrdersPage() {
                             )}
                         </div>
                     </div>
-
                     <div className="p-6">
                         {loading ? (
                             <LoadingState />
@@ -358,8 +311,6 @@ export default function AdminUserOrdersPage() {
                                         />
                                     ))}
                                 </div>
-
-                                {/* Pagination */}
                                 {totalPages > 1 && (
                                     <div className="flex items-center justify-center gap-2 mt-8">
                                         <button

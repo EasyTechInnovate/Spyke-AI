@@ -1,5 +1,4 @@
 'use client'
-
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -9,35 +8,26 @@ import { Mail, ArrowRight, ArrowLeft, CheckCircle, AlertCircle, Loader2, Shield,
 import { authAPI } from '@/lib/api/auth'
 import toast from '@/lib/utils/toast'
 import { validateEmail } from '@/lib/utils/utils'
-
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function ForgotPasswordPage() {
     const [notification, setNotification] = useState(null)
-
-    // Show inline notification messages  
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
-        // Auto-dismiss after 5 seconds
         setTimeout(() => setNotification(null), 5000)
     }
-
-    // Clear notification
     const clearNotification = () => setNotification(null)
-
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [emailSent, setEmailSent] = useState(false)
     const [email, setEmail] = useState('')
     const [error, setError] = useState('')
     const [touched, setTouched] = useState(false)
-
     const validateEmailInput = (email) => {
         if (!email) return 'Email is required'
         if (!email.includes('@')) return "Please include an '@' in the email address"
         if (!validateEmail(email)) return 'Please enter a valid email address'
         return ''
     }
-
     const handleEmailChange = (e) => {
         const value = e.target.value
         setEmail(value)
@@ -47,45 +37,36 @@ export default function ForgotPasswordPage() {
             setError(emailError)
         }
     }
-
     const handleBlur = () => {
         setTouched(true)
         const emailError = validateEmailInput(email)
         setError(emailError)
     }
-
     const handleSubmit = async (e) => {
         e.preventDefault()
-        
         setTouched(true)
         const emailError = validateEmailInput(email)
         if (emailError) {
             setError(emailError)
             return
         }
-
         setLoading(true)
         setError('')
-
         try {
             await authAPI.forgotPassword(email)
-
             setEmailSent(true)
             showMessage('Password reset email sent! Check your inbox.', 'success')
         } catch (err) {
             const errorMessage = err?.response?.data?.message || err?.data?.message || err?.message || 'Failed to send reset email'
-
             setError(errorMessage)
             showMessage(errorMessage, 'error')
         } finally {
             setLoading(false)
         }
     }
-
     const handleResendEmail = async () => {
         setLoading(true)
         setError('')
-
         try {
             await authAPI.forgotPassword(email)
             showMessage('Password reset email sent again! Check your inbox.', 'success')
@@ -97,10 +78,8 @@ export default function ForgotPasswordPage() {
             setLoading(false)
         }
     }
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#121212] to-[#1a1a1a] relative overflow-hidden font-league-spartan">
-            {/* Inline Notification */}
             {notification && (
                 <InlineNotification
                     type={notification.type}
@@ -108,18 +87,10 @@ export default function ForgotPasswordPage() {
                     onDismiss={clearNotification}
                 />
             )}
-
-            
-            {/* Animated background effects */}
             <div className="absolute inset-0 overflow-hidden">
-                {/* Primary gradient orbs */}
                 <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-[#00FF89]/20 to-[#00D4FF]/20 rounded-full blur-3xl animate-pulse opacity-60" />
                 <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-r from-[#FF6B6B]/15 to-[#4ECDC4]/15 rounded-full blur-3xl animate-pulse opacity-40" />
-
-                {/* Animated grid pattern */}
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,137,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,137,0.03)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_100%)]" />
-
-                {/* Floating particles */}
                 <div
                     className="absolute top-20 left-20 w-2 h-2 bg-[#00FF89]/40 rounded-full animate-bounce"
                     style={{ animationDelay: '0s', animationDuration: '3s' }}
@@ -133,14 +104,11 @@ export default function ForgotPasswordPage() {
                     style={{ animationDelay: '2s', animationDuration: '5s' }}
                 />
             </div>
-
             <Header />
-
             <main className="relative pt-16 sm:pt-20 lg:pt-24 pb-8 sm:pb-12 lg:pb-16">
                 <Container>
                     <div className="flex min-h-[calc(100vh-120px)] sm:min-h-[calc(100vh-140px)] lg:min-h-[calc(100vh-160px)] items-center justify-center px-4 sm:px-6 lg:px-8">
                         <div className="w-full max-w-2xl mx-auto">
-                            {/* Back to sign in link */}
                             <div className="mb-6 sm:mb-8">
                                 <Link
                                     href="/signin"
@@ -150,16 +118,11 @@ export default function ForgotPasswordPage() {
                                     <span>Back to Sign In</span>
                                 </Link>
                             </div>
-
-                            {/* Main card */}
                             <div className="relative">
-                                {/* Glow effect */}
                                 <div className="absolute -inset-1 bg-gradient-to-r from-[#00FF89]/20 via-[#00D4FF]/20 to-[#00FF89]/20 rounded-2xl blur-xl opacity-60" />
-                                
                                 <div className="relative bg-[#1a1a1a]/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 sm:p-12 shadow-2xl">
                                     {!emailSent ? (
                                         <>
-                                            {/* Header */}
                                             <div className="text-center mb-8 sm:mb-10">
                                                 <div className="inline-flex items-center justify-center w-16 h-16 bg-[#00FF89]/10 border border-[#00FF89]/20 rounded-full mb-6">
                                                     <Key className="w-8 h-8 text-[#00FF89]" />
@@ -171,10 +134,7 @@ export default function ForgotPasswordPage() {
                                                     No worries! Enter your email address and we'll send you a link to reset your password.
                                                 </p>
                                             </div>
-
-                                            {/* Form */}
                                             <form onSubmit={handleSubmit} className="space-y-6">
-                                                {/* Error message */}
                                                 {error && (
                                                     <div className="relative">
                                                         <div className="absolute -inset-0.5 bg-gradient-to-r from-red-500/50 to-orange-500/50 rounded-lg blur opacity-60" />
@@ -184,8 +144,6 @@ export default function ForgotPasswordPage() {
                                                         </div>
                                                     </div>
                                                 )}
-
-                                                {/* Email input */}
                                                 <div className="space-y-2">
                                                     <label className="block text-sm font-bold text-gray-300 pl-1">
                                                         Email Address
@@ -208,8 +166,6 @@ export default function ForgotPasswordPage() {
                                                         />
                                                     </div>
                                                 </div>
-
-                                                {/* Submit button */}
                                                 <button
                                                     type="submit"
                                                     disabled={loading || !email}
@@ -235,7 +191,6 @@ export default function ForgotPasswordPage() {
                                         </>
                                     ) : (
                                         <>
-                                            {/* Success state */}
                                             <div className="text-center">
                                                 <div className="inline-flex items-center justify-center w-16 h-16 bg-[#00FF89]/10 border border-[#00FF89]/20 rounded-full mb-6">
                                                     <CheckCircle className="w-8 h-8 text-[#00FF89]" />
@@ -246,8 +201,6 @@ export default function ForgotPasswordPage() {
                                                 <p className="text-lg text-gray-300 leading-relaxed mb-8">
                                                     We've sent a password reset link to <span className="text-[#00FF89] font-semibold">{email}</span>
                                                 </p>
-
-                                                {/* Instructions */}
                                                 <div className="bg-[#00FF89]/10 border border-[#00FF89]/20 rounded-xl p-6 mb-8 text-left">
                                                     <h3 className="text-white font-bold text-lg mb-3">What's next?</h3>
                                                     <div className="space-y-3">
@@ -271,8 +224,6 @@ export default function ForgotPasswordPage() {
                                                         </div>
                                                     </div>
                                                 </div>
-
-                                                {/* Security note */}
                                                 <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mb-8">
                                                     <div className="flex items-start gap-3">
                                                         <Shield className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
@@ -284,8 +235,6 @@ export default function ForgotPasswordPage() {
                                                         </div>
                                                     </div>
                                                 </div>
-
-                                                {/* Action buttons */}
                                                 <div className="space-y-4">
                                                     <button
                                                         onClick={handleResendEmail}
@@ -304,7 +253,6 @@ export default function ForgotPasswordPage() {
                                                             </span>
                                                         )}
                                                     </button>
-
                                                     <Link
                                                         href="/signin"
                                                         className="inline-flex items-center justify-center gap-2 w-full py-3 px-6 bg-gradient-to-r from-[#00FF89] to-[#00D4FF] text-[#121212] rounded-xl font-bold transition-all duration-300 hover:from-[#00D4FF] hover:to-[#00FF89] transform hover:scale-[1.02]"
@@ -318,8 +266,6 @@ export default function ForgotPasswordPage() {
                                     )}
                                 </div>
                             </div>
-
-                            {/* Footer links */}
                             <div className="mt-8 text-center">
                                 <p className="text-gray-400 text-sm">
                                     Need help?{' '}

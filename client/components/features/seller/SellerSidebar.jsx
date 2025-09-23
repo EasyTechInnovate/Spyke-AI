@@ -1,5 +1,4 @@
 'use client'
-
 import React, { useState, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -22,11 +21,6 @@ import {
     Banknote
 } from 'lucide-react'
 import { logoutService } from '@/lib/services/logout'
-
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
 const NAVIGATION_ITEMS = [
     {
         id: 'dashboard',
@@ -79,11 +73,6 @@ const NAVIGATION_ITEMS = [
         href: '/seller/settings'
     }
 ]
-
-// ============================================================================
-// HELPER COMPONENTS
-// ============================================================================
-
 const BrandHeader = ({ isCollapsed }) => (
     <div className={`px-6 py-8 border-b border-white/5 flex-shrink-0 transition-all duration-300 ${isCollapsed ? 'px-3' : ''}`}>
         <div className="flex items-center justify-between">
@@ -96,7 +85,6 @@ const BrandHeader = ({ isCollapsed }) => (
                 </div>
                 <p className="text-xs text-white/40 font-light tracking-wide">Creative Dashboard</p>
             </div>
-
             <div className={`items-center justify-center w-full transition-all duration-300 ${isCollapsed ? 'flex' : 'hidden'}`}>
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#00FF89] to-[#00FF89]/80 flex items-center justify-center">
                     <span className="text-black font-bold text-xs">S</span>
@@ -105,7 +93,6 @@ const BrandHeader = ({ isCollapsed }) => (
         </div>
     </div>
 )
-
 const UserProfile = ({ sellerName, getInitials, isCollapsed }) => (
     <div className={`px-6 py-6 border-b border-white/5 flex-shrink-0 transition-all duration-300 ${isCollapsed ? 'px-3' : ''}`}>
         <div className={`flex items-center gap-4 transition-all duration-300 ${isCollapsed ? 'justify-center gap-0' : ''}`}>
@@ -134,7 +121,6 @@ const UserProfile = ({ sellerName, getInitials, isCollapsed }) => (
         </div>
     </div>
 )
-
 const MobileUserProfile = ({ sellerName, getInitials }) => (
     <div className="px-6 py-6 border-b border-white/5 flex-shrink-0">
         <div className="flex items-center gap-4">
@@ -155,7 +141,6 @@ const MobileUserProfile = ({ sellerName, getInitials }) => (
         </div>
     </div>
 )
-
 const CollapseButton = ({ isCollapsed, onToggle }) => (
     <button
         onClick={onToggle}
@@ -164,7 +149,6 @@ const CollapseButton = ({ isCollapsed, onToggle }) => (
         {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
     </button>
 )
-
 const SupportCard = ({ isCollapsed }) => (
     <div
         className={`bg-gradient-to-r from-[#FFC050]/5 to-transparent rounded-2xl border border-[#FFC050]/10 group hover:border-[#FFC050]/20 transition-all duration-300 ${
@@ -179,16 +163,13 @@ const SupportCard = ({ isCollapsed }) => (
         </div>
     </div>
 )
-
 const ActionButton = ({ onClick, icon: Icon, label, variant = 'secondary', isCollapsed, title }) => {
     const baseClasses = "w-full group flex items-center rounded-2xl font-medium text-sm tracking-tight transition-all duration-300"
     const sizeClasses = isCollapsed ? 'justify-center px-2 py-2' : 'gap-3 px-4 py-3'
-    
     const variantClasses = {
         primary: 'bg-gradient-to-r from-[#00FF89] to-[#00FF89]/90 text-black font-semibold hover:shadow-lg hover:shadow-[#00FF89]/20 hover:scale-[1.02]',
         secondary: 'text-white/60 hover:text-white hover:bg-white/5'
     }
-
     return (
         <button
             onClick={onClick}
@@ -199,23 +180,17 @@ const ActionButton = ({ onClick, icon: Icon, label, variant = 'secondary', isCol
         </button>
     )
 }
-
 const NavigationItem = ({ item, isActive, isCollapsed, onToggleGroup, isExpanded }) => {
     const Icon = item.icon
     const isGroup = !!item.subItems
-
-    // Base classes for navigation items
     const baseClasses = "group flex items-center rounded-2xl transition-all duration-300"
     const sizeClasses = isCollapsed ? 'justify-center px-2 py-2' : (isGroup ? 'justify-between px-4 py-3' : 'gap-3 px-4 py-3')
-    
     const getStateClasses = (active) => {
         if (item.disabled) return 'text-white/30 cursor-not-allowed'
         return active 
             ? 'bg-[#00FF89] text-black shadow-lg shadow-[#00FF89]/20'
             : 'text-white/60 hover:text-white hover:bg-white/5'
     }
-
-    // Render disabled item
     if (item.disabled) {
         return (
             <div className={`${baseClasses} ${sizeClasses} ${getStateClasses(false)}`}>
@@ -233,8 +208,6 @@ const NavigationItem = ({ item, isActive, isCollapsed, onToggleGroup, isExpanded
             </div>
         )
     }
-
-    // Render group item
     if (isGroup) {
         return (
             <div className="space-y-1">
@@ -252,12 +225,11 @@ const NavigationItem = ({ item, isActive, isCollapsed, onToggleGroup, isExpanded
                         <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                     )}
                 </button>
-
                 {!isCollapsed && isExpanded && (
                     <div className="pl-4 space-y-1 pt-1">
                         {item.subItems.map((subItem) => {
                             const SubIcon = subItem.icon
-                            const subIsActive = isActive // This would need proper sub-item active logic
+                            const subIsActive = isActive 
                             return (
                                 <Link
                                     key={subItem.id}
@@ -277,8 +249,6 @@ const NavigationItem = ({ item, isActive, isCollapsed, onToggleGroup, isExpanded
             </div>
         )
     }
-
-    // Render regular link item
     return (
         <Link
             href={item.href}
@@ -291,11 +261,9 @@ const NavigationItem = ({ item, isActive, isCollapsed, onToggleGroup, isExpanded
         </Link>
     )
 }
-
 const MobileNavigationItem = ({ item, isActive, onToggleGroup, isExpanded, onCloseSidebar }) => {
     const Icon = item.icon
     const isGroup = !!item.subItems
-
     if (item.disabled) {
         return (
             <div className="group flex items-center justify-between px-4 py-3 rounded-2xl text-white/30 cursor-not-allowed transition-all duration-300">
@@ -309,7 +277,6 @@ const MobileNavigationItem = ({ item, isActive, onToggleGroup, isExpanded, onClo
             </div>
         )
     }
-
     if (isGroup) {
         return (
             <div className="space-y-1">
@@ -324,12 +291,11 @@ const MobileNavigationItem = ({ item, isActive, onToggleGroup, isExpanded, onClo
                     </div>
                     <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                 </button>
-
                 {isExpanded && (
                     <div className="pl-4 space-y-1 pt-1">
                         {item.subItems.map((subItem) => {
                             const SubIcon = subItem.icon
-                            const subIsActive = isActive // Proper sub-item active logic would go here
+                            const subIsActive = isActive 
                             return (
                                 <Link
                                     key={subItem.id}
@@ -350,7 +316,6 @@ const MobileNavigationItem = ({ item, isActive, onToggleGroup, isExpanded, onClo
             </div>
         )
     }
-
     return (
         <Link
             href={item.href}
@@ -365,11 +330,6 @@ const MobileNavigationItem = ({ item, isActive, onToggleGroup, isExpanded, onClo
         </Link>
     )
 }
-
-// ============================================================================
-// MAIN COMPONENT
-// ============================================================================
-
 export default function SellerSidebar({ 
     currentPath = '/profile', 
     sellerName = '', 
@@ -380,11 +340,6 @@ export default function SellerSidebar({
 }) {
     const router = useRouter()
     const [expandedMenus, setExpandedMenus] = useState([])
-
-    // ========================================================================
-    // MEMOIZED VALUES
-    // ========================================================================
-
     const getInitials = useCallback((name) => {
         if (!name) return 'S'
         return name
@@ -394,28 +349,20 @@ export default function SellerSidebar({
             .toUpperCase()
             .slice(0, 2)
     }, [])
-
     const isActive = useCallback((href) => {
         const cleanPath = currentPath.replace('/seller', '')
         const cleanHref = href.replace('/seller', '')
         return cleanPath === cleanHref || (cleanHref !== '' && cleanPath.startsWith(cleanHref))
     }, [currentPath])
-
     const navigationWithActiveState = useMemo(() => {
         return NAVIGATION_ITEMS.map(item => ({
             ...item,
             isActive: item.href ? isActive(item.href) : item.subItems?.some(sub => isActive(sub.href))
         }))
     }, [isActive])
-
-    // ========================================================================
-    // EVENT HANDLERS
-    // ========================================================================
-
     const handleToggleCollapse = useCallback(() => {
         setIsCollapsed?.(prev => !prev)
     }, [setIsCollapsed])
-
     const handleToggleGroup = useCallback((menuId) => {
         setExpandedMenus(prev => 
             prev.includes(menuId) 
@@ -423,38 +370,26 @@ export default function SellerSidebar({
                 : [...prev, menuId]
         )
     }, [])
-
     const handleSwitchToBuyer = useCallback(() => {
         setSidebarOpen?.(false)
         router.push('/explore')
     }, [router, setSidebarOpen])
-
     const handleLogout = useCallback(async () => {
         await logoutService.logout()
     }, [])
-
     const handleCloseMobileSidebar = useCallback(() => {
         setSidebarOpen?.(false)
     }, [setSidebarOpen])
-
-    // ========================================================================
-    // RENDER
-    // ========================================================================
-
     return (
         <>
-            {/* Desktop Sidebar */}
             <aside
                 className={`hidden lg:flex fixed top-0 left-0 z-30 h-full bg-gradient-to-b from-black/95 to-black/98 backdrop-blur-xl border-r border-white/5 transition-all duration-300 ease-out flex-col shadow-2xl ${
                     isCollapsed ? 'w-20' : 'w-64'
                 }`}
                 aria-label="Seller navigation sidebar">
-                
                 <CollapseButton isCollapsed={isCollapsed} onToggle={handleToggleCollapse} />
                 <BrandHeader isCollapsed={isCollapsed} />
                 <UserProfile sellerName={sellerName} getInitials={getInitials} isCollapsed={isCollapsed} />
-
-                {/* Navigation */}
                 <nav className={`flex-1 overflow-y-auto py-4 space-y-1 transition-all duration-300 ${isCollapsed ? 'px-2' : 'px-4'}`}>
                     {navigationWithActiveState.map(item => (
                         <NavigationItem
@@ -467,13 +402,10 @@ export default function SellerSidebar({
                         />
                     ))}
                 </nav>
-
-                {/* Bottom Actions */}
                 <div className="flex-shrink-0 border-t border-white/5 bg-gradient-to-t from-black/50 to-transparent backdrop-blur-sm">
                     <div className={`pt-4 pb-2 transition-all duration-300 ${isCollapsed ? 'px-2' : 'px-4'}`}>
                         <SupportCard isCollapsed={isCollapsed} />
                     </div>
-
                     <div className={`pb-4 space-y-2 transition-all duration-300 ${isCollapsed ? 'px-2' : 'px-4'}`}>
                         <ActionButton
                             onClick={handleSwitchToBuyer}
@@ -494,15 +426,11 @@ export default function SellerSidebar({
                     </div>
                 </div>
             </aside>
-
-            {/* Mobile Sidebar */}
             <aside
                 className={`lg:hidden fixed top-0 left-0 z-50 h-full w-80 bg-gradient-to-b from-black/95 to-black/98 backdrop-blur-xl border-r border-white/5 transition-transform duration-300 ease-out flex flex-col shadow-2xl ${
                     sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 }`}
                 aria-label="Seller navigation sidebar">
-                
-                {/* Mobile Header */}
                 <div className="px-6 py-6 border-b border-white/5 flex-shrink-0">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
@@ -522,8 +450,6 @@ export default function SellerSidebar({
                     </div>
                 </div>
                 <MobileUserProfile sellerName={sellerName} getInitials={getInitials} />
-
-                {/* Mobile Navigation */}
                 <nav className="flex-1 overflow-y-auto py-4 px-4 space-y-1">
                     {navigationWithActiveState.map(item => (
                         <MobileNavigationItem
@@ -536,13 +462,10 @@ export default function SellerSidebar({
                         />
                     ))}
                 </nav>
-
-                {/* Mobile Bottom Actions */}
                 <div className="flex-shrink-0 border-t border-white/5 bg-gradient-to-t from-black/50 to-transparent backdrop-blur-sm">
                     <div className="pt-4 pb-2 px-4">
                         <SupportCard isCollapsed={false} />
                     </div>
-
                     <div className="pb-4 px-4 space-y-2">
                         <ActionButton
                             onClick={handleSwitchToBuyer}
@@ -564,4 +487,3 @@ export default function SellerSidebar({
         </>
     )
 }
-

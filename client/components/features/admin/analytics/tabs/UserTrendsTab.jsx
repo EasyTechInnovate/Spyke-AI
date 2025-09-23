@@ -1,20 +1,15 @@
 'use client'
-
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Users, TrendingUp, Activity, BarChart3, Target, UserPlus, Zap } from 'lucide-react'
 import { ResponsiveContainer, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip, Area, Bar, Line, PieChart, Pie, Cell, BarChart } from 'recharts'
-
 const formatNumber = (num) => {
     return new Intl.NumberFormat('en-US').format(num || 0)
 }
-
 const formatPercentage = (num) => {
     return `${(num || 0).toFixed(1)}%`
 }
-
 const clamp = (num, min, max) => Math.min(Math.max(num ?? 0, min), max)
-
 const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null
     return (
@@ -28,24 +23,17 @@ const CustomTooltip = ({ active, payload, label }) => {
         </div>
     )
 }
-
 export const UserTrendsTab = ({ analyticsData, timeRange, loading }) => {
     const processedData = useMemo(() => {
         if (!analyticsData) return null
-
-        // Handle multiple possible data structures
         const data = analyticsData.data || analyticsData
-        
         if (!data || !data.summary) return null
-
         const { summary, userRegistrations, userActivity, roleDistribution } = data
-
         const registrationMap = new Map()
         userRegistrations?.forEach(reg => {
             const date = reg._id.date
             registrationMap.set(date, reg.count)
         })
-
         const activityMap = new Map()
         userActivity?.forEach(activity => {
             const date = activity._id.date
@@ -54,7 +42,6 @@ export const UserTrendsTab = ({ analyticsData, timeRange, loading }) => {
                 activeUsers: activity.activeUserCount
             })
         })
-
         const getDaysFromTimeRange = (period) => {
             switch (period) {
                 case '7d': return 7
@@ -64,22 +51,18 @@ export const UserTrendsTab = ({ analyticsData, timeRange, loading }) => {
                 default: return 30
             }
         }
-
         const days = getDaysFromTimeRange(timeRange)
         const endDate = new Date()
         const startDate = new Date()
         startDate.setDate(endDate.getDate() - (days - 1))
-
         const timeSeriesData = []
         for (let i = 0; i < days; i++) {
             const currentDate = new Date(startDate)
             currentDate.setDate(startDate.getDate() + i)
             const dateString = currentDate.toISOString().split('T')[0]
             const displayDate = currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-
             const registrations = registrationMap.get(dateString) || 0
             const activity = activityMap.get(dateString) || { purchases: 0, activeUsers: 0 }
-
             timeSeriesData.push({
                 date: displayDate,
                 registrations,
@@ -87,31 +70,26 @@ export const UserTrendsTab = ({ analyticsData, timeRange, loading }) => {
                 activeUsers: activity.activeUsers
             })
         }
-
         const roleAggregation = new Map()
         roleDistribution?.forEach(role => {
             const roleName = role._id.role
             const current = roleAggregation.get(roleName) || 0
             roleAggregation.set(roleName, current + role.count)
         })
-
         const roleData = Array.from(roleAggregation.entries()).map(([role, count]) => ({
             role: role.charAt(0).toUpperCase() + role.slice(1),
             count,
             percentage: (count / summary.totalUsers) * 100
         }))
-
         const totalPurchases = userActivity?.reduce((sum, activity) => sum + activity.purchases, 0) || 0
         const totalActiveUserDays = userActivity?.reduce((sum, activity) => sum + activity.activeUserCount, 0) || 0
         const avgPurchasesPerActiveUser = totalActiveUserDays > 0 ? totalPurchases / totalActiveUserDays : 0
-
         const dailyActivityData = userActivity?.map(activity => ({
             date: new Date(activity._id.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
             purchases: activity.purchases,
             activeUsers: activity.activeUserCount,
             purchasesPerUser: activity.activeUserCount > 0 ? activity.purchases / activity.activeUserCount : 0
         })).sort((a, b) => new Date(a.date) - new Date(b.date)) || []
-
         return {
             summary: {
                 ...summary,
@@ -124,7 +102,6 @@ export const UserTrendsTab = ({ analyticsData, timeRange, loading }) => {
             dailyActivityData
         }
     }, [analyticsData, timeRange])
-
     if (loading) {
         return (
             <div className="space-y-6">
@@ -147,7 +124,6 @@ export const UserTrendsTab = ({ analyticsData, timeRange, loading }) => {
             </div>
         )
     }
-
     if (!processedData) {
         return (
             <div className="space-y-6">
@@ -159,10 +135,8 @@ export const UserTrendsTab = ({ analyticsData, timeRange, loading }) => {
             </div>
         )
     }
-
     const { summary, timeSeriesData, roleData, dailyActivityData } = processedData
     const CHART_COLORS = ['#00FF89', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981']
-
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -181,7 +155,6 @@ export const UserTrendsTab = ({ analyticsData, timeRange, loading }) => {
                         +{formatNumber(summary.newUsers)} new ({formatPercentage(summary.growthRate)})
                     </div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -198,7 +171,6 @@ export const UserTrendsTab = ({ analyticsData, timeRange, loading }) => {
                         {formatPercentage(summary.activationRate)} activation rate
                     </div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -215,7 +187,6 @@ export const UserTrendsTab = ({ analyticsData, timeRange, loading }) => {
                         User retention
                     </div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -232,7 +203,6 @@ export const UserTrendsTab = ({ analyticsData, timeRange, loading }) => {
                         Total transactions
                     </div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -251,7 +221,6 @@ export const UserTrendsTab = ({ analyticsData, timeRange, loading }) => {
                         Per active user
                     </div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -269,7 +238,6 @@ export const UserTrendsTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                 </motion.div>
             </div>
-
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -339,7 +307,6 @@ export const UserTrendsTab = ({ analyticsData, timeRange, loading }) => {
                     </ResponsiveContainer>
                 </div>
             </motion.div>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -377,7 +344,6 @@ export const UserTrendsTab = ({ analyticsData, timeRange, loading }) => {
                         )}
                     </div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -416,7 +382,6 @@ export const UserTrendsTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                 </motion.div>
             </div>
-
             {roleData.length > 0 && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}

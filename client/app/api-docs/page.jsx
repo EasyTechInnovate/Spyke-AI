@@ -1,21 +1,17 @@
 'use client'
-
 import React, { useState, useEffect, useMemo } from 'react'
 import { CheckCircle, XCircle, Clock, Database, Globe, Activity, Server, Zap, Shield, Code, Terminal, GitBranch, Monitor } from 'lucide-react'
 import { appConfig, getTotalEndpoints, buildApiUrl } from '@/lib/config'
 import { SpykeLogo } from '@/components/Logo'
 import Container from '@/components/shared/layout/Container'
-
 export default function APIPage() {
     const [serviceStatus, setServiceStatus] = useState({})
     const [loading, setLoading] = useState(true)
     const [mounted, setMounted] = useState(false)
     const [selectedService, setSelectedService] = useState(null)
-
     useEffect(() => {
         setMounted(true)
     }, [])
-
     const checkServiceHealth = async (service) => {
         const startTime = Date.now()
         try {
@@ -25,10 +21,8 @@ export default function APIPage() {
                     'Content-Type': 'application/json'
                 }
             })
-
             const endTime = Date.now()
             const responseTime = endTime - startTime
-
             if (response.ok) {
                 const data = await response.json()
                 return {
@@ -56,28 +50,20 @@ export default function APIPage() {
             }
         }
     }
-
     useEffect(() => {
         const checkAllServices = async () => {
             const statuses = {}
-
             for (const service of appConfig.services) {
                 const result = await checkServiceHealth(service)
                 statuses[service.id] = result
             }
-
             setServiceStatus(statuses)
             setLoading(false)
         }
-
         checkAllServices()
-
         const interval = setInterval(checkAllServices, appConfig.api.healthCheckInterval)
-
         return () => clearInterval(interval)
     }, [])
-
-    // Memoized computed values
     const computedStats = useMemo(() => {
         const totalServices = appConfig.services.length
         const totalEndpoints = getTotalEndpoints()
@@ -86,7 +72,6 @@ export default function APIPage() {
         const avgResponseTime = Object.values(serviceStatus)
             .filter((s) => s?.responseTime)
             .reduce((acc, s, _, arr) => acc + s.responseTime / arr.length, 0)
-
         return {
             totalServices,
             totalEndpoints,
@@ -95,19 +80,15 @@ export default function APIPage() {
             avgResponseTime: Math.round(avgResponseTime) || 0
         }
     }, [serviceStatus])
-
     const overallStatus = useMemo(() => {
         if (loading) return 'checking'
-
         const statuses = Object.values(serviceStatus)
         const onlineServices = statuses.filter((s) => s.status === 'online').length
         const totalServices = statuses.length
-
         if (onlineServices === totalServices) return 'all-operational'
         if (onlineServices > totalServices / 2) return 'partial-outage'
         return 'major-outage'
     }, [loading, serviceStatus])
-
     const statusMessage = useMemo(() => {
         switch (overallStatus) {
             case 'checking':
@@ -122,7 +103,6 @@ export default function APIPage() {
                 return 'Status Unknown'
         }
     }, [overallStatus])
-
     const statusColor = useMemo(() => {
         switch (overallStatus) {
             case 'checking':
@@ -137,12 +117,10 @@ export default function APIPage() {
                 return 'text-gray-500 bg-gray-500/10 border-gray-500/30'
         }
     }, [overallStatus])
-
     const healthData = useMemo(() => {
         const healthService = serviceStatus['health'] || Object.values(serviceStatus).find((s) => s?.status === 'online' && s?.data?.data)
         return healthService?.data?.data || null
     }, [serviceStatus])
-
     const StatusIndicator = ({ status, compact = false }) => {
         if (loading) {
             return (
@@ -152,7 +130,6 @@ export default function APIPage() {
                 </div>
             )
         }
-
         if (status === 'online') {
             return (
                 <div className={`flex items-center ${compact ? 'text-sm' : ''}`}>
@@ -161,7 +138,6 @@ export default function APIPage() {
                 </div>
             )
         }
-
         return (
             <div className={`flex items-center ${compact ? 'text-sm' : ''}`}>
                 <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
@@ -169,52 +145,39 @@ export default function APIPage() {
             </div>
         )
     }
-
     const formatMemory = (bytes) => {
         if (!bytes) return 'N/A'
         if (typeof bytes === 'string' && bytes.includes('MB')) return bytes
-
         const mb = bytes / (1024 * 1024)
         return `${mb.toFixed(2)} MB`
     }
-
     const formatCpuUsage = (cpuArray) => {
         if (!cpuArray || !Array.isArray(cpuArray)) return 'N/A'
         const average = cpuArray.reduce((sum, cpu) => sum + cpu, 0) / cpuArray.length
         return `${average.toFixed(1)}%`
     }
-
     const formatUptime = (uptime) => {
         if (!uptime) return 'N/A'
         if (typeof uptime === 'string') return uptime
-
         const seconds = Math.floor(uptime / 1000)
         const minutes = Math.floor(seconds / 60)
         const hours = Math.floor(minutes / 60)
-
         if (hours > 0) return `${hours}h ${minutes % 60}m`
         if (minutes > 0) return `${minutes}m ${seconds % 60}s`
         return `${seconds}s`
     }
-
     return (
         <div className="min-h-screen bg-[#121212]">
-            {/* Header Section */}
             <section className="relative py-16 border-b border-gray-800">
                 <Container>
                     <div className="text-center max-w-4xl mx-auto">
                         <div className="mb-8"></div>
-
                         <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">{appConfig.company.fullName} Developer API</h1>
-
                         <div className="text-[#00FF89] mb-6 font-mono text-lg">v2.1.0 • REST API • GraphQL Ready</div>
-
                         <p className="text-lg text-gray-300 leading-relaxed mb-8">
                             Production-grade APIs for AI marketplace integration. Real-time monitoring, comprehensive documentation, and
                             developer-first experience.
                         </p>
-
-                        {/* Overall Status */}
                         <div className={`inline-flex items-center px-8 py-4 rounded-xl border ${statusColor}`}>
                             <div className="flex items-center space-x-3">
                                 {loading ? (
@@ -227,8 +190,6 @@ export default function APIPage() {
                                 <span className="text-xl font-semibold font-mono">{statusMessage}</span>
                             </div>
                         </div>
-
-                        {/* Quick Access Links */}
                         <div className="flex items-center justify-center gap-4 mt-8 flex-wrap">
                             <a
                                 href="#documentation"
@@ -252,8 +213,6 @@ export default function APIPage() {
                     </div>
                 </Container>
             </section>
-
-            {/* Technical Stats */}
             <section className="py-16">
                 <Container>
                     <div className="grid md:grid-cols-5 gap-6 text-center mb-16">
@@ -283,19 +242,15 @@ export default function APIPage() {
                             <div className="text-gray-400 font-medium text-sm">Avg Response</div>
                         </div>
                     </div>
-
-                    {/* Service Status Grid */}
                     <div className="grid lg:grid-cols-2 gap-8 mb-16">
                         {appConfig.services.map((service, index) => {
                             const Icon = service.icon
                             const status = serviceStatus[service.id]
-
                             return (
                                 <div
                                     key={service.id}
                                     className="bg-[#1f1f1f] rounded-xl border border-gray-800 hover:border-[#00FF89]/30 transition-all duration-300 overflow-hidden group cursor-pointer"
                                     onClick={() => setSelectedService(selectedService === service.id ? null : service.id)}>
-                                    {/* Service Header */}
                                     <div className="p-6 border-b border-gray-800">
                                         <div className="flex items-start justify-between">
                                             <div className="flex items-center space-x-4">
@@ -325,8 +280,6 @@ export default function APIPage() {
                                             </div>
                                         </div>
                                     </div>
-
-                                    {/* Endpoints List */}
                                     <div className="p-6">
                                         <div className="flex items-center justify-between mb-4">
                                             <h4 className="text-sm font-semibold text-white font-mono">API Endpoints</h4>
@@ -334,7 +287,6 @@ export default function APIPage() {
                                                 Base URL: <span className="text-[#00FF89]">/api/v2/{service.id}</span>
                                             </div>
                                         </div>
-
                                         <div className="space-y-2">
                                             {service.endpoints
                                                 .slice(0, selectedService === service.id ? service.endpoints.length : 3)
@@ -355,7 +307,6 @@ export default function APIPage() {
                                                         </div>
                                                     </div>
                                                 ))}
-
                                             {service.endpoints.length > 3 && selectedService !== service.id && (
                                                 <div className="text-center py-2">
                                                     <button className="text-xs text-[#00FF89] hover:text-[#FFC050] font-mono transition-colors">
@@ -364,8 +315,6 @@ export default function APIPage() {
                                                 </div>
                                             )}
                                         </div>
-
-                                        {/* Code Example */}
                                         {selectedService === service.id && (
                                             <div className="mt-6">
                                                 <h5 className="text-sm font-semibold text-white font-mono mb-3">Usage Example</h5>
@@ -384,8 +333,6 @@ export default function APIPage() {
                             )
                         })}
                     </div>
-
-                    {/* Technical Information */}
                     <div className="bg-[#1f1f1f] rounded-xl p-8 border border-gray-800 hover:border-[#00FF89]/30 transition-colors">
                         <h3 className="text-2xl font-bold text-[#00FF89] mb-6 text-center font-mono">Technical Specifications</h3>
                         <div className="grid md:grid-cols-3 gap-6">
@@ -414,8 +361,6 @@ export default function APIPage() {
                                 </div>
                             </div>
                         </div>
-
-                        {/* API Version Info */}
                         <div className="mt-8 pt-6 border-t border-gray-800">
                             <div className="grid md:grid-cols-2 gap-6">
                                 <div>

@@ -1,8 +1,6 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import { BarChart3, Package, ShoppingCart, DollarSign, Users, TrendingUp } from 'lucide-react'
-
 const LoadingCard = ({ icon: Icon = BarChart3, delay = 0 }) => (
     <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -24,7 +22,6 @@ const LoadingCard = ({ icon: Icon = BarChart3, delay = 0 }) => (
             </div>
     </motion.div>
 )
-
 const LoadingChart = ({ title, delay = 0 }) => (
     <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -53,7 +50,6 @@ const LoadingChart = ({ title, delay = 0 }) => (
         </div>
     </motion.div>
 )
-
 const LoadingList = ({ delay = 0 }) => (
     <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -88,7 +84,6 @@ const LoadingList = ({ delay = 0 }) => (
         </div>
     </motion.div>
 )
-
 export const AnalyticsLoadingScreen = ({ variant = 'overview' }) => {
     if (variant === 'overview') {
         return (
@@ -99,12 +94,10 @@ export const AnalyticsLoadingScreen = ({ variant = 'overview' }) => {
                     <LoadingCard icon={Package} delay={0.2} />
                     <LoadingCard icon={TrendingUp} delay={0.3} />
                 </div>
-
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <LoadingList delay={0.4} />
                     <LoadingChart title="Revenue Trends" delay={0.5} />
                 </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <LoadingCard delay={0.6} />
                     <LoadingCard delay={0.7} />
@@ -113,7 +106,6 @@ export const AnalyticsLoadingScreen = ({ variant = 'overview' }) => {
             </div>
         )
     }
-
     if (variant === 'products') {
         return (
             <div className="space-y-8">
@@ -159,7 +151,6 @@ export const AnalyticsLoadingScreen = ({ variant = 'overview' }) => {
             </div>
         )
     }
-
     return (
         <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

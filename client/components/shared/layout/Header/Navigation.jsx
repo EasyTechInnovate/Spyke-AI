@@ -1,13 +1,10 @@
 'use client'
-
 import React, { useRef } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { TrendingUp } from 'lucide-react'
-
 export default function Navigation({ showBecomeSeller }) {
     const navRef = useRef(null)
-
     return (
         <nav
             ref={navRef}
@@ -21,7 +18,6 @@ export default function Navigation({ showBecomeSeller }) {
                     Explore
                 </Link>
             </motion.div>
-
             <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}>
@@ -31,7 +27,6 @@ export default function Navigation({ showBecomeSeller }) {
                     Sellers
                 </Link>
             </motion.div>
-
             <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}>
@@ -41,7 +36,6 @@ export default function Navigation({ showBecomeSeller }) {
                     Categories
                 </Link>
             </motion.div>
-
             <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}>
@@ -51,7 +45,6 @@ export default function Navigation({ showBecomeSeller }) {
                     How It Works
                 </Link>
             </motion.div>
-
             <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}>
@@ -63,7 +56,6 @@ export default function Navigation({ showBecomeSeller }) {
                     Hire
                 </a>
             </motion.div>
-
             {showBecomeSeller && (
                 <motion.div
                     whileHover={{ scale: 1.05 }}
@@ -79,4 +71,3 @@ export default function Navigation({ showBecomeSeller }) {
         </nav>
     )
 }
-

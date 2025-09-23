@@ -156,10 +156,12 @@ export const isValidPhoneNumber = (phoneNumber) => {
   return countryCode !== null
 }
 
-export default {
+const countryCodeUtils = {
   getCountryCodeFromPhone,
   formatPhoneNumber,
   getCountryFromPhone,
   isValidPhoneNumber,
   COUNTRY_CODES
 }
+
+export default countryCodeUtils

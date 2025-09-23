@@ -1,47 +1,35 @@
 'use client'
-
 import { useState, useMemo, useEffect, useRef, memo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Star, ThumbsUp, MoreVertical, Flag, CheckCircle, Calendar, MessageSquare, Camera, ChevronDown, ChevronUp, Filter, Eye } from 'lucide-react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { formatDistanceToNow } from '@/lib/utils/date'
-
 const fadeInUp = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
     exit: { opacity: 0, y: -20 }
 }
-
-// Memoized Rating Bar Component for better performance
 const RatingBar = memo(function RatingBar({ percentage, delay = 0 }) {
     const [width, setWidth] = useState(0)
     const [isVisible, setIsVisible] = useState(false)
-
     useEffect(() => {
-        // Reset on percentage change
         setWidth(0)
         setIsVisible(false)
-
-        // Small delay to ensure DOM is ready
         const visibilityTimer = setTimeout(() => {
             setIsVisible(true)
         }, 50)
-
-        // Animate width after visibility
         const widthTimer = setTimeout(
             () => {
                 setWidth(percentage)
             },
             50 + delay * 100
         )
-
         return () => {
             clearTimeout(visibilityTimer)
             clearTimeout(widthTimer)
         }
     }, [percentage, delay])
-
     return (
         <div
             className="h-full bg-yellow-500 rounded-full transition-all duration-[800ms] ease-out group-hover:bg-yellow-400"
@@ -53,17 +41,13 @@ const RatingBar = memo(function RatingBar({ percentage, delay = 0 }) {
         />
     )
 })
-
-// Memoized Review Card Component
 const ReviewCard = memo(function ReviewCard({ review, index, expandedReviews, showImages, onToggleReview, onToggleImages }) {
     const handleToggleReview = useCallback(() => {
         onToggleReview(review._id)
     }, [review._id, onToggleReview])
-
     const handleToggleImages = useCallback(() => {
         onToggleImages(review._id)
     }, [review._id, onToggleImages])
-
     return (
         <motion.div
             key={review._id || index}
@@ -71,9 +55,7 @@ const ReviewCard = memo(function ReviewCard({ review, index, expandedReviews, sh
             initial="initial"
             animate="animate"
             className="p-4 sm:p-6 bg-gray-900 rounded-lg sm:rounded-xl border border-gray-800 hover:border-gray-700 transition-colors">
-            {/* Review Header - Mobile Optimized with larger touch targets */}
             <div className="flex items-start gap-3 mb-3 sm:mb-4">
-                {/* User Avatar - Increased size for better mobile UX */}
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-full flex items-center justify-center text-white font-semibold text-sm sm:text-base flex-shrink-0 overflow-hidden">
                     {review.userId?.avatar ? (
                         <Image
@@ -87,10 +69,7 @@ const ReviewCard = memo(function ReviewCard({ review, index, expandedReviews, sh
                         review.userId?.name?.[0]?.toUpperCase() || 'A'
                     )}
                 </div>
-
-                {/* User Info - Mobile Layout */}
                 <div className="flex-1 min-w-0">
-                    {/* Name and Verification */}
                     <div className="flex flex-col xs:flex-row xs:items-center gap-1 xs:gap-2 mb-1">
                         <span className="font-medium text-white text-sm sm:text-base truncate">{review.userId?.name || 'Anonymous'}</span>
                         {review.isVerified && (
@@ -101,8 +80,6 @@ const ReviewCard = memo(function ReviewCard({ review, index, expandedReviews, sh
                             </span>
                         )}
                     </div>
-
-                    {/* Rating and Meta Info */}
                     <div className="flex flex-col xs:flex-row xs:items-center gap-2 xs:gap-3 text-xs sm:text-sm text-gray-500">
                         <div className="flex items-center gap-1">
                             {[...Array(5)].map((_, i) => (
@@ -118,17 +95,11 @@ const ReviewCard = memo(function ReviewCard({ review, index, expandedReviews, sh
                         </div>
                     </div>
                 </div>
-
-                {/* More Actions - Increased touch target */}
                 <button className="p-3 sm:p-2 hover:bg-gray-800 active:bg-gray-700 rounded-lg transition-colors touch-manipulation flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center">
                     <MoreVertical className="w-4 h-4 text-gray-500" />
                 </button>
             </div>
-
-            {/* Review Title */}
             {review.title && <h4 className="font-medium sm:font-semibold text-white mb-3 text-sm sm:text-base leading-tight">{review.title}</h4>}
-
-            {/* Review Content - Mobile Optimized */}
             <div className="relative">
                 <p
                     className={cn(
@@ -137,7 +108,6 @@ const ReviewCard = memo(function ReviewCard({ review, index, expandedReviews, sh
                     )}>
                     {review.comment}
                 </p>
-
                 {review.comment?.length > 150 && (
                     <button
                         onClick={handleToggleReview}
@@ -154,8 +124,6 @@ const ReviewCard = memo(function ReviewCard({ review, index, expandedReviews, sh
                     </button>
                 )}
             </div>
-
-            {/* Review Images - Mobile Grid with better touch targets */}
             {review.images && review.images.length > 0 && (
                 <div className="mt-4">
                     <button
@@ -167,7 +135,6 @@ const ReviewCard = memo(function ReviewCard({ review, index, expandedReviews, sh
                         </span>
                         {showImages[review._id] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </button>
-
                     {showImages[review._id] && (
                         <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-2">
                             {review.images.map((image, idx) => (
@@ -186,8 +153,6 @@ const ReviewCard = memo(function ReviewCard({ review, index, expandedReviews, sh
                     )}
                 </div>
             )}
-
-            {/* Review Actions - Mobile Layout with better touch targets */}
             {review.helpfulCount > 0 && (
                 <div className="mt-4 pt-4 border-t border-gray-800 flex flex-col xs:flex-row xs:items-center xs:justify-between gap-3">
                     <div className="flex items-center gap-4">
@@ -198,15 +163,12 @@ const ReviewCard = memo(function ReviewCard({ review, index, expandedReviews, sh
                             </div>
                         )}
                     </div>
-
                     <button className="flex items-center gap-2 text-gray-500 hover:text-gray-400 active:text-gray-400 transition-colors touch-manipulation text-sm min-h-[44px] py-2 px-3 -mx-3">
                         <Flag className="w-4 h-4" />
                         <span>Report</span>
                     </button>
                 </div>
             )}
-
-            {/* Seller Response - Mobile Optimized */}
             {review.sellerResponse && (
                 <div className="mt-4 p-4 sm:p-4 bg-gray-800 rounded-lg border border-gray-700">
                     <div className="flex items-center gap-2 mb-3">
@@ -219,47 +181,36 @@ const ReviewCard = memo(function ReviewCard({ review, index, expandedReviews, sh
         </motion.div>
     )
 })
-
-// Main component with memoization
 const ReviewsList = memo(function ReviewsList({ reviews = [], totalReviews = 0, averageRating = 0, reviewStats = {} }) {
     const [expandedReviews, setExpandedReviews] = useState({})
     const [sortBy, setSortBy] = useState('newest')
     const [filterRating, setFilterRating] = useState('all')
     const [showImages, setShowImages] = useState({})
     const [currentPage, setCurrentPage] = useState(1)
-    const [reviewsPerPage] = useState(5) // Show 5 reviews per page
-
-    // Memoized callbacks to prevent unnecessary re-renders
+    const [reviewsPerPage] = useState(5) 
     const handleToggleReview = useCallback((reviewId) => {
         setExpandedReviews((prev) => ({
             ...prev,
             [reviewId]: !prev[reviewId]
         }))
     }, [])
-
     const handleToggleImages = useCallback((reviewId) => {
         setShowImages((prev) => ({
             ...prev,
             [reviewId]: !prev[reviewId]
         }))
     }, [])
-
     const handleSortChange = useCallback((e) => {
         setSortBy(e.target.value)
     }, [])
-
     const handleFilterRatingChange = useCallback((rating) => {
         setFilterRating(rating)
     }, [])
-
     const handlePageChange = useCallback((newPage) => {
         setCurrentPage(newPage)
     }, [])
-
-    // Calculate review stats from reviews if not provided
     const calculatedStats = useMemo(() => {
         if (Object.keys(reviewStats).length > 0) return reviewStats
-
         const stats = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
         reviews.forEach((review) => {
             if (review.rating >= 1 && review.rating <= 5) {
@@ -268,10 +219,8 @@ const ReviewsList = memo(function ReviewsList({ reviews = [], totalReviews = 0, 
         })
         return stats
     }, [reviews, reviewStats])
-
     const filteredAndSortedReviews = useMemo(() => {
         const filtered = filterRating === 'all' ? reviews : reviews.filter((review) => review.rating === parseInt(filterRating))
-
         return [...filtered].sort((a, b) => {
             switch (sortBy) {
                 case 'newest':
@@ -289,29 +238,20 @@ const ReviewsList = memo(function ReviewsList({ reviews = [], totalReviews = 0, 
             }
         })
     }, [reviews, sortBy, filterRating])
-
-    // Paginate reviews
     const paginatedReviews = useMemo(() => {
         const startIndex = (currentPage - 1) * reviewsPerPage
         const endIndex = startIndex + reviewsPerPage
         return filteredAndSortedReviews.slice(startIndex, endIndex)
     }, [filteredAndSortedReviews, currentPage, reviewsPerPage])
-
-    // Calculate pagination info
     const totalPages = Math.ceil(filteredAndSortedReviews.length / reviewsPerPage)
     const hasNextPage = currentPage < totalPages
     const hasPrevPage = currentPage > 1
-
-    // Reset to first page when filters change
     useEffect(() => {
         setCurrentPage(1)
     }, [sortBy, filterRating])
-
     return (
         <div className="space-y-4 sm:space-y-6">
-            {/* Filters and Sort - Mobile Optimized with larger touch targets */}
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center sm:gap-4">
-                {/* Filter Section */}
                 <div className="flex flex-col xs:flex-row xs:items-center gap-3 text-sm">
                     <div className="flex items-center gap-2">
                         <Filter className="w-4 h-4 text-gray-400" />
@@ -319,7 +259,6 @@ const ReviewsList = memo(function ReviewsList({ reviews = [], totalReviews = 0, 
                             {filteredAndSortedReviews.length} of {reviews.length} reviews
                         </span>
                     </div>
-
                     {filterRating !== 'all' && (
                         <button
                             onClick={() => handleFilterRatingChange('all')}
@@ -328,8 +267,6 @@ const ReviewsList = memo(function ReviewsList({ reviews = [], totalReviews = 0, 
                         </button>
                     )}
                 </div>
-
-                {/* Sort Dropdown - Mobile Optimized with larger touch target */}
                 <select
                     value={sortBy}
                     onChange={handleSortChange}
@@ -341,8 +278,6 @@ const ReviewsList = memo(function ReviewsList({ reviews = [], totalReviews = 0, 
                     <option value="helpful">Most Helpful</option>
                 </select>
             </div>
-
-            {/* Reviews List - Mobile Optimized */}
             {paginatedReviews.length > 0 ? (
                 <>
                     <div className="space-y-4 max-h-none sm:max-h-[800px] sm:overflow-y-auto sm:pr-2 sm:scrollbar-thin sm:scrollbar-thumb-gray-600 sm:scrollbar-track-gray-800">
@@ -358,14 +293,11 @@ const ReviewsList = memo(function ReviewsList({ reviews = [], totalReviews = 0, 
                             />
                         ))}
                     </div>
-
-                    {/* Pagination - Mobile Optimized with larger touch targets */}
                     {totalPages > 1 && (
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-gray-800">
                             <div className="text-xs sm:text-sm text-gray-400 text-center sm:text-left">
                                 Page {currentPage} of {totalPages} • {paginatedReviews.length} reviews
                             </div>
-
                             <div className="flex items-center justify-center gap-2">
                                 <button
                                     onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
@@ -373,8 +305,6 @@ const ReviewsList = memo(function ReviewsList({ reviews = [], totalReviews = 0, 
                                     className="px-4 py-3 text-sm bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 active:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation min-h-[48px] min-w-[64px]">
                                     Prev
                                 </button>
-
-                                {/* Page numbers - Larger touch targets for mobile */}
                                 <div className="flex items-center gap-2">
                                     {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
                                         let pageNum
@@ -387,7 +317,6 @@ const ReviewsList = memo(function ReviewsList({ reviews = [], totalReviews = 0, 
                                         } else {
                                             pageNum = currentPage - 1 + i
                                         }
-
                                         return (
                                             <button
                                                 key={pageNum}
@@ -403,7 +332,6 @@ const ReviewsList = memo(function ReviewsList({ reviews = [], totalReviews = 0, 
                                         )
                                     })}
                                 </div>
-
                                 <button
                                     onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                                     disabled={!hasNextPage}
@@ -424,6 +352,4 @@ const ReviewsList = memo(function ReviewsList({ reviews = [], totalReviews = 0, 
         </div>
     )
 })
-
 export default ReviewsList
-

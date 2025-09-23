@@ -1,12 +1,9 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import { useState, useCallback, useMemo } from 'react'
 import { Plus, X, GripVertical, Lightbulb, HelpCircle, Save, Check, Target, TrendingUp, Users, Settings, ArrowRight } from 'lucide-react'
 import { useProductCreateStore } from '@/store/productCreate'
 import { VALIDATION_LIMITS } from '@/lib/constants/productCreate'
-
-// Enhanced tooltips with contextual help
 const FIELD_HELP = {
     targetAudience: {
         title: "Target Audience Guide",
@@ -34,8 +31,6 @@ const FIELD_HELP = {
         examples: ["40% increase in qualified leads", "Reduce response time from 24 hours to 2 hours", "Save $2,000 monthly on manual processes"]
     }
 }
-
-// Enhanced error messages with specific guidance
 const getEnhancedErrorMessage = (field, error) => {
     const errorMap = {
         targetAudience: {
@@ -64,14 +59,10 @@ const getEnhancedErrorMessage = (field, error) => {
             'maxItems': 'Keep outcomes focused on the most important results.'
         }
     }
-
     return errorMap[field]?.[error] || error
 }
-
-// Tooltip component (reused from Step1)
 const Tooltip = ({ content, examples, children }) => {
     const [isVisible, setIsVisible] = useState(false)
-
     return (
         <div className="relative inline-block">
             <button
@@ -83,7 +74,6 @@ const Tooltip = ({ content, examples, children }) => {
                 className="p-1 text-gray-400 hover:text-[#00FF89] transition-colors">
                 <HelpCircle className="w-4 h-4" />
             </button>
-
             {isVisible && (
                 <motion.div
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -109,13 +99,10 @@ const Tooltip = ({ content, examples, children }) => {
         </div>
     )
 }
-
-// Auto-save indicator (reused from Step1)
 const AutoSaveIndicator = () => {
     const lastSaved = useProductCreateStore((state) => state.lastSaved)
     const isDirty = useProductCreateStore((state) => state.isDirty)
     const [showSaved, setShowSaved] = useState(false)
-
     const status = useMemo(() => {
         if (isDirty) return { icon: Save, text: 'Unsaved changes', color: 'text-yellow-400' }
         if (lastSaved) {
@@ -125,7 +112,6 @@ const AutoSaveIndicator = () => {
         }
         return { icon: Save, text: 'Auto-save enabled', color: 'text-gray-400' }
     }, [lastSaved, isDirty, showSaved])
-
     return (
         <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -136,7 +122,6 @@ const AutoSaveIndicator = () => {
         </motion.div>
     )
 }
-
 export default function Step2Details() {
     const targetAudience = useProductCreateStore((state) => state.targetAudience)
     const keyBenefits = useProductCreateStore((state) => state.keyBenefits)
@@ -145,54 +130,41 @@ export default function Step2Details() {
     const expectedOutcomes = useProductCreateStore((state) => state.expectedOutcomes)
     const errors = useProductCreateStore((state) => state.errors)
     const touchedFields = useProductCreateStore((state) => state.touchedFields)
-
     const setField = useProductCreateStore((state) => state.setField)
     const addToArray = useProductCreateStore((state) => state.addToArray)
     const removeFromArray = useProductCreateStore((state) => state.removeFromArray)
     const updateArrayItem = useProductCreateStore((state) => state.updateArrayItem)
     const markFieldTouched = useProductCreateStore((state) => state.markFieldTouched)
     const validateTouchedFields = useProductCreateStore((state) => state.validateTouchedFields)
-
     const addHowItWorksStep = () => {
         addToArray('howItWorks', { title: '', detail: '' })
     }
-
     const removeHowItWorksStep = (index) => {
         if (howItWorks.length > 1) {
             removeFromArray('howItWorks', index)
         }
     }
-
     const updateHowItWorksStep = (index, field, value) => {
         const updatedStep = { ...howItWorks[index], [field]: value }
         updateArrayItem('howItWorks', index, updatedStep)
     }
-
     const handleFieldBlur = (fieldName) => {
         markFieldTouched(fieldName)
         validateTouchedFields()
     }
-
     const showError = (fieldName) => {
         return touchedFields[fieldName] && errors[fieldName]
     }
-
     const validHowItWorksSteps = howItWorks.filter((step) => step.title.trim() && step.detail.trim()).length
-
     return (
         <div className="space-y-10">
-            {/* Auto-save indicator */}
             <div className="flex justify-end">
                 <AutoSaveIndicator />
             </div>
-
-            {/* Visual break - Welcome section */}
             <div className="text-center pb-6 border-b border-gray-700/50">
                 <h2 className="text-2xl font-semibold text-white mb-2">Product Details & Process</h2>
                 <p className="text-lg text-gray-400">Help customers understand your product's value and how it works</p>
             </div>
-
-            {/* Target Audience */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -221,16 +193,12 @@ export default function Step2Details() {
                     </div>
                 )}
             </motion.div>
-
-            {/* Visual break */}
             <div className="border-l-4 border-[#00FF89]/30 pl-6 py-4 bg-gray-800/20 rounded-r-lg">
                 <p className="text-base text-gray-300">
                     <Target className="w-4 h-4 inline mr-2" />
                     <span className="font-medium">Pro tip:</span> Specific target audiences help customers self-identify if your product is right for them
                 </p>
             </div>
-
-            {/* Benefits & Use Cases Section */}
             <div className="flex items-center my-8">
                 <div className="flex-1 border-t border-gray-700"></div>
                 <div className="px-4 text-base text-gray-400 flex items-center space-x-2">
@@ -239,8 +207,6 @@ export default function Step2Details() {
                 </div>
                 <div className="flex-1 border-t border-gray-700"></div>
             </div>
-
-            {/* Key Benefits */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -290,8 +256,6 @@ export default function Step2Details() {
                     </div>
                 )}
             </motion.div>
-
-            {/* Use Case Examples */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -341,8 +305,6 @@ export default function Step2Details() {
                     </div>
                 )}
             </motion.div>
-
-            {/* Process Flow Section */}
             <div className="flex items-center my-8">
                 <div className="flex-1 border-t border-gray-700"></div>
                 <div className="px-4 text-base text-gray-400 flex items-center space-x-2">
@@ -351,8 +313,6 @@ export default function Step2Details() {
                 </div>
                 <div className="flex-1 border-t border-gray-700"></div>
             </div>
-
-            {/* How it Works - Required */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -372,7 +332,6 @@ export default function Step2Details() {
                         )}
                     </div>
                 </div>
-
                 <div className="space-y-4">
                     {howItWorks.map((step, index) => (
                         <motion.div
@@ -413,14 +372,12 @@ export default function Step2Details() {
                         </motion.div>
                     ))}
                 </div>
-
                 <button
                     onClick={addHowItWorksStep}
                     className="flex items-center space-x-2 px-5 py-3 text-[#00FF89] border border-[#00FF89]/30 rounded-lg hover:bg-[#00FF89]/10 transition-all">
                     <Plus className="w-5 h-5" />
                     <span className="text-lg font-medium">Add Step</span>
                 </button>
-
                 {showError('howItWorks') && (
                     <div className="text-base text-red-400 flex items-center space-x-2">
                         <Lightbulb className="w-4 h-4" />
@@ -428,8 +385,6 @@ export default function Step2Details() {
                     </div>
                 )}
             </motion.div>
-
-            {/* Visual break */}
             <div className="flex items-center my-8">
                 <div className="flex-1 border-t border-gray-700"></div>
                 <div className="px-4 text-base text-gray-400 flex items-center space-x-2">
@@ -438,8 +393,6 @@ export default function Step2Details() {
                 </div>
                 <div className="flex-1 border-t border-gray-700"></div>
             </div>
-
-            {/* Expected Outcomes */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -487,8 +440,6 @@ export default function Step2Details() {
                     </div>
                 )}
             </motion.div>
-
-            {/* How it Works Preview */}
             {validHowItWorksSteps >= VALIDATION_LIMITS.HOW_IT_WORKS_MIN_STEPS && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}

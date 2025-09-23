@@ -1,8 +1,6 @@
 'use client'
-
 import { usePathname } from 'next/navigation'
 import Header from './Header'
-
 export default function ConditionalHeader() {
     const pathname = usePathname()
     const isSellerPage = pathname?.startsWith('/seller') || pathname?.includes('/seller/')
@@ -13,6 +11,5 @@ export default function ConditionalHeader() {
     if (shouldHideHeader || (typeof window !== 'undefined' && window.location.pathname.includes('/seller'))) {
         return null
     }
-    
     return <Header />
 }

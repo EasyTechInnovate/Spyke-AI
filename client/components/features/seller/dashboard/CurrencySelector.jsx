@@ -1,17 +1,13 @@
 'use client'
-
 import { ChevronDown } from 'lucide-react'
-
 const currencies = [
     { code: 'USD', symbol: '$', name: 'US Dollar' },
     { code: 'EUR', symbol: '€', name: 'Euro' },
     { code: 'GBP', symbol: '£', name: 'British Pound' },
     { code: 'INR', symbol: '₹', name: 'Indian Rupee' }
 ]
-
 export default function CurrencySelector({ value, onChange }) {
     const selectedCurrency = currencies.find(c => c.code === value) || currencies[0]
-
     return (
         <div className="relative">
             <select

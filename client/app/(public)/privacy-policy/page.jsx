@@ -1,16 +1,13 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import Container from '@/components/shared/layout/Container'
 import { Calendar, Mail, Globe, Shield, Eye, Lock, Users, Database } from 'lucide-react'
-
 export default function PrivacyPolicyPage() {
     const fadeInUp = {
         initial: { opacity: 0, y: 20 },
         animate: { opacity: 1, y: 0 },
         transition: { duration: 0.6 }
     }
-
     const staggerContainer = {
         animate: {
             transition: {
@@ -18,7 +15,6 @@ export default function PrivacyPolicyPage() {
             }
         }
     }
-
     const privacyHighlights = [
         {
             icon: Shield,
@@ -41,10 +37,8 @@ export default function PrivacyPolicyPage() {
             description: "We never sell your personal data to third parties"
         }
     ]
-
     return (
         <div className="min-h-screen bg-[#121212] text-white">
-            {/* Header Section */}
             <section className="relative py-16 border-b border-gray-800">
                 <Container>
                     <motion.div
@@ -54,16 +48,13 @@ export default function PrivacyPolicyPage() {
                         variants={staggerContainer}
                     >
                         <motion.div variants={fadeInUp} className="mb-8">
-
                         </motion.div>
-
                         <motion.h1
                             variants={fadeInUp}
                             className="text-4xl md:text-5xl font-bold text-white mb-4 font-league-spartan"
                         >
                             Privacy Policy
                         </motion.h1>
-
                         <motion.div
                             variants={fadeInUp}
                             className="flex items-center justify-center gap-2 text-gray-400 mb-6"
@@ -71,7 +62,6 @@ export default function PrivacyPolicyPage() {
                             <Calendar className="w-4 h-4" />
                             <span className="text-sm">Effective Date: August 26, 2025</span>
                         </motion.div>
-
                         <motion.p
                             variants={fadeInUp}
                             className="text-lg text-gray-300 leading-relaxed mb-8"
@@ -79,8 +69,6 @@ export default function PrivacyPolicyPage() {
                             SpykeAI respects your privacy and is committed to protecting your personal information.
                             This Privacy Policy explains how we collect, use, store, and protect your data when you use our Platform.
                         </motion.p>
-
-                        {/* Privacy Highlights */}
                         <motion.div
                             variants={fadeInUp}
                             className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8"
@@ -99,8 +87,6 @@ export default function PrivacyPolicyPage() {
                     </motion.div>
                 </Container>
             </section>
-
-            {/* Main Content */}
             <section className="py-16">
                 <Container>
                     <motion.div
@@ -110,7 +96,6 @@ export default function PrivacyPolicyPage() {
                         variants={staggerContainer}
                     >
                         <div className="prose prose-lg prose-invert max-w-none">
-                            {/* Introduction */}
                             <motion.div variants={fadeInUp} className="mb-12">
                                 <div className="bg-[#1f1f1f] rounded-xl p-6 border border-gray-800 mb-8">
                                     <p className="text-gray-300 leading-relaxed">
@@ -119,8 +104,6 @@ export default function PrivacyPolicyPage() {
                                     </p>
                                 </div>
                             </motion.div>
-
-                            {/* Section 1 */}
                             <motion.div variants={fadeInUp} className="mb-12">
                                 <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan flex items-center gap-3">
                                     <Database className="w-6 h-6" />
@@ -135,7 +118,6 @@ export default function PrivacyPolicyPage() {
                                             <li>Information you provide when listing or purchasing AI products or services</li>
                                         </ul>
                                     </div>
-
                                     <div>
                                         <h3 className="text-xl font-semibold text-white mb-3">b) Automatically Collected Information</h3>
                                         <ul className="list-disc list-inside space-y-2 ml-4">
@@ -144,7 +126,6 @@ export default function PrivacyPolicyPage() {
                                             <li>Cookies and similar tracking technologies</li>
                                         </ul>
                                     </div>
-
                                     <div>
                                         <h3 className="text-xl font-semibold text-white mb-3">c) Third-Party Data</h3>
                                         <ul className="list-disc list-inside space-y-2 ml-4">
@@ -153,8 +134,6 @@ export default function PrivacyPolicyPage() {
                                     </div>
                                 </div>
                             </motion.div>
-
-                            {/* Section 2 */}
                             <motion.div variants={fadeInUp} className="mb-12">
                                 <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">2. How We Use Your Information</h2>
                                 <div className="space-y-4 text-gray-300">
@@ -169,8 +148,6 @@ export default function PrivacyPolicyPage() {
                                     </ul>
                                 </div>
                             </motion.div>
-
-                            {/* Section 3 */}
                             <motion.div variants={fadeInUp} className="mb-12">
                                 <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">3. How We Share Your Information</h2>
                                 <div className="space-y-4 text-gray-300">
@@ -185,8 +162,6 @@ export default function PrivacyPolicyPage() {
                                     </ul>
                                 </div>
                             </motion.div>
-
-                            {/* Section 4 */}
                             <motion.div variants={fadeInUp} className="mb-12">
                                 <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">4. Cookies and Tracking Technologies</h2>
                                 <div className="space-y-4 text-gray-300">
@@ -201,8 +176,6 @@ export default function PrivacyPolicyPage() {
                                     </p>
                                 </div>
                             </motion.div>
-
-                            {/* Section 5 */}
                             <motion.div variants={fadeInUp} className="mb-12">
                                 <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">5. Data Retention</h2>
                                 <div className="space-y-4 text-gray-300">
@@ -212,8 +185,6 @@ export default function PrivacyPolicyPage() {
                                     </p>
                                 </div>
                             </motion.div>
-
-                            {/* Section 6 */}
                             <motion.div variants={fadeInUp} className="mb-12">
                                 <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">6. Your Rights</h2>
                                 <div className="space-y-4 text-gray-300">
@@ -249,8 +220,6 @@ export default function PrivacyPolicyPage() {
                                     </p>
                                 </div>
                             </motion.div>
-
-                            {/* Section 7 */}
                             <motion.div variants={fadeInUp} className="mb-12">
                                 <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan flex items-center gap-3">
                                     <Shield className="w-6 h-6" />
@@ -263,8 +232,6 @@ export default function PrivacyPolicyPage() {
                                     </p>
                                 </div>
                             </motion.div>
-
-                            {/* Section 8 */}
                             <motion.div variants={fadeInUp} className="mb-12">
                                 <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">8. Children's Privacy</h2>
                                 <div className="space-y-4 text-gray-300">
@@ -274,8 +241,6 @@ export default function PrivacyPolicyPage() {
                                     </p>
                                 </div>
                             </motion.div>
-
-                            {/* Section 9 */}
                             <motion.div variants={fadeInUp} className="mb-12">
                                 <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">9. International Data Transfers</h2>
                                 <div className="space-y-4 text-gray-300">
@@ -285,8 +250,6 @@ export default function PrivacyPolicyPage() {
                                     </p>
                                 </div>
                             </motion.div>
-
-                            {/* Section 10 */}
                             <motion.div variants={fadeInUp} className="mb-12">
                                 <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">10. Changes to This Privacy Policy</h2>
                                 <div className="space-y-4 text-gray-300">
@@ -296,8 +259,6 @@ export default function PrivacyPolicyPage() {
                                     </p>
                                 </div>
                             </motion.div>
-
-                            {/* Section 11 - Contact */}
                             <motion.div variants={fadeInUp} className="mb-12">
                                 <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">11. Contact Us</h2>
                                 <div className="bg-[#1f1f1f] rounded-xl p-6 border border-gray-800">

@@ -1,5 +1,4 @@
 'use client'
-
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Upload, Code, CheckCircle, XCircle, Copy, FileJson, Sparkles } from 'lucide-react'
@@ -8,9 +7,7 @@ import Link from 'next/link'
 import { productsAPI } from '@/lib/api'
 import toast from '@/lib/utils/toast'
 import { generateProduct } from '@/utils/productGenerator'
-
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
-// Sample product JSON template
 const SAMPLE_PRODUCT = {
   title: "AI-Powered Lead Generation System",
   type: "automation",
@@ -78,29 +75,19 @@ const SAMPLE_PRODUCT = {
     }
   ]
 }
-
 export default function AddProductJsonPage() {
-    // Inline notification state
     const [notification, setNotification] = useState(null)
-
-    // Show inline notification messages  
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
-        // Auto-dismiss after 5 seconds
         setTimeout(() => setNotification(null), 5000)
     }
-
-    // Clear notification
     const clearNotification = () => setNotification(null)
-
   const router = useRouter()
   const [jsonInput, setJsonInput] = useState('')
   const [isValidJson, setIsValidJson] = useState(null)
   const [parsedData, setParsedData] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [validationErrors, setValidationErrors] = useState([])
-
-  // Validate JSON input
   const validateJson = (input) => {
     if (!input.trim()) {
       setIsValidJson(null)
@@ -108,13 +95,10 @@ export default function AddProductJsonPage() {
       setValidationErrors([])
       return
     }
-
     try {
       const parsed = JSON.parse(input)
       setParsedData(parsed)
       setIsValidJson(true)
-      
-      // Basic validation
       const errors = []
       if (!parsed.title) errors.push('Title is required')
       if (!parsed.type) errors.push('Type is required')
@@ -128,7 +112,6 @@ export default function AddProductJsonPage() {
         errors.push('At least one tool is required')
       }
       if (!parsed.setupTime) errors.push('Setup time is required')
-      
       setValidationErrors(errors)
     } catch (e) {
       setIsValidJson(false)
@@ -136,21 +119,15 @@ export default function AddProductJsonPage() {
       setValidationErrors(['Invalid JSON format'])
     }
   }
-
-  // Handle form submission
   const handleSubmit = async () => {
     if (!parsedData || validationErrors.length > 0) {
       showMessage('Please fix validation errors before submitting', 'error')
       return
     }
-
     try {
       setIsSubmitting(true)
-      
-      // Clean up the data
       const productData = {
         ...parsedData,
-        // Ensure arrays are properly formatted
         benefits: parsedData.benefits?.filter(b => b) || [],
         useCaseExamples: parsedData.useCaseExamples?.filter(u => u) || [],
         howItWorks: parsedData.howItWorks?.filter(h => h) || [],
@@ -159,10 +136,8 @@ export default function AddProductJsonPage() {
         tags: parsedData.tags?.filter(t => t) || [],
         searchKeywords: parsedData.searchKeywords?.filter(k => k) || [],
         faqs: parsedData.faqs?.filter(f => f.question && f.answer) || [],
-        // Ensure price is a number
         price: parseFloat(parsedData.price),
         originalPrice: parsedData.originalPrice ? parseFloat(parsedData.originalPrice) : undefined,
-        // Clean toolsUsed
         toolsUsed: parsedData.toolsUsed?.map(tool => {
           const cleanTool = { name: tool.name }
           if (tool.logo) cleanTool.logo = tool.logo
@@ -171,9 +146,7 @@ export default function AddProductJsonPage() {
           return cleanTool
         }) || []
       }
-      
       const response = await productsAPI.createProduct(productData)
-      
       if (response.data) {
         showMessage('Product created successfully!', 'success')
         router.push('/seller/products')
@@ -191,21 +164,15 @@ export default function AddProductJsonPage() {
       setIsSubmitting(false)
     }
   }
-
-  // Copy sample JSON to clipboard
   const copySampleJson = () => {
     navigator.clipboard.writeText(JSON.stringify(SAMPLE_PRODUCT, null, 2))
     showMessage('Sample JSON copied to clipboard!', 'success')
   }
-
-  // Load sample JSON
   const loadSampleJson = () => {
     const sampleJson = JSON.stringify(SAMPLE_PRODUCT, null, 2)
     setJsonInput(sampleJson)
     validateJson(sampleJson)
   }
-
-  // Generate random product JSON
   const generateRandomProduct = () => {
     const randomProduct = generateProduct()
     const randomJson = JSON.stringify(randomProduct, null, 2)
@@ -213,10 +180,8 @@ export default function AddProductJsonPage() {
     validateJson(randomJson)
     showMessage('Random product generated!', 'success')
   }
-
   return (
     <div className="min-h-screen bg-black">
-            {/* Inline Notification */}
             {notification && (
                 <InlineNotification
                     type={notification.type}
@@ -224,9 +189,6 @@ export default function AddProductJsonPage() {
                     onDismiss={clearNotification}
                 />
             )}
-
-            
-      {/* Header */}
       <div className="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -242,7 +204,6 @@ export default function AddProductJsonPage() {
                 <h1 className="text-xl font-semibold text-white">Add Product via JSON</h1>
               </div>
             </div>
-            
             <div className="flex items-center gap-2">
               <button
                 onClick={copySampleJson}
@@ -279,11 +240,8 @@ export default function AddProductJsonPage() {
           </div>
         </div>
       </div>
-
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* JSON Input */}
           <div className="space-y-4">
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
@@ -307,7 +265,6 @@ export default function AddProductJsonPage() {
                   </div>
                 )}
               </div>
-              
               <textarea
                 value={jsonInput}
                 onChange={(e) => {
@@ -318,8 +275,6 @@ export default function AddProductJsonPage() {
                 className="w-full h-[600px] px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white font-mono text-sm placeholder-gray-500 focus:outline-none focus:border-brand-primary resize-none"
                 spellCheck={false}
               />
-              
-              {/* Instructions */}
               <div className="mt-4 p-4 bg-gray-800 rounded-lg">
                 <h3 className="text-sm font-medium text-gray-300 mb-2">Required Fields:</h3>
                 <ul className="text-xs text-gray-400 space-y-1 list-disc list-inside">
@@ -331,10 +286,7 @@ export default function AddProductJsonPage() {
               </div>
             </div>
           </div>
-
-          {/* Preview & Validation */}
           <div className="space-y-4">
-            {/* Validation Errors */}
             {validationErrors.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -349,8 +301,6 @@ export default function AddProductJsonPage() {
                 </ul>
               </motion.div>
             )}
-
-            {/* Product Preview */}
             {parsedData && validationErrors.length === 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -358,9 +308,7 @@ export default function AddProductJsonPage() {
                 className="bg-gray-900 border border-gray-800 rounded-xl p-6"
               >
                 <h2 className="text-lg font-semibold text-white mb-4">Product Preview</h2>
-                
                 <div className="space-y-4">
-                  {/* Thumbnail */}
                   {parsedData.thumbnail && (
                     <div className="aspect-video bg-gray-800 rounded-lg overflow-hidden">
                       <img
@@ -373,14 +321,10 @@ export default function AddProductJsonPage() {
                       />
                     </div>
                   )}
-                  
-                  {/* Basic Info */}
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-2">{parsedData.title}</h3>
                     <p className="text-gray-400">{parsedData.shortDescription}</p>
                   </div>
-                  
-                  {/* Meta Info */}
                   <div className="flex flex-wrap gap-2">
                     <span className="px-3 py-1 bg-gray-800 text-gray-300 rounded-full text-sm">
                       {parsedData.type}
@@ -392,8 +336,6 @@ export default function AddProductJsonPage() {
                       {parsedData.industry}
                     </span>
                   </div>
-                  
-                  {/* Price */}
                   <div className="flex items-baseline gap-2">
                     <span className="text-2xl font-bold text-brand-primary">
                       ${parsedData.price}
@@ -404,8 +346,6 @@ export default function AddProductJsonPage() {
                       </span>
                     )}
                   </div>
-                  
-                  {/* Tools */}
                   {parsedData.toolsUsed && parsedData.toolsUsed.length > 0 && (
                     <div>
                       <h4 className="text-sm font-medium text-gray-300 mb-2">Tools Used:</h4>
@@ -421,8 +361,6 @@ export default function AddProductJsonPage() {
                 </div>
               </motion.div>
             )}
-
-            {/* Sample JSON Structure */}
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
               <h3 className="text-sm font-medium text-gray-300 mb-3">Sample JSON Structure:</h3>
               <pre className="text-xs text-gray-500 overflow-x-auto">

@@ -1,5 +1,4 @@
 'use client'
-
 import React from 'react'
 import { motion } from 'framer-motion'
 import { 
@@ -21,11 +20,8 @@ import {
     Users,
     Calendar
 } from 'lucide-react'
-
 export default function ProductSpecs({ product }) {
     if (!product) return null
-
-    // Build specs from actual API data
     const specs = [
         {
             label: 'Product Type',
@@ -68,30 +64,22 @@ export default function ProductSpecs({ product }) {
             icon: Star
         }
     ]
-
     return (
         <div className="max-w-3xl mx-auto space-y-8">
-            
-            {/* Header */}
             <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center space-y-3">
-                
                 <h2 className="text-xl font-medium text-[#121212] dark:text-[#00FF89]">
                     Technical Specifications
                 </h2>
-                
                 <p className="text-base text-[#6b7280] dark:text-[#9ca3af]">
                     Detailed technical information and performance metrics
                 </p>
             </motion.div>
-
-            {/* Specs Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {specs.map((spec, index) => {
                     const IconComponent = spec.icon
-                    
                     return (
                         <motion.div
                             key={index}
@@ -99,12 +87,10 @@ export default function ProductSpecs({ product }) {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.1 + 0.1 }}
                             className="bg-gray-50 dark:bg-[#1f1f1f] rounded-lg p-6 hover:bg-gray-100 dark:hover:bg-[#1f1f1f]/80 transition-colors">
-                            
                             <div className="flex items-start gap-4">
                                 <div className="flex-shrink-0 w-10 h-10 bg-[#00FF89]/10 rounded-lg flex items-center justify-center">
                                     <IconComponent className="w-5 h-5 text-[#00FF89]" />
                                 </div>
-                                
                                 <div className="flex-1">
                                     <h3 className="font-medium text-[#121212] dark:text-[#00FF89] mb-1">
                                         {spec.label}
@@ -118,19 +104,15 @@ export default function ProductSpecs({ product }) {
                     )
                 })}
             </div>
-
-            {/* Tools & Technologies */}
             {product.toolsUsed && product.toolsUsed.length > 0 && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.9 }}
                     className="space-y-4">
-                    
                     <h3 className="text-lg font-medium text-[#121212] dark:text-[#00FF89]">
                         Technologies Used
                     </h3>
-                    
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {product.toolsUsed.map((tool, index) => (
                             <motion.div
@@ -139,7 +121,6 @@ export default function ProductSpecs({ product }) {
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={{ delay: 0.1 * index + 1.0 }}
                                 className="bg-gray-50 dark:bg-[#1f1f1f] rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-[#1f1f1f]/80 transition-colors">
-                                
                                 <div className="flex items-center gap-3">
                                     <img 
                                         src={tool.logo} 
@@ -165,19 +146,15 @@ export default function ProductSpecs({ product }) {
                     </div>
                 </motion.div>
             )}
-
-            {/* Performance Summary */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2 }}
                 className="bg-[#00FF89]/5 dark:bg-[#00FF89]/10 rounded-lg p-6 border border-[#00FF89]/20 dark:border-[#00FF89]/30">
-                
                 <div className="text-center space-y-4">
                     <h3 className="text-lg font-medium text-[#121212] dark:text-[#00FF89]">
                         Product Statistics
                     </h3>
-                    
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="text-center">
                             <div className="text-xl font-bold text-[#00FF89]">{product.views || 0}</div>
@@ -198,11 +175,7 @@ export default function ProductSpecs({ product }) {
                     </div>
                 </div>
             </motion.div>
-
-            {/* Additional Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                
-                {/* Verification Status */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -212,7 +185,6 @@ export default function ProductSpecs({ product }) {
                             ? 'bg-[#00FF89]/5 dark:bg-[#00FF89]/10 border-[#00FF89]/20 dark:border-[#00FF89]/30'
                             : 'bg-gray-50 dark:bg-[#1f1f1f] border-gray-200 dark:border-gray-700'
                     }`}>
-                    
                     <div className="flex items-center gap-3">
                         <Shield className={`w-5 h-5 ${product.isVerified ? 'text-[#00FF89]' : 'text-[#6b7280] dark:text-[#9ca3af]'}`} />
                         <div>
@@ -225,8 +197,6 @@ export default function ProductSpecs({ product }) {
                         </div>
                     </div>
                 </motion.div>
-
-                {/* Testing Status */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -236,7 +206,6 @@ export default function ProductSpecs({ product }) {
                             ? 'bg-[#00FF89]/5 dark:bg-[#00FF89]/10 border-[#00FF89]/20 dark:border-[#00FF89]/30'
                             : 'bg-gray-50 dark:bg-[#1f1f1f] border-gray-200 dark:border-gray-700'
                     }`}>
-                    
                     <div className="flex items-center gap-3">
                         <Zap className={`w-5 h-5 ${product.isTested ? 'text-[#00FF89]' : 'text-[#6b7280] dark:text-[#9ca3af]'}`} />
                         <div>

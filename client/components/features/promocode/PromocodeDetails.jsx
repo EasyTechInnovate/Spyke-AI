@@ -1,5 +1,4 @@
 'use client'
-
 import { useState } from 'react'
 import { promocodeAPI } from '@/lib/api'
 import toast from '@/lib/utils/toast'
@@ -22,30 +21,20 @@ import {
     Clock,
     Info
 } from 'lucide-react'
-
 export default function PromocodeDetails({ promocode, onClose, onEdit, onDelete, onShowStats }) {
-    // Inline notification state
     const [notification, setNotification] = useState(null)
-
-    // Show inline notification messages  
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
-        // Auto-dismiss after 5 seconds
         setTimeout(() => setNotification(null), 5000)
     }
-
-    // Clear notification
     const clearNotification = () => setNotification(null)
-
     const [copiedCode, setCopiedCode] = useState(false)
-
     const copyToClipboard = () => {
         navigator.clipboard.writeText(promocode.code)
         setCopiedCode(true)
         showMessage(`Code "${promocode.code}" copied to clipboard!`, 'success')
         setTimeout(() => setCopiedCode(false), 2000)
     }
-
     const formatDate = (date) => {
         return new Date(date).toLocaleDateString('en-US', {
             year: 'numeric',
@@ -55,18 +44,14 @@ export default function PromocodeDetails({ promocode, onClose, onEdit, onDelete,
             minute: '2-digit'
         })
     }
-
     const calculateDaysRemaining = () => {
         if (!promocode.validUntil) return null
         const days = Math.ceil((new Date(promocode.validUntil) - new Date()) / (1000 * 60 * 60 * 24))
         return days > 0 ? days : 0
     }
-
     const daysRemaining = calculateDaysRemaining()
-
     return (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-            {/* Inline Notification */}
             {notification && (
                 <InlineNotification
                     type={notification.type}
@@ -74,11 +59,8 @@ export default function PromocodeDetails({ promocode, onClose, onEdit, onDelete,
                     onDismiss={clearNotification}
                 />
             )}
-
-            
             <div className="w-full max-w-2xl bg-[#1f1f1f] border border-gray-800 rounded-xl overflow-hidden">
                 <div className="p-6">
-                    {/* Header */}
                     <div className="flex justify-between items-start mb-6">
                         <div>
                             <div className="flex items-center gap-3 mb-2">
@@ -109,8 +91,6 @@ export default function PromocodeDetails({ promocode, onClose, onEdit, onDelete,
                             <X className="w-5 h-5 text-gray-400" />
                         </button>
                     </div>
-
-                    {/* Discount Display */}
                     <div className="bg-[#00FF89]/10 border border-[#00FF89]/30 rounded-xl p-6 mb-6">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
@@ -155,10 +135,7 @@ export default function PromocodeDetails({ promocode, onClose, onEdit, onDelete,
                             </button>
                         </div>
                     </div>
-
-                    {/* Details Grid */}
                     <div className="grid grid-cols-2 gap-6 mb-6">
-                        {/* Usage Stats */}
                         <div className="bg-[#2a2a2a] border border-gray-700 rounded-xl p-4">
                             <div className="flex items-center gap-2 mb-3">
                                 <Users className="w-5 h-5 text-[#00FF89]" />
@@ -199,8 +176,6 @@ export default function PromocodeDetails({ promocode, onClose, onEdit, onDelete,
                                 )}
                             </div>
                         </div>
-
-                        {/* Validity Period */}
                         <div className="bg-[#2a2a2a] border border-gray-700 rounded-xl p-4">
                             <div className="flex items-center gap-2 mb-3">
                                 <Calendar className="w-5 h-5 text-[#00FF89]" />
@@ -235,8 +210,6 @@ export default function PromocodeDetails({ promocode, onClose, onEdit, onDelete,
                             </div>
                         </div>
                     </div>
-
-                    {/* Applicable To */}
                     <div className="bg-[#2a2a2a] border border-gray-700 rounded-xl p-4 mb-6">
                         <div className="flex items-center gap-2 mb-3">
                             <Tag className="w-5 h-5 text-[#00FF89]" />
@@ -263,8 +236,6 @@ export default function PromocodeDetails({ promocode, onClose, onEdit, onDelete,
                             )}
                         </div>
                     </div>
-
-                    {/* Additional Info */}
                     <div className="bg-[#2a2a2a]/50 border border-gray-800 rounded-xl p-4 mb-6">
                         <div className="flex items-center gap-2 mb-3">
                             <Info className="w-5 h-5 text-gray-400" />
@@ -293,8 +264,6 @@ export default function PromocodeDetails({ promocode, onClose, onEdit, onDelete,
                             )}
                         </div>
                     </div>
-
-                    {/* Action Buttons */}
                     <div className="flex gap-3">
                         <button
                             onClick={onShowStats}

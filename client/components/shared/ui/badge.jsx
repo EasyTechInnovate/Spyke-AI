@@ -1,5 +1,4 @@
 import { cn } from '@/lib/utils/cn'
-
 const variants = {
   default: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
   primary: "bg-brand-primary/10 text-brand-primary dark:bg-brand-primary/20",
@@ -8,7 +7,6 @@ const variants = {
   new: "bg-gradient-to-r from-brand-primary to-brand-secondary text-white",
   outline: "border border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300"
 }
-
 export default function Badge({ className, variant = "default", children, ...props }) {
   return (
     <span

@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Send, Users, User, Megaphone, MessageSquare, AlertTriangle, CheckCircle, Info, XCircle, Calendar, Clock } from 'lucide-react'
@@ -7,25 +6,21 @@ import { useAuth } from '@/hooks/useAuth'
 import { useNotificationProvider } from '../shared/notifications/NotificationProvider'
 import { authAPI } from '@/lib/api/auth'
 import { adminAPI } from '@/lib/api/admin'
-
 const NOTIFICATION_TYPES = [
     { value: 'info', label: 'Information', icon: Info, color: 'text-blue-400' },
     { value: 'success', label: 'Success', icon: CheckCircle, color: 'text-green-400' },
     { value: 'warning', label: 'Warning', icon: AlertTriangle, color: 'text-yellow-400' },
     { value: 'error', label: 'Error', icon: XCircle, color: 'text-red-400' }
 ]
-
 const RECIPIENT_TYPES = [
     { value: 'single', label: 'Single User', icon: User },
     { value: 'bulk', label: 'Multiple Users', icon: Users },
     { value: 'all', label: 'All Users', icon: Megaphone },
     { value: 'role', label: 'By Role', icon: Users }
 ]
-
 export default function AdminNotificationManager() {
     const { user } = useAuth()
     const { showSuccess, showError } = useNotificationProvider()
-
     const [formData, setFormData] = useState({
         recipientType: 'single',
         userId: '',
@@ -36,34 +31,24 @@ export default function AdminNotificationManager() {
         type: 'info',
         expiresAt: ''
     })
-
     const [loading, setLoading] = useState(false)
     const [users, setUsers] = useState([])
     const [searchTerm, setSearchTerm] = useState('')
-
-    // Check if user is admin
     const isAdmin = user?.roles?.includes('admin')
-
     useEffect(() => {
         if (isAdmin && (formData.recipientType === 'single' || formData.recipientType === 'bulk')) {
             fetchUsers()
         }
     }, [isAdmin, formData.recipientType])
-
     const fetchUsers = async () => {
         try {
-            // This would need to be implemented in the admin API
-            // const response = await adminAPI.users.getAll({ limit: 100 })
-            // setUsers(response.data || [])
         } catch (error) {
             console.error('Failed to fetch users:', error)
         }
     }
-
     const handleSubmit = async (e) => {
         e.preventDefault()
         if (!isAdmin) return
-
         setLoading(true)
         try {
             const notification = {
@@ -72,7 +57,6 @@ export default function AdminNotificationManager() {
                 type: formData.type,
                 expiresAt: formData.expiresAt || null
             }
-
             switch (formData.recipientType) {
                 case 'single':
                     await authAPI.sendNotification({
@@ -81,7 +65,6 @@ export default function AdminNotificationManager() {
                     })
                     showSuccess('Success', 'Notification sent to user')
                     break
-
                 case 'bulk':
                     const userIds = formData.userIds
                         .split(',')
@@ -93,23 +76,17 @@ export default function AdminNotificationManager() {
                     })
                     showSuccess('Success', `Notification sent to ${userIds.length} users`)
                     break
-
                 case 'all':
-                    // This would need backend support for sending to all users
                     await authAPI.sendBulkNotification({
-                        userIds: [], // Empty array could mean "all users" in backend
+                        userIds: [], 
                         ...notification
                     })
                     showSuccess('Success', 'Notification sent to all users')
                     break
-
                 case 'role':
-                    // This would need backend support for sending by role
                     showError('Error', 'Role-based notifications not yet implemented')
                     break
             }
-
-            // Reset form
             setFormData({
                 recipientType: 'single',
                 userId: '',
@@ -126,7 +103,6 @@ export default function AdminNotificationManager() {
             setLoading(false)
         }
     }
-
     if (!isAdmin) {
         return (
             <div className="text-center py-12">
@@ -136,19 +112,16 @@ export default function AdminNotificationManager() {
             </div>
         )
     }
-
     return (
         <div className="max-w-4xl mx-auto">
             <div className="mb-8">
                 <h2 className="text-2xl font-bold text-white mb-2">Send Notification</h2>
                 <p className="text-gray-400">Send notifications to users across the platform</p>
             </div>
-
             <form
                 onSubmit={handleSubmit}
                 className="space-y-6">
                 <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-                    {/* Recipient Type */}
                     <div className="mb-6">
                         <label className="block text-sm font-medium text-white mb-3">Recipient Type</label>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -179,8 +152,6 @@ export default function AdminNotificationManager() {
                             })}
                         </div>
                     </div>
-
-                    {/* Recipient Details */}
                     {formData.recipientType === 'single' && (
                         <div className="mb-6">
                             <label className="block text-sm font-medium text-white mb-2">User ID</label>
@@ -194,7 +165,6 @@ export default function AdminNotificationManager() {
                             />
                         </div>
                     )}
-
                     {formData.recipientType === 'bulk' && (
                         <div className="mb-6">
                             <label className="block text-sm font-medium text-white mb-2">User IDs (comma-separated)</label>
@@ -208,7 +178,6 @@ export default function AdminNotificationManager() {
                             />
                         </div>
                     )}
-
                     {formData.recipientType === 'role' && (
                         <div className="mb-6">
                             <label className="block text-sm font-medium text-white mb-2">Role</label>
@@ -222,8 +191,6 @@ export default function AdminNotificationManager() {
                             </select>
                         </div>
                     )}
-
-                    {/* Notification Type */}
                     <div className="mb-6">
                         <label className="block text-sm font-medium text-white mb-3">Notification Type</label>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -246,8 +213,6 @@ export default function AdminNotificationManager() {
                             })}
                         </div>
                     </div>
-
-                    {/* Title */}
                     <div className="mb-6">
                         <label className="block text-sm font-medium text-white mb-2">
                             Title <span className="text-red-400">*</span>
@@ -261,8 +226,6 @@ export default function AdminNotificationManager() {
                             required
                         />
                     </div>
-
-                    {/* Message */}
                     <div className="mb-6">
                         <label className="block text-sm font-medium text-white mb-2">
                             Message <span className="text-red-400">*</span>
@@ -276,8 +239,6 @@ export default function AdminNotificationManager() {
                             required
                         />
                     </div>
-
-                    {/* Expiration */}
                     <div className="mb-6">
                         <label className="block text-sm font-medium text-white mb-2">Expiration Date (Optional)</label>
                         <input
@@ -289,8 +250,6 @@ export default function AdminNotificationManager() {
                         <p className="text-xs text-gray-400 mt-1">Leave empty for permanent notification</p>
                     </div>
                 </div>
-
-                {/* Submit Button */}
                 <div className="flex justify-end">
                     <motion.button
                         type="submit"

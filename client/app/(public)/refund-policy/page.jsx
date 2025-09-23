@@ -1,16 +1,13 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import Container from '@/components/shared/layout/Container'
 import { Calendar, Mail, Globe, RefreshCw, AlertCircle, CheckCircle, XCircle, Clock } from 'lucide-react'
-
 export default function RefundPolicyPage() {
     const fadeInUp = {
         initial: { opacity: 0, y: 20 },
         animate: { opacity: 1, y: 0 },
         transition: { duration: 0.6 }
     }
-
     const staggerContainer = {
         animate: {
             transition: {
@@ -18,7 +15,6 @@ export default function RefundPolicyPage() {
             }
         }
     }
-
     const refundHighlights = [
         {
             icon: Clock,
@@ -45,7 +41,6 @@ export default function RefundPolicyPage() {
             type: 'info'
         }
     ]
-
     const refundExceptions = [
         {
             title: 'Non-Delivery of Product',
@@ -65,17 +60,14 @@ export default function RefundPolicyPage() {
             description: 'If your account or payment method was used without your permission.'
         }
     ]
-
     const noRefundCases = [
         "Buyer's change of mind after purchase",
         "Incompatibility with Buyer's device, system, or software (unless explicitly stated as compatible)",
         "Buyer's failure to learn how to use the product",
         'Accidental or mistaken purchases by the Buyer'
     ]
-
     return (
         <div className="min-h-screen bg-[#121212] text-white">
-            {/* Header Section */}
             <section className="relative py-16 border-b border-gray-800">
                 <Container>
                     <motion.div
@@ -88,22 +80,18 @@ export default function RefundPolicyPage() {
                             className="text-4xl md:text-5xl font-bold text-white mb-4 font-league-spartan">
                             Return & Refund Policy
                         </motion.h1>
-
                         <motion.div
                             variants={fadeInUp}
                             className="flex items-center justify-center gap-2 text-gray-400 mb-6">
                             <Calendar className="w-4 h-4" />
                             <span className="text-sm">Effective Date: August 26, 2025</span>
                         </motion.div>
-
                         <motion.p
                             variants={fadeInUp}
                             className="text-lg text-gray-300 leading-relaxed mb-8">
                             This Return & Refund Policy outlines the terms under which refunds or returns may be issued for purchases made through
                             SpykeAI. By purchasing from our marketplace, you agree to the following terms.
                         </motion.p>
-
-                        {/* Refund Highlights */}
                         <motion.div
                             variants={fadeInUp}
                             className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
@@ -121,7 +109,6 @@ export default function RefundPolicyPage() {
                                         : highlight.type === 'warning'
                                           ? 'text-yellow-500'
                                           : 'text-[#00FF89]'
-
                                 return (
                                     <div
                                         key={index}
@@ -136,8 +123,6 @@ export default function RefundPolicyPage() {
                     </motion.div>
                 </Container>
             </section>
-
-            {/* Main Content */}
             <section className="py-16">
                 <Container>
                     <motion.div
@@ -146,7 +131,6 @@ export default function RefundPolicyPage() {
                         animate="animate"
                         variants={staggerContainer}>
                         <div className="prose prose-lg prose-invert max-w-none">
-                            {/* Section 1 */}
                             <motion.div
                                 variants={fadeInUp}
                                 className="mb-12">
@@ -172,8 +156,6 @@ export default function RefundPolicyPage() {
                                     </p>
                                 </div>
                             </motion.div>
-
-                            {/* Section 2 */}
                             <motion.div
                                 variants={fadeInUp}
                                 className="mb-12">
@@ -199,15 +181,12 @@ export default function RefundPolicyPage() {
                                     ))}
                                 </div>
                             </motion.div>
-
-                            {/* Section 3 */}
                             <motion.div
                                 variants={fadeInUp}
                                 className="mb-12">
                                 <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">3. Refund Request Process</h2>
                                 <div className="space-y-6 text-gray-300">
                                     <p>To request a refund:</p>
-
                                     <div className="bg-[#1f1f1f] rounded-xl p-6 border border-gray-800">
                                         <div className="space-y-4">
                                             <div className="flex items-center gap-3">
@@ -219,7 +198,6 @@ export default function RefundPolicyPage() {
                                                     <strong>7 days</strong> from the product purchase date.
                                                 </p>
                                             </div>
-
                                             <div className="flex items-start gap-3">
                                                 <div className="w-8 h-8 bg-[#00FF89] text-black rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 mt-1">
                                                     2
@@ -238,7 +216,6 @@ export default function RefundPolicyPage() {
                                             </div>
                                         </div>
                                     </div>
-
                                     <div className="space-y-4">
                                         <p>
                                             SpykeAI will investigate refund requests in detail after the Buyer provides sufficient proof or evidence.
@@ -250,8 +227,6 @@ export default function RefundPolicyPage() {
                                     </div>
                                 </div>
                             </motion.div>
-
-                            {/* Section 4 */}
                             <motion.div
                                 variants={fadeInUp}
                                 className="mb-12">
@@ -270,8 +245,6 @@ export default function RefundPolicyPage() {
                                     </ul>
                                 </div>
                             </motion.div>
-
-                            {/* Section 5 */}
                             <motion.div
                                 variants={fadeInUp}
                                 className="mb-12">
@@ -290,8 +263,6 @@ export default function RefundPolicyPage() {
                                     </ul>
                                 </div>
                             </motion.div>
-
-                            {/* Section 6 */}
                             <motion.div
                                 variants={fadeInUp}
                                 className="mb-12">
@@ -314,8 +285,6 @@ export default function RefundPolicyPage() {
                                     ))}
                                 </div>
                             </motion.div>
-
-                            {/* Section 7 */}
                             <motion.div
                                 variants={fadeInUp}
                                 className="mb-12">
@@ -328,8 +297,6 @@ export default function RefundPolicyPage() {
                                     </ul>
                                 </div>
                             </motion.div>
-
-                            {/* Section 8 */}
                             <motion.div
                                 variants={fadeInUp}
                                 className="mb-12">
@@ -338,8 +305,6 @@ export default function RefundPolicyPage() {
                                     <p>We may update this policy at any time. Updates will be posted on this page with a new "Effective Date."</p>
                                 </div>
                             </motion.div>
-
-                            {/* Contact Section */}
                             <motion.div
                                 variants={fadeInUp}
                                 className="mb-12">

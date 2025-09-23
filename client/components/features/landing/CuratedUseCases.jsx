@@ -1,17 +1,13 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import { Briefcase, Megaphone, User, TrendingUp, Users, Mail } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-
-// Use the same background effects as hero section
 const BackgroundEffectsLight = dynamic(() => import('./hero/BackgroundEffectsLight'), {
   ssr: false,
   loading: () => null
 })
-
 const useCases = [
   {
     id: 'recruiters',
@@ -74,16 +70,12 @@ const useCases = [
     color: 'bg-pink-500'
   }
 ]
-
 export default function CuratedUseCases() {
   return (
     <section className="relative py-20 lg:py-24 bg-black">
-      {/* Consistent Background Effects */}
       <BackgroundEffectsLight />
-      
       <Container>
         <div className="relative z-10 max-w-7xl mx-auto">
-          {/* Section Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -98,8 +90,6 @@ export default function CuratedUseCases() {
               Find AI tools and automations specifically designed for your job
             </p>
           </motion.div>
-
-          {/* Use Cases Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {useCases.map((useCase, index) => (
               <motion.div
@@ -114,9 +104,7 @@ export default function CuratedUseCases() {
                   className="group block h-full"
                 >
                   <div className="relative h-full bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-brand-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-brand-primary/10">
-                    {/* Content */}
                     <div className="p-6 flex flex-col h-full">
-                      {/* Header */}
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <span className="text-sm font-medium text-brand-primary">
@@ -130,13 +118,9 @@ export default function CuratedUseCases() {
                           <useCase.icon className={`w-5 h-5 ${useCase.color.replace('bg-', 'text-')}`} />
                         </div>
                       </div>
-                      
-                      {/* Description */}
                       <p className="text-sm text-gray-400 mb-6 flex-1 font-body">
                         {useCase.description}
                       </p>
-                      
-                      {/* Benefits */}
                       <div className="space-y-2 mb-6">
                         {useCase.benefits.map((benefit, idx) => (
                           <div key={idx} className="flex items-center gap-2">
@@ -145,8 +129,6 @@ export default function CuratedUseCases() {
                           </div>
                         ))}
                       </div>
-                      
-                      {/* CTA */}
                       <div className="flex items-center text-brand-primary group-hover:text-brand-primary/80 transition-colors">
                         <span className="text-sm font-medium">Browse tools</span>
                         <span className="ml-2 transform group-hover:translate-x-1 transition-transform">→</span>

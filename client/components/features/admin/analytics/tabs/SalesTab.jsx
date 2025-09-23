@@ -1,10 +1,8 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { BarChart3, Users, ShoppingCart, Activity, Package, DollarSign } from 'lucide-react'
 import { ResponsiveContainer, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip, Area, Bar, Line, PieChart, Pie, Cell } from 'recharts'
-
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -13,18 +11,14 @@ const formatCurrency = (amount) => {
         maximumFractionDigits: 0
     }).format(amount || 0)
 }
-
 const formatNumber = (num) => {
     return new Intl.NumberFormat('en-US').format(num || 0)
 }
-
 const formatPercentage = (num) => {
     return `${(num || 0).toFixed(2)}%`
 }
-
 export const SalesTab = ({ analyticsData, timeRange, loading }) => {
     const [salesData, setSalesData] = useState(null)
-
     const generateTrendsWithAllDates = (dailySales, timeRange) => {
         const getDaysFromTimeRange = (period) => {
             switch (period) {
@@ -40,12 +34,10 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
                     return 30
             }
         }
-
         const days = getDaysFromTimeRange(timeRange)
         const endDate = new Date()
         const startDate = new Date()
         startDate.setDate(endDate.getDate() - (days - 1))
-
         const dataMap = new Map()
         dailySales.forEach((item) => {
             const dateKey = item._id?.date || item.date
@@ -56,15 +48,12 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
                 })
             }
         })
-
         const trends = []
         for (let i = 0; i < days; i++) {
             const currentDate = new Date(startDate)
             currentDate.setDate(startDate.getDate() + i)
             const dateString = currentDate.toISOString().split('T')[0]
-
             const data = dataMap.get(dateString) || { revenue: 0, salesCount: 0 }
-
             trends.push({
                 date: currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
                 revenue: data.revenue,
@@ -72,19 +61,15 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
                 averageOrderValue: data.revenue && data.salesCount ? Math.round(data.revenue / data.salesCount) : 0
             })
         }
-
         return trends
     }
-
     const processTopProducts = (sales) => {
         const productMap = new Map()
-
         sales.forEach((sale) => {
             sale.items.forEach((item) => {
                 const productId = item.productId?._id || 'unknown'
                 const productName = item.productId?.title || 'Product (Deleted)'
                 const price = item.price || 0
-
                 if (productMap.has(productId)) {
                     const existing = productMap.get(productId)
                     existing.salesCount += 1
@@ -99,21 +84,17 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
                 }
             })
         })
-
         return Array.from(productMap.values())
             .sort((a, b) => b.revenue - a.revenue)
             .slice(0, 10)
     }
-
     const processPaymentMethods = (sales) => {
         const paymentMap = new Map()
         let totalRevenue = 0
-
         sales.forEach((sale) => {
             const method = sale.paymentMethod || 'unknown'
             const revenue = sale.finalAmount || 0
             totalRevenue += revenue
-
             if (paymentMap.has(method)) {
                 const existing = paymentMap.get(method)
                 existing.count += 1
@@ -127,22 +108,18 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
                 })
             }
         })
-
         return Array.from(paymentMap.values()).map((method) => ({
             ...method,
             percentage: totalRevenue > 0 ? (method.revenue / totalRevenue) * 100 : 0
         }))
     }
-
     const processCustomerInsights = (sales) => {
         const customerMap = new Map()
-
         sales.forEach((sale) => {
             const customerId = sale.userId?._id
             const customerName = sale.userId?.name || 'Anonymous'
             const customerEmail = sale.userId?.emailAddress || 'unknown@email.com'
             const amount = sale.finalAmount || 0
-
             if (customerMap.has(customerId)) {
                 const existing = customerMap.get(customerId)
                 existing.totalSpent += amount
@@ -157,12 +134,10 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
                 })
             }
         })
-
         return Array.from(customerMap.values())
             .sort((a, b) => b.totalSpent - a.totalSpent)
             .slice(0, 10)
     }
-
     useEffect(() => {
         if (analyticsData?.sales) {
             const processedData = {
@@ -187,11 +162,9 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
                         paymentMethod: sale.paymentMethod
                     })) || []
             }
-
             setSalesData(processedData)
         }
     }, [analyticsData, timeRange])
-
     if (loading) {
         return (
             <div className="space-y-6">
@@ -212,7 +185,6 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
             </div>
         )
     }
-
     if (!salesData) {
         return (
             <div className="space-y-6">
@@ -233,12 +205,9 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
             </div>
         )
     }
-
     const { metrics = {}, trends = [], topProducts = [], paymentMethods = [], topCustomers = [], recentSales = [] } = salesData
-
     const validTrends = Array.isArray(trends) ? trends : []
     const CHART_COLORS = ['#00FF89', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981', '#F97316', '#6366F1']
-
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
@@ -254,7 +223,6 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                     <div className="text-2xl font-bold text-white mb-1">{formatCurrency(metrics.totalRevenue)}</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -268,7 +236,6 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                     <div className="text-2xl font-bold text-white mb-1">{formatNumber(metrics.totalOrders)}</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -282,7 +249,6 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                     <div className="text-2xl font-bold text-white mb-1">{formatCurrency(metrics.averageOrderValue)}</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -296,7 +262,6 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                     <div className="text-2xl font-bold text-white mb-1">{formatNumber(metrics.totalItems)}</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -311,7 +276,6 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
                     <div className="text-2xl font-bold text-white">{formatPercentage(metrics.conversionRate)}</div>
                 </motion.div>
             </div>
-
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -319,7 +283,6 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
                 className="bg-gray-800 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-white">Sales Trends</h3>
-
                     <div className="flex items-center gap-4 text-xs">
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-[#00FF89] rounded-sm opacity-80"></div>
@@ -435,7 +398,6 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
                             />
                         </ComposedChart>
                     </ResponsiveContainer>
-
                     {(!validTrends.length || !validTrends.some((item) => item.revenue > 0 || item.orders > 0)) && (
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-gray-800/50 rounded">
                             <div className="text-center text-gray-400">
@@ -447,7 +409,6 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
                     )}
                 </div>
             </motion.div>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -484,7 +445,6 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
                         )}
                     </div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -542,7 +502,6 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                 </motion.div>
             </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -580,7 +539,6 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
                         )}
                     </div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -623,4 +581,3 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
         </div>
     )
 }
-

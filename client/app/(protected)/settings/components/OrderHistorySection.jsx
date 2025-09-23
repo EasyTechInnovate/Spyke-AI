@@ -1,8 +1,6 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import { ShoppingBag } from 'lucide-react'
-
 export default function OrderHistorySection() {
   return (
     <motion.div
@@ -19,7 +17,6 @@ export default function OrderHistorySection() {
           <p className="text-gray-300">View your past purchases and downloads</p>
         </div>
       </div>
-
       <div className="text-center py-12">
         <ShoppingBag className="w-16 h-16 text-gray-600 mx-auto mb-4" />
         <h3 className="text-xl font-semibold mb-2 text-white">No Orders Yet</h3>

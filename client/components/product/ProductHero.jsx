@@ -1,5 +1,4 @@
 'use client'
-
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
@@ -24,28 +23,18 @@ import {
     TrendingUp,
     ExternalLink
 } from 'lucide-react'
-
-// NEW: Central type badge color constants for easy theming
 const TYPE_BADGE_STYLES = {
-    // example custom types (extend as needed)
     prompt: { bg: 'bg-indigo-500/10', border: 'border-indigo-500/30', text: 'text-indigo-400' },
     hiring: { bg: 'bg-rose-500/10', border: 'border-rose-500/30', text: 'text-rose-400' },
-    // fallback / default (previous green style) with improved contrast on light mode
     default: { bg: 'bg-[#00FF89]/10', border: 'border-[#00FF89]/30', text: 'text-emerald-700 dark:text-[#00FF89]' }
 }
-
-// Accessible focus ring utility (can be abstracted later)
 const focusRing =
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00FF89] focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#121212]'
-
 const getVideoEmbedInfo = (url) => {
     if (!url) return null
-
-    // YouTube URL patterns
     const youtubeRegex =
         /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
     const youtubeMatch = url.match(youtubeRegex)
-
     if (youtubeMatch) {
         return {
             type: 'youtube',
@@ -54,21 +43,16 @@ const getVideoEmbedInfo = (url) => {
             thumbnailUrl: `https://img.youtube.com/vi/${youtubeMatch[1]}/maxresdefault.jpg`
         }
     }
-
-    // Vimeo URL patterns
     const vimeoRegex = /(?:https?:\/\/)?(?:www\.)?(?:vimeo\.com\/)([0-9]+)/
     const vimeoMatch = url.match(vimeoRegex)
-
     if (vimeoMatch) {
         return {
             type: 'vimeo',
             id: vimeoMatch[1],
             embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1&muted=1`,
-            thumbnailUrl: null // Vimeo thumbnails require API call
+            thumbnailUrl: null 
         }
     }
-
-    // Direct video file URLs
     if (url.match(/\.(mp4|webm|ogg|mov|avi)(\?.*)?$/i)) {
         return {
             type: 'direct',
@@ -77,8 +61,6 @@ const getVideoEmbedInfo = (url) => {
             thumbnailUrl: null
         }
     }
-
-    // Default to treating as direct video
     return {
         type: 'direct',
         url: url,
@@ -86,7 +68,6 @@ const getVideoEmbedInfo = (url) => {
         thumbnailUrl: null
     }
 }
-
 export default function ProductHero({
     product,
     selectedImage,
@@ -107,7 +88,7 @@ export default function ProductHero({
     onDownload,
     onShare,
     ctaRef,
-    onNavigateToReviews // Add new prop for navigation function
+    onNavigateToReviews 
 }) {
     const [isPlaying, setIsPlaying] = useState(false)
     const [isMuted, setIsMuted] = useState(true)
@@ -117,15 +98,9 @@ export default function ProductHero({
     const [showVideoModal, setShowVideoModal] = useState(false)
     const videoRef = useRef(null)
     const iframeRef = useRef(null)
-
     if (!product) return null
-
-    // Get video embed information
     const videoInfo = product.previewVideo ? getVideoEmbedInfo(product.previewVideo) : null
-
-    // Prepare media items
     const mediaItems = []
-
     if (product.images && product.images.length > 0) {
         product.images.forEach((image, index) => {
             mediaItems.push({
@@ -135,7 +110,6 @@ export default function ProductHero({
             })
         })
     }
-
     if (videoInfo) {
         mediaItems.push({
             type: 'video',
@@ -145,7 +119,6 @@ export default function ProductHero({
             videoInfo: videoInfo
         })
     }
-
     if (mediaItems.length === 0 && product.thumbnail) {
         mediaItems.push({
             type: 'image',
@@ -153,10 +126,7 @@ export default function ProductHero({
             alt: product.title
         })
     }
-
     const activeMedia = mediaItems[currentImageIndex] || mediaItems[0]
-
-    // Auto-advance images
     useEffect(() => {
         if (mediaItems.length > 1 && activeMedia?.type === 'image') {
             const interval = setInterval(() => {
@@ -165,8 +135,6 @@ export default function ProductHero({
             return () => clearInterval(interval)
         }
     }, [mediaItems.length, activeMedia?.type])
-
-    // Video controls for direct video files
     const togglePlayPause = () => {
         if (activeMedia?.videoInfo?.type === 'direct' && videoRef.current) {
             if (isPlaying) {
@@ -179,44 +147,35 @@ export default function ProductHero({
             }
             setIsPlaying(!isPlaying)
         } else if (activeMedia?.videoInfo?.type === 'youtube' || activeMedia?.videoInfo?.type === 'vimeo') {
-            // For YouTube/Vimeo, open in modal
             setShowVideoModal(true)
         }
     }
-
     const toggleMute = () => {
         if (videoRef.current) {
             videoRef.current.muted = !isMuted
             setIsMuted(!isMuted)
         }
     }
-
     const nextImage = () => {
         setCurrentImageIndex((prev) => (prev + 1) % mediaItems.length)
     }
-
     const prevImage = () => {
         setCurrentImageIndex((prev) => (prev - 1 + mediaItems.length) % mediaItems.length)
     }
-
-    // Add handler for navigating to reviews
     const handleNavigateToReviews = () => {
         if (onNavigateToReviews) {
             onNavigateToReviews()
         }
     }
-
     return (
         <div className="bg-white dark:bg-[#121212]">
             <div className="max-w-7xl mx-auto px-4 py-8 lg:py-12">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-                    {/* Left Side - Media Gallery */}
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.6 }}
                         className="space-y-4">
-                        {/* Main Media Display */}
                         <div
                             className="relative group"
                             role="region"
@@ -271,8 +230,6 @@ export default function ProductHero({
                                                         <ExternalLink className="w-16 h-16 text-[#00FF89]" />
                                                     </div>
                                                 )}
-
-                                                {/* Simple Video Controls */}
                                                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                     <button
                                                         onClick={togglePlayPause}
@@ -295,8 +252,6 @@ export default function ProductHero({
                                                 }}
                                             />
                                         )}
-
-                                        {/* Simple Navigation */}
                                         {mediaItems.length > 1 && (
                                             <>
                                                 <button
@@ -313,13 +268,9 @@ export default function ProductHero({
                                                 </button>
                                             </>
                                         )}
-
-                                        {/* Discount badge removed from media overlay to keep gallery clean. */}
                                     </motion.div>
                                 </AnimatePresence>
                             </div>
-
-                            {/* Media Indicators */}
                             {mediaItems.length > 1 && (
                                 <div
                                     className="flex justify-center mt-3 gap-2"
@@ -343,8 +294,6 @@ export default function ProductHero({
                                 </div>
                             )}
                         </div>
-
-                        {/* Thumbnail Gallery */}
                         {mediaItems.length > 1 && (
                             <div className="grid grid-cols-5 gap-2">
                                 {mediaItems.slice(0, 5).map((media, index) => (
@@ -371,24 +320,18 @@ export default function ProductHero({
                             </div>
                         )}
                     </motion.div>
-
-                    {/* Right Side - Product Information */}
                     <motion.div
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.6, delay: 0.1 }}
                         className="space-y-6">
-                        {/* Product Header */}
                         <div className="space-y-4">
-                            {/* Category + Type Badges (split) */}
                             <div className="flex flex-wrap items-center gap-2">
-                                {/* Category Badge (improved contrast) */}
                                 <div className="inline-flex items-center px-3 py-1 rounded-full bg-[#00FF89]/10 border border-[#00FF89]/30">
                                     <span className="text-sm font-medium text-emerald-700 dark:text-[#00FF89]">
                                         {product.category?.replace('_', ' ')}
                                     </span>
                                 </div>
-                                {/* Type Badge with color mapping */}
                                 {(() => {
                                     const key = (product.type || '').toLowerCase()
                                     const style = TYPE_BADGE_STYLES[key] || TYPE_BADGE_STYLES.default
@@ -399,14 +342,8 @@ export default function ProductHero({
                                     )
                                 })()}
                             </div>
-
-                            {/* Title */}
                             <h1 className="text-2xl lg:text-3xl font-bold text-[#121212] dark:text-[#00FF89] leading-tight">{product.title}</h1>
-
-                            {/* Description */}
                             <p className="text-lg text-[#6b7280] dark:text-[#9ca3af] leading-relaxed">{product.shortDescription}</p>
-
-                            {/* Stats */}
                             <div className="flex items-center gap-6">
                                 <button
                                     onClick={handleNavigateToReviews}
@@ -431,8 +368,6 @@ export default function ProductHero({
                                     <span className="text-[#6b7280] dark:text-[#9ca3af]">views</span>
                                 </div>
                             </div>
-
-                            {/* Social Actions */}
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <button
@@ -448,7 +383,6 @@ export default function ProductHero({
                                         <ThumbsUp className="w-4 h-4" />
                                         <span className="font-medium text-sm">{product.upvotes || 0}</span>
                                     </button>
-
                                     <button
                                         onClick={onLike}
                                         aria-pressed={!!liked}
@@ -462,7 +396,6 @@ export default function ProductHero({
                                         <span className="font-medium text-sm">{product.favorites || 0}</span>
                                     </button>
                                 </div>
-
                                 <button
                                     onClick={onShare}
                                     aria-label="Share product"
@@ -480,12 +413,9 @@ export default function ProductHero({
                                 </button>
                             </div>
                         </div>
-
-                        {/* Pricing Card */}
                         <motion.div
                             ref={ctaRef}
                             className="relative bg-gray-50 dark:bg-[#1f1f1f] rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-                            {/* Discount badge moved here for a cleaner layout */}
                             {discountPercentage > 0 && (
                                 <div className="absolute top-4 right-4">
                                     <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#FFC050]/20 text-[#FFC050] text-sm font-medium border border-[#FFC050]/30">
@@ -493,8 +423,6 @@ export default function ProductHero({
                                     </span>
                                 </div>
                             )}
-
-                            {/* Pricing */}
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="text-3xl font-bold text-[#00FF89]">${Math.round(product.price || 0)}</div>
                                 {product.originalPrice && product.originalPrice > product.price && (
@@ -508,8 +436,6 @@ export default function ProductHero({
                                     </>
                                 )}
                             </div>
-
-                            {/* Features List */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
                                 <div className="flex items-center gap-2">
                                     <Zap className="w-4 h-4 text-[#00FF89]" />
@@ -528,8 +454,6 @@ export default function ProductHero({
                                     <span className="text-sm text-[#6b7280] dark:text-[#9ca3af]">Lifetime Updates</span>
                                 </div>
                             </div>
-
-                            {/* Action Buttons */}
                             <div className="space-y-3">
                                 {hasPurchased ? (
                                     <button
@@ -562,13 +486,9 @@ export default function ProductHero({
                                 )}
                             </div>
                         </motion.div>
-
-                        {/* Promocode Display */}
                         <ProductPromoDisplay 
                             product={product}
                         />
-
-                        {/* Seller Info */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -585,7 +505,6 @@ export default function ProductHero({
                                     <User className="w-6 h-6 text-[#00FF89]" />
                                 )}
                             </div>
-
                             <div className="flex-1">
                                 <div className="font-medium text-[#121212] dark:text-[#00FF89]">
                                     {product.sellerId?.fullName || 'Anonymous Seller'}
@@ -606,7 +525,6 @@ export default function ProductHero({
                                     ))}
                                 </div>
                             </div>
-
                             <a
                                 href={`/profile/${product.sellerId?.username || product.sellerId?._id}`}
                                 target="_blank"
@@ -618,8 +536,6 @@ export default function ProductHero({
                     </motion.div>
                 </div>
             </div>
-
-            {/* Fullscreen Image Modal */}
             <AnimatePresence>
                 {isImageFullscreen && (
                     <motion.div
@@ -642,8 +558,6 @@ export default function ProductHero({
                     </motion.div>
                 )}
             </AnimatePresence>
-
-            {/* Video Modal */}
             <AnimatePresence>
                 {showVideoModal && activeMedia?.videoInfo && (
                     <motion.div
@@ -672,4 +586,3 @@ export default function ProductHero({
         </div>
     )
 }
-

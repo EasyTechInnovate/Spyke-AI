@@ -1,12 +1,8 @@
 'use client'
-
 import { memo } from 'react'
 import { motion } from 'framer-motion'
-
-// Loading Badge Component
 export const LoadingBadge = memo(({ count, loading, className = '' }) => {
   if (!count && !loading) return null
-
   return (
     <span
       className={`px-2 py-1 text-xs bg-[#00FF89]/10 text-[#00FF89] rounded-lg font-medium transition-all duration-300 ${
@@ -21,8 +17,6 @@ export const LoadingBadge = memo(({ count, loading, className = '' }) => {
   )
 })
 LoadingBadge.displayName = 'LoadingBadge'
-
-// Metric Card Component
 export const MetricCard = memo(({ title, value, icon: Icon, color = 'blue', loading = false, onClick }) => {
   const colorClasses = {
     blue: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
@@ -33,9 +27,7 @@ export const MetricCard = memo(({ title, value, icon: Icon, color = 'blue', load
     indigo: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20',
     cyan: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20'
   }
-
   const Component = onClick ? motion.button : motion.div
-
   return (
     <Component
       initial={{ opacity: 0, y: 20 }}
@@ -62,8 +54,6 @@ export const MetricCard = memo(({ title, value, icon: Icon, color = 'blue', load
   )
 })
 MetricCard.displayName = 'MetricCard'
-
-// Status Badge Component
 export const StatusBadge = memo(({ status, variant = 'default', size = 'sm' }) => {
   const variants = {
     default: 'bg-gray-500/20 text-gray-300',
@@ -73,14 +63,12 @@ export const StatusBadge = memo(({ status, variant = 'default', size = 'sm' }) =
     info: 'bg-blue-500/20 text-blue-300',
     pending: 'bg-orange-500/20 text-orange-300'
   }
-
   const sizes = {
     xs: 'px-2 py-1 text-xs',
     sm: 'px-2.5 py-1 text-xs',
     md: 'px-3 py-1.5 text-sm',
     lg: 'px-4 py-2 text-base'
   }
-
   return (
     <span
       className={`inline-flex items-center rounded-full font-medium ${variants[variant]} ${sizes[size]}`}>
@@ -89,8 +77,6 @@ export const StatusBadge = memo(({ status, variant = 'default', size = 'sm' }) =
   )
 })
 StatusBadge.displayName = 'StatusBadge'
-
-// Loading Skeleton Component
 export const LoadingSkeleton = memo(({ className = '', variant = 'default' }) => {
   const variants = {
     default: 'h-4 bg-gray-800 rounded',
@@ -99,12 +85,9 @@ export const LoadingSkeleton = memo(({ className = '', variant = 'default' }) =>
     avatar: 'w-10 h-10 bg-gray-800 rounded-full',
     button: 'h-10 bg-gray-800 rounded-lg'
   }
-
   return <div className={`animate-pulse ${variants[variant]} ${className}`} />
 })
 LoadingSkeleton.displayName = 'LoadingSkeleton'
-
-// Empty State Component
 export const EmptyState = memo(({ 
   icon: Icon, 
   title, 
@@ -124,8 +107,6 @@ export const EmptyState = memo(({
   </div>
 ))
 EmptyState.displayName = 'EmptyState'
-
-// Error State Component
 export const ErrorState = memo(({ 
   title = 'Something went wrong', 
   description, 

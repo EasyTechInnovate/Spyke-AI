@@ -156,9 +156,11 @@ export const FIELD_IMPROVEMENT_TIPS = {
     ]
 }
 
-export default {
+const errorMessagesUtils = {
     ERROR_MESSAGES,
     getEnhancedErrorMessage,
     STEP_NAVIGATION_ERRORS,
     FIELD_IMPROVEMENT_TIPS
 }
+
+export default errorMessagesUtils

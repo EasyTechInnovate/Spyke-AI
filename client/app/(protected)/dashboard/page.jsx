@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Container from '@/components/shared/layout/Container'
@@ -7,15 +6,13 @@ import Header from '@/components/shared/layout/Header'
 import { BarChart3, DollarSign, Package, Users, TrendingUp, Plus, Eye, Edit, MessageSquare, Star, ArrowUpRight, Activity } from 'lucide-react'
 import toast from '@/lib/utils/toast'
 import sellerAPI from '@/lib/api/seller'
-
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function Dashboard() {
     const router = useRouter()
     const [loading, setLoading] = useState(true)
     const [dashboardData, setDashboardData] = useState(null)
     const [products, setProducts] = useState([])
-    const [userRole, setUserRole] = useState('user') // 'user' or 'seller'
-
+    const [userRole, setUserRole] = useState('user') 
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const user = JSON.parse(localStorage.getItem('user') || '{}')
@@ -25,23 +22,18 @@ export default function Dashboard() {
             setUserRole(detectedRole)
         }
     }, [])
-
     useEffect(() => {
         if (userRole) {
             loadDashboardData()
         }
     }, [userRole])
-
     const loadDashboardData = async () => {
         try {
-            // Load different data based on user role
             if (userRole === 'seller') {
-                // Load seller dashboard data and products in parallel
                 const [dashboardResponse, productsResponse] = await Promise.all([
                     sellerAPI.getDashboard().catch(() => null),
                     sellerAPI.getProducts({ limit: 5 }).catch(() => null)
                 ])
-
                 if (dashboardResponse) {
                     setDashboardData(dashboardResponse)
                 }
@@ -49,13 +41,8 @@ export default function Dashboard() {
                     setProducts(productsResponse.products || productsResponse || [])
                 }
             } else {
-                // Load regular user dashboard data (purchases, wishlist, etc.)
-                // For now, we'll show a different interface for regular users
             }
-
-            // Use mock data if API calls fail (for development)
             if (!dashboardResponse || !productsResponse) {
-                // Mock data fallback
                 setDashboardData({
                     stats: {
                         totalRevenue: 2450.0,
@@ -71,7 +58,6 @@ export default function Dashboard() {
                         { id: 3, product: 'Content Creation Bundle', amount: 79.99, date: '1 day ago', buyer: 'Mike R.' }
                     ]
                 })
-
                 setProducts([
                     {
                         id: 1,
@@ -108,11 +94,9 @@ export default function Dashboard() {
                     }
                 ])
             } else {
-                // Use real API data
                 setDashboardData(dashboardResponse)
                 setProducts(productsResponse.products || productsResponse)
             }
-
             setLoading(false)
         } catch (error) {
             console.error('Error loading dashboard:', error)
@@ -120,20 +104,15 @@ export default function Dashboard() {
             setLoading(false)
         }
     }
-
     const handleCreateProduct = () => {
-        // Navigate to product creation page
         router.push('/seller/products/create')
     }
-
     const handleEditProduct = (productId) => {
         router.push(`/seller/products/edit/${productId}`)
     }
-
     const handleViewProduct = (productId) => {
         router.push(`/products/${productId}`)
     }
-
     if (loading) {
         return (
             <div className="min-h-screen bg-black">
@@ -150,14 +129,11 @@ export default function Dashboard() {
             </div>
         )
     }
-
     return (
         <div className="min-h-screen bg-black text-white">
-
             <main className="pt-24 pb-16">
                 <Container>
                     <div className="max-w-7xl mx-auto">
-                        {/* Header */}
                         <div className="mb-8">
                             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                                 <div>
@@ -180,8 +156,6 @@ export default function Dashboard() {
                                 )}
                             </div>
                         </div>
-
-                        {/* Dashboard Content */}
                         {userRole === 'seller' ? (
                             <SellerDashboardContent
                                 dashboardData={dashboardData}
@@ -200,13 +174,10 @@ export default function Dashboard() {
         </div>
     )
 }
-
 function SellerDashboardContent({ dashboardData, products, handleCreateProduct, handleEditProduct, handleViewProduct, router }) {
     if (!dashboardData) return null
-
     return (
         <div>
-            {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
                 <StatsCard
                     title="Total Revenue"
@@ -251,9 +222,7 @@ function SellerDashboardContent({ dashboardData, products, handleCreateProduct, 
                     color="orange-400"
                 />
             </div>
-
             <div className="grid lg:grid-cols-3 gap-8">
-                {/* Products List */}
                 <div className="lg:col-span-2">
                     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
                         <div className="flex items-center justify-between mb-6">
@@ -264,7 +233,6 @@ function SellerDashboardContent({ dashboardData, products, handleCreateProduct, 
                                 View All
                             </button>
                         </div>
-
                         <div className="space-y-4">
                             {products.map((product) => (
                                 <ProductCard
@@ -277,15 +245,12 @@ function SellerDashboardContent({ dashboardData, products, handleCreateProduct, 
                         </div>
                     </div>
                 </div>
-
-                {/* Recent Sales */}
                 <div className="lg:col-span-1">
                     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-xl font-semibold">Recent Sales</h2>
                             <Activity className="w-5 h-5 text-brand-primary" />
                         </div>
-
                         <div className="space-y-4">
                             {dashboardData.recentSales.map((sale) => (
                                 <div
@@ -303,8 +268,6 @@ function SellerDashboardContent({ dashboardData, products, handleCreateProduct, 
                             ))}
                         </div>
                     </div>
-
-                    {/* Quick Actions */}
                     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 mt-6">
                         <h2 className="text-xl font-semibold mb-6">Quick Actions</h2>
                         <div className="space-y-3">
@@ -330,11 +293,9 @@ function SellerDashboardContent({ dashboardData, products, handleCreateProduct, 
         </div>
     )
 }
-
 function UserDashboardContent() {
     return (
         <div className="space-y-8">
-            {/* User Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 text-center">
                     <Package className="w-8 h-8 text-brand-primary mx-auto mb-3" />
@@ -352,8 +313,6 @@ function UserDashboardContent() {
                     <p className="text-gray-400">Messages</p>
                 </div>
             </div>
-
-            {/* Quick Actions */}
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
                 <h2 className="text-xl font-semibold text-white mb-6">Quick Actions</h2>
                 <div className="grid md:grid-cols-2 gap-4">
@@ -373,8 +332,6 @@ function UserDashboardContent() {
                     </a>
                 </div>
             </div>
-
-            {/* Recent Activity */}
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
                 <h2 className="text-xl font-semibold text-white mb-6">Recent Activity</h2>
                 <div className="text-center py-8">
@@ -385,7 +342,6 @@ function UserDashboardContent() {
         </div>
     )
 }
-
 function StatsCard({ title, value, icon: Icon, trend, color }) {
     return (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
@@ -401,7 +357,6 @@ function StatsCard({ title, value, icon: Icon, trend, color }) {
         </div>
     )
 }
-
 function ProductCard({ product, onEdit, onView }) {
     return (
         <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
@@ -417,7 +372,6 @@ function ProductCard({ product, onEdit, onView }) {
                     {product.status}
                 </span>
             </div>
-
             <div className="grid grid-cols-3 gap-4 mb-4 text-sm">
                 <div>
                     <p className="text-gray-400">Price</p>
@@ -432,7 +386,6 @@ function ProductCard({ product, onEdit, onView }) {
                     <p className="text-white">{product.views}</p>
                 </div>
             </div>
-
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 text-yellow-400 fill-current" />
@@ -456,7 +409,6 @@ function ProductCard({ product, onEdit, onView }) {
         </div>
     )
 }
-
 function QuickActionButton({ icon: Icon, label, onClick }) {
     return (
         <button

@@ -77,5 +77,7 @@ class IndustryAPI {
 const categoryAPI = new CategoryAPI()
 const industryAPI = new IndustryAPI()
 
+const toolsNicheAPI = { category: categoryAPI, industry: industryAPI }
+
 export { categoryAPI, industryAPI }
-export default { category: categoryAPI, industry: industryAPI }
+export default toolsNicheAPI

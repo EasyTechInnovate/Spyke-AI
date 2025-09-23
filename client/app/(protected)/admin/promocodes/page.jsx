@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { promocodeAPI } from '@/lib/api'
@@ -22,22 +21,14 @@ import {
 import PromocodeForm from '@/components/features/promocode/PromocodeForm'
 import PromocodeStats from '@/components/features/promocode/PromocodeStats'
 import LoadingSpinner from '@/components/shared/ui/LoadingSpinner'
-
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function AdminPromocodesPage() {
-    // Inline notification state
     const [notification, setNotification] = useState(null)
-
-    // Show inline notification messages  
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
-        // Auto-dismiss after 5 seconds
         setTimeout(() => setNotification(null), 5000)
     }
-
-    // Clear notification
     const clearNotification = () => setNotification(null)
-
     const router = useRouter()
     const [promocodes, setPromocodes] = useState([])
     const [loading, setLoading] = useState(true)
@@ -53,11 +44,9 @@ export default function AdminPromocodesPage() {
         total: 0,
         totalPages: 0
     })
-
     useEffect(() => {
         fetchPromocodes()
     }, [pagination.page, filterStatus, filterType])
-
     const fetchPromocodes = async () => {
         try {
             setLoading(true)
@@ -68,7 +57,6 @@ export default function AdminPromocodesPage() {
                 type: filterType !== 'all' ? filterType : undefined,
                 search: searchTerm || undefined
             })
-
             setPromocodes(response.promocodes || [])
             setPagination({
                 ...pagination,
@@ -82,21 +70,17 @@ export default function AdminPromocodesPage() {
             setLoading(false)
         }
     }
-
     const handleSearch = (e) => {
         e.preventDefault()
         setPagination({ ...pagination, page: 1 })
         fetchPromocodes()
     }
-
     const handleCreateEdit = (promocode = null) => {
         setSelectedPromocode(promocode)
         setShowForm(true)
     }
-
     const handleDelete = async (promocodeId) => {
         if (!confirm('Are you sure you want to delete this promocode?')) return
-
         try {
             await promocodeAPI.deletePromocode(promocodeId)
             showMessage('Promocode deleted successfully', 'success')
@@ -106,7 +90,6 @@ export default function AdminPromocodesPage() {
             console.error('Error deleting promocode:', error)
         }
     }
-
     const handleToggleStatus = async (promocodeId) => {
         try {
             await promocodeAPI.togglePromocodeStatus(promocodeId)
@@ -117,17 +100,14 @@ export default function AdminPromocodesPage() {
             console.error('Error toggling status:', error)
         }
     }
-
     const handleShowStats = (promocode) => {
         setSelectedPromocode(promocode)
         setShowStats(true)
     }
-
     const copyToClipboard = (code) => {
         navigator.clipboard.writeText(code)
         showMessage('Code copied to clipboard', 'success')
     }
-
     const handleFormClose = (refreshData = false) => {
         setShowForm(false)
         setSelectedPromocode(null)
@@ -135,14 +115,11 @@ export default function AdminPromocodesPage() {
             fetchPromocodes()
         }
     }
-
     const handleStatsClose = () => {
         setShowStats(false)
         setSelectedPromocode(null)
     }
-
     const exportPromocodes = () => {
-        // Convert promocodes to CSV
         const headers = ['Code', 'Status', 'Type', 'Value', 'Uses', 'Max Uses', 'Created By', 'Created At']
         const csvData = promocodes.map(p => [
             p.code,
@@ -154,7 +131,6 @@ export default function AdminPromocodesPage() {
             p.createdBy?.emailAddress || 'Unknown',
             new Date(p.createdAt).toLocaleDateString()
         ])
-
         const csv = [headers, ...csvData].map(row => row.join(',')).join('\n')
         const blob = new Blob([csv], { type: 'text/csv' })
         const url = window.URL.createObjectURL(blob)
@@ -165,10 +141,8 @@ export default function AdminPromocodesPage() {
         window.URL.revokeObjectURL(url)
         showMessage('Promocodes exported successfully', 'success')
     }
-
     return (
         <div className="container mx-auto px-4 py-8">
-            {/* Inline Notification */}
             {notification && (
                 <InlineNotification
                     type={notification.type}
@@ -176,14 +150,10 @@ export default function AdminPromocodesPage() {
                     onDismiss={clearNotification}
                 />
             )}
-
-            
             <div className="mb-8">
                 <h1 className="text-3xl font-bold mb-2">Promocode Management (Admin)</h1>
                 <p className="text-gray-600">Manage all promotional codes across the platform</p>
             </div>
-
-            {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <Card className="p-4">
                     <div className="text-sm text-gray-600 mb-1">Total Promocodes</div>
@@ -208,8 +178,6 @@ export default function AdminPromocodesPage() {
                     </div>
                 </Card>
             </div>
-
-            {/* Controls */}
             <Card className="p-6 mb-6">
                 <div className="flex flex-col lg:flex-row gap-4">
                     <form onSubmit={handleSearch} className="flex-1 flex gap-2">
@@ -224,7 +192,6 @@ export default function AdminPromocodesPage() {
                             <Search className="w-4 h-4" />
                         </Button>
                     </form>
-
                     <div className="flex gap-2">
                         <select
                             value={filterStatus}
@@ -236,7 +203,6 @@ export default function AdminPromocodesPage() {
                             <option value="inactive">Inactive</option>
                             <option value="expired">Expired</option>
                         </select>
-
                         <select
                             value={filterType}
                             onChange={(e) => setFilterType(e.target.value)}
@@ -246,7 +212,6 @@ export default function AdminPromocodesPage() {
                             <option value="percentage">Percentage</option>
                             <option value="fixed">Fixed Amount</option>
                         </select>
-
                         <Button 
                             onClick={exportPromocodes} 
                             variant="outline"
@@ -256,7 +221,6 @@ export default function AdminPromocodesPage() {
                             <Download className="w-4 h-4" />
                             Export
                         </Button>
-
                         <Button onClick={() => handleCreateEdit()} className="gap-2">
                             <Plus className="w-4 h-4" />
                             Create Promocode
@@ -264,8 +228,6 @@ export default function AdminPromocodesPage() {
                     </div>
                 </div>
             </Card>
-
-            {/* Promocodes List */}
             {loading ? (
                 <div className="flex justify-center py-12">
                     <LoadingSpinner />
@@ -301,11 +263,9 @@ export default function AdminPromocodesPage() {
                                             </Badge>
                                         )}
                                     </div>
-                                    
                                     {promocode.description && (
                                         <p className="text-gray-600 mb-2">{promocode.description}</p>
                                     )}
-                                    
                                     <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                                         <span>Uses: {promocode.usageCount || 0} / {promocode.maxUses || '∞'}</span>
                                         {promocode.validFrom && (
@@ -320,7 +280,6 @@ export default function AdminPromocodesPage() {
                                         <span>Created: {new Date(promocode.createdAt).toLocaleDateString()}</span>
                                     </div>
                                 </div>
-
                                 <div className="flex items-center gap-2">
                                     <Button
                                         variant="ghost"
@@ -373,8 +332,6 @@ export default function AdminPromocodesPage() {
                     ))}
                 </div>
             )}
-
-            {/* Pagination */}
             {pagination.totalPages > 1 && (
                 <div className="mt-6 flex justify-center gap-2">
                     <Button
@@ -396,15 +353,12 @@ export default function AdminPromocodesPage() {
                     </Button>
                 </div>
             )}
-
-            {/* Modals */}
             {showForm && (
                 <PromocodeForm
                     promocode={selectedPromocode}
                     onClose={handleFormClose}
                 />
             )}
-
             {showStats && selectedPromocode && (
                 <PromocodeStats
                     promocode={selectedPromocode}

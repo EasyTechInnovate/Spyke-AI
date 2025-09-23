@@ -1,9 +1,7 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import { useEffect } from 'react'
 import { CheckCircle, AlertCircle, Info, AlertTriangle, X } from 'lucide-react'
-
 const notificationConfig = {
     success: {
         icon: CheckCircle,
@@ -50,14 +48,12 @@ const notificationConfig = {
         closeBtnColor: 'text-gray-400 hover:text-gray-200 hover:bg-gray-600/10'
     }
 }
-
 const titleMap = {
     success: 'Success',
     error: 'Error',
     warning: 'Warning',
     info: 'Info'
 }
-
 export default function Notification({ 
     id,
     type = 'info', 
@@ -70,18 +66,14 @@ export default function Notification({
     const config = notificationConfig[type]
     const IconComponent = config.icon
     const displayTitle = title || titleMap[type]
-
-    // Auto-close timer
     useEffect(() => {
         if (duration > 0 && onClose) {
             const timer = setTimeout(() => {
                 onClose(id)
             }, duration)
-
             return () => clearTimeout(timer)
         }
     }, [duration, onClose, id])
-
     return (
         <motion.div
             initial={{ opacity: 0, x: 400, scale: 0.95 }}
@@ -91,28 +83,20 @@ export default function Notification({
             className="max-w-sm w-full cursor-pointer"
             style={{ fontFamily: 'var(--font-league-spartan)' }}
             onClick={() => onClick?.(id)}>
-            
             <div className={`
                 relative overflow-hidden rounded-2xl border backdrop-blur-xl shadow-2xl
                 transform transition-all duration-300 hover:scale-[1.02]
                 ${config.bg} ${config.border}
             `}>
-                
-                {/* Animated Border Glow */}
                 <div 
                     className="absolute inset-0 rounded-2xl opacity-60 animate-pulse" 
                     style={{ boxShadow: `0 0 20px ${config.shadowColor}` }} 
                 />
-                
-                {/* Content */}
                 <div className="relative p-4">
                     <div className="flex items-start space-x-4">
-                        {/* Icon */}
                         <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${config.iconBg}`}>
                             <IconComponent className="w-5 h-5" />
                         </div>
-                        
-                        {/* Text Content */}
                         <div className="flex-1 min-w-0">
                             <div className={`text-base font-semibold ${config.titleColor}`}>
                                 {displayTitle}
@@ -121,8 +105,6 @@ export default function Notification({
                                 {message}
                             </p>
                         </div>
-                        
-                        {/* Close Button */}
                         <button
                             onClick={(e) => {
                                 e.stopPropagation()
@@ -132,8 +114,6 @@ export default function Notification({
                             <X className="w-4 h-4" />
                         </button>
                     </div>
-                    
-                    {/* Progress Bar */}
                     {duration > 0 && (
                         <motion.div
                             initial={{ width: '100%' }}

@@ -1,35 +1,6 @@
 'use client'
-
 import React from 'react'
 import { ChevronRight } from 'lucide-react'
-
-/**
- * @typedef {Object} SelectOption
- * @property {string} value - Option value
- * @property {string} label - Option label
- * @property {boolean} [disabled] - Whether option is disabled
- */
-
-/**
- * @typedef {Object} FormSelectProps
- * @property {string} [label] - Field label
- * @property {string} name - Field name
- * @property {string} [value=''] - Selected value
- * @property {function} onChange - Change handler
- * @property {string} [error] - Error message
- * @property {string} [placeholder='Select an option'] - Placeholder text
- * @property {string} [helperText] - Helper text
- * @property {boolean} [required] - Whether field is required
- * @property {string} [className] - Additional CSS classes
- * @property {SelectOption[]} options - Select options
- * @property {boolean} [disabled] - Whether field is disabled
- * @property {React.ReactNode} [icon] - Icon component
- */
-
-/**
- * Reusable form select component
- * @param {FormSelectProps} props
- */
 export default function FormSelect({
     label,
     name,
@@ -53,7 +24,6 @@ export default function FormSelect({
         ${error ? 'border-red-500' : 'border-gray-700'}
         ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
     `
-
     return (
         <div className={className}>
             {label && (
@@ -61,14 +31,12 @@ export default function FormSelect({
                     {label} {required && '*'}
                 </label>
             )}
-            
             <div className="relative">
                 {icon && (
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
                         {icon}
                     </div>
                 )}
-                
                 <select
                     name={name}
                     value={value}
@@ -91,14 +59,11 @@ export default function FormSelect({
                         </option>
                     ))}
                 </select>
-                
                 <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 rotate-90 pointer-events-none" />
             </div>
-            
             {helperText && !error && (
                 <p className="mt-1 text-sm text-gray-500">{helperText}</p>
             )}
-            
             {error && (
                 <p className="mt-1 text-sm text-red-400">{error}</p>
             )}

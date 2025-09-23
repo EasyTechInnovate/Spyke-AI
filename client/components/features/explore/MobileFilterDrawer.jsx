@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { X, ChevronDown, ChevronUp, Star, DollarSign } from 'lucide-react'
 import { createPortal } from 'react-dom'
-
 export default function MobileFilterDrawer({
     isOpen,
     onClose,
@@ -14,7 +13,6 @@ export default function MobileFilterDrawer({
     setupTimes = [],
     onFilterChange
 }) {
-    // Section expansion state (only a few open by default for compactness)
     const [open, setOpen] = useState({
         productType: true,
         category: true,
@@ -24,20 +22,14 @@ export default function MobileFilterDrawer({
         rating: false,
         seller: false
     })
-
-    // Refs for focus management
     const dialogRef = useRef(null)
     const firstFocusRef = useRef(null)
     const lastFocusRef = useRef(null)
-
-    // Focus first element when opening
     useEffect(() => {
         if (isOpen) {
             requestAnimationFrame(() => firstFocusRef.current?.focus())
         }
     }, [isOpen])
-
-    // Dynamic viewport height CSS var to handle mobile browser chrome
     useEffect(() => {
         const setVH = () => {
             document.documentElement.style.setProperty('--vh', `${window.innerHeight}px`)
@@ -46,8 +38,6 @@ export default function MobileFilterDrawer({
         window.addEventListener('resize', setVH)
         return () => window.removeEventListener('resize', setVH)
     }, [])
-
-    // Lock body scroll when open
     useEffect(() => {
         if (isOpen) {
             document.body.classList.add('mobile-filter-open')
@@ -56,8 +46,6 @@ export default function MobileFilterDrawer({
         }
         return () => document.body.classList.remove('mobile-filter-open')
     }, [isOpen])
-
-    // Simple focus trap + ESC close
     useEffect(() => {
         if (!isOpen) return
         const handler = (e) => {
@@ -84,15 +72,12 @@ export default function MobileFilterDrawer({
         document.addEventListener('keydown', handler)
         return () => document.removeEventListener('keydown', handler)
     }, [isOpen, onClose])
-
-    // Utility
     const toggle = useCallback((k) => setOpen((o) => ({ ...o, [k]: !o[k] })), [])
     const update = useCallback((partial) => onFilterChange({ ...filters, ...partial }), [filters, onFilterChange])
     const clear = useCallback(() => {
         update({ category: 'all', type: 'all', industry: 'all', setupTime: 'all', priceRange: [0, 1000], rating: 0, verifiedOnly: false })
         onClose()
     }, [update, onClose])
-
     const hasActive = useMemo(
         () =>
             filters.category !== 'all' ||
@@ -105,8 +90,6 @@ export default function MobileFilterDrawer({
             filters.priceRange?.[1] < 1000,
         [filters]
     )
-
-    // Data-driven sections definition
     const sections = [
         {
             key: 'productType',
@@ -129,7 +112,6 @@ export default function MobileFilterDrawer({
             items: setupTimes.map((i) => ({ id: i.id, name: i.name, active: filters.setupTime === i.id, onClick: () => update({ setupTime: i.id }) }))
         }
     ]
-
     return (
         isOpen ? createPortal(
             <AnimatePresence>
@@ -152,7 +134,6 @@ export default function MobileFilterDrawer({
                         exit={{ x: '100%' }}
                         transition={{ type: 'spring', damping: 26, stiffness: 260 }}
                     >
-                        {/* Header */}
                         <div className="flex items-center justify-between px-5 pt-6 pb-4 border-b border-gray-800/70 shrink-0">
                             <h2 id="mobile-filters-title" className="text-lg font-semibold tracking-wide flex items-center gap-2">
                                 Filters
@@ -162,10 +143,7 @@ export default function MobileFilterDrawer({
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-
-                        {/* Scrollable content */}
                         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3" style={{ WebkitOverflowScrolling: 'touch' }}>
-                            {/* Reduced bottom padding so content ends just above footer */}
                             <div className="space-y-3 pb-6">
                                 {sections.map(sec => (
                                     <Section key={sec.key} id={sec.key} label={sec.label} expanded={open[sec.key]} onToggle={toggle}>
@@ -178,7 +156,6 @@ export default function MobileFilterDrawer({
                                         </ul>
                                     </Section>
                                 ))}
-
                                 <Section id="price" label="Price" expanded={open.price} onToggle={toggle}>
                                     <div className="space-y-3">
                                         <div className="flex items-center gap-3">
@@ -194,7 +171,6 @@ export default function MobileFilterDrawer({
                                         </div>
                                     </div>
                                 </Section>
-
                                 <Section id="rating" label="Rating" expanded={open.rating} onToggle={toggle}>
                                     <div className="flex flex-col gap-2">
                                         {[4,3,2,1,0].map(r => (
@@ -202,7 +178,6 @@ export default function MobileFilterDrawer({
                                         ))}
                                     </div>
                                 </Section>
-
                                 <Section id="seller" label="Seller" expanded={open.seller} onToggle={toggle}>
                                     <label className="flex items-center gap-3 p-3 rounded-md bg-gray-900/40 hover:bg-gray-800/60 cursor-pointer">
                                         <input type="checkbox" checked={filters.verifiedOnly} onChange={e => update({ verifiedOnly: e.target.checked })} className="h-4 w-4 rounded border-gray-600 text-emerald-400 focus:ring-emerald-500" aria-label="Verified sellers only" />
@@ -211,8 +186,6 @@ export default function MobileFilterDrawer({
                                 </Section>
                             </div>
                         </div>
-
-                        {/* Footer (flex item, fixed at bottom via flex layout) */}
                         <div className="px-5 py-4 flex gap-3 border-t border-gray-800/70 bg-[#111214] shrink-0 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
                             <button onClick={clear} className="flex-1 h-11 rounded-lg bg-gray-800 text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/50">Clear</button>
                             <button ref={lastFocusRef} onClick={onClose} className="flex-1 h-11 rounded-lg bg-emerald-400 text-black text-sm font-semibold hover:bg-emerald-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#111214] focus:ring-emerald-400">Apply</button>
@@ -222,8 +195,6 @@ export default function MobileFilterDrawer({
             </AnimatePresence>, document.body) : null
     )
 }
-
-/* ---------------- Sub Components ---------------- */
 function Section({ id, label, children, expanded, onToggle }) {
     return (
         <div className="border border-gray-800/60 rounded-lg overflow-hidden">
@@ -246,7 +217,6 @@ function Section({ id, label, children, expanded, onToggle }) {
         </div>
     )
 }
-
 function OptionButton({ label, active, onClick }) {
     return (
         <button
@@ -260,7 +230,6 @@ function OptionButton({ label, active, onClick }) {
         </button>
     )
 }
-
 function RatingButton({ rating, active, onClick }) {
     return (
         <button
@@ -287,7 +256,6 @@ function RatingButton({ rating, active, onClick }) {
         </button>
     )
 }
-
 function PriceInput({ value, onChange, min, max, ...rest }) {
     return (
         <div className="flex-1 relative">
@@ -307,7 +275,6 @@ function PriceInput({ value, onChange, min, max, ...rest }) {
         </div>
     )
 }
-
 function QuickPrice({ label, active, onClick }) {
     return (
         <button
@@ -321,4 +288,3 @@ function QuickPrice({ label, active, onClick }) {
         </button>
     )
 }
-

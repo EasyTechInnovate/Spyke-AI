@@ -1,23 +1,15 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
-
 export default function BackgroundEffectsLight() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
-
   useEffect(() => {
-    // Respect user's reduced motion preference
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
     setPrefersReducedMotion(mediaQuery.matches)
-
     const handleChange = (e) => setPrefersReducedMotion(e.matches)
     mediaQuery.addEventListener('change', handleChange)
-
     return () => mediaQuery.removeEventListener('change', handleChange)
   }, [])
-
-  // Generate elegant floating particles
   const particles = Array.from({ length: 12 }, (_, i) => ({
     id: i,
     size: Math.random() * 4 + 2,
@@ -26,18 +18,11 @@ export default function BackgroundEffectsLight() {
     duration: Math.random() * 20 + 15,
     delay: Math.random() * 5,
   }))
-
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-      {/* Seamless base gradient that covers the entire viewport */}
       <div className="absolute inset-0">
-        {/* Primary dark base */}
         <div className="absolute inset-0 bg-black" />
-
-        {/* Smooth vertical gradient for depth */}
         <div className="absolute inset-0 bg-gradient-to-b from-gray-900/10 via-black to-gray-900/15" />
-
-        {/* Continuous radial gradients that span multiple sections */}
         <div
           className="absolute inset-0 opacity-25"
           style={{
@@ -48,8 +33,6 @@ export default function BackgroundEffectsLight() {
             `
           }}
         />
-
-        {/* Additional flowing gradients for seamless transitions */}
         <div
           className="absolute inset-0 opacity-15"
           style={{
@@ -60,8 +43,6 @@ export default function BackgroundEffectsLight() {
           }}
         />
       </div>
-
-      {/* Large animated glow orbs that span across sections */}
       <motion.div
         className="absolute w-[600px] h-[600px] rounded-full blur-3xl"
         style={{
@@ -81,7 +62,6 @@ export default function BackgroundEffectsLight() {
           ease: "easeInOut"
         }}
       />
-
       <motion.div
         className="absolute w-[500px] h-[500px] rounded-full blur-3xl"
         style={{
@@ -102,8 +82,6 @@ export default function BackgroundEffectsLight() {
           delay: 3
         }}
       />
-
-      {/* Central flowing glow */}
       <motion.div
         className="absolute w-[400px] h-[400px] rounded-full blur-2xl"
         style={{
@@ -124,8 +102,6 @@ export default function BackgroundEffectsLight() {
           delay: 8
         }}
       />
-
-      {/* Distributed floating particles across the entire page */}
       {!prefersReducedMotion && (
         <div className="absolute inset-0">
           {particles.map((particle) => (
@@ -156,8 +132,6 @@ export default function BackgroundEffectsLight() {
           ))}
         </div>
       )}
-
-      {/* Seamless geometric grid pattern */}
       <div
         className="absolute inset-0 opacity-[0.06]"
         style={{
@@ -168,11 +142,8 @@ export default function BackgroundEffectsLight() {
           backgroundSize: '80px 80px',
         }}
       />
-
-      {/* Flowing geometric elements */}
       {!prefersReducedMotion && (
         <div className="absolute inset-0">
-          {/* Large flowing ring */}
           <motion.div
             className="absolute w-60 h-60 border-2 rounded-full"
             style={{
@@ -192,8 +163,6 @@ export default function BackgroundEffectsLight() {
               ease: "linear"
             }}
           />
-
-          {/* Medium flowing ring */}
           <motion.div
             className="absolute w-32 h-32 border rounded-full"
             style={{
@@ -213,8 +182,6 @@ export default function BackgroundEffectsLight() {
               ease: "linear"
             }}
           />
-
-          {/* Distributed accent dots */}
           {[...Array(8)].map((_, i) => (
             <motion.div
               key={i}
@@ -239,8 +206,6 @@ export default function BackgroundEffectsLight() {
           ))}
         </div>
       )}
-
-      {/* Flowing light streaks that connect sections visually */}
       <div className="absolute inset-0">
         <div
           className="absolute w-0.5 h-60 opacity-30"
@@ -273,8 +238,6 @@ export default function BackgroundEffectsLight() {
           }}
         />
       </div>
-
-      {/* Enhanced seamless gradients for smooth section transitions */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/20" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/15 via-transparent to-black/15" />

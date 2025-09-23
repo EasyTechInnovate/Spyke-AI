@@ -1,11 +1,8 @@
-// filepath: /Users/anandpandey/Desktop/Projects/EasyTech/Spyke-AI/client/components/shared/IndustryDropdown.jsx
 'use client'
-
 import { useState, useEffect, useRef } from 'react'
 import { ChevronDown, Building2, Loader2 } from 'lucide-react'
 import { industryAPI } from '@/lib/api/toolsNiche'
 import { useNotifications } from '@/hooks/useNotifications'
-
 export default function IndustryDropdown({
     value,
     onChange,
@@ -22,7 +19,6 @@ export default function IndustryDropdown({
     const [isOpen, setIsOpen] = useState(false)
     const { addNotification } = useNotifications()
     const fetchedRef = useRef(false)
-
     useEffect(() => {
         if (fetchedRef.current) return
         fetchedRef.current = true
@@ -39,7 +35,9 @@ export default function IndustryDropdown({
                     isActive: ind.isActive !== false
                 })).filter(ind => ind.isActive)
                 setIndustries(formattedIndustries)
-                try { onDataLoaded(formattedIndustries) } catch { /* noop */ }
+                try { onDataLoaded(formattedIndustries) } catch (e) {
+                    console.error('Error in onDataLoaded:', e)
+                }
             } catch (error) {
                 console.error('Error fetching industries:', error)
                 addNotification({
@@ -51,16 +49,12 @@ export default function IndustryDropdown({
             }
         }
         fetchIndustries()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
-
     const handleSelect = (industryId) => {
         onChange(industryId)
         setIsOpen(false)
     }
-
     const selectedIndustry = industries.find(ind => ind.id === value)
-
     return (
         <div className={`relative ${className}`}>
             <button

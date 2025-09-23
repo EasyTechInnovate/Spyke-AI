@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import {
     Plus,
@@ -33,11 +32,9 @@ import { productsAPI, sellerAPI } from '@/lib/api'
 import toast from '@/lib/utils/toast'
 import { useSellerProfile } from '@/hooks/useSellerProfile'
 import ConfirmationModal from '@/components/shared/ui/ConfirmationModal'
-
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
 const BRAND = '#00FF89'
 const AMBER = '#FFC050'
-
 function formatDate(date) {
     if (!date) return 'N/A'
     const d = new Date(date)
@@ -48,7 +45,6 @@ function formatDate(date) {
     if (diffDays < 7) return `${diffDays} days ago`
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
 }
-
 const statusConfig = {
     draft: {
         color: 'text-[#FFC050]',
@@ -79,23 +75,15 @@ const statusConfig = {
         hint: 'Product is archived and not visible to buyers.'
     }
 }
-
 export default function SellerProductsPage() {
     const router = useRouter()
     const { data: sellerProfile, loading: profileLoading } = useSellerProfile()
-    // Inline notification state - moved to component level
     const [notification, setNotification] = useState(null)
-
-    // Show inline notification messages  
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
-        // Auto-dismiss after 5 seconds
         setTimeout(() => setNotification(null), 5000)
     }
-
-    // Clear notification
     const clearNotification = () => setNotification(null)
-
     const [products, setProducts] = useState([])
     const [loading, setLoading] = useState(true)
     const [tabSwitching, setTabSwitching] = useState(false)
@@ -106,8 +94,6 @@ export default function SellerProductsPage() {
     const [selectedProducts, setSelectedProducts] = useState(new Set())
     const [showBulkActions, setShowBulkActions] = useState(false)
     const [actionLoading, setActionLoading] = useState(false)
-
-    // Advanced filters
     const [sortBy, setSortBy] = useState('updatedAt')
     const [sortOrder, setSortOrder] = useState('desc')
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
@@ -117,8 +103,6 @@ export default function SellerProductsPage() {
         type: '',
         verificationStatus: ''
     })
-
-    // Confirmation modal state
     const [confirmModal, setConfirmModal] = useState({
         isOpen: false,
         title: '',
@@ -129,7 +113,6 @@ export default function SellerProductsPage() {
         confirmText: 'Confirm',
         cancelText: 'Cancel'
     })
-
     const [stats, setStats] = useState({
         all: 0,
         draft: 0,
@@ -140,17 +123,13 @@ export default function SellerProductsPage() {
         totalViews: 0,
         avgRating: 0
     })
-
     const [pagination, setPagination] = useState({
         currentPage: 1,
         totalPages: 1,
         totalItems: 0
     })
-
     const latestReqIdRef = useRef(0)
     const cacheRef = useRef(new Map())
-
-    // Sort options
     const sortOptions = [
         { value: 'updatedAt', label: 'Last Updated' },
         { value: 'createdAt', label: 'Date Created' },
@@ -160,36 +139,25 @@ export default function SellerProductsPage() {
         { value: 'sales', label: 'Sales' },
         { value: 'rating', label: 'Rating' }
     ]
-
-    // Approval status flags
     const isVerificationApproved = sellerProfile?.verificationStatus === 'approved'
     const isCommissionAccepted = sellerProfile?.commissionOffer?.status === 'accepted' && sellerProfile?.commissionOffer?.acceptedAt
     const isFullyApproved = isVerificationApproved && isCommissionAccepted
-
-    // Debounce search query
     useEffect(() => {
         const id = setTimeout(() => setDebouncedQuery(searchQuery.trim().toLowerCase()), 300)
         return () => clearTimeout(id)
     }, [searchQuery])
-
-    // Main fetch function
     const fetchProducts = useCallback(
         async ({ isTabChange = false, isManualRefresh = false, silent = false } = {}) => {
             if (!isFullyApproved) return
-
             const key = `${filterStatus}:${pagination.currentPage}`
-
             if (isManualRefresh) setListOpacity(0.6)
             if (isTabChange) setTabSwitching(true)
             if (!silent) setLoading(true)
-
-            // Serve cached quickly while fetching fresh
             if (cacheRef.current.has(key)) {
                 const cached = cacheRef.current.get(key)
                 setProducts(cached.products)
                 setPagination(cached.pagination || pagination)
             }
-
             try {
                 const reqId = ++latestReqIdRef.current
                 const params = {
@@ -202,21 +170,14 @@ export default function SellerProductsPage() {
                 if (advancedFilters.category) params.category = advancedFilters.category
                 if (advancedFilters.type) params.type = advancedFilters.type
                 if (advancedFilters.priceRange) params.priceRange = advancedFilters.priceRange
-
                 const response = await productsAPI.getMyProducts(params)
-                if (reqId !== latestReqIdRef.current) return // ignore stale response
-
+                if (reqId !== latestReqIdRef.current) return 
                 if (response.data) {
                     const productsData = response.data.products || []
                     const paginationData = response.data.pagination || {}
-
-                    // Cache fresh data
                     cacheRef.current.set(key, { products: productsData, pagination: paginationData })
-
                     setProducts(productsData)
                     setPagination(paginationData)
-
-                    // Calculate stats
                     const newStats = {
                         all: productsData.length,
                         draft: productsData.filter((p) => p.status === 'draft').length,
@@ -245,12 +206,9 @@ export default function SellerProductsPage() {
         },
         [filterStatus, pagination.currentPage, isFullyApproved, sortBy, sortOrder, advancedFilters]
     )
-
     useEffect(() => {
         fetchProducts()
     }, [fetchProducts])
-
-    // Filter products based on search
     const filteredProducts = useMemo(() => {
         if (!debouncedQuery) return products
         return products.filter((product) => {
@@ -263,8 +221,6 @@ export default function SellerProductsPage() {
             )
         })
     }, [debouncedQuery, products])
-
-    // Handle sort change
     const handleSortChange = (newSortBy) => {
         if (sortBy === newSortBy) {
             setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))
@@ -274,8 +230,6 @@ export default function SellerProductsPage() {
         }
         fetchProducts()
     }
-
-    // Bulk actions
     const handleSelectProduct = (productId) => {
         setSelectedProducts((prev) => {
             const newSet = new Set(prev)
@@ -287,7 +241,6 @@ export default function SellerProductsPage() {
             return newSet
         })
     }
-
     const handleSelectAll = () => {
         if (selectedProducts.size === filteredProducts.length) {
             setSelectedProducts(new Set())
@@ -295,10 +248,8 @@ export default function SellerProductsPage() {
             setSelectedProducts(new Set(filteredProducts.map((p) => p._id)))
         }
     }
-
     const handleBulkAction = async (action) => {
         if (selectedProducts.size === 0) return
-
         setActionLoading(true)
         try {
             switch (action) {
@@ -336,7 +287,6 @@ export default function SellerProductsPage() {
             setActionLoading(false)
         }
     }
-
     const exportProductsData = (productsData) => {
         const csvContent = [
             ['Title', 'Status', 'Price', 'Views', 'Sales', 'Rating', 'Created', 'Updated'],
@@ -353,7 +303,6 @@ export default function SellerProductsPage() {
         ]
             .map((row) => row.map((field) => `"${field}"`).join(','))
             .join('\n')
-
         const blob = new Blob([csvContent], { type: 'text/csv' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -364,8 +313,6 @@ export default function SellerProductsPage() {
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
     }
-
-    // Product actions
     const handleDeleteProduct = async (productId, productTitle) => {
         setConfirmModal({
             isOpen: true,
@@ -389,7 +336,6 @@ export default function SellerProductsPage() {
             }
         })
     }
-
     const handlePublishProduct = async (productId, currentStatus, product) => {
         try {
             if (currentStatus !== 'published') {
@@ -403,7 +349,6 @@ export default function SellerProductsPage() {
                     return
                 }
             }
-
             const newStatus = currentStatus === 'published' ? 'draft' : 'published'
             await productsAPI.updateProduct(productId, { status: newStatus })
             showMessage(`Product ${newStatus === 'published' ? 'published' : 'unpublished'} successfully`, 'success')
@@ -417,7 +362,6 @@ export default function SellerProductsPage() {
             }
         }
     }
-
     const handleSubmitForReview = async (productId, productTitle) => {
         setConfirmModal({
             isOpen: true,
@@ -442,13 +386,10 @@ export default function SellerProductsPage() {
             }
         })
     }
-
     const showRestricted = !profileLoading && !isFullyApproved
-
     if (showRestricted) {
         return (
             <div className="min-h-screen bg-[#121212] flex items-center justify-center">
-            {/* Inline Notification */}
             {notification && (
                 <InlineNotification
                     type={notification.type}
@@ -456,8 +397,6 @@ export default function SellerProductsPage() {
                     onDismiss={clearNotification}
                 />
             )}
-
-            
                 <div className="max-w-md w-full mx-4">
                     <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
                         <AlertCircle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
@@ -483,10 +422,8 @@ export default function SellerProductsPage() {
             </div>
         )
     }
-
     return (
         <div className="space-y-6">
-            {/* Enhanced Header */}
             <div className="relative overflow-hidden rounded-2xl border border-gray-800 bg-[#141414]">
                 <div
                     className="absolute inset-0 pointer-events-none"
@@ -511,7 +448,6 @@ export default function SellerProductsPage() {
                                 <p className="text-gray-400 mt-1">Manage and monitor your product portfolio</p>
                             </div>
                         </div>
-
                         <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full lg:w-auto">
                             <MiniKPI
                                 label="Published"
@@ -546,8 +482,6 @@ export default function SellerProductsPage() {
                         </div>
                     </div>
                 </div>
-
-                {/* Action Buttons Row */}
                 <div className="border-t border-gray-800 px-5 sm:px-6 py-4">
                     <div className="flex flex-col sm:flex-row gap-3 justify-between">
                         <div className="flex items-center gap-3">
@@ -565,7 +499,6 @@ export default function SellerProductsPage() {
                                 <span>Import JSON</span>
                             </Link>
                         </div>
-
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => exportProductsData(filteredProducts)}
@@ -582,12 +515,9 @@ export default function SellerProductsPage() {
                         </div>
                     </div>
                 </div>
-
-                {/* Sticky Filter Bar */}
                 <div className="sticky top-0 z-10 border-t border-gray-800 bg-[#121212]/80 backdrop-blur supports-[backdrop-filter]:backdrop-blur-md">
                     <div className="px-4 sm:px-6 py-3">
                         <div className="flex flex-col md:flex-row md:items-center gap-3 justify-between">
-                            {/* Status Filter Tabs */}
                             <div className="relative -mx-4 sm:-mx-6 w-[calc(100%+2rem)] sm:w-[calc(100%+3rem)]">
                                 <div className="overflow-x-auto px-4 sm:px-6">
                                     <div
@@ -595,7 +525,6 @@ export default function SellerProductsPage() {
                                         role="tablist"
                                         aria-label="Filter by status">
                                         <Filter className="w-4 h-4 text-gray-500" />
-
                                         <FilterTab
                                             id="all"
                                             label="All"
@@ -609,7 +538,6 @@ export default function SellerProductsPage() {
                                                 fetchProducts({ isTabChange: true })
                                             }}
                                         />
-
                                         <FilterTab
                                             id="draft"
                                             label="Draft"
@@ -625,7 +553,6 @@ export default function SellerProductsPage() {
                                                 fetchProducts({ isTabChange: true })
                                             }}
                                         />
-
                                         <FilterTab
                                             id="pending_review"
                                             label="Review"
@@ -641,7 +568,6 @@ export default function SellerProductsPage() {
                                                 fetchProducts({ isTabChange: true })
                                             }}
                                         />
-
                                         <FilterTab
                                             id="published"
                                             label="Published"
@@ -657,7 +583,6 @@ export default function SellerProductsPage() {
                                                 fetchProducts({ isTabChange: true })
                                             }}
                                         />
-
                                         <FilterTab
                                             id="archived"
                                             label="Archived"
@@ -676,8 +601,6 @@ export default function SellerProductsPage() {
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Search + Controls */}
                             <div className="flex items-center gap-2 md:min-w-[360px]">
                                 <div className="relative flex-1">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -702,17 +625,13 @@ export default function SellerProductsPage() {
                     </div>
                 </div>
             </div>
-
             {debouncedQuery && (
                 <div className="text-xs sm:text-sm text-gray-400 px-1">
                     Showing {filteredProducts.length} results for "{debouncedQuery}".
                 </div>
             )}
-
-            {/* Advanced Sorting & Filtering Controls */}
             <div className="bg-[#171717] border border-gray-800 rounded-xl p-4">
                 <div className="flex flex-col lg:flex-row lg:items-center gap-4 justify-between">
-                    {/* Left: Sort Controls */}
                     <div className="flex items-center gap-3">
                         <span className="text-sm text-gray-400">Sort by:</span>
                         <div className="flex items-center gap-2">
@@ -735,8 +654,6 @@ export default function SellerProductsPage() {
                             </button>
                         </div>
                     </div>
-
-                    {/* Right: Filter Controls */}
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
@@ -745,7 +662,6 @@ export default function SellerProductsPage() {
                             Advanced Filters
                             {showAdvancedFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                         </button>
-
                         {filteredProducts.length > 0 && (
                             <div className="flex items-center gap-2">
                                 <input
@@ -759,8 +675,6 @@ export default function SellerProductsPage() {
                         )}
                     </div>
                 </div>
-
-                {/* Advanced Filters Panel */}
                 {showAdvancedFilters && (
                     <div className="mt-4 pt-4 border-t border-gray-800">
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -778,7 +692,6 @@ export default function SellerProductsPage() {
                                     <option value="over-100">Over $100</option>
                                 </select>
                             </div>
-
                             <div>
                                 <label className="block text-xs font-medium text-gray-400 mb-1">Category</label>
                                 <select
@@ -792,7 +705,6 @@ export default function SellerProductsPage() {
                                     <option value="analytics">Analytics</option>
                                 </select>
                             </div>
-
                             <div>
                                 <label className="block text-xs font-medium text-gray-400 mb-1">Product Type</label>
                                 <select
@@ -806,7 +718,6 @@ export default function SellerProductsPage() {
                                     <option value="template">Templates</option>
                                 </select>
                             </div>
-
                             <div className="flex items-end">
                                 <button
                                     onClick={() =>
@@ -825,8 +736,6 @@ export default function SellerProductsPage() {
                     </div>
                 )}
             </div>
-
-            {/* Products Grid */}
             <section
                 aria-busy={loading}
                 className="transition-opacity duration-200"
@@ -855,8 +764,6 @@ export default function SellerProductsPage() {
                     </div>
                 )}
             </section>
-
-            {/* Pagination */}
             {pagination.totalPages > 1 && !debouncedQuery && (
                 <div className="flex items-center justify-center gap-2 mt-6">
                     <button
@@ -876,8 +783,6 @@ export default function SellerProductsPage() {
                     </button>
                 </div>
             )}
-
-            {/* Quick Actions Toolbar */}
             {selectedProducts.size > 0 && (
                 <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
                     <div className="bg-[#1a1a1a] border border-gray-700 rounded-xl px-4 py-3 shadow-2xl">
@@ -919,8 +824,6 @@ export default function SellerProductsPage() {
                     </div>
                 </div>
             )}
-
-            {/* Confirmation Modal */}
             <ConfirmationModal
                 isOpen={confirmModal.isOpen}
                 onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
@@ -935,8 +838,6 @@ export default function SellerProductsPage() {
         </div>
     )
 }
-
-// Helper Components
 function MiniKPI({ label, value, icon }) {
     return (
         <div className="relative rounded-lg border border-gray-800 bg-[#0f0f0f] px-3 py-2">
@@ -948,7 +849,6 @@ function MiniKPI({ label, value, icon }) {
         </div>
     )
 }
-
 function FilterTab({ id, label, active, onSelect, icon: Icon, tone = 'neutral', count }) {
     const isActive = active === id
     const toneClass =
@@ -963,7 +863,6 @@ function FilterTab({ id, label, active, onSelect, icon: Icon, tone = 'neutral', 
                   : 'bg-[#1e1e1e] text-gray-300'
     const activeClass = isActive ? `${toneClass} ring-1 ring-white/10` : 'bg-[#0f0f0f] text-gray-400 hover:bg-[#1b1b1b]'
     const showCount = typeof count === 'number'
-
     return (
         <button
             role="tab"
@@ -977,7 +876,6 @@ function FilterTab({ id, label, active, onSelect, icon: Icon, tone = 'neutral', 
         </button>
     )
 }
-
 function Loader() {
     return (
         <div className="flex items-center justify-center h-64">
@@ -988,7 +886,6 @@ function Loader() {
         </div>
     )
 }
-
 function SkeletonList() {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1008,7 +905,6 @@ function SkeletonList() {
         </div>
     )
 }
-
 function EmptyState({ query }) {
     return (
         <div className="bg-[#171717] border border-gray-800 rounded-xl p-10 text-center">
@@ -1028,11 +924,9 @@ function EmptyState({ query }) {
         </div>
     )
 }
-
 function ProductCard({ product, onSelect, isSelected, onDelete, onPublish, onSubmitForReview }) {
     const status = product.status || 'draft'
     const cfg = statusConfig[status] || statusConfig.draft
-
     const getVerificationStatusText = (product) => {
         if (product.isVerified && product.isTested) {
             return { text: 'Fully Approved', color: 'text-green-400', icon: Star }
@@ -1045,10 +939,8 @@ function ProductCard({ product, onSelect, isSelected, onDelete, onPublish, onSub
         }
         return { text: 'Under Review', color: 'text-yellow-400', icon: Clock }
     }
-
     const verificationStatus = getVerificationStatusText(product)
     const StatusIcon = verificationStatus.icon
-
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1057,7 +949,6 @@ function ProductCard({ product, onSelect, isSelected, onDelete, onPublish, onSub
             className="rounded-xl border border-gray-800 bg-[#171717] overflow-hidden">
             <div className="p-4">
                 <div className="flex items-start justify-between gap-3 mb-4">
-                    {/* Product Info */}
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2">
                             <input
@@ -1068,9 +959,7 @@ function ProductCard({ product, onSelect, isSelected, onDelete, onPublish, onSub
                             />
                             <h3 className="text-lg font-semibold text-white truncate">{product.title}</h3>
                         </div>
-
                         <p className="text-gray-400 text-sm mb-3 line-clamp-2">{product.shortDescription}</p>
-
                         <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
                             <div className="flex items-center gap-1">
                                 <Eye className="w-4 h-4" />
@@ -1086,22 +975,17 @@ function ProductCard({ product, onSelect, isSelected, onDelete, onPublish, onSub
                             </div>
                         </div>
                     </div>
-
-                    {/* Status and Actions */}
                     <div className="text-right">
                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${cfg.chip} mb-2`}>
                             <cfg.icon className="w-3.5 h-3.5" />
                             {cfg.label}
                         </span>
-
                         <div className={`flex items-center gap-1 text-xs ${verificationStatus.color} mb-2`}>
                             <StatusIcon className="w-3 h-3" />
                             <span>{verificationStatus.text}</span>
                         </div>
                     </div>
                 </div>
-
-                {/* Verification Progress */}
                 <div className="bg-gray-800/30 rounded-lg p-3 mb-4">
                     <div className="grid grid-cols-2 gap-2 text-xs">
                         <div className={`flex items-center gap-1.5 ${product.isVerified ? 'text-green-400' : 'text-yellow-400'}`}>
@@ -1113,20 +997,16 @@ function ProductCard({ product, onSelect, isSelected, onDelete, onPublish, onSub
                             <span>{product.isTested ? '✓ Tested' : '⏳ Pending'}</span>
                         </div>
                     </div>
-
                     {product.isVerified && product.isTested && status === 'draft' && (
                         <div className="mt-2 text-center text-xs text-[#00FF89]">🚀 Ready to publish!</div>
                     )}
                 </div>
-
-                {/* Action Buttons */}
                 <div className="flex gap-2">
                     <Link
                         href={`/seller/products/${product.slug || product._id}/edit`}
                         className="flex-1 px-3 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors text-center text-sm font-medium">
                         Edit
                     </Link>
-
                     {product.isVerified && product.isTested ? (
                         <button
                             onClick={onPublish}
@@ -1148,17 +1028,14 @@ function ProductCard({ product, onSelect, isSelected, onDelete, onPublish, onSub
                             Under Review
                         </button>
                     )}
-
                     <button
                         onClick={onDelete}
                         className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
                         <Trash2 className="w-4 h-4" />
                     </button>
                 </div>
-
                 <div className="text-xs text-gray-500 mt-2 text-center">Updated {formatDate(product.updatedAt)}</div>
             </div>
         </motion.div>
     )
 }
-

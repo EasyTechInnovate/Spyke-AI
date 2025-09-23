@@ -1,35 +1,6 @@
 'use client'
-
 import React, { useState, useRef, useEffect } from 'react'
 import { Search, X, ChevronDown } from 'lucide-react'
-
-/**
- * @typedef {Object} SearchableOption
- * @property {string} value - Option value
- * @property {string} label - Option label
- * @property {string} [description] - Optional description
- */
-
-/**
- * @typedef {Object} FormSearchableSelectProps
- * @property {string} [label] - Field label
- * @property {string} name - Field name
- * @property {string} [value=''] - Selected value
- * @property {function} onChange - Change handler
- * @property {string} [error] - Error message
- * @property {string} [placeholder='Search...'] - Placeholder text
- * @property {string} [helperText] - Helper text
- * @property {boolean} [required] - Whether field is required
- * @property {string} [className] - Additional CSS classes
- * @property {SearchableOption[]} options - Select options
- * @property {boolean} [disabled] - Whether field is disabled
- * @property {string} [noResultsText='No results found'] - No results message
- */
-
-/**
- * Reusable searchable select component
- * @param {FormSearchableSelectProps} props
- */
 export default function FormSearchableSelect({
     label,
     name,
@@ -47,14 +18,11 @@ export default function FormSearchableSelect({
     const [isOpen, setIsOpen] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
     const dropdownRef = useRef(null)
-
     const selectedOption = options.find(opt => opt.value === value)
-
     const filteredOptions = options.filter(option =>
         option.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (option.description && option.description.toLowerCase().includes(searchTerm.toLowerCase()))
     )
-
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const handleClickOutside = (event) => {
@@ -62,23 +30,19 @@ export default function FormSearchableSelect({
                     setIsOpen(false)
                 }
             }
-
             document.addEventListener('mousedown', handleClickOutside)
             return () => document.removeEventListener('mousedown', handleClickOutside)
         }
     }, [])
-
     const handleSelect = (optionValue) => {
         onChange({ target: { name, value: optionValue } })
         setIsOpen(false)
         setSearchTerm('')
     }
-
     const handleClear = () => {
         onChange({ target: { name, value: '' } })
         setSearchTerm('')
     }
-
     return (
         <div className={className} ref={dropdownRef}>
             {label && (
@@ -86,7 +50,6 @@ export default function FormSearchableSelect({
                     {label} {required && '*'}
                 </label>
             )}
-
             <div className="relative">
                 {!value || !selectedOption ? (
                     <>
@@ -109,7 +72,6 @@ export default function FormSearchableSelect({
                             />
                             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                         </div>
-
                         {isOpen && !disabled && (
                             <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                                 {filteredOptions.length > 0 ? (
@@ -150,11 +112,9 @@ export default function FormSearchableSelect({
                     </div>
                 )}
             </div>
-
             {helperText && !error && (
                 <p className="mt-1 text-sm text-gray-500">{helperText}</p>
             )}
-
             {error && (
                 <p className="mt-1 text-sm text-red-400">{error}</p>
             )}

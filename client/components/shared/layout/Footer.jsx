@@ -4,7 +4,6 @@ import Link from 'next/link'
 import Container from './Container'
 import { SpykeLogo } from '@/components/Logo'
 import { Twitter, Linkedin, Youtube, Facebook, Instagram } from 'lucide-react'
-
 export default function Footer() {
     const footerLinks = {
         Product: [
@@ -29,7 +28,6 @@ export default function Footer() {
             { name: 'Seller Aggrement', href: '/seller-agreement', prefetch: false }
         ]
     }
-
     const socialLinks = [
         { name: 'Twitter', icon: Twitter, href: 'https://x.com/spykeai' },
         { name: 'LinkedIn', icon: Linkedin, href: 'https://www.linkedin.com/company/spykeai/' },
@@ -37,7 +35,6 @@ export default function Footer() {
         { name: 'YouTube', icon: Youtube, href: 'https://www.youtube.com/@SpykeAITech?sub_confirmation=1' },
         { name: 'Instagram', icon: Instagram, href: 'https://www.instagram.com/spykeai/' }
     ]
-
     return (
         <>
             <footer className="bg-black text-white border-t border-gray-800">
@@ -99,7 +96,6 @@ export default function Footer() {
                         <div className="pt-4 border-t border-gray-800">
                             <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
                                 <p className="font-kumbh-sans text-sm text-gray-400">© {new Date().getFullYear()} Spyke AI. All rights reserved.</p>
-                                
                             </div>
                         </div>
                     </div>
@@ -108,4 +104,3 @@ export default function Footer() {
         </>
     )
 }
-

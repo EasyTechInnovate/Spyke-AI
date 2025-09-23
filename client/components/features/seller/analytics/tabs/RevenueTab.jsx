@@ -1,13 +1,10 @@
 'use client'
-
 import { useState, useEffect, useMemo } from 'react'
 import { DollarSign, TrendingUp, TrendingDown, Calendar, BarChart3, RefreshCw, AlertCircle, Target, Activity } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Line, ComposedChart, Area, Bar } from 'recharts'
 import analyticsAPI from '@/lib/api/analytics'
 import { AnalyticsLoadingScreen } from '../AnalyticsLoadingScreen'
-
-// Enhanced utility functions matching SalesTab
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -16,29 +13,22 @@ const formatCurrency = (amount) => {
         maximumFractionDigits: 0
     }).format(amount || 0)
 }
-
 const formatNumber = (num) => {
     return new Intl.NumberFormat('en-US').format(num || 0)
 }
-
 const formatPercentage = (num) => {
     return `${(num || 0).toFixed(1)}%`
 }
-
-// Main RevenueTab component with proper API integration and matching Sales design
 export default function RevenueTab({ timeRange = '30d' }) {
     const [revenueData, setRevenueData] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [refreshing, setRefreshing] = useState(false)
-
-    // Fetch revenue data
     const fetchRevenueData = async (silent = false) => {
         try {
             if (!silent) setLoading(true)
             if (silent) setRefreshing(true)
             setError(null)
-
             const data = await analyticsAPI.seller.getRevenue()
             setRevenueData(data)
         } catch (err) {
@@ -49,32 +39,20 @@ export default function RevenueTab({ timeRange = '30d' }) {
             setRefreshing(false)
         }
     }
-
-    // Initial load
     useEffect(() => {
         fetchRevenueData()
     }, [timeRange])
-
-    // Calculate comprehensive metrics from real API data
     const summaryMetrics = useMemo(() => {
         if (!revenueData) return null
-
         const { dailyRevenue = [], categoryRevenue = [], monthlyComparison = {} } = revenueData
-
-        // Calculate totals from daily data
         const totalRevenue = dailyRevenue.reduce((sum, day) => sum + (day.revenue || 0), 0)
         const totalSales = dailyRevenue.reduce((sum, day) => sum + (day.salesCount || 0), 0)
         const avgOrderValue = totalSales > 0 ? totalRevenue / totalSales : 0
-
-        // Get current vs previous month data
         const currentMonth = monthlyComparison.current || { revenue: 0, salesCount: 0 }
         const previousMonth = monthlyComparison.previous || { revenue: 0, salesCount: 0 }
         const growth = monthlyComparison.growth || 0
-
-        // Calculate additional insights
         const avgDailyRevenue = dailyRevenue.length > 0 ? totalRevenue / dailyRevenue.length : 0
         const peakDay = dailyRevenue.reduce((peak, day) => (day.revenue > peak.revenue ? day : peak), { revenue: 0 })
-
         return {
             totalRevenue,
             totalSales,
@@ -86,11 +64,8 @@ export default function RevenueTab({ timeRange = '30d' }) {
             categoryCount: categoryRevenue.length
         }
     }, [revenueData])
-
-    // Process daily revenue for line chart
     const chartData = useMemo(() => {
         if (!revenueData?.dailyRevenue?.length) return []
-
         return revenueData.dailyRevenue.map((day) => ({
             date: new Date(day._id.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
             revenue: day.revenue || 0,
@@ -98,18 +73,12 @@ export default function RevenueTab({ timeRange = '30d' }) {
             avgOrderValue: day.salesCount > 0 ? day.revenue / day.salesCount : 0
         }))
     }, [revenueData])
-
-    // Manual refresh
     const handleRefresh = () => {
         fetchRevenueData(true)
     }
-
-    // Loading state
     if (loading && !revenueData) {
         return <AnalyticsLoadingScreen variant="revenue" />
     }
-
-    // Error state
     if (error) {
         return (
             <div className="min-h-[600px] flex items-center justify-center">
@@ -131,8 +100,6 @@ export default function RevenueTab({ timeRange = '30d' }) {
             </div>
         )
     }
-
-    // No data state
     if (!revenueData || (!revenueData.dailyRevenue?.length && !revenueData.categoryRevenue?.length)) {
         return (
             <div className="min-h-[600px] flex items-center justify-center">
@@ -156,10 +123,8 @@ export default function RevenueTab({ timeRange = '30d' }) {
             </div>
         )
     }
-
     return (
         <div className="space-y-6">
-            {/* Header with refresh button */}
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-2xl font-bold text-white">Revenue Analytics</h2>
@@ -173,8 +138,6 @@ export default function RevenueTab({ timeRange = '30d' }) {
                     Refresh
                 </button>
             </div>
-
-            {/* Revenue Metrics Cards - Using exact SalesTab design */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -189,7 +152,6 @@ export default function RevenueTab({ timeRange = '30d' }) {
                     <div className="text-2xl font-bold text-white mb-1">{formatCurrency(summaryMetrics?.totalRevenue || 0)}</div>
                     <div className="text-sm text-emerald-400">Last 30 days</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -204,7 +166,6 @@ export default function RevenueTab({ timeRange = '30d' }) {
                     <div className="text-2xl font-bold text-white mb-1">{formatNumber(summaryMetrics?.totalSales || 0)}</div>
                     <div className="text-sm text-gray-400">Total orders</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -219,7 +180,6 @@ export default function RevenueTab({ timeRange = '30d' }) {
                     <div className="text-2xl font-bold text-white mb-1">{formatCurrency(summaryMetrics?.avgOrderValue || 0)}</div>
                     <div className="text-sm text-gray-400">Per transaction</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -242,8 +202,6 @@ export default function RevenueTab({ timeRange = '30d' }) {
                     <div className="text-sm text-gray-400">vs last month</div>
                 </motion.div>
             </div>
-
-            {/* Revenue Trends Line Chart */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -251,8 +209,6 @@ export default function RevenueTab({ timeRange = '30d' }) {
                 className="bg-gray-800 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-white">Revenue Trends</h3>
-
-                    {/* Legend */}
                     <div className="flex items-center gap-4 text-xs">
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-[#00FF89] rounded-sm"></div>
@@ -268,7 +224,6 @@ export default function RevenueTab({ timeRange = '30d' }) {
                         </div>
                     </div>
                 </div>
-
                 <div className="h-80 relative">
                     {chartData.length > 0 ? (
                         <ResponsiveContainer
@@ -323,8 +278,6 @@ export default function RevenueTab({ timeRange = '30d' }) {
                                         return null
                                     }}
                                 />
-
-                                {/* Revenue trend line */}
                                 <Line
                                     yAxisId="left"
                                     type="monotone"
@@ -335,8 +288,6 @@ export default function RevenueTab({ timeRange = '30d' }) {
                                     activeDot={{ r: 8, fill: '#00FF89' }}
                                     name="Revenue"
                                 />
-
-                                {/* Sales count trend line */}
                                 <Line
                                     yAxisId="right"
                                     type="monotone"
@@ -347,8 +298,6 @@ export default function RevenueTab({ timeRange = '30d' }) {
                                     activeDot={{ r: 6, fill: '#3B82F6' }}
                                     name="Sales Count"
                                 />
-
-                                {/* Average order value trend line */}
                                 <Line
                                     yAxisId="left"
                                     type="monotone"
@@ -372,17 +321,13 @@ export default function RevenueTab({ timeRange = '30d' }) {
                     )}
                 </div>
             </motion.div>
-
-            {/* Monthly Performance Comparison */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
                 className="bg-gray-800 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-white mb-6">Monthly Performance Comparison</h3>
-
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Current Month */}
                     <div className="bg-gray-700/30 rounded-xl p-5">
                         <h4 className="text-gray-300 font-medium mb-4 flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
@@ -403,8 +348,6 @@ export default function RevenueTab({ timeRange = '30d' }) {
                             </div>
                         </div>
                     </div>
-
-                    {/* Previous Month */}
                     <div className="bg-gray-700/30 rounded-xl p-5">
                         <h4 className="text-gray-300 font-medium mb-4 flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
@@ -425,8 +368,6 @@ export default function RevenueTab({ timeRange = '30d' }) {
                             </div>
                         </div>
                     </div>
-
-                    {/* Growth Summary */}
                     <div className="bg-gradient-to-r from-gray-700/50 to-gray-600/50 rounded-xl p-5 border border-gray-600/30">
                         <h4 className="text-gray-300 font-medium mb-4 flex items-center gap-2">
                             {summaryMetrics?.growth >= 0 ? (

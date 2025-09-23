@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { User, Mail, Phone, Camera, MapPin, Upload, Loader2, X, Navigation, Search, Globe, Edit2, Save, XCircle } from 'lucide-react'
@@ -8,7 +7,6 @@ import { authAPI } from '@/lib/api/auth'
 import { useImageUpload } from '@/hooks/useImageUpload'
 import { getUserLocation } from '@/lib/utils/getUserLocation'
 import geocodingService from '@/lib/utils/geocoding'
-
 export default function ProfileSection({ onSuccess, onError }) {
     const { user, updateProfile, checkAuthStatus } = useAuth()
     const [loading, setLoading] = useState(false)
@@ -20,7 +18,6 @@ export default function ProfileSection({ onSuccess, onError }) {
     const [isEditMode, setIsEditMode] = useState(false)
     const [locationName, setLocationName] = useState('')
     const [loadingLocationName, setLoadingLocationName] = useState(false)
-
     const [profileData, setProfileData] = useState({
         name: user?.name || '',
         email: user?.emailAddress || user?.email || '',
@@ -32,8 +29,6 @@ export default function ProfileSection({ onSuccess, onError }) {
             address: user?.userLocation?.address || ''
         }
     })
-
-    // Update profileData when user data changes
     useEffect(() => {
         setProfileData({
             name: user?.name || '',
@@ -47,11 +42,8 @@ export default function ProfileSection({ onSuccess, onError }) {
             }
         })
     }, [user])
-
-    // Real-time validation
     const validateField = (field, value) => {
         const errors = { ...validationErrors }
-
         switch (field) {
             case 'name':
                 if (value && value.trim().length < 2) {
@@ -68,11 +60,8 @@ export default function ProfileSection({ onSuccess, onError }) {
                 }
                 break
         }
-
         setValidationErrors(errors)
     }
-
-    // Use the image upload hook for avatar uploads
     const {
         uploading: avatarUploading,
         progress: avatarProgress,
@@ -90,41 +79,27 @@ export default function ProfileSection({ onSuccess, onError }) {
             onError(`Avatar upload failed: ${error}`)
         }
     })
-
-    // Helper function to format phone number for display
     const formatPhoneNumber = (phone) => {
         if (!phone) return null
-
-        // If it's an object with phone number properties
         if (typeof phone === 'object') {
-            // Try different possible properties
-            return phone.internationalNumber || phone.nationalNumber || phone.number || phone.phoneNumber || phone.phone || JSON.stringify(phone) // fallback to show the object structure for debugging
+            return phone.internationalNumber || phone.nationalNumber || phone.number || phone.phoneNumber || phone.phone || JSON.stringify(phone) 
         }
-
-        // If it's a string or number, return as is
         return phone.toString()
     }
-
-    // Helper function to format phone number for editing
     const getPhoneNumberForEditing = (phone) => {
         if (!phone) return ''
-
-        // If it's an object with phone number properties
         if (typeof phone === 'object') {
             return phone.internationalNumber || phone.nationalNumber || phone.number || phone.phoneNumber || phone.phone || ''
         }
-
         return phone.toString()
     }
     const getCurrentValues = () => {
         const getLocationDisplay = () => {
             if (user?.userLocation?.lat && user?.userLocation?.long) {
-                // Return cached location name or coordinates as fallback
                 return locationName || `${user.userLocation.lat.toFixed(4)}, ${user.userLocation.long.toFixed(4)}`
             }
             return 'Not set'
         }
-
         return {
             name: user?.name || 'Not set',
             email: user?.emailAddress || user?.email || 'Not set',
@@ -132,8 +107,6 @@ export default function ProfileSection({ onSuccess, onError }) {
             location: getLocationDisplay()
         }
     }
-
-    // Load location name when user data is available
     useEffect(() => {
         const loadLocationName = async () => {
             if (user?.userLocation?.lat && user?.userLocation?.long && !locationName && !loadingLocationName) {
@@ -152,15 +125,11 @@ export default function ProfileSection({ onSuccess, onError }) {
                 }
             }
         }
-
         loadLocationName()
     }, [user, locationName, loadingLocationName])
-
     const currentValues = getCurrentValues()
-
     const handleEditToggle = () => {
         if (isEditMode) {
-            // Reset form data to current user values when canceling edit
             setProfileData({
                 name: user?.name || '',
                 email: user?.emailAddress || user?.email || '',
@@ -179,8 +148,6 @@ export default function ProfileSection({ onSuccess, onError }) {
         }
         setIsEditMode(!isEditMode)
     }
-
-    // Get current location using browser geolocation
     const handleGetCurrentLocation = async () => {
         setLocationLoading(true)
         try {
@@ -188,9 +155,7 @@ export default function ProfileSection({ onSuccess, onError }) {
                 (status) => console.log('Location status:', status),
                 (type, message) => (type === 'error' ? onError(message) : onSuccess(message))
             )
-
             if (location) {
-                // Reverse geocode to get address
                 const address = await reverseGeocode(location.lat, location.long)
                 setProfileData((prev) => ({
                     ...prev,
@@ -208,8 +173,6 @@ export default function ProfileSection({ onSuccess, onError }) {
             setLocationLoading(false)
         }
     }
-
-    // Reverse geocoding to get address from lat/long
     const reverseGeocode = async (lat, lng) => {
         try {
             return await geocodingService.getLocationName(lat, lng)
@@ -218,14 +181,11 @@ export default function ProfileSection({ onSuccess, onError }) {
             return null
         }
     }
-
-    // Search for cities using geocoding
     const searchCities = async (query) => {
         if (!query || query.length < 3) {
             setCitySearchResults([])
             return
         }
-
         try {
             const results = await geocodingService.searchPlaces(query, 5)
             setCitySearchResults(results)
@@ -234,17 +194,12 @@ export default function ProfileSection({ onSuccess, onError }) {
             setCitySearchResults([])
         }
     }
-
-    // Handle city search input
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             searchCities(citySearch)
         }, 300)
-
         return () => clearTimeout(timeoutId)
     }, [citySearch])
-
-    // Select a city from search results
     const handleCitySelect = (city) => {
         setProfileData((prev) => ({
             ...prev,
@@ -259,8 +214,6 @@ export default function ProfileSection({ onSuccess, onError }) {
         setShowCitySearch(false)
         onSuccess(`Location set to: ${city.address}`)
     }
-
-    // Clear location
     const handleClearLocation = () => {
         setProfileData((prev) => ({
             ...prev,
@@ -272,26 +225,20 @@ export default function ProfileSection({ onSuccess, onError }) {
         }))
         onSuccess('Location cleared')
     }
-
     const handleProfileUpdate = async (e) => {
         e.preventDefault()
         setLoading(true)
-
         try {
             const updateData = {}
-
             if (profileData.name && profileData.name.trim()) {
                 updateData.name = profileData.name.trim()
             }
-
             if (profileData.phoneNumber && profileData.phoneNumber.trim()) {
                 updateData.phoneNumber = profileData.phoneNumber.trim()
             }
-
             if (profileData.avatar && profileData.avatar.trim()) {
                 updateData.avatar = profileData.avatar.trim()
             }
-
             if (profileData.userLocation.lat && profileData.userLocation.long) {
                 updateData.userLocation = {
                     lat: parseFloat(profileData.userLocation.lat),
@@ -299,20 +246,14 @@ export default function ProfileSection({ onSuccess, onError }) {
                     address: profileData.userLocation.address
                 }
             }
-
             const response = await authAPI.updateProfile(updateData)
-
-            // Update the local user context if available
             if (updateProfile) {
                 updateProfile(response)
             }
-
-            // Refresh user data to get the latest from server
             if (checkAuthStatus) {
                 checkAuthStatus()
             }
-
-            setIsEditMode(false) // Exit edit mode after successful update
+            setIsEditMode(false) 
             onSuccess('Profile updated successfully!')
         } catch (error) {
             console.error('Profile update failed:', error)
@@ -322,31 +263,23 @@ export default function ProfileSection({ onSuccess, onError }) {
             setLoading(false)
         }
     }
-
     const handleAvatarFileSelect = async (e) => {
         const file = e.target.files[0]
         if (!file) return
-
         try {
             await uploadImage(file)
         } catch (error) {
-            // Error is already handled by the hook
         }
-
-        // Clear the file input
         e.target.value = ''
     }
-
     const removeAvatar = () => {
         setProfileData((prev) => ({ ...prev, avatar: '' }))
     }
-
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-[#1f1f1f] rounded-xl border border-gray-800 p-8">
-            {/* Header */}
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-[#00FF89]/10 rounded-xl flex items-center justify-center border border-[#00FF89]/20">
@@ -359,8 +292,6 @@ export default function ProfileSection({ onSuccess, onError }) {
                         </p>
                     </div>
                 </div>
-
-                {/* Edit Toggle Button */}
                 <div className="flex items-center gap-2">
                     {isEditMode && (
                         <button
@@ -381,12 +312,8 @@ export default function ProfileSection({ onSuccess, onError }) {
                     )}
                 </div>
             </div>
-
-            {/* Profile Content */}
             {!isEditMode ? (
-                /* Read-Only View */
                 <div className="space-y-6">
-                    {/* Profile Photo Display */}
                     <div className="flex items-center gap-6 p-4 bg-[#121212] rounded-xl border border-gray-700">
                         <div className="w-20 h-20 bg-gradient-to-br from-[#00FF89]/20 to-[#00FF89]/10 rounded-2xl flex items-center justify-center text-2xl font-bold border border-[#00FF89]/20 overflow-hidden">
                             {user?.avatar || user?.profilePhoto ? (
@@ -406,10 +333,7 @@ export default function ProfileSection({ onSuccess, onError }) {
                             </p>
                         </div>
                     </div>
-
-                    {/* Profile Information Display */}
                     <div className="grid md:grid-cols-2 gap-6">
-                        {/* Name */}
                         <div className="p-4 bg-[#121212] rounded-xl border border-gray-700">
                             <div className="flex items-center gap-3 mb-2">
                                 <User className="w-5 h-5 text-[#00FF89]" />
@@ -419,8 +343,6 @@ export default function ProfileSection({ onSuccess, onError }) {
                                 {currentValues.name}
                             </p>
                         </div>
-
-                        {/* Email */}
                         <div className="p-4 bg-[#121212] rounded-xl border border-gray-700">
                             <div className="flex items-center gap-3 mb-2">
                                 <Mail className="w-5 h-5 text-[#00FF89]" />
@@ -428,8 +350,6 @@ export default function ProfileSection({ onSuccess, onError }) {
                             </div>
                             <p className="text-lg font-medium text-white">{currentValues.email}</p>
                         </div>
-
-                        {/* Phone */}
                         <div className="p-4 bg-[#121212] rounded-xl border border-gray-700">
                             <div className="flex items-center gap-3 mb-2">
                                 <Phone className="w-5 h-5 text-[#00FF89]" />
@@ -439,8 +359,6 @@ export default function ProfileSection({ onSuccess, onError }) {
                                 {currentValues.phone}
                             </p>
                         </div>
-
-                        {/* Location */}
                         <div className="p-4 bg-[#121212] rounded-xl border border-gray-700">
                             <div className="flex items-center gap-3 mb-2">
                                 <MapPin className="w-5 h-5 text-[#00FF89]" />
@@ -455,15 +373,11 @@ export default function ProfileSection({ onSuccess, onError }) {
                     </div>
                 </div>
             ) : (
-                /* Edit Mode - Form */
                 <form
                     onSubmit={handleProfileUpdate}
                     className="space-y-6">
-                    {/* Profile Photo Section */}
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold text-white">Profile Photo</h3>
-
-                        {/* Avatar Preview */}
                         <div className="flex items-center gap-6">
                             <div className="relative">
                                 <div className="w-24 h-24 bg-gradient-to-br from-[#00FF89]/20 to-[#00FF89]/10 rounded-2xl flex items-center justify-center text-2xl font-bold border border-[#00FF89]/20 overflow-hidden">
@@ -481,8 +395,6 @@ export default function ProfileSection({ onSuccess, onError }) {
                                         <span className="text-[#00FF89]">{profileData.name.charAt(0).toUpperCase() || 'U'}</span>
                                     )}
                                 </div>
-
-                                {/* Upload Button */}
                                 <input
                                     type="file"
                                     accept=".jpg,.jpeg,.png,.webp"
@@ -507,8 +419,6 @@ export default function ProfileSection({ onSuccess, onError }) {
                                         {avatarUploading && <span className="text-sm text-[#00FF89]">Uploading {avatarProgress}%...</span>}
                                     </div>
                                     <p className="text-sm text-gray-400">Click the camera icon to upload a new profile picture from your computer</p>
-
-                                    {/* Progress Bar */}
                                     {avatarUploading && (
                                         <div className="w-full bg-gray-700 rounded-full h-2">
                                             <div
@@ -517,16 +427,12 @@ export default function ProfileSection({ onSuccess, onError }) {
                                             />
                                         </div>
                                     )}
-
-                                    {/* Upload Error */}
                                     {uploadError && (
                                         <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
                                             <X className="w-4 h-4 text-red-400 flex-shrink-0" />
                                             <p className="text-sm text-red-400">{uploadError}</p>
                                         </div>
                                     )}
-
-                                    {/* Success Message */}
                                     {profileData.avatar && !avatarUploading && (
                                         <div className="flex items-center justify-between p-3 bg-[#00FF89]/10 border border-[#00FF89]/20 rounded-lg">
                                             <div className="flex items-center gap-2">
@@ -542,14 +448,11 @@ export default function ProfileSection({ onSuccess, onError }) {
                                             </button>
                                         </div>
                                     )}
-
                                     <p className="text-xs text-gray-500">Max size: 5MB | Formats: JPG, PNG, WEBP</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    {/* Form Fields */}
                     <div className="grid md:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-semibold text-gray-300 mb-2">Full Name *</label>
@@ -568,7 +471,6 @@ export default function ProfileSection({ onSuccess, onError }) {
                                 {validationErrors.name && <p className="text-xs text-red-500 mt-1">{validationErrors.name}</p>}
                             </div>
                         </div>
-
                         <div>
                             <label className="block text-sm font-semibold text-gray-300 mb-2">Email Address</label>
                             <div className="relative">
@@ -583,7 +485,6 @@ export default function ProfileSection({ onSuccess, onError }) {
                             </div>
                             <p className="text-xs text-gray-500 mt-1">Email address cannot be changed</p>
                         </div>
-
                         <div>
                             <label className="block text-sm font-semibold text-gray-300 mb-2">Phone Number</label>
                             <div className="relative">
@@ -602,8 +503,6 @@ export default function ProfileSection({ onSuccess, onError }) {
                             </div>
                             <p className="text-xs text-gray-500 mt-1">Include country code (e.g., 919876543210)</p>
                         </div>
-
-                        {/* Location Section */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-300 mb-2">
                                 Location
@@ -684,7 +583,6 @@ export default function ProfileSection({ onSuccess, onError }) {
                             </p>
                         </div>
                     </div>
-
                     <div className="flex justify-end">
                         <button
                             type="submit"
@@ -708,4 +606,3 @@ export default function ProfileSection({ onSuccess, onError }) {
         </motion.div>
     )
 }
-

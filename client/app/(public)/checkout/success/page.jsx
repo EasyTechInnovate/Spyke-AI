@@ -1,30 +1,26 @@
 'use client'
-
 import { Suspense } from 'react'
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { CheckCircle, Package, Mail, ArrowRight, Download, Loader2, AlertCircle } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
-import Header from '@/components/shared/layout/Header'
 import Link from 'next/link'
 import { cartAPI } from '@/lib/api'
+import { useCart } from '@/hooks/useCart'
 import confetti from 'canvas-confetti'
-
 function CheckoutSuccessContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
-
+    const { clearCart, reload: reloadCart } = useCart()
     const orderId = searchParams.get('orderId')
     const sessionId = searchParams.get('session_id')
     const isManualPayment = searchParams.get('manual') === 'true'
     const orderTotal = searchParams.get('total')
     const orderItems = searchParams.get('items')
-
     const [loading, setLoading] = useState(true)
     const [orderDetails, setOrderDetails] = useState(null)
     const [error, setError] = useState(null)
-
     useEffect(() => {
         const triggerConfetti = () => {
             confetti({
@@ -34,7 +30,6 @@ function CheckoutSuccessContent() {
                 colors: ['#00FF89', '#00D672', '#00B85C']
             })
         }
-
         const loadOrderDetails = async () => {
             try {
                 if (sessionId) {
@@ -45,7 +40,6 @@ function CheckoutSuccessContent() {
                             console.error('Session confirmation failed:', result?.message || 'Unknown error')
                             throw new Error(result?.message || 'Session validation failed')
                         }
-
                         const responseData = result
                         const orderData = {
                             orderId: responseData?.purchaseId,
@@ -57,17 +51,14 @@ function CheckoutSuccessContent() {
                             appliedPromocode: responseData?.appliedPromocode || null,
                         }
                         setOrderDetails(orderData)
-
-                        // Store in sessionStorage for consistency
                         sessionStorage.setItem('lastOrderDetails', JSON.stringify(orderData))
-
-                        // Clear cart after successful payment
                         try {
                             await cartAPI.clearCart()
+                            await clearCart()
+                            await reloadCart()
                         } catch (error) {
                             console.error('Failed to clear cart:', error)
                         }
-
                         setLoading(false)
                         triggerConfetti()
                         return
@@ -82,8 +73,6 @@ function CheckoutSuccessContent() {
                         throw apiError
                     }
                 }
-
-                // Try to get stored order details from sessionStorage first
                 const storedDetails = sessionStorage.getItem('lastOrderDetails')
                 if (storedDetails) {
                     const parsedDetails = JSON.parse(storedDetails)
@@ -91,7 +80,6 @@ function CheckoutSuccessContent() {
                         setOrderDetails(parsedDetails.orderDetails)
                         setLoading(false)
                         triggerConfetti()
-                        // Clean up stored data
                         sessionStorage.removeItem('lastOrderDetails')
                         return
                     }
@@ -104,7 +92,6 @@ function CheckoutSuccessContent() {
                     paymentMethod: isManualPayment ? 'manual' : 'unknown',
                     items: []
                 }
-
                 setOrderDetails(fallbackDetails)
                 triggerConfetti()
             } catch (err) {
@@ -114,11 +101,9 @@ function CheckoutSuccessContent() {
                 setLoading(false)
             }
         }
-
         const timer = setTimeout(loadOrderDetails, 800)
         return () => clearTimeout(timer)
     }, [orderId, sessionId, isManualPayment, orderTotal, orderItems])
-
     if (loading) {
         return (
             <div className="min-h-screen bg-black">
@@ -133,7 +118,6 @@ function CheckoutSuccessContent() {
             </div>
         )
     }
-
     if (error) {
         return (
             <div className="min-h-screen bg-black">
@@ -154,13 +138,11 @@ function CheckoutSuccessContent() {
             </div>
         )
     }
-
     return (
         <div className="min-h-screen bg-black">
             <main className="pt-16 pb-24">
                 <Container>
                     <div className="max-w-4xl mx-auto">
-                        {/* Success Header */}
                         <div className="text-center mb-12">
                             <motion.div
                                 initial={{ scale: 0 }}
@@ -171,7 +153,6 @@ function CheckoutSuccessContent() {
                                     <CheckCircle className="w-12 h-12 text-brand-primary" />
                                 </div>
                             </motion.div>
-
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -179,19 +160,15 @@ function CheckoutSuccessContent() {
                                 <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
                                     {isManualPayment ? 'Order Placed Successfully!' : 'Purchase Successful!'}
                                 </h1>
-
                                 <p className="text-xl text-gray-400 mb-8">
                                     {isManualPayment
                                         ? 'Your test order has been confirmed. You now have access to your products.'
                                         : 'Thank you for your purchase. Your order has been confirmed and processed.'}
                                 </p>
-
-                                {/* Order Summary Card */}
                                 <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-8 max-w-md mx-auto">
                                     <div className="text-center">
                                         <p className="text-sm text-gray-400 mb-2">Order Number</p>
                                         <p className="text-2xl font-mono font-bold text-white mb-4">{orderId}</p>
-
                                         {orderDetails && (
                                             <div className="space-y-2 text-sm">
                                                 <div className="flex justify-between items-center">
@@ -212,14 +189,11 @@ function CheckoutSuccessContent() {
                                                 </div>
                                             </div>
                                         )}
-
                                         {isManualPayment && <p className="text-xs text-brand-primary mt-4">Test Mode - Manual Payment</p>}
                                     </div>
                                 </div>
                             </motion.div>
                         </div>
-
-                        {/* Order Items (if available) */}
                         {orderDetails?.items && orderDetails.items.length > 0 && (
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
@@ -255,8 +229,6 @@ function CheckoutSuccessContent() {
                                 </div>
                             </motion.div>
                         )}
-
-                        {/* Next Steps */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -277,8 +249,6 @@ function CheckoutSuccessContent() {
                                 </div>
                             </div>
                         </motion.div>
-
-                        {/* Action Buttons */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -290,7 +260,6 @@ function CheckoutSuccessContent() {
                                 <Download className="w-5 h-5" />
                                 View My Purchases
                             </Link>
-
                             <Link
                                 href="/"
                                 className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-gray-700 text-gray-300 font-semibold rounded-xl hover:border-gray-600 hover:text-white transition-colors">
@@ -304,7 +273,6 @@ function CheckoutSuccessContent() {
         </div>
     )
 }
-
 export default function CheckoutSuccessPage() {
     return (
         <Suspense
@@ -321,4 +289,3 @@ export default function CheckoutSuccessPage() {
         </Suspense>
     )
 }
-

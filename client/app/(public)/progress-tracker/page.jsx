@@ -1,11 +1,7 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import { CheckCircle2, Circle, Package, Tag, ShoppingCart, Clock, Lock } from 'lucide-react';
-
-// Static progress data - no API calls needed
 const initialProgressData = [
-  // Shopping Cart System
   {
     id: 'cart-1',
     feature: 'Cart Model & Schema',
@@ -46,8 +42,6 @@ const initialProgressData = [
     backend: true,
     frontend: false
   },
-  
-  // Promocode System
   {
     id: 'promo-1',
     feature: 'Promocode Model',
@@ -88,8 +82,6 @@ const initialProgressData = [
     backend: false,
     frontend: false
   },
-  
-  // Purchase System
   {
     id: 'purchase-1',
     feature: 'Purchase Model',
@@ -130,8 +122,6 @@ const initialProgressData = [
     backend: false,
     frontend: false
   },
-  
-  // Purchase History
   {
     id: 'history-1',
     feature: 'Purchase History API',
@@ -164,8 +154,6 @@ const initialProgressData = [
     backend: false,
     frontend: false
   },
-  
-  // Premium Content
   {
     id: 'premium-1',
     feature: 'Premium Content Fields',
@@ -207,7 +195,6 @@ const initialProgressData = [
     frontend: false
   }
 ];
-
 const categoryIcons = {
   cart: ShoppingCart,
   promocode: Tag,
@@ -215,7 +202,6 @@ const categoryIcons = {
   history: Clock,
   premium: Lock
 };
-
 const categoryColors = {
   cart: 'blue',
   promocode: 'purple',
@@ -223,11 +209,8 @@ const categoryColors = {
   history: 'orange',
   premium: 'pink'
 };
-
 export default function ProgressTracker() {
   const [progressData, setProgressData] = useState(initialProgressData);
-
-  // Load saved progress from localStorage on mount
   useEffect(() => {
     const savedProgress = localStorage.getItem('spyke_progress_tracker');
     if (savedProgress) {
@@ -238,12 +221,9 @@ export default function ProgressTracker() {
       }
     }
   }, []);
-
-  // Save progress to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('spyke_progress_tracker', JSON.stringify(progressData));
   }, [progressData]);
-
   const updateProgress = (itemId, type, value) => {
     setProgressData(prev => 
       prev.map(item => 
@@ -253,8 +233,6 @@ export default function ProgressTracker() {
       )
     );
   };
-
-  // Calculate statistics
   const calculateStats = () => {
     const stats = {
       total: progressData.length,
@@ -264,9 +242,7 @@ export default function ProgressTracker() {
         backend: { implemented: 0, pending: 0, percentage: 0 }
       }
     };
-
     progressData.forEach(item => {
-      // Initialize category if not exists
       if (!stats.byCategory[item.category]) {
         stats.byCategory[item.category] = {
           total: 0,
@@ -274,10 +250,7 @@ export default function ProgressTracker() {
           backend: { implemented: 0, pending: 0 }
         };
       }
-
       stats.byCategory[item.category].total++;
-
-      // Frontend stats
       if (item.frontend) {
         stats.byCategory[item.category].frontend.implemented++;
         stats.overall.frontend.implemented++;
@@ -285,8 +258,6 @@ export default function ProgressTracker() {
         stats.byCategory[item.category].frontend.pending++;
         stats.overall.frontend.pending++;
       }
-
-      // Backend stats
       if (item.backend) {
         stats.byCategory[item.category].backend.implemented++;
         stats.overall.backend.implemented++;
@@ -295,15 +266,12 @@ export default function ProgressTracker() {
         stats.overall.backend.pending++;
       }
     });
-
-    // Calculate percentages
     stats.overall.frontend.percentage = Math.round(
       (stats.overall.frontend.implemented / stats.total) * 100
     );
     stats.overall.backend.percentage = Math.round(
       (stats.overall.backend.implemented / stats.total) * 100
     );
-
     Object.keys(stats.byCategory).forEach(category => {
       const cat = stats.byCategory[category];
       cat.frontend.percentage = Math.round(
@@ -313,13 +281,9 @@ export default function ProgressTracker() {
         (cat.backend.implemented / cat.total) * 100
       );
     });
-
     return stats;
   };
-
   const stats = calculateStats();
-
-  // Group items by category
   const groupedItems = progressData.reduce((acc, item) => {
     if (!acc[item.category]) {
       acc[item.category] = [];
@@ -327,11 +291,9 @@ export default function ProgressTracker() {
     acc[item.category].push(item);
     return acc;
   }, {});
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Product System Enhancement - Progress Tracker
@@ -340,8 +302,6 @@ export default function ProgressTracker() {
             Track implementation progress for frontend and backend features (Stored locally)
           </p>
         </div>
-
-        {/* Overall Stats */}
         <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Frontend Progress</h3>
@@ -365,7 +325,6 @@ export default function ProgressTracker() {
               </div>
             </div>
           </div>
-
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Backend Progress</h3>
             <div className="space-y-2">
@@ -389,13 +348,10 @@ export default function ProgressTracker() {
             </div>
           </div>
         </div>
-
-        {/* Progress Items by Category */}
         <div className="space-y-8">
           {Object.entries(groupedItems).map(([category, items]) => {
             const Icon = categoryIcons[category] || Package;
             const color = categoryColors[category] || 'gray';
-            
             return (
               <div key={category} className="bg-white dark:bg-gray-800 rounded-lg shadow">
                 <div className={`px-6 py-4 border-b border-gray-200 dark:border-gray-700`}>
@@ -410,7 +366,6 @@ export default function ProgressTracker() {
                     </span>
                   </div>
                 </div>
-
                 <div className="p-6">
                   <table className="w-full">
                     <thead>
@@ -467,8 +422,6 @@ export default function ProgressTracker() {
             );
           })}
         </div>
-
-        {/* Reset Button */}
         <div className="mt-8 text-center">
           <button
             onClick={() => {

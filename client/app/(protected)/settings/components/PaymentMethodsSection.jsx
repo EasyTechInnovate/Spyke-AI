@@ -1,10 +1,8 @@
 'use client'
-
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { CreditCard, Plus, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
-
 export default function PaymentMethodsSection({ onSuccess, onError }) {
   const [paymentMethods, setPaymentMethods] = useState([
     {
@@ -16,12 +14,9 @@ export default function PaymentMethodsSection({ onSuccess, onError }) {
       hasSubscription: true
     }
   ])
-
   const handleAddPaymentMethod = () => {
-    // TODO: Open payment method modal
     onSuccess('Payment method functionality coming soon!')
   }
-
   const handleSetPrimaryCard = (cardId) => {
     setPaymentMethods(prev => prev.map(card => ({
       ...card,
@@ -29,7 +24,6 @@ export default function PaymentMethodsSection({ onSuccess, onError }) {
     })))
     onSuccess('Primary payment method updated!')
   }
-
   const handleRemoveCard = (cardId) => {
     const card = paymentMethods.find(c => c.id === cardId)
     if (card?.hasSubscription) {
@@ -39,14 +33,12 @@ export default function PaymentMethodsSection({ onSuccess, onError }) {
     setPaymentMethods(prev => prev.filter(c => c.id !== cardId))
     onSuccess('Payment method removed!')
   }
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6"
     >
-      {/* Payment Cards */}
       <div className="bg-[#1f1f1f] rounded-xl border border-gray-800 p-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
@@ -66,7 +58,6 @@ export default function PaymentMethodsSection({ onSuccess, onError }) {
             Add Card
           </button>
         </div>
-
         <div className="space-y-4">
           {paymentMethods.map((card) => (
             <div
@@ -119,8 +110,6 @@ export default function PaymentMethodsSection({ onSuccess, onError }) {
           ))}
         </div>
       </div>
-
-      {/* PayPal */}
       <div className="bg-[#1f1f1f] rounded-xl border border-gray-800 p-8">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center border border-blue-500/20">

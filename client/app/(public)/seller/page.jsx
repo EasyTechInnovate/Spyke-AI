@@ -1,11 +1,7 @@
-// Public Seller Landing / Directory placeholder
-// TODO: Replace with real seller marketplace listing
-
 export const metadata = {
   title: 'Sellers | Spyke AI',
   description: 'Discover top sellers on the Spyke AI marketplace.'
 }
-
 export default function SellerDirectoryPage() {
   return (
     <div className="min-h-screen bg-[#121212] text-white flex flex-col items-center justify-center p-8">

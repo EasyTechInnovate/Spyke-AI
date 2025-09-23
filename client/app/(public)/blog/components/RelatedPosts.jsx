@@ -1,15 +1,12 @@
 'use client'
-
 import Image from 'next/image'
 import Link from 'next/link'
 import { Calendar, Clock, User } from 'lucide-react'
 import { urlFor } from '@/sanity/lib/image'
-
 export default function RelatedPosts({ posts }) {
   if (!posts || posts.length === 0) {
     return null
   }
-
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -17,7 +14,6 @@ export default function RelatedPosts({ posts }) {
       day: 'numeric'
     })
   }
-
   const getCategoryColor = (color) => {
     const colors = {
       blue: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
@@ -29,7 +25,6 @@ export default function RelatedPosts({ posts }) {
     }
     return colors[color] || colors.gray
   }
-
   return (
     <section className="py-16">
       <div className="mb-12">
@@ -40,11 +35,9 @@ export default function RelatedPosts({ posts }) {
           Continue your learning journey with these hand-picked articles
         </p>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {posts.map((post) => (
           <article key={post._id} className="card-dark card-hover group">
-            {/* Featured Image */}
             <div className="relative h-48 overflow-hidden rounded-t-lg">
               {post.featuredImage ? (
                 <Image
@@ -62,10 +55,7 @@ export default function RelatedPosts({ posts }) {
                 </div>
               )}
             </div>
-
-            {/* Content */}
             <div className="p-6">
-              {/* Category */}
               {post.category && (
                 <div className="mb-3">
                   <span className={`badge ${getCategoryColor(post.category.color)} text-xs`}>
@@ -73,20 +63,14 @@ export default function RelatedPosts({ posts }) {
                   </span>
                 </div>
               )}
-
-              {/* Title */}
               <h3 className="font-league-spartan font-bold text-xl mb-3 line-clamp-2 group-hover:text-brand-primary transition-colors">
                 <Link href={`/blog/${post.slug.current}`}>
                   {post.title}
                 </Link>
               </h3>
-
-              {/* Summary */}
               <p className="text-gray-400 text-sm line-clamp-3 mb-4">
                 {post.summary}
               </p>
-
-              {/* Meta */}
               <div className="flex items-center justify-between pt-4 border-t border-white/10">
                 <div className="flex items-center gap-3">
                   {post.author?.avatar ? (
@@ -112,8 +96,6 @@ export default function RelatedPosts({ posts }) {
                   </div>
                 </div>
               </div>
-
-              {/* CTA */}
               <div className="mt-4">
                 <Link
                   href={`/blog/${post.slug.current}`}
@@ -126,8 +108,6 @@ export default function RelatedPosts({ posts }) {
           </article>
         ))}
       </div>
-
-      {/* View All Link */}
       <div className="text-center mt-12">
         <Link href="/blog">
           <button className="bg-white/5 hover:bg-white/10 border border-white/10 hover:border-brand-primary/50 text-white px-8 py-3 rounded-lg transition-all font-medium">

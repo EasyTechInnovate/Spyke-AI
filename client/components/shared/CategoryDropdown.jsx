@@ -1,10 +1,8 @@
 'use client'
-
 import { useState, useEffect, useRef } from 'react'
 import { ChevronDown, Package, Loader2 } from 'lucide-react'
 import { categoryAPI } from '@/lib/api/toolsNiche'
 import { useNotifications } from '@/hooks/useNotifications'
-
 export default function CategoryDropdown({ 
     value, 
     onChange, 
@@ -21,7 +19,6 @@ export default function CategoryDropdown({
     const [isOpen, setIsOpen] = useState(false)
     const { addNotification } = useNotifications()
     const fetchedRef = useRef(false)
-
     useEffect(() => {
         if (fetchedRef.current) return
         fetchedRef.current = true
@@ -40,10 +37,10 @@ export default function CategoryDropdown({
                     productCount: cat.productCount || 0,
                     isActive: cat.isActive !== false
                 })).filter(cat => cat.isActive)
-
                 setCategories(formattedCategories)
-                // Call without causing dependency loop
-                try { onDataLoaded(formattedCategories) } catch { /* noop */ }
+                try { onDataLoaded(formattedCategories) } catch (e) {
+                    console.error('Error in onDataLoaded:', e)
+                }
             } catch (error) {
                 console.error('Error fetching categories:', error)
                 addNotification({
@@ -54,19 +51,13 @@ export default function CategoryDropdown({
                 setLoading(false)
             }
         }
-
         fetchCategories()
-        // deliberately empty dependency array to avoid infinite loop
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
-
     const handleSelect = (categoryId) => {
         onChange(categoryId)
         setIsOpen(false)
     }
-
     const selectedCategory = categories.find(cat => cat.id === value)
-
     return (
         <div className={`relative ${className}`}>
             <button
@@ -80,22 +71,18 @@ export default function CategoryDropdown({
                     ${error ? 'border-red-500' : 'border-gray-700 focus:border-[#00FF89] focus:ring-1 focus:ring-[#00FF89]'}
                     ${isOpen ? 'border-[#00FF89] ring-1 ring-[#00FF89]' : ''}
                 `}>
-                
                 <div className="flex items-center gap-3">
                     <Package className="w-4 h-4 text-gray-400" />
                     <span className={selectedCategory ? 'text-white' : 'text-gray-400'}>
                         {loading ? 'Loading...' : selectedCategory?.name || placeholder}
                     </span>
                 </div>
-
                 {loading ? (
                     <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
                 ) : (
                     <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                 )}
             </button>
-
-            {/* Dropdown Menu */}
             {isOpen && !loading && (
                 <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-60 overflow-y-auto">
                     {showAllOption && (
@@ -111,7 +98,6 @@ export default function CategoryDropdown({
                             <div className="font-medium">All Categories</div>
                         </button>
                     )}
-
                     {categories.length === 0 ? (
                         <div className="px-4 py-6 text-center text-gray-400">
                             No categories available
@@ -134,20 +120,14 @@ export default function CategoryDropdown({
                     )}
                 </div>
             )}
-
-            {/* Error Message */}
             {error && (
                 <div className="mt-1 text-sm text-red-400">
                     {error}
                 </div>
             )}
-
-            {/* Required Indicator */}
             {required && (
                 <span className="absolute -top-1 -right-1 text-red-400 text-xs">*</span>
             )}
-
-            {/* Click outside handler */}
             {isOpen && (
                 <div 
                     className="fixed inset-0 z-40" 

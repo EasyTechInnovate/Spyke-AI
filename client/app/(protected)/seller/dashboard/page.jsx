@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect, lazy, Suspense, memo } from 'react'
 import Link from 'next/link'
 import {
@@ -27,19 +26,11 @@ import sellerAPI from '@/lib/api/seller'
 import DocumentUploadModal from '@/components/features/seller/SellerDocumentUpload'
 import VerificationBadge from '@/components/features/seller/shared/VerificationBadge'
 import CurrencySelector from '@/components/features/seller/dashboard/CurrencySelector'
-
-// Lazy load charts for better performance
 const RevenueChart = lazy(() => import('@/components/features/seller/dashboard/RevenueChart'))
 const PerformanceChart = lazy(() => import('@/components/features/seller/dashboard/PerformanceChart'))
-
-// ============================================================================
-// LOADING & SKELETON COMPONENTS
-// ============================================================================
-
 const LoadingSkeleton = ({ className = "h-4 bg-gray-700 rounded animate-pulse" }) => (
     <div className={className} />
 )
-
 const MetricCardSkeleton = () => (
     <div className="bg-[#1a1a1a] border border-gray-800 rounded-xl p-6 animate-pulse">
         <div className="flex items-start justify-between mb-4">
@@ -51,7 +42,6 @@ const MetricCardSkeleton = () => (
         <LoadingSkeleton className="w-28 h-3" />
     </div>
 )
-
 const ProductCardSkeleton = () => (
     <div className="bg-[#1a1a1a] border border-gray-800 rounded-xl p-6 animate-pulse">
         <div className="flex items-center gap-4 mb-6">
@@ -71,7 +61,6 @@ const ProductCardSkeleton = () => (
         </div>
     </div>
 )
-
 const ChartSkeleton = ({ height = "h-80" }) => (
     <div className={`${height} bg-[#1a1a1a] border border-gray-800 rounded-xl flex items-center justify-center`}>
         <div className="text-center">
@@ -80,11 +69,6 @@ const ChartSkeleton = ({ height = "h-80" }) => (
         </div>
     </div>
 )
-
-// ============================================================================
-// METRIC CARD COMPONENT
-// ============================================================================
-
 const MetricCard = ({ 
     icon: Icon, 
     value, 
@@ -102,12 +86,9 @@ const MetricCard = ({
         amber: 'text-amber-400 border-amber-400/30',
         orange: 'text-orange-400 border-orange-400/30'
     }
-
     if (isLoading) return <MetricCardSkeleton />
-
     const trendValue = parseFloat(trend)
     const isPositive = trendValue > 0
-
     return (
         <div 
             className={`bg-[#1a1a1a] border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-all duration-200 ${onClick ? 'cursor-pointer hover:scale-[1.02]' : ''}`}
@@ -140,22 +121,14 @@ const MetricCard = ({
         </div>
     )
 }
-
-// ============================================================================
-// PRODUCT CARD COMPONENT
-// ============================================================================
-
 const ProductCard = ({ product, index, isLoading = false }) => {
     const typeColors = {
         prompt: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
         agent: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
         automation: 'bg-orange-500/10 text-orange-400 border-orange-500/20'
     }
-
     const formatCurrency = (amount) => `$${Number(amount || 0).toLocaleString()}`
-
     if (isLoading) return <ProductCardSkeleton />
-
     return (
         <div className="bg-[#1a1a1a] border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-all duration-200 group">
             <div className="flex items-center gap-4 mb-6">
@@ -176,7 +149,6 @@ const ProductCard = ({ product, index, isLoading = false }) => {
                     </div>
                 </div>
             </div>
-
             <div className="grid grid-cols-3 gap-6">
                 <div className="text-center">
                     <p className="text-[#00FF89] font-bold text-2xl mb-1">{product.sales}</p>
@@ -194,20 +166,13 @@ const ProductCard = ({ product, index, isLoading = false }) => {
         </div>
     )
 }
-
-// ============================================================================
-// ORDER COMPONENTS
-// ============================================================================
-
 const OrderCard = ({ order }) => {
     const statusColors = {
         completed: 'bg-[#00FF89]/10 text-[#00FF89] border-[#00FF89]/20',
         pending: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
         cancelled: 'bg-red-500/10 text-red-400 border-red-500/20'
     }
-
     const formatCurrency = (amount) => `$${Number(amount || 0).toLocaleString()}`
-
     return (
         <div className="bg-[#2a2a2a] border border-gray-700 rounded-lg p-4 hover:border-gray-600 transition-colors">
             <div className="flex items-start justify-between mb-3">
@@ -236,7 +201,6 @@ const OrderCard = ({ order }) => {
         </div>
     )
 }
-
 const OrdersSection = ({ orders, isLoading = false }) => {
     if (isLoading) {
         return (
@@ -253,7 +217,6 @@ const OrdersSection = ({ orders, isLoading = false }) => {
             </div>
         )
     }
-
     if (!orders || orders.length === 0) {
         return (
             <div className="bg-[#1a1a1a] border border-gray-800 rounded-xl">
@@ -287,7 +250,6 @@ const OrdersSection = ({ orders, isLoading = false }) => {
             </div>
         )
     }
-
     return (
         <div className="bg-[#1a1a1a] border border-gray-800 rounded-xl overflow-hidden">
             <div className="p-6 border-b border-gray-800">
@@ -318,24 +280,17 @@ const OrdersSection = ({ orders, isLoading = false }) => {
         </div>
     )
 }
-
-// ============================================================================
-// ALERT COMPONENT
-// ============================================================================
-
 const Alert = ({ type = 'info', title, children, action }) => {
     const styles = {
         warning: 'bg-amber-500/10 border-amber-500/30 text-amber-100',
         success: 'bg-[#00FF89]/10 border-[#00FF89]/30 text-[#00FF89]',
         info: 'bg-blue-500/10 border-blue-500/30 text-blue-100'
     }
-
     const icons = {
         warning: '⚠️',
         success: '✅',
         info: 'ℹ️'
     }
-
     return (
         <div className={`rounded-xl border p-6 ${styles[type]}`}>
             <div className="flex items-start gap-4">
@@ -349,11 +304,6 @@ const Alert = ({ type = 'info', title, children, action }) => {
         </div>
     )
 }
-
-// ============================================================================
-// SETUP PROGRESS COMPONENT
-// ============================================================================
-
 const SetupProgress = ({ sellerProfile, isApproved }) => (
     <div className="max-w-2xl mx-auto text-center py-12">
         <div className="w-20 h-20 bg-[#00FF89]/20 rounded-2xl border border-[#00FF89]/30 flex items-center justify-center mx-auto mb-6">
@@ -363,7 +313,6 @@ const SetupProgress = ({ sellerProfile, isApproved }) => (
         <p className="text-lg text-gray-300 mb-8 max-w-lg mx-auto">
             Complete your verification to start selling AI tools and earning revenue on our platform.
         </p>
-
         <div className="space-y-4 mb-8">
             {[
                 {
@@ -409,7 +358,6 @@ const SetupProgress = ({ sellerProfile, isApproved }) => (
                 </div>
             ))}
         </div>
-
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
                 href="/seller/profile"
@@ -426,15 +374,9 @@ const SetupProgress = ({ sellerProfile, isApproved }) => (
         </div>
     </div>
 )
-
-// ============================================================================
-// MAIN DASHBOARD COMPONENT
-// ============================================================================
-
 const MemoizedMetricCard = memo(MetricCard)
 const MemoizedProductCard = memo(ProductCard)
 const MemoizedOrdersSection = memo(OrdersSection)
-
 export default function SellerDashboard() {
     const [loading, setLoading] = useState(true)
     const [dashboardData, setDashboardData] = useState(null)
@@ -444,17 +386,11 @@ export default function SellerDashboard() {
     const [refreshing, setRefreshing] = useState(false)
     const [error, setError] = useState(null)
     const [sidebarOpen, setSidebarOpen] = useState(false)
-
-    // ============================================================================
-    // DATA LOADING
-    // ============================================================================
-
     useEffect(() => {
         loadDashboardData()
         const interval = setInterval(() => loadDashboardData(true), 30000)
         return () => clearInterval(interval)
     }, [])
-
     const loadDashboardData = async (silent = false) => {
         try {
             if (!silent) {
@@ -462,12 +398,10 @@ export default function SellerDashboard() {
                 setLoading(true)
             }
             setError(null)
-
             const [profile, dashboard] = await Promise.all([
                 sellerAPI.getProfile(),
                 sellerAPI.getDashboard()
             ])
-
             const processedData = {
                 ...dashboard,
                 chartData: {
@@ -475,7 +409,6 @@ export default function SellerDashboard() {
                     performance: generatePerformanceData(dashboard?.topProducts || [])
                 }
             }
-
             setSellerProfile(profile)
             setDashboardData(processedData)
         } catch (error) {
@@ -488,11 +421,6 @@ export default function SellerDashboard() {
             setRefreshing(false)
         }
     }
-
-    // ============================================================================
-    // DATA PROCESSING
-    // ============================================================================
-
     const generateRevenueData = (orders) => {
         const last30Days = Array.from({ length: 30 }, (_, i) => {
             const date = new Date()
@@ -503,18 +431,14 @@ export default function SellerDashboard() {
                 orders: 0
             }
         })
-
         orders.forEach(order => {
             try {
                 const orderDateString = order.orderDate || order.createdAt || order.date
                 if (!orderDateString) return
-                
                 const orderDate = new Date(orderDateString)
                 if (isNaN(orderDate.getTime())) return
-                
                 const orderDateFormatted = orderDate.toISOString().split('T')[0]
                 const dayData = last30Days.find(day => day.date === orderDateFormatted)
-                
                 if (dayData) {
                     dayData.revenue += parseFloat(order.price || order.totalAmount || 0)
                     dayData.orders += 1
@@ -523,17 +447,14 @@ export default function SellerDashboard() {
                 console.warn('Error processing order date:', error)
             }
         })
-
         return last30Days
     }
-
     const generatePerformanceData = (products) => {
         return products.map(product => {
             try {
                 const views = parseInt(product.views) || 0
                 const sales = parseInt(product.sales) || 0
                 const price = parseFloat(product.price) || 0
-                
                 return {
                     name: product.title || 'Untitled Product',
                     views: views,
@@ -553,23 +474,12 @@ export default function SellerDashboard() {
             }
         })
     }
-
-    // ============================================================================
-    // HELPERS
-    // ============================================================================
-
     const formatCurrency = (amount) => {
         const symbols = { USD: '$', EUR: '€', GBP: '£', INR: '₹' }
         return `${symbols[selectedCurrency] || '$'}${Number(amount || 0).toLocaleString()}`
     }
-
     const isApproved = sellerProfile?.verification?.status === 'approved' && 
                       sellerProfile?.commissionOffer?.status === 'accepted'
-
-    // ============================================================================
-    // LOADING STATE
-    // ============================================================================
-
     if (loading) {
         return (
             <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
@@ -581,11 +491,6 @@ export default function SellerDashboard() {
             </div>
         )
     }
-
-    // ============================================================================
-    // ERROR STATE
-    // ============================================================================
-
     if (error) {
         return (
             <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
@@ -605,23 +510,13 @@ export default function SellerDashboard() {
             </div>
         )
     }
-
-    // ============================================================================
-    // MAIN RENDER
-    // ============================================================================
-
     return (
         <div className="w-full min-h-screen bg-[#0a0a0a] overflow-x-hidden">
-            {/* ============================================================================ */}
-            {/* HEADER */}
-            {/* ============================================================================ */}
-            
             <header className="w-full mb-8">
                 <div className="w-full">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-3 mb-2">
-                                {/* Mobile menu button */}
                                 <button
                                     onClick={() => setSidebarOpen?.(true)}
                                     className="lg:hidden p-2 text-white/60 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200 flex-shrink-0"
@@ -631,7 +526,6 @@ export default function SellerDashboard() {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                                     </svg>
                                 </button>
-                                
                                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white truncate">
                                     {sellerProfile?.fullName?.split(' ')[0] || 'Seller'} Dashboard
                                 </h1>
@@ -644,7 +538,6 @@ export default function SellerDashboard() {
                                 <span>Creative Dashboard</span>
                             </div>
                         </div>
-
                         <div className="flex items-center gap-3 flex-shrink-0">
                             {isApproved && (
                                 <>
@@ -678,11 +571,6 @@ export default function SellerDashboard() {
                     </div>
                 </div>
             </header>
-
-            {/* ============================================================================ */}
-            {/* ALERTS */}
-            {/* ============================================================================ */}
-
             <div className="space-y-4 mb-8">
                 {sellerProfile?.verification?.status === 'commission_offered' && 
                  sellerProfile?.commissionOffer?.status !== 'accepted' && (
@@ -702,7 +590,6 @@ export default function SellerDashboard() {
                         <p>We've offered you a {sellerProfile?.commissionOffer?.rate}% commission rate. Accept to start selling!</p>
                     </Alert>
                 )}
-
                 {dashboardData?.pendingOrders > 0 && (
                     <Alert
                         type="warning"
@@ -723,14 +610,8 @@ export default function SellerDashboard() {
                     </Alert>
                 )}
             </div>
-
-            {/* ============================================================================ */}
-            {/* MAIN CONTENT */}
-            {/* ============================================================================ */}
-
             {isApproved ? (
                 <>
-                    {/* Metrics Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                         <MemoizedMetricCard
                             icon={DollarSign}
@@ -766,8 +647,6 @@ export default function SellerDashboard() {
                             isLoading={loading}
                         />
                     </div>
-
-                    {/* Secondary Metrics */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                         <MemoizedMetricCard
                             icon={Percent}
@@ -799,8 +678,6 @@ export default function SellerDashboard() {
                             isLoading={loading}
                         />
                     </div>
-
-                    {/* Top Products */}
                     <section className="mb-8">
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-3">
@@ -833,16 +710,12 @@ export default function SellerDashboard() {
                             ))}
                         </div>
                     </section>
-
-                    {/* Recent Orders */}
                     <section className="mb-8">
                         <MemoizedOrdersSection
                             orders={dashboardData?.recentOrders || []}
                             isLoading={loading}
                         />
                     </section>
-
-                    {/* Analytics Charts */}
                     <section className="mb-8">
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-3">
@@ -875,8 +748,6 @@ export default function SellerDashboard() {
             ) : (
                 <SetupProgress sellerProfile={sellerProfile} isApproved={isApproved} />
             )}
-
-            {/* Document Upload Modal */}
             {showDocumentUpload && (
                 <DocumentUploadModal
                     isOpen={showDocumentUpload}
@@ -890,4 +761,3 @@ export default function SellerDashboard() {
         </div>
     )
 }
-

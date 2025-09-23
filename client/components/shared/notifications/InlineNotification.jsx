@@ -1,7 +1,5 @@
 'use client'
-
 import { AlertCircle, CheckCircle, Info, AlertTriangle, X } from 'lucide-react'
-
 const NOTIFICATION_STYLES = {
     success: {
         container: 'bg-green-900/20 border-green-500/30',
@@ -32,7 +30,6 @@ const NOTIFICATION_STYLES = {
         textColor: 'text-blue-300'
     }
 }
-
 export default function InlineNotification({ 
     type = 'info',
     message,
@@ -42,10 +39,8 @@ export default function InlineNotification({
     className = ''
 }) {
     if (!message && !title && !children) return null
-
     const styles = NOTIFICATION_STYLES[type] || NOTIFICATION_STYLES.info
     const Icon = styles.icon
-
     return (
         <div className={`relative mb-4 sm:mb-6 ${className}`}>
             <div className={`absolute -inset-0.5 bg-gradient-to-r ${styles.gradient} rounded-lg blur opacity-60`} />

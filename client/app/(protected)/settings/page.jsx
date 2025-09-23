@@ -1,10 +1,7 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Container from '@/components/shared/layout/Container'
-
-// Import all the modular components
 import SettingsNavigation from './components/SettingsNavigation'
 import MessageAlert from './components/MessageAlert'
 import ProfileSection from './components/ProfileSection'
@@ -13,13 +10,10 @@ import PaymentMethodsSection from './components/PaymentMethodsSection'
 import OrderHistorySection from './components/OrderHistorySection'
 import CommunicationSection from './components/CommunicationSection'
 import ActiveSessionsSection from './components/ActiveSessionsSection'
-
 export default function SettingsPage() {
     const [activeSection, setActiveSection] = useState('profile')
     const [successMessage, setSuccessMessage] = useState('')
     const [errorMessage, setErrorMessage] = useState('')
-
-    // Clear messages after 5 seconds
     useEffect(() => {
         if (successMessage || errorMessage) {
             const timer = setTimeout(() => {
@@ -29,21 +23,16 @@ export default function SettingsPage() {
             return () => clearTimeout(timer)
         }
     }, [successMessage, errorMessage])
-
     const handleSuccess = (message) => {
         setSuccessMessage(message)
         setErrorMessage('')
     }
-
     const handleError = (message) => {
         setErrorMessage(message)
         setSuccessMessage('')
     }
-
     const renderActiveSection = () => {
-        // Define which sections are disabled
         const disabledSections = ['payment'];
-        
         if (disabledSections.includes(activeSection)) {
             return (
                 <div className="bg-[#1f1f1f] rounded-xl border border-gray-800 p-8">
@@ -63,7 +52,6 @@ export default function SettingsPage() {
                 </div>
             );
         }
-
         switch (activeSection) {
             case 'profile':
                 return (
@@ -88,12 +76,10 @@ export default function SettingsPage() {
                 )
         }
     }
-
     return (
         <div className="min-h-screen bg-[#121212] text-white pt-20">
             <Container>
                 <div className="max-w-6xl mx-auto py-8">
-                    {/* Header */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -101,21 +87,15 @@ export default function SettingsPage() {
                         <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 font-league-spartan">Account Settings</h1>
                         <p className="text-gray-300 text-lg">Manage your profile, security, and preferences</p>
                     </motion.div>
-
-                    {/* Success/Error Messages */}
                     <MessageAlert
                         successMessage={successMessage}
                         errorMessage={errorMessage}
                     />
-
                     <div className="grid lg:grid-cols-[280px_1fr] gap-8">
-                        {/* Sidebar Navigation */}
                         <SettingsNavigation
                             activeSection={activeSection}
                             onSectionChange={setActiveSection}
                         />
-
-                        {/* Main Content */}
                         <motion.div
                             key={activeSection}
                             initial={{ opacity: 0, y: 20 }}

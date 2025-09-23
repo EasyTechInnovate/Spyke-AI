@@ -1,10 +1,8 @@
 'use client'
-
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageCircle, X, Phone, Mail, Calendar, MessageSquare, MapPin, Globe, ExternalLink, Copy, Check } from 'lucide-react'
 import { formatPhoneNumber, getCountryCodeFromPhone } from '@/lib/utils/countryCode'
-
 export default function ContactWidget({ seller, isOpen, onClose, className = '' }) {
     const [selectedContact, setSelectedContact] = useState(null)
     const [message, setMessage] = useState('')
@@ -12,7 +10,6 @@ export default function ContactWidget({ seller, isOpen, onClose, className = '' 
     const [name, setName] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [copiedItem, setCopiedItem] = useState(null)
-
     const contactOptions = [
         {
             id: 'message',
@@ -42,7 +39,6 @@ export default function ContactWidget({ seller, isOpen, onClose, className = '' 
             description: 'Discuss custom automation projects'
         }
     ]
-
     const copyToClipboard = async (text, item) => {
         try {
             await navigator.clipboard.writeText(text)
@@ -52,35 +48,25 @@ export default function ContactWidget({ seller, isOpen, onClose, className = '' 
             console.error('Failed to copy text: ', err)
         }
     }
-
     const formatDisplayPhoneNumber = (phone) => {
         if (!phone) return null
         const countryCode = getCountryCodeFromPhone(phone)
         return formatPhoneNumber(phone, countryCode)
     }
-
     const handleSubmit = async (e) => {
         e.preventDefault()
         setIsSubmitting(true)
-
-        // Simulate API call
         await new Promise((resolve) => setTimeout(resolve, 1500))
-
         setIsSubmitting(false)
         onClose()
         setSelectedContact(null)
         setMessage('')
         setEmail('')
         setName('')
-
-        // Show success message
         alert('Message sent successfully!')
     }
-
     if (!seller) return null
-
     const selectedOption = contactOptions.find((o) => o.id === selectedContact)
-
     const contactMethods = [
         {
             icon: MessageCircle,
@@ -120,7 +106,6 @@ export default function ContactWidget({ seller, isOpen, onClose, className = '' 
             external: true
         }
     ].filter(Boolean)
-
     return (
         <>
             <AnimatePresence>
@@ -169,7 +154,6 @@ export default function ContactWidget({ seller, isOpen, onClose, className = '' 
                                     <X className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </button>
                             </div>
-
                             <div className="text-center py-6 sm:py-8">
                                 <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#FFC050]/20 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                                     <MessageCircle className="w-6 h-6 sm:w-8 sm:h-8 text-[#FFC050]" />
@@ -185,7 +169,6 @@ export default function ContactWidget({ seller, isOpen, onClose, className = '' 
                                     We're working on a messaging system to connect you directly with sellers. For now, you can reach out via their
                                     social links or email.
                                 </p>
-
                                 <div className="space-y-3">
                                     {contactMethods.map((method, index) => (
                                         <button
@@ -199,7 +182,6 @@ export default function ContactWidget({ seller, isOpen, onClose, className = '' 
                                             <method.icon
                                                 className={`w-5 h-5 flex-shrink-0 ${method.primary ? 'text-white' : 'text-[--brand-primary]'}`}
                                             />
-
                                             <div className="flex-1 min-w-0">
                                                 <p className={`text-sm font-medium ${method.primary ? 'text-white' : 'text-[--text-secondary]'}`}>
                                                     {method.label}
@@ -208,7 +190,6 @@ export default function ContactWidget({ seller, isOpen, onClose, className = '' 
                                                     {method.value}
                                                 </p>
                                             </div>
-
                                             <div className="flex items-center gap-2">
                                                 {method.copyable &&
                                                     (copiedItem === method.label.toLowerCase() ? (

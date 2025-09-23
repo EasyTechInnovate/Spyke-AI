@@ -1,10 +1,8 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import { Star, Play, Download, Eye, Tag, Clock, Users, Zap } from 'lucide-react'
 import { useProductCreateStore } from '@/store/productCreate'
 import { PRODUCT_TYPES, CATEGORIES, INDUSTRIES, PRICING_STRATEGIES, SETUP_TIMES } from '@/lib/constants/productCreate'
-
 export default function LivePreview() {
     const state = useProductCreateStore()
     const getProductTypeInfo = () => PRODUCT_TYPES.find((t) => t.value === state.type)
@@ -12,19 +10,15 @@ export default function LivePreview() {
     const getIndustryInfo = () => INDUSTRIES.find((i) => i.value === state.industry)
     const getPricingInfo = () => PRICING_STRATEGIES.find((s) => s.value === state.pricingStrategy)
     const getSetupTimeInfo = () => SETUP_TIMES.find((t) => t.value === state.setupTimeEstimate)
-
     const productTypeInfo = getProductTypeInfo()
     const categoryInfo = getCategoryInfo()
     const industryInfo = getIndustryInfo()
     const pricingInfo = getPricingInfo()
     const setupTimeInfo = getSetupTimeInfo()
-
     const validHowItWorksSteps = state.howItWorks.filter((step) => step.title.trim() && step.detail.trim())
     const validFAQs = state.faq.filter((faq) => faq.question.trim() && faq.answer.trim())
-
     return (
         <div className="bg-gray-900/50 backdrop-blur-sm rounded-lg border border-gray-800 overflow-hidden">
-            {/* Preview Header */}
             <div className="p-4 border-b border-gray-800 bg-gray-800/50">
                 <div className="flex items-center space-x-2 text-[#00FF89]">
                     <Eye className="w-4 h-4" />
@@ -32,15 +26,12 @@ export default function LivePreview() {
                     <span className="text-xs bg-[#00FF89]/20 px-2 py-1 rounded-full">Real-time</span>
                 </div>
             </div>
-
             <div className="p-6 space-y-8">
-                {/* Product Header */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="space-y-4">
                     <div className="flex items-start space-x-4">
-                        {/* Thumbnail */}
                         <div className="w-24 h-24 bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
                             {state.thumbnailImage ? (
                                 typeof state.thumbnailImage === 'string' ? (
@@ -62,12 +53,9 @@ export default function LivePreview() {
                                 </div>
                             )}
                         </div>
-
                         <div className="flex-1 min-w-0">
                             <h1 className="text-2xl font-bold text-white mb-2">{state.title || 'Your Product Title'}</h1>
-
                             <p className="text-gray-300 text-base mb-3">{state.shortDescription || 'Your short description will appear here...'}</p>
-
                             <div className="flex flex-wrap gap-2 mb-3">
                                 {productTypeInfo && (
                                     <span className="px-3 py-1 bg-[#00FF89]/20 text-[#00FF89] rounded-full text-xs">
@@ -85,7 +73,6 @@ export default function LivePreview() {
                                     </span>
                                 )}
                             </div>
-
                             <div className="flex items-center space-x-4 text-base text-gray-400">
                                 <div className="flex items-center space-x-1">
                                     <Star className="w-4 h-4 text-yellow-400" />
@@ -105,8 +92,6 @@ export default function LivePreview() {
                         </div>
                     </div>
                 </motion.div>
-
-                {/* Product Tags */}
                 {state.productTags.length > 0 && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -128,8 +113,6 @@ export default function LivePreview() {
                         </div>
                     </motion.div>
                 )}
-
-                {/* Description */}
                 {state.fullDescription && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -140,8 +123,6 @@ export default function LivePreview() {
                         <p className="text-gray-300 text-base whitespace-pre-wrap leading-relaxed">{state.fullDescription}</p>
                     </motion.div>
                 )}
-
-                {/* How It Works */}
                 {validHowItWorksSteps.length > 0 && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -169,8 +150,6 @@ export default function LivePreview() {
                         </div>
                     </motion.div>
                 )}
-
-                {/* Key Benefits */}
                 {state.keyBenefits.filter((b) => b.trim()).length > 0 && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -192,8 +171,6 @@ export default function LivePreview() {
                         </ul>
                     </motion.div>
                 )}
-
-                {/* Technical Details */}
                 {(state.toolsUsed.length > 0 || state.toolsConfiguration) && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -217,7 +194,6 @@ export default function LivePreview() {
                                     </div>
                                 </div>
                             )}
-
                             {state.toolsConfiguration && (
                                 <div>
                                     <h4 className="text-base font-medium text-white mb-2">Configuration</h4>
@@ -227,8 +203,6 @@ export default function LivePreview() {
                         </div>
                     </motion.div>
                 )}
-
-                {/* Media Gallery */}
                 {(state.additionalImages.length > 0 || state.previewVideo) && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -265,8 +239,6 @@ export default function LivePreview() {
                         </div>
                     </motion.div>
                 )}
-
-                {/* Pricing */}
                 {pricingInfo && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -285,8 +257,6 @@ export default function LivePreview() {
                         </div>
                     </motion.div>
                 )}
-
-                {/* FAQ */}
                 {validFAQs.length > 0 && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -306,8 +276,6 @@ export default function LivePreview() {
                         </div>
                     </motion.div>
                 )}
-
-                {/* Support Information */}
                 {state.supportAndMaintenance && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -318,8 +286,6 @@ export default function LivePreview() {
                         <p className="text-gray-300 text-base whitespace-pre-wrap">{state.supportAndMaintenance}</p>
                     </motion.div>
                 )}
-
-                {/* Action Buttons Preview */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -339,4 +305,3 @@ export default function LivePreview() {
         </div>
     )
 }
-

@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import {
     Package,
@@ -45,11 +44,9 @@ import toast from '@/lib/utils/toast'
 import Link from 'next/link'
 import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 import AdminProductModal from '@/components/product/AdminProductModal'
-
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
 const BRAND = '#00FF89'
 const AMBER = '#FFC050'
-
 function formatDate(date) {
     if (!date) return 'N/A'
     const d = new Date(date)
@@ -60,7 +57,6 @@ function formatDate(date) {
     if (diffDays < 7) return `${diffDays} days ago`
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
 }
-
 const statusConfig = {
     pending_review: {
         color: 'text-[#FFC050]',
@@ -91,7 +87,6 @@ const statusConfig = {
         hint: 'Product approved and ready for seller to publish.'
     }
 }
-
 export default function PendingProductsPage() {
     const [products, setProducts] = useState([])
     const [loading, setLoading] = useState(true)
@@ -131,41 +126,29 @@ export default function PendingProductsPage() {
         priceRange: '',
         seller: ''
     })
-
     const sortOptions = [
         { value: 'createdAt', label: 'Submission Date' },
         { value: 'title', label: 'Product Name' },
         { value: 'price', label: 'Price' },
         { value: 'sellerId.fullName', label: 'Seller Name' }
     ]
-
-    // Inline notification state
     const [notification, setNotification] = useState(null)
-
-    // Show inline notification messages  
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
-        // Auto-dismiss after 5 seconds
         setTimeout(() => setNotification(null), 5000)
     }
-
-    // Clear notification
     const clearNotification = () => setNotification(null)
-
     useEffect(() => {
         fetchPendingProducts()
     }, [activeStatusFilter, sortBy, sortOrder])
-
     useEffect(() => {
         const id = setTimeout(() => setDebouncedQuery(searchQuery.trim().toLowerCase()), 220)
         return () => clearTimeout(id)
     }, [searchQuery])
-
     const fetchPendingProducts = async ({ isTabChange = false, isManualRefresh = false, silent = false } = {}) => {
         if (isManualRefresh) setListOpacity(0.6)
         if (isTabChange) setTabSwitching(true)
         if (!silent) setLoading(true)
-
         try {
             const params = {
                 page: 1,
@@ -174,12 +157,9 @@ export default function PendingProductsPage() {
                 sortOrder,
                 status: 'pending_review'
             }
-
             const response = await productsAPI.getAllProductsAdmin(params)
-
             if (response?.data?.products) {
                 let allProducts = response.data.products
-
                 const draftParams = {
                     page: 1,
                     limit: 50,
@@ -189,13 +169,10 @@ export default function PendingProductsPage() {
                 }
                 const draftResponse = await productsAPI.getAllProductsAdmin(draftParams)
                 const draftProducts = draftResponse?.data?.products || []
-
                 const combinedProducts = [...allProducts, ...draftProducts.filter((p) => !p.isVerified || !p.isTested)]
-
                 const pendingProducts = combinedProducts.filter((p) => p.status === 'pending_review' || !p.isVerified || !p.isTested)
                 const urgentCutoff = new Date(Date.now() - 48 * 60 * 60 * 1000)
                 const urgentProducts = pendingProducts.filter((p) => new Date(p.createdAt) < urgentCutoff)
-
                 setStats({
                     pending: pendingProducts.length,
                     urgent: urgentProducts.length,
@@ -203,8 +180,6 @@ export default function PendingProductsPage() {
                     tested: combinedProducts.filter((p) => p.isTested).length,
                     readyToPublish: combinedProducts.filter((p) => p.isVerified && p.isTested).length
                 })
-
-                // Apply filters
                 let filteredProducts = combinedProducts
                 switch (activeStatusFilter) {
                     case 'unverified':
@@ -229,7 +204,6 @@ export default function PendingProductsPage() {
                         filteredProducts = pendingProducts
                         break
                 }
-
                 setCounts({
                     all: activeStatusFilter === 'all' ? filteredProducts.length : undefined,
                     pending_review:
@@ -245,7 +219,6 @@ export default function PendingProductsPage() {
                             : combinedProducts.filter((p) => p.isVerified && p.isTested).length,
                     urgent: activeStatusFilter === 'urgent' ? filteredProducts.length : urgentProducts.length
                 })
-
                 setProducts(filteredProducts)
             }
         } catch (error) {
@@ -260,7 +233,6 @@ export default function PendingProductsPage() {
             }, 120)
         }
     }
-
     const filteredProducts = products.filter((product) => {
         if (!debouncedQuery) return true
         const q = debouncedQuery
@@ -272,12 +244,10 @@ export default function PendingProductsPage() {
             (product.type || '').toLowerCase().includes(q)
         )
     })
-
     const handleProductAction = async (productId, action, notes = '') => {
         setActionLoading(true)
         try {
             let updateData = {}
-
             switch (action) {
                 case 'verify':
                     updateData = { isVerified: true }
@@ -289,9 +259,7 @@ export default function PendingProductsPage() {
                     updateData = { isVerified: true, isTested: true }
                     break
             }
-
             if (notes) updateData.adminNotes = notes
-
             await productsAPI.verifyProduct(productId, updateData)
             showMessage(`Product ${action}ed successfully`, 'success')
             fetchPendingProducts()
@@ -306,17 +274,14 @@ export default function PendingProductsPage() {
             setActionLoading(false)
         }
     }
-
     const handleBulkAction = async (action) => {
         if (selectedProducts.size === 0) {
             showMessage('Please select products first', 'error')
             return
         }
-
         setBulkActionLoading(true)
         try {
             const promises = [...selectedProducts].map((productId) => handleProductAction(productId, action, `Bulk ${action}`))
-
             await Promise.all(promises)
             showMessage(`${selectedProducts.size} products updated successfully`, 'success')
             setSelectedProducts(new Set())
@@ -326,7 +291,6 @@ export default function PendingProductsPage() {
             setBulkActionLoading(false)
         }
     }
-
     const handleSelectProduct = (productId) => {
         setSelectedProducts((prev) => {
             const newSet = new Set(prev)
@@ -338,7 +302,6 @@ export default function PendingProductsPage() {
             return newSet
         })
     }
-
     const handleSelectAll = () => {
         if (selectedProducts.size === filteredProducts.length) {
             setSelectedProducts(new Set())
@@ -346,7 +309,6 @@ export default function PendingProductsPage() {
             setSelectedProducts(new Set(filteredProducts.map((p) => p._id)))
         }
     }
-
     const handleSortChange = (newSortBy) => {
         if (sortBy === newSortBy) {
             setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))
@@ -356,19 +318,16 @@ export default function PendingProductsPage() {
         }
         fetchPendingProducts()
     }
-
     const getUrgencyLevel = (createdAt) => {
         const hoursDiff = (Date.now() - new Date(createdAt)) / (1000 * 60 * 60)
         if (hoursDiff > 72) return { level: 'high', color: 'text-red-400 bg-red-500/10', text: 'URGENT' }
         if (hoursDiff > 48) return { level: 'medium', color: 'text-yellow-400 bg-yellow-500/10', text: 'Priority' }
         return { level: 'low', color: 'text-green-400 bg-green-500/10', text: 'Normal' }
     }
-
     const handleProductUpdate = (productId, updateData) => {
         setProducts((prev) => prev.map((p) => (p._id === productId ? { ...p, ...updateData } : p)))
         fetchPendingProducts()
     }
-
     const exportProductsData = (productsData) => {
         const csvContent = [
             ['Title', 'Seller', 'Category', 'Type', 'Price', 'Status', 'Verified', 'Tested', 'Submitted'],
@@ -386,7 +345,6 @@ export default function PendingProductsPage() {
         ]
             .map((row) => row.map((field) => `"${field}"`).join(','))
             .join('\n')
-
         const blob = new Blob([csvContent], { type: 'text/csv' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -397,10 +355,8 @@ export default function PendingProductsPage() {
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
     }
-
     return (
         <div className="space-y-4 sm:space-y-6">
-            {/* Inline Notification */}
             {notification && (
                 <InlineNotification
                     type={notification.type}
@@ -408,9 +364,6 @@ export default function PendingProductsPage() {
                     onDismiss={clearNotification}
                 />
             )}
-
-            
-            {/* Header */}
             <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-gray-800 bg-[#141414]">
                 <div
                     className="absolute inset-0 pointer-events-none"
@@ -435,7 +388,6 @@ export default function PendingProductsPage() {
                                 <p className="text-xs sm:text-sm text-gray-400 mt-1 lg:hidden">Review and approve products submitted by sellers</p>
                             </div>
                         </div>
-
                         <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full lg:w-auto lg:max-w-sm">
                             <MiniKPI
                                 label="Avg Time"
@@ -470,14 +422,10 @@ export default function PendingProductsPage() {
                         </div>
                     </div>
                 </div>
-
                 <LegendBannerAlways statusConfig={statusConfig} />
-
-                {/* Sticky Filter Bar */}
                 <div className="sticky top-0 z-10 border-t border-gray-800 bg-[#121212]/80 backdrop-blur supports-[backdrop-filter]:backdrop-blur-md">
                     <div className="px-3 sm:px-4 lg:px-6 py-3">
                         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                            {/* Filter Tabs - Mobile First */}
                             <div className="relative -mx-3 sm:-mx-4 lg:-mx-6 w-[calc(100%+1.5rem)] sm:w-[calc(100%+2rem)] lg:w-[calc(100%+3rem)]">
                                 <div className="overflow-x-auto px-3 sm:px-4 lg:px-6">
                                     <div
@@ -485,7 +433,6 @@ export default function PendingProductsPage() {
                                         role="tablist"
                                         aria-label="Filter by status">
                                         <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500 flex-shrink-0" />
-
                                         <FilterTab
                                             id="pending_both"
                                             label="Needs Review"
@@ -498,7 +445,6 @@ export default function PendingProductsPage() {
                                                 fetchPendingProducts({ isTabChange: true })
                                             }}
                                         />
-
                                         <FilterTab
                                             id="pending_review"
                                             label="Submitted"
@@ -513,7 +459,6 @@ export default function PendingProductsPage() {
                                                 fetchPendingProducts({ isTabChange: true })
                                             }}
                                         />
-
                                         <FilterTab
                                             id="unverified"
                                             label="Unverified"
@@ -528,7 +473,6 @@ export default function PendingProductsPage() {
                                                 fetchPendingProducts({ isTabChange: true })
                                             }}
                                         />
-
                                         <FilterTab
                                             id="untested"
                                             label="Untested"
@@ -543,7 +487,6 @@ export default function PendingProductsPage() {
                                                 fetchPendingProducts({ isTabChange: true })
                                             }}
                                         />
-
                                         <FilterTab
                                             id="ready_to_publish"
                                             label="Ready"
@@ -558,7 +501,6 @@ export default function PendingProductsPage() {
                                                 fetchPendingProducts({ isTabChange: true })
                                             }}
                                         />
-
                                         <FilterTab
                                             id="urgent"
                                             label="Urgent"
@@ -576,8 +518,6 @@ export default function PendingProductsPage() {
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Search + Refresh */}
                             <div className="flex items-center gap-2 w-full md:w-auto md:min-w-[300px] lg:min-w-[380px] flex-shrink-0">
                                 <div className="relative flex-1 min-w-0">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -599,7 +539,6 @@ export default function PendingProductsPage() {
                                         </button>
                                     )}
                                 </div>
-
                                 <button
                                     type="button"
                                     onClick={() => fetchPendingProducts({ isManualRefresh: true })}
@@ -613,17 +552,13 @@ export default function PendingProductsPage() {
                     </div>
                 </div>
             </div>
-
             {debouncedQuery && (
                 <div className="text-xs sm:text-sm text-gray-400 px-1">
                     Showing {filteredProducts.length} results for "{debouncedQuery}".
                 </div>
             )}
-
-            {/* Advanced Sorting & Filtering Controls */}
             <div className="bg-[#171717] border border-gray-800 rounded-xl p-3 sm:p-4">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    {/* Left: Sort Controls */}
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                         <span className="text-sm text-gray-400 flex-shrink-0">Sort by:</span>
                         <div className="flex items-center gap-2">
@@ -646,8 +581,6 @@ export default function PendingProductsPage() {
                             </button>
                         </div>
                     </div>
-
-                    {/* Right: Action Controls */}
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                         <button
                             onClick={() => exportProductsData(filteredProducts)}
@@ -655,7 +588,6 @@ export default function PendingProductsPage() {
                             <Download className="w-4 h-4" />
                             <span>Export CSV</span>
                         </button>
-
                         {filteredProducts.length > 0 && (
                             <div className="flex items-center gap-2">
                                 <input
@@ -670,8 +602,6 @@ export default function PendingProductsPage() {
                     </div>
                 </div>
             </div>
-
-            {/* Products List */}
             <section
                 aria-busy={loading}
                 className="transition-opacity duration-200"
@@ -703,8 +633,6 @@ export default function PendingProductsPage() {
                     </div>
                 )}
             </section>
-
-            {/* Admin Product Modal */}
             <AdminProductModal
                 product={selectedProduct}
                 isOpen={showModal}
@@ -714,8 +642,6 @@ export default function PendingProductsPage() {
                 }}
                 onProductUpdate={handleProductUpdate}
             />
-
-            {/* Quick Actions Toolbar - Mobile Optimized */}
             {selectedProducts.size > 0 && (
                 <div className="fixed bottom-4 left-4 right-4 sm:bottom-6 sm:left-1/2 sm:right-auto sm:transform sm:-translate-x-1/2 z-50">
                     <div className="bg-[#1a1a1a] border border-gray-700 rounded-xl px-3 sm:px-4 py-3 shadow-2xl">
@@ -755,8 +681,6 @@ export default function PendingProductsPage() {
         </div>
     )
 }
-
-// Supporting Components
 function MiniKPI({ label, value, icon }) {
     return (
         <div className="relative rounded-lg border border-gray-800 bg-[#0f0f0f] px-3 py-2">
@@ -768,7 +692,6 @@ function MiniKPI({ label, value, icon }) {
         </div>
     )
 }
-
 function FilterTab({ id, label, active, onSelect, icon: Icon, tone = 'neutral', count }) {
     const isActive = active === id
     const toneClass =
@@ -783,7 +706,6 @@ function FilterTab({ id, label, active, onSelect, icon: Icon, tone = 'neutral', 
                   : 'bg-[#1e1e1e] text-gray-300'
     const activeClass = isActive ? `${toneClass} ring-1 ring-white/10` : 'bg-[#0f0f0f] text-gray-400 hover:bg-[#1b1b1b]'
     const showCount = typeof count === 'number'
-
     return (
         <button
             role="tab"
@@ -797,7 +719,6 @@ function FilterTab({ id, label, active, onSelect, icon: Icon, tone = 'neutral', 
         </button>
     )
 }
-
 function ProductCard({ product, onVerify, onTest, onApprove, onViewDetails, onSelect, isSelected, urgency }) {
     const getProductStatus = () => {
         if (product.status === 'pending_review') return 'pending_review'
@@ -806,10 +727,8 @@ function ProductCard({ product, onVerify, onTest, onApprove, onViewDetails, onSe
         if (product.isVerified && product.isTested) return 'ready_to_publish'
         return 'pending_review'
     }
-
     const status = getProductStatus()
     const cfg = statusConfig[status] || statusConfig.pending_review
-
     const getPrimaryAction = () => {
         if (!product.isVerified) {
             return { label: 'Verify', icon: Shield, onClick: onVerify, color: 'bg-green-500 hover:bg-green-600' }
@@ -822,16 +741,12 @@ function ProductCard({ product, onVerify, onTest, onApprove, onViewDetails, onSe
         }
         return { label: 'Review', icon: Eye, onClick: onViewDetails, color: 'bg-[#00FF89] hover:bg-[#00FF89]/90' }
     }
-
     const primaryAction = getPrimaryAction()
-
     return (
         <div className="rounded-xl border border-gray-800 bg-[#171717] overflow-hidden">
             <div className="p-3 sm:p-4 lg:p-5">
                 <div className="flex flex-col gap-4">
-                    {/* Mobile: Top Row with Thumbnail + Title + Status */}
                     <div className="flex items-start gap-3 sm:gap-4">
-                        {/* Thumbnail with Checkbox */}
                         <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-800">
                             <input
                                 type="checkbox"
@@ -848,11 +763,8 @@ function ProductCard({ product, onVerify, onTest, onApprove, onViewDetails, onSe
                                 onClick={onViewDetails}
                             />
                         </div>
-
-                        {/* Title + Urgency + Status - Mobile Stacked */}
                         <div className="flex-1 min-w-0">
                             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                                {/* Left: Title + Urgency */}
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-start gap-2 flex-wrap">
                                         <h3
@@ -864,8 +776,6 @@ function ProductCard({ product, onVerify, onTest, onApprove, onViewDetails, onSe
                                             {urgency.text}
                                         </div>
                                     </div>
-
-                                    {/* Meta Info - Responsive Layout */}
                                     <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 mt-1 text-xs text-gray-400">
                                         <span className="flex items-center gap-1">
                                             <User className="w-3 h-3 flex-shrink-0" />
@@ -881,8 +791,6 @@ function ProductCard({ product, onVerify, onTest, onApprove, onViewDetails, onSe
                                         </span>
                                     </div>
                                 </div>
-
-                                {/* Right: Status Chip - Mobile Full Width */}
                                 <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
                                     <span className={`inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${cfg.chip} flex-shrink-0`}>
                                         <cfg.icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
@@ -896,8 +804,6 @@ function ProductCard({ product, onVerify, onTest, onApprove, onViewDetails, onSe
                             </div>
                         </div>
                     </div>
-
-                    {/* Category & Type Tags */}
                     {(product.category || product.type) && (
                         <div className="flex items-center gap-2 flex-wrap -mt-2">
                             {product.category && (
@@ -906,8 +812,6 @@ function ProductCard({ product, onVerify, onTest, onApprove, onViewDetails, onSe
                             {product.type && <span className="px-2 py-0.5 text-[10px] rounded bg-[#352a14] text-[#FFC050]">{product.type}</span>}
                         </div>
                     )}
-
-                    {/* Status Indicators */}
                     <div className="flex items-center gap-2 flex-wrap">
                         <div
                             className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium ${product.isVerified ? 'bg-[#00FF89]/20 text-[#00FF89]' : 'bg-yellow-500/20 text-yellow-400'}`}>
@@ -920,10 +824,7 @@ function ProductCard({ product, onVerify, onTest, onApprove, onViewDetails, onSe
                             <span>{product.isTested ? 'Tested' : 'Untested'}</span>
                         </div>
                     </div>
-
-                    {/* Actions - Mobile Optimized */}
                     <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-end">
-                        {/* Primary Action Row */}
                         <div className="flex items-center gap-2 flex-1 sm:flex-none">
                             {primaryAction.onClick && (
                                 <button
@@ -935,7 +836,6 @@ function ProductCard({ product, onVerify, onTest, onApprove, onViewDetails, onSe
                                     </div>
                                 </button>
                             )}
-
                             {!product.isVerified || !product.isTested ? (
                                 <button
                                     onClick={onApprove}
@@ -948,8 +848,6 @@ function ProductCard({ product, onVerify, onTest, onApprove, onViewDetails, onSe
                                     </div>
                                 </button>
                             ) : null}
-
-                            {/* View Details */}
                             <button
                                 onClick={onViewDetails}
                                 className="p-2 bg-[#0f0f0f] text-gray-400 rounded-lg hover:bg-[#1b1b1b] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00FF89]/60 flex-shrink-0"
@@ -964,10 +862,8 @@ function ProductCard({ product, onVerify, onTest, onApprove, onViewDetails, onSe
         </div>
     )
 }
-
 function InfoTip({ label = 'Info', children }) {
     const [open, setOpen] = useState(false)
-
     useEffect(() => {
         if (!open) return
         const onKey = (e) => {
@@ -976,7 +872,6 @@ function InfoTip({ label = 'Info', children }) {
         window.addEventListener('keydown', onKey)
         return () => window.removeEventListener('keydown', onKey)
     }, [open])
-
     return (
         <div className="relative inline-block">
             <button
@@ -997,7 +892,6 @@ function InfoTip({ label = 'Info', children }) {
         </div>
     )
 }
-
 function Loader() {
     return (
         <div className="flex items-center justify-center h-64">
@@ -1008,7 +902,6 @@ function Loader() {
         </div>
     )
 }
-
 function SkeletonList() {
     return (
         <div className="space-y-3 sm:space-y-4">
@@ -1028,7 +921,6 @@ function SkeletonList() {
         </div>
     )
 }
-
 function EmptyState({ query }) {
     return (
         <div className="bg-[#171717] border border-gray-800 rounded-xl p-10 text-center">
@@ -1038,25 +930,20 @@ function EmptyState({ query }) {
         </div>
     )
 }
-
 function LegendBannerAlways({ statusConfig }) {
     return (
         <div className="px-4 sm:px-6 pb-3">
             <div className="rounded-xl border border-sky-900/40 bg-gradient-to-br from-[#0b1220] via-[#0b1324] to-[#0e1b2a] shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_10px_30px_rgba(10,20,40,0.25)] w-full">
-                {/* Header */}
                 <div className="flex items-center gap-2 px-4 sm:px-6 pt-3 pb-2 border-b border-white/5">
                     <Info className="w-4 h-4 text-sky-300" />
                     <span className="font-semibold text-sky-300">Product Approval Workflow</span>
                 </div>
-
-                {/* Content */}
                 <div className="px-4 sm:px-6 py-3 sm:py-4">
                     <div className="flex flex-col lg:flex-row lg:items-center gap-3 sm:gap-4">
                         {Object.entries(statusConfig).map(([key, cfg], index) => (
                             <div
                                 key={key}
                                 className="flex items-center gap-3 sm:gap-4 flex-1">
-                                {/* Status Card */}
                                 <div className="flex items-start gap-3 rounded-lg border border-white/10 bg-white/5 p-3 flex-1">
                                     <div className="w-8 h-8 rounded-md flex items-center justify-center bg-sky-900/30 text-sky-300 border border-sky-800/50">
                                         <cfg.icon className="w-4 h-4" />
@@ -1066,8 +953,6 @@ function LegendBannerAlways({ statusConfig }) {
                                         <p className="text-xs text-sky-100/70 leading-relaxed">{cfg.hint}</p>
                                     </div>
                                 </div>
-
-                                {/* Arrow between states */}
                                 {index < Object.entries(statusConfig).length - 1 && (
                                     <div className="flex items-center justify-center">
                                         <ArrowRight className="w-5 h-5 text-sky-400/60 flex-shrink-0" />
@@ -1076,7 +961,6 @@ function LegendBannerAlways({ statusConfig }) {
                             </div>
                         ))}
                     </div>
-
                     <div className="mt-3 text-xs text-sky-100/60">
                         Flow: <span className="text-sky-200">Submitted → Verify Content → Test Functionality → Ready to Publish</span>
                     </div>
@@ -1085,4 +969,3 @@ function LegendBannerAlways({ statusConfig }) {
         </div>
     )
 }
-

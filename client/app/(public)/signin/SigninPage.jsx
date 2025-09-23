@@ -1,17 +1,13 @@
 'use client'
 export const dynamic = 'force-dynamic'
-
 import { useState } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff, AlertCircle, Mail, Lock, ArrowRight, Sparkles, Shield, Zap } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import Header from '@/components/shared/layout/Header'
-
 import { DSContainer, DSStack, DSHeading, DSText, DSButton, DSBadge, DSLoadingState } from '@/lib/design-system'
-
 export default function SignInPage() {
     const { login, authService } = useAuth()
-
     const [loading, setLoading] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
     const [loginError, setLoginError] = useState('')
@@ -19,7 +15,6 @@ export default function SignInPage() {
         emailAddress: '',
         password: ''
     })
-
     const handleChange = (e) => {
         const { name, value } = e.target
         setFormData({ ...formData, [name]: value })
@@ -27,14 +22,11 @@ export default function SignInPage() {
             setLoginError('')
         }
     }
-
     const handleLogin = async (e) => {
         e.preventDefault()
         if (loading) return
-
         setLoading(true)
         setLoginError('')
-
         try {
             await login(formData)
         } catch (error) {
@@ -44,7 +36,6 @@ export default function SignInPage() {
             setLoading(false)
         }
     }
-
     const handleGoogleAuth = () => {
         if (!loading) {
             import('@/lib/api/auth').then(({ authAPI }) => {
@@ -52,7 +43,6 @@ export default function SignInPage() {
             })
         }
     }
-
     const handleResendVerification = async () => {
         try {
             authService.showToast('verification', toast.info, '📧 Please re-register with your email or contact support for verification help.')
@@ -60,12 +50,10 @@ export default function SignInPage() {
             authService.handleAuthError(error, 'resend verification')
         }
     }
-
     return (
         <div className="min-h-screen bg-[#121212] relative overflow-hidden flex flex-col">
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900/60 to-black" />
-
                 <div className="absolute top-1/3 left-1/5 w-72 sm:w-96 h-72 sm:h-96 bg-[#00FF89]/10 rounded-full blur-3xl animate-pulse opacity-70" />
                 <div
                     className="absolute bottom-1/3 right-1/5 w-64 sm:w-80 h-64 sm:h-80 bg-[#FFC050]/8 rounded-full blur-3xl animate-pulse opacity-50"
@@ -75,13 +63,10 @@ export default function SignInPage() {
                     className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-56 h-56 bg-[#00FF89]/5 rounded-full blur-2xl animate-pulse opacity-30"
                     style={{ animationDelay: '4s' }}
                 />
-
                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/20" />
                 <div className="absolute inset-0 bg-gradient-radial from-transparent via-black/5 to-black/20" />
             </div>
-
             <Header />
-
             <main className="relative flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
                 <div className="w-full max-w-7xl mx-auto">
                     <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 xl:gap-20 items-center min-h-[calc(100vh-120px)]">
@@ -97,7 +82,6 @@ export default function SignInPage() {
                                         Trusted by 10,000+ creators
                                     </DSBadge>
                                 </div>
-
                                 <DSStack
                                     gap="small"
                                     direction="column">
@@ -110,7 +94,6 @@ export default function SignInPage() {
                                             SpykeAI
                                         </span>
                                     </DSHeading>
-
                                     <DSText
                                         variant="subhero"
                                         className="text-base xl:text-lg text-gray-300 leading-relaxed max-w-lg">
@@ -118,7 +101,6 @@ export default function SignInPage() {
                                         unlock limitless possibilities.
                                     </DSText>
                                 </DSStack>
-
                                 <DSStack
                                     gap="small"
                                     direction="column"
@@ -141,7 +123,6 @@ export default function SignInPage() {
                                             </DSText>
                                         </div>
                                     </div>
-
                                     <div className="group flex items-center gap-3 p-3 bg-[#1a1a1a]/60 border border-gray-800/60 rounded-xl backdrop-blur-sm hover:bg-[#1a1a1a]/80 hover:border-[#FFC050]/20 transition-all duration-300">
                                         <div className="w-10 h-10 bg-gradient-to-br from-[#FFC050]/20 to-[#FFC050]/10 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
                                             <Zap className="w-5 h-5 text-[#FFC050]" />
@@ -163,7 +144,6 @@ export default function SignInPage() {
                                 </DSStack>
                             </DSStack>
                         </div>
-
                         <div className="w-full flex flex-col justify-center">
                             <div className="text-center lg:hidden mb-6">
                                 <DSHeading
@@ -173,11 +153,9 @@ export default function SignInPage() {
                                 </DSHeading>
                                 <DSText className="text-gray-400 font-medium">Sign in to continue your journey</DSText>
                             </div>
-
                             <div className="relative w-full max-w-md mx-auto lg:max-w-lg">
                                 <div className="absolute -inset-1 bg-gradient-to-r from-[#00FF89]/15 via-[#FFC050]/15 to-[#00FF89]/15 rounded-2xl blur-xl opacity-75 animate-pulse" />
                                 <div className="absolute -inset-0.5 bg-gradient-to-r from-[#00FF89]/20 via-[#FFC050]/20 to-[#00FF89]/20 rounded-xl blur opacity-60" />
-
                                 <div className="relative bg-[#1a1a1a]/90 backdrop-blur-2xl border border-gray-700/60 rounded-2xl p-6 shadow-2xl">
                                     <DSStack
                                         gap="medium"
@@ -194,7 +172,6 @@ export default function SignInPage() {
                                                 Access your SpykeAI account
                                             </DSText>
                                         </div>
-
                                         <form
                                             onSubmit={handleLogin}
                                             className="space-y-4">
@@ -230,7 +207,6 @@ export default function SignInPage() {
                                                     </div>
                                                 </div>
                                             )}
-
                                             <div className="space-y-1">
                                                 <label className="block text-sm font-semibold text-gray-300 pl-1">Email Address</label>
                                                 <div className="relative group">
@@ -247,7 +223,6 @@ export default function SignInPage() {
                                                     />
                                                 </div>
                                             </div>
-
                                             <div className="space-y-1">
                                                 <div className="flex items-center justify-between">
                                                     <label className="block text-sm font-semibold text-gray-300 pl-1">Password</label>
@@ -278,7 +253,6 @@ export default function SignInPage() {
                                                     </button>
                                                 </div>
                                             </div>
-
                                             <DSButton
                                                 variant="primary"
                                                 size="medium"
@@ -297,7 +271,6 @@ export default function SignInPage() {
                                                     </span>
                                                 )}
                                             </DSButton>
-
                                             <div className="relative my-4">
                                                 <div className="absolute inset-0 flex items-center">
                                                     <div className="w-full border-t border-gray-700/60" />
@@ -306,7 +279,6 @@ export default function SignInPage() {
                                                     <span className="px-4 bg-[#1a1a1a] text-gray-400 font-semibold text-xs">or continue with</span>
                                                 </div>
                                             </div>
-
                                             <DSButton
                                                 variant="secondary"
                                                 size="medium"
@@ -338,7 +310,6 @@ export default function SignInPage() {
                                                 <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform duration-200" />
                                             </DSButton>
                                         </form>
-
                                         <div className="text-center pt-3 border-t border-gray-700/40">
                                             <DSText
                                                 size="sm"
@@ -363,4 +334,3 @@ export default function SignInPage() {
         </div>
     )
 }
-

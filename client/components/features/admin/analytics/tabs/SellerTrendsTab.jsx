@@ -1,20 +1,15 @@
 'use client'
-
 import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Users, TrendingUp, Activity, Target, Package, DollarSign, UserCheck, UserPlus } from 'lucide-react'
 import { ResponsiveContainer, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip, Area, Bar, Line, PieChart, Pie, Cell } from 'recharts'
-
 const formatNumber = (num) => {
     return new Intl.NumberFormat('en-US').format(num || 0)
 }
-
 const formatPercentage = (num) => {
     return `${(num || 0).toFixed(1)}%`
 }
-
 const clamp = (num, min, max) => Math.min(Math.max(num ?? 0, min), max)
-
 const SellerTrendsTooltip = ({ active, payload }) => {
     if (!active || !payload?.length) return null
     const data = payload[0].payload
@@ -28,11 +23,9 @@ const SellerTrendsTooltip = ({ active, payload }) => {
         </div>
     )
 }
-
 export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
     const sellerTrendsData = useMemo(() => {
         if (!analyticsData) return null
-
         const getDaysFromTimeRange = (period) => {
             switch (period) {
                 case '7d':
@@ -47,13 +40,11 @@ export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
                     return 30
             }
         }
-
         const generateTrendsWithAllDates = (registrations, activity, verifications, period) => {
             const days = getDaysFromTimeRange(period)
             const endDate = new Date()
             const startDate = new Date()
             startDate.setDate(endDate.getDate() - (days - 1))
-
             const registrationMap = new Map()
             registrations.forEach((item) => {
                 const dateKey = item._id?.date || item.date
@@ -61,7 +52,6 @@ export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
                     registrationMap.set(dateKey, item.count || 0)
                 }
             })
-
             const activityMap = new Map()
             activity.forEach((item) => {
                 const dateKey = item._id?.date || item.date
@@ -72,7 +62,6 @@ export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
                     })
                 }
             })
-
             const verificationMap = new Map()
             verifications.forEach((item) => {
                 const dateKey = item._id?.date || item.date
@@ -80,17 +69,14 @@ export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
                     verificationMap.set(dateKey, item.count || 0)
                 }
             })
-
             const trends = []
             for (let i = 0; i < days; i++) {
                 const currentDate = new Date(startDate)
                 currentDate.setDate(startDate.getDate() + i)
                 const dateString = currentDate.toISOString().split('T')[0]
-
                 const registrations = registrationMap.get(dateString) || 0
                 const activityData = activityMap.get(dateString) || { activeSellers: 0, productsCreated: 0 }
                 const verifications = verificationMap.get(dateString) || 0
-
                 trends.push({
                     date: currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
                     registrations,
@@ -100,10 +86,8 @@ export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
                     conversionRate: registrations > 0 ? (verifications / registrations) * 100 : 0
                 })
             }
-
             return trends
         }
-
         const summary = analyticsData.summary || {}
         const trends = generateTrendsWithAllDates(
             analyticsData.sellerRegistrations || [],
@@ -111,12 +95,10 @@ export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
             analyticsData.verificationTrend || [],
             timeRange
         )
-
         const totalRegistrations = trends.reduce((sum, item) => sum + item.registrations, 0)
         const totalVerifications = trends.reduce((sum, item) => sum + item.verifications, 0)
         const totalProductsCreated = trends.reduce((sum, item) => sum + item.productsCreated, 0)
         const avgConversionRate = totalRegistrations > 0 ? (totalVerifications / totalRegistrations) * 100 : 0
-
         return {
             metrics: {
                 totalSellers: summary.totalSellers || 0,
@@ -132,7 +114,6 @@ export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
             trends
         }
     }, [analyticsData, timeRange])
-
     if (loading) {
         return (
             <div className="space-y-6">
@@ -153,7 +134,6 @@ export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
             </div>
         )
     }
-
     if (!sellerTrendsData) {
         return (
             <div className="space-y-6">
@@ -174,10 +154,8 @@ export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
             </div>
         )
     }
-
     const { metrics, trends } = sellerTrendsData
     const validTrends = Array.isArray(trends) ? trends : []
-
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -196,7 +174,6 @@ export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
                         +{formatNumber(metrics.newSellers)} new this {timeRange === '7d' ? 'week' : 'month'}
                     </div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -211,7 +188,6 @@ export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
                     <div className="text-2xl font-bold text-white mb-1">{formatNumber(metrics.activeSellers)}</div>
                     <div className="text-sm text-gray-400">{formatPercentage(metrics.activityRate)} activity rate</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -226,7 +202,6 @@ export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
                     <div className="text-2xl font-bold text-white mb-1">{formatNumber(metrics.totalRegistrations)}</div>
                     <div className="text-sm text-[#00FF89]">{formatPercentage(metrics.growthRate)} growth rate</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -242,7 +217,6 @@ export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
                     <div className="text-sm text-gray-400">{formatPercentage(metrics.avgConversionRate)} conversion rate</div>
                 </motion.div>
             </div>
-
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -343,7 +317,6 @@ export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
                     )}
                 </div>
             </motion.div>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -363,7 +336,6 @@ export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
                                     style={{ width: '100%' }}></div>
                             </div>
                         </div>
-
                         <div className="space-y-2">
                             <div className="flex justify-between text-sm">
                                 <span className="text-white font-medium">Verified Sellers</span>
@@ -381,7 +353,6 @@ export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
                                     }}></div>
                             </div>
                         </div>
-
                         <div className="space-y-2">
                             <div className="flex justify-between text-sm">
                                 <span className="text-white font-medium">Active Sellers</span>
@@ -399,7 +370,6 @@ export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
                                     }}></div>
                             </div>
                         </div>
-
                         <div className="space-y-2">
                             <div className="flex justify-between text-sm">
                                 <span className="text-white font-medium">Products Created</span>
@@ -421,7 +391,6 @@ export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
                         </div>
                     </div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -441,7 +410,6 @@ export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
                             </div>
                             <p className="text-sm text-gray-400">Registration to verification conversion</p>
                         </div>
-
                         <div className="bg-gray-750 rounded-lg p-4">
                             <div className="flex items-center gap-3 mb-2">
                                 <div className="w-8 h-8 bg-[#3B82F6]/20 rounded-lg flex items-center justify-center">
@@ -454,7 +422,6 @@ export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
                             </div>
                             <p className="text-sm text-gray-400">Sellers actively creating products</p>
                         </div>
-
                         <div className="bg-gray-750 rounded-lg p-4">
                             <div className="flex items-center gap-3 mb-2">
                                 <div className="w-8 h-8 bg-[#8B5CF6]/20 rounded-lg flex items-center justify-center">
@@ -475,4 +442,3 @@ export const SellerTrendsTab = ({ analyticsData, timeRange, loading }) => {
         </div>
     )
 }
-

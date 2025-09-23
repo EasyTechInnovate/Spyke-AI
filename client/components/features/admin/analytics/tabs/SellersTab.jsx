@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
     Users,
@@ -49,7 +48,6 @@ import {
     LineChart as RechartsLineChart
 } from 'recharts'
 import analyticsAPI from '@/lib/api/analytics'
-
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -58,17 +56,13 @@ const formatCurrency = (amount) => {
         maximumFractionDigits: 0
     }).format(amount || 0)
 }
-
 const formatNumber = (num) => {
     return new Intl.NumberFormat('en-US').format(num || 0)
 }
-
 const formatPercentage = (num) => {
     return `${(num || 0).toFixed(1)}%`
 }
-
 const CHART_COLORS = ['#00FF89', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981', '#F97316', '#6366F1']
-
 const MetricCard = ({ title, value, change, icon: Icon, trend, suffix = '', subtitle }) => {
     return (
         <motion.div
@@ -90,7 +84,6 @@ const MetricCard = ({ title, value, change, icon: Icon, trend, suffix = '', subt
         </motion.div>
     )
 }
-
 const ChartCard = ({ title, children, height = 350, icon: Icon, subtitle, action }) => (
     <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -109,7 +102,6 @@ const ChartCard = ({ title, children, height = 350, icon: Icon, subtitle, action
         <div style={{ height: `${height}px` }}>{children}</div>
     </motion.div>
 )
-
 const EmptyStateCard = ({ title, description, icon: Icon }) => (
     <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -124,7 +116,6 @@ const EmptyStateCard = ({ title, description, icon: Icon }) => (
         <p className="text-gray-400 max-w-md mx-auto">{description}</p>
     </motion.div>
 )
-
 const LoadingCard = () => (
     <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 animate-pulse">
         <div className="flex items-center gap-3 mb-4">
@@ -137,17 +128,14 @@ const LoadingCard = () => (
         <div className="h-64 bg-gray-700/50 rounded"></div>
     </div>
 )
-
 const SellerCard = ({ seller, rank }) => {
     const verificationStatusConfig = {
         approved: { color: 'text-emerald-400 bg-emerald-500/10', icon: CheckCircle, label: 'Verified' },
         pending: { color: 'text-amber-400 bg-amber-500/10', icon: Clock, label: 'Pending' },
         rejected: { color: 'text-rose-400 bg-rose-500/10', icon: AlertCircle, label: 'Rejected' }
     }
-
     const config = verificationStatusConfig[seller.verification?.status] || verificationStatusConfig.pending
     const Icon = config.icon
-
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -169,7 +157,6 @@ const SellerCard = ({ seller, rank }) => {
                     {config.label}
                 </div>
             </div>
-
             <div className="grid grid-cols-2 gap-3 mb-3">
                 <div className="text-center">
                     <p className="text-lg font-bold text-white">{formatCurrency(seller.totalRevenue)}</p>
@@ -180,7 +167,6 @@ const SellerCard = ({ seller, rank }) => {
                     <p className="text-xs text-gray-400">Products</p>
                 </div>
             </div>
-
             <div className="grid grid-cols-3 gap-2 text-xs">
                 <div className="text-center">
                     <p className="text-white font-medium">{seller.totalSales}</p>
@@ -195,7 +181,6 @@ const SellerCard = ({ seller, rank }) => {
                     <p className="text-gray-500">Commission</p>
                 </div>
             </div>
-
             {seller.location?.country && (
                 <div className="mt-3 flex items-center gap-1 text-xs text-gray-400">
                     <MapPin className="w-3 h-3" />
@@ -205,23 +190,19 @@ const SellerCard = ({ seller, rank }) => {
         </motion.div>
     )
 }
-
 export default function SellersTab({ timeRange = '30d', loading: parentLoading }) {
     const [analyticsData, setAnalyticsData] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [refreshing, setRefreshing] = useState(false)
-
     const fetchAnalytics = useCallback(async (isRefresh = false) => {
         try {
             if (isRefresh) setRefreshing(true)
             else setLoading(true)
             setError(null)
-
             const response = await analyticsAPI.admin.getSellers({
                 period: timeRange.replace('d', '')
             })
-
             setAnalyticsData(response.data || response)
         } catch (err) {
             console.error('Error fetching seller analytics:', err)
@@ -231,33 +212,23 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
             setRefreshing(false)
         }
     }, [timeRange])
-
     useEffect(() => {
         fetchAnalytics()
     }, [fetchAnalytics])
-
-    // Process only actual API data
     const processedData = useMemo(() => {
         if (!analyticsData) return null
-
         const sellers = analyticsData.sellers || []
         const topSellers = analyticsData.topSellers || []
         const pagination = analyticsData.pagination || {}
-
-        // Calculate metrics from actual data
         const totalSellers = sellers.length
         const activeSellers = sellers.filter(s => s.isActive).length
         const verifiedSellers = sellers.filter(s => s.verification?.status === 'approved').length
-        
-        // Real revenue calculations
         const totalRevenue = sellers.reduce((sum, s) => sum + (s.totalRevenue || 0), 0)
         const totalEarnings = sellers.reduce((sum, s) => sum + (s.stats?.totalEarnings || 0), 0)
         const totalProducts = sellers.reduce((sum, s) => sum + (s.totalProducts || 0), 0)
         const totalSales = sellers.reduce((sum, s) => sum + (s.totalSales || 0), 0)
         const totalProfileViews = sellers.reduce((sum, s) => sum + (s.stats?.profileViews || 0), 0)
         const totalReviews = sellers.reduce((sum, s) => sum + (s.stats?.totalReviews || 0), 0)
-
-        // Real niche data from API
         const nichesData = sellers.reduce((acc, seller) => {
             (seller.niches || []).forEach(niche => {
                 const existing = acc.find(item => item.name === niche)
@@ -274,8 +245,6 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
             })
             return acc
         }, []).sort((a, b) => b.count - a.count)
-
-        // Real tools data from API
         const toolsData = sellers.reduce((acc, seller) => {
             (seller.toolsSpecialization || []).forEach(tool => {
                 const existing = acc.find(item => item.name === tool)
@@ -292,8 +261,6 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
             })
             return acc
         }, []).sort((a, b) => b.count - a.count)
-
-        // Real verification status data
         const verificationStatusData = [
             { 
                 name: 'Approved', 
@@ -311,8 +278,6 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
                 color: '#EF4444'
             }
         ].filter(item => item.count > 0)
-
-        // Real commission rates from API
         const commissionRates = sellers.reduce((acc, seller) => {
             const rate = seller.commissionOffer?.rate || 0
             const existing = acc.find(item => item.rate === rate)
@@ -329,8 +294,6 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
             }
             return acc
         }, []).sort((a, b) => b.count - a.count)
-
-        // Real country distribution
         const countryData = sellers.reduce((acc, seller) => {
             const country = seller.location?.country || 'Unknown'
             const existing = acc.find(item => item.name === country)
@@ -346,8 +309,6 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
             }
             return acc
         }, []).sort((a, b) => b.count - a.count)
-
-        // Real payout methods
         const payoutMethods = sellers.reduce((acc, seller) => {
             const method = seller.payoutInfo?.method || 'Not Set'
             const existing = acc.find(item => item.name === method)
@@ -363,8 +324,6 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
             }
             return acc
         }, [])
-
-        // Real performance data for charts
         const performanceData = sellers.map(seller => ({
             name: seller.fullName,
             revenue: seller.totalRevenue || 0,
@@ -375,7 +334,6 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
             profileViews: seller.stats?.profileViews || 0,
             commission: seller.commissionOffer?.rate || 0
         }))
-
         return {
             sellers,
             topSellers,
@@ -405,9 +363,7 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
             hasData: totalSellers > 0
         }
     }, [analyticsData])
-
     const isLoading = loading || parentLoading
-
     if (error) {
         return (
             <motion.div
@@ -428,7 +384,6 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
             </motion.div>
         )
     }
-
     if (isLoading) {
         return (
             <div className="space-y-8">
@@ -449,7 +404,6 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
             </div>
         )
     }
-
     if (!processedData || !processedData.hasData) {
         return (
             <div className="space-y-8">
@@ -474,7 +428,6 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
             </div>
         )
     }
-
     const { 
         sellers, 
         topSellers, 
@@ -487,10 +440,8 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
         payoutMethods, 
         performanceData 
     } = processedData
-
     return (
         <div className="space-y-8">
-            {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-2xl font-bold text-white">Seller Analytics</h2>
@@ -512,8 +463,6 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
                     </button>
                 </div>
             </div>
-
-            {/* Key Metrics - Only Real Data */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <MetricCard
                     title="Total Sellers"
@@ -544,10 +493,7 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
                     subtitle="Total engagement"
                 />
             </div>
-
-            {/* Charts Section - Only if data exists */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                {/* Seller Performance Comparison */}
                 <ChartCard
                     title="Seller Performance"
                     icon={BarChart3}
@@ -585,8 +531,6 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
                         </BarChart>
                     </ResponsiveContainer>
                 </ChartCard>
-
-                {/* Verification Status */}
                 {verificationStatusData.length > 0 && (
                     <ChartCard
                         title="Verification Status"
@@ -621,10 +565,7 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
                     </ChartCard>
                 )}
             </div>
-
-            {/* Data Tables Section */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                {/* Niches Data */}
                 {nichesData.length > 0 && (
                     <ChartCard
                         title="Popular Niches"
@@ -667,8 +608,6 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
                         </ResponsiveContainer>
                     </ChartCard>
                 )}
-
-                {/* Tools Specialization */}
                 {toolsData.length > 0 && (
                     <ChartCard
                         title="Tool Specializations"
@@ -706,10 +645,7 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
                     </ChartCard>
                 )}
             </div>
-
-            {/* Additional Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Commission Rates */}
                 {commissionRates.length > 0 && (
                     <ChartCard
                         title="Commission Rates"
@@ -735,8 +671,6 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
                         </ResponsiveContainer>
                     </ChartCard>
                 )}
-
-                {/* Country Distribution */}
                 {countryData.length > 0 && (
                     <ChartCard
                         title="Geographic Distribution"
@@ -769,8 +703,6 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
                         </ResponsiveContainer>
                     </ChartCard>
                 )}
-
-                {/* Payout Methods */}
                 {payoutMethods.length > 0 && (
                     <ChartCard
                         title="Payout Methods"
@@ -801,8 +733,6 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
                     </ChartCard>
                 )}
             </div>
-
-            {/* Top Sellers List */}
             {topSellers.length > 0 && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -819,8 +749,6 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
                     </div>
                 </motion.div>
             )}
-
-            {/* Detailed Performance Table */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -878,4 +806,3 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
         </div>
     )
 }
-

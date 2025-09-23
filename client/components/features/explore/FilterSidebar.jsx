@@ -11,7 +11,6 @@ import {
   PRODUCT_PRICE_CATEGORIES,
   DEFAULT_FILTERS 
 } from '@/lib/constants/filterMappings'
-
 export default function FilterSidebar({ 
   filters, 
   onFilterChange,
@@ -27,52 +26,39 @@ export default function FilterSidebar({
     rating: true,
     seller: true
   })
-
-  // Enhanced filter handlers for all filter types
   const handleProductTypeChange = useCallback((typeId) => {
     onFilterChange({ ...filters, type: typeId })
   }, [filters, onFilterChange])
-
   const handleCategoryChange = useCallback((categoryId) => {
     onFilterChange({ ...filters, category: categoryId })
   }, [filters, onFilterChange])
-
   const handleIndustryChange = useCallback((industryId) => {
     onFilterChange({ ...filters, industry: industryId })
   }, [filters, onFilterChange])
-
   const handleSetupTimeChange = useCallback((setupTimeId) => {
     onFilterChange({ ...filters, setupTime: setupTimeId })
   }, [filters, onFilterChange])
-
   const handlePriceRangeChange = useCallback((range) => {
     onFilterChange({ ...filters, priceRange: range })
   }, [filters, onFilterChange])
-
   const handleRatingChange = useCallback((rating) => {
     onFilterChange({ ...filters, rating })
   }, [filters, onFilterChange])
-
   const handleVerifiedChange = useCallback((checked) => {
     onFilterChange({ ...filters, verifiedOnly: checked })
   }, [filters, onFilterChange])
-
   const clearAllFilters = useCallback(() => {
     onFilterChange({
       ...DEFAULT_FILTERS,
       search: filters.search
     })
   }, [filters.search, onFilterChange])
-
-  // Toggle section with smooth animation
   const toggleSection = useCallback((section) => {
     setExpandedSections(prev => ({
       ...prev,
       [section]: !prev[section]
     }))
   }, [])
-
-  // Check if any filters are active
   const hasActiveFilters = useMemo(() => 
     filters.category !== 'all' ||
     filters.type !== 'all' ||
@@ -82,12 +68,10 @@ export default function FilterSidebar({
     filters.verifiedOnly ||
     (filters.priceRange && (filters.priceRange[0] > 0 || filters.priceRange[1] < 1000))
   , [filters])
-
   const priceRangeOptions = PRODUCT_PRICE_CATEGORIES.map(option => ({
     ...option,
     count: productCounts.priceRanges?.[option.id] || 0
   }))
-
   return (
     <motion.aside 
       initial={{ opacity: 0, x: -20 }}
@@ -99,7 +83,6 @@ export default function FilterSidebar({
         className
       )}
     >
-      {/* Compact Header */}
       <header className="flex items-center justify-between p-4 border-b border-gray-800 flex-shrink-0">
         <h2 className="text-lg font-bold text-white">Filters</h2>
         {hasActiveFilters && (
@@ -114,11 +97,8 @@ export default function FilterSidebar({
           </Button>
         )}
       </header>
-
-      {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto overscroll-contain">
         <div className="p-4 space-y-4">
-          {/* Product Type Filter */}
           <FilterSection
             title="Product Type"
             isExpanded={expandedSections.productType}
@@ -145,8 +125,6 @@ export default function FilterSidebar({
               )}
             </div>
           </FilterSection>
-
-          {/* Category Filter */}
           <FilterSection
             title="Category"
             isExpanded={expandedSections.category}
@@ -173,8 +151,6 @@ export default function FilterSidebar({
               )}
             </div>
           </FilterSection>
-
-          {/* Price Filter */}
           <FilterSection
             title="Price"
             isExpanded={expandedSections.priceRange}
@@ -192,8 +168,6 @@ export default function FilterSidebar({
                   />
                 ))}
               </div>
-              
-              {/* Compact Custom Price Range */}
               {expandedSections.priceRange && (
                 <div className="pt-2 border-t border-gray-800">
                   <p className="text-xs text-gray-400 mb-2">Custom Range</p>
@@ -233,8 +207,6 @@ export default function FilterSidebar({
               )}
             </div>
           </FilterSection>
-
-          {/* Rating Filter */}
           <FilterSection
             title="Rating"
             isExpanded={expandedSections.rating}
@@ -252,8 +224,6 @@ export default function FilterSidebar({
               ))}
             </div>
           </FilterSection>
-
-          {/* Industry Filter - Collapsed by default */}
           <FilterSection
             title="Industry"
             isExpanded={expandedSections.industry}
@@ -280,8 +250,6 @@ export default function FilterSidebar({
               )}
             </div>
           </FilterSection>
-
-          {/* Setup Time Filter - Collapsed by default */}
           <FilterSection
             title="Setup Time"
             isExpanded={expandedSections.setupTime}
@@ -308,8 +276,6 @@ export default function FilterSidebar({
               )}
             </div>
           </FilterSection>
-
-          {/* Seller Filter - Collapsed by default */}
           <FilterSection
             title="Seller"
             isExpanded={expandedSections.seller}
@@ -352,12 +318,9 @@ export default function FilterSidebar({
     </motion.aside>
   )
 }
-
-// Professional Filter Section Component with proper accessibility
 function FilterSection({ title, children, isExpanded, onToggle, count }) {
   const sectionId = `filter-section-${title.toLowerCase().replace(/\s+/g, '-')}`
   const contentId = `${sectionId}-content`
-
   return (
     <section className="border-b border-gray-800 pb-3 last:border-b-0">
       <button
@@ -382,7 +345,6 @@ function FilterSection({ title, children, isExpanded, onToggle, count }) {
           <ChevronDown className="w-4 h-4 text-gray-400 group-hover:text-[#00FF89] transition-colors" />
         )}
       </button>
-      
       <AnimatePresence initial={false}>
         {isExpanded && (
           <motion.div
@@ -400,8 +362,6 @@ function FilterSection({ title, children, isExpanded, onToggle, count }) {
     </section>
   )
 }
-
-// Professional Filter Option Component with proper states
 function FilterOption({ label, isSelected, onSelect, count, className }) {
   return (
     <button
@@ -442,8 +402,6 @@ function FilterOption({ label, isSelected, onSelect, count, className }) {
     </button>
   )
 }
-
-// Professional Rating Option Component
 function RatingOption({ rating, isSelected, onSelect, count }) {
   return (
     <button
@@ -467,7 +425,6 @@ function RatingOption({ rating, isSelected, onSelect, count }) {
           <div className="w-1.5 h-1.5 bg-white rounded-full" />
         )}
       </div>
-      
       <div className="flex items-center gap-1 flex-1 min-w-0">
         {rating === 0 ? (
           <span className="text-sm font-medium">All ratings</span>
@@ -490,7 +447,6 @@ function RatingOption({ rating, isSelected, onSelect, count }) {
           </div>
         )}
       </div>
-      
       {count > 0 && (
         <span className={cn(
           "text-xs px-2 py-0.5 rounded-full flex-shrink-0 font-medium",

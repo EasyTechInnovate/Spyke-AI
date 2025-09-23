@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect, use } from 'react'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
@@ -26,8 +25,6 @@ import StickyLeadForm from '../components/StickyLeadForm'
 import NewsletterCTA from '../components/NewsletterCTA'
 import RelatedPosts from '../components/RelatedPosts'
 import SocialShare from '../components/SocialShare'
-
-// PortableText components for rich text rendering
 const portableTextComponents = {
   block: {
     h1: ({children}) => <h1 className="text-4xl font-league-spartan font-bold mb-6 text-white">{children}</h1>,
@@ -93,17 +90,14 @@ const portableTextComponents = {
     ),
   },
 }
-
 export default function BlogPostPage({ params }) {
   const resolvedParams = use(params)
   const [post, setPost] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-
   useEffect(() => {
     fetchPost()
   }, [resolvedParams.slug])
-
   const fetchPost = async () => {
     try {
       const response = await fetch(`/api/blog/posts/${resolvedParams.slug}`)
@@ -122,7 +116,6 @@ export default function BlogPostPage({ params }) {
       setLoading(false)
     }
   }
-
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -130,7 +123,6 @@ export default function BlogPostPage({ params }) {
       day: 'numeric'
     })
   }
-
   const getCategoryColor = (color) => {
     const colors = {
       blue: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
@@ -142,11 +134,9 @@ export default function BlogPostPage({ params }) {
     }
     return colors[color] || colors.gray
   }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-[#121212] text-white">
-        {/* Added padding to prevent header overlap */}
         <div className="pt-24">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="animate-pulse">
@@ -164,7 +154,6 @@ export default function BlogPostPage({ params }) {
       </div>
     )
   }
-
   if (error || !post) {
     return (
       <div className="min-h-screen bg-[#121212] text-white flex items-center justify-center">
@@ -182,14 +171,11 @@ export default function BlogPostPage({ params }) {
       </div>
     )
   }
-
   return (
     <>
       <div className="min-h-screen bg-[#121212] text-white">
-        {/* Added proper padding to prevent header overlap */}
         <div className="pt-24">
           <div className="relative">
-            {/* Hero Section */}
             <div className="relative h-[60vh] overflow-hidden">
               {post.featuredImage ? (
                 <Image
@@ -204,8 +190,6 @@ export default function BlogPostPage({ params }) {
                 <div className="w-full h-full bg-gradient-to-br from-brand-primary/20 to-brand-secondary/20"></div>
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/60 to-transparent"></div>
-              
-              {/* Back Button */}
               <div className="absolute top-6 left-6 z-10">
                 <Link href="/blog">
                   <Button variant="ghost" className="bg-black/50 backdrop-blur-sm text-white hover:bg-black/70">
@@ -215,12 +199,9 @@ export default function BlogPostPage({ params }) {
                 </Link>
               </div>
             </div>
-
-            {/* Article Content */}
             <div className="relative -mt-32 z-10">
               <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="bg-[#1f1f1f] rounded-2xl p-8 lg:p-12 shadow-2xl border border-white/10">
-                  {/* Category */}
                   {post.category && (
                     <div className="mb-6">
                       <span className={`badge ${getCategoryColor(post.category.color)}`}>
@@ -228,15 +209,10 @@ export default function BlogPostPage({ params }) {
                       </span>
                     </div>
                   )}
-
-                  {/* Title */}
                   <h1 className="text-4xl lg:text-5xl font-league-spartan font-bold mb-6 leading-tight">
                     {post.title}
                   </h1>
-
-                  {/* Meta Info */}
                   <div className="flex flex-wrap items-center gap-6 mb-8 pb-8 border-b border-white/10">
-                    {/* Author */}
                     <div className="flex items-center gap-3">
                       {post.author?.avatar ? (
                         <Image
@@ -265,20 +241,14 @@ export default function BlogPostPage({ params }) {
                         </div>
                       </div>
                     </div>
-
-                    {/* Reading Time */}
                     {post.estimatedReadingTime && (
                       <div className="flex items-center gap-2 text-gray-400">
                         <Clock className="w-4 h-4" />
                         <span className="text-sm">{post.estimatedReadingTime} min read</span>
                       </div>
                     )}
-
-                    {/* Social Share - Made it available */}
                     <SocialShare post={post} />
                   </div>
-
-                  {/* Tags */}
                   {post.tags && post.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-8">
                       {post.tags.map((tag) => (
@@ -292,16 +262,12 @@ export default function BlogPostPage({ params }) {
                       ))}
                     </div>
                   )}
-
-                  {/* Content */}
                   <div className="prose prose-invert max-w-none">
                     <PortableText 
                       value={post.content} 
                       components={portableTextComponents}
                     />
                   </div>
-
-                  {/* Product CTAs */}
                   <div className="mt-12 p-6 bg-gradient-to-r from-brand-primary/10 to-brand-secondary/10 rounded-xl border border-brand-primary/20">
                     <h3 className="text-xl font-league-spartan font-bold mb-4">Ready to Automate Your Business?</h3>
                     <p className="text-gray-300 mb-6">
@@ -318,8 +284,6 @@ export default function BlogPostPage({ params }) {
                       </Button>
                     </div>
                   </div>
-
-                  {/* Author Bio */}
                   {post.author && (
                     <div className="mt-12 p-6 bg-white/5 rounded-xl border border-white/10">
                       <div className="flex items-start gap-4">
@@ -385,20 +349,14 @@ export default function BlogPostPage({ params }) {
                 </div>
               </div>
             </div>
-
-            {/* Newsletter CTA - Added proper spacing */}
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 mb-8">
               <NewsletterCTA blogPostSlug={post.slug.current} />
             </div>
-
-            {/* Related Posts */}
             {post.relatedPosts && post.relatedPosts.length > 0 && (
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 mb-16">
                 <RelatedPosts posts={post.relatedPosts} />
               </div>
             )}
-
-            {/* Sticky Lead Form */}
             <StickyLeadForm blogPostSlug={post.slug.current} />
           </div>
         </div>

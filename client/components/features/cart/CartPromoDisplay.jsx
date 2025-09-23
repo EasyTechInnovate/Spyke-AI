@@ -1,10 +1,8 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Tag, Copy, CheckCircle, Clock, Percent, DollarSign, Sparkles, ChevronDown, ChevronUp, Zap, Gift } from 'lucide-react'
 import { promocodeAPI } from '@/lib/api'
-
 export default function CartPromoDisplay({ 
     cartItems, 
     onApplyPromo, 
@@ -17,9 +15,7 @@ export default function CartPromoDisplay({
     const [applyingPromo, setApplyingPromo] = useState(null)
     const [showAll, setShowAll] = useState(false)
     const [bestDeal, setBestDeal] = useState(null)
-    
     const MAX_INITIAL_DISPLAY = 3
-
     useEffect(() => {
         if (cartItems?.length > 0) {
             fetchSmartPromocodes()
@@ -29,21 +25,17 @@ export default function CartPromoDisplay({
             setLoading(false)
         }
     }, [cartItems])
-
     const fetchSmartPromocodes = async () => {
         try {
             setLoading(true)
             const cartProductIds = cartItems.map(item => item.productId?._id || item.productId || item.id).filter(Boolean)
-            
             if (cartProductIds.length === 0) {
                 setPromocodes([])
                 setBestDeal(null)
                 return
             }
-
             const response = await fetch(`/api/v1/promocode/applicable?productIds=${cartProductIds.join(',')}`)
             const data = await response.json()
-            
             if (data.success && data.data.applicablePromocodes) {
                 const allApplicable = [
                     ...data.data.applicablePromocodes.global,
@@ -51,13 +43,11 @@ export default function CartPromoDisplay({
                     ...data.data.applicablePromocodes.categorySpecific,
                     ...data.data.applicablePromocodes.industrySpecific
                 ]
-
                 const sortedPromos = allApplicable.sort((a, b) => {
                     const aValue = calculatePotentialSavings(a)
                     const bValue = calculatePotentialSavings(b)
                     return bValue - aValue
                 })
-
                 setPromocodes(sortedPromos)
                 setBestDeal(sortedPromos[0] || null)
             }
@@ -69,12 +59,9 @@ export default function CartPromoDisplay({
             setLoading(false)
         }
     }
-
     const calculatePotentialSavings = (promocode) => {
         const cartTotal = cartItems.reduce((sum, item) => sum + (item.price || 0), 0)
-        
         if (cartTotal < (promocode.minimumOrderAmount || 0)) return 0
-        
         if (promocode.discountType === 'percentage') {
             let discount = (cartTotal * promocode.discountValue) / 100
             if (promocode.maxDiscountAmount) {
@@ -82,19 +69,15 @@ export default function CartPromoDisplay({
             }
             return discount
         }
-        
         return Math.min(promocode.discountValue, cartTotal)
     }
-
     const copyToClipboard = (code) => {
         navigator.clipboard.writeText(code)
         setCopiedCode(code)
         setTimeout(() => setCopiedCode(null), 2000)
     }
-
     const handleApplyPromo = async (promocode) => {
         if (applyingPromo || currentPromocode) return
-        
         setApplyingPromo(promocode.code)
         try {
             await onApplyPromo(promocode.code)
@@ -104,23 +87,19 @@ export default function CartPromoDisplay({
             setApplyingPromo(null)
         }
     }
-
     const formatDiscount = (promocode) => {
         if (promocode.discountType === 'percentage') {
             return `${promocode.discountValue}% OFF`
         }
         return `$${promocode.discountValue} OFF`
     }
-
     const getDaysRemaining = (validUntil) => {
         if (!validUntil) return null
         const days = Math.ceil((new Date(validUntil) - new Date()) / (1000 * 60 * 60 * 24))
         return days > 0 ? days : 0
     }
-
     const promosToShow = showAll ? promocodes : promocodes.slice(0, MAX_INITIAL_DISPLAY)
     const hasMorePromos = promocodes.length > MAX_INITIAL_DISPLAY
-
     if (loading) {
         return (
             <div className="mb-6">
@@ -139,7 +118,6 @@ export default function CartPromoDisplay({
             </div>
         )
     }
-
     if (promocodes.length === 0) {
         return (
             <div className="mb-6 p-4 bg-gray-800/30 rounded-lg border border-gray-700/50">
@@ -150,7 +128,6 @@ export default function CartPromoDisplay({
             </div>
         )
     }
-
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -188,14 +165,12 @@ export default function CartPromoDisplay({
                     </div>
                 </motion.div>
             )}
-
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-[#00FF89]" />
                     <h3 className="text-sm font-medium text-gray-300">Smart Offers for Your Cart</h3>
                     <span className="text-xs text-gray-500">({promocodes.length} found)</span>
                 </div>
-                
                 {hasMorePromos && (
                     <button
                         onClick={() => setShowAll(!showAll)}
@@ -215,7 +190,6 @@ export default function CartPromoDisplay({
                     </button>
                 )}
             </div>
-            
             <div className="space-y-2">
                 <AnimatePresence mode="wait">
                     <motion.div
@@ -234,7 +208,6 @@ export default function CartPromoDisplay({
                                 const isApplying = applyingPromo === promocode.code
                                 const potentialSavings = calculatePotentialSavings(promocode)
                                 const isBestDeal = bestDeal && promocode.code === bestDeal.code
-                                
                                 return (
                                     <motion.div
                                         key={promocode._id}
@@ -277,21 +250,18 @@ export default function CartPromoDisplay({
                                                         </span>
                                                     )}
                                                 </div>
-                                                
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-xs text-gray-400">Use code:</span>
                                                     <code className="bg-black/30 px-2 py-1 rounded text-xs font-mono text-white">
                                                         {promocode.code}
                                                     </code>
                                                 </div>
-                                                
                                                 {promocode.description && (
                                                     <p className="text-xs text-gray-400 mt-1 line-clamp-1">
                                                         {promocode.description}
                                                     </p>
                                                 )}
                                             </div>
-                                            
                                             <div className="flex items-center gap-2">
                                                 <button
                                                     onClick={() => copyToClipboard(promocode.code)}
@@ -308,7 +278,6 @@ export default function CartPromoDisplay({
                                                         <Copy className="w-4 h-4" />
                                                     )}
                                                 </button>
-                                                
                                                 {!isCurrentlyApplied && (
                                                     <button
                                                         onClick={() => handleApplyPromo(promocode)}
@@ -327,7 +296,6 @@ export default function CartPromoDisplay({
                     </motion.div>
                 </AnimatePresence>
             </div>
-            
             {!showAll && hasMorePromos && (
                 <motion.div
                     initial={{ opacity: 0 }}

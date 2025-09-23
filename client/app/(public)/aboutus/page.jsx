@@ -1,17 +1,14 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import Container from '@/components/shared/layout/Container'
 import { ArrowRight, Shield, Globe, CheckCircle, Zap, Users, Target, Lightbulb, Star, Award } from 'lucide-react'
 import Link from 'next/link'
-
 export default function AboutUsPage() {
     const fadeInUp = {
         initial: { opacity: 0, y: 20 },
         animate: { opacity: 1, y: 0 },
         transition: { duration: 0.6 }
     }
-
     const staggerContainer = {
         animate: {
             transition: {
@@ -19,7 +16,6 @@ export default function AboutUsPage() {
             }
         }
     }
-
     const offerings = [
         {
             icon: Zap,
@@ -47,7 +43,6 @@ export default function AboutUsPage() {
             description: "Bespoke AI solutions tailored to your specific needs"
         }
     ]
-
     const whyChooseUs = [
         {
             icon: Shield,
@@ -70,7 +65,6 @@ export default function AboutUsPage() {
             description: "Transparent terms for product usage and ownership"
         }
     ]
-
     const teamMembers = [
         {
             name: "Alex Chen",
@@ -97,7 +91,6 @@ export default function AboutUsPage() {
             image: "/images/team/emma-johnson.jpg"
         }
     ]
-
     return (
         <div className="min-h-screen bg-[#121212] text-white">
             <section className="relative py-20 lg:py-32">
@@ -108,8 +101,6 @@ export default function AboutUsPage() {
                         animate="animate"
                         variants={staggerContainer}
                     >
-                        
-                        
                         <motion.h1 
                             variants={fadeInUp}
                             className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 font-league-spartan"
@@ -117,7 +108,6 @@ export default function AboutUsPage() {
                             Empowering the Future of{' '}
                             <span className="text-[#00FF89]">AI Innovation</span>
                         </motion.h1>
-                        
                         <motion.p 
                             variants={fadeInUp}
                             className="text-xl md:text-2xl text-gray-300 leading-relaxed mb-12 max-w-3xl mx-auto"
@@ -125,7 +115,6 @@ export default function AboutUsPage() {
                             SpykeAI is where creators, developers, and businesses connect to exchange AI-powered tools, 
                             prompts, automation workflows, and services — all in one trusted marketplace.
                         </motion.p>
-
                         <motion.div
                             variants={fadeInUp}
                             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
@@ -148,8 +137,6 @@ export default function AboutUsPage() {
                     </motion.div>
                 </Container>
             </section>
-
-            {/* Our Story */}
             <section className="py-20 lg:py-24">
                 <Container>
                     <motion.div 
@@ -164,7 +151,6 @@ export default function AboutUsPage() {
                                 Our Story
                             </h2>
                         </motion.div>
-                        
                         <motion.div variants={fadeInUp} className="bg-[#1f1f1f] rounded-2xl p-8 md:p-12 border border-gray-800">
                             <p className="text-lg md:text-xl text-gray-300 leading-relaxed mb-6">
                                 Founded in 2025, SpykeAI was built to bridge the gap between AI creators and those who need AI-powered solutions. 
@@ -179,8 +165,6 @@ export default function AboutUsPage() {
                     </motion.div>
                 </Container>
             </section>
-
-            {/* Our Mission */}
             <section className="py-20 lg:py-24 bg-[#0f0f0f]">
                 <Container>
                     <motion.div 
@@ -196,7 +180,6 @@ export default function AboutUsPage() {
                         >
                             Our Mission
                         </motion.h2>
-                        
                         <motion.div variants={fadeInUp} className="relative">
                             <div className="absolute inset-0 bg-gradient-to-r from-[#00FF89]/20 via-transparent to-[#00FF89]/20 rounded-2xl blur-xl"></div>
                             <div className="relative bg-[#1f1f1f] rounded-2xl p-8 md:p-12 border border-[#00FF89]/20">
@@ -209,8 +192,6 @@ export default function AboutUsPage() {
                     </motion.div>
                 </Container>
             </section>
-
-            {/* What We Offer */}
             <section className="py-20 lg:py-24">
                 <Container>
                     <motion.div 
@@ -228,7 +209,6 @@ export default function AboutUsPage() {
                                 Discover a comprehensive range of AI solutions designed to meet every need
                             </p>
                         </motion.div>
-                        
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {offerings.map((offering, index) => {
                                 const Icon = offering.icon
@@ -256,8 +236,6 @@ export default function AboutUsPage() {
                     </motion.div>
                 </Container>
             </section>
-
-            {/* Why Choose SpykeAI */}
             <section className="py-20 lg:py-24 bg-[#0f0f0f]">
                 <Container>
                     <motion.div 
@@ -275,7 +253,6 @@ export default function AboutUsPage() {
                                 Built on trust, security, and innovation to ensure the best experience for all users
                             </p>
                         </motion.div>
-                        
                         <div className="grid md:grid-cols-2 gap-8">
                             {whyChooseUs.map((feature, index) => {
                                 const Icon = feature.icon
@@ -305,8 +282,6 @@ export default function AboutUsPage() {
                     </motion.div>
                 </Container>
             </section>
-
-            {/* Our Vision */}
             <section className="py-20 lg:py-24">
                 <Container>
                     <motion.div 
@@ -322,7 +297,6 @@ export default function AboutUsPage() {
                         >
                             Our Vision for the Future
                         </motion.h2>
-                        
                         <motion.div variants={fadeInUp} className="bg-[#1f1f1f] rounded-2xl p-8 md:p-12 border border-gray-800">
                             <p className="text-lg md:text-xl text-gray-300 leading-relaxed">
                                 We envision SpykeAI as the go-to global hub for AI innovation, where every creator has the tools 
@@ -333,8 +307,6 @@ export default function AboutUsPage() {
                     </motion.div>
                 </Container>
             </section>
-
-            {/* Team Section */}
             <section className="py-20 lg:py-24 bg-[#0f0f0f]">
                 <Container>
                     <motion.div 
@@ -352,7 +324,6 @@ export default function AboutUsPage() {
                                 Passionate experts dedicated to revolutionizing the AI marketplace
                             </p>
                         </motion.div>
-                        
                         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                             {teamMembers.map((member, index) => (
                                 <motion.div 
@@ -378,8 +349,6 @@ export default function AboutUsPage() {
                     </motion.div>
                 </Container>
             </section>
-
-            {/* Join Us CTA */}
             <section className="py-20 lg:py-24">
                 <Container>
                     <motion.div 

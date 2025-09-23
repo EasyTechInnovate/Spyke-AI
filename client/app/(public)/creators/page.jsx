@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect, useMemo, useCallback, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -25,9 +24,7 @@ import {
     Heart,
     ExternalLink
 } from 'lucide-react'
-
 const ITEMS_PER_PAGE = 12
-
 function CreatorCardSkeleton() {
     return (
         <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 animate-pulse">
@@ -49,7 +46,6 @@ function CreatorCardSkeleton() {
         </div>
     )
 }
-
 function HeroSection({ creatorsCount }) {
     return (
         <section className="text-center py-8 relative">
@@ -64,14 +60,12 @@ function HeroSection({ creatorsCount }) {
                         {creatorsCount?.toLocaleString() || '0'} Active Creators
                     </span>
                 </div>
-
                 <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 leading-tight">
                     Meet Our{' '}
                     <span className="bg-gradient-to-r from-[#00FF89] to-emerald-400 bg-clip-text text-transparent">
                         Creators
                     </span>
                 </h1>
-
                 <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
                     Discover talented automation experts and digital creators ready to transform your business
                 </p>
@@ -79,7 +73,6 @@ function HeroSection({ creatorsCount }) {
         </section>
     )
 }
-
 function SearchControls({ 
     searchQuery, 
     filters, 
@@ -93,9 +86,7 @@ function SearchControls({
     const niches = ['E-commerce', 'Email Marketing', 'Lead Generation', 'Sales Automation']
     const tools = ['Zapier', 'Mailchimp']
     const countries = ['India']
-
     const hasActiveFilters = filters.niche || filters.tool || filters.country
-
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -113,13 +104,11 @@ function SearchControls({
                     className="w-full pl-12 pr-4 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-[#00FF89]/50 transition-all"
                 />
             </div>
-
             <div className="flex flex-wrap items-center gap-4 mb-6">
                 <div className="flex items-center gap-2 text-gray-400">
                     <Filter className="w-4 h-4" />
                     <span className="text-sm font-medium">Filters</span>
                 </div>
-
                 <select
                     value={filters.niche}
                     onChange={(e) => {
@@ -132,7 +121,6 @@ function SearchControls({
                         <option key={niche} value={niche} className="bg-gray-800">{niche}</option>
                     ))}
                 </select>
-
                 <select
                     value={filters.tool}
                     onChange={(e) => {
@@ -145,7 +133,6 @@ function SearchControls({
                         <option key={tool} value={tool} className="bg-gray-800">{tool}</option>
                     ))}
                 </select>
-
                 <select
                     value={filters.country}
                     onChange={(e) => {
@@ -158,7 +145,6 @@ function SearchControls({
                         <option key={country} value={country} className="bg-gray-800">{country}</option>
                     ))}
                 </select>
-
                 <select
                     value={sortBy}
                     onChange={(e) => {
@@ -171,7 +157,6 @@ function SearchControls({
                     <option value="stats.totalProducts-desc" className="bg-gray-800">Most Products</option>
                     <option value="stats.profileViews-desc" className="bg-gray-800">Most Popular</option>
                 </select>
-
                 {hasActiveFilters && (
                     <button
                         onClick={() => {
@@ -183,7 +168,6 @@ function SearchControls({
                     </button>
                 )}
             </div>
-
             {hasActiveFilters && (
                 <div className="flex flex-wrap gap-2 mb-4">
                     {filters.niche && (
@@ -203,14 +187,12 @@ function SearchControls({
                     )}
                 </div>
             )}
-
             <div className="text-sm text-gray-400">
                 Showing {creatorsCount?.toLocaleString() || 0} creators
             </div>
         </motion.div>
     )
 }
-
 function CreatorCard({ creator }) {
     const formatJoinDate = (dateString) => {
         return new Date(dateString).toLocaleDateString('en-US', { 
@@ -218,11 +200,9 @@ function CreatorCard({ creator }) {
             month: 'short' 
         })
     }
-
     const getInitials = (name) => {
         return name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'CR'
     }
-
     return (
         <Link href={`/profile/${creator._id}`} className="group block h-full">
             <motion.div
@@ -253,7 +233,6 @@ function CreatorCard({ creator }) {
                             )}
                             <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#00FF89] rounded-full border-2 border-black" />
                         </div>
-                        
                         <div className="flex-1 min-w-0">
                             <h3 className="font-semibold text-white text-lg leading-tight mb-1 group-hover:text-[#00FF89] transition-colors">
                                 {creator.fullName}
@@ -266,7 +245,6 @@ function CreatorCard({ creator }) {
                             )}
                         </div>
                     </div>
-
                     <div className="mb-4 flex-shrink-0">
                         {creator.bio ? (
                             <p className="text-sm text-gray-300 leading-relaxed h-16 overflow-hidden relative">
@@ -276,7 +254,6 @@ function CreatorCard({ creator }) {
                             <div className="h-16"></div>
                         )}
                     </div>
-
                     <div className="mb-4 flex-shrink-0">
                         {creator.niches && creator.niches.length > 0 ? (
                             <div className="flex flex-wrap gap-1.5 min-h-[36px]">
@@ -298,7 +275,6 @@ function CreatorCard({ creator }) {
                             <div className="h-9"></div>
                         )}
                     </div>
-
                     <div className="mb-4 flex-shrink-0">
                         {creator.toolsSpecialization && creator.toolsSpecialization.length > 0 ? (
                             <>
@@ -318,9 +294,7 @@ function CreatorCard({ creator }) {
                             <div className="h-12"></div>
                         )}
                     </div>
-
                     <div className="flex-1"></div>
-
                     {creator.stats && (
                         <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/10 mb-4 flex-shrink-0">
                             <div className="text-center">
@@ -342,7 +316,6 @@ function CreatorCard({ creator }) {
                             </div>
                         </div>
                     )}
-
                     <div className="flex items-center justify-between pt-4 border-t border-white/10 flex-shrink-0">
                         <div className="flex items-center gap-1 text-xs text-gray-500">
                             <Calendar className="w-3 h-3" />
@@ -360,7 +333,6 @@ function CreatorCard({ creator }) {
         </Link>
     )
 }
-
 function CreatorsGrid({ creators, loading }) {
     if (loading) {
         return (
@@ -371,7 +343,6 @@ function CreatorsGrid({ creators, loading }) {
             </div>
         )
     }
-
     if (!creators.length) {
         return (
             <motion.div
@@ -387,7 +358,6 @@ function CreatorsGrid({ creators, loading }) {
             </motion.div>
         )
     }
-
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {creators.map((creator, index) => (
@@ -403,18 +373,14 @@ function CreatorsGrid({ creators, loading }) {
         </div>
     )
 }
-
 function Pagination({ currentPage, totalPages, onPageChange, loading }) {
     if (totalPages <= 1) return null
-
     const getPageNumbers = () => {
         const pages = []
         const showPages = 5
         const halfShow = Math.floor(showPages / 2)
-        
         let startPage = Math.max(1, currentPage - halfShow)
         let endPage = Math.min(totalPages, currentPage + halfShow)
-        
         if (endPage - startPage + 1 < showPages) {
             if (startPage === 1) {
                 endPage = Math.min(totalPages, startPage + showPages - 1)
@@ -422,14 +388,11 @@ function Pagination({ currentPage, totalPages, onPageChange, loading }) {
                 startPage = Math.max(1, endPage - showPages + 1)
             }
         }
-        
         for (let i = startPage; i <= endPage; i++) {
             pages.push(i)
         }
-        
         return pages
     }
-
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -444,7 +407,6 @@ function Pagination({ currentPage, totalPages, onPageChange, loading }) {
                 <ChevronLeft className="w-4 h-4" />
                 Previous
             </button>
-            
             {getPageNumbers().map((pageNum) => (
                 <button
                     key={pageNum}
@@ -459,7 +421,6 @@ function Pagination({ currentPage, totalPages, onPageChange, loading }) {
                     {pageNum}
                 </button>
             ))}
-            
             <button
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages || loading}
@@ -471,7 +432,6 @@ function Pagination({ currentPage, totalPages, onPageChange, loading }) {
         </motion.div>
     )
 }
-
 function ErrorState({ error, onRetry }) {
     return (
         <motion.div
@@ -495,11 +455,9 @@ function ErrorState({ error, onRetry }) {
         </motion.div>
     )
 }
-
 function CreatorsPageContent() {
     const searchParams = useSearchParams()
     const router = useRouter()
-
     const [creators, setCreators] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
@@ -517,22 +475,17 @@ function CreatorsPageContent() {
         totalPages: 0
     })
     const [sortBy, setSortBy] = useState('createdAt-desc')
-
     const fetchCreators = useCallback(async (resetData = false) => {
         try {
             setLoading(true)
             setError(null)
-
             const params = new URLSearchParams()
             params.append('page', 1)
             params.append('limit', 100)
             params.append('sortBy', 'createdAt')
             params.append('sortOrder', 'desc')
-
             const queryString = `?${params.toString()}`
-
             const response = await sellerAPI.searchSellers(queryString)
-            
             let sellersData = null
             if (response?.data?.sellers) {
                 sellersData = response.data.sellers
@@ -541,9 +494,7 @@ function CreatorsPageContent() {
             } else {
                 sellersData = []
             }
-
             setCreators(sellersData)
-            
         } catch (err) {
             setError(err.message || 'Failed to load creators')
             setCreators([])
@@ -551,10 +502,8 @@ function CreatorsPageContent() {
             setLoading(false)
         }
     }, [])
-
     const filteredAndSortedCreators = useMemo(() => {
         let filtered = [...creators]
-
         if (searchInput.trim()) {
             const query = searchInput.toLowerCase()
             filtered = filtered.filter(creator => 
@@ -564,30 +513,25 @@ function CreatorsPageContent() {
                 creator.toolsSpecialization?.some(tool => tool.toLowerCase().includes(query))
             )
         }
-
         if (filters.niche) {
             filtered = filtered.filter(creator => 
                 creator.niches?.includes(filters.niche)
             )
         }
-
         if (filters.tool) {
             filtered = filtered.filter(creator => 
                 creator.toolsSpecialization?.includes(filters.tool)
             )
         }
-
         if (filters.country) {
             filtered = filtered.filter(creator => 
                 creator.location?.country === filters.country
             )
         }
-
         if (sortBy) {
             const [sortField, sortOrder] = sortBy.split('-')
             filtered.sort((a, b) => {
                 let aValue, bValue
-
                 if (sortField === 'createdAt') {
                     aValue = new Date(a.userId?.createdAt || 0)
                     bValue = new Date(b.userId?.createdAt || 0)
@@ -599,7 +543,6 @@ function CreatorsPageContent() {
                     aValue = a[sortField] || ''
                     bValue = b[sortField] || ''
                 }
-
                 if (sortOrder === 'desc') {
                     return bValue > aValue ? 1 : -1
                 } else {
@@ -607,66 +550,52 @@ function CreatorsPageContent() {
                 }
             })
         }
-
         return filtered
     }, [creators, searchInput, filters, sortBy])
-
     const paginatedCreators = useMemo(() => {
         const startIndex = (pagination.page - 1) * ITEMS_PER_PAGE
         const endIndex = startIndex + ITEMS_PER_PAGE
         const paginatedData = filteredAndSortedCreators.slice(startIndex, endIndex)
-        
         const newTotal = filteredAndSortedCreators.length
         const newTotalPages = Math.ceil(newTotal / ITEMS_PER_PAGE)
-        
         setPagination(prev => ({
             ...prev,
             total: newTotal,
             totalPages: newTotalPages
         }))
-
         return paginatedData
     }, [filteredAndSortedCreators, pagination.page])
-
     const handleSearchChange = useCallback((searchTerm) => {
         setSearchInput(searchTerm)
         setPagination(prev => ({ ...prev, page: 1 }))
     }, [])
-
     const handleFilterChange = useCallback((filterType, value) => {
         setFilters(prev => ({ ...prev, [filterType]: value }))
         setPagination(prev => ({ ...prev, page: 1 }))
     }, [])
-
     const handleSortChange = useCallback((newSort) => {
         setSortBy(newSort)
         setPagination(prev => ({ ...prev, page: 1 }))
     }, [])
-
     const handlePageChange = useCallback((page) => {
         setPagination(prev => ({ ...prev, page }))
         window.scrollTo({ top: 0, behavior: 'smooth' })
     }, [])
-
     const clearFilters = useCallback(() => {
         setFilters({ niche: '', tool: '', country: '' })
         setSearchInput('')
         setPagination(prev => ({ ...prev, page: 1 }))
     }, [])
-
     const handleRetry = useCallback(() => {
         fetchCreators(true)
     }, [fetchCreators])
-
     useEffect(() => {
         fetchCreators()
     }, [fetchCreators])
-
     return (
         <div className="min-h-screen bg-black text-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-1 pb-16">
                 <HeroSection creatorsCount={filteredAndSortedCreators.length} />
-                
                 <SearchControls
                     searchQuery={searchInput}
                     filters={filters}
@@ -677,13 +606,11 @@ function CreatorsPageContent() {
                     onClearFilters={clearFilters}
                     creatorsCount={filteredAndSortedCreators.length}
                 />
-
                 {error ? (
                     <ErrorState error={error} onRetry={handleRetry} />
                 ) : (
                     <>
                         <CreatorsGrid creators={paginatedCreators} loading={loading} />
-                        
                         <Pagination
                             currentPage={pagination.page}
                             totalPages={pagination.totalPages}
@@ -696,7 +623,6 @@ function CreatorsPageContent() {
         </div>
     )
 }
-
 function LoadingFallback() {
     return (
         <div className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -707,7 +633,6 @@ function LoadingFallback() {
         </div>
     )
 }
-
 export default function CreatorsPage() {
     return (
         <ErrorBoundary fallback={<ErrorState />}>

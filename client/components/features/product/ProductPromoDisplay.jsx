@@ -1,11 +1,9 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Tag, Copy, CheckCircle, Clock, Percent, DollarSign, Sparkles, ChevronDown, ChevronUp, Zap, Gift, ExternalLink } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 import { promocodeAPI } from '@/lib/api'
-
 export default function ProductPromoDisplay({ product }) {
     const [promocodes, setPromocodes] = useState([])
     const [loading, setLoading] = useState(true)
@@ -13,22 +11,17 @@ export default function ProductPromoDisplay({ product }) {
     const [showAll, setShowAll] = useState(false)
     const [bestDeal, setBestDeal] = useState(null)
     const { addToCart } = useCart()
-    
     const MAX_INITIAL_DISPLAY = 2
-
     useEffect(() => {
         if (product?._id) {
             fetchProductPromocodes()
         }
     }, [product])
-
     const fetchProductPromocodes = async () => {
         try {
             setLoading(true)
-            
             const response = await promocodeAPI.getApplicablePromocodes(product._id)
             console.log('📊 Promocode API response:', response)
-            
             if (response.success && response.data?.applicablePromocodes) {
                 const allApplicable = [
                     ...(response.data.applicablePromocodes.global || []),
@@ -36,22 +29,18 @@ export default function ProductPromoDisplay({ product }) {
                     ...(response.data.applicablePromocodes.categorySpecific || []),
                     ...(response.data.applicablePromocodes.industrySpecific || [])
                 ]
-
                 const validPromocodes = allApplicable.filter(promo => {
                     const productPrice = product?.price || 0
                     const minimumRequired = promo.minimumOrderAmount || 0
                     const isValid = productPrice >= minimumRequired
-
                     console.log(`✅ Promo ${promo.code}: price=${productPrice}, minimum=${minimumRequired}, valid=${isValid}`)
                     return isValid
                 })
-
                 const sortedPromos = validPromocodes.sort((a, b) => {
                     const aValue = calculatePotentialSavings(a)
                     const bValue = calculatePotentialSavings(b)
                     return bValue - aValue
                 })
-
                 setPromocodes(sortedPromos)
                 setBestDeal(sortedPromos[0] || null)
             } else {
@@ -65,13 +54,9 @@ export default function ProductPromoDisplay({ product }) {
             setLoading(false)
         }
     }
-
     const calculatePotentialSavings = (promocode) => {
         const productPrice = product?.price || 0
-        
-        // Don't filter here, just calculate savings
         if (productPrice < (promocode.minimumOrderAmount || 0)) return 0
-        
         if (promocode.discountType === 'percentage') {
             let discount = (productPrice * promocode.discountValue) / 100
             if (promocode.maxDiscountAmount) {
@@ -79,16 +64,13 @@ export default function ProductPromoDisplay({ product }) {
             }
             return discount
         }
-        
         return Math.min(promocode.discountValue, productPrice)
     }
-
     const copyToClipboard = (code) => {
         navigator.clipboard.writeText(code)
         setCopiedCode(code)
         setTimeout(() => setCopiedCode(null), 2000)
     }
-
     const handleAddToCartWithPromo = async (promocode) => {
         try {
             await addToCart(product, 1, promocode.code)
@@ -96,23 +78,19 @@ export default function ProductPromoDisplay({ product }) {
             console.error('Failed to add to cart with promo:', error)
         }
     }
-
     const formatDiscount = (promocode) => {
         if (promocode.discountType === 'percentage') {
             return `${promocode.discountValue}% OFF`
         }
         return `$${promocode.discountValue} OFF`
     }
-
     const getDaysRemaining = (validUntil) => {
         if (!validUntil) return null
         const days = Math.ceil((new Date(validUntil) - new Date()) / (1000 * 60 * 60 * 24))
         return days > 0 ? days : 0
     }
-
     const promosToShow = showAll ? promocodes : promocodes.slice(0, MAX_INITIAL_DISPLAY)
     const hasMorePromos = promocodes.length > MAX_INITIAL_DISPLAY
-
     if (loading) {
         return (
             <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6">
@@ -131,7 +109,6 @@ export default function ProductPromoDisplay({ product }) {
             </div>
         )
     }
-
     if (promocodes.length === 0) {
         return (
             <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6">
@@ -153,7 +130,6 @@ export default function ProductPromoDisplay({ product }) {
             </div>
         )
     }
-
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -211,14 +187,12 @@ export default function ProductPromoDisplay({ product }) {
                     </div>
                 </motion.div>
             )}
-
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <Tag className="w-5 h-5 text-[#00FF89]" />
                     <h3 className="text-lg font-medium text-white">Available Offers</h3>
                     <span className="text-sm text-gray-500">({promocodes.length})</span>
                 </div>
-                
                 {hasMorePromos && (
                     <button
                         onClick={() => setShowAll(!showAll)}
@@ -238,7 +212,6 @@ export default function ProductPromoDisplay({ product }) {
                     </button>
                 )}
             </div>
-            
             <div className="space-y-3">
                 <AnimatePresence mode="wait">
                     <motion.div
@@ -253,7 +226,6 @@ export default function ProductPromoDisplay({ product }) {
                             const daysRemaining = getDaysRemaining(promocode.validUntil)
                             const potentialSavings = calculatePotentialSavings(promocode)
                             const isBestDeal = bestDeal && promocode.code === bestDeal.code
-                            
                             return (
                                 <motion.div
                                     key={promocode._id}
@@ -289,27 +261,23 @@ export default function ProductPromoDisplay({ product }) {
                                                     </div>
                                                 )}
                                             </div>
-                                            
                                             <div className="flex items-center gap-2 mb-2">
                                                 <span className="text-sm text-gray-400">Code:</span>
                                                 <code className="bg-black/50 px-2 py-1 rounded text-sm font-mono text-white">
                                                     {promocode.code}
                                                 </code>
                                             </div>
-                                            
                                             {promocode.description && (
                                                 <p className="text-sm text-gray-400 mb-3">
                                                     {promocode.description}
                                                 </p>
                                             )}
-
                                             {promocode.minimumOrderAmount && (
                                                 <p className="text-xs text-gray-500">
                                                     Minimum order: ${promocode.minimumOrderAmount}
                                                 </p>
                                             )}
                                         </div>
-                                        
                                         <div className="flex flex-col gap-2 ml-4">
                                             <button
                                                 onClick={() => copyToClipboard(promocode.code)}
@@ -335,7 +303,6 @@ export default function ProductPromoDisplay({ product }) {
                     </motion.div>
                 </AnimatePresence>
             </div>
-            
             {!showAll && hasMorePromos && (
                 <motion.div
                     initial={{ opacity: 0 }}

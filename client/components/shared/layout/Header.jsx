@@ -1,5 +1,4 @@
 'use client'
-
 import { X, Menu } from 'lucide-react'
 import { useHeader } from '@/hooks/useHeader'
 import HeaderLogo from './Header/Logo'
@@ -14,7 +13,6 @@ import Link from 'next/link'
 import { NAVIGATION, SELLER_MENU_ITEMS, USER_MENU_ITEMS } from './Header/const'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
-
 export default function Header() {
     const pathname = usePathname()
     const {
@@ -33,30 +31,21 @@ export default function Header() {
         isSeller,
         showBecomeSeller
     } = useHeader()
-
-    // Prevent hydration flash / mismatch for user-dependent UI
     const [mounted, setMounted] = useState(false)
     useEffect(() => { setMounted(true) }, [])
-
     const menuItems = currentRole === 'seller' && isSeller ? SELLER_MENU_ITEMS : USER_MENU_ITEMS
     const isSignInPage = pathname === '/signin'
-
     return (
         <>
             <div className="sticky top-0 z-[9999] w-full backdrop-blur-xl bg-black/95 border-b border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.3)] supports-[backdrop-filter]:bg-black/80">
                 <div className="max-w-[120rem] mx-auto px-4 md:px-8">
                     <div className="flex items-center justify-between h-20 w-full">
-                        {/* Logo */}
                         <div className="shrink-0">
                             <HeaderLogo />
                         </div>
-
-                        {/* Desktop Navigation */}
                         <div className="flex-1 hidden md:flex justify-center mx-4">
                             <Navigation showBecomeSeller={showBecomeSeller} searchOpen={searchOpen} />
                         </div>
-
-                        {/* Right Side Actions */}
                         <div className="flex items-center gap-4">
                             <div className="hidden sm:block">
                                 <SearchButton onClick={() => setSearchOpen(true)} />
@@ -67,8 +56,6 @@ export default function Header() {
                                     <SimpleNotificationBell />
                                 </div>
                             )}
-
-                            {/* User / Auth Buttons */}
                             {mounted && user ? (
                                 <div className="hidden md:block">
                                     <UserDropdown
@@ -101,8 +88,6 @@ export default function Header() {
                                     </Link>
                                 )
                             )}
-
-                            {/* Mobile Menu Toggle */}
                             <button
                                 className="md:hidden p-2.5 rounded-lg bg-white/5 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
                                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -114,7 +99,6 @@ export default function Header() {
                     </div>
                 </div>
             </div>
-
             <MobileMenu
                 isOpen={mobileMenuOpen}
                 onClose={() => setMobileMenuOpen(false)}
@@ -128,9 +112,7 @@ export default function Header() {
                 onSwitchRole={switchRole}
                 onLogout={handleLogout}
             />
-
             <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
         </>
     )
 }
-

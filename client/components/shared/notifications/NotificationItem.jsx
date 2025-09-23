@@ -1,5 +1,4 @@
 'use client'
-
 import { memo } from 'react'
 import { motion } from 'framer-motion'
 import { formatDistanceToNow } from 'date-fns'
@@ -13,14 +12,12 @@ import {
     Dot
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
-
 const NOTIFICATION_ICONS = {
     info: Info,
     success: CheckCircle,
     warning: AlertTriangle,
     error: XCircle
 }
-
 const NOTIFICATION_COLORS = {
     info: {
         bg: 'bg-blue-500/10',
@@ -47,25 +44,20 @@ const NOTIFICATION_COLORS = {
         icon: 'text-red-400'
     }
 }
-
 function NotificationItem({ notification, onClick, onMarkAsRead }) {
     const Icon = NOTIFICATION_ICONS[notification.type] || Info
     const colors = NOTIFICATION_COLORS[notification.type] || NOTIFICATION_COLORS.info
-
     const formattedTime = formatDistanceToNow(new Date(notification.createdAt), { 
         addSuffix: true 
     })
-
     const handleClick = (e) => {
         e.preventDefault()
         onClick?.(notification)
     }
-
     const handleMarkAsRead = (e) => {
         e.stopPropagation()
         onMarkAsRead?.(notification._id)
     }
-
     return (
         <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -85,39 +77,29 @@ function NotificationItem({ notification, onClick, onMarkAsRead }) {
         >
             <div className="p-4">
                 <div className="flex items-start gap-3">
-                    {/* Icon */}
                     <div className={cn(
                         "flex-shrink-0 mt-0.5",
                         notification.isRead ? "text-gray-500" : colors.icon
                     )}>
                         <Icon className="w-4 h-4" />
                     </div>
-
-                    {/* Content */}
                     <div className="flex-1 min-w-0">
-                        {/* Title */}
                         <h4 className={cn(
                             "font-medium text-sm mb-1 line-clamp-2",
                             notification.isRead ? "text-gray-300" : "text-white"
                         )}>
                             {notification.title}
                         </h4>
-
-                        {/* Message */}
                         <p className={cn(
                             "text-sm line-clamp-3 mb-2",
                             notification.isRead ? "text-gray-500" : "text-gray-300"
                         )}>
                             {notification.message}
                         </p>
-
-                        {/* Footer */}
                         <div className="flex items-center justify-between text-xs">
                             <div className="flex items-center gap-2">
                                 <Clock className="w-3 h-3 text-gray-500" />
                                 <span className="text-gray-500">{formattedTime}</span>
-                                
-                                {/* Type badge */}
                                 <div className="flex items-center gap-1">
                                     <Dot className={cn("w-4 h-4", colors.icon)} />
                                     <span className={cn("capitalize", colors.text)}>
@@ -125,8 +107,6 @@ function NotificationItem({ notification, onClick, onMarkAsRead }) {
                                     </span>
                                 </div>
                             </div>
-
-                            {/* Read status */}
                             {notification.isRead ? (
                                 <div className="flex items-center gap-1 text-gray-500">
                                     <Check className="w-3 h-3" />
@@ -149,13 +129,9 @@ function NotificationItem({ notification, onClick, onMarkAsRead }) {
                         </div>
                     </div>
                 </div>
-
-                {/* Unread indicator */}
                 {!notification.isRead && (
                     <div className="absolute top-4 left-2 w-2 h-2 bg-brand-primary rounded-full" />
                 )}
-
-                {/* Expiration warning */}
                 {notification.expiresAt && new Date(notification.expiresAt) < new Date(Date.now() + 24 * 60 * 60 * 1000) && (
                     <div className="absolute top-2 right-2">
                         <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" 
@@ -163,11 +139,8 @@ function NotificationItem({ notification, onClick, onMarkAsRead }) {
                     </div>
                 )}
             </div>
-
-            {/* Hover effect */}
             <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
         </motion.div>
     )
 }
-
 export default memo(NotificationItem)

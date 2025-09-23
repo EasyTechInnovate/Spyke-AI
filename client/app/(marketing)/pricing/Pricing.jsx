@@ -1,10 +1,8 @@
 'use client'
-
 import React from 'react'
 import { Check } from 'lucide-react'
 import Header from '@/components/shared/layout/Header'
 import Container from '@/components/shared/layout/Container'
-
 const plans = [
     {
         name: 'Basic',
@@ -49,7 +47,6 @@ const plans = [
         popular: false
     }
 ]
-
 export default function PricingPage() {
     return (
         <>
@@ -62,7 +59,6 @@ export default function PricingPage() {
                         Choose the perfect plan for your needs. Always know what you'll pay.
                     </p>
                 </div>
-
                 <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
                     {plans.map((plan, index) => (
                         <div
@@ -80,7 +76,6 @@ export default function PricingPage() {
                                     </span>
                                 </div>
                             )}
-
                             <div className="text-center mb-8">
                                 <h3 className="text-2xl font-bold text-gray-900 mb-2">
                                     {plan.name}
@@ -97,7 +92,6 @@ export default function PricingPage() {
                                     </span>
                                 </div>
                             </div>
-
                             <ul className="space-y-4 mb-8">
                                 {plan.features.map((feature, featureIndex) => (
                                     <li key={featureIndex} className="flex items-center">
@@ -106,7 +100,6 @@ export default function PricingPage() {
                                     </li>
                                 ))}
                             </ul>
-
                             <button
                                 className={`w-full py-3 px-6 rounded-lg font-medium transition-colors ${
                                     plan.popular
@@ -119,7 +112,6 @@ export default function PricingPage() {
                         </div>
                     ))}
                 </div>
-
                 <div className="text-center mt-16">
                     <p className="text-gray-600 mb-4">
                         Need a custom plan? We're here to help.

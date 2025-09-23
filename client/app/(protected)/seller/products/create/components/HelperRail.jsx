@@ -1,17 +1,13 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import { Lightbulb, AlertCircle, CheckCircle, Clock, Target, Zap, ArrowRight, BookOpen, TrendingUp } from 'lucide-react'
 import { useProductCreateStore, useProductCreateSelectors } from '@/store/productCreate'
 import { STEP_HELPERS, VALIDATION_LIMITS } from '@/lib/constants/productCreate'
-
 export default function HelperRail({ currentStep }) {
     const errors = useProductCreateStore((state) => state.errors)
     const isDirty = useProductCreateStore(useProductCreateSelectors.isDirty)
     const lastSaved = useProductCreateStore(useProductCreateSelectors.lastSaved)
     const completionPercentage = useProductCreateStore(useProductCreateSelectors.completionPercentage)
-
-    // Get relevant state for smart suggestions
     const title = useProductCreateStore((state) => state.title)
     const type = useProductCreateStore((state) => state.type)
     const shortDescription = useProductCreateStore((state) => state.shortDescription)
@@ -21,23 +17,17 @@ export default function HelperRail({ currentStep }) {
     const thumbnailImage = useProductCreateStore((state) => state.thumbnailImage)
     const supportAndMaintenance = useProductCreateStore((state) => state.supportAndMaintenance)
     const faq = useProductCreateStore((state) => state.faq)
-
     const stepInfo = STEP_HELPERS[currentStep] || {}
-
-    // Get active errors for current step
     const getActiveErrors = () => {
         return Object.entries(errors)
             .map(([field, message]) => ({
                 field: field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1'),
                 message
             }))
-            .slice(0, 3) // Show max 3 errors to keep it clean
+            .slice(0, 3) 
     }
-
-    // Get smart suggestions based on current step and state
     const getSmartSuggestions = () => {
         const suggestions = []
-
         switch (currentStep) {
             case 1:
                 if (!title && !shortDescription) {
@@ -55,7 +45,6 @@ export default function HelperRail({ currentStep }) {
                         icon: TrendingUp
                     })
                 }
-
                 if (type && !shortDescription) {
                     suggestions.push({
                         type: 'next',
@@ -65,7 +54,6 @@ export default function HelperRail({ currentStep }) {
                     })
                 }
                 break
-
             case 2:
                 const validSteps = howItWorks.filter((step) => step.title?.trim() && step.detail?.trim()).length
                 if (validSteps === 0) {
@@ -84,7 +72,6 @@ export default function HelperRail({ currentStep }) {
                     })
                 }
                 break
-
             case 3:
                 if (toolsUsed.length === 0) {
                     suggestions.push({
@@ -102,7 +89,6 @@ export default function HelperRail({ currentStep }) {
                     })
                 }
                 break
-
             case 5:
                 if (!thumbnailImage) {
                     suggestions.push({
@@ -112,7 +98,6 @@ export default function HelperRail({ currentStep }) {
                         icon: TrendingUp
                     })
                 }
-
                 if (productTags.length < 3) {
                     suggestions.push({
                         type: 'tip',
@@ -122,7 +107,6 @@ export default function HelperRail({ currentStep }) {
                     })
                 }
                 break
-
             case 6:
                 const validFaqs = faq.filter((item) => item.question?.trim() && item.answer?.trim()).length
                 if (!supportAndMaintenance) {
@@ -142,27 +126,20 @@ export default function HelperRail({ currentStep }) {
                 }
                 break
         }
-
-        return suggestions.slice(0, 2) // Keep it focused
+        return suggestions.slice(0, 2) 
     }
-
     const activeErrors = getActiveErrors()
     const smartSuggestions = getSmartSuggestions()
     const hasErrors = activeErrors.length > 0
-
-    // Get progress status
     const getProgressStatus = () => {
         if (hasErrors) return { color: 'text-amber-400', bg: 'bg-amber-400/10', text: 'Needs attention' }
         if (completionPercentage >= 80) return { color: 'text-emerald-400', bg: 'bg-emerald-400/10', text: 'Looking great!' }
         if (completionPercentage >= 50) return { color: 'text-blue-400', bg: 'bg-blue-400/10', text: 'Good progress' }
         return { color: 'text-gray-400', bg: 'bg-gray-400/10', text: 'Getting started' }
     }
-
     const progressStatus = getProgressStatus()
-
     return (
         <div className="space-y-6 sticky top-24">
-            {/* Progress Overview */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -176,14 +153,11 @@ export default function HelperRail({ currentStep }) {
                         {progressStatus.text}
                     </div>
                 </div>
-
-                {/* Progress Bar */}
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-400">Step {currentStep} of 6</span>
                         <span className="text-lg font-bold text-white">{completionPercentage}%</span>
                     </div>
-
                     <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
                         <motion.div
                             className="h-2 bg-gradient-to-r from-[#00FF89] to-emerald-400 rounded-full"
@@ -193,7 +167,6 @@ export default function HelperRail({ currentStep }) {
                             transition={{ duration: 0.8, ease: 'easeOut' }}
                         />
                     </div>
-
                     <div className="flex items-center justify-between text-xs text-gray-500">
                         <div className="flex items-center space-x-1">
                             <Clock className="w-3 h-3" />
@@ -203,8 +176,6 @@ export default function HelperRail({ currentStep }) {
                     </div>
                 </div>
             </motion.div>
-
-            {/* Errors - Clean & Focused */}
             {hasErrors && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -215,7 +186,6 @@ export default function HelperRail({ currentStep }) {
                         <h3 className="text-lg font-semibold text-red-100">Quick Fixes</h3>
                         <span className="text-xs bg-red-500/20 text-red-300 px-2 py-1 rounded-full">{activeErrors.length}</span>
                     </div>
-
                     <div className="space-y-3">
                         {activeErrors.map((error, index) => (
                             <div
@@ -231,8 +201,6 @@ export default function HelperRail({ currentStep }) {
                     </div>
                 </motion.div>
             )}
-
-            {/* Smart Suggestions */}
             {smartSuggestions.length > 0 && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -243,7 +211,6 @@ export default function HelperRail({ currentStep }) {
                         <Lightbulb className="w-5 h-5 text-blue-400" />
                         <h3 className="text-lg font-semibold text-blue-100">Smart Suggestions</h3>
                     </div>
-
                     <div className="space-y-3">
                         {smartSuggestions.map((suggestion, index) => {
                             const Icon = suggestion.icon
@@ -253,7 +220,6 @@ export default function HelperRail({ currentStep }) {
                                 progress: 'bg-amber-900/40 text-amber-200',
                                 next: 'bg-indigo-900/40 text-indigo-200'
                             }
-
                             return (
                                 <div
                                     key={index}
@@ -271,8 +237,6 @@ export default function HelperRail({ currentStep }) {
                     </div>
                 </motion.div>
             )}
-
-            {/* Step Guidance */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -282,7 +246,6 @@ export default function HelperRail({ currentStep }) {
                     <BookOpen className="w-5 h-5 text-[#00FF89]" />
                     <h3 className="text-lg font-semibold text-white">Step Guide</h3>
                 </div>
-
                 {stepInfo.tips && (
                     <div className="space-y-3">
                         {stepInfo.tips.slice(0, 3).map((tip, index) => (
@@ -296,8 +259,6 @@ export default function HelperRail({ currentStep }) {
                     </div>
                 )}
             </motion.div>
-
-            {/* Pro Tips */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -307,7 +268,6 @@ export default function HelperRail({ currentStep }) {
                     <Zap className="w-5 h-5 text-emerald-400" />
                     <h3 className="text-lg font-semibold text-emerald-100">Pro Tips</h3>
                 </div>
-
                 <div className="space-y-2">
                     {currentStep === 1 && (
                         <div className="space-y-2">
@@ -315,28 +275,24 @@ export default function HelperRail({ currentStep }) {
                             <p className="text-sm text-emerald-200">• Include your target audience when relevant</p>
                         </div>
                     )}
-
                     {currentStep === 2 && (
                         <div className="space-y-2">
                             <p className="text-sm text-emerald-200">• Use specific outcomes with numbers</p>
                             <p className="text-sm text-emerald-200">• Include action verbs in your steps</p>
                         </div>
                     )}
-
                     {currentStep === 3 && (
                         <div className="space-y-2">
                             <p className="text-sm text-emerald-200">• List tools in order of importance</p>
                             <p className="text-sm text-emerald-200">• Be transparent about complexity</p>
                         </div>
                     )}
-
                     {currentStep === 5 && (
                         <div className="space-y-2">
                             <p className="text-sm text-emerald-200">• High-quality images increase sales 3x</p>
                             <p className="text-sm text-emerald-200">• Use searchable, descriptive tags</p>
                         </div>
                     )}
-
                     {currentStep === 6 && (
                         <div className="space-y-2">
                             <p className="text-sm text-emerald-200">• Address common buyer objections</p>
@@ -348,4 +304,3 @@ export default function HelperRail({ currentStep }) {
         </div>
     )
 }
-

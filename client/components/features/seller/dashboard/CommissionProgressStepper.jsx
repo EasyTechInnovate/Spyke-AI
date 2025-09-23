@@ -1,50 +1,39 @@
 'use client'
 import React, { useMemo } from 'react'
 import { FileText, Eye, DollarSign, Handshake, Rocket, Check, Clock, AlertCircle } from 'lucide-react'
-
 function BaseCommissionProgressStepper({ verificationStatus, commissionStatus, hasCounterOffer, acceptedAt }) {
-  // Don't show stepper if profile is fully approved and commission is accepted
   const isFullyCompleted = verificationStatus === 'approved' && commissionStatus === 'accepted'
   if (isFullyCompleted) return null
-
   const steps = useMemo(() => {
     const getStepStatus = (stepId) => {
       const isCommissionAccepted = commissionStatus === 'accepted'
-      
       switch (stepId) {
         case 1:
           return 'completed'
-          
         case 2:
           if (['commission_offered', 'approved'].includes(verificationStatus)) return 'completed'
           if (verificationStatus === 'under_review') return 'active'
           if (verificationStatus === 'rejected') return 'error'
           return 'pending'
-          
         case 3:
           if (isCommissionAccepted) return 'completed'
           if (verificationStatus === 'commission_offered') return 'active'
           if (verificationStatus === 'rejected') return 'error'
           return 'pending'
-          
         case 4:
           if (!hasCounterOffer && !commissionStatus) return 'hidden'
           if (isCommissionAccepted) return 'completed'
           if (commissionStatus === 'counter_offered') return 'active'
           if (commissionStatus === 'rejected') return 'error'
           return 'pending'
-          
         case 5:
-          // Final approval
           if (verificationStatus === 'approved' && isCommissionAccepted) return 'completed'
           if (isCommissionAccepted) return 'active'
           return 'pending'
-          
         default:
           return 'pending'
       }
     }
-
     const allSteps = [
       { id: 1, title: 'Profile Submitted', icon: FileText, description: 'Your seller profile has been submitted' },
       { id: 2, title: 'Document Review', icon: Eye, description: 'We are reviewing your documents' },
@@ -52,18 +41,15 @@ function BaseCommissionProgressStepper({ verificationStatus, commissionStatus, h
       { id: 4, title: 'Negotiation', icon: Handshake, description: 'Discussing terms' },
       { id: 5, title: 'Final Approval', icon: Rocket, description: 'Ready to start selling' }
     ]
-
     return allSteps
       .map(step => ({ ...step, status: getStepStatus(step.id) }))
       .filter(step => step.status !== 'hidden')
   }, [verificationStatus, commissionStatus, hasCounterOffer])
-
   const completedSteps = steps.filter(s => s.status === 'completed').length
   const activeStep = steps.find(s => s.status === 'active')
   const errorStep = steps.find(s => s.status === 'error')
   const totalSteps = steps.length
   const progressPercentage = (completedSteps / Math.max(totalSteps - 1, 1)) * 100
-
   const getStatusMessage = () => {
     if (errorStep) {
       if (verificationStatus === 'rejected') {
@@ -73,7 +59,6 @@ function BaseCommissionProgressStepper({ verificationStatus, commissionStatus, h
         return { type: 'error', message: 'Commission negotiation was unsuccessful. Please contact support.' }
       }
     }
-    
     if (activeStep) {
       switch (activeStep.id) {
         case 2:
@@ -88,15 +73,11 @@ function BaseCommissionProgressStepper({ verificationStatus, commissionStatus, h
           return { type: 'info', message: activeStep.description }
       }
     }
-    
     return null
   }
-
   const statusMessage = getStatusMessage()
-
   return (
     <div className="w-full bg-gradient-to-br from-[#1a1a1a] to-[#1f1f1f] border border-gray-800/50 rounded-2xl p-6 mb-8 shadow-lg">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-white mb-1">Seller Onboarding Progress</h3>
@@ -107,8 +88,6 @@ function BaseCommissionProgressStepper({ verificationStatus, commissionStatus, h
           <div className="text-xs text-gray-400">Steps Completed</div>
         </div>
       </div>
-
-      {/* Progress Bar */}
       <div className="relative mb-8">
         <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
           <div 
@@ -119,8 +98,6 @@ function BaseCommissionProgressStepper({ verificationStatus, commissionStatus, h
         <div className="absolute -top-1 right-0 w-4 h-4 bg-[#00FF89] rounded-full opacity-75 animate-pulse" 
              style={{ right: `${100 - Math.min(progressPercentage, 100)}%`, transform: 'translateX(50%)' }} />
       </div>
-
-      {/* Steps */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
         {steps.map((step, index) => {
           const Icon = step.icon
@@ -128,7 +105,6 @@ function BaseCommissionProgressStepper({ verificationStatus, commissionStatus, h
           const isActive = step.status === 'active'
           const isError = step.status === 'error'
           const isPending = step.status === 'pending'
-
           return (
             <div key={step.id} className={`relative p-4 rounded-xl border transition-all duration-300 ${
               isCompleted 
@@ -139,7 +115,6 @@ function BaseCommissionProgressStepper({ verificationStatus, commissionStatus, h
                     ? 'bg-red-500/10 border-red-500/30'
                     : 'bg-gray-900/50 border-gray-700/50'
             }`}>
-              {/* Step Number */}
               <div className="flex items-center justify-between mb-3">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
                   isCompleted 
@@ -166,8 +141,6 @@ function BaseCommissionProgressStepper({ verificationStatus, commissionStatus, h
                   Step {step.id}
                 </span>
               </div>
-
-              {/* Step Content */}
               <div>
                 <h4 className={`font-medium mb-1 text-sm ${
                   isCompleted ? 'text-white' : isActive ? 'text-white' : isError ? 'text-red-300' : 'text-gray-400'
@@ -180,8 +153,6 @@ function BaseCommissionProgressStepper({ verificationStatus, commissionStatus, h
                   {step.description}
                 </p>
               </div>
-
-              {/* Active indicator */}
               {isActive && (
                 <div className="absolute top-2 right-2">
                   <div className="w-2 h-2 bg-[#00FF89] rounded-full animate-pulse" />
@@ -191,8 +162,6 @@ function BaseCommissionProgressStepper({ verificationStatus, commissionStatus, h
           )
         })}
       </div>
-
-      {/* Status Message */}
       {statusMessage && (
         <div className={`p-4 rounded-xl border ${
           statusMessage.type === 'error' 
@@ -229,6 +198,5 @@ function BaseCommissionProgressStepper({ verificationStatus, commissionStatus, h
     </div>
   )
 }
-
 const CommissionProgressStepper = React.memo(BaseCommissionProgressStepper)
 export default CommissionProgressStepper

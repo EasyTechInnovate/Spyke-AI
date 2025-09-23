@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -21,7 +20,6 @@ import {
 import { useSellerProfile } from '@/hooks/useSellerProfile'
 import { useSellerSettings } from '@/hooks/useSellerSettings'
 import { useNotifications } from '@/hooks/useNotifications'
-
 const SETTINGS_SECTIONS = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'payment', label: 'Payment & Payouts', icon: CreditCard },
@@ -31,7 +29,6 @@ const SETTINGS_SECTIONS = [
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'account', label: 'Account Management', icon: Settings }
 ]
-
 export default function SellerSettings() {
     const { data: seller, loading, error, mutate } = useSellerProfile()
     const {
@@ -44,11 +41,8 @@ export default function SellerSettings() {
         uploadProgress
     } = useSellerSettings()
     const { addNotification } = useNotifications()
-
     const [activeSection, setActiveSection] = useState('profile')
     const [formData, setFormData] = useState({})
-
-    // Initialize form data when seller data loads
     useEffect(() => {
         if (seller) {
             setFormData({
@@ -70,11 +64,9 @@ export default function SellerSettings() {
             })
         }
     }, [seller])
-
     const handleSave = async (section, data = null) => {
         const dataToSave = data || formData
         let result
-
         try {
             switch (section) {
                 case 'profile':
@@ -104,13 +96,11 @@ export default function SellerSettings() {
                 default:
                     result = await updateProfile(dataToSave)
             }
-
             if (result.success) {
                 addNotification({
                     type: 'success',
                     message: 'Settings saved successfully!'
                 })
-                // Refresh seller data
                 mutate()
             } else {
                 addNotification({
@@ -125,22 +115,19 @@ export default function SellerSettings() {
             })
         }
     }
-
     const handleFileUpload = async (file, type) => {
         let result
-
         if (type === 'profile') {
             result = await updateProfileImage(file)
         } else if (type === 'banner') {
             result = await updateBanner(file)
         }
-
         if (result.success) {
             addNotification({
                 type: 'success',
                 message: `${type === 'profile' ? 'Profile image' : 'Banner'} updated successfully!`
             })
-            mutate() // Refresh data
+            mutate() 
         } else {
             addNotification({
                 type: 'error',
@@ -148,7 +135,6 @@ export default function SellerSettings() {
             })
         }
     }
-
     if (loading) {
         return (
             <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
@@ -159,7 +145,6 @@ export default function SellerSettings() {
             </div>
         )
     }
-
     if (error) {
         return (
             <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
@@ -171,10 +156,8 @@ export default function SellerSettings() {
             </div>
         )
     }
-
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white">
-            {/* Header */}
             <div className="border-b border-gray-800 bg-[#0f0f0f]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="flex items-center gap-3">
@@ -188,10 +171,8 @@ export default function SellerSettings() {
                     </div>
                 </div>
             </div>
-
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                    {/* Sidebar Navigation */}
                     <div className="lg:col-span-1">
                         <nav className="space-y-2">
                             {SETTINGS_SECTIONS.map((section) => {
@@ -212,8 +193,6 @@ export default function SellerSettings() {
                             })}
                         </nav>
                     </div>
-
-                    {/* Main Content */}
                     <div className="lg:col-span-3">
                         <AnimatePresence mode="wait">
                             <motion.div
@@ -262,102 +241,75 @@ export default function SellerSettings() {
         </div>
     )
 }
-
-// Profile Settings Component
 function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, uploading, uploadProgress }) {
     const [isEditing, setIsEditing] = useState(false)
     const [originalData, setOriginalData] = useState({})
     const [hasChanges, setHasChanges] = useState(false)
-
-    // Initialize original data when formData changes
     useEffect(() => {
         if (formData && Object.keys(formData).length > 0) {
             setOriginalData({ ...formData })
         }
     }, [formData])
-
-    // Check for changes whenever formData updates
     useEffect(() => {
         if (Object.keys(originalData).length > 0) {
             const changes = checkForChanges(originalData, formData)
             setHasChanges(changes)
         }
     }, [formData, originalData])
-
     const checkForChanges = (original, current) => {
-        // Compare all relevant fields
         const fieldsToCompare = [
             'fullName', 'email', 'bio', 'websiteUrl', 'profileImage', 'bannerImage'
         ]
-
         for (const field of fieldsToCompare) {
             if (original[field] !== current[field]) {
                 return true
             }
         }
-
-        // Compare arrays (skills, languages)
         if (JSON.stringify(original.skills || []) !== JSON.stringify(current.skills || [])) {
             return true
         }
         if (JSON.stringify(original.languages || []) !== JSON.stringify(current.languages || [])) {
             return true
         }
-
-        // Compare social links object
         if (JSON.stringify(original.socialLinks || {}) !== JSON.stringify(current.socialLinks || {})) {
             return true
         }
-
         return false
     }
-
     const handleEdit = () => {
         setIsEditing(true)
-        setOriginalData({ ...formData }) // Save current state as original
+        setOriginalData({ ...formData }) 
     }
-
     const handleCancel = () => {
-        setFormData({ ...originalData }) // Restore original data
+        setFormData({ ...originalData }) 
         setIsEditing(false)
         setHasChanges(false)
     }
-
     const handleSave = async () => {
         await onSave()
         setIsEditing(false)
-        setOriginalData({ ...formData }) // Update original data after save
+        setOriginalData({ ...formData }) 
         setHasChanges(false)
     }
-
     const handleInputChange = (field, value) => {
         if (isEditing) {
             setFormData(prev => ({ ...prev, [field]: value }))
         }
     }
-
     const handleFileChange = async (e, type) => {
         if (!isEditing) return
-
         const file = e.target.files[0]
         if (file) {
-            // Validate file type
             const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
             if (!validTypes.includes(file.type)) {
-                // You'll need to add notification here
                 return
             }
-
-            // Validate file size (5MB limit)
             if (file.size > 5 * 1024 * 1024) {
-                // You'll need to add notification here
                 return
             }
-
             await onFileUpload(file, type)
         }
     }
-
     const handleSkillAdd = (skill) => {
         if (isEditing && skill && !formData.skills?.includes(skill)) {
             setFormData(prev => ({
@@ -366,7 +318,6 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
             }))
         }
     }
-
     const handleSkillRemove = (skillToRemove) => {
         if (isEditing) {
             setFormData(prev => ({
@@ -375,7 +326,6 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
             }))
         }
     }
-
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -419,12 +369,9 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                     )}
                 </div>
             </div>
-
-            {/* Profile Photo & Banner */}
             <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-white mb-4">Photos</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Profile Photo */}
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-3">Profile Photo</label>
                         <div className="flex items-center gap-4">
@@ -463,8 +410,6 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                             </div>
                         </div>
                     </div>
-
-                    {/* Banner */}
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-3">Profile Banner (Optional)</label>
                         <div className={`w-full h-20 bg-[#0f0f0f] border-2 border-dashed border-gray-700 rounded-lg flex items-center justify-center relative overflow-hidden ${!isEditing ? 'opacity-50' : ''
@@ -499,8 +444,6 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                     </div>
                 </div>
             </div>
-
-            {/* Basic Information */}
             <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-white mb-4">Basic Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -545,8 +488,6 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                     </div>
                 </div>
             </div>
-
-            {/* Bio */}
             <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-white mb-4">Bio / About Me</h3>
                 <textarea
@@ -565,8 +506,6 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                     <p className="text-xs text-gray-400 mt-2">{formData.bio?.length || 0}/500 characters</p>
                 )}
             </div>
-
-            {/* Skills & Languages */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <SkillsSection
                     title="Skills / Expertise"
@@ -585,8 +524,6 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                     isEditing={isEditing}
                 />
             </div>
-
-            {/* Social Links */}
             <SocialLinksSection
                 socialLinks={formData.socialLinks || {}}
                 onUpdate={(links) => handleInputChange('socialLinks', links)}
@@ -595,24 +532,19 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
         </div>
     )
 }
-
-// Skills Section Component
 function SkillsSection({ title, skills, onAdd, onRemove, placeholder, isEditing }) {
     const [inputValue, setInputValue] = useState('')
-
     const handleAdd = () => {
         if (inputValue.trim() && isEditing) {
             onAdd(inputValue.trim())
             setInputValue('')
         }
     }
-
     const handleKeyPress = (e) => {
         if (e.key === 'Enter') {
             handleAdd()
         }
     }
-
     return (
         <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6">
             <h3 className="text-lg font-semibold text-white mb-4">{title}</h3>
@@ -639,7 +571,6 @@ function SkillsSection({ title, skills, onAdd, onRemove, placeholder, isEditing 
                         </button>
                     </div>
                 )}
-
                 <div className="flex flex-wrap gap-2">
                     {skills.map((skill, index) => (
                         <span
@@ -658,7 +589,6 @@ function SkillsSection({ title, skills, onAdd, onRemove, placeholder, isEditing 
                         </span>
                     ))}
                 </div>
-
                 {skills.length === 0 && (
                     <p className="text-sm text-gray-500 italic">
                         {isEditing ? `Click above to add ${title.toLowerCase()}` : `No ${title.toLowerCase()} added yet`}
@@ -668,8 +598,6 @@ function SkillsSection({ title, skills, onAdd, onRemove, placeholder, isEditing 
         </div>
     )
 }
-
-// Social Links Section
 function SocialLinksSection({ socialLinks, onUpdate, isEditing }) {
     const socialPlatforms = [
         { key: 'linkedin', label: 'LinkedIn', placeholder: 'https://linkedin.com/in/your-profile' },
@@ -677,7 +605,6 @@ function SocialLinksSection({ socialLinks, onUpdate, isEditing }) {
         { key: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/your-handle' },
         { key: 'youtube', label: 'YouTube', placeholder: 'https://youtube.com/@yourchannel' }
     ]
-
     const handleLinkChange = (platform, value) => {
         if (isEditing) {
             onUpdate({
@@ -686,9 +613,7 @@ function SocialLinksSection({ socialLinks, onUpdate, isEditing }) {
             })
         }
     }
-
     const hasAnyLinks = socialPlatforms.some(platform => socialLinks[platform.key])
-
     return (
         <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6">
             <h3 className="text-lg font-semibold text-white mb-4">Social Links</h3>
@@ -710,7 +635,6 @@ function SocialLinksSection({ socialLinks, onUpdate, isEditing }) {
                         )}
                     </div>
                 ))}
-
                 {!isEditing && !hasAnyLinks && (
                     <div className="text-center py-4">
                         <p className="text-sm text-gray-500 italic">No social links added yet</p>

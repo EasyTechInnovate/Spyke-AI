@@ -1,13 +1,10 @@
 'use client'
-
 import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, AlertTriangle, Edit3, Send, ArrowLeft, Eye, AlertCircle, Loader2, Sparkles, Trophy, Zap, Star, HelpCircle, Info, Clock, Save, Check } from 'lucide-react'
 import { useProductCreateStore } from '@/store/productCreate'
 import { productsAPI } from '@/lib/api'
 import { useRouter } from 'next/navigation'
-
-// Enhanced tooltips for validation errors
 const ERROR_HELP = {
     title: "Product title is required for listing your product in the marketplace",
     type: "Select whether your product is an automation, template, or consultation",
@@ -25,11 +22,8 @@ const ERROR_HELP = {
     supportAndMaintenance: "Explain what support customers can expect after purchase",
     faq: "Answer common questions customers ask before buying"
 }
-
-// Tooltip component
 const Tooltip = ({ content }) => {
     const [isVisible, setIsVisible] = useState(false)
-
     return (
         <div className="relative inline-block">
             <button
@@ -41,7 +35,6 @@ const Tooltip = ({ content }) => {
                 className="p-1 text-gray-400 hover:text-[#00FF89] transition-colors">
                 <HelpCircle className="w-4 h-4" />
             </button>
-            
             {isVisible && (
                 <motion.div
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -54,13 +47,10 @@ const Tooltip = ({ content }) => {
         </div>
     )
 }
-
-// Auto-save indicator
 const AutoSaveIndicator = () => {
     const lastSaved = useProductCreateStore((state) => state.lastSaved)
     const isDirty = useProductCreateStore((state) => state.isDirty)
     const [showSaved, setShowSaved] = useState(false)
-
     const status = useMemo(() => {
         if (isDirty) return { icon: Save, text: 'Unsaved changes', color: 'text-yellow-400' }
         if (lastSaved) {
@@ -70,7 +60,6 @@ const AutoSaveIndicator = () => {
         }
         return { icon: Save, text: 'Auto-save enabled', color: 'text-gray-400' }
     }, [lastSaved, isDirty, showSaved])
-
     return (
         <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -81,8 +70,6 @@ const AutoSaveIndicator = () => {
         </motion.div>
     )
 }
-
-// Confetti Component
 const ConfettiParticle = ({ delay }) => (
     <motion.div
         className="absolute w-2 h-2 rounded-full"
@@ -104,11 +91,8 @@ const ConfettiParticle = ({ delay }) => (
         }}
     />
 )
-
-// Success Modal Component
 const SuccessModal = ({ isOpen, productTitle, onClose, onViewProducts }) => {
     const [confetti, setConfetti] = useState([])
-
     useEffect(() => {
         if (isOpen) {
             const particles = []
@@ -116,38 +100,31 @@ const SuccessModal = ({ isOpen, productTitle, onClose, onViewProducts }) => {
                 particles.push({ id: i, delay: Math.random() * 2 })
             }
             setConfetti(particles)
-
             const timer = setTimeout(() => {
                 onViewProducts()
             }, 4000)
-
             return () => clearTimeout(timer)
         }
     }, [isOpen, onViewProducts])
-
     if (!isOpen) return null
-
     return (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-            {/* Confetti */}
             {confetti.map((particle) => (
                 <ConfettiParticle
                     key={particle.id}
                     delay={particle.delay}
                 />
             ))}
-
             <motion.div
                 initial={{ scale: 0.5, opacity: 0, y: 50 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.5, opacity: 0, y: 50 }}
                 transition={{ type: 'spring', damping: 20, stiffness: 300 }}
                 className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl border border-[#00FF89]/30 p-8 max-w-md w-full text-center shadow-2xl">
-                {/* Success Icon with Animation */}
                 <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -157,8 +134,6 @@ const SuccessModal = ({ isOpen, productTitle, onClose, onViewProducts }) => {
                     <div className="relative bg-[#00FF89] rounded-full w-full h-full flex items-center justify-center">
                         <CheckCircle className="w-12 h-12 text-black" />
                     </div>
-
-                    {/* Sparkle effects */}
                     {[...Array(6)].map((_, i) => (
                         <motion.div
                             key={i}
@@ -180,8 +155,6 @@ const SuccessModal = ({ isOpen, productTitle, onClose, onViewProducts }) => {
                         />
                     ))}
                 </motion.div>
-
-                {/* Success Message */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -193,8 +166,6 @@ const SuccessModal = ({ isOpen, productTitle, onClose, onViewProducts }) => {
                     <p className="text-gray-300 mb-1">Your product has been created successfully!</p>
                     <p className="text-[#00FF89] font-semibold text-base">"{productTitle}"</p>
                 </motion.div>
-
-                {/* Celebration Stats */}
                 <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -219,15 +190,12 @@ const SuccessModal = ({ isOpen, productTitle, onClose, onViewProducts }) => {
                         <div className="text-sm text-gray-400">Professional</div>
                     </div>
                 </motion.div>
-
-                {/* Next Steps */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 2.0 }}
                     className="space-y-3">
                     <p className="text-gray-400 text-sm">Taking you to Product page where you submit your product for review</p>
-
                     <div className="flex gap-3 pt-4">
                         <motion.button
                             whileHover={{ scale: 1.05 }}
@@ -249,7 +217,6 @@ const SuccessModal = ({ isOpen, productTitle, onClose, onViewProducts }) => {
         </motion.div>
     )
 }
-
 export default function ReviewSubmit({ onBackToStep }) {
     const router = useRouter()
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -257,19 +224,15 @@ export default function ReviewSubmit({ onBackToStep }) {
     const [changedFields, setChangedFields] = useState([])
     const [showSuccessModal, setShowSuccessModal] = useState(false)
     const [createdProductTitle, setCreatedProductTitle] = useState('')
-
     const state = useProductCreateStore()
     const validateStep = useProductCreateStore((state) => state.validateStep)
     const toApiPayload = useProductCreateStore((state) => state.toApiPayload)
     const reset = useProductCreateStore((state) => state.reset)
-
-    // Simplified validation with better error categorization
     const validationSummary = useMemo(() => {
         const criticalFields = ['title', 'type', 'category', 'industry', 'shortDescription', 'fullDescription', 'supportAndMaintenance']
         const mediaFields = ['thumbnailImage', 'additionalImages', 'productTags']
         const processFields = ['howItWorks', 'toolsUsed', 'toolsConfiguration', 'setupTimeEstimate']
         const supportFields = ['faq']
-
         const checkFields = (fields) => fields.filter(field => {
             switch (field) {
                 case 'howItWorks':
@@ -286,22 +249,17 @@ export default function ReviewSubmit({ onBackToStep }) {
                     return !state[field]?.toString().trim()
             }
         })
-
         const critical = checkFields(criticalFields)
         const media = checkFields(mediaFields)
         const process = checkFields(processFields)
         const support = checkFields(supportFields)
-        
         const total = critical.length + media.length + process.length + support.length
         const isComplete = total === 0
-
         return { critical, media, process, support, total, isComplete }
     }, [state])
-
     const handleSubmit = async () => {
         setIsSubmitting(true)
         setSubmitError('')
-
         try {
             let allValid = true
             for (let step of [1, 2, 3, 5, 6]) {
@@ -309,19 +267,14 @@ export default function ReviewSubmit({ onBackToStep }) {
                     allValid = false
                 }
             }
-
             if (!allValid) {
                 throw new Error('Please fix all validation errors before submitting')
             }
-
             const payload = toApiPayload()
-
             if (payload.thumbnail instanceof File) {
                 throw new Error('Please provide image URLs instead of files for now')
             }
-
             const response = await productsAPI.createProduct(payload)
-
             if (response?.data) {
                 localStorage.removeItem('spyke-product-create')
                 setCreatedProductTitle(state.title)
@@ -337,16 +290,13 @@ export default function ReviewSubmit({ onBackToStep }) {
             setIsSubmitting(false)
         }
     }
-
     const handleViewProducts = () => {
         setShowSuccessModal(false)
         router.push('/seller/products')
     }
-
     const handleCloseSuccess = () => {
         setShowSuccessModal(false)
     }
-
     const jumpToField = (fieldName) => {
         const fieldToStep = {
             title: 1,
@@ -365,13 +315,11 @@ export default function ReviewSubmit({ onBackToStep }) {
             supportAndMaintenance: 6,
             faq: 6
         }
-
         const step = fieldToStep[fieldName]
         if (step && onBackToStep) {
             onBackToStep(step)
         }
     }
-
     return (
         <div className="space-y-8">
             <SuccessModal
@@ -380,21 +328,15 @@ export default function ReviewSubmit({ onBackToStep }) {
                 onClose={handleCloseSuccess}
                 onViewProducts={handleViewProducts}
             />
-
-            {/* Auto-save indicator */}
             <div className="flex justify-end">
                 <AutoSaveIndicator />
             </div>
-
-            {/* Header */}
             <div className="text-center pb-6 border-b border-gray-700/50">
                 <h1 className="text-3xl font-bold text-white mb-4">Review & Submit</h1>
                 <p className="text-gray-400 max-w-2xl mx-auto text-base">
                     Review your product details and submit for publication. You can make changes by jumping to specific sections.
                 </p>
             </div>
-
-            {/* Submission Status - Simplified */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -412,7 +354,6 @@ export default function ReviewSubmit({ onBackToStep }) {
                         </span>
                     </div>
                 </div>
-
                 {validationSummary.isComplete ? (
                     <div className="bg-[#00FF89]/10 border border-[#00FF89]/20 rounded-lg p-4">
                         <div className="flex items-center text-[#00FF89] mb-2">
@@ -425,7 +366,6 @@ export default function ReviewSubmit({ onBackToStep }) {
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {/* Critical Issues */}
                         {validationSummary.critical.length > 0 && (
                             <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
                                 <div className="flex items-center justify-between mb-2">
@@ -454,8 +394,6 @@ export default function ReviewSubmit({ onBackToStep }) {
                                 </div>
                             </div>
                         )}
-
-                        {/* Media & Tags */}
                         {validationSummary.media.length > 0 && (
                             <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4">
                                 <div className="flex items-center justify-between mb-2">
@@ -484,8 +422,6 @@ export default function ReviewSubmit({ onBackToStep }) {
                                 </div>
                             </div>
                         )}
-
-                        {/* Process & Setup */}
                         {validationSummary.process.length > 0 && (
                             <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
                                 <div className="flex items-center justify-between mb-2">
@@ -517,8 +453,6 @@ export default function ReviewSubmit({ onBackToStep }) {
                     </div>
                 )}
             </motion.div>
-
-            {/* Quick Stats - Simplified */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -545,8 +479,6 @@ export default function ReviewSubmit({ onBackToStep }) {
                     <div className="text-sm text-gray-400">FAQ Items</div>
                 </div>
             </motion.div>
-
-            {/* Product Overview - Simplified */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -596,8 +528,6 @@ export default function ReviewSubmit({ onBackToStep }) {
                     </div>
                 </div>
             </motion.div>
-
-            {/* Error Display */}
             {submitError && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -610,8 +540,6 @@ export default function ReviewSubmit({ onBackToStep }) {
                     <p className="text-red-200 mt-2 text-base">{submitError}</p>
                 </motion.div>
             )}
-
-            {/* Actions */}
             <div className="flex items-center justify-between pt-6 border-t border-gray-700">
                 <div className="flex items-center space-x-4">
                     <button
@@ -620,7 +548,6 @@ export default function ReviewSubmit({ onBackToStep }) {
                         <ArrowLeft className="w-4 h-4" />
                         <span>Back to Edit</span>
                     </button>
-
                     <button
                         onClick={() => onBackToStep?.(6)}
                         className="flex items-center space-x-2 px-4 py-2 border border-gray-600 text-white rounded-lg hover:bg-gray-800 transition-colors text-base">
@@ -628,14 +555,12 @@ export default function ReviewSubmit({ onBackToStep }) {
                         <span>Continue Editing</span>
                     </button>
                 </div>
-
                 <div className="flex items-center space-x-4">
                     {state.lastSaved && (
                         <div className="text-sm text-gray-400">
                             Last saved: {new Date(state.lastSaved).toLocaleTimeString()}
                         </div>
                     )}
-
                     <button
                         onClick={handleSubmit}
                         disabled={!validationSummary.isComplete || isSubmitting}
@@ -658,12 +583,9 @@ export default function ReviewSubmit({ onBackToStep }) {
                     </button>
                 </div>
             </div>
-
-            {/* Legal Notice */}
             <div className="text-center text-sm text-gray-500 border-t border-gray-700 pt-4">
                 <p>By submitting, you agree to our terms of service. Your product will be reviewed before going live.</p>
             </div>
         </div>
     )
 }
-

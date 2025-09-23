@@ -1,17 +1,14 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, CheckCircle, AlertTriangle, Info, XCircle } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
-
 const TOAST_ICONS = {
     success: CheckCircle,
     warning: AlertTriangle,
     info: Info,
     error: XCircle
 }
-
 const TOAST_COLORS = {
     success: {
         bg: 'bg-green-500/10',
@@ -38,7 +35,6 @@ const TOAST_COLORS = {
         icon: 'text-red-400'
     }
 }
-
 export default function NotificationToast({ 
     notification, 
     onClose, 
@@ -46,26 +42,21 @@ export default function NotificationToast({
     position = 'top-right' 
 }) {
     const [isVisible, setIsVisible] = useState(true)
-
     useEffect(() => {
         if (duration > 0) {
             const timer = setTimeout(() => {
                 setIsVisible(false)
-                setTimeout(() => onClose?.(), 300) // Wait for exit animation
+                setTimeout(() => onClose?.(), 300) 
             }, duration)
-
             return () => clearTimeout(timer)
         }
     }, [duration, onClose])
-
     const Icon = TOAST_ICONS[notification.type] || Info
     const colors = TOAST_COLORS[notification.type] || TOAST_COLORS.info
-
     const handleClose = () => {
         setIsVisible(false)
         setTimeout(() => onClose?.(), 300)
     }
-
     const getPositionClasses = () => {
         switch (position) {
             case 'top-left':
@@ -84,12 +75,10 @@ export default function NotificationToast({
                 return 'top-6 right-6'
         }
     }
-
     const getAnimationProps = () => {
         const isTop = position.includes('top')
         const isLeft = position.includes('left')
         const isCenter = position.includes('center')
-        
         if (isCenter) {
             return {
                 initial: { opacity: 0, y: isTop ? -50 : 50, scale: 0.9 },
@@ -97,7 +86,6 @@ export default function NotificationToast({
                 exit: { opacity: 0, y: isTop ? -50 : 50, scale: 0.9 }
             }
         }
-        
         return {
             initial: { 
                 opacity: 0, 
@@ -114,7 +102,6 @@ export default function NotificationToast({
             }
         }
     }
-
     return (
         <AnimatePresence>
             {isVisible && (
@@ -132,12 +119,9 @@ export default function NotificationToast({
                         colors.border
                     )}>
                         <div className="flex items-start gap-3">
-                            {/* Icon */}
                             <div className={cn('flex-shrink-0 mt-0.5', colors.icon)}>
                                 <Icon className="w-5 h-5" />
                             </div>
-
-                            {/* Content */}
                             <div className="flex-1 min-w-0">
                                 <h4 className="font-medium text-white text-sm mb-1">
                                     {notification.title}
@@ -146,8 +130,6 @@ export default function NotificationToast({
                                     {notification.message}
                                 </p>
                             </div>
-
-                            {/* Close Button */}
                             <button
                                 onClick={handleClose}
                                 className="flex-shrink-0 text-gray-400 hover:text-white transition-colors"
@@ -155,8 +137,6 @@ export default function NotificationToast({
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
-
-                        {/* Progress Bar */}
                         {duration > 0 && (
                             <motion.div
                                 className="absolute bottom-0 left-0 h-1 bg-white/20 rounded-b-lg overflow-hidden"

@@ -1,21 +1,16 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Users, UserPlus, UserCheck, Activity, TrendingUp, MapPin, Calendar } from 'lucide-react'
 import { ResponsiveContainer, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip, Area, Bar, Line, PieChart, Pie, Cell, AreaChart } from 'recharts'
-
 const formatNumber = (num) => {
     return new Intl.NumberFormat('en-US').format(num || 0)
 }
-
 const formatPercentage = (num) => {
     return `${(num || 0).toFixed(1)}%`
 }
-
 export const UsersTab = ({ analyticsData, timeRange, loading }) => {
     const [usersData, setUsersData] = useState(null)
-
     const generateTrendsWithAllDates = (dailyUsers, timeRange) => {
         const getDaysFromTimeRange = (period) => {
             switch (period) {
@@ -26,12 +21,10 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
                 default: return 30
             }
         }
-
         const days = getDaysFromTimeRange(timeRange)
         const endDate = new Date()
         const startDate = new Date()
         startDate.setDate(endDate.getDate() - (days - 1))
-
         const dataMap = new Map()
         dailyUsers.forEach(item => {
             const dateKey = item._id?.date || item.date
@@ -43,15 +36,12 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
                 })
             }
         })
-
         const trends = []
         for (let i = 0; i < days; i++) {
             const currentDate = new Date(startDate)
             currentDate.setDate(startDate.getDate() + i)
             const dateString = currentDate.toISOString().split('T')[0]
-            
             const data = dataMap.get(dateString) || { registrations: 0, activeUsers: 0, purchases: 0 }
-            
             trends.push({
                 date: currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
                 registrations: data.registrations,
@@ -62,14 +52,11 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
                     : 0
             })
         }
-
         return trends
     }
-
     useEffect(() => {
         if (analyticsData) {
             console.log('Analytics Data received:', analyticsData)
-
             const processedData = {
                 metrics: {
                     totalUsers: analyticsData.users?.pagination?.totalCount || 0,
@@ -99,12 +86,10 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
                         : 0
                 })) || []
             }
-
             console.log('Processed Users Data:', processedData)
             setUsersData(processedData)
         }
     }, [analyticsData, timeRange])
-
     if (loading) {
         return (
             <div className="space-y-6">
@@ -123,7 +108,6 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
             </div>
         )
     }
-
     if (!usersData) {
         return (
             <div className="space-y-6">
@@ -142,14 +126,10 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
             </div>
         )
     }
-
     const { metrics = {}, trends = [], activityTrends = [], topUsers = [], roleDistribution = [] } = usersData
-
     const validTrends = Array.isArray(trends) ? trends : []
     const validActivityTrends = Array.isArray(activityTrends) ? activityTrends : []
-
     const CHART_COLORS = ['#00FF89', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981', '#F97316', '#6366F1']
-
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -170,7 +150,6 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
                         <span className="text-gray-400">vs last period</span>
                     </div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -188,7 +167,6 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                     <div className="text-sm text-gray-400">This {timeRange === '7d' ? 'week' : 'month'}</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -206,7 +184,6 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                     <div className="text-sm text-gray-400">Recently active</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -225,7 +202,6 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
                     <div className="text-sm text-gray-400">30-day retention</div>
                 </motion.div>
             </div>
-
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -233,7 +209,6 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
                 className="bg-gray-800 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-white">User Registration & Activity Trends</h3>
-                    
                     <div className="flex items-center gap-4 text-xs">
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-[#00FF89] rounded-sm opacity-80"></div>
@@ -336,7 +311,6 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
                     )}
                 </div>
             </motion.div>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -389,7 +363,6 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
                         )}
                     </div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -425,7 +398,6 @@ export const UsersTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                 </motion.div>
             </div>
-
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

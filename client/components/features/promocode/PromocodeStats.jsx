@@ -1,34 +1,23 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { promocodeAPI } from '@/lib/api'
 import toast from '@/lib/utils/toast'
 import Card from '@/components/shared/ui/card'
 import { X, TrendingUp, Users, DollarSign, Calendar, BarChart2, Percent } from 'lucide-react'
 import LoadingSpinner from '@/components/shared/ui/LoadingSpinner'
-
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function PromocodeStats({ promocode, onClose }) {
-    // Inline notification state
     const [notification, setNotification] = useState(null)
-
-    // Show inline notification messages  
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
-        // Auto-dismiss after 5 seconds
         setTimeout(() => setNotification(null), 5000)
     }
-
-    // Clear notification
     const clearNotification = () => setNotification(null)
-
     const [loading, setLoading] = useState(true)
     const [stats, setStats] = useState(null)
-
     useEffect(() => {
         fetchStats()
     }, [promocode._id])
-
     const fetchStats = async () => {
         try {
             setLoading(true)
@@ -41,21 +30,17 @@ export default function PromocodeStats({ promocode, onClose }) {
             setLoading(false)
         }
     }
-
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD'
         }).format(amount || 0)
     }
-
     const formatPercentage = (value) => {
         return `${(value || 0).toFixed(1)}%`
     }
-
     return (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-            {/* Inline Notification */}
             {notification && (
                 <InlineNotification
                     type={notification.type}
@@ -63,8 +48,6 @@ export default function PromocodeStats({ promocode, onClose }) {
                     onDismiss={clearNotification}
                 />
             )}
-
-            
             <div className="w-full max-w-2xl bg-[#1f1f1f] border border-gray-800 rounded-xl overflow-hidden">
                 <div className="p-6 overflow-y-auto max-h-[calc(90vh-2rem)]">
                     <div className="flex justify-between items-center mb-6">
@@ -81,7 +64,6 @@ export default function PromocodeStats({ promocode, onClose }) {
                             <X className="w-5 h-5 text-gray-400" />
                         </button>
                     </div>
-
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-16">
                             <LoadingSpinner />
@@ -89,7 +71,6 @@ export default function PromocodeStats({ promocode, onClose }) {
                         </div>
                     ) : (
                         <div className="space-y-6">
-                            {/* Basic Info */}
                             <div className="bg-[#2a2a2a] border border-gray-700 rounded-xl p-6">
                                 <h3 className="text-lg font-semibold text-white mb-4">Overview</h3>
                                 <div className="grid grid-cols-2 gap-4">
@@ -129,8 +110,6 @@ export default function PromocodeStats({ promocode, onClose }) {
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Usage Stats */}
                             <div className="bg-[#2a2a2a] border border-gray-700 rounded-xl p-6">
                                 <h3 className="text-lg font-semibold text-white mb-4">Usage Statistics</h3>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
@@ -148,7 +127,6 @@ export default function PromocodeStats({ promocode, onClose }) {
                                             </p>
                                         )}
                                     </div>
-                                    
                                     <div>
                                         <div className="flex items-center gap-2 mb-2">
                                             <DollarSign className="w-4 h-4 text-[#00FF89]" />
@@ -158,7 +136,6 @@ export default function PromocodeStats({ promocode, onClose }) {
                                             ${promocode.usageHistory?.reduce((sum, usage) => sum + usage.discountAmount, 0).toFixed(2) || '0.00'}
                                         </p>
                                     </div>
-                                    
                                     <div>
                                         <div className="flex items-center gap-2 mb-2">
                                             <TrendingUp className="w-4 h-4 text-[#00FF89]" />
@@ -172,8 +149,6 @@ export default function PromocodeStats({ promocode, onClose }) {
                                         </p>
                                     </div>
                                 </div>
-
-                                {/* Usage Progress Bar */}
                                 {promocode.usageLimit && (
                                     <div className="mt-6">
                                         <div className="flex justify-between text-sm mb-2">
@@ -191,8 +166,6 @@ export default function PromocodeStats({ promocode, onClose }) {
                                     </div>
                                 )}
                             </div>
-
-                            {/* Recent Usage */}
                             {promocode.usageHistory && promocode.usageHistory.length > 0 && (
                                 <div className="bg-[#2a2a2a] border border-gray-700 rounded-xl p-6">
                                     <h3 className="text-lg font-semibold text-white mb-4">Recent Usage</h3>
@@ -213,8 +186,6 @@ export default function PromocodeStats({ promocode, onClose }) {
                                     </div>
                                 </div>
                             )}
-
-                            {/* Performance Insights */}
                             {stats && stats.insights && (
                                 <div className="bg-[#00FF89]/10 border border-[#00FF89]/30 rounded-xl p-6">
                                     <div className="flex items-start gap-3">
@@ -230,7 +201,6 @@ export default function PromocodeStats({ promocode, onClose }) {
                                     </div>
                                 </div>
                             )}
-
                         </div>
                     )}
                 </div>

@@ -1,5 +1,4 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import { Filter, ArrowRight, Sparkles, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
@@ -11,14 +10,10 @@ import {
   PRODUCT_TYPES, 
   PRODUCT_INDUSTRIES 
 } from '@/lib/constants/filterMappings'
-
-// Use the same background effects as hero section
 const BackgroundEffectsLight = dynamic(() => import('./hero/BackgroundEffectsLight'), {
   ssr: false,
   loading: () => null
 })
-
-// Create filter groups using the proper mapping data - showing ALL options with scrolling
 const filterGroups = [
   {
     id: 'types',
@@ -32,7 +27,7 @@ const filterGroups = [
       link: `/explore?type=${type.id}`,
       description: type.description
     })),
-    maxHeight: 'max-h-64' // Fixed height for types
+    maxHeight: 'max-h-64' 
   },
   {
     id: 'categories',
@@ -45,7 +40,7 @@ const filterGroups = [
       icon: category.icon,
       link: `/explore?category=${category.id}`
     })),
-    maxHeight: 'max-h-80' // Scrollable height for categories
+    maxHeight: 'max-h-80' 
   },
   {
     id: 'industries',
@@ -58,21 +53,16 @@ const filterGroups = [
       icon: industry.icon,
       link: `/explore?industry=${industry.id}`
     })),
-    maxHeight: 'max-h-80' // Scrollable height for industries
+    maxHeight: 'max-h-80' 
   }
 ]
-
 export default function QuickFilters() {
   const [hoveredFilter, setHoveredFilter] = useState(null)
-
   return (
     <section className="relative py-20 lg:py-24 bg-black">
-      {/* Consistent Background Effects */}
       <BackgroundEffectsLight />
-      
       <Container>
         <div className="relative z-10 max-w-7xl mx-auto">
-          {/* Section Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -86,17 +76,13 @@ export default function QuickFilters() {
                 Quick Filters
               </span>
             </div>
-            
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 font-title">
               Discover Tools Instantly
             </h2>
-            
             <p className="text-lg text-gray-400 max-w-2xl mx-auto font-body">
               Jump straight to what you need with our curated filter shortcuts
             </p>
           </motion.div>
-
-          {/* Filter Groups Grid - Fixed Height with Scrolling */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {filterGroups.map((group, groupIndex) => (
               <motion.div
@@ -107,7 +93,6 @@ export default function QuickFilters() {
                 transition={{ duration: 0.5, delay: groupIndex * 0.1 }}
                 className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-brand-primary/30 transition-all duration-300 flex flex-col h-96"
               >
-                {/* Group Header - Fixed */}
                 <div className="flex items-center gap-3 p-6 border-b border-gray-800 flex-shrink-0">
                   <div className="w-10 h-10 rounded-lg bg-brand-primary/20 flex items-center justify-center">
                     <group.icon className="w-5 h-5 text-brand-primary" />
@@ -121,8 +106,6 @@ export default function QuickFilters() {
                     </p>
                   </div>
                 </div>
-
-                {/* Scrollable Filter Options */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar">
                   {group.filters.map((filter, index) => (
                     <Link
@@ -148,7 +131,6 @@ export default function QuickFilters() {
                             )}
                           </div>
                         </div>
-                        
                         <ArrowRight 
                           className={`w-4 h-4 text-gray-600 transition-all duration-200 flex-shrink-0 ${
                             hoveredFilter === `${groupIndex}-${index}` 
@@ -163,8 +145,6 @@ export default function QuickFilters() {
               </motion.div>
             ))}
           </div>
-
-          {/* Explore All CTA */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}

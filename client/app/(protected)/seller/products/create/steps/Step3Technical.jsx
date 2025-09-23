@@ -1,5 +1,4 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import { useState, useMemo } from 'react'
 import {
@@ -27,8 +26,6 @@ import {
 import { useProductCreateStore } from '@/store/productCreate'
 import { SETUP_TIMES } from '@/lib/constants/productCreate'
 import CustomSelect from '@/components/shared/CustomSelect'
-
-// Enhanced tooltips with contextual help
 const FIELD_HELP = {
   toolsUsed: {
     title: "Tools & Platforms Guide",
@@ -46,8 +43,6 @@ const FIELD_HELP = {
     examples: ["Under 1 hour: Simple integrations", "1-3 hours: Multiple tool setup", "3+ hours: Complex workflows"]
   }
 }
-
-// Enhanced error messages
 const getEnhancedErrorMessage = (field, error) => {
   const errorMap = {
     toolsUsed: {
@@ -64,14 +59,10 @@ const getEnhancedErrorMessage = (field, error) => {
       'required': 'Setup time helps customers plan their implementation. Choose the most realistic estimate.'
     }
   }
-
   return errorMap[field]?.[error] || error
 }
-
-// Tooltip component
 const Tooltip = ({ content, examples }) => {
   const [isVisible, setIsVisible] = useState(false)
-
   return (
     <div className="relative inline-block">
       <button
@@ -83,7 +74,6 @@ const Tooltip = ({ content, examples }) => {
         className="p-1 text-gray-400 hover:text-[#00FF89] transition-colors">
         <HelpCircle className="w-4 h-4" />
       </button>
-
       {isVisible && (
         <motion.div
           initial={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -109,13 +99,10 @@ const Tooltip = ({ content, examples }) => {
     </div>
   )
 }
-
-// Auto-save indicator
 const AutoSaveIndicator = () => {
   const lastSaved = useProductCreateStore((state) => state.lastSaved)
   const isDirty = useProductCreateStore((state) => state.isDirty)
   const [showSaved, setShowSaved] = useState(false)
-
   const status = useMemo(() => {
     if (isDirty) return { icon: Save, text: 'Unsaved changes', color: 'text-yellow-400' }
     if (lastSaved) {
@@ -125,7 +112,6 @@ const AutoSaveIndicator = () => {
     }
     return { icon: Save, text: 'Auto-save enabled', color: 'text-gray-400' }
   }, [lastSaved, isDirty, showSaved])
-
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -136,8 +122,6 @@ const AutoSaveIndicator = () => {
     </motion.div>
   )
 }
-
-// Define tools with Lucide React icons only - organized by category
 const TOOLS_BY_CATEGORY = {
   'AI Tools': [
     { value: 'CHATGPT', label: 'ChatGPT', icon: Bot },
@@ -173,31 +157,23 @@ const TOOLS_BY_CATEGORY = {
     { value: 'KLAVIYO', label: 'Klaviyo', icon: Mail },
   ]
 }
-
-// Flatten all tools for the dropdown
 const ALL_TOOLS = Object.values(TOOLS_BY_CATEGORY).flat()
-
 export default function Step3Technical() {
   const toolsUsed = useProductCreateStore((state) => state.toolsUsed)
   const toolsConfiguration = useProductCreateStore((state) => state.toolsConfiguration)
   const setupTimeEstimate = useProductCreateStore((state) => state.setupTimeEstimate)
   const errors = useProductCreateStore((state) => state.errors)
   const touchedFields = useProductCreateStore((state) => state.touchedFields)
-
   const setField = useProductCreateStore((state) => state.setField)
   const markFieldTouched = useProductCreateStore((state) => state.markFieldTouched)
   const validateTouchedFields = useProductCreateStore((state) => state.validateTouchedFields)
-
   const handleFieldBlur = (fieldName) => {
     markFieldTouched(fieldName)
     validateTouchedFields()
   }
-
   const showError = (fieldName) => {
     return touchedFields[fieldName] && errors[fieldName]
   }
-
-  // Handle tool selection for multiple select
   const handleToolSelection = (selectedValues) => {
     const selectedTools = selectedValues.map(value => {
       const tool = ALL_TOOLS.find(t => t.value === value)
@@ -210,31 +186,22 @@ export default function Step3Technical() {
     setField('toolsUsed', selectedTools)
     handleFieldBlur('toolsUsed')
   }
-
   const updateToolConfiguration = (toolValue, configuration) => {
     const updated = toolsUsed.map((tool) =>
       tool.value === toolValue ? { ...tool, configuration } : tool
     )
     setField('toolsUsed', updated)
   }
-
-  // Get currently selected tool values for the dropdown
   const selectedToolValues = toolsUsed.map(tool => tool.value)
-
   return (
     <div className="space-y-10">
-      {/* Auto-save indicator */}
       <div className="flex justify-end">
         <AutoSaveIndicator />
       </div>
-
-      {/* Visual break - Welcome section */}
       <div className="text-center pb-6 border-b border-gray-700/50">
         <h2 className="text-2xl font-semibold text-white mb-2">Technical Setup & Tools</h2>
         <p className="text-lg text-gray-400">Define the tools and technical requirements for your product</p>
       </div>
-
-      {/* Tools Selection with Custom Dropdown */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -247,7 +214,6 @@ export default function Step3Technical() {
           </div>
           <div className="text-base text-gray-400">{toolsUsed.length} selected</div>
         </div>
-
         <CustomSelect
           value={selectedToolValues}
           onChange={handleToolSelection}
@@ -261,14 +227,11 @@ export default function Step3Technical() {
           onBlur={() => handleFieldBlur('toolsUsed')}
           maxHeight="max-h-80"
         />
-
         {showError('toolsUsed') && (
           <div className="text-base text-red-400">
             {getEnhancedErrorMessage('toolsUsed', errors.toolsUsed)}
           </div>
         )}
-
-        {/* Selected Tools Preview */}
         {toolsUsed.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 p-4 bg-gray-800/30 rounded-lg border border-gray-700">
             {toolsUsed.map((tool) => {
@@ -284,16 +247,12 @@ export default function Step3Technical() {
           </div>
         )}
       </motion.div>
-
-      {/* Visual break */}
       <div className="border-l-4 border-[#00FF89]/30 pl-6 py-4 bg-gray-800/20 rounded-r-lg">
         <p className="text-base text-gray-300">
           <Cpu className="w-4 h-4 inline mr-2" />
           <span className="font-medium">Pro tip:</span> Select tools your target audience is familiar with for easier adoption
         </p>
       </div>
-
-      {/* Individual Tool Configurations */}
       {toolsUsed.length > 0 && (
         <>
           <motion.div
@@ -309,7 +268,6 @@ export default function Step3Technical() {
               </div>
               <div className="flex-1 border-t border-gray-700"></div>
             </div>
-
             <div className="space-y-4">
               {toolsUsed.map((tool, index) => {
                 const toolData = ALL_TOOLS.find((t) => t.value === tool.value)
@@ -341,8 +299,6 @@ export default function Step3Technical() {
           </motion.div>
         </>
       )}
-
-      {/* General Tools Configuration */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -373,8 +329,6 @@ export default function Step3Technical() {
           </div>
         )}
       </motion.div>
-
-      {/* Setup Time Section */}
       <div className="flex items-center my-8">
         <div className="flex-1 border-t border-gray-700"></div>
         <div className="px-4 text-base text-gray-400 flex items-center space-x-2">
@@ -383,8 +337,6 @@ export default function Step3Technical() {
         </div>
         <div className="flex-1 border-t border-gray-700"></div>
       </div>
-
-      {/* Setup Time Estimate */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -426,8 +378,6 @@ export default function Step3Technical() {
           </div>
         )}
       </motion.div>
-
-      {/* Technical Summary Preview */}
       {(toolsUsed.length > 0 || toolsConfiguration || setupTimeEstimate) && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -463,4 +413,3 @@ export default function Step3Technical() {
     </div>
   )
 }
-

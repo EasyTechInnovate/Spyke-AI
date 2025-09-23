@@ -1,8 +1,6 @@
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Users, DollarSign, Package, Target, Globe, TrendingUp, Activity, Eye, AlertCircle, Zap, CheckCircle } from 'lucide-react'
-
-// Utility functions for formatting (same as Sales tab)
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -11,15 +9,12 @@ const formatCurrency = (amount) => {
         maximumFractionDigits: 0
     }).format(amount || 0)
 }
-
 const formatNumber = (num) => {
     return new Intl.NumberFormat('en-US').format(num || 0)
 }
-
 const formatPercentage = (num) => {
     return `${(num || 0).toFixed(1)}%`
 }
-
 const EmptyStateCard = ({ title, description, icon: Icon, action }) => (
     <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -35,49 +30,35 @@ const EmptyStateCard = ({ title, description, icon: Icon, action }) => (
         {action && <div className="flex justify-center">{action}</div>}
     </motion.div>
 )
-
 export const OverviewTab = ({ analyticsData, timeRange }) => {
-    // Extract overview data safely - Updated to match real API response
     const overviewData = useMemo(() => {
-        // Add comprehensive debugging
         console.log('Raw analyticsData:', analyticsData)
         console.log('analyticsData type:', typeof analyticsData)
         console.log('analyticsData keys:', analyticsData ? Object.keys(analyticsData) : 'null/undefined')
-
-        // Handle multiple possible response structures
         let data = null
-
         if (analyticsData) {
-            // Check if it's the direct API response with success/data structure
             if (analyticsData.success && analyticsData.data) {
                 data = analyticsData.data
                 console.log('Using direct API response structure')
             }
-            // Check if it's already the data object
             else if (analyticsData.data && !analyticsData.success) {
                 data = analyticsData
                 console.log('Using wrapped data structure')
             }
-            // Check if it's the unwrapped data
             else if (analyticsData.overview || analyticsData.growth) {
                 data = analyticsData
                 console.log('Using unwrapped data structure')
             }
-            // Fallback to treating it as data
             else {
                 data = analyticsData
                 console.log('Using fallback data structure')
             }
         }
-
         console.log('Extracted data object:', data)
-
         const overview = data?.overview || {}
         const growth = data?.growth || {}
-
         console.log('Overview object:', overview)
         console.log('Growth object:', growth)
-
         const result = {
             totalUsers: overview.totalUsers || 0,
             totalSellers: overview.totalSellers || 0,
@@ -91,15 +72,11 @@ export const OverviewTab = ({ analyticsData, timeRange }) => {
             newProductsLast30Days: growth.newProductsLast30Days || 0,
             salesLast30Days: growth.salesLast30Days || 0
         }
-
         console.log('Final overview result:', result)
         return result
     }, [analyticsData])
-
-    // Extract top categories data
     const topCategories = useMemo(() => {
         let data = null
-
         if (analyticsData) {
             if (analyticsData.success && analyticsData.data) {
                 data = analyticsData.data
@@ -111,43 +88,33 @@ export const OverviewTab = ({ analyticsData, timeRange }) => {
                 data = analyticsData
             }
         }
-
         const categories = data?.topCategories || []
         console.log('Top categories:', categories)
         return categories
     }, [analyticsData])
-
     const performanceMetrics = useMemo(() => {
         const conversionRate =
             overviewData.totalSales > 0 && overviewData.totalViews > 0 ? (overviewData.totalSales / overviewData.totalViews) * 100 : 0
-
         return {
             conversionRate
         }
     }, [overviewData])
-
-    // Check if we have meaningful data to display
     const hasData = useMemo(() => {
-        // Debug the data values
         console.log('Overview Data:', overviewData)
         console.log('Analytics Data:', analyticsData)
-
         const result =
             overviewData.totalUsers > 0 ||
             overviewData.totalProducts > 0 ||
             overviewData.totalRevenue > 0 ||
             overviewData.totalSales > 0 ||
             overviewData.totalViews > 0
-
         console.log('Has Data Result:', result)
         return result
     }, [overviewData, analyticsData])
-
     return (
         <div className="space-y-6">
             {!hasData ? (
                 <>
-                    {/* No Data State */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <EmptyStateCard
                             title="No Platform Data Yet"
@@ -160,8 +127,6 @@ export const OverviewTab = ({ analyticsData, timeRange }) => {
                             icon={Zap}
                         />
                     </div>
-
-                    {/* Getting Started Tips */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -212,7 +177,6 @@ export const OverviewTab = ({ analyticsData, timeRange }) => {
                 </>
             ) : (
                 <>
-                    {/* Platform Overview Metrics - Using real API data */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
@@ -227,7 +191,6 @@ export const OverviewTab = ({ analyticsData, timeRange }) => {
                             <div className="text-2xl font-bold text-white mb-1">{formatNumber(overviewData.totalUsers)}</div>
                             <div className="text-sm text-[#00FF89]">+{formatNumber(overviewData.newUsersLast30Days)} new in 30d</div>
                         </motion.div>
-
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -242,7 +205,6 @@ export const OverviewTab = ({ analyticsData, timeRange }) => {
                             <div className="text-2xl font-bold text-white mb-1">{formatCurrency(overviewData.totalRevenue)}</div>
                             <div className="text-sm text-[#00FF89]">{formatNumber(overviewData.totalSales)} total sales</div>
                         </motion.div>
-
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -257,7 +219,6 @@ export const OverviewTab = ({ analyticsData, timeRange }) => {
                             <div className="text-2xl font-bold text-white mb-1">{formatNumber(overviewData.totalProducts)}</div>
                             <div className="text-sm text-[#00FF89]">{formatNumber(overviewData.activeProducts)} active</div>
                         </motion.div>
-
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -273,8 +234,6 @@ export const OverviewTab = ({ analyticsData, timeRange }) => {
                             <div className="text-sm text-[#00FF89]">Per order average</div>
                         </motion.div>
                     </div>
-
-                    {/* Top Categories Section */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -310,8 +269,6 @@ export const OverviewTab = ({ analyticsData, timeRange }) => {
                             )}
                         </div>
                     </motion.div>
-
-                    {/* Key Metrics - Updated with real data */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
@@ -343,7 +300,6 @@ export const OverviewTab = ({ analyticsData, timeRange }) => {
                                 </div>
                             </div>
                         </motion.div>
-
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -380,4 +336,3 @@ export const OverviewTab = ({ analyticsData, timeRange }) => {
         </div>
     )
 }
-

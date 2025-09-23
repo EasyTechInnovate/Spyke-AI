@@ -1,9 +1,7 @@
-// filepath: client/app/(protected)/seller/payouts/page.jsx
 'use client'
 import React, { useCallback, useState } from 'react'
 import usePayouts from '@/hooks/usePayouts'
 import { RefreshCw, Loader2, Award, Wallet, Clock, AlertCircle, CheckCircle2, XCircle } from 'lucide-react'
-
 const statusColorMap = {
   pending: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
   approved: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
@@ -12,13 +10,11 @@ const statusColorMap = {
   failed: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
   cancelled: 'bg-gray-500/15 text-gray-400 border-gray-500/30'
 }
-
 export default function SellerPayoutDashboardPage() {
   const { dashboard, loadingDashboard, requestPayout, loadDashboard, error, updatingMethod, loadingRequest } = usePayouts()
   const [requestNotes] = useState('')
   const [requestError, setRequestError] = useState(null)
   const [requestSuccess, setRequestSuccess] = useState(null)
-
   const handleRequest = useCallback(async () => {
     setRequestError(null)
     setRequestSuccess(null)
@@ -29,12 +25,10 @@ export default function SellerPayoutDashboardPage() {
       setRequestError(e?.message || 'Request failed')
     }
   }, [requestPayout, requestNotes])
-
   const earnings = dashboard?.earnings
   const pending = dashboard?.pendingPayouts?.[0]
   const recent = dashboard?.recentPayouts || []
   const canRequest = dashboard?.canRequestPayout
-
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -59,7 +53,6 @@ export default function SellerPayoutDashboardPage() {
           </button>
         </div>
       </div>
-
       {(error || requestError || requestSuccess) && (
         <div className="space-y-2">
           {error && (
@@ -79,16 +72,12 @@ export default function SellerPayoutDashboardPage() {
           )}
         </div>
       )}
-
-      {/* Earnings Summary */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryCard title="Available for Payout" value={earnings ? `$${Math.round(earnings.availableForPayout || 0)}` : '—'} icon={Wallet} accent="emerald" loading={loadingDashboard} />
         <SummaryCard title="Gross Earnings" value={earnings ? `$${Math.round(earnings.grossEarnings || 0)}` : '—'} icon={Award} accent="amber" loading={loadingDashboard} />
         <SummaryCard title="Net Earnings" value={earnings ? `$${Math.round(earnings.netEarnings || 0)}` : '—'} icon={Wallet} accent="indigo" loading={loadingDashboard} />
         <SummaryCard title="Sales" value={earnings ? earnings.salesCount || 0 : '—'} icon={Clock} accent="sky" loading={loadingDashboard} />
       </div>
-
-      {/* Eligibility / Hold */}
       {earnings && (
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4">
@@ -104,7 +93,6 @@ export default function SellerPayoutDashboardPage() {
               <p className="text-xs text-white/50">You need at least ${earnings.minimumThreshold} available to request a payout.</p>
             )}
           </div>
-
           <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-white/60">Fees</h2>
             <div className="grid grid-cols-2 gap-3 text-sm">
@@ -116,8 +104,6 @@ export default function SellerPayoutDashboardPage() {
           </div>
         </div>
       )}
-
-      {/* Pending Payout */}
       {pending && (
         <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4">
           <div className="flex items-center justify-between">
@@ -132,8 +118,6 @@ export default function SellerPayoutDashboardPage() {
           <p className="text-xs text-white/50">You will be notified by email for each status update.</p>
         </div>
       )}
-
-      {/* Recent Payouts */}
       <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-white/60">Recent Payouts</h2>
@@ -175,15 +159,12 @@ export default function SellerPayoutDashboardPage() {
           </table>
         </div>
       </div>
-
-      {/* Placeholder for future: payout method management */}
       <div className="text-center text-xs text-white/30 pt-4 border-t border-white/5">
         Payout method management UI coming soon.
       </div>
     </div>
   )
 }
-
 function SummaryCard({ title, value, icon: Icon, accent = 'emerald', loading }) {
   const accentMap = {
     emerald: 'from-emerald-500/20 to-emerald-500/5 text-emerald-300',
@@ -206,7 +187,6 @@ function SummaryCard({ title, value, icon: Icon, accent = 'emerald', loading }) 
     </div>
   )
 }
-
 function Badge({ label, color }) {
   const palette = {
     emerald: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
@@ -216,7 +196,6 @@ function Badge({ label, color }) {
   }
   return <span className={`px-2 py-1 rounded-full text-xs font-medium border ${palette[color] || palette.gray}`}>{label}</span>
 }
-
 function FeeLine({ label, value }) {
   return (
     <div className="flex items-center justify-between text-white/70 text-xs border-b border-white/5 last:border-none pb-2 last:pb-0">

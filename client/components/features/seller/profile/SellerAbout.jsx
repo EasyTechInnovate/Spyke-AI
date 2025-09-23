@@ -1,22 +1,15 @@
 'use client'
-
 import { Clock, Award, Users, Briefcase, Star, CheckCircle } from 'lucide-react'
-
 export default function SellerAbout({ seller }) {
-    // Format member since date
     const formatMemberSince = (date) => {
         if (!date) return new Date().getFullYear()
-        
         const memberDate = new Date(date)
         if (isNaN(memberDate.getTime())) return new Date().getFullYear()
-        
-        // Return month and year format (e.g., "Jan 2024")
         return memberDate.toLocaleDateString('en-US', { 
             month: 'short', 
             year: 'numeric' 
         })
     }
-
     const achievements = [
         {
             icon: Star,
@@ -43,18 +36,14 @@ export default function SellerAbout({ seller }) {
             earned: seller?.isVerified
         }
     ]
-
     const skillsList = [
         ...(seller?.niches || []),
         ...(seller?.toolsSpecialization || [])
     ]
-
     return (
         <div className="space-y-8">
-            {/* About Section */}
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
                 <h2 className="text-xl font-semibold text-white mb-4">About {seller?.fullName}</h2>
-                
                 {seller?.bio ? (
                     <div className="prose prose-gray max-w-none">
                         <p className="text-gray-300 leading-relaxed text-base">
@@ -64,8 +53,6 @@ export default function SellerAbout({ seller }) {
                 ) : (
                     <p className="text-gray-400 italic">No bio available.</p>
                 )}
-
-                {/* Key Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-gray-800">
                     <div className="text-center">
                         <p className="text-2xl font-bold text-brand-primary">
@@ -93,12 +80,9 @@ export default function SellerAbout({ seller }) {
                     </div>
                 </div>
             </div>
-
-            {/* Skills & Expertise */}
             {skillsList.length > 0 && (
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
                     <h2 className="text-xl font-semibold text-white mb-4">Skills & Expertise</h2>
-                    
                     <div className="grid gap-6">
                         {seller?.niches && seller.niches.length > 0 && (
                             <div>
@@ -117,7 +101,6 @@ export default function SellerAbout({ seller }) {
                                 </div>
                             </div>
                         )}
-
                         {seller?.toolsSpecialization && seller.toolsSpecialization.length > 0 && (
                             <div>
                                 <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
@@ -138,11 +121,8 @@ export default function SellerAbout({ seller }) {
                     </div>
                 </div>
             )}
-
-            {/* Achievements */}
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
                 <h2 className="text-xl font-semibold text-white mb-6">Achievements & Badges</h2>
-                
                 <div className="grid md:grid-cols-2 gap-4">
                     {achievements.map((achievement, index) => (
                         <div
@@ -173,12 +153,9 @@ export default function SellerAbout({ seller }) {
                     ))}
                 </div>
             </div>
-
-            {/* Portfolio Links */}
             {seller?.portfolioLinks && seller.portfolioLinks.length > 0 && (
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
                     <h2 className="text-xl font-semibold text-white mb-4">Portfolio</h2>
-                    
                     <div className="space-y-3">
                         {seller.portfolioLinks.map((link, index) => (
                             <a
@@ -201,8 +178,6 @@ export default function SellerAbout({ seller }) {
                     </div>
                 </div>
             )}
-
-            {/* Custom Services */}
             {seller?.customAutomationServices && (
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
                     <h2 className="text-xl font-semibold text-white mb-4">Custom Services</h2>

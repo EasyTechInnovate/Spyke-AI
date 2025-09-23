@@ -1,25 +1,18 @@
 'use client'
-
 import { memo, useRef, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ChevronDown } from 'lucide-react'
 import { LoadingBadge } from '../ui/CoreComponents'
-
-// Custom hook for measured height
 function useMeasuredHeight(open) {
   const ref = useRef(null)
   const [height, setHeight] = useState(0)
-
   useEffect(() => {
     if (ref.current) {
       setHeight(ref.current.scrollHeight)
     }
   }, [open])
-
   return { ref, height }
 }
-
-// Helper to match paths
 const matchPath = (path, target) => {
   if (!path || !target) return false
   if (path === target) return true
@@ -31,8 +24,6 @@ const matchPath = (path, target) => {
     return path.startsWith(target)
   }
 }
-
-// Navigation Item Component
 export const NavigationItem = memo(({ 
   item, 
   isActive, 
@@ -47,7 +38,6 @@ export const NavigationItem = memo(({
   const Icon = item.icon
   const isGroup = !!item.subItems
   const { ref, height } = useMeasuredHeight(isExpanded)
-
   if (!isGroup) {
     return (
       <div key={item.id}>
@@ -91,7 +81,6 @@ export const NavigationItem = memo(({
       </div>
     )
   }
-
   return (
     <div key={item.id} className="space-y-1">
       <button
@@ -120,7 +109,6 @@ export const NavigationItem = memo(({
           </div>
         )}
       </button>
-
       {!isCollapsed && (
         <div
           className="overflow-hidden transition-all duration-300"
@@ -156,8 +144,6 @@ export const NavigationItem = memo(({
   )
 })
 NavigationItem.displayName = 'NavigationItem'
-
-// Navigation Section Component
 export const NavigationSection = memo(({ 
   items, 
   expandedMenus, 
@@ -177,7 +163,6 @@ export const NavigationSection = memo(({
           : item.href
             ? matchPath(currentPath, item.href)
             : item.subItems?.some((s) => matchPath(currentPath, s.href))
-
         return (
           <NavigationItem
             key={item.id}

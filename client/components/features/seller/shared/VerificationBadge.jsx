@@ -1,11 +1,6 @@
 'use client'
 import { Clock, Eye, DollarSign, CheckCircle, AlertCircle } from 'lucide-react'
 import React from 'react'
-
-/**
- * Displays seller verification / commission negotiation status
- * status: pending | under_review | commission_offered | approved | rejected
- */
 export default function VerificationBadge({ status, className = '' }) {
   const map = {
     pending: { color: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30', icon: Clock, text: 'Verification Pending' },

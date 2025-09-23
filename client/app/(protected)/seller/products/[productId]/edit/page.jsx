@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -17,12 +16,9 @@ import {
   TOOLS,
   SETUP_TIMES
 } from '@/components/features/products/form/constants'
-
-// Small reusable components kept local to avoid over-fragmentation
 const StepContainer = ({ children }) => (
   <div className="space-y-6">{children}</div>
 )
-
 const ToolButton = ({ tool, selected, onToggle }) => (
   <button
     onClick={onToggle}
@@ -34,37 +30,25 @@ const ToolButton = ({ tool, selected, onToggle }) => (
     <span className="text-xs font-medium text-center leading-tight">{tool.label}</span>
   </button>
 )
-
 export default function EditProductPage() {
-    // Inline notification state
     const [notification, setNotification] = useState(null)
-
-    // Show inline notification messages  
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
-        // Auto-dismiss after 5 seconds
         setTimeout(() => setNotification(null), 5000)
     }
-
-    // Clear notification
     const clearNotification = () => setNotification(null)
-
   const { productId } = useParams()
   const router = useRouter()
-
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
   const [originalData, setOriginalData] = useState(null)
   const [formData, setFormData] = useState(null)
-
-  // Derived dirty flag
   const isDirty = useMemo(() => {
     if (!originalData || !formData) return false
     return JSON.stringify(preparePayload(formData)) !== JSON.stringify(preparePayload(originalData))
   }, [originalData, formData])
-
   const preparePayload = (data) => ({
     title: data.title,
     type: data.type,
@@ -101,7 +85,6 @@ export default function EditProductPage() {
     expectedSupport: data.expectedSupport || '',
     faqs: (data.faqs || []).filter(f => f.question && f.answer)
   })
-
   const mapApiToForm = (p) => ({
     title: p.title || '',
     type: p.type || '',
@@ -133,16 +116,13 @@ export default function EditProductPage() {
     faqs: p.faqs?.length ? p.faqs : [{ question: '', answer: '' }],
     status: p.status || 'draft'
   })
-
   const fetchProduct = useCallback(async () => {
     try {
       setLoading(true)
-      // Use existing stable API method to avoid undefined getProduct runtime issues
       let res
       try {
         res = await productsAPI.getProductBySlug(productId)
       } catch (innerErr) {
-        // Fallback: if backend accepts raw ID the same endpoint still works; rethrow if fails
         throw innerErr
       }
       if (!res.data) throw new Error('Product not found')
@@ -157,12 +137,9 @@ export default function EditProductPage() {
       setLoading(false)
     }
   }, [productId, router])
-
   useEffect(() => {
     if (productId) fetchProduct()
   }, [productId, fetchProduct])
-
-  // Navigation protection
   useEffect(() => {
     const handler = (e) => {
       if (isDirty) {
@@ -173,29 +150,23 @@ export default function EditProductPage() {
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
   }, [isDirty])
-
   const handleInputChange = (field, value) => setFormData(prev => ({ ...prev, [field]: value }))
-
   const handleArrayFieldChange = (field, index, value) => setFormData(prev => ({
     ...prev,
     [field]: prev[field].map((item, i) => i === index ? value : item)
   }))
-
   const addArrayFieldItem = (field, defaultValue = '') => setFormData(prev => ({
     ...prev,
     [field]: [...prev[field], defaultValue]
   }))
-
   const removeArrayFieldItem = (field, index) => setFormData(prev => ({
     ...prev,
     [field]: prev[field].filter((_, i) => i !== index)
   }))
-
   const handleFaqChange = (index, field, value) => setFormData(prev => ({
     ...prev,
     faqs: prev.faqs.map((faq, i) => i === index ? { ...faq, [field]: value } : faq)
   }))
-
   const validateStep = (step) => {
     if (!formData) return false
     switch (step) {
@@ -213,12 +184,10 @@ export default function EditProductPage() {
         return false
     }
   }
-
   const goToStep = (step) => {
     if (step < currentStep || validateStep(currentStep)) setCurrentStep(step)
     else showMessage('Please complete all required fields', 'error')
   }
-
   const handleSave = async () => {
     try {
       if (!formData) return
@@ -234,19 +203,16 @@ export default function EditProductPage() {
       setSaving(false)
     }
   }
-
   const handleSaveAndExit = async () => {
     await handleSave()
     router.push('/seller/products')
   }
-
   const handleRevert = () => {
     if (!originalData) return
     if (isDirty && !confirm('Discard unsaved changes?')) return
     setFormData(originalData)
     showMessage('Reverted changes', 'success')
   }
-
   const handleDelete = async () => {
     if (!confirm('This will permanently delete the product. Continue?')) return
     try {
@@ -261,18 +227,15 @@ export default function EditProductPage() {
       setDeleting(false)
     }
   }
-
   const toggleTool = (tool) => {
     const exists = formData.toolsUsed.some(t => t.name === tool.label)
     handleInputChange('toolsUsed', exists
       ? formData.toolsUsed.filter(t => t.name !== tool.label)
       : [...formData.toolsUsed, { name: tool.label, logo: `https://placehold.co/40x40/1f1f1f/808080?text=${encodeURIComponent(tool.label.charAt(0))}`, model: '', link: '' }])
   }
-
   if (loading || !formData) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-            {/* Inline Notification */}
             {notification && (
                 <InlineNotification
                     type={notification.type}
@@ -280,8 +243,6 @@ export default function EditProductPage() {
                     onDismiss={clearNotification}
                 />
             )}
-
-            
         <div className="flex flex-col items-center gap-4 text-gray-400">
           <Loader2 className="w-8 h-8 animate-spin" />
           <p>Loading product...</p>
@@ -289,10 +250,8 @@ export default function EditProductPage() {
       </div>
     )
   }
-
   return (
     <div className="min-h-screen bg-black">
-      {/* Header */}
       <div className="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -340,8 +299,6 @@ export default function EditProductPage() {
           </div>
         </div>
       </div>
-
-      {/* Progress Steps */}
       <div className="bg-gray-900/50 border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between overflow-x-auto scrollbar-hide">
@@ -366,8 +323,6 @@ export default function EditProductPage() {
           </div>
         </div>
       </div>
-
-      {/* Form */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <AnimatePresence mode="wait">
           <motion.div
@@ -377,7 +332,6 @@ export default function EditProductPage() {
             exit={{ opacity: 0, x: -20 }}
             className="bg-gray-900 border border-gray-800 rounded-xl p-8"
           >
-            {/* Step 1 */}
             {currentStep === 1 && (
               <StepContainer>
                 <h2 className="text-2xl font-semibold text-white mb-6">Basic Information</h2>
@@ -423,8 +377,6 @@ export default function EditProductPage() {
                 </div>
               </StepContainer>
             )}
-
-            {/* Step 2 */}
             {currentStep === 2 && (
               <StepContainer>
                 <h2 className="text-2xl font-semibold text-white mb-6">Product Details</h2>
@@ -435,8 +387,6 @@ export default function EditProductPage() {
                 <DynamicList title="Outcomes (KPIs)" field="outcome" values={formData.outcome} placeholder="e.g., +50% lead conversion" onChange={handleArrayFieldChange} addItem={() => addArrayFieldItem('outcome')} removeItem={(i) => removeArrayFieldItem('outcome', i)} />
               </StepContainer>
             )}
-
-            {/* Step 3 */}
             {currentStep === 3 && (
               <StepContainer>
                 <h2 className="text-2xl font-semibold text-white mb-6">Technical Details</h2>
@@ -501,8 +451,6 @@ export default function EditProductPage() {
                 )}
               </StepContainer>
             )}
-
-            {/* Step 4 */}
             {currentStep === 4 && (
               <StepContainer>
                 <h2 className="text-2xl font-semibold text-white mb-6">Pricing & Media</h2>
@@ -537,8 +485,6 @@ export default function EditProductPage() {
                 </div>
               </StepContainer>
             )}
-
-            {/* Step 5 */}
             {currentStep === 5 && (
               <StepContainer>
                 <h2 className="text-2xl font-semibold text-white mb-6">Advanced Settings</h2>
@@ -559,8 +505,6 @@ export default function EditProductPage() {
             )}
           </motion.div>
         </AnimatePresence>
-
-        {/* Nav Buttons */}
         <div className="flex items-center justify-between mt-8">
           <button onClick={() => setCurrentStep(Math.max(1, currentStep - 1))} disabled={currentStep === 1} className="inline-flex items-center gap-2 px-6 py-3 text-gray-400 hover:text-white disabled:opacity-50">Previous</button>
           {currentStep < 5 ? (
@@ -573,8 +517,6 @@ export default function EditProductPage() {
     </div>
   )
 }
-
-// Helper subcomponents
 function DynamicList({ title, field, values, placeholder, onChange, addItem, removeItem, numbered, required }) {
   return (
     <div>
@@ -592,14 +534,12 @@ function DynamicList({ title, field, values, placeholder, onChange, addItem, rem
     </div>
   )
 }
-
 function DynamicImages({ images, onChange, add, remove }) {
   const handleImageChange = (index, newUrl) => {
     const updatedImages = [...images]
     updatedImages[index] = newUrl
     onChange('images', updatedImages)
   }
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -613,7 +553,6 @@ function DynamicImages({ images, onChange, add, remove }) {
           Add Image
         </button>
       </div>
-      
       {images.map((img, i) => (
         <div key={i} className="relative border border-gray-700 rounded-lg p-4 bg-gray-800/50">
           <div className="flex items-start justify-between mb-3">
@@ -627,7 +566,6 @@ function DynamicImages({ images, onChange, add, remove }) {
               <X className="w-4 h-4" />
             </button>
           </div>
-          
           <ImageUpload
             value={img}
             onChange={(e) => handleImageChange(i, e.target.value)}
@@ -638,7 +576,6 @@ function DynamicImages({ images, onChange, add, remove }) {
           />
         </div>
       ))}
-      
       {images.length === 0 && (
         <div className="text-center py-8 text-gray-400 border-2 border-dashed border-gray-700 rounded-lg">
           <ImageIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
@@ -649,7 +586,6 @@ function DynamicImages({ images, onChange, add, remove }) {
     </div>
   )
 }
-
 function TagInput({ tags, onAdd, onRemove }) {
   return (
     <div>
@@ -672,7 +608,6 @@ function TagInput({ tags, onAdd, onRemove }) {
     </div>
   )
 }
-
 function MetricsFields({ formData, handleInputChange }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -687,7 +622,6 @@ function MetricsFields({ formData, handleInputChange }) {
     </div>
   )
 }
-
 function FAQSection({ faqs, onChange, add, remove }) {
   return (
     <div>
@@ -703,7 +637,6 @@ function FAQSection({ faqs, onChange, add, remove }) {
     </div>
   )
 }
-
 function ToolGroups({ tools, formData, toggleTool }) {
   return (
     <div className="space-y-6">
@@ -715,7 +648,6 @@ function ToolGroups({ tools, formData, toggleTool }) {
     </div>
   )
 }
-
 function ToolCategory({ label, tools, formData, toggleTool }) {
   return (
     <div>
@@ -729,7 +661,6 @@ function ToolCategory({ label, tools, formData, toggleTool }) {
     </div>
   )
 }
-
 function FieldArraySection({ title, value, onChange, placeholder }) {
   return (
     <div>

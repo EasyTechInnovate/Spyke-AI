@@ -1,5 +1,4 @@
 import AdminDashboardPage from './Dashboard'
-
 export const metadata = {
     title: 'Admin Dashboard - Spyke AI',
     description: 'Manage users, monitor platform activity, oversee marketplace operations, and access administrative tools for Spyke AI.',
@@ -17,7 +16,6 @@ export const metadata = {
     },
 }
 export const dynamic = 'force-dynamic';
-
 export default function Page() {
     return <AdminDashboardPage />
 }

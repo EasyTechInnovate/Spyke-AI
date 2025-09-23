@@ -1,5 +1,4 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { HelpCircle, Save, Check, Loader2, Package } from 'lucide-react'
@@ -9,9 +8,7 @@ import CategoryDropdown from '@/components/shared/CategoryDropdown'
 import IndustryDropdown from '@/components/shared/IndustryDropdown'
 import CustomSelect from '@/components/shared/CustomSelect'
 import { getEnhancedErrorMessage } from '@/lib/utils/errorMessages'
-
 const PRODUCT_TYPES = CREATE_PRODUCT_TYPES
-
 const iconMap = {
     Bot: () => import('lucide-react').then(m => m.Bot),
     Zap: () => import('lucide-react').then(m => m.Zap),
@@ -36,7 +33,6 @@ const iconMap = {
     Cpu: () => import('lucide-react').then(m => m.Cpu),
     Clipboard: () => import('lucide-react').then(m => m.Clipboard)
 }
-
 const FIELD_HELP = {
     title: {
         title: "Product Title Tips",
@@ -69,11 +65,8 @@ const FIELD_HELP = {
         examples: []
     }
 }
-
-// Tooltip component
 const Tooltip = ({ content, examples, children }) => {
     const [isVisible, setIsVisible] = useState(false)
-
     return (
         <div className="relative inline-block">
             <button
@@ -85,7 +78,6 @@ const Tooltip = ({ content, examples, children }) => {
                 className="p-1 text-gray-400 hover:text-[#00FF89] transition-colors">
                 <HelpCircle className="w-4 h-4" />
             </button>
-
             {isVisible && (
                 <motion.div
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -111,13 +103,10 @@ const Tooltip = ({ content, examples, children }) => {
         </div>
     )
 }
-
-// Auto-save indicator
 const AutoSaveIndicator = () => {
     const lastSaved = useProductCreateStore((state) => state.lastSaved)
     const isDirty = useProductCreateStore((state) => state.isDirty)
     const [showSaved, setShowSaved] = useState(false)
-
     const status = useMemo(() => {
         if (isDirty) return { icon: Save, text: 'Unsaved changes', color: 'text-yellow-400' }
         if (lastSaved) {
@@ -127,7 +116,6 @@ const AutoSaveIndicator = () => {
         }
         return { icon: Save, text: 'Auto-save enabled', color: 'text-gray-400' }
     }, [lastSaved, isDirty, showSaved])
-
     return (
         <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -138,7 +126,6 @@ const AutoSaveIndicator = () => {
         </motion.div>
     )
 }
-
 export default function Step1Basic() {
     const title = useProductCreateStore((state) => state.title)
     const type = useProductCreateStore((state) => state.type)
@@ -148,31 +135,23 @@ export default function Step1Basic() {
     const fullDescription = useProductCreateStore((state) => state.fullDescription)
     const errors = useProductCreateStore((state) => state.errors)
     const touchedFields = useProductCreateStore((state) => state.touchedFields)
-
     const setField = useProductCreateStore((state) => state.setField)
     const markFieldTouched = useProductCreateStore((state) => state.markFieldTouched)
     const validateTouchedFields = useProductCreateStore((state) => state.validateTouchedFields)
     const applySuggestions = useProductCreateStore((state) => state.applySuggestions)
-
     const [loadedIcons, setLoadedIcons] = useState({})
     const [categoriesList, setCategoriesList] = useState([])
     const [industriesList, setIndustriesList] = useState([])
     const mountedRef = useRef(true)
-
-    // Cleanup on unmount to prevent memory leaks
     useEffect(() => {
         return () => {
             mountedRef.current = false
-            // Clear loaded icons to prevent memory leaks
             setLoadedIcons({})
         }
     }, [])
-
-    // Enhanced icon loading with cleanup
     const loadIcon = useCallback(async (iconName) => {
         if (!mountedRef.current) return Package
         if (loadedIcons[iconName]) return loadedIcons[iconName]
-
         try {
             const iconLoader = iconMap[iconName]
             if (iconLoader) {
@@ -187,42 +166,34 @@ export default function Step1Basic() {
         }
         return Package
     }, [loadedIcons])
-
     const handleTypeChange = (newType) => {
         setField('type', newType)
         applySuggestions(newType, category)
     }
-
     const handleCategoryChange = (newCategory) => {
         setField('category', newCategory)
         applySuggestions(type, newCategory)
     }
-
     const handleFieldBlur = (fieldName) => {
         markFieldTouched(fieldName)
         validateTouchedFields()
     }
-
     const showError = (fieldName) => {
         return touchedFields[fieldName] && errors[fieldName]
     }
-
     const renderIcon = (iconName, className = "w-12 h-12") => {
         const IconComponent = loadedIcons[iconName] || Package
         return <IconComponent className={className} />
     }
-
     return (
         <div className="space-y-10">
             <div className="flex justify-end">
                 <AutoSaveIndicator />
             </div>
-
             <div className="text-center pb-6 border-b border-gray-700/50">
                 <h2 className="text-2xl font-semibold text-white mb-2">Let's Create Your Product</h2>
                 <p className="text-lg text-gray-400">Start with the basics - we'll guide you through each step</p>
             </div>
-
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -254,15 +225,11 @@ export default function Step1Basic() {
                     </div>
                 </div>
             </motion.div>
-
-            {/* Visual break */}
             <div className="border-l-4 border-[#00FF89]/30 pl-6 py-4 bg-gray-800/20 rounded-r-lg">
                 <p className="text-base text-gray-300">
                     💡 <span className="font-medium">Pro tip:</span> Great product titles include the main benefit and target audience
                 </p>
             </div>
-
-            {/* Product Type */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -272,8 +239,6 @@ export default function Step1Basic() {
                     <label className="block text-lg font-semibold text-white">Product Type *</label>
                     <Tooltip content={FIELD_HELP.type} examples={FIELD_HELP.type.examples} />
                 </div>
-
-                {/* Enhanced mobile-first horizontal scroll row */}
                 <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
                     {PRODUCT_TYPES.map((productType) => (
                         <motion.button
@@ -323,17 +288,12 @@ export default function Step1Basic() {
                     </div>
                 )}
             </motion.div>
-
-            {/* Visual break */}
             <div className="flex items-center my-8">
                 <div className="flex-1 border-t border-gray-700"></div>
                 <div className="px-4 text-base text-gray-400">Targeting & Categories</div>
                 <div className="flex-1 border-t border-gray-700"></div>
             </div>
-
-            {/* Category and Industry */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Category */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -358,8 +318,6 @@ export default function Step1Basic() {
                         error={showError('category') ? getEnhancedErrorMessage('category', errors.category) : null}
                     />
                 </motion.div>
-
-                {/* Industry */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -385,15 +343,11 @@ export default function Step1Basic() {
                     />
                 </motion.div>
             </div>
-
-            {/* Visual break */}
             <div className="flex items-center my-8">
                 <div className="flex-1 border-t border-gray-700"></div>
                 <div className="px-4 text-base text-gray-400">Product Descriptions</div>
                 <div className="flex-1 border-t border-gray-700"></div>
             </div>
-
-            {/* Short Description */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -427,8 +381,6 @@ export default function Step1Basic() {
                     </div>
                 </div>
             </motion.div>
-
-            {/* Full Description */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -462,8 +414,6 @@ export default function Step1Basic() {
                     </div>
                 </div>
             </motion.div>
-
-            {/* Real-time Preview Card */}
             {(title || shortDescription) && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}

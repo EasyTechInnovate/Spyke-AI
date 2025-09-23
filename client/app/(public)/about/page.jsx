@@ -1,5 +1,4 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import { 
     ArrowRight, 
@@ -21,35 +20,26 @@ import {
 import Link from 'next/link'
 import Container from '@/components/shared/layout/Container'
 import { Button } from '@/lib/design-system'
-
-// Simple animation variants
 const fadeIn = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
     transition: { duration: 0.6 }
 }
-
-// Team data (simplified)
 const team = [
     { name: "Alex Chen", role: "CEO", focus: "AI Strategy" },
     { name: "Sarah Kim", role: "CTO", focus: "Platform" },
     { name: "Marcus Johnson", role: "Product", focus: "Experience" },
     { name: "Elena Rodriguez", role: "Design", focus: "Interface" }
 ]
-
-// Simple offerings
 const services = [
     { icon: Brain, title: "AI Models", desc: "Ready-to-use AI models and APIs" },
     { icon: Sparkles, title: "AI Prompts", desc: "Optimized prompts for all LLMs" },
     { icon: Workflow, title: "Automation", desc: "Complete workflow solutions" },
     { icon: Code, title: "Custom AI", desc: "Bespoke AI development" }
 ]
-
 export default function AboutPage() {
     return (
         <div className="min-h-screen bg-black text-white">
-            
-            {/* Hero - Simple & Clean */}
             <section className="pt-32 pb-20">
                 <Container>
                     <div className="max-w-3xl">
@@ -60,7 +50,6 @@ export default function AboutPage() {
                                     About SpykeAI
                                 </div>
                             </div>
-                            
                             <h1 className="text-5xl md:text-7xl font-light tracking-tight mb-6">
                                 We're building the
                                 <span className="block text-[#00FF89] font-normal">
@@ -70,7 +59,6 @@ export default function AboutPage() {
                                     of tomorrow
                                 </span>
                             </h1>
-                            
                             <p className="text-xl text-gray-400 leading-relaxed mb-8 max-w-2xl">
                                 Where AI creators meet businesses. Where innovation finds its audience. 
                                 Where the future gets built, one tool at a time.
@@ -79,8 +67,6 @@ export default function AboutPage() {
                     </div>
                 </Container>
             </section>
-
-            {/* Story - Minimal */}
             <section className="py-20 border-t border-white/10">
                 <Container>
                     <div className="grid md:grid-cols-2 gap-16 items-center">
@@ -100,7 +86,6 @@ export default function AboutPage() {
                                 </p>
                             </div>
                         </motion.div>
-                        
                         <motion.div {...fadeIn} className="relative">
                             <div className="aspect-square bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center">
                                 <div className="text-center">
@@ -112,8 +97,6 @@ export default function AboutPage() {
                     </div>
                 </Container>
             </section>
-
-            {/* What we offer - Clean grid */}
             <section className="py-20 border-t border-white/10">
                 <Container>
                     <motion.div {...fadeIn} className="mb-16">
@@ -122,7 +105,6 @@ export default function AboutPage() {
                             Four main categories that cover everything you need in AI.
                         </p>
                     </motion.div>
-
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                         {services.map((service, i) => (
                             <motion.div 
@@ -139,8 +121,6 @@ export default function AboutPage() {
                     </div>
                 </Container>
             </section>
-
-            {/* Values - Simple list */}
             <section className="py-20 border-t border-white/10">
                 <Container>
                     <div className="grid md:grid-cols-2 gap-16">
@@ -154,7 +134,6 @@ export default function AboutPage() {
                                         <p className="text-sm text-gray-400">Every creator is reviewed for quality</p>
                                     </div>
                                 </div>
-                                
                                 <div className="flex items-start gap-4">
                                     <Lock className="w-6 h-6 text-[#00FF89] mt-1 flex-shrink-0" />
                                     <div>
@@ -162,7 +141,6 @@ export default function AboutPage() {
                                         <p className="text-sm text-gray-400">Safe transactions, always</p>
                                     </div>
                                 </div>
-                                
                                 <div className="flex items-start gap-4">
                                     <Globe className="w-6 h-6 text-[#00FF89] mt-1 flex-shrink-0" />
                                     <div>
@@ -170,7 +148,6 @@ export default function AboutPage() {
                                         <p className="text-sm text-gray-400">Connect worldwide</p>
                                     </div>
                                 </div>
-                                
                                 <div className="flex items-start gap-4">
                                     <Award className="w-6 h-6 text-[#00FF89] mt-1 flex-shrink-0" />
                                     <div>
@@ -180,7 +157,6 @@ export default function AboutPage() {
                                 </div>
                             </div>
                         </motion.div>
-
                         <motion.div {...fadeIn}>
                             <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
                                 <h3 className="text-xl font-light mb-6">Our mission</h3>
@@ -188,7 +164,6 @@ export default function AboutPage() {
                                     Make AI innovation accessible, secure, and profitable for creators 
                                     while empowering businesses with the tools they need to succeed.
                                 </p>
-                                
                                 <div className="mt-8 pt-8 border-t border-white/10">
                                     <div className="grid grid-cols-3 gap-4 text-center">
                                         <div>
@@ -210,15 +185,12 @@ export default function AboutPage() {
                     </div>
                 </Container>
             </section>
-
-            {/* Team - Minimal */}
             <section className="py-20 border-t border-white/10">
                 <Container>
                     <motion.div {...fadeIn} className="mb-16">
                         <h2 className="text-3xl font-light mb-4">The team</h2>
                         <p className="text-gray-400">Four people obsessed with making AI accessible.</p>
                     </motion.div>
-
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                         {team.map((member, i) => (
                             <motion.div 
@@ -238,8 +210,6 @@ export default function AboutPage() {
                     </div>
                 </Container>
             </section>
-
-            {/* CTA - Simple */}
             <section className="py-20 border-t border-white/10">
                 <Container>
                     <motion.div {...fadeIn} className="text-center max-w-2xl mx-auto">
@@ -247,7 +217,6 @@ export default function AboutPage() {
                         <p className="text-gray-400 mb-8">
                             Join thousands of creators and businesses already using SpykeAI.
                         </p>
-                        
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <Link href="/explore">
                                 <Button variant="primary" size="lg">

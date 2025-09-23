@@ -18,10 +18,8 @@ import {
 import UserAvatar, { getDisplayName } from './UserAvatar'
 import RoleSwitcher from './RoleSwitcher'
 import { SELLER_MENU_ITEMS, USER_MENU_ITEMS } from './const'
-
 const UserDropdown = forwardRef(({ user, currentRole, isSeller, dropdownOpen, setDropdownOpen, onLogout, onSwitchRole }, ref) => {
     const menuItems = currentRole === 'seller' && isSeller ? SELLER_MENU_ITEMS : USER_MENU_ITEMS
-
     return (
         <div
             className="relative hidden md:block"
@@ -41,12 +39,9 @@ const UserDropdown = forwardRef(({ user, currentRole, isSeller, dropdownOpen, se
                         <span className="text-xs sm:text-sm font-medium text-brand-primary">{currentRole === 'seller' ? 'Seller' : 'Buyer'}</span>
                     </div>
                 )}
-
                 <UserAvatar user={user} />
-
                 <ChevronDown className={`h-3 w-3 sm:h-4 sm:w-4 text-gray-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
             </button>
-
             <AnimatePresence>
                 {dropdownOpen && (
                     <motion.div
@@ -55,7 +50,6 @@ const UserDropdown = forwardRef(({ user, currentRole, isSeller, dropdownOpen, se
                         exit={{ opacity: 0, y: -10, scale: 0.95 }}
                         transition={{ duration: 0.2, ease: 'easeOut' }}
                         className="absolute right-0 mt-2 w-80 sm:w-96 bg-gray-900/98 backdrop-blur-xl border border-gray-700 rounded-2xl shadow-2xl overflow-hidden">
-                        {/* User Info Section */}
                         <div className="px-5 py-4 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border-b border-gray-700">
                             <div className="flex items-start gap-3">
                                 <UserAvatar
@@ -68,8 +62,6 @@ const UserDropdown = forwardRef(({ user, currentRole, isSeller, dropdownOpen, se
                                 </div>
                             </div>
                         </div>
-
-                        {/* Role Switcher */}
                         {isSeller && (
                             <div className="p-3 border-b border-gray-700">
                                 <p className="text-xs text-gray-500 uppercase tracking-wide mb-2 px-2">Switch Mode</p>
@@ -79,8 +71,6 @@ const UserDropdown = forwardRef(({ user, currentRole, isSeller, dropdownOpen, se
                                 />
                             </div>
                         )}
-
-                        {/* Menu Items */}
                         <div className="py-2 max-h-[300px] overflow-y-auto">
                             {menuItems.map((item) => (
                                 <Link
@@ -100,8 +90,6 @@ const UserDropdown = forwardRef(({ user, currentRole, isSeller, dropdownOpen, se
                                 </Link>
                             ))}
                         </div>
-
-                        {/* Bottom Actions */}
                         <div className="border-t border-gray-700">
                             {!isSeller && (
                                 <Link
@@ -119,7 +107,6 @@ const UserDropdown = forwardRef(({ user, currentRole, isSeller, dropdownOpen, se
                                     <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-brand-primary" />
                                 </Link>
                             )}
-
                             <button
                                 onClick={onLogout}
                                 className="w-full flex items-center justify-between px-5 py-3 text-sm text-gray-300 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200 border-t border-gray-700 group">
@@ -129,7 +116,6 @@ const UserDropdown = forwardRef(({ user, currentRole, isSeller, dropdownOpen, se
                                     </div>
                                     <span className="font-medium">Log out</span>
                                 </div>
-                                
                             </button>
                         </div>
                     </motion.div>
@@ -138,7 +124,5 @@ const UserDropdown = forwardRef(({ user, currentRole, isSeller, dropdownOpen, se
         </div>
     )
 })
-
 UserDropdown.displayName = 'UserDropdown'
 export default UserDropdown
-

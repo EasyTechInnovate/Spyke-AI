@@ -1,11 +1,8 @@
 'use client'
-
 import { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import adminAPI from '@/lib/api/admin'
 import analyticsAPI from '@/lib/api/analytics'
-
-// Action types
 const ADMIN_ACTIONS = {
   SET_LOADING: 'SET_LOADING',
   SET_COUNTS: 'SET_COUNTS',
@@ -14,8 +11,6 @@ const ADMIN_ACTIONS = {
   SET_CURRENT_PAGE: 'SET_CURRENT_PAGE',
   CLEAR_ERROR: 'CLEAR_ERROR'
 }
-
-// Initial state
 const initialState = {
   loading: {
     counts: true,
@@ -30,8 +25,6 @@ const initialState = {
   error: null,
   lastFetch: null
 }
-
-// Reducer function
 function adminReducer(state, action) {
   switch (action.type) {
     case ADMIN_ACTIONS.SET_LOADING:
@@ -39,7 +32,6 @@ function adminReducer(state, action) {
         ...state,
         loading: { ...state.loading, ...action.payload }
       }
-    
     case ADMIN_ACTIONS.SET_COUNTS:
       return {
         ...state,
@@ -47,84 +39,57 @@ function adminReducer(state, action) {
         loading: { ...state.loading, counts: false },
         lastFetch: Date.now()
       }
-    
     case ADMIN_ACTIONS.SET_OVERVIEW:
       return {
         ...state,
         overview: action.payload,
         loading: { ...state.loading, overview: false }
       }
-    
     case ADMIN_ACTIONS.SET_CURRENT_PAGE:
       return {
         ...state,
         currentPage: action.payload
       }
-    
     case ADMIN_ACTIONS.SET_ERROR:
       return {
         ...state,
         error: action.payload,
         loading: { counts: false, overview: false }
       }
-    
     case ADMIN_ACTIONS.CLEAR_ERROR:
       return {
         ...state,
         error: null
       }
-    
     default:
       return state
   }
 }
-
-// Context
 const AdminContext = createContext(null)
-
-// Helper function to determine page type and data needs
 const getPageConfig = (pathname) => {
   if (!pathname) return { type: 'unknown', needsCounts: false, needsOverview: false }
-  
   if (pathname.includes('/admin/analytics')) {
     return { type: 'analytics', needsCounts: false, needsOverview: false }
   }
-  
   if (pathname.includes('/admin/dashboard')) {
     return { type: 'dashboard', needsCounts: true, needsOverview: true }
   }
-  
   return { type: 'management', needsCounts: true, needsOverview: false }
 }
-
-// Helper to extract total from API responses
 const getTotal = (res) => res?.meta?.total ?? res?.pagination?.total ?? res?.total ?? res?.data?.total ?? 0
-
-// Provider component
 export function AdminProvider({ children }) {
   const [state, dispatch] = useReducer(adminReducer, initialState)
   const pathname = usePathname()
   const [isHydrated, setIsHydrated] = useState(false)
-  
-  // Page configuration based on current route
   const pageConfig = useMemo(() => getPageConfig(pathname), [pathname])
-  
-  // Update current page when pathname changes
   useEffect(() => {
     dispatch({ type: ADMIN_ACTIONS.SET_CURRENT_PAGE, payload: pageConfig })
   }, [pageConfig])
-
-  // Hydration effect - ensures client matches server initially
   useEffect(() => {
     setIsHydrated(true)
   }, [])
-
-  // Fetch admin counts (only when needed)
   const fetchCounts = useCallback(async (force = false) => {
-    // Skip if not hydrated yet to prevent hydration mismatch
     if (!isHydrated) return
-    
-    // Skip if not needed for current page type
     if (!pageConfig.needsCounts && !force) {
       dispatch({ 
         type: ADMIN_ACTIONS.SET_COUNTS, 
@@ -132,28 +97,21 @@ export function AdminProvider({ children }) {
       })
       return
     }
-
-    // Skip if recently fetched (within 2 minutes) and not forced
     if (!force && state.lastFetch && (Date.now() - state.lastFetch) < 120000) {
       return
     }
-
     try {
       dispatch({ type: ADMIN_ACTIONS.SET_LOADING, payload: { counts: true } })
-      
-      // Use real analytics API for admin dashboard counts
       const [sellersRes, productsRes, usersRes] = await Promise.allSettled([
-        analyticsAPI.admin.getSellers({ limit: 1 }), // Just for totals
-        analyticsAPI.admin.getProducts({ limit: 1 }), // Just for totals  
-        analyticsAPI.admin.getUsers({ limit: 1 }) // Just for totals
+        analyticsAPI.admin.getSellers({ limit: 1 }), 
+        analyticsAPI.admin.getProducts({ limit: 1 }), 
+        analyticsAPI.admin.getUsers({ limit: 1 }) 
       ])
-
-      // Extract counts from analytics responses
       const counts = {
         sellers: {
           pending: sellersRes.value?.summary?.pendingSellers || 0,
           active: sellersRes.value?.summary?.activeSellers || 0,
-          payouts: 0 // TODO: Add payouts count when API available
+          payouts: 0 
         },
         products: {
           pending: productsRes.value?.summary?.pendingProducts || 0,
@@ -161,12 +119,9 @@ export function AdminProvider({ children }) {
           featured: productsRes.value?.summary?.featuredProducts || 0
         }
       }
-
       dispatch({ type: ADMIN_ACTIONS.SET_COUNTS, payload: counts })
-      
     } catch (error) {
       console.error('Failed to fetch admin counts:', error)
-      // Fallback to basic counts on error
       dispatch({ 
         type: ADMIN_ACTIONS.SET_COUNTS, 
         payload: { 
@@ -175,25 +130,16 @@ export function AdminProvider({ children }) {
         }
       })
     }
-  }, [pageConfig.needsCounts, isHydrated]) // Remove state.lastFetch from dependencies
-
-  // Fetch overview data (only for dashboard)
+  }, [pageConfig.needsCounts, isHydrated]) 
   const fetchOverview = useCallback(async () => {
-    // Skip if not hydrated yet to prevent hydration mismatch
     if (!isHydrated) return
-    
     if (!pageConfig.needsOverview) return
-
     try {
       dispatch({ type: ADMIN_ACTIONS.SET_LOADING, payload: { overview: true } })
-      
-      // Use real platform analytics API
       const overview = await analyticsAPI.admin.getPlatform()
-      
       dispatch({ type: ADMIN_ACTIONS.SET_OVERVIEW, payload: overview.overview })
     } catch (error) {
       console.warn('Failed to fetch overview:', error)
-      // Fallback overview data
       dispatch({ type: ADMIN_ACTIONS.SET_OVERVIEW, payload: {
         totalUsers: 0,
         totalSellers: 0,
@@ -202,72 +148,48 @@ export function AdminProvider({ children }) {
       }})
     }
   }, [pageConfig.needsOverview, isHydrated])
-
-  // Refresh all data
   const refreshData = useCallback(async () => {
     await Promise.all([
       fetchCounts(true),
       fetchOverview()
     ])
   }, [fetchCounts, fetchOverview])
-
-  // Clear error
   const clearError = useCallback(() => {
     dispatch({ type: ADMIN_ACTIONS.CLEAR_ERROR })
   }, [])
-
-  // Initial data fetch - only after hydration
   useEffect(() => {
     if (isHydrated) {
       fetchCounts()
       fetchOverview()
     }
-  }, [isHydrated]) // Remove fetchCounts and fetchOverview from dependencies to prevent infinite loop
-
-  // Auto-refresh counts (only for dashboard page and with longer intervals)
+  }, [isHydrated]) 
   useEffect(() => {
     if (!isHydrated || !pageConfig.needsCounts || pageConfig.type !== 'dashboard') return
-
     const interval = setInterval(() => {
-      // Only refresh if data is older than 2 minutes and user is active
       if (state.lastFetch && (Date.now() - state.lastFetch) < 120000) return
-      
       fetchCounts()
-    }, 60000) // Increased to 60 seconds from 30 seconds
-
+    }, 60000) 
     return () => clearInterval(interval)
-  }, [isHydrated, pageConfig.needsCounts, pageConfig.type]) // Remove fetchCounts and state.lastFetch from dependencies
-
-  // Context value
+  }, [isHydrated, pageConfig.needsCounts, pageConfig.type]) 
   const value = useMemo(() => ({
-    // State
     ...state,
     pageConfig,
-    
-    // Actions
     fetchCounts,
     fetchOverview,
     refreshData,
     clearError,
-    
-    // Computed values
     isAnalyticsPage: pageConfig.type === 'analytics',
     isDashboardPage: pageConfig.type === 'dashboard',
     isManagementPage: pageConfig.type === 'management',
-    
-    // Helper methods
     getTotalSellerCount: () => state.counts.sellers.pending + state.counts.sellers.active,
     getTotalProductCount: () => state.counts.products.pending + state.counts.products.flagged + state.counts.products.featured
   }), [state, pageConfig, fetchCounts, fetchOverview, refreshData, clearError])
-
   return (
     <AdminContext.Provider value={value}>
       {children}
     </AdminContext.Provider>
   )
 }
-
-// Custom hook to use admin context
 export function useAdmin() {
   const context = useContext(AdminContext)
   if (!context) {
@@ -275,6 +197,4 @@ export function useAdmin() {
   }
   return context
 }
-
-// Export actions for external use
 export { ADMIN_ACTIONS }

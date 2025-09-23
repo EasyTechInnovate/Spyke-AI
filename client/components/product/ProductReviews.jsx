@@ -1,5 +1,4 @@
 'use client'
-
 import React, { useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Star, Award, LogIn, MessageSquare } from 'lucide-react'
@@ -8,38 +7,28 @@ import { useNotificationProvider } from '@/components/shared/notifications/Notif
 import productsAPI from '@/lib/api/products'
 import UnifiedReviewForm from '@/components/product/UnifiedReviewForm'
 import ReviewsList from '@/components/product/ReviewsList'
-
 const fadeInUp = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
     exit: { opacity: 0, y: -20 }
 }
-
 export default function ProductReviews({ product, onProductUpdate }) {
     const { isAuthenticated, requireAuth } = useAuth()
     const { showSuccess, showError } = useNotificationProvider()
-
-    // Handle review submission
     const handleReviewSubmit = useCallback(
         async (reviewData) => {
             if (!isAuthenticated) {
                 requireAuth()
                 return
             }
-
             if (!product?._id) {
                 showError('Product not found', 'Unable to find the product to review')
                 return
             }
-
             try {
-                // Call the products API to submit the review
                 const response = await productsAPI.addReview(product._id, reviewData)
-
                 if (response?.data) {
                     showSuccess('Review submitted successfully!', 'Thank you for your feedback')
-
-                    // Update the product data if parent provides update function
                     if (onProductUpdate) {
                         onProductUpdate({
                             reviews: response.data.reviews || product.reviews,
@@ -53,7 +42,6 @@ export default function ProductReviews({ product, onProductUpdate }) {
                 }
             } catch (error) {
                 console.error('Error submitting review:', error)
-
                 if (error.status === 400) {
                     showError('Invalid review data', error.message || 'Please check your review and try again')
                 } else if (error.status === 401) {
@@ -70,46 +58,33 @@ export default function ProductReviews({ product, onProductUpdate }) {
         },
         [isAuthenticated, product, requireAuth, showSuccess, showError, onProductUpdate]
     )
-
-    // Calculate review metrics
     const reviewMetrics = useMemo(() => {
         const totalReviews = product?.totalReviews || product?.reviews?.length || 0
         const averageRating = product?.averageRating || 0
         const reviews = product?.reviews || []
-
-        // Calculate satisfaction and distribution from actual reviews
         let satisfaction = 0
         let distribution = []
-
         if (totalReviews > 0 && reviews.length > 0) {
-            // Count ratings from actual review data
             const ratingCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
-
             reviews.forEach((review) => {
                 const rating = Math.floor(review.rating || 0)
                 if (rating >= 1 && rating <= 5) {
                     ratingCounts[rating]++
                 }
             })
-
-            // Calculate satisfaction (4-5 star reviews)
             satisfaction = Math.round(((ratingCounts[5] + ratingCounts[4]) / totalReviews) * 100)
-
-            // Create distribution array
             distribution = [5, 4, 3, 2, 1].map((rating) => ({
                 rating,
                 count: ratingCounts[rating],
                 percentage: totalReviews > 0 ? (ratingCounts[rating] / totalReviews) * 100 : 0
             }))
         } else {
-            // Default empty distribution
             distribution = [5, 4, 3, 2, 1].map((rating) => ({
                 rating,
                 count: 0,
                 percentage: 0
             }))
         }
-
         return {
             totalReviews,
             averageRating,
@@ -118,7 +93,6 @@ export default function ProductReviews({ product, onProductUpdate }) {
             hasReviews: totalReviews > 0
         }
     }, [product])
-
     const getRatingLabel = (rating) => {
         if (rating >= 4.5) return 'Excellent'
         if (rating >= 4.0) return 'Very Good'
@@ -126,7 +100,6 @@ export default function ProductReviews({ product, onProductUpdate }) {
         if (rating >= 3.0) return 'Average'
         return 'Fair'
     }
-
     return (
         <motion.div
             variants={fadeInUp}
@@ -134,8 +107,6 @@ export default function ProductReviews({ product, onProductUpdate }) {
             animate="animate"
             exit="exit"
             className="space-y-4 sm:space-y-6">
-            
-            {/* Review Form or Sign In Prompt */}
             {isAuthenticated ? (
                 <UnifiedReviewForm
                     variant="quickReview"
@@ -163,20 +134,13 @@ export default function ProductReviews({ product, onProductUpdate }) {
                     </div>
                 </div>
             )}
-
-            {/* Customer Reviews Section - Mobile Optimized */}
             {reviewMetrics.hasReviews && (
                 <div className="bg-gray-900 rounded-xl sm:rounded-2xl border border-gray-800">
-                    {/* Header with Mobile-First Design */}
                     <div className="p-4 sm:p-6 border-b border-gray-800">
-                        {/* Mobile: Stack vertically, Desktop: Side by side */}
                         <div className="flex flex-col gap-3 sm:gap-4">
-                            {/* Title and Rating Row */}
                             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                                     <h3 className="text-lg sm:text-xl font-semibold text-white">Customer Reviews</h3>
-
-                                    {/* Rating Display - Mobile Optimized */}
                                     <div className="flex items-center gap-2">
                                         <div className="flex items-center gap-0.5 sm:gap-1">
                                             {[1, 2, 3, 4, 5].map((star) => (
@@ -191,7 +155,6 @@ export default function ProductReviews({ product, onProductUpdate }) {
                                         <span className="text-base sm:text-lg font-semibold text-white">
                                             {reviewMetrics.averageRating.toFixed(1)}
                                         </span>
-
                                         <div className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-amber-400/10 text-amber-400 text-xs font-medium">
                                             <Award className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                                             <span className="hidden xs:inline">{getRatingLabel(reviewMetrics.averageRating)}</span>
@@ -199,8 +162,6 @@ export default function ProductReviews({ product, onProductUpdate }) {
                                         </div>
                                     </div>
                                 </div>
-
-                                {/* Stats - Mobile Optimized */}
                                 <div className="text-xs sm:text-sm text-gray-400 flex flex-col xs:flex-row xs:items-center gap-1 xs:gap-2">
                                     <span>
                                         {reviewMetrics.totalReviews} review{reviewMetrics.totalReviews !== 1 ? 's' : ''}
@@ -211,8 +172,6 @@ export default function ProductReviews({ product, onProductUpdate }) {
                             </div>
                         </div>
                     </div>
-
-                    {/* Reviews List with Mobile Padding */}
                     <div className="p-3 sm:p-6">
                         <ReviewsList
                             reviews={product?.reviews || []}
@@ -223,8 +182,6 @@ export default function ProductReviews({ product, onProductUpdate }) {
                     </div>
                 </div>
             )}
-
-            {/* Empty State - Mobile Optimized */}
             {!reviewMetrics.hasReviews && (
                 <div className="text-center py-6 sm:py-8">
                     <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">
@@ -250,4 +207,3 @@ export default function ProductReviews({ product, onProductUpdate }) {
         </motion.div>
     )
 }
-

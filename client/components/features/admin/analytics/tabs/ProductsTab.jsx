@@ -1,12 +1,9 @@
 'use client'
-
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Package, Activity, BarChart3, Users, Eye, Star } from 'lucide-react'
 import { ResponsiveContainer, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip, Area, Bar, Line, PieChart, Pie, Cell } from 'recharts'
-
 const CHART_COLORS = ['#00FF89', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981', '#F97316', '#6366F1']
-
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -15,19 +12,15 @@ const formatCurrency = (amount) => {
         maximumFractionDigits: 0
     }).format(amount || 0)
 }
-
 const formatNumber = (num) => {
     return new Intl.NumberFormat('en-US').format(num || 0)
 }
-
 const formatPercentage = (num) => {
     return `${(num || 0).toFixed(1)}%`
 }
-
 const safeDivide = (num, den) => (den ? num / den : 0)
 const clamp = (num, min, max) => Math.min(Math.max(num ?? 0, min), max)
 const truncate = (str, max = 16) => (str?.length > max ? `${str.slice(0, max - 1)}…` : str || '')
-
 const TopProductsTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null
     return (
@@ -41,7 +34,6 @@ const TopProductsTooltip = ({ active, payload, label }) => {
         </div>
     )
 }
-
 const CategoryTooltip = ({ active, payload }) => {
     if (!active || !payload?.length) return null
     const data = payload[0].payload
@@ -54,7 +46,6 @@ const CategoryTooltip = ({ active, payload }) => {
         </div>
     )
 }
-
 export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
     const generateTrendsWithAllDates = (dailyProducts, timeRange) => {
         const getDaysFromTimeRange = (period) => {
@@ -66,12 +57,10 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
                 default: return 30
             }
         }
-
         const days = getDaysFromTimeRange(timeRange)
         const endDate = new Date()
         const startDate = new Date()
         startDate.setDate(endDate.getDate() - (days - 1))
-
         const dataMap = new Map()
         dailyProducts.forEach(item => {
             let rawDate = item._id?.date || item.date
@@ -79,7 +68,6 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
                 const { year, month, day } = item._id
                 rawDate = new Date(Number(year), Number(month) - 1, Number(day))
             }
-
             if (rawDate) {
                 const normalizedKey = new Date(rawDate).toISOString().split('T')[0]
                 dataMap.set(normalizedKey, {
@@ -89,15 +77,12 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
                 })
             }
         })
-
         const trends = []
         for (let i = 0; i < days; i++) {
             const currentDate = new Date(startDate)
             currentDate.setDate(startDate.getDate() + i)
             const dateString = currentDate.toISOString().split('T')[0]
-            
             const data = dataMap.get(dateString) || { productsCreated: 0, totalViews: 0, avgRating: 0 }
-            
             trends.push({
                 date: currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
                 productsCreated: data.productsCreated,
@@ -105,15 +90,11 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
                 avgRating: data.avgRating
             })
         }
-
         return trends
     }
-
     const productsData = useMemo(() => {
         if (!analyticsData) return null
-
         const root = analyticsData?.data ?? analyticsData
-
         const products = Array.isArray(root.products) ? root.products : []
         const totalProducts = products.length
         const totalViews = products.reduce((sum, p) => sum + (p.views || p.viewCount || 0), 0)
@@ -122,7 +103,6 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
         const avgRating = safeDivide(products.reduce((sum, p) => sum + (p.averageRating || 0), 0), totalProducts)
         const avgConversionRate = safeDivide(products.reduce((sum, p) => sum + (p.conversionRate || 0), 0), totalProducts)
         const activeProducts = products.filter(p => p.status === 'published').length
-
         let dailyProducts = Array.isArray(root.dailyProducts) ? root.dailyProducts : []
         if (!dailyProducts.length && products.length) {
             const map = new Map()
@@ -147,9 +127,7 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
                 avgRating: safeDivide(v.avgRatingSum, v.ratingCount)
             }))
         }
-
         const trends = generateTrendsWithAllDates(dailyProducts, timeRange)
-
         const topProducts = products
             .map((product) => ({
                 _id: product._id,
@@ -165,7 +143,6 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
             }))
             .sort((a, b) => (b.revenue - a.revenue) || (b.viewCount - a.viewCount))
             .slice(0, 10)
-
         const rawCategories = Array.isArray(root.categoryDistribution) ? root.categoryDistribution : []
         const catTotal = rawCategories.reduce((sum, c) => sum + (c.count || 0), 0)
         const categoryDistribution = rawCategories
@@ -178,7 +155,6 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
                 percentage: catTotal ? ((c.count || 0) / catTotal) * 100 : 0
             }))
             .sort((a, b) => b.count - a.count)
-
         const rawStatuses = Array.isArray(root.statusDistribution) ? root.statusDistribution : []
         const statusTotal = rawStatuses.reduce((sum, s) => sum + (s.count || 0), 0) || totalProducts
         const statusDistribution = rawStatuses.map((s) => ({
@@ -187,7 +163,6 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
             count: s.count || 0,
             percentage: statusTotal ? ((s.count || 0) / statusTotal) * 100 : 0
         }))
-
         return {
             metrics: { totalProducts, activeProducts, totalViews, avgRating, totalRevenue, avgConversionRate, totalSales },
             trends,
@@ -196,7 +171,6 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
             statusDistribution,
         }
     }, [analyticsData, timeRange])
-
     if (loading) {
         return (
             <div className="space-y-6">
@@ -215,7 +189,6 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
             </div>
         )
     }
-
     if (!productsData) {
         return (
             <div className="space-y-6">
@@ -234,11 +207,8 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
             </div>
         )
     }
-
     const { metrics = {}, trends = [], topProducts = [], categoryDistribution = [], statusDistribution = [] } = productsData
-
     const validTrends = Array.isArray(trends) ? trends : []
-
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
@@ -254,7 +224,6 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                     <div className="text-2xl font-bold text-white mb-1">{formatNumber(metrics.totalProducts)}</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -268,7 +237,6 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                     <div className="text-2xl font-bold text-white mb-1">{formatNumber(metrics.activeProducts)}</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -282,7 +250,6 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                     <div className="text-2xl font-bold text-white mb-1">{formatNumber(metrics.totalViews)}</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -296,7 +263,6 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                     <div className="text-2xl font-bold text-white mb-1">{formatNumber(metrics.totalSales)}</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -313,7 +279,6 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                 </motion.div>
             </div>
-
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -321,7 +286,6 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
                 className="bg-gray-800 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-white">Product Performance Trends</h3>
-                    
                     <div className="flex items-center gap-4 text-xs">
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-[#00FF89] rounded-sm opacity-80"></div>
@@ -414,7 +378,6 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
                             />
                         </ComposedChart>
                     </ResponsiveContainer>
-
                     {(!validTrends.length || !validTrends.some((item) => item.totalViews > 0 || item.productsCreated > 0)) && (
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-gray-800/50 rounded">
                             <div className="text-center text-gray-400">
@@ -426,7 +389,6 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
                     )}
                 </div>
             </motion.div>
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -441,7 +403,6 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                     <div className="text-2xl font-bold text-white mb-1">{formatCurrency(metrics.totalRevenue)}</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -455,7 +416,6 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                     <div className="text-2xl font-bold text-white mb-1">{formatPercentage(metrics.avgConversionRate)}</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -470,7 +430,6 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
                     <div className="text-2xl font-bold text-white mb-1">{formatNumber(categoryDistribution.length)}</div>
                 </motion.div>
             </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -506,7 +465,6 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
                         )}
                     </div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -545,7 +503,6 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                 </motion.div>
             </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -579,7 +536,6 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
                         )}
                     </div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}

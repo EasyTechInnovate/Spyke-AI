@@ -1,10 +1,8 @@
 'use client'
-
 import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { MessageSquare, Star, ThumbsUp, ThumbsDown, BarChart3, TrendingUp, TrendingDown } from 'lucide-react'
 import { ResponsiveContainer, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip, Area, Bar, Line, PieChart, Pie, Cell, LineChart } from 'recharts'
-
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -13,21 +11,16 @@ const formatCurrency = (amount) => {
         maximumFractionDigits: 0
     }).format(amount || 0)
 }
-
 const formatNumber = (num) => {
     return new Intl.NumberFormat('en-US').format(num || 0)
 }
-
 const formatPercentage = (num) => {
     return `${(num || 0).toFixed(1)}%`
 }
-
 const clamp = (num, min, max) => Math.min(Math.max(num ?? 0, min), max)
 const truncate = (str, max = 16) => (str?.length > max ? `${str.slice(0, max - 1)}…` : str || '')
-
 export const FeedbackTab = ({ analyticsData, timeRange, loading }) => {
     const [feedbackData, setFeedbackData] = useState(null)
-
     const generateTimeSeriesData = (timeRange) => {
         const getDaysFromTimeRange = (period) => {
             switch (period) {
@@ -43,17 +36,14 @@ export const FeedbackTab = ({ analyticsData, timeRange, loading }) => {
                     return 30
             }
         }
-
         const days = getDaysFromTimeRange(timeRange)
         const endDate = new Date()
         const startDate = new Date()
         startDate.setDate(endDate.getDate() - (days - 1))
-
         const trends = []
         for (let i = 0; i < days; i++) {
             const currentDate = new Date(startDate)
             currentDate.setDate(startDate.getDate() + i)
-
             trends.push({
                 date: currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
                 fullDate: currentDate.toISOString().split('T')[0],
@@ -63,35 +53,27 @@ export const FeedbackTab = ({ analyticsData, timeRange, loading }) => {
                 satisfactionScore: 0
             })
         }
-
         return trends
     }
-
     const computeDerivedMetrics = (data) => {
         const summary = data.summary || {}
         const totalReviews = summary.totalReviews || 0
         const totalRatings =
             (summary.rating5 || 0) + (summary.rating4 || 0) + (summary.rating3 || 0) + (summary.rating2 || 0) + (summary.rating1 || 0)
-
         const positiveReviews = (summary.rating5 || 0) + (summary.rating4 || 0)
         const negativeReviews = (summary.rating1 || 0) + (summary.rating2 || 0)
         const neutralReviews = summary.rating3 || 0
-
         const positiveRate = totalRatings > 0 ? (positiveReviews / totalRatings) * 100 : 0
         const negativeRate = totalRatings > 0 ? (negativeReviews / totalRatings) * 100 : 0
         const neutralRate = totalRatings > 0 ? (neutralReviews / totalRatings) * 100 : 0
-
         const satisfactionScore =
             totalRatings > 0
                 ? ((summary.rating5 || 0) * 100 + (summary.rating4 || 0) * 75 + (summary.rating3 || 0) * 50 + (summary.rating2 || 0) * 25) /
                   totalRatings
                 : 0
-
         const responseRate = totalReviews > 0 ? 100 : 0
         const avgRating = summary.avgRating || 0
-
         const nps = totalRatings > 0 ? positiveRate - negativeRate : 0
-
         return {
             totalReviews,
             totalRatings,
@@ -108,14 +90,11 @@ export const FeedbackTab = ({ analyticsData, timeRange, loading }) => {
             engagementRate: totalReviews > 0 ? 100 : 0
         }
     }
-
     const processedData = useMemo(() => {
         if (!analyticsData?.data) return null
-
         const data = analyticsData.data
         const metrics = computeDerivedMetrics(data)
         const trends = generateTimeSeriesData(timeRange)
-
         const ratingDistribution = [
             {
                 name: '5 Stars',
@@ -148,13 +127,11 @@ export const FeedbackTab = ({ analyticsData, timeRange, loading }) => {
                 percentage: metrics.totalRatings > 0 ? ((data.summary?.rating1 || 0) / metrics.totalRatings) * 100 : 0
             }
         ]
-
         const sentimentDistribution = [
             { name: 'Positive', value: metrics.positiveReviews, color: '#00FF89', percentage: metrics.positiveRate },
             { name: 'Neutral', value: metrics.neutralReviews, color: '#F59E0B', percentage: metrics.neutralRate },
             { name: 'Negative', value: metrics.negativeReviews, color: '#EF4444', percentage: metrics.negativeRate }
         ].filter((item) => item.value > 0)
-
         return {
             metrics,
             trends,
@@ -164,14 +141,11 @@ export const FeedbackTab = ({ analyticsData, timeRange, loading }) => {
             pagination: data.pagination || {}
         }
     }, [analyticsData, timeRange])
-
     useEffect(() => {
         setFeedbackData(processedData)
     }, [processedData])
-
     const shouldShowLoading = loading && !analyticsData
     const shouldShowSkeleton = !feedbackData && !analyticsData
-
     if (shouldShowLoading || shouldShowSkeleton) {
         return (
             <div className="space-y-6">
@@ -192,7 +166,6 @@ export const FeedbackTab = ({ analyticsData, timeRange, loading }) => {
             </div>
         )
     }
-
     const safeMetrics = feedbackData?.metrics || {
         totalReviews: 0,
         totalRatings: 0,
@@ -208,11 +181,9 @@ export const FeedbackTab = ({ analyticsData, timeRange, loading }) => {
         nps: 0,
         engagementRate: 0
     }
-
     const safeRatingDistribution = feedbackData?.ratingDistribution || []
     const safeSentimentDistribution = feedbackData?.sentimentDistribution || []
     const safeFeedback = feedbackData?.feedback || []
-
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -231,7 +202,6 @@ export const FeedbackTab = ({ analyticsData, timeRange, loading }) => {
                         <span>{formatPercentage(safeMetrics.responseRate)} response rate</span>
                     </div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -246,7 +216,6 @@ export const FeedbackTab = ({ analyticsData, timeRange, loading }) => {
                     <div className="text-2xl font-bold text-white mb-1">{safeMetrics.avgRating ? safeMetrics.avgRating.toFixed(1) : '0.0'}/5</div>
                     <div className="text-sm text-gray-400">Overall satisfaction</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -264,7 +233,6 @@ export const FeedbackTab = ({ analyticsData, timeRange, loading }) => {
                         <span>{formatPercentage(safeMetrics.positiveRate)} positive</span>
                     </div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -280,7 +248,6 @@ export const FeedbackTab = ({ analyticsData, timeRange, loading }) => {
                     <div className="text-sm text-gray-400">Weighted average</div>
                 </motion.div>
             </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -334,7 +301,6 @@ export const FeedbackTab = ({ analyticsData, timeRange, loading }) => {
                         )}
                     </div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -388,7 +354,6 @@ export const FeedbackTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                 </motion.div>
             </div>
-
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -427,7 +392,6 @@ export const FeedbackTab = ({ analyticsData, timeRange, loading }) => {
                         )
                     })}
                 </div>
-
                 {safeMetrics.totalRatings === 0 && (
                     <div className="text-center text-gray-400 py-8">
                         <BarChart3 className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -436,7 +400,6 @@ export const FeedbackTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                 )}
             </motion.div>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -469,7 +432,6 @@ export const FeedbackTab = ({ analyticsData, timeRange, loading }) => {
                         </div>
                     </div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -491,7 +453,6 @@ export const FeedbackTab = ({ analyticsData, timeRange, loading }) => {
                             </div>
                             <div className="text-gray-400 text-sm">Based on {formatNumber(safeMetrics.totalRatings)} ratings</div>
                         </div>
-
                         <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-700">
                             <div className="text-center">
                                 <div className="text-lg font-bold text-[#00FF89]">{formatNumber(safeMetrics.positiveReviews)}</div>
@@ -509,7 +470,6 @@ export const FeedbackTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                 </motion.div>
             </div>
-
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

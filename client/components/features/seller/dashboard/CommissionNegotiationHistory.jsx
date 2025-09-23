@@ -1,9 +1,7 @@
 'use client'
 import { Clock, Check, X, Building, User, CheckCircle, DollarSign } from 'lucide-react'
-
 export default function CommissionNegotiationHistory({ commissionOffer, verificationStatus }) {
     if (!commissionOffer || verificationStatus !== 'commission_offered') return null
-
     const serverHistory = commissionOffer.history || []
     const fallbackHistory = !serverHistory.length
         ? [
@@ -18,33 +16,26 @@ export default function CommissionNegotiationHistory({ commissionOffer, verifica
               }
           ]
         : serverHistory
-
     const negotiationHistory = fallbackHistory
-
     const formatDate = (timestamp) => {
         return new Date(timestamp).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric'
         })
     }
-
     return (
         <div className="bg-gray-900 border border-gray-800 rounded-xl">
-            {/* Header */}
             <div className="p-6 border-b border-gray-800">
                 <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-white">Commission History</h3>
                     {commissionOffer.negotiationRound && <span className="text-sm text-gray-400">Round {commissionOffer.negotiationRound}</span>}
                 </div>
             </div>
-
-            {/* Timeline */}
             <div className="p-6 space-y-6">
                 {negotiationHistory.map((item) => (
                     <div
                         key={item.id}
                         className="flex items-start gap-4">
-                        {/* Status Icon */}
                         <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
                             {item.status === 'pending' && <Clock className="w-5 h-5 text-amber-400" />}
                             {item.status === 'accepted' && <Check className="w-5 h-5 text-emerald-400" />}
@@ -52,8 +43,6 @@ export default function CommissionNegotiationHistory({ commissionOffer, verifica
                             {!['pending', 'accepted', 'rejected'].includes(item.status) &&
                                 (item.by === 'admin' ? <Building className="w-5 h-5 text-blue-400" /> : <User className="w-5 h-5 text-purple-400" />)}
                         </div>
-
-                        {/* Content */}
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
@@ -67,21 +56,18 @@ export default function CommissionNegotiationHistory({ commissionOffer, verifica
                                 </div>
                                 {item.timestamp && <span className="text-xs text-gray-500">{formatDate(item.timestamp)}</span>}
                             </div>
-
                             {typeof item.rate === 'number' && (
                                 <div className="mb-2">
                                     <span className="text-2xl font-bold text-[#00FF89]">{item.rate}%</span>
                                     <span className="text-sm text-gray-400 ml-2">commission rate</span>
                                 </div>
                             )}
-
                             {item.status === 'pending' && (
                                 <div className="inline-flex items-center gap-1 text-amber-400">
                                     <Clock className="w-3 h-3" />
                                     <span className="text-xs">Awaiting response</span>
                                 </div>
                             )}
-
                             {item.reason && (
                                 <div className="mt-2 p-3 bg-gray-800 rounded-lg">
                                     <p className="text-sm text-gray-300">{item.reason}</p>
@@ -91,8 +77,6 @@ export default function CommissionNegotiationHistory({ commissionOffer, verifica
                     </div>
                 ))}
             </div>
-
-            {/* Footer */}
             {commissionOffer.status === 'pending' && !commissionOffer.acceptedAt && (
                 <div className="p-6 border-t border-gray-800">
                     <div className="flex items-center justify-between">
@@ -110,7 +94,6 @@ export default function CommissionNegotiationHistory({ commissionOffer, verifica
                     </div>
                 </div>
             )}
-
             {commissionOffer.acceptedAt && (
                 <div className="p-6 border-t border-emerald-500/20 bg-emerald-500/5">
                     <div className="flex items-center gap-3">
@@ -125,4 +108,3 @@ export default function CommissionNegotiationHistory({ commissionOffer, verifica
         </div>
     )
 }
-

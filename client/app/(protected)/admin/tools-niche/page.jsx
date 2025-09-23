@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Search, Edit, Trash2, Grid3X3, Target, X, Loader2, ToggleLeft, ToggleRight, Package, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -9,7 +8,6 @@ import Card from '@/components/shared/ui/card'
 import Badge from '@/components/shared/ui/badge'
 import Notification from '@/components/shared/Notification'
 import { categoryAPI, industryAPI } from '@/lib/api/toolsNiche'
-
 export default function ToolsNichePage() {
     const [activeTab, setActiveTab] = useState('category')
     const [categories, setCategories] = useState([])
@@ -23,38 +21,24 @@ export default function ToolsNichePage() {
     const [operationLoading, setOperationLoading] = useState({})
     const [showDeleteModal, setShowDeleteModal] = useState(false)
     const [itemToDelete, setItemToDelete] = useState(null)
-
-    // Pagination state
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(12)
-
-    // Simple notification state
     const [notifications, setNotifications] = useState([])
-
-    // Add notification function
     const addNotification = useCallback((message, type = 'info') => {
         const id = Date.now() + Math.random()
         const newNotification = { id, message, type }
         setNotifications((prev) => [...prev, newNotification])
     }, [])
-
-    // Remove notification function
     const removeNotification = useCallback((id) => {
         setNotifications((prev) => prev.filter((notification) => notification.id !== id))
     }, [])
-
-    // Fetch data
     const fetchData = useCallback(
         async (showLoader = true) => {
             try {
                 if (showLoader) setLoading(true)
-
                 const [categoriesRes, industriesRes] = await Promise.all([categoryAPI.getCategories(), industryAPI.getIndustries()])
-
-                // Handle API response structure properly
                 const categoriesData = categoriesRes?.data?.categories || categoriesRes?.categories || categoriesRes?.data || []
                 const industriesData = industriesRes?.data?.industries || industriesRes?.industries || industriesRes?.data || []
-
                 setCategories(Array.isArray(categoriesData) ? categoriesData : [])
                 setIndustries(Array.isArray(industriesData) ? industriesData : [])
             } catch (error) {
@@ -66,49 +50,36 @@ export default function ToolsNichePage() {
         },
         [addNotification]
     )
-
     useEffect(() => {
         fetchData()
     }, [fetchData])
-
     const currentData = activeTab === 'category' ? categories : industries
     const filteredData = currentData.filter(
         (item) => item.name?.toLowerCase().includes(searchTerm.toLowerCase()) || item.description?.toLowerCase().includes(searchTerm.toLowerCase())
     )
-
-    // Pagination calculations
     const totalPages = Math.ceil(filteredData.length / itemsPerPage)
     const startIndex = (currentPage - 1) * itemsPerPage
     const endIndex = startIndex + itemsPerPage
     const paginatedData = filteredData.slice(startIndex, endIndex)
-
-    // Reset to first page when search term or tab changes
     useEffect(() => {
         setCurrentPage(1)
     }, [searchTerm, activeTab])
-
-    // Pagination handlers
     const handlePageChange = (page) => {
         if (page >= 1 && page <= totalPages) {
             setCurrentPage(page)
-            // Smooth scroll to top of the grid
             document.querySelector('[data-pagination-content]')?.scrollIntoView({ 
                 behavior: 'smooth', 
                 block: 'start' 
             })
         }
     }
-
     const handleItemsPerPageChange = (newItemsPerPage) => {
         setItemsPerPage(newItemsPerPage)
-        setCurrentPage(1) // Reset to first page
+        setCurrentPage(1) 
     }
-
-    // Generate page numbers for pagination
     const getPageNumbers = () => {
         const pages = []
         const maxVisiblePages = 5
-        
         if (totalPages <= maxVisiblePages) {
             for (let i = 1; i <= totalPages; i++) {
                 pages.push(i)
@@ -117,25 +88,20 @@ export default function ToolsNichePage() {
             const halfVisible = Math.floor(maxVisiblePages / 2)
             let startPage = Math.max(currentPage - halfVisible, 1)
             let endPage = Math.min(startPage + maxVisiblePages - 1, totalPages)
-            
             if (endPage - startPage < maxVisiblePages - 1) {
                 startPage = Math.max(endPage - maxVisiblePages + 1, 1)
             }
-            
             for (let i = startPage; i <= endPage; i++) {
                 pages.push(i)
             }
         }
-        
         return pages
     }
-
     const handleCreate = () => {
         setEditingItem(null)
         setFormData({ name: '', description: '' })
         setShowCreateModal(true)
     }
-
     const handleEdit = (item) => {
         setEditingItem(item)
         setFormData({
@@ -144,69 +110,48 @@ export default function ToolsNichePage() {
         })
         setShowCreateModal(true)
     }
-
     const handleSubmit = async (e) => {
         e.preventDefault()
-
         if (!formData.name.trim()) {
             addNotification('Name is required', 'error')
             return
         }
-
         try {
             setSubmitting(true)
-
             const data = {
                 name: formData.name.trim(),
                 description: formData.description.trim()
             }
-
             let response
             if (editingItem) {
-                // Update existing
                 if (activeTab === 'category') {
                     response = await categoryAPI.updateCategory(editingItem._id, data)
                 } else {
                     response = await industryAPI.updateIndustry(editingItem._id, data)
                 }
             } else {
-                // Create new
                 if (activeTab === 'category') {
                     response = await categoryAPI.createCategory(data)
                 } else {
                     response = await industryAPI.createIndustry(data)
                 }
             }
-
-            // Check if the operation was successful
             const isSuccess = response?.success !== false && response?.statusCode !== 409 && response?.statusCode !== 400
-
             if (isSuccess) {
-                // Success case
                 const action = editingItem ? 'updated' : 'created'
                 const capitalizedTab = activeTab.charAt(0).toUpperCase() + activeTab.slice(1)
-
                 addNotification(`${capitalizedTab} ${action} successfully`, 'success')
-
-                // Close modal and reset form
                 setShowCreateModal(false)
                 setFormData({ name: '', description: '' })
                 setEditingItem(null)
-
-                // Refresh data
                 fetchData(false)
             } else {
-                // Handle API error response
                 const errorMessage = response?.message || `Failed to ${editingItem ? 'update' : 'create'} ${activeTab}`
                 addNotification(errorMessage, 'error')
             }
         } catch (error) {
-            // Handle network/unexpected errors
             console.error('API Error:', error)
-
             let errorMessage = `Failed to ${editingItem ? 'update' : 'create'} ${activeTab}`
-
-            // Try to extract error message from different response structures
             if (error?.response?.data?.message) {
                 errorMessage = error.response.data.message
             } else if (error?.data?.message) {
@@ -214,51 +159,38 @@ export default function ToolsNichePage() {
             } else if (error?.message) {
                 errorMessage = error.message
             }
-
             addNotification(errorMessage, 'error')
         } finally {
             setSubmitting(false)
         }
     }
-
     const handleToggleStatus = async (item) => {
         const newStatus = item.isActive ? false : true
         const operationKey = `toggle-${item._id}`
-
         try {
             setOperationLoading((prev) => ({ ...prev, [operationKey]: true }))
-
             let response
             if (activeTab === 'category') {
                 response = await categoryAPI.updateCategory(item._id, { isActive: newStatus })
             } else {
                 response = await industryAPI.updateIndustry(item._id, { isActive: newStatus })
             }
-
-            // Check if the operation was successful
             const isSuccess = response?.success === true && response?.statusCode === 200
-
             if (isSuccess) {
                 const capitalizedTab = activeTab.charAt(0).toUpperCase() + activeTab.slice(1)
                 addNotification(`${capitalizedTab} ${newStatus ? 'activated' : 'deactivated'} successfully`, 'success')
-
-                // Update local state immediately for better UX
                 if (activeTab === 'category') {
                     setCategories((prev) => prev.map((cat) => (cat._id === item._id ? { ...cat, isActive: newStatus } : cat)))
                 } else {
                     setIndustries((prev) => prev.map((industry) => (industry._id === item._id ? { ...industry, isActive: newStatus } : industry)))
                 }
             } else {
-                // Handle API error response
                 const errorMessage = response?.message || `Failed to update ${activeTab} status`
                 addNotification(errorMessage, 'error')
             }
         } catch (error) {
             console.error('Toggle Status Error:', error)
-
             let errorMessage = `Failed to update ${activeTab} status`
-
-            // Try to extract error message from different response structures
             if (error?.response?.data?.message) {
                 errorMessage = error.response.data.message
             } else if (error?.data?.message) {
@@ -266,7 +198,6 @@ export default function ToolsNichePage() {
             } else if (error?.message) {
                 errorMessage = error.message
             }
-
             addNotification(errorMessage, 'error')
         } finally {
             setOperationLoading((prev) => {
@@ -276,35 +207,25 @@ export default function ToolsNichePage() {
             })
         }
     }
-
     const handleDelete = (item) => {
         setItemToDelete(item)
         setShowDeleteModal(true)
     }
-
     const confirmDelete = async () => {
         if (!itemToDelete) return
-
         const operationKey = `delete-${itemToDelete._id}`
-
         try {
             setOperationLoading((prev) => ({ ...prev, [operationKey]: true }))
-
             let response
             if (activeTab === 'category') {
                 response = await categoryAPI.deleteCategory(itemToDelete._id)
             } else {
                 response = await industryAPI.deleteIndustry(itemToDelete._id)
             }
-
-            // Check if the operation was successful
             const isSuccess = response?.success !== false && response?.statusCode !== 404
-
             if (isSuccess) {
                 const capitalizedTab = activeTab.charAt(0).toUpperCase() + activeTab.slice(1)
                 addNotification(`${capitalizedTab} deleted successfully`, 'success')
-
-                // Remove from local state immediately
                 if (activeTab === 'category') {
                     setCategories((prev) => prev.filter((cat) => cat._id !== itemToDelete._id))
                 } else {
@@ -316,9 +237,7 @@ export default function ToolsNichePage() {
             }
         } catch (error) {
             console.error('Delete Error:', error)
-
             let errorMessage = `Failed to delete ${activeTab}`
-
             if (error?.response?.data?.message) {
                 errorMessage = error.response.data.message
             } else if (error?.data?.message) {
@@ -326,7 +245,6 @@ export default function ToolsNichePage() {
             } else if (error?.message) {
                 errorMessage = error.message
             }
-
             addNotification(errorMessage, 'error')
         } finally {
             setOperationLoading((prev) => {
@@ -338,16 +256,13 @@ export default function ToolsNichePage() {
             setItemToDelete(null)
         }
     }
-
     const handleView = (item) => {
         addNotification(`Viewing ${item.name} details`, 'info')
     }
-
     const tabs = [
         { id: 'category', label: 'Category', icon: Grid3X3 },
         { id: 'industry', label: 'Industry', icon: Target }
     ]
-
     if (loading) {
         return (
             <div className="flex items-center justify-center py-16">
@@ -358,10 +273,8 @@ export default function ToolsNichePage() {
             </div>
         )
     }
-
     return (
         <div className="space-y-6">
-            {/* Notifications */}
             <div className="fixed top-4 right-4 z-50 space-y-2">
                 <AnimatePresence>
                     {notifications.map((notification) => (
@@ -373,8 +286,6 @@ export default function ToolsNichePage() {
                     ))}
                 </AnimatePresence>
             </div>
-
-            {/* Basic Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-white">Tools & Industry Management</h1>
@@ -387,8 +298,6 @@ export default function ToolsNichePage() {
                     Create {activeTab === 'category' ? 'Category' : 'Industry'}
                 </Button>
             </div>
-
-            {/* Basic Tabs */}
             <div className="border-b border-gray-700">
                 <nav className="flex space-x-8">
                     {tabs.map((tab) => {
@@ -408,8 +317,6 @@ export default function ToolsNichePage() {
                     })}
                 </nav>
             </div>
-
-            {/* Header with Search and Controls */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-1">
                         <div className="relative flex-1 max-w-md">
@@ -422,8 +329,6 @@ export default function ToolsNichePage() {
                                 className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00FF89] focus:border-transparent"
                             />
                         </div>
-                        
-                        {/* Items per page selector */}
                         <div className="flex items-center gap-2 text-sm text-gray-400">
                             <span>Show:</span>
                             <select
@@ -439,11 +344,7 @@ export default function ToolsNichePage() {
                             <span>per page</span>
                         </div>
                     </div>
-
-                    
                 </div>
-
-                {/* Results Summary */}
                 <div className="mb-6" data-pagination-content>
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-sm text-gray-400">
                         <div>
@@ -461,8 +362,6 @@ export default function ToolsNichePage() {
                         )}
                     </div>
                 </div>
-
-            {/* Basic Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Card className="p-4">
                     <div className="flex items-center justify-between">
@@ -492,8 +391,6 @@ export default function ToolsNichePage() {
                     </div>
                 </Card>
             </div>
-
-            {/* Basic Data Grid */}
             <Card className="p-6">
                 {filteredData.length === 0 ? (
                     <div className="text-center py-12">
@@ -504,7 +401,6 @@ export default function ToolsNichePage() {
                         <p className="text-gray-400 mb-4">
                             {searchTerm ? `No ${activeTab === 'category' ? 'categories' : 'industries'} match your search.` : `Create your first ${activeTab} to get started.`}
                         </p>
-                        
                     </div>
                 ) : (
                     <div data-pagination-content className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -531,14 +427,11 @@ export default function ToolsNichePage() {
                                         </div>
                                     </div>
                                 </div>
-
                                 {item.description && <p className="text-gray-400 text-sm mb-3 line-clamp-2">{item.description}</p>}
-
                                 <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
                                     <span>{item.productCount || 0} products</span>
                                     {item.createdAt && <span>{new Date(item.createdAt).toLocaleDateString()}</span>}
                                 </div>
-
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-1">
                                         <Button
@@ -562,7 +455,6 @@ export default function ToolsNichePage() {
                                             )}
                                         </Button>
                                     </div>
-
                                     <Button
                                         variant="ghost"
                                         size="sm"
@@ -584,8 +476,6 @@ export default function ToolsNichePage() {
                     </div>
                 )}
             </Card>
-
-            {/* Pagination Controls */}
             {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center gap-2">
@@ -628,8 +518,6 @@ export default function ToolsNichePage() {
                     </div>
                 </div>
             )}
-
-            {/* Create/Edit Modal */}
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex items-center justify-center p-4">
                     <motion.div
@@ -648,7 +536,6 @@ export default function ToolsNichePage() {
                                 <X className="w-4 h-4" />
                             </Button>
                         </div>
-
                         <form
                             onSubmit={handleSubmit}
                             className="space-y-4">
@@ -660,7 +547,6 @@ export default function ToolsNichePage() {
                                 className="bg-[#121212] border-gray-700 text-white"
                                 required
                             />
-
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
                                 <textarea
@@ -671,7 +557,6 @@ export default function ToolsNichePage() {
                                     rows={3}
                                 />
                             </div>
-
                             <div className="flex gap-3 pt-2">
                                 <Button
                                     type="button"
@@ -692,8 +577,6 @@ export default function ToolsNichePage() {
                     </motion.div>
                 </div>
             )}
-
-            {/* Delete Confirmation Modal */}
             {showDeleteModal && itemToDelete && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex items-center justify-center p-4">
                     <motion.div
@@ -713,7 +596,6 @@ export default function ToolsNichePage() {
                                 <X className="w-4 h-4" />
                             </Button>
                         </div>
-
                         <div className="mb-6">
                             <div className="flex items-center gap-3 mb-3">
                                 <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center">
@@ -726,7 +608,6 @@ export default function ToolsNichePage() {
                             </div>
                             <p className="text-gray-300 text-sm">Are you sure you want to delete this {activeTab}? This action cannot be undone.</p>
                         </div>
-
                         <div className="flex gap-3">
                             <Button
                                 type="button"
@@ -752,4 +633,3 @@ export default function ToolsNichePage() {
         </div>
     )
 }
-

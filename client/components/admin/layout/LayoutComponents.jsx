@@ -1,5 +1,4 @@
 'use client'
-
 import { memo } from 'react'
 import { Search, RefreshCw, Filter, Download, Plus } from 'lucide-react'
 export const PageHeader = memo(({ 
@@ -11,10 +10,8 @@ export const PageHeader = memo(({
   icon: Icon = null
 }) => (
   <div className={`relative bg-gradient-to-br from-gray-900/90 via-gray-800/60 to-gray-900/80 border border-gray-700/40 rounded-2xl p-8 mb-8 overflow-hidden backdrop-blur-sm ${className}`}>
-    {/* Subtle background pattern */}
     <div className="absolute inset-0 bg-gradient-to-r from-[#00FF89]/5 via-transparent to-blue-500/5 opacity-50"></div>
     <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#00FF89]/30 to-transparent"></div>
-    
     <div className="relative z-10">
       {breadcrumbs.length > 0 && (
         <nav className="mb-4">
@@ -36,7 +33,6 @@ export const PageHeader = memo(({
           </ol>
         </nav>
       )}
-      
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div className="flex items-start gap-4">
           {Icon && (
@@ -55,7 +51,6 @@ export const PageHeader = memo(({
             )}
           </div>
         </div>
-        
         {actions.length > 0 && (
           <div className="flex items-center gap-3 flex-shrink-0">
             {actions.map((action, index) => (
@@ -67,14 +62,10 @@ export const PageHeader = memo(({
         )}
       </div>
     </div>
-    
-    {/* Subtle bottom accent */}
     <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-600/30 to-transparent"></div>
   </div>
 ))
 PageHeader.displayName = 'PageHeader'
-
-// Quick Actions Bar Component
 export const QuickActionsBar = memo(({ 
   searchValue, 
   onSearchChange, 
@@ -93,7 +84,6 @@ export const QuickActionsBar = memo(({
     </div>
   ) : (
     <div className={`flex flex-col sm:flex-row gap-3 mb-6 ${className}`}>
-      {/* Search */}
       <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
         <input
@@ -104,7 +94,6 @@ export const QuickActionsBar = memo(({
           className="w-full pl-10 pr-4 py-2.5 bg-gray-900/50 border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-colors"
         />
       </div>
-      {/* Action Buttons */}
       <div className="flex items-center gap-2">
         {onRefresh && (
           <button
@@ -141,8 +130,6 @@ export const QuickActionsBar = memo(({
   )
 ))
 QuickActionsBar.displayName = 'QuickActionsBar'
-
-// Stats Grid Component
 export const StatsGrid = memo(({ stats = [], className = '' }) => (
   <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 ${className}`}>
     {stats.map((stat, index) => (
@@ -166,8 +153,6 @@ export const StatsGrid = memo(({ stats = [], className = '' }) => (
   </div>
 ))
 StatsGrid.displayName = 'StatsGrid'
-
-// Data Table Component
 export const DataTable = memo(({ 
   columns = [], 
   data = [], 

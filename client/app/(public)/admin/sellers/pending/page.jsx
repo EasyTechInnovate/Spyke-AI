@@ -1,6 +1,5 @@
 'use client'
 export const dynamic = 'force-dynamic'
-
 import { useState, useEffect, useMemo, useCallback, useRef, useId } from 'react'
 import { adminAPI } from '@/lib/api/admin'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
@@ -36,10 +35,8 @@ import {
     QuickActionsBar,
     StatsGrid
 } from '@/components/admin'
-
 const BRAND = '#00FF89'
 const AMBER = '#FFC050'
-
 function formatDate(date) {
     if (!date) return 'N/A'
     const d = new Date(date)
@@ -87,26 +84,17 @@ const statusConfig = {
         hint: 'Seller proposed a different rate. Accept or propose new.'
     }
 }
-
 export default function PendingSellersPage() {
-    // Inline notification state
     const [notification, setNotification] = useState(null)
-
-    // Show inline notification messages
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
-        // Auto-dismiss after 5 seconds
         setTimeout(() => setNotification(null), 5000)
     }
-
-    // Clear notification
     const clearNotification = () => setNotification(null)
-
     const [sellers, setSellers] = useState([])
     const [loading, setLoading] = useState(true)
     const [tabSwitching, setTabSwitching] = useState(false)
     const [listOpacity, setListOpacity] = useState(1)
-
     const [selectedSeller, setSelectedSeller] = useState(null)
     const [showCommissionModal, setShowCommissionModal] = useState(false)
     const [showRejectAppModal, setShowRejectAppModal] = useState(false)
@@ -114,19 +102,15 @@ export default function PendingSellersPage() {
     const [commissionRate, setCommissionRate] = useState(15)
     const [rejectReason, setRejectReason] = useState('')
     const [legendOpen, setLegendOpen] = useState(false)
-
     const [page, setPage] = useState(1)
     const [totalPages, setTotalPages] = useState(1)
     const [pagination, setPagination] = useState({})
     const [searchQuery, setSearchQuery] = useState('')
     const [debouncedQuery, setDebouncedQuery] = useState('')
     const [activeStatusFilter, setActiveStatusFilter] = useState('all')
-
     const [selectedSellers, setSelectedSellers] = useState(new Set())
     const [showBulkActions, setShowBulkActions] = useState(false)
     const [bulkActionType, setBulkActionType] = useState(null)
-
-    // Single source of truth for badges (tabs always read from this)
     const [counts, setCounts] = useState({
         all: undefined,
         pending: undefined,
@@ -134,12 +118,9 @@ export default function PendingSellersPage() {
         commission_offered: undefined,
         counter_offered: undefined
     })
-
     const [actionLoading, setActionLoading] = useState(false)
-
     const latestReqIdRef = useRef(0)
-    const cacheRef = useRef(new Map()) // key: `${status}:${page}`
-
+    const cacheRef = useRef(new Map()) 
     const [sortBy, setSortBy] = useState('submittedAt')
     const [sortOrder, setSortOrder] = useState('desc')
     const [advancedFilters, setAdvancedFilters] = useState({
@@ -150,7 +131,6 @@ export default function PendingSellersPage() {
         dateRange: ''
     })
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
-
     const sortOptions = [
         { value: 'submittedAt', label: 'Application Date' },
         { value: 'fullName', label: 'Name' },
@@ -158,7 +138,6 @@ export default function PendingSellersPage() {
         { value: 'stats.totalProducts', label: 'Products' },
         { value: 'toolsSpecialization.length', label: 'Experience' }
     ]
-
     const handleSortChange = (newSortBy) => {
         if (sortBy === newSortBy) {
             setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))
@@ -168,7 +147,6 @@ export default function PendingSellersPage() {
         }
         fetchList()
     }
-
     const exportSellersData = (sellersData) => {
         const csvContent = [
             ['Name', 'Email', 'Country', 'Status', 'Niches', 'Tools', 'Website', 'Submitted'],
@@ -185,7 +163,6 @@ export default function PendingSellersPage() {
         ]
             .map((row) => row.map((field) => `"${field}"`).join(','))
             .join('\n')
-
         const blob = new Blob([csvContent], { type: 'text/csv' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -196,53 +173,35 @@ export default function PendingSellersPage() {
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
     }
-
     const fetchList = useCallback(
         async ({ isTabChange = false, isManualRefresh = false, silent = false } = {}) => {
             const key = `${activeStatusFilter}:${page}`
-
             if (isManualRefresh) setListOpacity(0.6)
             if (isTabChange) setTabSwitching(true)
             if (!silent) setLoading(true)
-
-            // Serve cached quickly while fetching fresh
             if (cacheRef.current.has(key)) {
                 const cached = cacheRef.current.get(key)
                 setSellers(cached.list)
                 setPagination(cached.pagination || {})
                 setTotalPages(cached.pagination?.totalPages || 1)
-                // counts are per-tab; keep existing until fresh comes back
             }
-
             try {
                 const reqId = ++latestReqIdRef.current
-                // IMPORTANT: always pass the actual active status to backend
                 const res = await adminAPI.sellers.getByStatus.fetch(activeStatusFilter, page, 30)
-                if (reqId !== latestReqIdRef.current) return // ignore stale response
-
+                if (reqId !== latestReqIdRef.current) return 
                 const payload = res?.data?.profiles ? res.data : res
                 const profiles = payload?.profiles || []
                 const serverPagination = payload?.pagination || {}
-
                 const withStatus = profiles.map((s) => ({ ...s, currentStatus: mapStatus(s) }))
-
-                // Filter client-side too (covers cases where backend returns broader set)
                 const filtered =
                     activeStatusFilter === 'all'
                         ? withStatus.filter((s) => !['approved', 'active'].includes(s.currentStatus))
                         : withStatus.filter((s) => s.currentStatus === activeStatusFilter)
-
-                // Cache fresh
                 cacheRef.current.set(key, { list: filtered, pagination: serverPagination })
-
-                // Apply list
                 setSellers(filtered)
                 setPagination(serverPagination || {})
                 setTotalPages(serverPagination?.totalPages || 1)
-
-                // === Correct counts per tab ===
                 if (activeStatusFilter === 'all') {
-                    // Show per-status breakdown only on ALL
                     const newCounts = {
                         all: filtered.length,
                         pending: filtered.filter((s) => s.currentStatus === 'pending').length,
@@ -252,8 +211,6 @@ export default function PendingSellersPage() {
                     }
                     setCounts(newCounts)
                 } else {
-                    // For a specific tab, show ONLY that tab's count
-                    // Use server total if trustworthy, else final filtered length
                     const thisTabCount = typeof serverPagination?.total === 'number' ? serverPagination.total : filtered.length
                     setCounts({
                         all: undefined,
@@ -269,7 +226,6 @@ export default function PendingSellersPage() {
                 setSellers([])
                 setPagination({})
                 setTotalPages(1)
-                // Clear counts on error so no stale numbers linger
                 setCounts({
                     all: activeStatusFilter === 'all' ? 0 : undefined,
                     pending: activeStatusFilter === 'pending' ? 0 : undefined,
@@ -287,16 +243,13 @@ export default function PendingSellersPage() {
         },
         [activeStatusFilter, page]
     )
-
     useEffect(() => {
         fetchList()
     }, [fetchList])
-
     useEffect(() => {
         const id = setTimeout(() => setDebouncedQuery(searchQuery.trim().toLowerCase()), 220)
         return () => clearTimeout(id)
     }, [searchQuery])
-
     const filteredSellers = useMemo(() => {
         if (!debouncedQuery) return sellers
         return sellers.filter((seller) => {
@@ -310,7 +263,6 @@ export default function PendingSellersPage() {
             )
         })
     }, [debouncedQuery, sellers])
-
     const handleSelectSeller = (sellerId) => {
         setSelectedSellers((prev) => {
             const newSet = new Set(prev)
@@ -322,7 +274,6 @@ export default function PendingSellersPage() {
             return newSet
         })
     }
-
     const handleSelectAll = () => {
         if (selectedSellers.size === filteredSellers.length) {
             setSelectedSellers(new Set())
@@ -330,10 +281,8 @@ export default function PendingSellersPage() {
             setSelectedSellers(new Set(filteredSellers.map((s) => s._id)))
         }
     }
-
     const handleBulkAction = async (action) => {
         if (selectedSellers.size === 0) return
-
         setActionLoading(true)
         try {
             switch (action) {
@@ -342,12 +291,10 @@ export default function PendingSellersPage() {
                     showMessage(`${selectedSellers.size} sellers approved`, 'success')
                     break
                 case 'reject':
-                    // Open bulk reject modal
                     setBulkActionType('reject')
                     setShowBulkActions(true)
                     return
                 case 'export':
-                    // Export selected sellers data
                     const sellersData = filteredSellers.filter((s) => selectedSellers.has(s._id))
                     exportSellersData(sellersData)
                     showMessage('Sellers data exported', 'success')
@@ -362,13 +309,10 @@ export default function PendingSellersPage() {
         }
     }
     const handleStartReview = async (sellerId) => {
-        // sellerId should already be a string at this point
         if (!sellerId) return
-
         setActionLoading(true)
         try {
             await adminAPI.sellers.profile.startReview(sellerId)
-
             showMessage('Review started successfully!', 'success')
             fetchList()
         } catch (err) {
@@ -379,7 +323,6 @@ export default function PendingSellersPage() {
             setActionLoading(false)
         }
     }
-
     const handleSubmitCommission = async () => {
         if (!selectedSeller) return
         if (Number.isNaN(commissionRate) || commissionRate < 1 || commissionRate > 50) {
@@ -390,15 +333,11 @@ export default function PendingSellersPage() {
         try {
             const hasCounter = !!selectedSeller?.commissionOffer?.counterOffer?.rate
             const counterRate = selectedSeller?.commissionOffer?.counterOffer?.rate
-
             if (hasCounter && commissionRate === counterRate) {
-                // Accept seller's exact counter offer rate
                 await adminAPI.sellers.commission.acceptCounter(selectedSeller._id)
                 showMessage(`Counter offer accepted (${counterRate}%)`, 'success')
             } else {
-                // Use the single offer endpoint - it handles both initial offers and admin counter offers
                 await adminAPI.sellers.commission.offer(selectedSeller._id, commissionRate)
-
                 if (hasCounter && commissionRate !== counterRate) {
                     showMessage(`Counter offer of ${commissionRate}% sent to seller`, 'success')
                 } else {
@@ -427,10 +366,8 @@ export default function PendingSellersPage() {
         }
     }
     const handleResendOffer = async (sellerId) => {
-        // Find the seller object to get the commission rate
         const seller = sellers.find(s => s._id === sellerId)
         if (!seller?.commissionOffer?.rate) return showMessage('No previous offer to resend', 'info')
-        
         setActionLoading(true)
         try {
             await adminAPI.sellers.commission.offer(sellerId, seller.commissionOffer.rate)
@@ -458,7 +395,6 @@ export default function PendingSellersPage() {
             setActionLoading(false)
         }
     }
-
     const anyModalOpen = showCommissionModal || showRejectAppModal || showSellerDetailsModal
     useEffect(() => {
         if (typeof document === 'undefined') return
@@ -481,22 +417,15 @@ export default function PendingSellersPage() {
             }
         }
     }, [anyModalOpen])
-
     const [realTimeUpdates, setRealTimeUpdates] = useState(true)
     const [notifications, setNotifications] = useState([])
-
-    // WebSocket or polling for real-time updates
     useEffect(() => {
         if (!realTimeUpdates) return
-
         const interval = setInterval(() => {
-            // Silently check for updates without showing loading
             fetchList({ silent: true })
-        }, 30000) // Check every 30 seconds
-
+        }, 30000) 
         return () => clearInterval(interval)
     }, [realTimeUpdates, fetchList])
-
     const addNotification = (message, type = 'info') => {
         const id = Date.now()
         setNotifications((prev) => [...prev, { id, message, type, timestamp: new Date() }])
@@ -504,10 +433,8 @@ export default function PendingSellersPage() {
             setNotifications((prev) => prev.filter((n) => n.id !== id))
         }, 5000)
     }
-
     return (
         <div className="space-y-6">
-            {/* Inline Notification */}
             {notification && (
                 <InlineNotification
                     type={notification.type}
@@ -515,8 +442,6 @@ export default function PendingSellersPage() {
                     onDismiss={clearNotification}
                 />
             )}
-
-            {/* Header - Using new admin architecture */}
             <PageHeader 
                 title="Seller Applications"
                 subtitle="Manage pending seller applications and commission offers"
@@ -539,11 +464,7 @@ export default function PendingSellersPage() {
                     </button>
                 ]}
             />
-
-            {/* Legend Banner - Seller Onboarding Flow */}
             <LegendBannerAlways statusConfig={statusConfig} />
-
-            {/* Stats Grid for KPIs */}
             <StatsGrid 
                 stats={[
                     {
@@ -568,18 +489,14 @@ export default function PendingSellersPage() {
                     }
                 ]}
             />
-
             {debouncedQuery && (
                 <div className="text-sm text-gray-400 px-1">
                     Showing {filteredSellers.length} results for “{debouncedQuery}”.
                 </div>
             )}
-
-            {/* Filter Tabs - Using admin architecture QuickActionsBar */}
             <QuickActionsBar>
                 <div className="flex items-center gap-2">
                     <Filter className="w-5 h-5 text-gray-500" />
-                    
                     <FilterTab
                         id="all"
                         label="All"
@@ -593,7 +510,6 @@ export default function PendingSellersPage() {
                             fetchList({ isTabChange: true })
                         }}
                     />
-
                     <FilterTab
                         id="pending"
                         label="Pending"
@@ -609,7 +525,6 @@ export default function PendingSellersPage() {
                             fetchList({ isTabChange: true })
                         }}
                     />
-
                     <FilterTab
                         id="under_review"
                         label="Review"
@@ -625,7 +540,6 @@ export default function PendingSellersPage() {
                             fetchList({ isTabChange: true })
                         }}
                     />
-
                     <FilterTab
                         id="commission_offered"
                         label="Offered"
@@ -642,8 +556,6 @@ export default function PendingSellersPage() {
                         }}
                     />
                 </div>
-
-                {/* Search Controls */}
                 <div className="flex items-center gap-2">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -665,7 +577,6 @@ export default function PendingSellersPage() {
                             </button>
                         )}
                     </div>
-
                     <button
                         type="button"
                         onClick={() => fetchList({ isManualRefresh: true })}
@@ -676,8 +587,6 @@ export default function PendingSellersPage() {
                     </button>
                 </div>
             </QuickActionsBar>
-
-            {/* Sellers List */}
             <section
                 aria-busy={loading}
                 className="transition-opacity duration-200"
@@ -719,7 +628,6 @@ export default function PendingSellersPage() {
                     </div>
                 )}
             </section>
-
             {totalPages > 1 && !debouncedQuery && (
                 <div className="flex items-center justify-center gap-2 mt-2">
                     <button
@@ -741,7 +649,6 @@ export default function PendingSellersPage() {
                     </button>
                 </div>
             )}
-
             {showCommissionModal && selectedSeller && (
                 <Modal
                     onClose={() => {
@@ -755,7 +662,6 @@ export default function PendingSellersPage() {
                                 ? 'Accept the seller’s counter or propose a new rate.'
                                 : 'Send your commission rate. The seller must accept this to start selling.'}
                         </p>
-
                         {selectedSeller.commissionOffer?.counterOffer && (
                             <div className="bg-[#121212] border border-gray-700 rounded-lg p-4 mb-4">
                                 <div className="flex items-center justify-between text-sm">
@@ -768,7 +674,6 @@ export default function PendingSellersPage() {
                                 </div>
                             </div>
                         )}
-
                         <label className="block text-sm font-medium text-gray-400 mb-2">Commission Rate (%)</label>
                         <input
                             type="number"
@@ -784,7 +689,6 @@ export default function PendingSellersPage() {
                                 <span className="text-[var(--neon,#00FF89)] ml-1">✓ Accepting seller’s rate</span>
                             )}
                         </p>
-
                         {selectedSeller.commissionOffer?.counterOffer && (
                             <div className="mt-4 flex items-center gap-2 text-xs">
                                 <button
@@ -807,7 +711,6 @@ export default function PendingSellersPage() {
                                 </button>
                             </div>
                         )}
-
                         <div className="flex gap-3 mt-6">
                             <button
                                 type="button"
@@ -831,7 +734,6 @@ export default function PendingSellersPage() {
                     </div>
                 </Modal>
             )}
-
             {showRejectAppModal && selectedSeller && (
                 <Modal
                     onClose={() => {
@@ -849,7 +751,6 @@ export default function PendingSellersPage() {
                                 <p className="text-sm text-gray-400 mt-1">This rejects the seller’s application and ends negotiations.</p>
                             </div>
                         </div>
-
                         <div className="bg-[#121212] border border-gray-700 rounded-lg p-4 space-y-3 mb-4">
                             <MiniRow
                                 label="Seller"
@@ -866,7 +767,6 @@ export default function PendingSellersPage() {
                                 />
                             )}
                         </div>
-
                         <label className="block text-sm font-medium text-gray-400 mb-2">
                             Reason for rejection <span className="text-red-400">*</span>
                         </label>
@@ -877,7 +777,6 @@ export default function PendingSellersPage() {
                             placeholder="Provide a clear reason that will be sent to the seller…"
                             className="w-full px-4 py-3 bg-[#121212] border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50 focus:border-transparent resize-none"
                         />
-
                         <div className="flex gap-3 mt-6">
                             <button
                                 type="button"
@@ -900,7 +799,6 @@ export default function PendingSellersPage() {
                     </div>
                 </Modal>
             )}
-
             {showSellerDetailsModal && selectedSeller && (
                 <Modal
                     onClose={() => {
@@ -944,8 +842,6 @@ export default function PendingSellersPage() {
                     </div>
                 </Modal>
             )}
-
-            {/* Quick Actions Toolbar */}
             {selectedSellers.size > 0 && (
                 <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
                     <div className="bg-[#1a1a1a] border border-gray-700 rounded-xl px-5 py-4 shadow-2xl">
@@ -981,8 +877,6 @@ export default function PendingSellersPage() {
                     </div>
                 </div>
             )}
-
-            {/* Notifications */}
             {notifications.length > 0 && (
                 <div className="fixed top-6 right-6 z-50 space-y-2">
                     {notifications.map((notification) => (
@@ -1003,7 +897,6 @@ export default function PendingSellersPage() {
         </div>
     )
 }
-
 function MiniKPI({ label, value, icon }) {
     return (
         <div className="relative rounded-lg border border-gray-800 bg-[#0f0f0f] px-3 py-2">
@@ -1015,7 +908,6 @@ function MiniKPI({ label, value, icon }) {
         </div>
     )
 }
-
 function FilterTab({ id, label, active, onSelect, icon: Icon, tone = 'neutral', count }) {
     const isActive = active === id
     const toneClass =
@@ -1370,18 +1262,13 @@ function openProfile(seller) {
         showMessage('Profile page coming soon.', 'info')
     }
 }
-
 function SellerCard({ seller, onStartReview, onOpenCommission, onAcceptCounter, onResendOffer, onReject, onViewDetails }) {
     const status = seller.currentStatus || 'pending'
     const cfg = statusConfig[status] || statusConfig.pending
-
     const hasCounter = !!seller?.commissionOffer?.counterOffer
-    
-    // Create handlers that properly extract sellerId
     const handleStartReview = () => onStartReview(seller._id)
     const handleAcceptCounter = () => onAcceptCounter(seller._id, seller?.commissionOffer?.counterOffer?.rate)
     const handleResendOffer = () => onResendOffer(seller._id)
-    
     const primaryAction = (() => {
         if (status === 'pending') {
             return { label: 'Start Review', icon: Eye, onClick: handleStartReview }
@@ -1397,25 +1284,18 @@ function SellerCard({ seller, onStartReview, onOpenCommission, onAcceptCounter, 
         }
         return null
     })()
-
-    // For counter offered status, show both Accept Counter AND Counter Offer buttons
     const showBothCounterActions = status === 'counter_offered' && hasCounter
-
     return (
         <div className="rounded-xl border border-gray-800 bg-[#171717] overflow-hidden">
             <div className="p-5">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                    {/* Left: identity + meta */}
                     <div className="flex items-start gap-4 flex-1 min-w-0">
-                        {/* Avatar */}
                         <div
                             className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0"
                             style={{ backgroundColor: '#00FF891a', color: '#00FF89' }}>
                             {(seller.fullName || 'S').charAt(0).toUpperCase()}
                         </div>
-
                         <div className="flex-1 min-w-0">
-                            {/* Name row */}
                             <div className="flex items-center gap-2 flex-wrap">
                                 <h3 className="text-xl font-semibold text-white truncate">{seller.fullName || 'Unnamed Seller'}</h3>
                                 {seller.revenueShareAgreement?.accepted && (
@@ -1425,8 +1305,6 @@ function SellerCard({ seller, onStartReview, onOpenCommission, onAcceptCounter, 
                                     </span>
                                 )}
                             </div>
-
-                            {/* Meta */}
                             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-gray-400">
                                 <span className="flex items-center gap-1.5 min-w-0">
                                     <Mail className="w-4 h-4" />
@@ -1441,8 +1319,6 @@ function SellerCard({ seller, onStartReview, onOpenCommission, onAcceptCounter, 
                                     {formatDate(seller.verification?.submittedAt)}
                                 </span>
                             </div>
-
-                            {/* Niches */}
                             {Array.isArray(seller.niches) && seller.niches.length > 0 && (
                                 <div className="flex items-center gap-2 flex-wrap mt-3">
                                     <span className="text-xs text-gray-500">Niches:</span>
@@ -1457,15 +1333,10 @@ function SellerCard({ seller, onStartReview, onOpenCommission, onAcceptCounter, 
                                     {seller.niches.length > 3 && <span className="text-xs text-gray-500">+{seller.niches.length - 3}</span>}
                                 </div>
                             )}
-
-                            {/* Stepper */}
                             <Stepper current={status} />
                         </div>
                     </div>
-
-                    {/* Right: fixed 2-row column => consistent height across cards */}
                     <div className="w-full sm:w-auto">
-                        {/* Row 1: Chip + info (fixed height) */}
                         <div className="flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium">
                             <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${cfg.chip}`}>
                                 <cfg.icon className="w-4 h-4" />
@@ -1475,19 +1346,15 @@ function SellerCard({ seller, onStartReview, onOpenCommission, onAcceptCounter, 
                                 <p className="text-sm text-gray-200">{cfg.hint}</p>
                             </InfoTip>
                         </div>
-
-                        {/* Row 2: Actions (fixed height). Show both buttons for counter offers */}
                         <div className="flex items-center justify-end gap-2 h-12 mt-3">
                             {showBothCounterActions ? (
                                 <>
-                                    {/* Accept Counter Button */}
                                     <ActionPrimary
                                         onClick={handleAcceptCounter}
                                         label="Accept"
                                         sub={`Accept ${seller.commissionOffer.counterOffer.rate}%`}
                                         icon={CheckCircle}
                                     />
-                                    {/* Counter Offer Button */}
                                     <button
                                         type="button"
                                         onClick={onOpenCommission}
@@ -1510,10 +1377,8 @@ function SellerCard({ seller, onStartReview, onOpenCommission, onAcceptCounter, 
                                 <div
                                     className="w-[140px] h-12 invisible"
                                     aria-hidden
-                                /> // placeholder keeps height
+                                /> 
                             )}
-
-                            {/* Reject */}
                             <button
                                 type="button"
                                 onClick={onReject}
@@ -1522,8 +1387,6 @@ function SellerCard({ seller, onStartReview, onOpenCommission, onAcceptCounter, 
                                 aria-label="Reject application">
                                 <X className="w-4 h-4" />
                             </button>
-
-                            {/* View Details */}
                             <button
                                 type="button"
                                 onClick={onViewDetails}
@@ -1539,27 +1402,22 @@ function SellerCard({ seller, onStartReview, onOpenCommission, onAcceptCounter, 
         </div>
     )
 }
-
 function LegendBannerAlways({ statusConfig }) {
     return (
         <div className="px-4 sm:px-6 pb-3">
             <div
                 className="rounded-xl border border-sky-900/40 bg-gradient-to-br from-[#0b1220] via-[#0b1324] to-[#0e1b2a]
                         shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_10px_30px_rgba(10,20,40,0.25)] w-full">
-                {/* Header */}
                 <div className="flex items-center gap-2 px-4 sm:px-6 pt-4 pb-3 border-b border-white/5">
                     <Info className="w-5 h-5 text-sky-300" />
                     <span className="font-semibold text-sky-300 text-base">Seller Onboarding Flow</span>
                 </div>
-
-                {/* Content */}
                 <div className="px-4 sm:px-6 py-4 sm:py-5">
                     <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                         {Object.entries(statusConfig).map(([key, cfg], index) => (
                             <div
                                 key={key}
                                 className="flex items-center gap-4 flex-1">
-                                {/* Status Card */}
                                 <div className="flex items-start gap-3 rounded-lg border border-white/10 bg-white/5 p-4 flex-1">
                                     <div className="w-9 h-9 rounded-md flex items-center justify-center bg-sky-900/30 text-sky-300 border border-sky-800/50">
                                         <cfg.icon className="w-5 h-5" />
@@ -1569,8 +1427,6 @@ function LegendBannerAlways({ statusConfig }) {
                                         <p className="text-xs text-sky-100/70 leading-relaxed mt-1">{cfg.hint}</p>
                                     </div>
                                 </div>
-
-                                {/* Arrow between states (not after the last one) */}
                                 {index < Object.entries(statusConfig).length - 1 && (
                                     <div className="flex items-center justify-center">
                                         <ArrowRight className="w-6 h-6 text-sky-400/60 flex-shrink-0" />
@@ -1579,7 +1435,6 @@ function LegendBannerAlways({ statusConfig }) {
                             </div>
                         ))}
                     </div>
-
                     <div className="mt-4 text-sm text-sky-100/60">
                         Flow: <span className="text-sky-200">Pending → Under Review → Commission Offered</span>
                     </div>
@@ -1588,6 +1443,3 @@ function LegendBannerAlways({ statusConfig }) {
         </div>
     )
 }
-
-
-

@@ -4,7 +4,6 @@ import { Search, X, Mic, Package, Tag, History, TrendingUp as TrendingUpIcon, Ch
 import { useRouter } from 'next/navigation'
 import toast from '@/lib/utils/toast'
 import productsAPI from '@/lib/api/products'
-
 export default function SearchOverlay({ isOpen, onClose }) {
     const router = useRouter()
     const [searchQuery, setSearchQuery] = useState('')
@@ -14,23 +13,17 @@ export default function SearchOverlay({ isOpen, onClose }) {
     const [isListening, setIsListening] = useState(false)
     const [voiceSupported, setVoiceSupported] = useState(false)
     const searchInputRef = useRef(null)
-
-    // Focus input when opened
     useEffect(() => {
         if (isOpen && searchInputRef.current) {
             searchInputRef.current.focus()
         }
     }, [isOpen])
-
-    // Check voice support
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
             setVoiceSupported(!!SpeechRecognition)
         }
     }, [])
-
-    // Load recent searches
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('recentSearches')
@@ -39,33 +32,26 @@ export default function SearchOverlay({ isOpen, onClose }) {
             }
         }
     }, [])
-
-    // Voice search handler
     const handleVoiceSearch = () => {
         if (!voiceSupported) {
             toast.search.voiceNotSupported()
             return
         }
-
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
         const recognition = new SpeechRecognition()
-
         recognition.continuous = false
         recognition.interimResults = false
         recognition.lang = 'en-US'
-
         recognition.onstart = () => {
             setIsListening(true)
             toast.search.voiceListening()
         }
-
         recognition.onresult = (event) => {
             const transcript = event.results[0][0].transcript
             setSearchQuery(transcript)
             setIsListening(false)
             toast.search.voiceSuccess(transcript)
         }
-
         recognition.onerror = (event) => {
             setIsListening(false)
             if (event.error === 'no-speech') {
@@ -76,27 +62,21 @@ export default function SearchOverlay({ isOpen, onClose }) {
                 toast.search.voiceError(event.error)
             }
         }
-
         recognition.onend = () => {
             setIsListening(false)
         }
-
         if (isListening) {
             recognition.stop()
         } else {
             recognition.start()
         }
     }
-
-    // Perform search using the same API as home page
     const performSearch = async (query) => {
         if (!query.trim()) {
             setSearchResults({ products: [] })
             return
         }
-
         setIsSearching(true)
-
         try {
             const response = await productsAPI.getProducts({
                 search: query.trim(),
@@ -108,7 +88,6 @@ export default function SearchOverlay({ isOpen, onClose }) {
             } else if (response?.products && Array.isArray(response.products)) {
                 products = response.products
             }
-
             setSearchResults({ products })
         } catch (error) {
             console.error('Search error:', error)
@@ -117,61 +96,43 @@ export default function SearchOverlay({ isOpen, onClose }) {
             setIsSearching(false)
         }
     }
-
     useEffect(() => {
         if (searchQuery.trim().length > 2) {
             const timer = setTimeout(() => {
                 performSearch(searchQuery)
             }, 300)
-
             return () => clearTimeout(timer)
         } else {
             setSearchResults({ products: [] })
         }
     }, [searchQuery])
-
-    // Handle search submission (navigate to explore page)
     const handleSearchSubmit = (e) => {
         if (e) e.preventDefault()
         if (searchQuery.trim()) {
-            // Save to recent searches
             const updatedRecent = [searchQuery.trim(), ...recentSearches.filter((s) => s !== searchQuery.trim())].slice(0, 5)
             setRecentSearches(updatedRecent)
             localStorage.setItem('recentSearches', JSON.stringify(updatedRecent))
-
-            // Navigate to explore page with search (same as home page)
             router.push(`/explore?search=${encodeURIComponent(searchQuery.trim())}`)
             onClose()
             setSearchQuery('')
         }
     }
-
-    // Handle product click (navigate to product page)
     const handleProductClick = (product) => {
-        // Save to recent searches
         const updatedRecent = [product.title, ...recentSearches.filter((s) => s !== product.title)].slice(0, 5)
         setRecentSearches(updatedRecent)
         localStorage.setItem('recentSearches', JSON.stringify(updatedRecent))
-
-        // Use slug if available, otherwise fallback to id (same as home page)
         const identifier = product.slug || product.id || product._id
         router.push(`/products/${identifier}`)
         onClose()
         setSearchQuery('')
     }
-
-    // Handle recent search click
     const handleRecentSearchClick = (search) => {
         setSearchQuery(search)
-        // Trigger search immediately
         performSearch(search)
     }
-
     if (!isOpen) return null
-
     return (
         <>
-            {/* Backdrop */}
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -180,8 +141,6 @@ export default function SearchOverlay({ isOpen, onClose }) {
                 className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100]"
                 onClick={onClose}
             />
-
-            {/* Search Modal */}
             <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: -20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -189,10 +148,8 @@ export default function SearchOverlay({ isOpen, onClose }) {
                 transition={{ duration: 0.2 }}
                 className="fixed top-16 sm:top-20 left-0 right-0 z-[101] w-full max-w-4xl mx-auto p-4 sm:p-6 md:p-8">
                 <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700 rounded-2xl shadow-2xl overflow-hidden">
-                    {/* Search Header */}
                     <div className="p-4 sm:p-6 border-b border-gray-700">
                         <form onSubmit={handleSearchSubmit} className="relative">
-                            {/* Left icon wrapper for perfect vertical alignment */}
                             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                                 <Search className="h-5 w-5 text-gray-400" />
                             </div>
@@ -204,8 +161,6 @@ export default function SearchOverlay({ isOpen, onClose }) {
                                 placeholder="Search products, prompts, tools..."
                                 className="w-full h-12 sm:h-14 pl-12 sm:pl-14 pr-24 sm:pr-28 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/30 transition-all text-base sm:text-lg"
                             />
-
-                            {/* Voice Search Button */}
                             {voiceSupported && (
                                 <button
                                     type="button"
@@ -220,8 +175,6 @@ export default function SearchOverlay({ isOpen, onClose }) {
                                     {isListening && <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
                                 </button>
                             )}
-
-                            {/* Close Button */}
                             <button
                                 type="button"
                                 onClick={onClose}
@@ -229,8 +182,6 @@ export default function SearchOverlay({ isOpen, onClose }) {
                                 <X className="h-5 w-5" />
                             </button>
                         </form>
-
-                        {/* Quick Filters */}
                         <div className="flex items-center gap-2 mt-4 overflow-x-auto scrollbar-hide">
                             <button 
                                 onClick={() => setSearchQuery('AI prompts')}
@@ -254,8 +205,6 @@ export default function SearchOverlay({ isOpen, onClose }) {
                             </button>
                         </div>
                     </div>
-
-                    {/* Search Results */}
                     <SearchResults
                         isSearching={isSearching}
                         searchQuery={searchQuery}
@@ -270,7 +219,6 @@ export default function SearchOverlay({ isOpen, onClose }) {
         </>
     )
 }
-
 function SearchResults({ isSearching, searchQuery, searchResults, recentSearches, onProductClick, onRecentSearchClick, onSearchSubmit }) {
     if (isSearching) {
         return (
@@ -286,12 +234,9 @@ function SearchResults({ isSearching, searchQuery, searchResults, recentSearches
             </div>
         )
     }
-
-    // Show products if we have search query and results
     if (searchQuery && searchResults.products?.length > 0) {
         return (
             <div className="max-h-[60vh] overflow-y-auto">
-                {/* Products Section */}
                 <div className="p-4 sm:p-6">
                     <h3 className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
                         <Package className="h-4 w-4" />
@@ -332,8 +277,6 @@ function SearchResults({ isSearching, searchQuery, searchResults, recentSearches
                             </motion.button>
                         ))}
                     </div>
-
-                    {/* View All Results Button */}
                     <motion.button
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -345,8 +288,6 @@ function SearchResults({ isSearching, searchQuery, searchResults, recentSearches
             </div>
         )
     }
-
-    // Show no results if we searched but found nothing
     if (searchQuery && searchQuery.length > 2 && searchResults.products?.length === 0) {
         return (
             <div className="p-8 text-center">
@@ -363,12 +304,9 @@ function SearchResults({ isSearching, searchQuery, searchResults, recentSearches
             </div>
         )
     }
-
-    // Default: Recent & Trending
     return (
         <div className="p-4 sm:p-6 max-h-[60vh] overflow-y-auto">
             <div className="grid sm:grid-cols-2 gap-6">
-                {/* Recent Searches */}
                 {recentSearches.length > 0 && (
                     <div>
                         <h3 className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
@@ -387,8 +325,6 @@ function SearchResults({ isSearching, searchQuery, searchResults, recentSearches
                         </div>
                     </div>
                 )}
-
-                {/* Trending Searches */}
                 <div>
                     <h3 className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
                         <TrendingUpIcon className="h-4 w-4" />

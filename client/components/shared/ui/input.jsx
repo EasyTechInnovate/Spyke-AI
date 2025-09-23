@@ -1,5 +1,4 @@
 import { cn } from '@/lib/utils/cn'
-
 export default function Input({ className, type = "text", ...props }) {
   return (
     <input

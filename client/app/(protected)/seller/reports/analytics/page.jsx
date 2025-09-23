@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
@@ -19,7 +18,6 @@ import {
     Filter
 } from 'lucide-react'
 import analyticsAPI from '@/lib/api/analytics'
-
 const MetricCard = ({ title, value, change, changeType, icon: Icon, color = 'custom' }) => {
     const colorMap = {
         custom: 'from-[#00FF89] to-[#00E67A]',
@@ -29,7 +27,6 @@ const MetricCard = ({ title, value, change, changeType, icon: Icon, color = 'cus
         rose: 'from-rose-500 to-rose-600',
         indigo: 'from-indigo-500 to-indigo-600'
     }
-
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -61,7 +58,6 @@ const MetricCard = ({ title, value, change, changeType, icon: Icon, color = 'cus
         </motion.div>
     )
 }
-
 const QuickActions = () => {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -72,7 +68,6 @@ const QuickActions = () => {
                 <BarChart3 className="w-5 h-5 text-[#00FF89]" />
                 <span className="text-white font-medium">Product Analytics</span>
             </motion.button>
-            
             <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -80,7 +75,6 @@ const QuickActions = () => {
                 <TrendingUp className="w-5 h-5 text-blue-400" />
                 <span className="text-white font-medium">Sales Report</span>
             </motion.button>
-            
             <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -88,7 +82,6 @@ const QuickActions = () => {
                 <Users className="w-5 h-5 text-purple-400" />
                 <span className="text-white font-medium">Customer Insights</span>
             </motion.button>
-            
             <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -99,18 +92,15 @@ const QuickActions = () => {
         </div>
     )
 }
-
 export default function SellerAnalyticsOverview() {
     const [loading, setLoading] = useState(true)
     const [dashboardData, setDashboardData] = useState(null)
     const [refreshing, setRefreshing] = useState(false)
     const [timeRange, setTimeRange] = useState('30d')
-
     const loadAnalytics = async (silent = false) => {
         try {
             if (!silent) setLoading(true)
             if (silent) setRefreshing(true)
-
             const data = await analyticsAPI.seller.getDashboard()
             setDashboardData(data)
         } catch (error) {
@@ -120,15 +110,12 @@ export default function SellerAnalyticsOverview() {
             setRefreshing(false)
         }
     }
-
     useEffect(() => {
         loadAnalytics()
     }, [])
-
     const handleRefresh = () => {
         loadAnalytics(true)
     }
-
     if (loading) {
         return (
             <div className="min-h-screen bg-black text-white p-6">
@@ -149,17 +136,14 @@ export default function SellerAnalyticsOverview() {
             </div>
         )
     }
-
     return (
         <div className="min-h-screen bg-black text-white p-6">
             <div className="max-w-7xl mx-auto space-y-8">
-                {/* Header */}
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-bold mb-2">Analytics Overview</h1>
                         <p className="text-gray-400">Comprehensive insights into your seller performance</p>
                     </div>
-                    
                     <div className="flex items-center gap-3">
                         <select
                             value={timeRange}
@@ -170,7 +154,6 @@ export default function SellerAnalyticsOverview() {
                             <option value="90d">Last 90 days</option>
                             <option value="1y">Last year</option>
                         </select>
-                        
                         <button
                             onClick={handleRefresh}
                             disabled={refreshing}
@@ -180,8 +163,6 @@ export default function SellerAnalyticsOverview() {
                         </button>
                     </div>
                 </div>
-
-                {/* Metrics Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <MetricCard
                         title="Total Revenue"
@@ -216,16 +197,11 @@ export default function SellerAnalyticsOverview() {
                         color="amber"
                     />
                 </div>
-
-                {/* Quick Actions */}
                 <div>
                     <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
                     <QuickActions />
                 </div>
-
-                {/* Charts Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Revenue Chart Placeholder */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -244,8 +220,6 @@ export default function SellerAnalyticsOverview() {
                             </div>
                         </div>
                     </motion.div>
-
-                    {/* Top Products */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -280,8 +254,6 @@ export default function SellerAnalyticsOverview() {
                         </div>
                     </motion.div>
                 </div>
-
-                {/* Recent Activity */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}

@@ -1,13 +1,10 @@
 'use client'
-
 import { useState, useEffect, useMemo } from 'react'
 import { Users, User, DollarSign, TrendingUp, TrendingDown, RefreshCw, AlertCircle, Calendar, Heart, Crown, Activity } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Line } from 'recharts'
 import analyticsAPI from '@/lib/api/analytics'
 import { AnalyticsLoadingScreen } from '../AnalyticsLoadingScreen'
-
-// Enhanced utility functions matching other tabs
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -16,11 +13,9 @@ const formatCurrency = (amount) => {
         maximumFractionDigits: 0
     }).format(amount || 0)
 }
-
 const formatNumber = (num) => {
     return new Intl.NumberFormat('en-US').format(num || 0)
 }
-
 const formatDate = (date) => {
     return new Date(date).toLocaleDateString('en-US', { 
         month: 'short', 
@@ -28,8 +23,6 @@ const formatDate = (date) => {
         year: 'numeric'
     })
 }
-
-// Customer Card Component with enhanced design
 const CustomerCard = ({ customer, index, rank }) => (
     <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -67,7 +60,6 @@ const CustomerCard = ({ customer, index, rank }) => (
                 }`} />
             )}
         </div>
-
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <div className="text-center">
                 <div className="text-white font-bold text-lg">{formatNumber(customer.totalPurchases || 0)}</div>
@@ -86,7 +78,6 @@ const CustomerCard = ({ customer, index, rank }) => (
                 <div className="text-gray-400 text-xs">Days Active</div>
             </div>
         </div>
-
         <div className="flex items-center justify-between pt-4 border-t border-gray-700">
             <div className="text-sm text-gray-400">
                 First: {customer.firstPurchase ? formatDate(customer.firstPurchase) : 'N/A'}
@@ -97,25 +88,20 @@ const CustomerCard = ({ customer, index, rank }) => (
         </div>
     </motion.div>
 )
-
-// Customer Acquisition Chart with proper line chart
 const AcquisitionChart = ({ acquisitionTrend }) => {
     const chartData = useMemo(() => {
         if (!acquisitionTrend?.length) return []
-        
         return acquisitionTrend.map((day) => ({
             date: day._id?.date ? new Date(day._id.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A',
             newCustomers: day.newCustomers || 0
         }))
     }, [acquisitionTrend])
-
     return (
         <div className="bg-gray-800 rounded-lg p-6">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-emerald-400" />
                 Customer Acquisition Trend
             </h3>
-            
             <div className="h-64 relative">
                 {chartData.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
@@ -171,22 +157,17 @@ const AcquisitionChart = ({ acquisitionTrend }) => {
         </div>
     )
 }
-
-// Main CustomersTab component with API integration
 export default function CustomersTab({ timeRange = '30d' }) {
     const [customerData, setCustomerData] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [refreshing, setRefreshing] = useState(false)
     const [currentPage, setCurrentPage] = useState(1)
-
-    // Fetch customer data from API
     const fetchCustomerData = async (silent = false) => {
         try {
             if (!silent) setLoading(true)
             if (silent) setRefreshing(true)
             setError(null)
-
             const data = await analyticsAPI.seller.getCustomers({ 
                 page: currentPage, 
                 limit: 20 
@@ -200,13 +181,9 @@ export default function CustomersTab({ timeRange = '30d' }) {
             setRefreshing(false)
         }
     }
-
-    // Initial load and page changes
     useEffect(() => {
         fetchCustomerData()
     }, [currentPage, timeRange])
-
-    // Calculate customer insights from real data
     const customerInsights = useMemo(() => {
         if (!customerData) {
             return {
@@ -216,45 +193,31 @@ export default function CustomersTab({ timeRange = '30d' }) {
                 repeatRate: 0
             }
         }
-
-        // Use pagination total count for accurate total customers
         const totalCustomers = customerData.pagination?.totalCount || 0
-        
-        // Calculate from current page customers (limited data)
         const customers = customerData.customers || []
         const totalSpent = customers.reduce((sum, customer) => sum + (customer.totalSpent || 0), 0)
         const avgCustomerValue = customers.length > 0 ? totalSpent / customers.length : 0
         const repeatCustomers = customers.filter(customer => (customer.totalPurchases || 0) > 1).length
         const repeatRate = customers.length > 0 ? (repeatCustomers / customers.length) * 100 : 0
-
         return {
-            totalCustomers, // This shows the real total from pagination
-            avgCustomerValue, // This is calculated from current page only
-            repeatCustomers, // From current page
-            repeatRate // From current page
+            totalCustomers, 
+            avgCustomerValue, 
+            repeatCustomers, 
+            repeatRate 
         }
     }, [customerData])
-
-    // Get top customers
     const topCustomers = useMemo(() => {
         if (!customerData?.customers?.length) return []
-        
         return [...customerData.customers]
             .sort((a, b) => (b.totalSpent || 0) - (a.totalSpent || 0))
             .slice(0, 5)
     }, [customerData])
-
-    // Manual refresh
     const handleRefresh = () => {
         fetchCustomerData(true)
     }
-
-    // Loading state
     if (loading && !customerData) {
         return <AnalyticsLoadingScreen variant="customers" />
     }
-
-    // Error state
     if (error) {
         return (
             <div className="min-h-[600px] flex items-center justify-center">
@@ -276,8 +239,6 @@ export default function CustomersTab({ timeRange = '30d' }) {
             </div>
         )
     }
-
-    // No data state
     if (!customerData?.customers?.length) {
         return (
             <div className="min-h-[600px] flex items-center justify-center">
@@ -301,10 +262,8 @@ export default function CustomersTab({ timeRange = '30d' }) {
             </div>
         )
     }
-
     return (
         <div className="space-y-6">
-            {/* Header with refresh button */}
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-2xl font-bold text-white">Customer Analytics</h2>
@@ -318,8 +277,6 @@ export default function CustomersTab({ timeRange = '30d' }) {
                     Refresh
                 </button>
             </div>
-
-            {/* Customer Metrics Cards - Using exact SalesTab design */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -334,7 +291,6 @@ export default function CustomersTab({ timeRange = '30d' }) {
                     <div className="text-2xl font-bold text-white mb-1">{formatNumber(customerInsights.totalCustomers)}</div>
                     <div className="text-sm text-emerald-400">All time</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -349,7 +305,6 @@ export default function CustomersTab({ timeRange = '30d' }) {
                     <div className="text-2xl font-bold text-white mb-1">{formatCurrency(customerInsights.avgCustomerValue)}</div>
                     <div className="text-sm text-gray-400">Per customer</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -364,7 +319,6 @@ export default function CustomersTab({ timeRange = '30d' }) {
                     <div className="text-2xl font-bold text-white mb-1">{formatNumber(customerInsights.repeatCustomers)}</div>
                     <div className="text-sm text-gray-400">Multiple purchases</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -386,18 +340,13 @@ export default function CustomersTab({ timeRange = '30d' }) {
                     <div className="text-sm text-gray-400">Customer loyalty</div>
                 </motion.div>
             </div>
-
-            {/* Customer Acquisition Trend Chart - Moved to Top */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}>
                 <AcquisitionChart acquisitionTrend={customerData.acquisitionTrend} />
             </motion.div>
-
-            {/* Customer Management Section */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                {/* All Customers List - Takes 3 columns */}
                 <div className="lg:col-span-3">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -409,20 +358,15 @@ export default function CustomersTab({ timeRange = '30d' }) {
                                 <Users className="w-5 h-5 text-emerald-400" />
                                 All Customers ({formatNumber(customerInsights.totalCustomers)})
                             </h3>
-                            
-                            {/* Top customers indicator */}
                             <div className="text-sm text-gray-400">
                                 Showing {customerData.customers.length} of {customerInsights.totalCustomers}
                             </div>
                         </div>
-                        
                         <div className="space-y-4">
                             {customerData.customers.map((customer, index) => {
-                                // Calculate rank based on total spent for visual ranking
                                 const sortedCustomers = [...customerData.customers].sort((a, b) => (b.totalSpent || 0) - (a.totalSpent || 0))
                                 const rank = sortedCustomers.findIndex(c => c.userId === customer.userId) + 1
                                 const isTopCustomer = rank <= 3
-                                
                                 return (
                                     <motion.div
                                         key={customer.userId || index}
@@ -464,14 +408,11 @@ export default function CustomersTab({ timeRange = '30d' }) {
                                                     <p className="text-gray-400 text-sm">{customer.emailAddress || 'No email'}</p>
                                                 </div>
                                             </div>
-                                            
-                                            {/* Quick stats on the right */}
                                             <div className="text-right">
                                                 <div className="text-emerald-400 font-bold text-lg">{formatCurrency(customer.totalSpent || 0)}</div>
                                                 <div className="text-gray-400 text-sm">{customer.totalPurchases || 0} purchases</div>
                                             </div>
                                         </div>
-
                                         <div className="grid grid-cols-4 gap-4 mb-4">
                                             <div className="text-center">
                                                 <div className="text-white font-bold">{formatNumber(customer.totalPurchases || 0)}</div>
@@ -490,7 +431,6 @@ export default function CustomersTab({ timeRange = '30d' }) {
                                                 <div className="text-gray-400 text-xs">Days Active</div>
                                             </div>
                                         </div>
-
                                         <div className="flex items-center justify-between pt-4 border-t border-gray-600">
                                             <div className="text-sm text-gray-400">
                                                 First: {customer.firstPurchase ? formatDate(customer.firstPurchase) : 'N/A'}
@@ -503,8 +443,6 @@ export default function CustomersTab({ timeRange = '30d' }) {
                                 )
                             })}
                         </div>
-
-                        {/* Pagination */}
                         {customerData.pagination && customerData.pagination.totalPages > 1 && (
                             <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-700">
                                 <div className="text-gray-400 text-sm">
@@ -531,10 +469,7 @@ export default function CustomersTab({ timeRange = '30d' }) {
                         )}
                     </motion.div>
                 </div>
-
-                {/* Customer Insights Sidebar - Takes 1 column */}
                 <div className="space-y-6">
-                    {/* Quick Stats Summary */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -544,28 +479,23 @@ export default function CustomersTab({ timeRange = '30d' }) {
                             <Activity className="w-5 h-5 text-emerald-400" />
                             Quick Stats
                         </h3>
-                        
                         <div className="space-y-4">
                             <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
                                 <div className="text-gray-400 text-sm">Average Value</div>
                                 <div className="text-white font-bold">{formatCurrency(customerInsights.avgCustomerValue)}</div>
                             </div>
-                            
                             <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
                                 <div className="text-gray-400 text-sm">Repeat Rate</div>
                                 <div className={`font-bold ${customerInsights.repeatRate >= 50 ? 'text-emerald-400' : 'text-white'}`}>
                                     {customerInsights.repeatRate.toFixed(1)}%
                                 </div>
                             </div>
-                            
                             <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
                                 <div className="text-gray-400 text-sm">Loyal Customers</div>
                                 <div className="text-white font-bold">{formatNumber(customerInsights.repeatCustomers)}</div>
                             </div>
                         </div>
                     </motion.div>
-
-                    {/* Customer Value Distribution */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -575,14 +505,12 @@ export default function CustomersTab({ timeRange = '30d' }) {
                             <DollarSign className="w-5 h-5 text-emerald-400" />
                             Value Tiers
                         </h3>
-                        
                         <div className="space-y-3">
                             {customerData.customers
                                 .sort((a, b) => (b.totalSpent || 0) - (a.totalSpent || 0))
                                 .map((customer, index) => {
                                     const isHighValue = (customer.totalSpent || 0) > 1000
                                     const isMediumValue = (customer.totalSpent || 0) > 500 && (customer.totalSpent || 0) <= 1000
-                                    
                                     return (
                                         <div key={customer.userId || index} className="flex items-center gap-3 p-2">
                                             <div className={`w-3 h-3 rounded-full ${
@@ -598,7 +526,6 @@ export default function CustomersTab({ timeRange = '30d' }) {
                                 })
                             }
                         </div>
-                        
                         <div className="mt-4 pt-4 border-t border-gray-700">
                             <div className="flex items-center gap-2 text-xs text-gray-400">
                                 <div className="flex items-center gap-1">

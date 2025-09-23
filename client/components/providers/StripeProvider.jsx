@@ -1,12 +1,9 @@
 'use client'
-
 import { Elements } from '@stripe/react-stripe-js'
 import getStripe, { stripeOptions } from '@/lib/stripe/stripe'
 import { useEffect, useState } from 'react'
-
 export default function StripeProvider({ children }) {
     const [stripePromise, setStripePromise] = useState(null)
-
     useEffect(() => {
         const initializeStripe = async () => {
             try {
@@ -18,14 +15,11 @@ export default function StripeProvider({ children }) {
                 console.error('Failed to initialize Stripe:', error)
             }
         }
-
         initializeStripe()
     }, [])
-
     if (!stripePromise) {
         return children
     }
-
     return (
         <Elements stripe={stripePromise} options={stripeOptions}>
             {children}

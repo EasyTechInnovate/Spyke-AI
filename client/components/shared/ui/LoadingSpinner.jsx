@@ -4,7 +4,6 @@ export default function LoadingSpinner({ message = "Loading...", size = "default
         default: "h-12 w-12", 
         large: "h-16 w-16"
     }
-
     return (
         <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">

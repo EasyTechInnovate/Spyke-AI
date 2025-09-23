@@ -1,7 +1,5 @@
 'use client'
-
 import { DESIGN_TOKENS, COMPONENT_VARIANTS, getToken } from './tokens'
-
 export const DSButton = ({ 
   variant = 'primary', 
   size = 'medium', 
@@ -11,7 +9,6 @@ export const DSButton = ({
   ...props 
 }) => {
   const variantConfig = COMPONENT_VARIANTS.button[variant]
-  
   const baseStyles = {
     height: getToken(`component.button.height.${size}`),
     paddingLeft: getToken(`component.button.paddingX.${size}`),
@@ -34,7 +31,6 @@ export const DSButton = ({
     userSelect: 'none',
     opacity: loading ? 0.7 : 1
   }
-
   return (
     <button
       style={baseStyles}
@@ -49,7 +45,6 @@ export const DSButton = ({
     </button>
   )
 }
-
 export const DSHeading = ({ 
   level = 1, 
   variant = 'hero', 
@@ -59,10 +54,7 @@ export const DSHeading = ({
 }) => {
   const Tag = `h${level}`
   const variantConfig = COMPONENT_VARIANTS.text[variant] || {}
-  
-  // Check if className contains color-related classes
   const hasColorClass = className.includes('text-') || className.includes('color-')
-  
   const styles = {
     fontSize: variantConfig.fontSize || getToken('typography.fontSize.4xl'),
     lineHeight: variantConfig.lineHeight || getToken('typography.lineHeight.tight'),
@@ -70,10 +62,8 @@ export const DSHeading = ({
     fontWeight: variantConfig.fontWeight || getToken('typography.fontWeight.bold'),
     fontFamily: variantConfig.fontFamily || getToken('typography.fontFamily.title'),
     margin: 0,
-    // Only set color to inherit if no color class is provided
     ...(hasColorClass ? {} : { color: 'inherit' })
   }
-
   return (
     <Tag
       style={styles}
@@ -84,7 +74,6 @@ export const DSHeading = ({
     </Tag>
   )
 }
-
 export const DSText = ({ 
   variant = 'body', 
   size = 'base',
@@ -95,7 +84,6 @@ export const DSText = ({
 }) => {
   const Tag = as
   const variantConfig = COMPONENT_VARIANTS.text[variant]
-  
   const styles = {
     fontSize: variantConfig?.fontSize || getToken(`typography.fontSize.${size}`),
     lineHeight: variantConfig?.lineHeight || getToken('typography.lineHeight.normal'),
@@ -105,7 +93,6 @@ export const DSText = ({
     margin: 0,
     color: 'inherit'
   }
-
   return (
     <Tag
       style={styles}
@@ -116,7 +103,6 @@ export const DSText = ({
     </Tag>
   )
 }
-
 export const DSStack = ({ 
   gap = 'medium', 
   direction = 'column', 
@@ -127,7 +113,6 @@ export const DSStack = ({
   ...props 
 }) => {
   const gapValue = getToken(`component.hero.gap.${gap}`) || getToken(`spacing.${gap}`)
-  
   const styles = {
     display: 'flex',
     flexDirection: direction,
@@ -135,7 +120,6 @@ export const DSStack = ({
     justifyContent: justify,
     gap: gapValue
   }
-
   return (
     <div
       style={styles}
@@ -146,7 +130,6 @@ export const DSStack = ({
     </div>
   )
 }
-
 export const DSContainer = ({ 
   maxWidth = 'hero',
   padding = 'responsive',
@@ -157,7 +140,6 @@ export const DSContainer = ({
   const maxWidthValue = maxWidth === 'hero' 
     ? getToken('component.hero.maxWidth') 
     : getToken(`breakpoints.${maxWidth}`)
-  
   const paddingStyles = padding === 'responsive' ? {
     paddingLeft: 'clamp(1rem, 4vw, 2rem)',
     paddingRight: 'clamp(1rem, 4vw, 2rem)'
@@ -165,7 +147,6 @@ export const DSContainer = ({
     paddingLeft: getToken(`spacing.${padding}`),
     paddingRight: getToken(`spacing.${padding}`)
   }
-  
   const styles = {
     maxWidth: maxWidthValue,
     marginLeft: 'auto',
@@ -173,7 +154,6 @@ export const DSContainer = ({
     width: '100%',
     ...paddingStyles
   }
-
   return (
     <div
       style={styles}
@@ -184,8 +164,6 @@ export const DSContainer = ({
     </div>
   )
 }
-
-// Loading States Component
 export const DSLoadingState = ({ 
   type = 'skeleton', 
   variant = 'default',
@@ -201,7 +179,6 @@ export const DSLoadingState = ({
       borderRadius: getToken('borderRadius.md'),
       animation: 'ds-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
     }
-
     return (
       <div
         className={`ds-skeleton ${className}`}
@@ -209,7 +186,6 @@ export const DSLoadingState = ({
       />
     )
   }
-
   if (type === 'spinner') {
     const styles = {
       width: '24px',
@@ -219,7 +195,6 @@ export const DSLoadingState = ({
       borderRadius: '50%',
       animation: 'ds-spin 1s linear infinite'
     }
-
     return (
       <div 
         className={`ds-spinner ${className}`}
@@ -227,7 +202,6 @@ export const DSLoadingState = ({
       />
     )
   }
-
   if (type === 'dots') {
     return (
       <div className={`ds-loading-dots ${className}`}>
@@ -237,10 +211,8 @@ export const DSLoadingState = ({
       </div>
     )
   }
-
   return null
 }
-
 export const DSBadge = ({
   variant = 'primary',
   size = 'medium',
@@ -251,9 +223,9 @@ export const DSBadge = ({
 }) => {
   const variantStyles = {
     primary: {
-      backgroundColor: `${getToken('colors.brand.primary')}0D`, // 5% opacity
+      backgroundColor: `${getToken('colors.brand.primary')}0D`, 
       color: getToken('colors.brand.primary'),
-      border: `1px solid ${getToken('colors.brand.primary')}1A` // 10% opacity
+      border: `1px solid ${getToken('colors.brand.primary')}1A` 
     },
     secondary: {
       backgroundColor: `${getToken('colors.brand.secondary')}0D`,
@@ -261,7 +233,6 @@ export const DSBadge = ({
       border: `1px solid ${getToken('colors.brand.secondary')}1A`
     }
   }
-
   const sizeStyles = {
     small: {
       padding: `${getToken('spacing.1')} ${getToken('spacing.3')}`,
@@ -272,7 +243,6 @@ export const DSBadge = ({
       fontSize: getToken('typography.fontSize.sm')
     }
   }
-
   const styles = {
     ...variantStyles[variant],
     ...sizeStyles[size],
@@ -283,7 +253,6 @@ export const DSBadge = ({
     fontFamily: getToken('typography.fontFamily.body'),
     fontWeight: getToken('typography.fontWeight.medium')
   }
-
   return (
     <span
       style={styles}
@@ -295,8 +264,6 @@ export const DSBadge = ({
     </span>
   )
 }
-
-// Stats Card Component
 export const DSStatsCard = ({
   icon: Icon,
   value,
@@ -312,7 +279,6 @@ export const DSStatsCard = ({
     alignItems: 'center',
     gap: getToken('spacing.3')
   }
-
   const iconStyles = {
     display: 'inline-flex',
     alignItems: 'center',
@@ -323,22 +289,19 @@ export const DSStatsCard = ({
     borderRadius: getToken('borderRadius.xl'),
     marginBottom: getToken('spacing.1')
   }
-
   const valueStyles = {
-    fontSize: 'clamp(1rem, 2.5vw, 1.375rem)', // Further reduced to match CSS
+    fontSize: 'clamp(1rem, 2.5vw, 1.375rem)', 
     fontWeight: getToken('typography.fontWeight.bold'),
     fontFamily: getToken('typography.fontFamily.title'),
     color: getToken('colors.brand.white'),
     margin: 0
   }
-
   const labelStyles = {
-    fontSize: getToken('typography.fontSize.xs'), // Reduced from sm to xs
+    fontSize: getToken('typography.fontSize.xs'), 
     color: getToken('colors.text.secondary.dark'),
     fontFamily: getToken('typography.fontFamily.body'),
     margin: 0
   }
-
   return (
     <div
       style={styles}
@@ -353,8 +316,6 @@ export const DSStatsCard = ({
     </div>
   )
 }
-
-// Form Input Components for Design System
 export const DSFormInput = ({
   label,
   name,
@@ -375,7 +336,6 @@ export const DSFormInput = ({
 }) => {
   const hasError = touched && error
   const hasSuccess = touched && !error && value
-
   return (
     <div className="space-y-2">
       {label && (
@@ -428,8 +388,6 @@ export const DSFormInput = ({
     </div>
   )
 }
-
-// Checkbox Component
 export const DSCheckbox = ({
   label,
   name,
@@ -444,7 +402,6 @@ export const DSCheckbox = ({
   ...props
 }) => {
   const hasError = touched && error
-
   return (
     <div className="space-y-2">
       <label className={`flex items-start gap-3 cursor-pointer group ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}>
@@ -477,29 +434,23 @@ export const DSCheckbox = ({
     </div>
   )
 }
-
-// Password Strength Indicator
 export const DSPasswordStrength = ({ password, strength }) => {
   if (!password) return null
-
   const getStrengthColor = (score) => {
     if (score <= 2) return 'bg-red-500'
     if (score === 3) return 'bg-yellow-500'
     return 'bg-[#00FF89]'
   }
-
   const getStrengthText = (score) => {
     if (score <= 2) return 'Weak password'
     if (score === 3) return 'Good password'
     return 'Strong password'
   }
-
   const getStrengthTextColor = (score) => {
     if (score <= 2) return 'text-red-400'
     if (score === 3) return 'text-yellow-400'
     return 'text-[#00FF89]'
   }
-
   return (
     <div className="space-y-2 mt-2">
       <div className="flex gap-1">

@@ -1,5 +1,4 @@
 import './globals.css'
-// import { Toaster } from 'sonner'
 import { appConfig } from '@/lib/config'
 import { fontVariables } from '@/lib/fonts'
 import WhatsAppButton from '@/components/shared/WhatsAppButton'
@@ -7,8 +6,6 @@ import ConditionalFooter from '@/components/shared/layout/ConditionalFooter'
 import ConditionalHeader from '@/components/shared/layout/ConditionalHeader'
 import { NotificationProvider } from '@/components/shared/NotificationProvider'
 import StripeProvider from '@/components/providers/StripeProvider'
-
-
 const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
@@ -36,19 +33,16 @@ const structuredData = {
         }
     }
 }
-
 export const viewport = {
     width: 'device-width',
     initialScale: 1,
     maximumScale: 5,
     userScalable: true
 }
-
 export const themeColor = [
     { media: '(prefers-color-scheme: light)', color: '#00FF89' },
     { media: '(prefers-color-scheme: dark)', color: '#00FF89' }
 ]
-
 export const metadata = {
     metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://spykeai.com'),
     title: {
@@ -157,7 +151,6 @@ export const metadata = {
         apple: '/apple-icon.png'
     }
 }
-
 export default function RootLayout({ children }) {
     return (
         <html
@@ -165,10 +158,7 @@ export default function RootLayout({ children }) {
             className={`${fontVariables} scroll-smooth`}>
             <head>
                 <meta charSet="utf-8" />
-
-                {/* Pinterest Domain Verification */}
                 <meta name="p:domain_verify" content="ac2574a26c2baac8234b798c9c6c2724"/>
-
                 <link
                     rel="icon"
                     href="/favicon.ico"
@@ -188,8 +178,6 @@ export default function RootLayout({ children }) {
                     href="/logo-icon.svg"
                     color="#00FF89"
                 />
-
-                {/* Google Tag Manager */}
                 <script
                     dangerouslySetInnerHTML={{
                         __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -199,8 +187,6 @@ export default function RootLayout({ children }) {
                         })(window,document,'script','dataLayer','GTM-5GN3WZM9');`
                     }}
                 />
-
-                {/* Google Analytics 4 */}
                 <script async src="https://www.googletagmanager.com/gtag/js?id=G-5F5D2WWDBN"></script>
                 <script
                     dangerouslySetInnerHTML={{
@@ -212,8 +198,6 @@ export default function RootLayout({ children }) {
                         `
                     }}
                 />
-
-                {/* Meta Pixel */}
                 <script
                     dangerouslySetInnerHTML={{
                         __html: `
@@ -234,8 +218,6 @@ export default function RootLayout({ children }) {
                     <img height="1" width="1" style={{display:'none'}}
                          src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1" />
                 </noscript>
-
-                {/* Amplitude Analytics */}
                 <script src="https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz"></script>
                 <script src="https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.8.0-min.js.gz"></script>
                 <script
@@ -243,8 +225,6 @@ export default function RootLayout({ children }) {
                         __html: `window.amplitude.add(window.sessionReplay.plugin({sampleRate: 1}));window.amplitude.init('60f1e4c9467fa9b1c4e6748e2794dd53', {"autocapture":{"elementInteractions":true}});`
                     }}
                 />
-
-                {/* Optional (but safe) font preconnect */}
                 <link
                     rel="dns-prefetch"
                     href="https://fonts.googleapis.com"
@@ -262,26 +242,20 @@ export default function RootLayout({ children }) {
                     href="https://fonts.gstatic.com"
                     crossOrigin="anonymous"
                 />
-
                 <link
                     rel="preload"
                     as="image"
                     href="/og-image.png"
                     imageSrcSet="/og-image.png 1200w"
                 />
-
-                {/* Structured Data */}
                 <script
                     type="application/ld+json"
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
                 />
             </head>
-
             <body
                 className={`font-league-spartan bg-brand-dark text-white antialiased min-h-screen`}
                 suppressHydrationWarning={true}>
-
-                {/* Google Tag Manager (noscript) */}
                 <noscript>
                     <iframe
                         src="https://www.googletagmanager.com/ns.html?id=GTM-5GN3WZM9"
@@ -290,13 +264,11 @@ export default function RootLayout({ children }) {
                         style={{display:'none',visibility:'hidden'}}
                     ></iframe>
                 </noscript>
-
                 <a
                     href="#main-content"
                     className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-brand-primary text-brand-primary-text px-4 py-2 rounded-md font-bold z-50">
                     Skip to main content
                 </a>
-
                 <ConditionalHeader />
                 <StripeProvider>
                     <NotificationProvider>
@@ -305,9 +277,7 @@ export default function RootLayout({ children }) {
                 </StripeProvider>
                 <ConditionalFooter />
                 <WhatsAppButton />
-
             </body>
         </html>
     )
 }
-

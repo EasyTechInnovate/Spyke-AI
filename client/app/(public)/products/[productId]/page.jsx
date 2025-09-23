@@ -1,5 +1,4 @@
 'use client'
-
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -35,7 +34,6 @@ import ProductBreadcrumb from '@/components/product/ProductBreadcrumb'
 import ProductHero from '@/components/product/ProductHero'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
 import Notification from '@/components/shared/Notification'
-
 const PRODUCT_TABS = [
     {
         id: 'overview',
@@ -80,8 +78,6 @@ const PRODUCT_TABS = [
         component: ProductFAQ
     }
 ]
-
-// Helper function to safely convert any value to string
 const safeToString = (value) => {
     if (value === null || value === undefined) return ''
     if (typeof value === 'string') return value
@@ -93,11 +89,8 @@ const safeToString = (value) => {
     }
     return String(value)
 }
-
-// Safe data processing
 const getSafeSellerData = (data) => {
     if (!data) return null
-
     return {
         ...data,
         fullName: safeToString(data.fullName) || 'Unknown Seller',
@@ -114,36 +107,25 @@ const getSafeSellerData = (data) => {
         }
     }
 }
-
 export default function ProductPage() {
-    // Simple notification state
     const [notifications, setNotifications] = useState([])
-
-    // Add notification function
     const addNotification = useCallback((message, type = 'info') => {
         const id = Date.now() + Math.random()
         const newNotification = { id, message, type }
         setNotifications((prev) => [...prev, newNotification])
     }, [])
-
-    // Remove notification function
     const removeNotification = useCallback((id) => {
         setNotifications((prev) => prev.filter((notification) => notification.id !== id))
     }, [])
-
     const params = useParams()
     const router = useRouter()
     const productSlug = params.productId
     const { isAuthenticated, requireAuth } = useAuth()
     const { addToCart, isInCart, loading: cartLoading } = useCart()
-
-    // Core state
     const [product, setProduct] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [mounted, setMounted] = useState(false)
-
-    // UI state
     const [selectedImage, setSelectedImage] = useState(0)
     const [liked, setLiked] = useState(false)
     const [upvoted, setUpvoted] = useState(false)
@@ -151,22 +133,13 @@ export default function ProductPage() {
     const [showCopied, setShowCopied] = useState(false)
     const [showStickyBar, setShowStickyBar] = useState(false)
     const [addingToCart, setAddingToCart] = useState(false)
-
-    // Tab state
     const [activeTab, setActiveTab] = useState('overview')
-
-    // Data state
     const [relatedProducts, setRelatedProducts] = useState([])
-
-    // Refs
     const ctaRef = useRef(null)
-
-    // Computed values
     const discountPercentage = useMemo(() => {
         if (!product || product.originalPrice <= product.price) return 0
         return Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     }, [product])
-
     const inCart = useMemo(() => {
         if (!mounted || !product || !isInCart || cartLoading) return false
         try {
@@ -175,52 +148,36 @@ export default function ProductPage() {
             return false
         }
     }, [mounted, product, isInCart, cartLoading])
-
     const savingsAmount = useMemo(() => {
         if (!product || !product.originalPrice) return 0
         return Math.round(product.originalPrice - product.price)
     }, [product])
-
-    // Clean hasPurchased checking - only rely on API data
     const hasPurchased = useMemo(() => {
         return product?.userAccess?.hasPurchased || false
     }, [product])
-
     const isOwner = useMemo(() => {
         return product?.userAccess?.isOwner || false
     }, [product])
-
-    // Handle hydration and scroll effects
     useEffect(() => {
         setMounted(true)
     }, [])
-
-    // Handle scroll for sticky bar
     useEffect(() => {
         if (!mounted || !ctaRef.current) return
-
         const handleScroll = () => {
             const ctaRect = ctaRef.current?.getBoundingClientRect()
             setShowStickyBar(ctaRect && ctaRect.bottom < 0)
         }
-
         window.addEventListener('scroll', handleScroll, { passive: true })
         return () => window.removeEventListener('scroll', handleScroll)
     }, [mounted])
-
-    // Fetch product data
     useEffect(() => {
         const fetchProduct = async () => {
             try {
                 setLoading(true)
                 setError(null)
-
                 const response = await productsAPI.getProductBySlug(productSlug)
-
                 if (response && response.data) {
                     setProduct(response.data)
-
-                    // Fetch related products
                     if (response.data._id) {
                         try {
                             const relatedResponse = await productsAPI.getRelatedProducts(response.data._id, 4)
@@ -231,9 +188,6 @@ export default function ProductPage() {
                             console.warn('Failed to fetch related products:', relatedError)
                         }
                     }
-
-                    // Note: Promocodes are now handled by the ProductPromoDisplay component
-                    // which uses the smart applicable API instead of manual filtering
                 } else {
                     console.error('No product data in response:', response)
                     setError('Product not found')
@@ -251,17 +205,13 @@ export default function ProductPage() {
                 setLoading(false)
             }
         }
-
         if (productSlug) {
             fetchProduct()
         }
     }, [productSlug])
-
-    // Event handlers
     const handleBack = useCallback(() => {
         router.back()
     }, [router])
-
     const handleAddToCart = useCallback(async () => {
         if (!product) return
         if (!isAuthenticated) {
@@ -273,7 +223,6 @@ export default function ProductPage() {
             }
             return
         }
-
         if (hasPurchased) {
             addNotification('You already own this product', 'info')
             return
@@ -282,16 +231,12 @@ export default function ProductPage() {
             addNotification("You can't add your own product to cart", 'info')
             return
         }
-
         const alreadyInCart = mounted && !cartLoading && isInCart && (isInCart(product._id) || isInCart(product.id))
         if (alreadyInCart) {
             addNotification('Product is already in cart', 'info')
             return
         }
-
-        // Set loading state for the button
         setAddingToCart(true)
-
         const cartProduct = {
             id: product._id,
             title: product.title,
@@ -304,31 +249,22 @@ export default function ProductPage() {
             description: product.shortDescription || product.description,
             image: Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : product.thumbnail
         }
-
         try {
             const success = await addToCart(cartProduct)
             if (success) {
-                // Show success message with e-commerce style
                 addNotification(`"${product.title}" has been added to your cart!`, 'success')
-
-                // Auto-dismiss loading state
                 setTimeout(() => {
                     setAddingToCart(false)
                 }, 500)
-
-                // Refresh the page to update header cart count
                 setTimeout(() => {
                     window.location.reload()
-                }, 1000) // Give time for notification to show
+                }, 1000) 
             } else {
                 setAddingToCart(false)
             }
         } catch (error) {
             console.log('🚨 Unexpected error in handleAddToCart:', error)
-
-            // Check for specific error messages and show appropriate notifications
             const errorMessage = error.message || 'Failed to add to cart. Please try again.'
-
             if (errorMessage.includes('already purchased')) {
                 addNotification('You have already purchased this product', 'warning')
             } else if (errorMessage.includes('already in cart')) {
@@ -340,11 +276,9 @@ export default function ProductPage() {
             } else {
                 addNotification(errorMessage, 'error')
             }
-
             setAddingToCart(false)
         }
     }, [product, hasPurchased, isOwner, mounted, cartLoading, isInCart, addToCart, addNotification, isAuthenticated, router, productSlug])
-
     const handleBuyNow = useCallback(async () => {
         if (!isAuthenticated) {
             try {
@@ -355,20 +289,16 @@ export default function ProductPage() {
             }
             return
         }
-
         if (hasPurchased) {
             addNotification('You have already purchased this product', 'info')
             return
         }
-
         if (isOwner) {
             addNotification("You can't purchase your own product", 'info')
             return
         }
-
         if (product) {
             const alreadyInCart = mounted && !cartLoading && isInCart && (isInCart(product._id) || isInCart(product.id))
-
             if (!alreadyInCart) {
                 const cartProduct = {
                     id: product._id,
@@ -382,16 +312,12 @@ export default function ProductPage() {
                     description: product.shortDescription || product.description,
                     image: Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : product.thumbnail
                 }
-
                 try {
                     const success = await addToCart(cartProduct)
                     if (!success) return
                 } catch (error) {
                     console.log('🚨 Error in handleBuyNow addToCart:', error)
-
-                    // Handle specific error messages from API
                     const errorMessage = error.message || 'Failed to add to cart'
-
                     if (errorMessage.includes('already purchased')) {
                         addNotification('You have already purchased this product', 'info')
                     } else if (errorMessage.includes('already in cart')) {
@@ -406,17 +332,14 @@ export default function ProductPage() {
                     return
                 }
             }
-
             router.push('/checkout')
         }
     }, [product, addToCart, router, mounted, cartLoading, isInCart, hasPurchased, isOwner, addNotification, isAuthenticated, productSlug])
-
     const handleLike = useCallback(async () => {
         if (!isAuthenticated) {
             requireAuth()
             return
         }
-
         try {
             setLiked(!liked)
             await productsAPI.toggleFavorite(product._id, !liked)
@@ -425,27 +348,21 @@ export default function ProductPage() {
             addNotification('Failed to update favorite', 'error')
         }
     }, [isAuthenticated, liked, product, requireAuth, addNotification])
-
     const handleUpvote = useCallback(async () => {
         if (!isAuthenticated) {
             requireAuth()
             return
         }
-
         if (!product || isUpvoting) return
-
         setIsUpvoting(true)
         const newUpvoted = !upvoted
-
         try {
             setUpvoted(newUpvoted)
             await productsAPI.toggleUpvote(product._id, { isUpvoted: newUpvoted })
-
             setProduct((prevProduct) => ({
                 ...prevProduct,
                 upvotes: newUpvoted ? (prevProduct.upvotes || 0) + 1 : Math.max(0, (prevProduct.upvotes || 0) - 1)
             }))
-
             addNotification(newUpvoted ? 'Upvoted!' : 'Removed upvote', 'success')
         } catch (error) {
             setUpvoted(!newUpvoted)
@@ -454,30 +371,22 @@ export default function ProductPage() {
             setIsUpvoting(false)
         }
     }, [isAuthenticated, upvoted, product, requireAuth, isUpvoting, addNotification])
-
     const handleDownload = useCallback(async () => {
         try {
-            // Redirect to the purchased product page
             router.push(`/products/${productSlug}/purchased`)
         } catch (error) {
             addNotification('Failed to access product', 'error')
         }
     }, [router, productSlug, addNotification])
-
-    // Handle product updates from child components
     const handleProductUpdate = useCallback((updatedData) => {
         setProduct((prevProduct) => ({
             ...prevProduct,
             ...updatedData
         }))
     }, [])
-
-    // Handle share functionality
     const handleShare = useCallback(async () => {
         if (!mounted) return
-
         const url = typeof window !== 'undefined' ? window.location.href : ''
-
         if (navigator.share) {
             try {
                 await navigator.share({
@@ -486,7 +395,6 @@ export default function ProductPage() {
                     url
                 })
             } catch (err) {
-                // Share cancelled
             }
         } else if (navigator.clipboard) {
             try {
@@ -501,28 +409,20 @@ export default function ProductPage() {
             addNotification(`Share this link: ${url}`, 'info')
         }
     }, [mounted, product, addNotification])
-
-    // Handle review submission
     const handleReviewSubmit = useCallback(
         async (reviewData) => {
             if (!isAuthenticated) {
                 requireAuth()
                 return
             }
-
             if (!product?._id) {
                 addNotification('Product not found', 'error')
                 return
             }
-
             try {
-                // Call the products API to submit the review
                 const response = await productsAPI.addReview(product._id, reviewData)
-
                 if (response?.data) {
                     addNotification('Review submitted successfully!', 'success')
-
-                    // Update the product state with the new review data
                     setProduct((prevProduct) => ({
                         ...prevProduct,
                         reviews: response.data.reviews || prevProduct.reviews,
@@ -535,7 +435,6 @@ export default function ProductPage() {
                 }
             } catch (error) {
                 console.error('Error submitting review:', error)
-
                 if (error.status === 400) {
                     addNotification(error.message || 'Invalid review data', 'error')
                 } else if (error.status === 401) {
@@ -552,12 +451,8 @@ export default function ProductPage() {
         },
         [isAuthenticated, product, requireAuth, addNotification]
     )
-
-    // Handle navigation to reviews tab
     const handleNavigateToReviews = useCallback(() => {
         setActiveTab('reviews')
-
-        // Smooth scroll to the reviews section on mobile or desktop
         const reviewsSection = document.querySelector('[data-tab="reviews"]') || document.querySelector('.reviews-section')
         if (reviewsSection) {
             reviewsSection.scrollIntoView({
@@ -565,7 +460,6 @@ export default function ProductPage() {
                 block: 'start'
             })
         } else {
-            // Fallback: scroll to tabs section
             const tabsSection = document.querySelector('.lg\\:flex.gap-12')
             if (tabsSection) {
                 tabsSection.scrollIntoView({
@@ -575,8 +469,6 @@ export default function ProductPage() {
             }
         }
     }, [])
-
-    // Loading state
     if (loading) {
         return (
             <div
@@ -593,7 +485,6 @@ export default function ProductPage() {
                         />
                     </div>
                 ))}
-
                 <DSContainer
                     maxWidth="hero"
                     padding="responsive">
@@ -685,8 +576,6 @@ export default function ProductPage() {
             </div>
         )
     }
-
-    // Error state
     if (error || !product) {
         return (
             <div
@@ -718,13 +607,11 @@ export default function ProductPage() {
             </div>
         )
     }
-
     return (
         <ErrorBoundary>
             <div
                 className="min-h-screen"
                 style={{ backgroundColor: DESIGN_TOKENS.colors.background.dark, fontFamily: DESIGN_TOKENS.typography.fontFamily.body }}>
-                {/* Notifications - fixed top-right, always visible regardless of scroll */}
                 <div className="fixed top-4 right-4 z-[9999] space-y-2 w-full max-w-sm pointer-events-none">
                     <AnimatePresence>
                         {notifications.map((notification) => (
@@ -739,12 +626,8 @@ export default function ProductPage() {
                         ))}
                     </AnimatePresence>
                 </div>
-
                 <main className="relative">
-                    {/* Breadcrumb Navigation */}
                     <ProductBreadcrumb product={product} />
-
-                    {/* Product Hero Section - Use ProductHero component for all screen sizes */}
                     <section className="relative">
                         <ProductHero
                             product={product}
@@ -769,19 +652,15 @@ export default function ProductPage() {
                             ctaRef={ctaRef}
                         />
                     </section>
-
-                    {/* Vertical Tabs Section */}
                     <section className="relative py-12 lg:py-16">
                         <DSContainer
                             maxWidth="hero"
                             padding="responsive">
-                            {/* Mobile: Simple Tab Navigation */}
                             <div className="lg:hidden mb-8">
                                 <div className="flex overflow-x-auto gap-2 pb-2 mb-8">
                                     {PRODUCT_TABS.map((tab) => {
                                         const IconComponent = tab.icon
                                         const isActive = activeTab === tab.id
-
                                         return (
                                             <button
                                                 key={tab.id}
@@ -797,8 +676,6 @@ export default function ProductPage() {
                                         )
                                     })}
                                 </div>
-
-                                {/* Mobile Content */}
                                 <div className="bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
                                     <AnimatePresence mode="wait">
                                         <motion.div
@@ -811,7 +688,6 @@ export default function ProductPage() {
                                             {(() => {
                                                 const activeTabConfig = PRODUCT_TABS.find((tab) => tab.id === activeTab)
                                                 const ComponentToRender = activeTabConfig?.component
-
                                                 if (!ComponentToRender) {
                                                     return (
                                                         <div className="text-center py-12">
@@ -825,8 +701,6 @@ export default function ProductPage() {
                                                         </div>
                                                     )
                                                 }
-
-                                                // Special case for ProductReviews component - pass onProductUpdate
                                                 if (activeTabConfig.id === 'reviews') {
                                                     return (
                                                         <ComponentToRender
@@ -835,26 +709,20 @@ export default function ProductPage() {
                                                         />
                                                     )
                                                 }
-
                                                 return <ComponentToRender product={product} />
                                             })()}
                                         </motion.div>
                                     </AnimatePresence>
                                 </div>
                             </div>
-
-                            {/* Desktop: Clean Side-by-Side Layout */}
                             <div className="hidden lg:flex gap-12">
-                                {/* Simple Tab Navigation */}
                                 <div className="w-64 flex-shrink-0">
                                     <div className="sticky top-24 space-y-2">
                                         <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-6">Product Information</h3>
-
                                         <nav className="space-y-1">
                                             {PRODUCT_TABS.map((tab) => {
                                                 const IconComponent = tab.icon
                                                 const isActive = activeTab === tab.id
-
                                                 return (
                                                     <button
                                                         key={tab.id}
@@ -873,8 +741,6 @@ export default function ProductPage() {
                                                 )
                                             })}
                                         </nav>
-
-                                        {/* Simple Stats */}
                                         <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                                             <div className="grid grid-cols-1 gap-3">
                                                 <div className="text-center py-2">
@@ -899,8 +765,6 @@ export default function ProductPage() {
                                         </div>
                                     </div>
                                 </div>
-
-                                {/* Clean Content Area */}
                                 <div className="flex-1 min-w-0">
                                     <div className="bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
                                         <AnimatePresence mode="wait">
@@ -914,7 +778,6 @@ export default function ProductPage() {
                                                 {(() => {
                                                     const activeTabConfig = PRODUCT_TABS.find((tab) => tab.id === activeTab)
                                                     const ComponentToRender = activeTabConfig?.component
-
                                                     if (!ComponentToRender) {
                                                         return (
                                                             <div className="text-center py-12">
@@ -930,8 +793,6 @@ export default function ProductPage() {
                                                             </div>
                                                         )
                                                     }
-
-                                                    // Special case for ProductReviews component - pass onProductUpdate
                                                     if (activeTabConfig.id === 'reviews') {
                                                         return (
                                                             <ComponentToRender
@@ -940,7 +801,6 @@ export default function ProductPage() {
                                                             />
                                                         )
                                                     }
-
                                                     return <ComponentToRender product={product} />
                                                 })()}
                                             </motion.div>
@@ -951,8 +811,6 @@ export default function ProductPage() {
                         </DSContainer>
                     </section>
                 </main>
-
-                {/* Sticky Purchase Bar */}
                 <AnimatePresence>
                     {showStickyBar && (
                         <motion.div
@@ -981,7 +839,6 @@ export default function ProductPage() {
                                             <div className="text-2xl font-bold text-[#00FF89]">${product?.price || 0}</div>
                                         </div>
                                     </div>
-
                                     <div className="flex items-center gap-3">
                                         {hasPurchased ? (
                                             <DSButton
@@ -1026,4 +883,3 @@ export default function ProductPage() {
         </ErrorBoundary>
     )
 }
-

@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect, useCallback, useRef, useMemo, Suspense } from 'react'
 import dynamic from 'next/dynamic'
 import { useSearchParams, useRouter } from 'next/navigation'
@@ -13,11 +12,9 @@ import { productsAPI } from '@/lib/api'
 import { CATEGORIES, PRODUCT_TYPES, INDUSTRIES, SETUP_TIMES, ITEMS_PER_PAGE, DEFAULT_FILTERS } from '@/data/explore/constants'
 import { Loader2, AlertTriangle } from 'lucide-react'
 import { useDebounce } from '@/hooks/useDebounce'
-
 const FilterSidebar = dynamic(() => import('@/components/features/explore/FilterSidebar'), { ssr: false })
 const MobileFilterDrawer = dynamic(() => import('@/components/features/explore/MobileFilterDrawer'), { ssr: false })
 const VirtualizedProductGrid = dynamic(() => import('@/components/features/explore/VirtualizedProductGrid'), { ssr: false })
-
 function useMounted() {
     const mounted = useRef(false)
     useEffect(() => {
@@ -28,7 +25,6 @@ function useMounted() {
     }, [])
     return mounted
 }
-
 function useNetwork() {
     const [online, setOnline] = useState(true)
     useEffect(() => {
@@ -44,7 +40,6 @@ function useNetwork() {
     }, [])
     return online
 }
-
 function useURLState() {
     const searchParams = useSearchParams()
     return useMemo(() => {
@@ -55,7 +50,7 @@ function useURLState() {
         const industry = get('industry', 'all')
         const setupTime = get('setupTime', 'all')
         const search = get('search', '')
-        const sort = get('sort', 'newest') // retained in UI only
+        const sort = get('sort', 'newest') 
         const rating = parseInt(get('rating', '0')) || 0
         const verifiedOnly = get('verified', '') === 'true'
         const minPrice = parseInt(get('minPrice', '0')) || 0
@@ -74,7 +69,6 @@ function useURLState() {
         }
     }, [searchParams])
 }
-
 function useExploreData(initialURLState) {
     const mounted = useMounted()
     const online = useNetwork()
@@ -84,7 +78,6 @@ function useExploreData(initialURLState) {
     const [error, setError] = useState(null)
     const abortRef = useRef(null)
     const cache = useRef(new Map())
-
     const fetchProducts = useCallback(
         async (filters) => {
             if (!online) {
@@ -104,7 +97,6 @@ function useExploreData(initialURLState) {
                 ...(filters.rating > 0 && { minRating: filters.rating }),
                 ...(filters.verifiedOnly && { verifiedOnly: 'true' }),
                 ...(() => {
-                    // price range map -> priceCategory
                     const [min, max] = filters.priceRange
                     if (min === 0 && max >= 1000) return {}
                     if (min === 0 && max === 0) return { priceCategory: 'free' }
@@ -146,14 +138,11 @@ function useExploreData(initialURLState) {
         },
         [online, mounted]
     )
-
     useEffect(() => {
         fetchProducts(initialURLState)
-    }, []) // initial mount
-
+    }, []) 
     return { products, totalItems, loading, error, fetchProducts }
 }
-
 export default function ExplorePage() {
     return (
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-gray-400">Loading Explore…</div>}>
@@ -161,11 +150,9 @@ export default function ExplorePage() {
         </Suspense>
     )
 }
-
 function ExplorePageContent() {
     const router = useRouter()
     const urlState = useURLState()
-
     const [filters, setFilters] = useState({
         ...DEFAULT_FILTERS,
         category: urlState.category,
@@ -181,15 +168,11 @@ function ExplorePageContent() {
     const [showFilters, setShowFilters] = useState(true)
     const [showMobileFilters, setShowMobileFilters] = useState(false)
     const [viewMode, setViewMode] = useState('grid')
-
     const debouncedSearch = useDebounce(filters.search, 350)
-
     const { products, totalItems, loading, error, fetchProducts } = useExploreData({ ...filters, page })
-
     useEffect(() => {
         fetchProducts({ ...filters, search: debouncedSearch, page })
     }, [filters.category, filters.type, filters.industry, filters.setupTime, debouncedSearch, filters.rating, filters.verifiedOnly, filters.priceRange[0], filters.priceRange[1], page, fetchProducts])
-
     useEffect(() => {
         const params = new URLSearchParams()
         if (filters.category !== 'all') params.set('category', filters.category)
@@ -205,9 +188,7 @@ function ExplorePageContent() {
         const qs = params.toString()
         router.replace(qs ? `/explore?${qs}` : '/explore')
     }, [filters, page, router])
-
     const totalPages = useMemo(() => Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE)), [totalItems])
-
     const hasActiveFilters = useMemo(
         () =>
             filters.category !== 'all' ||
@@ -221,17 +202,14 @@ function ExplorePageContent() {
             filters.priceRange[1] < 1000,
         [filters]
     )
-
     const handleFilterChange = (next) => {
         setFilters(next)
         setPage(1)
     }
-
     const clearFilters = () => {
         setFilters(DEFAULT_FILTERS)
         setPage(1)
     }
-
     const handlePageChange = (p) => {
         setPage(p)
         if (typeof window !== 'undefined') {
@@ -239,9 +217,7 @@ function ExplorePageContent() {
             el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
     }
-
     const useVirtual = products.length > 50
-
     return (
         <div className="min-h-screen bg-black text-white">
             <main className="pt-24 pb-16 max-w-7xl mx-auto px-4">
@@ -253,7 +229,6 @@ function ExplorePageContent() {
                     }>
                     <ExploreHeader />
                 </Suspense>
-
                 <ExploreControls
                     filters={filters}
                     viewMode={viewMode}
@@ -263,13 +238,10 @@ function ExplorePageContent() {
                     onToggleFilters={() => setShowFilters((v) => !v)}
                     onToggleMobileFilters={() => setShowMobileFilters(true)}
                 />
-
                 <ActiveFilters
                     filters={filters}
                     onFilterChange={handleFilterChange}
                 />
-
-                {/* Layout */}
                 <div className="flex gap-6">
                     {showFilters && (
                         <aside className="hidden lg:block w-72 flex-shrink-0">
@@ -283,7 +255,6 @@ function ExplorePageContent() {
                             />
                         </aside>
                     )}
-
                     <section
                         id="products-section"
                         className="flex-1 min-w-0">
@@ -293,14 +264,12 @@ function ExplorePageContent() {
                                 <p className="text-sm tracking-wide uppercase text-gray-500">Loading products…</p>
                             </div>
                         )}
-
                         {!loading && error && (
                             <ErrorState
                                 message={error}
                                 onRetry={() => fetchProducts({ ...filters, search: debouncedSearch, page })}
                             />
                         )}
-
                         {!error && products.length > 0 && (
                             <>
                                 {useVirtual ? (
@@ -321,7 +290,6 @@ function ExplorePageContent() {
                                         onClearFilters={clearFilters}
                                     />
                                 )}
-
                                 {totalPages > 1 && (
                                     <div className="mt-12">
                                         <Pagination
@@ -334,7 +302,6 @@ function ExplorePageContent() {
                                         />
                                     </div>
                                 )}
-
                                 <div className="mt-8 text-center text-sm text-gray-500">
                                     Showing {products.length} of {totalItems.toLocaleString()} products
                                     {hasActiveFilters && (
@@ -347,7 +314,6 @@ function ExplorePageContent() {
                                 </div>
                             </>
                         )}
-
                         {!loading && !error && products.length === 0 && (
                             <div className="min-h-[40vh] flex flex-col items-center justify-center gap-4 text-gray-400">
                                 <p className="text-xl font-semibold text-white">No products found</p>
@@ -368,7 +334,6 @@ function ExplorePageContent() {
                     </section>
                 </div>
             </main>
-
             <MobileFilterDrawer
                 isOpen={showMobileFilters}
                 onClose={() => setShowMobileFilters(false)}
@@ -382,8 +347,6 @@ function ExplorePageContent() {
         </div>
     )
 }
-
-/* ----------------------------- Helper Components ---------------------------- */
 function Spinner({ large = false, label }) {
     return (
         <div className="flex flex-col items-center gap-2">
@@ -392,7 +355,6 @@ function Spinner({ large = false, label }) {
         </div>
     )
 }
-
 function ErrorState({ message, onRetry }) {
     return (
         <div className="min-h-[50vh] flex flex-col items-center justify-center gap-5 text-center">
@@ -418,4 +380,3 @@ function ErrorState({ message, onRetry }) {
         </div>
     )
 }
-

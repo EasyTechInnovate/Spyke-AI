@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
@@ -18,23 +17,17 @@ import {
 } from 'lucide-react'
 import { useAdmin } from '@/providers/AdminProvider'
 import analyticsAPI from '@/lib/api/analytics'
-
 export default function AdminOverviewPage() {
   const { counts, overview, loading, error } = useAdmin()
   const [analyticsData, setAnalyticsData] = useState(null)
   const [recentActivity, setRecentActivity] = useState([])
   const [loadingAnalytics, setLoadingAnalytics] = useState(true)
-
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoadingAnalytics(true)
-        // Load analytics data from real API
         const response = await analyticsAPI.admin.getPlatform()
         setAnalyticsData(response)
-        
-        // TODO: Load real recent activity data when API is available
-        // For now, keep empty until real API is implemented
         setRecentActivity([])
       } catch (error) {
         console.error('Failed to load analytics:', error)
@@ -44,10 +37,8 @@ export default function AdminOverviewPage() {
         setLoadingAnalytics(false)
       }
     }
-
     loadData()
   }, [])
-
   if (loading || loadingAnalytics) {
     return (
       <div className="p-6">
@@ -66,7 +57,6 @@ export default function AdminOverviewPage() {
       </div>
     )
   }
-
   if (error) {
     return (
       <div className="p-6">
@@ -76,7 +66,6 @@ export default function AdminOverviewPage() {
       </div>
     )
   }
-
   const stats = [
     {
       title: 'Total Users',
@@ -107,7 +96,6 @@ export default function AdminOverviewPage() {
       bgColor: 'bg-purple-500/10'
     }
   ]
-
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -117,8 +105,6 @@ export default function AdminOverviewPage() {
           Last updated: {new Date().toLocaleTimeString()}
         </div>
       </div>
-
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
           <motion.div
@@ -140,10 +126,7 @@ export default function AdminOverviewPage() {
           </motion.div>
         ))}
       </div>
-
-      {/* Charts and Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Quick Actions */}
         <div className="bg-[#1a1a1a] rounded-xl p-6 border border-gray-800">
           <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
           <div className="space-y-3">
@@ -176,8 +159,6 @@ export default function AdminOverviewPage() {
             </button>
           </div>
         </div>
-
-        {/* Recent Activity */}
         <div className="bg-[#1a1a1a] rounded-xl p-6 border border-gray-800">
           <h3 className="text-lg font-semibold text-white mb-4">Recent Activity</h3>
           {recentActivity.length === 0 ? (
@@ -190,15 +171,12 @@ export default function AdminOverviewPage() {
             <div className="space-y-3">
               {recentActivity.map((activity, index) => (
                 <div key={index} className="flex items-center gap-3 p-3 bg-[#0f0f0f] rounded-lg">
-                  {/* Activity content will be rendered when real data is available */}
                 </div>
               ))}
             </div>
           )}
         </div>
       </div>
-
-      {/* Additional Analytics */}
       {analyticsData && (
         <div className="bg-[#1a1a1a] rounded-xl p-6 border border-gray-800">
           <h3 className="text-lg font-semibold text-white mb-4">Platform Analytics</h3>

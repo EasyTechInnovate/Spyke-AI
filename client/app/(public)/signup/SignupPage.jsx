@@ -1,33 +1,13 @@
 'use client'
 export const dynamic = 'force-dynamic'
-
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/shared/layout/Header'
 import api from '@/lib/api'
 import { checkPasswordStrength, countryCodes, validateEmail, validatePhone, formatPhone } from '@/lib/utils/utils'
-import {
-    Eye,
-    EyeOff,
-    Mail,
-    Lock,
-    Phone,
-    ArrowRight,
-    Sparkles,
-    Shield,
-    Zap,
-    Users,
-    CheckCircle,
-    Globe,
-    ChevronDown,
-    Loader,
-    X,
-    AlertCircle
-} from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, Phone, ArrowRight, Sparkles, Shield, Zap, Users, CheckCircle, Globe, ChevronDown, Loader } from 'lucide-react'
 import Notification from '@/components/shared/Notification'
-import { Globe as GlobeIcon } from 'lucide-react'
-
 export const debounce = (func, wait) => {
     let timeout
     return (...args) => {
@@ -35,7 +15,6 @@ export const debounce = (func, wait) => {
         timeout = setTimeout(() => func(...args), wait)
     }
 }
-
 export default function SignupPage() {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
@@ -43,7 +22,6 @@ export default function SignupPage() {
     const [emailChecking, setEmailChecking] = useState(false)
     const [emailAvailable, setEmailAvailable] = useState(true)
     const [notification, setNotification] = useState(null)
-
     const [formData, setFormData] = useState({
         emailAddress: '',
         countryCode: '+1',
@@ -52,12 +30,9 @@ export default function SignupPage() {
         consent: false,
         marketingConsent: false
     })
-
     const [errors, setErrors] = useState({})
     const [touched, setTouched] = useState({})
-
     const emailCheckRef = useRef(null)
-
     const showNotification = (message, type = 'success') => {
         setNotification({
             id: Date.now(),
@@ -66,20 +41,17 @@ export default function SignupPage() {
             duration: type === 'error' ? 6000 : 4000
         })
     }
-
     useEffect(() => {
         emailCheckRef.current = debounce(async (email) => {
             if (!email || !validateEmail(email)) {
                 setEmailAvailable(true)
                 return
             }
-
             setEmailChecking(true)
             try {
                 const response = await api.auth.checkEmail(email)
                 const data = response.data || response
                 setEmailAvailable(data.available !== false)
-
                 if (!data.available) {
                     setErrors((prev) => ({ ...prev, emailAddress: 'This email is already registered' }))
                 } else {
@@ -92,18 +64,15 @@ export default function SignupPage() {
             }
         }, 500)
     }, [])
-
     const validateEmailInput = (email) => {
         if (!email) return 'Email is required'
         if (!email.includes('@')) return "Please include an '@' in the email address"
         if (!validateEmail(email)) return 'Please enter a valid email address'
         return ''
     }
-
     const handleChange = useCallback(
         (e) => {
             const { name, value, type, checked } = e.target
-
             if (name === 'phoneNumber') {
                 const formatted = formatPhone(value, formData.countryCode)
                 setFormData((prev) => ({ ...prev, phoneNumber: formatted }))
@@ -113,31 +82,25 @@ export default function SignupPage() {
                     [name]: type === 'checkbox' ? checked : value
                 }))
             }
-
             if (name === 'emailAddress') {
                 const emailError = validateEmailInput(value)
                 setErrors((prev) => ({ ...prev, emailAddress: emailError }))
             } else {
                 setErrors((prev) => ({ ...prev, [name]: '' }))
             }
-
             setTouched((prev) => ({ ...prev, [name]: true }))
-
             if (name === 'emailAddress' && emailCheckRef.current) {
                 emailCheckRef.current(value)
             }
         },
         [formData.countryCode]
     )
-
     const handleBlur = useCallback((e) => {
         const { name } = e.target
         setTouched((prev) => ({ ...prev, [name]: true }))
     }, [])
-
     const validateForm = useCallback(() => {
         const newErrors = {}
-
         if (!formData.emailAddress) {
             newErrors.emailAddress = 'Email is required'
         } else if (!validateEmail(formData.emailAddress)) {
@@ -145,47 +108,37 @@ export default function SignupPage() {
         } else if (!emailAvailable) {
             newErrors.emailAddress = 'This email is already registered'
         }
-
         if (!formData.phoneNumber) {
             newErrors.phoneNumber = 'Phone number is required'
         } else if (!validatePhone(formData.phoneNumber, formData.countryCode)) {
             newErrors.phoneNumber = 'Please enter a valid phone number'
         }
-
         if (!formData.password) {
             newErrors.password = 'Password is required'
         } else if (!checkPasswordStrength(formData.password).isValid) {
             newErrors.password = 'Password must be stronger'
         }
-
         if (!formData.consent) {
             newErrors.consent = 'You must accept the terms'
         }
-
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }, [formData, emailAvailable])
-
     const handleSubmit = useCallback(
         async (e) => {
             e.preventDefault()
-
             setTouched({
                 emailAddress: true,
                 phoneNumber: true,
                 password: true,
                 consent: true
             })
-
             if (!validateForm()) return
-
             setLoading(true)
-
             try {
                 const countryCodeDigits = formData.countryCode.replace(/\D/g, '')
                 const phoneNumberDigits = formData.phoneNumber.replace(/\D/g, '')
                 const fullPhoneNumber = countryCodeDigits + phoneNumberDigits
-
                 const response = await api.auth.register({
                     emailAddress: formData.emailAddress.toLowerCase().trim(),
                     phoneNumber: fullPhoneNumber,
@@ -195,10 +148,8 @@ export default function SignupPage() {
                     userLocation: { lat: 0, long: 0 },
                     role: 'user'
                 })
-
                 if (response && (response.success === true || response.statusCode === 201 || (response.id && response.emailAddress))) {
                     showNotification('Account created successfully! Please check your email to verify your account before signing in.', 'success')
-
                     setTimeout(() => {
                         router.push(`/verify-email?email=${encodeURIComponent(formData.emailAddress)}`)
                     }, 3000)
@@ -214,9 +165,7 @@ export default function SignupPage() {
         },
         [formData, router, validateForm]
     )
-
     const passwordStrength = checkPasswordStrength(formData.password)
-
     const countryOptions = countryCodes
         .map(({ code, country, flag }) => ({
             value: code,
@@ -229,9 +178,7 @@ export default function SignupPage() {
             const countryB = countryCodes.find((c) => c.code === b.value)?.country || ''
             return countryA.localeCompare(countryB)
         })
-
     const selectedCountry = countryCodes.find((c) => c.code === formData.countryCode) || countryCodes[0]
-
     return (
         <div className="min-h-screen bg-[#121212] relative overflow-hidden flex flex-col">
             <div className="absolute inset-0 overflow-hidden">
@@ -243,18 +190,15 @@ export default function SignupPage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/10" />
             </div>
-
             {notification && (
-                <div className="fixed top-8 left-1/2 transform -translate-x-1/2 z-[60]">
+                <div className="fixed top-22 right-4 z-[60]">
                     <Notification
                         {...notification}
                         onClose={() => setNotification(null)}
                     />
                 </div>
             )}
-
             <Header />
-
             <main className="relative flex-1 flex flex-col lg:flex-row pt-12 sm:pt-16 lg:pt-20">
                 <div className="hidden lg:flex lg:w-1/2 flex-col justify-center px-6 xl:px-12">
                     <div className="max-w-lg">
@@ -262,16 +206,13 @@ export default function SignupPage() {
                             <Sparkles className="w-4 h-4 text-[#00FF89]" />
                             <span className="text-sm font-semibold text-[#00FF89]">Join 10,000+ creators worldwide</span>
                         </div>
-
                         <h1 className="text-3xl xl:text-4xl font-bold text-white mb-4 leading-tight">
                             Start your journey with <span className="text-[#00FF89]">SpykeAI</span>
                         </h1>
-
                         <p className="text-base xl:text-lg text-gray-300 mb-6 leading-relaxed font-medium">
                             Create your account in seconds and unlock the world's largest AI marketplace. Connect with creators, discover premium
                             tools, and scale your business.
                         </p>
-
                         <div className="space-y-3">
                             <div className="flex items-center gap-3 p-3 bg-[#1a1a1a]/50 border border-gray-800/50 rounded-xl backdrop-blur-sm">
                                 <div className="w-8 h-8 bg-[#00FF89]/20 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -282,7 +223,6 @@ export default function SignupPage() {
                                     <p className="text-xs text-gray-400">Browse 1000+ AI tools immediately</p>
                                 </div>
                             </div>
-
                             <div className="flex items-center gap-3 p-3 bg-[#1a1a1a]/50 border border-gray-800/50 rounded-xl backdrop-blur-sm">
                                 <div className="w-8 h-8 bg-[#FFC050]/20 rounded-lg flex items-center justify-center flex-shrink-0">
                                     <Shield className="w-4 h-4 text-[#FFC050]" />
@@ -292,7 +232,6 @@ export default function SignupPage() {
                                     <p className="text-xs text-gray-400">Bank-level encryption & protection</p>
                                 </div>
                             </div>
-
                             <div className="flex items-center gap-3 p-3 bg-[#1a1a1a]/50 border border-gray-800/50 rounded-xl backdrop-blur-sm">
                                 <div className="w-8 h-8 bg-[#ff6b6b]/20 rounded-lg flex items-center justify-center flex-shrink-0">
                                     <Zap className="w-4 h-4 text-[#ff6b6b]" />
@@ -305,23 +244,19 @@ export default function SignupPage() {
                         </div>
                     </div>
                 </div>
-
                 <div className="w-full lg:w-1/2 flex items-center justify-center px-4 sm:px-6 lg:px-8 xl:px-12 py-6">
                     <div className="w-full max-w-md">
                         <div className="text-center lg:hidden mb-6">
                             <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Join SpykeAI</h1>
                             <p className="text-gray-400 font-medium">Create your account in 30 seconds</p>
                         </div>
-
                         <div className="relative">
                             <div className="absolute -inset-1 bg-gradient-to-r from-[#00FF89]/15 via-[#FFC050]/15 to-[#00FF89]/15 rounded-2xl blur-xl opacity-60" />
-
                             <div className="relative bg-[#1a1a1a]/90 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 shadow-2xl">
                                 <div className="mb-6">
                                     <h2 className="text-xl lg:text-2xl font-bold text-white mb-1">Create Account</h2>
                                     <p className="text-gray-400 font-medium text-sm">Join thousands of creators and innovators</p>
                                 </div>
-
                                 <form
                                     onSubmit={handleSubmit}
                                     className="space-y-4">
@@ -355,7 +290,6 @@ export default function SignupPage() {
                                             <p className="mt-1 text-xs text-red-400">{errors.emailAddress}</p>
                                         )}
                                     </div>
-
                                     <div>
                                         <label className="block text-sm font-bold text-gray-300 mb-1.5">
                                             Phone Number <span className="text-red-400">*</span>
@@ -379,11 +313,10 @@ export default function SignupPage() {
                                                             WebkitAppearance: 'none',
                                                             MozAppearance: 'none',
                                                             msDropdown: 'none'
-                                                        }}
-                                                    >
+                                                        }}>
                                                         {countryCodes.map(({ code, country, flag }) => (
-                                                            <option 
-                                                                key={code} 
+                                                            <option
+                                                                key={code}
                                                                 value={code}
                                                                 className="bg-[#1a1a1a] text-white py-3 px-3 border-none"
                                                                 style={{
@@ -392,8 +325,7 @@ export default function SignupPage() {
                                                                     padding: '12px',
                                                                     fontSize: '14px',
                                                                     fontWeight: '500'
-                                                                }}
-                                                            >
+                                                                }}>
                                                                 {flag} {code}
                                                             </option>
                                                         ))}
@@ -403,7 +335,6 @@ export default function SignupPage() {
                                                     </div>
                                                 </div>
                                             </div>
-
                                             <div className="flex-1 relative">
                                                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                                 <input
@@ -423,7 +354,6 @@ export default function SignupPage() {
                                             <p className="mt-1 text-xs text-red-400">{errors.phoneNumber}</p>
                                         )}
                                     </div>
-
                                     <div>
                                         <label className="block text-sm font-bold text-gray-300 mb-1.5">
                                             Password <span className="text-red-400">*</span>
@@ -449,7 +379,6 @@ export default function SignupPage() {
                                                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                             </button>
                                         </div>
-
                                         {formData.password && (
                                             <div className="mt-3 space-y-2">
                                                 <div className="flex items-center gap-2 mb-2">
@@ -479,7 +408,6 @@ export default function SignupPage() {
                                                         {passwordStrength.label}
                                                     </span>
                                                 </div>
-
                                                 <div className="bg-[#121212]/30 border border-gray-700/50 rounded-lg p-3">
                                                     <p className="text-xs text-gray-400 font-semibold mb-2">Password requirements:</p>
                                                     <div className="space-y-1">
@@ -544,7 +472,6 @@ export default function SignupPage() {
                                         )}
                                         {errors.password && touched.password && <p className="mt-1 text-xs text-red-400">{errors.password}</p>}
                                     </div>
-
                                     <div className="space-y-3">
                                         <div className="flex items-start gap-2">
                                             <input
@@ -571,7 +498,6 @@ export default function SignupPage() {
                                             </label>
                                         </div>
                                         {errors.consent && touched.consent && <p className="text-xs text-red-400">{errors.consent}</p>}
-
                                         <div className="flex items-start gap-2">
                                             <input
                                                 type="checkbox"
@@ -585,7 +511,6 @@ export default function SignupPage() {
                                             </label>
                                         </div>
                                     </div>
-
                                     <button
                                         type="submit"
                                         disabled={loading || emailChecking || !emailAvailable || !formData.consent}
@@ -606,7 +531,6 @@ export default function SignupPage() {
                                             </>
                                         )}
                                     </button>
-
                                     <div className="relative my-4">
                                         <div className="absolute inset-0 flex items-center">
                                             <div className="w-full border-t border-gray-700" />
@@ -615,7 +539,6 @@ export default function SignupPage() {
                                             <span className="px-3 bg-[#1a1a1a] text-gray-400 text-xs font-medium">or continue with</span>
                                         </div>
                                     </div>
-
                                     <button
                                         type="button"
                                         onClick={() => api.auth.googleAuth()}
@@ -647,7 +570,6 @@ export default function SignupPage() {
                                         <ArrowRight className="w-3 h-3" />
                                     </button>
                                 </form>
-
                                 <div className="mt-4 text-center">
                                     <p className="text-gray-400 text-sm">
                                         Already have an account?{' '}
@@ -662,7 +584,6 @@ export default function SignupPage() {
                                 </div>
                             </div>
                         </div>
-
                         <div className="mt-6 grid grid-cols-3 gap-2">
                             <div className="flex flex-col items-center gap-1 p-2 bg-[#1a1a1a]/30 rounded-lg backdrop-blur-sm">
                                 <Shield className="w-3 h-3 text-[#00FF89]" />
@@ -683,4 +604,3 @@ export default function SignupPage() {
         </div>
     )
 }
-

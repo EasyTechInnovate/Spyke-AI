@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import {
     UserCheck,
@@ -29,9 +28,7 @@ import {
 import apiClient from '@/lib/api/client'
 import { adminAPI } from '@/lib/api/admin'
 import Notification from '@/components/shared/Notification'
-
 const BRAND = '#00FF89'
-
 const SELLER_STATUS = {
     approved: {
         label: 'Active',
@@ -64,7 +61,6 @@ const SELLER_STATUS = {
         icon: UserX
     }
 }
-
 const FILTER_OPTIONS = [
     { id: 'all', label: 'All Sellers' },
     { id: 'approved', label: 'Active' },
@@ -74,8 +70,6 @@ const FILTER_OPTIONS = [
     { id: 'suspended', label: 'Suspended' },
     { id: 'high-earning', label: 'High Earners' }
 ]
-
-// Simple Confirmation Modal Component
 function ConfirmationModal({
     isOpen,
     onClose,
@@ -89,20 +83,16 @@ function ConfirmationModal({
 }) {
     const [reason, setReason] = useState('')
     const [activationNote, setActivationNote] = useState('')
-
     const handleConfirm = () => {
         const data = showReasonInput && confirmText === 'Suspend' ? { reason } : confirmText === 'Activate' ? { activationNote } : {}
         onConfirm(data)
     }
-
     if (!isOpen) return null
-
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-[#1a1a1a] border border-gray-800 rounded-xl p-6 w-full max-w-md">
                 <h3 className="text-xl font-bold text-white mb-4">{title}</h3>
                 <p className="text-gray-300 mb-4">{message}</p>
-
                 {showReasonInput && confirmText === 'Suspend' && (
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-300 mb-2">Reason for suspension *</label>
@@ -116,7 +106,6 @@ function ConfirmationModal({
                         />
                     </div>
                 )}
-
                 {confirmText === 'Activate' && (
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-300 mb-2">Activation note (optional)</label>
@@ -129,7 +118,6 @@ function ConfirmationModal({
                         />
                     </div>
                 )}
-
                 <div className="flex gap-3 justify-end">
                     <button
                         onClick={onClose}
@@ -149,7 +137,6 @@ function ConfirmationModal({
         </div>
     )
 }
-
 export default function SellerManagementPage() {
     const [sellers, setSellers] = useState([])
     const [loading, setLoading] = useState(true)
@@ -157,16 +144,11 @@ export default function SellerManagementPage() {
     const [activeFilter, setActiveFilter] = useState('all')
     const [showActionDropdown, setShowActionDropdown] = useState(null)
     const [actionLoading, setActionLoading] = useState(false)
-
     const [currentPage, setCurrentPage] = useState(1)
     const [totalPages, setTotalPages] = useState(1)
     const [totalSellers, setTotalSellers] = useState(0)
     const sellersPerPage = 20
-
-    // Notification state
     const [notifications, setNotifications] = useState([])
-
-    // Modal state
     const [confirmModal, setConfirmModal] = useState({
         isOpen: false,
         type: '',
@@ -174,7 +156,6 @@ export default function SellerManagementPage() {
         sellerName: '',
         showReasonInput: false
     })
-
     const showMessage = (message, type = 'info', title = null) => {
         const id = Date.now()
         const notification = {
@@ -186,11 +167,9 @@ export default function SellerManagementPage() {
         }
         setNotifications((prev) => [...prev, notification])
     }
-
     const removeNotification = (id) => {
         setNotifications((prev) => prev.filter((notification) => notification.id !== id))
     }
-
     const fetchSellers = useCallback(async (page = 1, filter = 'all', search = '') => {
         try {
             setLoading(true)
@@ -200,13 +179,9 @@ export default function SellerManagementPage() {
                 sortBy: 'createdAt',
                 sortOrder: 'desc'
             }
-
-            // Add search to backend query
             if (search.trim()) {
                 params.search = search.trim()
             }
-
-            // Handle status filters at backend level
             if (filter !== 'all') {
                 if (filter === 'approved') {
                     params.verificationStatus = 'approved'
@@ -219,24 +194,18 @@ export default function SellerManagementPage() {
                 } else if (filter === 'suspended') {
                     params.isActive = false
                 } else if (filter === 'high-earning') {
-                    params.minEarnings = 5000 // Backend filter for high-earning sellers
+                    params.minEarnings = 5000 
                 }
             }
-
             const response = await apiClient.get('/v1/analytics/admin/sellers', { params })
-
             if (response?.data?.sellers) {
                 let filteredSellers = response.data.sellers
-
                 setSellers(filteredSellers)
-
-                // Use backend pagination data for accurate counts
                 const pagination = response.data.pagination
                 if (pagination) {
                     setTotalPages(pagination.totalPages || 1)
                     setTotalSellers(pagination.totalCount || 0)
                 } else {
-                    // Fallback for backend without pagination
                     setTotalPages(Math.ceil(filteredSellers.length / sellersPerPage))
                     setTotalSellers(filteredSellers.length)
                 }
@@ -248,36 +217,25 @@ export default function SellerManagementPage() {
             setLoading(false)
         }
     }, [])
-
-    // Debounced search to avoid too many API calls
     const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
-
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             setDebouncedSearchQuery(searchQuery)
         }, 500)
         return () => clearTimeout(timeoutId)
     }, [searchQuery])
-
-    // Reset to page 1 when filters or search change
     useEffect(() => {
         setCurrentPage(1)
         fetchSellers(1, activeFilter, debouncedSearchQuery)
     }, [fetchSellers, activeFilter, debouncedSearchQuery])
-
-    // Fetch data when page changes (but not filter/search)
     useEffect(() => {
         if (currentPage !== 1) {
-            // Avoid double fetch on filter change
             fetchSellers(currentPage, activeFilter, debouncedSearchQuery)
         }
     }, [currentPage])
-
-    // Single seller action handlers
     const handleSingleSellerAction = async (action, sellerId) => {
         const seller = sellers.find((s) => s._id === sellerId)
         if (!seller) return
-
         if (action === 'suspend' && seller.isActive !== false) {
             setConfirmModal({
                 isOpen: true,
@@ -297,28 +255,21 @@ export default function SellerManagementPage() {
         }
         setShowActionDropdown(null)
     }
-
-    // Confirm single seller action
     const confirmSingleSellerAction = async (data = {}) => {
         if (!confirmModal.sellerId) return
-
         setActionLoading(true)
         try {
             if (confirmModal.type === 'suspend') {
-                // Note: This endpoint may need to be implemented on the backend
                 await apiClient.post(`/v1/seller/admin/suspend/${confirmModal.sellerId}`, {
                     reason: data.reason || 'Seller suspended by administrator'
                 })
                 showMessage(`Seller "${confirmModal.sellerName}" has been suspended`, 'success')
             } else if (confirmModal.type === 'activate') {
-                // Note: This endpoint may need to be implemented on the backend
                 await apiClient.post(`/v1/seller/admin/activate/${confirmModal.sellerId}`, {
                     note: data.activationNote
                 })
                 showMessage(`Seller "${confirmModal.sellerName}" has been activated`, 'success')
             }
-
-            // Refresh seller list
             await fetchSellers(currentPage, activeFilter, debouncedSearchQuery)
             setConfirmModal({ isOpen: false, type: '', sellerId: '', sellerName: '', showReasonInput: false })
         } catch (error) {
@@ -328,12 +279,10 @@ export default function SellerManagementPage() {
             setActionLoading(false)
         }
     }
-
     const handleSellerAction = async (action, sellerId) => {
         if (action === 'suspend' || action === 'activate') {
             handleSingleSellerAction(action, sellerId)
         } else {
-            // Handle other actions
             setActionLoading(true)
             try {
                 switch (action) {
@@ -354,7 +303,6 @@ export default function SellerManagementPage() {
             }
         }
     }
-
     const exportSellers = () => {
         const csvContent = [
             ['Name', 'Email', 'Status', 'Joined', 'Products', 'Total Earnings', 'Location'].join(','),
@@ -370,7 +318,6 @@ export default function SellerManagementPage() {
                 ].join(',')
             )
         ].join('\n')
-
         const blob = new Blob([csvContent], { type: 'text/csv' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -382,12 +329,10 @@ export default function SellerManagementPage() {
         URL.revokeObjectURL(url)
         showMessage('Seller data exported successfully', 'success')
     }
-
     const getSellerStatus = (seller) => {
         if (seller.isActive === false) return 'suspended'
         return seller.verification?.status || seller.verificationStatus || 'pending'
     }
-
     return (
         <div className="min-h-screen bg-[#121212]">
             <div className="border-b border-gray-800 bg-[#1a1a1a]">
@@ -404,7 +349,6 @@ export default function SellerManagementPage() {
                             <p className="text-gray-400">Manage seller accounts, products, and earnings</p>
                         </div>
                     </div>
-
                     <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                         <div className="flex flex-col sm:flex-row gap-3 flex-1">
                             <div className="relative flex-1 max-w-md">
@@ -417,7 +361,6 @@ export default function SellerManagementPage() {
                                     className="w-full pl-10 pr-4 py-2 bg-[#121212] border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[var(--neon,#00FF89)] transition-colors"
                                 />
                             </div>
-
                             <div className="relative">
                                 <select
                                     value={activeFilter}
@@ -434,7 +377,6 @@ export default function SellerManagementPage() {
                                 <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                             </div>
                         </div>
-
                         <div className="flex gap-2">
                             <button
                                 onClick={exportSellers}
@@ -442,7 +384,6 @@ export default function SellerManagementPage() {
                                 <Download className="w-4 h-4" />
                                 Export
                             </button>
-
                             <button
                                 onClick={() => fetchSellers(currentPage, activeFilter)}
                                 disabled={loading}
@@ -454,8 +395,6 @@ export default function SellerManagementPage() {
                     </div>
                 </div>
             </div>
-
-            {/* Notifications Container */}
             <div className="fixed top-6 right-6 z-50 space-y-3 pointer-events-none">
                 <div className="pointer-events-auto">
                     {notifications.map((notification) => (
@@ -471,7 +410,6 @@ export default function SellerManagementPage() {
                     ))}
                 </div>
             </div>
-
             <div className="p-6">
                 <div className="bg-[#1a1a1a] border border-gray-800 rounded-xl overflow-hidden">
                     <div className="overflow-x-auto">
@@ -511,7 +449,6 @@ export default function SellerManagementPage() {
                                         const status = getSellerStatus(seller)
                                         const statusConfig = SELLER_STATUS[status] || SELLER_STATUS.pending
                                         const StatusIcon = statusConfig.icon
-
                                         return (
                                             <tr
                                                 key={seller._id}
@@ -562,7 +499,6 @@ export default function SellerManagementPage() {
                                                             className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors">
                                                             <MoreHorizontal className="w-4 h-4" />
                                                         </button>
-
                                                         {showActionDropdown === seller._id && (
                                                             <div className="absolute right-0 top-full mt-1 w-48 bg-[#121212] border border-gray-700 rounded-lg shadow-xl z-10">
                                                                 <button
@@ -603,7 +539,6 @@ export default function SellerManagementPage() {
                             </tbody>
                         </table>
                     </div>
-
                     <div className="border-t border-gray-800 px-6 py-4">
                         <div className="flex items-center justify-between">
                             <div className="text-gray-400 text-sm">
@@ -631,7 +566,6 @@ export default function SellerManagementPage() {
                     </div>
                 </div>
             </div>
-
             <ConfirmationModal
                 isOpen={confirmModal.isOpen}
                 onClose={() => setConfirmModal({ isOpen: false, type: '', sellerId: '', sellerName: '', showReasonInput: false })}

@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { DollarSign, TrendingUp, TrendingDown, BarChart3, PieChart, Activity, Target, Calendar, Users, ShoppingCart } from 'lucide-react'
@@ -20,7 +19,6 @@ import {
     BarChart,
     LineChart
 } from 'recharts'
-
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -29,18 +27,14 @@ const formatCurrency = (amount) => {
         maximumFractionDigits: 0
     }).format(amount || 0)
 }
-
 const formatNumber = (num) => {
     return new Intl.NumberFormat('en-US').format(num || 0)
 }
-
 const formatPercentage = (num) => {
     return `${(num || 0).toFixed(1)}%`
 }
-
 const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null
-
     return (
         <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -64,14 +58,11 @@ const CustomTooltip = ({ active, payload, label }) => {
         </motion.div>
     )
 }
-
 export const RevenueTab = ({ analyticsData, timeRange, loading }) => {
     const [processedData, setProcessedData] = useState(null)
-
     useEffect(() => {
         if (analyticsData) {
             let revenueData = null
-
             if (analyticsData.success && analyticsData.data) {
                 revenueData = analyticsData.data
             } else if (analyticsData.data && !analyticsData.hasOwnProperty('success')) {
@@ -81,15 +72,12 @@ export const RevenueTab = ({ analyticsData, timeRange, loading }) => {
             } else {
                 revenueData = analyticsData
             }
-
             const { monthlyRevenue = [], categoryRevenue = [], commission = {} } = revenueData || {}
-
             const totalRevenue = commission.totalRevenue || 0
             const totalCommission = commission.totalCommission || 0
             const totalSales = monthlyRevenue.reduce((sum, month) => sum + (month.salesCount || 0), 0)
             const avgOrderValue = totalSales > 0 ? totalRevenue / totalSales : 0
             const netRevenue = totalRevenue - totalCommission
-
             const monthlyTrends = monthlyRevenue.map((month) => {
                 const monthName = new Date(month._id.year, month._id.month - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
                 return {
@@ -100,7 +88,6 @@ export const RevenueTab = ({ analyticsData, timeRange, loading }) => {
                     netRevenue: (month.revenue || 0) - (month.revenue || 0) * 0.1
                 }
             })
-
             const categoryData = categoryRevenue.map((cat, index) => ({
                 category: cat._id?.replace(/_/g, ' ')?.replace(/\b\w/g, (l) => l.toUpperCase()) || 'Other',
                 revenue: cat.revenue || 0,
@@ -109,14 +96,12 @@ export const RevenueTab = ({ analyticsData, timeRange, loading }) => {
                 percentage: totalRevenue > 0 ? ((cat.revenue || 0) / totalRevenue) * 100 : 0,
                 color: ['#00FF89', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981', '#F97316', '#6366F1'][index % 8]
             }))
-
             const growthRate =
                 monthlyRevenue.length >= 2
                     ? (((monthlyRevenue[monthlyRevenue.length - 1]?.revenue || 0) - (monthlyRevenue[monthlyRevenue.length - 2]?.revenue || 0)) /
                           (monthlyRevenue[monthlyRevenue.length - 2]?.revenue || 1)) *
                       100
                     : 0
-
             setProcessedData({
                 metrics: {
                     totalRevenue,
@@ -134,7 +119,6 @@ export const RevenueTab = ({ analyticsData, timeRange, loading }) => {
             setProcessedData(null)
         }
     }, [analyticsData])
-
     if (loading) {
         return (
             <div className="space-y-8">
@@ -162,7 +146,6 @@ export const RevenueTab = ({ analyticsData, timeRange, loading }) => {
             </div>
         )
     }
-
     if (!processedData) {
         return (
             <div className="flex items-center justify-center h-96 text-gray-400">
@@ -174,10 +157,8 @@ export const RevenueTab = ({ analyticsData, timeRange, loading }) => {
             </div>
         )
     }
-
     const { metrics, monthlyTrends, categoryData } = processedData
     const COLORS = ['#00FF89', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981', '#F97316', '#6366F1']
-
     return (
         <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -201,7 +182,6 @@ export const RevenueTab = ({ analyticsData, timeRange, loading }) => {
                     <div className="text-3xl font-bold text-white mb-1">{formatCurrency(metrics.totalRevenue)}</div>
                     <p className="text-sm text-gray-500">Gross earnings</p>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -216,7 +196,6 @@ export const RevenueTab = ({ analyticsData, timeRange, loading }) => {
                     <div className="text-3xl font-bold text-white mb-1">{formatCurrency(metrics.netRevenue)}</div>
                     <p className="text-sm text-gray-500">After commissions</p>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -231,7 +210,6 @@ export const RevenueTab = ({ analyticsData, timeRange, loading }) => {
                     <div className="text-3xl font-bold text-white mb-1">{formatCurrency(metrics.avgOrderValue)}</div>
                     <p className="text-sm text-gray-500">Per transaction</p>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -247,7 +225,6 @@ export const RevenueTab = ({ analyticsData, timeRange, loading }) => {
                     <p className="text-sm text-gray-500">Completed orders</p>
                 </motion.div>
             </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -320,7 +297,6 @@ export const RevenueTab = ({ analyticsData, timeRange, loading }) => {
                                             return null
                                         }}
                                     />
-                                    {/* Use Line chart for Revenue instead of Area for single data points */}
                                     <Line
                                         yAxisId="left"
                                         type="monotone"
@@ -331,7 +307,6 @@ export const RevenueTab = ({ analyticsData, timeRange, loading }) => {
                                         activeDot={{ r: 10, fill: '#00FF89', stroke: '#00FF89', strokeWidth: 2 }}
                                         name="Revenue"
                                     />
-                                    {/* Keep bars but make them thinner for single data points */}
                                     <Bar 
                                         yAxisId="right" 
                                         dataKey="sales" 
@@ -363,7 +338,6 @@ export const RevenueTab = ({ analyticsData, timeRange, loading }) => {
                         )}
                     </div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -431,7 +405,6 @@ export const RevenueTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                 </motion.div>
             </div>
-
             {categoryData.length > 0 && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -497,7 +470,6 @@ export const RevenueTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                 </motion.div>
             )}
-
             {categoryData.length > 0 && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -541,7 +513,6 @@ export const RevenueTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                 </motion.div>
             )}
-
             <div className="bg-gradient-to-br from-gray-800 to-gray-800/80 rounded-2xl p-6 border border-gray-700/30 backdrop-blur-sm">
                 <h3 className="text-xl font-semibold text-white mb-6">Revenue Summary</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

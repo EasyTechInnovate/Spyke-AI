@@ -1,5 +1,4 @@
 "use client"
-
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -23,17 +22,6 @@ import {
   Clock,
 } from "lucide-react";
 import { AnalyticsLoadingScreen } from "../AnalyticsLoadingScreen";
-
-/**
- * ProductsTab — Redesigned (JSX version)
- * ----------------------------------------------
- * • Keeps your existing dark theme + neon #00FF89 accents
- * • Uses the SAME incoming data shape (analyticsData: { products, summary, pagination })
- * • No TypeScript — pure JSX
- * • Adds: sticky toolbar, chip filters, view toggle (Cards/Table), improved charts, A11y, empty/skeleton states
- */
-
-// ---------- Small UI primitives ---------- //
 const Chip = ({ label, onRemove }) => (
   <span className="inline-flex items-center gap-1 rounded-full border border-gray-600 bg-gray-800 px-2.5 py-1 text-xs text-gray-200">
     {label}
@@ -48,7 +36,6 @@ const Chip = ({ label, onRemove }) => (
     )}
   </span>
 );
-
 const Section = ({ title, icon, right, children }) => (
   <section className="rounded-2xl border border-gray-700 bg-gray-900/60 p-5">
     <header className="mb-4 flex items-center justify-between">
@@ -61,12 +48,9 @@ const Section = ({ title, icon, right, children }) => (
     {children}
   </section>
 );
-
-// ---------- Charts (lightweight SVG + motion) ---------- //
 function ProductPerformanceChart({ products }) {
   const hasData = Array.isArray(products) && products.length > 0;
   const base = useMemo(() => (hasData ? products.slice(0, 8) : []), [hasData, products]);
-
   if (!hasData)
     return (
       <Section
@@ -79,7 +63,6 @@ function ProductPerformanceChart({ products }) {
         </div>
       </Section>
     );
-
   const rows = base.map((p) => {
     const views = Number(p.views ?? p.viewCount ?? 0);
     const sales = Number(p.sales ?? p.totalSales ?? p.salesCount ?? 0);
@@ -88,10 +71,8 @@ function ProductPerformanceChart({ products }) {
     const conversion = views > 0 ? (sales / views) * 100 : 0;
     return { id: p._id ?? p.id, title: p.title ?? "Untitled", views, sales, revenue, conversion };
   });
-
   const maxViews = Math.max(...rows.map((r) => r.views), 1);
   const maxSales = Math.max(...rows.map((r) => r.sales), 1);
-
   return (
     <Section
       title="Product Performance"
@@ -108,16 +89,14 @@ function ProductPerformanceChart({ products }) {
       }
     >
       <div className="relative h-64">
-        {/* grid */}
         <div className="absolute inset-0">
           {[0, 25, 50, 75, 100].map((p) => (
             <div key={p} className="absolute inset-x-0 border-t border-gray-700/50" style={{ top: `${p}%` }} />
           ))}
         </div>
-        {/* bars */}
         <div className="relative flex h-full items-end gap-3">
           {rows.map((r, i) => {
-            const viewH = (r.views / maxViews) * 85 + 5; // keep visible
+            const viewH = (r.views / maxViews) * 85 + 5; 
             const saleH = (r.sales / maxSales) * 40 + 4;
             return (
               <div key={r.id} className="group flex min-w-0 flex-1 flex-col items-center">
@@ -173,7 +152,6 @@ function ProductPerformanceChart({ products }) {
     </Section>
   );
 }
-
 function CategoryDistributionChart({ products }) {
   const cats = useMemo(() => {
     const m = new Map();
@@ -184,7 +162,6 @@ function CategoryDistributionChart({ products }) {
     });
     return Array.from(m.entries());
   }, [products]);
-
   if (!cats.length)
     return (
       <Section title="Category Distribution" icon={<PieChart className="h-5 w-5 text-[#00FF89]" />}>
@@ -194,11 +171,9 @@ function CategoryDistributionChart({ products }) {
         </div>
       </Section>
     );
-
   const total = cats.reduce((s, [, v]) => s + v.count, 0);
   const palette = ["#00FF89", "#3B82F6", "#8B5CF6", "#F59E0B", "#EF4444", "#10B981"];
-
-  let start = 0; // in degrees
+  let start = 0; 
   const arcs = cats.map(([name, v], i) => {
     const angle = (v.count / total) * 360;
     const a0 = start;
@@ -215,7 +190,6 @@ function CategoryDistributionChart({ products }) {
     const d = `M ${cx} ${cy} L ${sx} ${sy} A ${r} ${r} 0 ${large} 1 ${ex} ${ey} Z`;
     return { d, color: palette[i % palette.length], name, count: v.count };
   });
-
   return (
     <Section title="Category Distribution" icon={<PieChart className="h-5 w-5 text-[#00FF89]" />}>
       <div className="flex flex-col items-center gap-6 lg:flex-row">
@@ -251,7 +225,6 @@ function CategoryDistributionChart({ products }) {
     </Section>
   );
 }
-
 function ProductStatusOverview({ products }) {
   const statusColors = {
     published: "#10B981",
@@ -266,7 +239,6 @@ function ProductStatusOverview({ products }) {
   });
   const entries = Array.from(map.entries());
   const total = (products ?? []).length || 1;
-
   return (
     <Section title="Product Status Overview" icon={<Activity className="h-5 w-5 text-[#00FF89]" />}>
       <div className="space-y-4">
@@ -288,7 +260,6 @@ function ProductStatusOverview({ products }) {
     </Section>
   );
 }
-
 function PriceAnalysisChart({ products }) {
   const ranges = [
     { label: "Free", min: 0, max: 0 },
@@ -307,7 +278,6 @@ function PriceAnalysisChart({ products }) {
     }).length,
   }));
   const max = Math.max(1, ...data.map((d) => d.count));
-
   return (
     <Section title="Price Range Distribution" icon={<DollarSign className="h-5 w-5 text-[#00FF89]" />}>
       <div className="relative h-64">
@@ -323,7 +293,6 @@ function PriceAnalysisChart({ products }) {
               <stop offset="100%" stopColor="#00FF89" stopOpacity="0.1" />
             </linearGradient>
           </defs>
-          {/* Area */}
           <motion.path
             d={`M 0 256 ${data
               .map((d, i) => {
@@ -337,7 +306,6 @@ function PriceAnalysisChart({ products }) {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
           />
-          {/* Line */}
           <motion.path
             d={`${data
               .map((d, i) => {
@@ -368,7 +336,6 @@ function PriceAnalysisChart({ products }) {
             );
           })}
         </svg>
-        {/* X axis */}
         <div className="absolute -bottom-7 left-0 right-0 flex justify-between text-[11px] text-gray-400">
           {data.map((d) => (
             <span key={d.label}>{d.label}</span>
@@ -394,7 +361,6 @@ function PriceAnalysisChart({ products }) {
     </Section>
   );
 }
-
 function DetailedProductCard({ product, index }) {
   const badge = (product.status ?? "unknown").toUpperCase();
   const badgeClass =
@@ -405,13 +371,11 @@ function DetailedProductCard({ product, index }) {
       : product.status === "pending"
       ? "bg-blue-900 text-blue-300"
       : "bg-red-900 text-red-300";
-
   return (
     <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }} className="rounded-2xl border border-gray-700 bg-gray-900/60 p-5 hover:border-gray-600">
       <div className="mb-5 flex items-start gap-4">
         <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-xl bg-gray-800">
           {product.thumbnail ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img src={product.thumbnail} alt={product.title} className="h-20 w-20 object-cover" />
           ) : (
             <Package className="h-10 w-10 text-[#00FF89]" />
@@ -438,7 +402,6 @@ function DetailedProductCard({ product, index }) {
           </div>
         </div>
       </div>
-
       <div className="mb-5 flex items-center gap-4">
         <div className="text-2xl font-bold text-[#00FF89]">${Number(product.price ?? 0)}</div>
         {product.originalPrice && product.originalPrice > product.price && (
@@ -450,26 +413,22 @@ function DetailedProductCard({ product, index }) {
           </>
         )}
       </div>
-
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat icon={<Eye className="h-4 w-4" />} color="text-blue-400" label="Views" value={Number(product.views ?? 0).toLocaleString()} />
         <Stat icon={<ShoppingCart className="h-4 w-4" />} color="text-green-400" label="Sales" value={Number(product.sales ?? 0).toLocaleString()} />
         <Stat icon={<DollarSign className="h-4 w-4" />} color="text-purple-400" label="Revenue" value={`$${Number(product.revenue ?? (Number(product.price ?? 0) * Number(product.sales ?? 0))).toLocaleString()}`} />
         <Stat icon={<TrendingUp className="h-4 w-4" />} color="text-orange-400" label="Conversion" value={`${(Number(product.conversionRate ?? 0)).toFixed(2)}%`} />
       </div>
-
       <div className="mb-5 grid grid-cols-3 gap-3">
         <MiniStat icon={<Star className="h-4 w-4" />} color="text-yellow-400" label={`Rating (${Number(product.totalReviews ?? 0)})`} value={(Number(product.averageRating ?? 0)).toFixed(1)} />
         <MiniStat icon={<TrendingUp className="h-4 w-4" />} color="text-blue-400" label="Upvotes" value={Number(product.upvotes ?? 0)} />
         <MiniStat icon={<Package className="h-4 w-4" />} color="text-red-400" label="Favorites" value={Number(product.favorites ?? 0)} />
       </div>
-
       <div className="mb-5 space-y-2">
         <Flag label="Verified Product" on={Boolean(product.isVerified)} />
         <Flag label="Tested" on={Boolean(product.isTested)} />
         <Flag label="Refund Policy" on={Boolean(product.hasRefundPolicy)} onText="Available" offText="Not Available" />
       </div>
-
       {Array.isArray(product.tags) && product.tags.length > 0 && (
         <div className="mb-4">
           <div className="mb-2 text-sm text-gray-400">Tags</div>
@@ -483,7 +442,6 @@ function DetailedProductCard({ product, index }) {
           </div>
         </div>
       )}
-
       <div className="flex items-center justify-between border-t border-gray-700 pt-4 text-sm text-gray-400">
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4" />
@@ -494,7 +452,6 @@ function DetailedProductCard({ product, index }) {
     </motion.div>
   );
 }
-
 function Stat({ icon, color, label, value }) {
   return (
     <div className="rounded-lg bg-gray-800/60 p-3 text-center">
@@ -504,7 +461,6 @@ function Stat({ icon, color, label, value }) {
     </div>
   );
 }
-
 function MiniStat({ icon, color, label, value }) {
   return (
     <div className="rounded-lg bg-gray-800/40 p-3 text-center">
@@ -514,7 +470,6 @@ function MiniStat({ icon, color, label, value }) {
     </div>
   );
 }
-
 function Flag({ label, on, onText = "On", offText = "Off" }) {
   return (
     <div className="flex items-center justify-between text-sm">
@@ -525,7 +480,6 @@ function Flag({ label, on, onText = "On", offText = "Off" }) {
     </div>
   );
 }
-
 function ProductsTable({ items }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-700">
@@ -549,7 +503,6 @@ function ProductsTable({ items }) {
                   <div className="flex items-center gap-3">
                     <div className="grid h-10 w-10 place-items-center overflow-hidden rounded-lg bg-gray-800">
                       {p.thumbnail ? (
-                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={p.thumbnail} alt="" className="h-10 w-10 object-cover" />
                       ) : (
                         <Package className="h-5 w-5 text-[#00FF89]" />
@@ -585,16 +538,13 @@ function ProductsTable({ items }) {
     </div>
   );
 }
-
 export default function ProductsTab({ analyticsData, timeRange, loading }) {
   const [q, setQ] = useState("");
   const [sortBy, setSortBy] = useState("views");
   const [cat, setCat] = useState("");
   const [status, setStatus] = useState("");
-  const [view, setView] = useState("cards"); // "cards" | "table"
-
+  const [view, setView] = useState("cards"); 
   if (loading && !analyticsData) return <AnalyticsLoadingScreen variant="products" />;
-
   const { products = [], summary = {} } = analyticsData || {};
   if (!products.length)
     return (
@@ -604,10 +554,8 @@ export default function ProductsTab({ analyticsData, timeRange, loading }) {
         <p className="max-w-md text-sm text-gray-500">Create your first product to see analytics.</p>
       </div>
     );
-
   const categories = Array.from(new Set(products.map((p) => p.category).filter(Boolean)));
   const statuses = Array.from(new Set(products.map((p) => p.status).filter(Boolean)));
-
   const filtered = useMemo(() => {
     const text = q.trim().toLowerCase();
     return products
@@ -634,18 +582,14 @@ export default function ProductsTab({ analyticsData, timeRange, loading }) {
         }
       });
   }, [products, q, cat, status, sortBy]);
-
   return (
     <div className="space-y-8">
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
         <KPI icon={<Package className="h-5 w-5 text-[#00FF89]" />} label="Total Products" value={summary.totalProducts ?? products.length} sub="Products created" />
         <KPI icon={<Eye className="h-5 w-5 text-blue-400" />} label="Total Views" value={(summary.totalViews ?? products.reduce((s, p) => s + Number(p.views ?? 0), 0)).toLocaleString()} sub="Across all products" />
         <KPI icon={<Star className="h-5 w-5 text-yellow-400" />} label="Avg Rating" value={(summary.avgRating ?? (products.length ? products.reduce((s, p) => s + Number(p.averageRating ?? 0), 0) / products.length : 0)).toFixed(1)} sub="Overall rating" />
         <KPI icon={<TrendingUp className="h-5 w-5 text-green-400" />} label="Total Upvotes" value={summary.totalUpvotes ?? products.reduce((s, p) => s + Number(p.upvotes ?? 0), 0)} sub="Community engagement" />
       </div>
-
-      {/* Sticky Toolbar */}
       <div className="sticky top-0 z-10 -mx-1 rounded-xl border border-gray-700 bg-gray-900/80 px-4 py-3 backdrop-blur supports-[backdrop-filter]:backdrop-blur">
         <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-1 items-center gap-3">
@@ -707,7 +651,6 @@ export default function ProductsTab({ analyticsData, timeRange, loading }) {
             </button>
           </div>
         </div>
-        {/* Active filter chips */}
         <div className="mt-2 flex flex-wrap gap-2">
           {q && <Chip label={`Search: "${q}"`} onRemove={() => setQ("")} />}
           {cat && <Chip label={`Category: ${String(cat).replace("_", " ")}`} onRemove={() => setCat("")} />}
@@ -715,8 +658,6 @@ export default function ProductsTab({ analyticsData, timeRange, loading }) {
           {!q && !cat && !status && <span className="text-xs text-gray-500">No filters applied</span>}
         </div>
       </div>
-
-      {/* Charts */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <ProductPerformanceChart products={products} />
         <CategoryDistributionChart products={products} />
@@ -725,8 +666,6 @@ export default function ProductsTab({ analyticsData, timeRange, loading }) {
         <ProductStatusOverview products={products} />
         <PriceAnalysisChart products={products} />
       </div>
-
-      {/* Content */}
       {view === "cards" ? (
         <Section title="Product Details" icon={<Rows className="h-5 w-5 text-[#00FF89]" />} right={<span className="text-xs text-gray-400">Showing {filtered.length} of {products.length}</span>}>
           <div className="grid grid-cols-1 gap-6">
@@ -743,7 +682,6 @@ export default function ProductsTab({ analyticsData, timeRange, loading }) {
     </div>
   );
 }
-
 function KPI({ icon, label, value, sub }) {
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-gray-700 bg-gray-900/60 p-5">

@@ -1,14 +1,10 @@
 'use client'
-
 import React from 'react'
 import Link from 'next/link'
 import { Home, ChevronRight } from 'lucide-react'
-
 import { DESIGN_TOKENS, DSText, DSContainer } from '@/lib/design-system'
-
 export default function ProductBreadcrumb({ product }) {
     if (!product) return null
-
     const breadcrumbItems = [
         { href: '/', label: 'Home', icon: Home },
         { href: '/explore', label: 'Products' },
@@ -19,7 +15,6 @@ export default function ProductBreadcrumb({ product }) {
         },
         { label: product.title, current: true }
     ]
-
     return (
         <section
             className="pt-4 pb-4 border-b"

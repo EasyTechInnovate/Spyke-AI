@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -30,51 +29,40 @@ import { useAuth } from '@/hooks/useAuth'
 import Link from 'next/link'
 import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
-
 export default function CheckoutPage() {
     const [notification, setNotification] = useState(null)
-
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
         setTimeout(() => setNotification(null), 5000)
     }
-
     const clearNotification = () => setNotification(null)
-
     const router = useRouter()
     const { isAuthenticated } = useAuth()
     const { cartItems, cartData, loading: cartLoading, clearCart, removeFromCart } = useCart()
-
     const [loading, setLoading] = useState(false)
     const [initialLoad, setInitialLoad] = useState(true)
     const [hasCheckedCart, setHasCheckedCart] = useState(false)
     const [skipCartRedirect, setSkipCartRedirect] = useState(false)
-    const [step, setStep] = useState(1) // 1: Review, 2: Payment
+    const [step, setStep] = useState(1) 
     const [paymentMethod, setPaymentMethod] = useState('manual')
-    
-
     useEffect(() => {
         if (!cartLoading) {
             setInitialLoad(false)
             setHasCheckedCart(true)
         }
     }, [cartLoading])
-
     useEffect(() => {
         if (hasCheckedCart && !cartLoading && !initialLoad && !isAuthenticated) {
             router.push('/auth/signup?redirect=/checkout')
             return
         }
-
         const timer = setTimeout(() => {
             if (hasCheckedCart && !cartLoading && !initialLoad && !skipCartRedirect && cartItems.length === 0) {
                 router.push('/cart')
             }
         }, 500)
-
         return () => clearTimeout(timer)
     }, [cartItems.length, cartLoading, hasCheckedCart, initialLoad, router, skipCartRedirect, isAuthenticated])
-
     const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
     const discount = cartData.appliedPromocode
         ? cartData.appliedPromocode.discountType === 'percentage'
@@ -82,7 +70,6 @@ export default function CheckoutPage() {
             : cartData.appliedPromocode.discountValue || cartData.appliedPromocode.discountAmount
         : 0
     const total = Math.max(0, subtotal - discount)
-
     const handleRemoveItem = async (itemId) => {
         try {
             await removeFromCart(itemId)
@@ -91,47 +78,37 @@ export default function CheckoutPage() {
             showMessage('Failed to remove item', 'error')
         }
     }
-
     const handlePaymentMethodChange = async (newPaymentMethod) => {
         setPaymentMethod(newPaymentMethod)
     }
-
     const handleNextStep = async () => {
         if (step === 1) {
             setStep(2)
         }
     }
-
     const handlePreviousStep = () => {
         if (step > 1) setStep(step - 1)
     }
-
     const handleCheckout = async () => {
         setLoading(true)
-
         try {
             const purchaseData = {
                 paymentMethod: paymentMethod,
                 paymentReference: `${paymentMethod.toUpperCase()}-${Date.now()}`
             }
             const result = await cartAPI.createPurchase(purchaseData)
-
             const purchaseId =
                 result?.purchaseId || result?._id || result?.data?.purchaseId || result?.completed?.data?.purchaseId || result?.completed?.purchaseId
-
             if (!purchaseId) {
                 throw new Error('Failed to create purchase - no purchase ID returned')
             }
-
             await completeCheckout(purchaseId, paymentMethod)
-
         } catch (error) {
             showMessage(error.message || 'Checkout failed. Please try again.', 'error')
         } finally {
             setLoading(false)
         }
     }
-
     const completeCheckout = async (purchaseId, method) => {
         const successData = {
             orderId: purchaseId,
@@ -151,31 +128,19 @@ export default function CheckoutPage() {
                 appliedPromocode: cartData.appliedPromocode
             }
         }
-
-        // Prevent cart redirect during navigation
         setSkipCartRedirect(true)
-
-        // Store order details in sessionStorage for success page
         if (typeof window !== 'undefined') {
             sessionStorage.setItem('lastOrderDetails', JSON.stringify(successData))
         }
-
-        // Navigate to success page with enhanced data
         const successUrl = `/checkout/success?orderId=${purchaseId}&manual=${method === 'manual'}&total=${total}&items=${cartItems.length}`
         router.push(successUrl)
-
-        // Clear cart after successful navigation
         await clearCart()
         setSkipCartRedirect(false)
-
-        // Show success message
         showMessage('Order completed successfully!', 'success')
     }
-
     if (cartLoading || !hasCheckedCart) {
         return (
             <div className="min-h-screen bg-black">
-                {/* Inline Notification */}
                 {notification && (
                     <InlineNotification
                         type={notification.type}
@@ -183,7 +148,6 @@ export default function CheckoutPage() {
                         onDismiss={clearNotification}
                     />
                 )}
-
                 <Container>
                     <div className="flex items-center justify-center min-h-[60vh]">
                         <div className="text-center">
@@ -195,10 +159,8 @@ export default function CheckoutPage() {
             </div>
         )
     }
-
     return (
         <div className="min-h-screen bg-black">
-            {/* Inline Notification - Fixed positioning */}
             {notification && (
                 <div className="fixed top-4 right-4 z-50">
                     <InlineNotification
@@ -208,20 +170,16 @@ export default function CheckoutPage() {
                     />
                 </div>
             )}
-
             <main className="pt-16 pb-24">
                 <Container>
-                    {/* Progress Steps - Improved mobile responsiveness */}
                     <div className="max-w-3xl mx-auto mb-8">
                         <div className="flex items-center justify-between relative px-4 sm:px-8">
-                            {/* Progress line */}
                             <div className="absolute left-8 right-8 top-5 h-0.5 bg-gray-800 hidden sm:block">
                                 <div
                                     className="h-full bg-brand-primary transition-all duration-300"
                                     style={{ width: `${(step - 1) * 100}%` }}
                                 />
                             </div>
-
                             {[
                                 { num: 1, label: 'Review Order' },
                                 { num: 2, label: 'Payment' }
@@ -249,9 +207,7 @@ export default function CheckoutPage() {
                             ))}
                         </div>
                     </div>
-
                     <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
-                        {/* Main Form Area */}
                         <div className="lg:col-span-2">
                             <motion.div
                                 key={step}
@@ -261,7 +217,6 @@ export default function CheckoutPage() {
                                 className="bg-gray-900 border border-gray-800 rounded-2xl p-4 sm:p-6 relative"
                                 role="main"
                                 aria-label={`Checkout step ${step}`}>
-                                {/* Loading Overlay - Improved */}
                                 {loading && (
                                     <div
                                         className="absolute inset-0 bg-gray-900/90 backdrop-blur-sm rounded-2xl flex items-center justify-center z-20"
@@ -274,7 +229,6 @@ export default function CheckoutPage() {
                                         </div>
                                     </div>
                                 )}
-
                                 {step === 1 && (
                                     <ReviewStep
                                         paymentMethod={paymentMethod}
@@ -286,7 +240,6 @@ export default function CheckoutPage() {
                                         onRemoveItem={handleRemoveItem}
                                     />
                                 )}
-
                                 {step === 2 && (
                                     <PaymentMethodStep
                                         paymentMethod={paymentMethod}
@@ -294,8 +247,6 @@ export default function CheckoutPage() {
                                         onPaymentMethodChange={handlePaymentMethodChange}
                                     />
                                 )}
-
-                                {/* Navigation Buttons - Improved spacing and states */}
                                 <div className="flex flex-col sm:flex-row justify-between gap-4 mt-8 pt-6 border-t border-gray-800">
                                     {step > 1 ? (
                                         <button
@@ -315,7 +266,6 @@ export default function CheckoutPage() {
                                             Back to Cart
                                         </Link>
                                     )}
-
                                     {step < 2 ? (
                                         <button
                                             onClick={handleNextStep}
@@ -345,8 +295,6 @@ export default function CheckoutPage() {
                                     )}
                                 </div>
                             </motion.div>
-
-                            {/* Trust Signals - Improved spacing */}
                             <div className="mt-6 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-gray-500 text-sm">
                                 <div className="flex items-center gap-2">
                                     <Shield className="w-4 h-4 text-brand-primary" />
@@ -362,8 +310,6 @@ export default function CheckoutPage() {
                                 </div>
                             </div>
                         </div>
-
-                        {/* Order Summary Sidebar */}
                         <div className="lg:col-span-1">
                             <OrderSummary
                                 cartItems={cartItems}
@@ -379,12 +325,8 @@ export default function CheckoutPage() {
         </div>
     )
 }
-
-// Review Step Component
 function ReviewStep({ cartItems, total, subtotal, discount, promocode, onRemoveItem }) {
-    // Helper function to get the best available image URL
     const getProductImage = (item) => {
-        // Try multiple possible image field names, including nested productId
         const imageUrl =
             item.thumbnail ||
             item.image ||
@@ -392,35 +334,28 @@ function ReviewStep({ cartItems, total, subtotal, discount, promocode, onRemoveI
             item.productImage ||
             item.images?.[0] ||
             item.media?.[0]?.url ||
-            // Check nested productId object (from API response)
             item.productId?.thumbnail ||
             item.productId?.image ||
             item.productId?.thumbnailImage ||
             item.productId?.images?.[0] ||
             null
-
         return imageUrl
     }
-
     return (
         <div>
             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
                 <Package className="w-6 h-6 text-brand-primary" />
                 Review Your Order
             </h2>
-
             <div className="space-y-4 mb-6">
                 {cartItems.map((item) => {
                     const imageUrl = getProductImage(item)
-                    // Get product details from either item directly or nested productId
                     const product = item.productId || item
-
                     return (
                         <div
                             key={item._id || item.id}
                             className="bg-gray-800 border border-gray-700 rounded-xl p-4">
                             <div className="flex items-start gap-4">
-                                {/* Product Image */}
                                 <div className="flex-shrink-0 w-20 h-20">
                                     {imageUrl ? (
                                         <OptimizedImage
@@ -433,18 +368,13 @@ function ReviewStep({ cartItems, total, subtotal, discount, promocode, onRemoveI
                                             showFallbackIcon={true}
                                         />
                                     ) : (
-                                        // Fallback for no image
                                         <div className="w-full h-full bg-gradient-to-br from-brand-primary/20 to-gray-700/30 rounded-lg border border-gray-600 flex items-center justify-center">
                                             <Package className="w-8 h-8 text-brand-primary/60" />
                                         </div>
                                     )}
                                 </div>
-
-                                {/* Product Details */}
                                 <div className="flex-1 min-w-0">
                                     <h3 className="font-semibold text-white text-lg mb-1 truncate">{product.title || item.title}</h3>
-
-                                    {/* Seller Info - Display actual seller name */}
                                     <div className="flex items-center gap-2 mb-2">
                                         <span className="text-sm text-gray-400">Sold by:</span>
                                         <span className="text-sm text-brand-primary font-medium">
@@ -457,8 +387,6 @@ function ReviewStep({ cartItems, total, subtotal, discount, promocode, onRemoveI
                                                 'Verified Seller'}
                                         </span>
                                     </div>
-
-                                    {/* Product Type & Category */}
                                     <div className="flex items-center gap-3 mb-3">
                                         <span className="inline-flex items-center gap-1 px-2 py-1 bg-brand-primary/10 text-brand-primary text-xs rounded-full">
                                             <Tag className="w-3 h-3" />
@@ -470,8 +398,6 @@ function ReviewStep({ cartItems, total, subtotal, discount, promocode, onRemoveI
                                             </span>
                                         )}
                                     </div>
-
-                                    {/* Price */}
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <span className="text-xl font-bold text-brand-primary">
@@ -484,8 +410,6 @@ function ReviewStep({ cartItems, total, subtotal, discount, promocode, onRemoveI
                                                     </span>
                                                 )}
                                         </div>
-
-                                        {/* Remove Button */}
                                         <button
                                             onClick={() =>
                                                 onRemoveItem(
@@ -504,11 +428,8 @@ function ReviewStep({ cartItems, total, subtotal, discount, promocode, onRemoveI
                     )
                 })}
             </div>
-
-            {/* Order Totals */}
             <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
                 <h3 className="font-semibold text-white mb-4">Order Summary</h3>
-
                 <div className="space-y-3">
                     <div className="flex justify-between text-gray-300">
                         <span>
@@ -516,14 +437,12 @@ function ReviewStep({ cartItems, total, subtotal, discount, promocode, onRemoveI
                         </span>
                         <span>${subtotal.toFixed(2)}</span>
                     </div>
-
                     {promocode && discount > 0 && (
                         <div className="flex justify-between text-brand-primary">
                             <span>Promo Code ({promocode.code})</span>
                             <span>-${discount.toFixed(2)}</span>
                         </div>
                     )}
-
                     <div className="border-t border-gray-600 pt-3">
                         <div className="flex justify-between">
                             <span className="text-lg font-semibold text-white">Total</span>
@@ -532,8 +451,6 @@ function ReviewStep({ cartItems, total, subtotal, discount, promocode, onRemoveI
                     </div>
                 </div>
             </div>
-
-            {/* Terms */}
             <div className="mt-4 text-xs text-gray-400">
                 By completing this purchase, you agree to our{' '}
                 <Link
@@ -551,7 +468,6 @@ function ReviewStep({ cartItems, total, subtotal, discount, promocode, onRemoveI
         </div>
     )
 }
-
 function PaymentMethodStep({ paymentMethod, setPaymentMethod, onPaymentMethodChange }) {
     const paymentOptions = [
         {
@@ -584,14 +500,12 @@ function PaymentMethodStep({ paymentMethod, setPaymentMethod, onPaymentMethodCha
             comingSoon: true
         }
     ]
-
     return (
         <div>
             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
                 <CreditCard className="w-6 h-6 text-brand-primary" />
                 Choose Payment Method
             </h2>
-
             <div className="space-y-4">
                 {paymentOptions.map((option) => (
                     <label
@@ -619,7 +533,6 @@ function PaymentMethodStep({ paymentMethod, setPaymentMethod, onPaymentMethodCha
                                 disabled={option.comingSoon}
                                 className="sr-only"
                             />
-
                             <div className="flex-1">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
@@ -655,24 +568,20 @@ function PaymentMethodStep({ paymentMethod, setPaymentMethod, onPaymentMethodCha
                     </label>
                 ))}
             </div>
-
             {paymentMethod === 'stripe' && (
                 <div className="mt-6 p-4 bg-gray-800 rounded-xl">
                     <p className="text-sm text-gray-400 mb-4">You will be redirected to Stripe's secure payment page to complete your purchase.</p>
-
                     <div className="flex items-center gap-2 text-xs text-gray-500">
                         <Lock className="w-4 h-4" />
                         Your payment information is encrypted and secure
                     </div>
                 </div>
             )}
-
             {paymentMethod === 'manual' && (
                 <div className="mt-6 p-4 bg-gray-800 rounded-xl">
                     <p className="text-sm text-gray-400 mb-4">
                         This is a test payment method. Your order will be processed immediately without actual payment.
                     </p>
-
                     <div className="space-y-2">
                         <div className="flex items-center gap-2 text-xs text-gray-500">
                             <CheckCircle className="w-4 h-4 text-green-400" />
@@ -688,10 +597,7 @@ function PaymentMethodStep({ paymentMethod, setPaymentMethod, onPaymentMethodCha
         </div>
     )
 }
-
-// Order Summary Component
 function OrderSummary({ cartItems, subtotal, discount, total, promocode }) {
-    // Helper function to get the best available image URL
     const getProductImage = (item) => {
         const imageUrl =
             item.thumbnail ||
@@ -700,7 +606,6 @@ function OrderSummary({ cartItems, subtotal, discount, total, promocode }) {
             item.productImage ||
             item.images?.[0] ||
             item.media?.[0]?.url ||
-            // Check nested productId object (from API response)
             item.productId?.thumbnail ||
             item.productId?.image ||
             item.productId?.thumbnailImage ||
@@ -708,18 +613,13 @@ function OrderSummary({ cartItems, subtotal, discount, total, promocode }) {
             null
         return imageUrl
     }
-
     return (
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 sticky top-8">
             <h3 className="text-xl font-semibold text-white mb-6">Order Summary</h3>
-
-            {/* Items List */}
             <div className="space-y-4 mb-6">
                 {cartItems.map((item) => {
                     const imageUrl = getProductImage(item)
-                    // Get product details from either item directly or nested productId
                     const product = item.productId || item
-
                     return (
                         <div
                             key={item._id || item.id}
@@ -736,7 +636,6 @@ function OrderSummary({ cartItems, subtotal, discount, total, promocode }) {
                                         showFallbackIcon={true}
                                     />
                                 ) : (
-                                    // Fallback for no image
                                     <div className="w-full h-full bg-gradient-to-br from-brand-primary/20 to-gray-700/30 rounded-lg border border-gray-600 flex items-center justify-center">
                                         <Package className="w-4 h-4 text-brand-primary/60" />
                                     </div>
@@ -753,21 +652,17 @@ function OrderSummary({ cartItems, subtotal, discount, total, promocode }) {
                     )
                 })}
             </div>
-
-            {/* Totals */}
             <div className="border-t border-gray-700 pt-6 space-y-3">
                 <div className="flex justify-between text-gray-300">
                     <span>Subtotal</span>
                     <span>${subtotal.toFixed(2)}</span>
                 </div>
-
                 {promocode && discount > 0 && (
                     <div className="flex justify-between text-brand-primary">
                         <span>Discount ({promocode.code})</span>
                         <span>-${discount.toFixed(2)}</span>
                     </div>
                 )}
-
                 <div className="border-t border-gray-700 pt-3">
                     <div className="flex justify-between text-lg font-semibold">
                         <span className="text-white">Total</span>
@@ -775,8 +670,6 @@ function OrderSummary({ cartItems, subtotal, discount, total, promocode }) {
                     </div>
                 </div>
             </div>
-
-            {/* Security Badge */}
             <div className="mt-6 pt-6 border-t border-gray-700">
                 <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
                     <Shield className="w-4 h-4 text-brand-primary" />
@@ -789,4 +682,3 @@ function OrderSummary({ cartItems, subtotal, discount, total, promocode }) {
         </div>
     )
 }
-

@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { X, Menu, TrendingUp, ShoppingCart, LogOut, Store, User } from 'lucide-react'
 import UserAvatar, { getDisplayName, getInitials } from './UserAvatar'
-
 export default function MobileMenu({
     isOpen,
     onClose,
@@ -16,16 +15,12 @@ export default function MobileMenu({
     onLogout
 }) {
     if (!isOpen) return null
-
     return (
         <>
-            {/* Mobile Menu Overlay */}
             <div 
                 className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
                 onClick={onClose}
             />
-            
-            {/* Mobile Menu Content - Fixed positioning to align with header */}
             <div className="md:hidden fixed top-20 sm:top-24 lg:top-28 left-0 right-0 bg-black/95 backdrop-blur-lg border-t border-gray-700 max-h-[calc(100vh-5rem)] sm:max-h-[calc(100vh-6rem)] lg:max-h-[calc(100vh-7rem)] overflow-y-auto z-50">
                 <nav className="flex flex-col py-4">
                     {showBecomeSeller && (
@@ -37,8 +32,6 @@ export default function MobileMenu({
                             <span>Become a Seller</span>
                         </Link>
                     )}
-
-                    {/* Navigation Links */}
                     {navigation.map((item) => (
                         <Link
                             key={item.name}
@@ -49,11 +42,9 @@ export default function MobileMenu({
                             <span>{item.name}</span>
                         </Link>
                     ))}
-
                     {user ? (
                         <>
                             <div className="border-t border-gray-700 mt-2">
-                                {/* User Info */}
                                 <div className="flex items-center gap-3 px-6 py-4 bg-gray-900/50">
                                     <UserAvatar
                                         user={user}
@@ -66,8 +57,6 @@ export default function MobileMenu({
                                         <p className="text-sm text-gray-400 truncate">{user.emailAddress || user.email}</p>
                                     </div>
                                 </div>
-
-                                {/* Role Switcher */}
                                 {isSeller && (
                                     <div className="px-6 py-4 bg-gray-900/30">
                                         <p className="text-xs text-gray-500 uppercase tracking-wide mb-3">Switch Mode</p>
@@ -97,8 +86,6 @@ export default function MobileMenu({
                                         </div>
                                     </div>
                                 )}
-
-                                {/* Cart Link */}
                                 <Link
                                     href="/cart"
                                     className="flex items-center gap-3 font-kumbh-sans font-medium text-base text-gray-300 hover:text-brand-primary px-6 py-4 hover:bg-white/5 transition-all border-b border-gray-800/50"
@@ -106,8 +93,6 @@ export default function MobileMenu({
                                     <ShoppingCart className="h-5 w-5 opacity-70" />
                                     <span>Cart {cartCount > 0 && `(${cartCount})`}</span>
                                 </Link>
-
-                                {/* Menu Items */}
                                 {menuItems.map((item) => (
                                     <Link
                                         key={item.name}
@@ -118,8 +103,6 @@ export default function MobileMenu({
                                         <span>{item.name}</span>
                                     </Link>
                                 ))}
-
-                                {/* Logout Button */}
                                 <div className="px-6 py-4">
                                     <button
                                         onClick={() => {

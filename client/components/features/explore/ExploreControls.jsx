@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion'
 import { Search, Filter, SlidersHorizontal, Grid3X3, List } from 'lucide-react'
-
 export default function ExploreControls({ filters, viewMode, showFilters, onSearch, onViewModeChange, onToggleFilters, onToggleMobileFilters }) {
     const hasActiveFilters =
         Object.keys(filters).filter(
@@ -13,7 +12,6 @@ export default function ExploreControls({ filters, viewMode, showFilters, onSear
                 (k === 'verifiedOnly' && filters[k]) ||
                 (k === 'priceRange' && (filters[k][0] > 0 || filters[k][1] < 1000))
         ).length > 0
-
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -21,7 +19,6 @@ export default function ExploreControls({ filters, viewMode, showFilters, onSear
             transition={{ delay: 0.1 }}
             className="mb-8 space-y-4">
             <div className="flex flex-col lg:flex-row gap-4">
-                {/* Search Input */}
                 <div className="flex-1 relative">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
@@ -33,9 +30,7 @@ export default function ExploreControls({ filters, viewMode, showFilters, onSear
                         aria-label="Search products"
                     />
                 </div>
-
                 <div className="flex gap-2">
-                    {/* Mobile Filter Button */}
                     <button
                         onClick={onToggleMobileFilters}
                         className="lg:hidden flex items-center gap-2 px-4 py-2 bg-gray-900 border border-gray-800 rounded-xl hover:bg-gray-800 transition-colors"
@@ -44,8 +39,6 @@ export default function ExploreControls({ filters, viewMode, showFilters, onSear
                         Filters
                         {hasActiveFilters && <span className="w-2 h-2 bg-brand-primary rounded-full" />}
                     </button>
-
-                    {/* Desktop Filter Toggle */}
                     <button
                         onClick={onToggleFilters}
                         className="hidden lg:flex items-center gap-2 px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl hover:bg-gray-800 transition-colors h-12"
@@ -53,8 +46,6 @@ export default function ExploreControls({ filters, viewMode, showFilters, onSear
                         <SlidersHorizontal className="w-4 h-4" />
                         {showFilters ? 'Hide' : 'Show'} Filters
                     </button>
-
-                    {/* View Mode Toggle */}
                     <div className="flex items-center gap-1 bg-gray-900 border border-gray-800 rounded-xl p-1 h-12">
                         <button
                             onClick={() => onViewModeChange('grid')}
@@ -78,4 +69,3 @@ export default function ExploreControls({ filters, viewMode, showFilters, onSear
         </motion.div>
     )
 }
-

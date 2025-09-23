@@ -1,27 +1,5 @@
 'use client'
-
 import React from 'react'
-
-/**
- * @typedef {Object} Step
- * @property {number} id - Step ID
- * @property {string} title - Step title
- * @property {string} [subtitle] - Step subtitle
- */
-
-/**
- * @typedef {Object} StepIndicatorProps
- * @property {Step[]} steps - Array of steps
- * @property {number} currentStep - Current active step
- * @property {string} [className] - Additional CSS classes
- * @property {boolean} [showLabels=true] - Whether to show step labels
- * @property {boolean} [compact=false] - Use compact mode for mobile
- */
-
-/**
- * Reusable step indicator component for multi-step forms
- * @param {StepIndicatorProps} props
- */
 export default function StepIndicator({
     steps,
     currentStep,
@@ -36,7 +14,6 @@ export default function StepIndicator({
                     const isActive = currentStep >= step.id
                     const isCompleted = currentStep > step.id
                     const isLast = index === steps.length - 1
-
                     return (
                         <div
                             key={step.id}
@@ -71,7 +48,6 @@ export default function StepIndicator({
                                         step.id
                                     )}
                                 </div>
-                                
                                 {showLabels && !compact && (
                                     <div className="ml-3 hidden sm:block">
                                         <p className="font-kumbh-sans font-medium">
@@ -85,7 +61,6 @@ export default function StepIndicator({
                                     </div>
                                 )}
                             </div>
-                            
                             {!isLast && (
                                 <div
                                     className={`
@@ -101,7 +76,6 @@ export default function StepIndicator({
                     )
                 })}
             </div>
-            
             {showLabels && compact && (
                 <div className="mt-3 text-center sm:hidden">
                     <p className="font-kumbh-sans font-medium text-brand-primary">

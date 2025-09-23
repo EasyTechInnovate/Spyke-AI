@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useCallback, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import {
@@ -25,8 +24,6 @@ import { useImageUpload } from '@/hooks/useImageUpload'
 import { useNotifications } from '@/components/shared/NotificationProvider'
 import { useFileUploadQueue } from '@/hooks/useFileUploadQueue'
 import { getEnhancedErrorMessage } from '@/lib/utils/errorMessages'
-
-// Enhanced tooltips with contextual help
 const FIELD_HELP = {
     thumbnailImage: {
         title: 'Thumbnail Image Guide',
@@ -59,11 +56,8 @@ const FIELD_HELP = {
         examples: ['Simple automation: $10-50', 'Complex workflow: $50-200', 'Enterprise solution: $200+']
     }
 }
-
-// Tooltip component (reused from Step1)
 const Tooltip = ({ content, examples }) => {
     const [isVisible, setIsVisible] = useState(false)
-
     return (
         <div className="relative inline-block">
             <button
@@ -75,7 +69,6 @@ const Tooltip = ({ content, examples }) => {
                 className="p-1 text-gray-400 hover:text-[#00FF89] transition-colors">
                 <HelpCircle className="w-4 h-4" />
             </button>
-
             {isVisible && (
                 <motion.div
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -103,13 +96,10 @@ const Tooltip = ({ content, examples }) => {
         </div>
     )
 }
-
-// Auto-save indicator (reused from Step1)
 const AutoSaveIndicator = () => {
     const lastSaved = useProductCreateStore((state) => state.lastSaved)
     const isDirty = useProductCreateStore((state) => state.isDirty)
     const [showSaved, setShowSaved] = useState(false)
-
     const status = useMemo(() => {
         if (isDirty) return { icon: Save, text: 'Unsaved changes', color: 'text-yellow-400' }
         if (lastSaved) {
@@ -119,7 +109,6 @@ const AutoSaveIndicator = () => {
         }
         return { icon: Save, text: 'Auto-save enabled', color: 'text-gray-400' }
     }, [lastSaved, isDirty, showSaved])
-
     return (
         <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -130,7 +119,6 @@ const AutoSaveIndicator = () => {
         </motion.div>
     )
 }
-
 export default function Step5MediaPricing() {
     const thumbnailImage = useProductCreateStore((state) => state.thumbnailImage)
     const additionalImages = useProductCreateStore((state) => state.additionalImages)
@@ -141,7 +129,6 @@ export default function Step5MediaPricing() {
     const originalPrice = useProductCreateStore((state) => state.originalPrice)
     const errors = useProductCreateStore((state) => state.errors)
     const touchedFields = useProductCreateStore((state) => state.touchedFields)
-
     const setField = useProductCreateStore((state) => state.setField)
     const setFile = useProductCreateStore((state) => state.setFile)
     const addFile = useProductCreateStore((state) => state.addFile)
@@ -150,20 +137,16 @@ export default function Step5MediaPricing() {
     const removeTag = useProductCreateStore((state) => state.removeTag)
     const markFieldTouched = useProductCreateStore((state) => state.markFieldTouched)
     const validateTouchedFields = useProductCreateStore((state) => state.validateTouchedFields)
-
     const [dragOver, setDragOver] = useState(false)
     const [tagInput, setTagInput] = useState('')
     const [keywordInput, setKeywordInput] = useState('')
     const [videoMetadata, setVideoMetadata] = useState(null)
     const [uploadingThumbnail, setUploadingThumbnail] = useState(false)
-    const [uploadingAdditional, setUploadingAdditional] = useState(new Set()) // Track multiple uploads by index
+    const [uploadingAdditional, setUploadingAdditional] = useState(new Set()) 
     const [videoInputType, setVideoInputType] = useState('upload')
     const [videoUrl, setVideoUrl] = useState('')
     const [uploadingVideo, setUploadingVideo] = useState(false)
-
     const { showSuccess, showError } = useNotifications()
-
-    // Image upload hooks
     const thumbnailUpload = useImageUpload({
         category: 'product-thumbnails',
         maxSize: 10,
@@ -175,74 +158,57 @@ export default function Step5MediaPricing() {
             showError(error)
         }
     })
-
     const additionalUpload = useImageUpload({
         category: 'product-images',
         maxSize: 10,
         onSuccess: (url) => {
             addFile('additionalImages', url)
             showSuccess('Image uploaded successfully')
-            // Clear the upload state for the "add new" slot
             setUploadingAdditional(new Set())
         },
         onError: (error) => {
             showError(error)
-            // Clear the upload state on error
             setUploadingAdditional(new Set())
         }
     })
-
-    // Video validation function
     const validateVideoFile = (file) => {
         return new Promise((resolve, reject) => {
             if (!file) {
                 reject('No file selected')
                 return
             }
-
             if (!file.type.startsWith('video/')) {
                 reject('Please select a valid video file')
                 return
             }
-
             if (file.size > 100 * 1024 * 1024) {
-                // 100MB limit
                 reject('Video file size must be less than 100MB')
                 return
             }
-
-            // Check video duration using HTML5 video element
             const video = document.createElement('video')
             video.preload = 'metadata'
-
             video.onloadedmetadata = () => {
                 window.URL.revokeObjectURL(video.src)
                 if (video.duration > 180) {
-                    // 3 minutes limit
                     reject('Video duration must be less than 3 minutes')
                 } else {
                     resolve()
                 }
             }
-
             video.onerror = () => {
                 window.URL.revokeObjectURL(video.src)
                 reject('Invalid video file')
             }
-
             video.src = URL.createObjectURL(file)
         })
     }
-
     const handleFieldBlur = (fieldName) => {
         markFieldTouched(fieldName)
         validateTouchedFields()
     }
-
     const showFieldError = (fieldName) => {
         return touchedFields[fieldName] && errors[fieldName]
     }
-
     const handleFileUpload = useCallback(
         async (file, type) => {
             if (type === 'thumbnail') {
@@ -254,7 +220,6 @@ export default function Step5MediaPricing() {
                     showError('Image size must be less than 10MB')
                     return 'Image size must be less than 10MB'
                 }
-
                 setUploadingThumbnail(true)
                 try {
                     await thumbnailUpload.uploadImage(file)
@@ -271,12 +236,10 @@ export default function Step5MediaPricing() {
                     showError('Image size must be less than 10MB')
                     return 'Image size must be less than 10MB'
                 }
-
                 if (additionalImages.length >= VALIDATION_LIMITS.ADDITIONAL_IMAGES_MAX) {
                     showError(`Maximum ${VALIDATION_LIMITS.ADDITIONAL_IMAGES_MAX} images allowed`)
                     return `Maximum ${VALIDATION_LIMITS.ADDITIONAL_IMAGES_MAX} images allowed`
                 }
-
                 setUploadingAdditional(prev => new Set([...prev, 'new']))
                 try {
                     await additionalUpload.uploadImage(file)
@@ -293,36 +256,29 @@ export default function Step5MediaPricing() {
                     return error
                 }
             }
-
             return null
         },
         [additionalImages.length, thumbnailUpload, additionalUpload, validateVideoFile, setFile, showError]
     )
-
     const handleDrop = useCallback(
         async (e, type) => {
             e.preventDefault()
             setDragOver(false)
-
             const files = Array.from(e.dataTransfer.files)
             if (files.length === 0) return
-
             const file = files[0]
             await handleFileUpload(file, type)
         },
         [handleFileUpload]
     )
-
     const handleDragOver = useCallback((e) => {
         e.preventDefault()
         setDragOver(true)
     }, [])
-
     const handleDragLeave = useCallback((e) => {
         e.preventDefault()
         setDragOver(false)
     }, [])
-
     const handleTagInput = useCallback(
         (e) => {
             if (e.key === 'Enter' && tagInput.trim()) {
@@ -335,7 +291,6 @@ export default function Step5MediaPricing() {
         },
         [tagInput, productTags, addTag, removeTag]
     )
-
     const handleKeywordInput = useCallback(
         (e) => {
             if (e.key === 'Enter' && keywordInput.trim()) {
@@ -348,7 +303,6 @@ export default function Step5MediaPricing() {
         },
         [keywordInput, seoKeywords, addTag, removeTag]
     )
-
     const removeImage = useCallback(
         (index) => {
             removeFile('additionalImages', index)
@@ -356,43 +310,34 @@ export default function Step5MediaPricing() {
         },
         [removeFile, showSuccess]
     )
-
     const removeThumbnail = useCallback(() => {
         setField('thumbnailImage', null)
         showSuccess('Thumbnail removed')
     }, [setField, showSuccess])
-
     const removeVideo = useCallback(() => {
         setField('previewVideo', null)
         setVideoMetadata(null)
         showSuccess('Video removed')
     }, [setField, showSuccess])
-
     const handleVideoUpload = async (file) => {
         if (!file || file.type.indexOf('video/') !== 0) {
             showError('Please select a valid video file')
             return
         }
-
         if (file.size > 100 * 1024 * 1024) {
             showError('Video file size must be less than 100MB')
             return
         }
-
         setUploadingVideo(true)
         try {
             const formData = new FormData()
             formData.append('video', file)
-
             const response = await fetch('/api/upload/video', {
                 method: 'POST',
                 body: formData
             })
-
             if (!response.ok) throw new Error('Upload failed')
-
             const data = await response.json()
-
             setField('previewVideo', data.url)
             setVideoMetadata(data.metadata)
             showSuccess('Video uploaded successfully')
@@ -402,38 +347,29 @@ export default function Step5MediaPricing() {
             setUploadingVideo(false)
         }
     }
-
     const handleVideoUrlSubmit = () => {
         if (!videoUrl) {
             showError('Please enter a valid video URL')
             return
         }
-
         const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/
         if (!urlPattern.test(videoUrl)) {
             showError('Please enter a valid URL')
             return
         }
-
         setField('previewVideo', videoUrl)
         setVideoMetadata(null)
         showSuccess('Video URL added successfully')
     }
-
     return (
         <div className="space-y-10">
-            {/* Auto-save indicator */}
             <div className="flex justify-end">
                 <AutoSaveIndicator />
             </div>
-
-            {/* Visual break - Welcome section */}
             <div className="text-center pb-6 border-b border-gray-700/50">
                 <h2 className="text-xl font-semibold text-white mb-2">Media, Tags & Pricing</h2>
                 <p className="text-gray-400">Showcase your product with compelling visuals and set competitive pricing</p>
             </div>
-
-            {/* Visual Section */}
             <div className="flex items-center my-8">
                 <div className="flex-1 border-t border-gray-700"></div>
                 <div className="px-4 text-sm text-gray-400 flex items-center space-x-2">
@@ -442,8 +378,6 @@ export default function Step5MediaPricing() {
                 </div>
                 <div className="flex-1 border-t border-gray-700"></div>
             </div>
-
-            {/* Thumbnail Image */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -457,7 +391,6 @@ export default function Step5MediaPricing() {
                     />
                 </div>
                 <p className="text-base text-gray-400 mb-4">Upload a high-quality image that represents your product (max 10MB)</p>
-
                 {thumbnailImage ? (
                     <div className="relative group">
                         <img
@@ -516,16 +449,12 @@ export default function Step5MediaPricing() {
                     </div>
                 )}
             </motion.div>
-
-            {/* Visual break */}
             <div className="border-l-4 border-[#00FF89]/30 pl-6 py-4 bg-gray-800/20 rounded-r-lg">
                 <p className="text-base text-gray-300">
                     <Camera className="w-4 h-4 inline mr-2" />
                     <span className="font-medium">Pro tip:</span> High-quality visuals can increase conversion rates by up to 80%
                 </p>
             </div>
-
-            {/* Additional Images */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -542,7 +471,6 @@ export default function Step5MediaPricing() {
                     Add up to {VALIDATION_LIMITS.ADDITIONAL_IMAGES_MAX} more images to showcase your product ({additionalImages.length}/
                     {VALIDATION_LIMITS.ADDITIONAL_IMAGES_MAX})
                 </p>
-
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {additionalImages.map((image, index) => (
                         <motion.div
@@ -564,7 +492,6 @@ export default function Step5MediaPricing() {
                             </div>
                         </motion.div>
                     ))}
-
                     {additionalImages.length < VALIDATION_LIMITS.ADDITIONAL_IMAGES_MAX && (
                         <div
                             className={`aspect-square border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-center transition-all cursor-pointer ${
@@ -601,8 +528,6 @@ export default function Step5MediaPricing() {
                     <div className="text-sm text-red-400">{getEnhancedErrorMessage('additionalImages', errors.additionalImages)}</div>
                 )}
             </motion.div>
-
-            {/* Preview Video */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -618,11 +543,7 @@ export default function Step5MediaPricing() {
                     </div>
                     <span className="text-sm text-gray-400">(Optional)</span>
                 </div>
-
-                {/* ...existing video code with consistent styling... */}
             </motion.div>
-
-            {/* Tags & SEO Section */}
             <div className="flex items-center my-8">
                 <div className="flex-1 border-t border-gray-700"></div>
                 <div className="px-4 text-sm text-gray-400 flex items-center space-x-2">
@@ -631,8 +552,6 @@ export default function Step5MediaPricing() {
                 </div>
                 <div className="flex-1 border-t border-gray-700"></div>
             </div>
-
-            {/* Product Tags */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -646,7 +565,6 @@ export default function Step5MediaPricing() {
                     />
                 </div>
                 <p className="text-sm text-gray-400 mb-4">Add tags to help customers find your product (max {VALIDATION_LIMITS.PRODUCT_TAGS_MAX})</p>
-
                 <div className="space-y-3">
                     <div className="flex flex-wrap gap-3">
                         {productTags.map((tag, index) => (
@@ -665,7 +583,6 @@ export default function Step5MediaPricing() {
                             </motion.span>
                         ))}
                     </div>
-
                     <div className="relative">
                         <input
                             type="text"
@@ -690,8 +607,6 @@ export default function Step5MediaPricing() {
                     <div className="text-sm text-red-400">{getEnhancedErrorMessage('productTags', errors.productTags)}</div>
                 )}
             </motion.div>
-
-            {/* SEO Keywords */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -708,11 +623,7 @@ export default function Step5MediaPricing() {
                     />
                 </div>
                 <p className="text-sm text-gray-400 mb-4">Add keywords to improve search visibility (max {VALIDATION_LIMITS.SEO_KEYWORDS_MAX})</p>
-
-                {/* ...existing SEO keywords code with consistent styling... */}
             </motion.div>
-
-            {/* Pricing Section */}
             <div className="flex items-center my-8">
                 <div className="flex-1 border-t border-gray-700"></div>
                 <div className="px-4 text-sm text-gray-400 flex items-center space-x-2">
@@ -721,8 +632,6 @@ export default function Step5MediaPricing() {
                 </div>
                 <div className="flex-1 border-t border-gray-700"></div>
             </div>
-
-            {/* Pricing */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -736,7 +645,6 @@ export default function Step5MediaPricing() {
                     />
                 </div>
                 <p className="text-sm text-gray-400">Set your product pricing to attract customers while reflecting its value</p>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
                         <label className="block text-base font-semibold text-white">Current Price *</label>
@@ -764,7 +672,6 @@ export default function Step5MediaPricing() {
                             </div>
                         )}
                     </div>
-
                     <div className="space-y-3">
                         <label className="block text-base font-semibold text-white">
                             Original Price
@@ -791,7 +698,6 @@ export default function Step5MediaPricing() {
                         )}
                     </div>
                 </div>
-
                 {originalPrice && price && originalPrice > price && (
                     <div className="bg-[#00FF89]/10 border border-[#00FF89]/30 rounded-xl p-6">
                         <div className="flex items-center justify-between">
@@ -809,8 +715,6 @@ export default function Step5MediaPricing() {
                     </div>
                 )}
             </motion.div>
-
-            {/* Media & Pricing Summary */}
             {(thumbnailImage || additionalImages.length > 0 || productTags.length > 0 || price) && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -844,4 +748,3 @@ export default function Step5MediaPricing() {
         </div>
     )
 }
-

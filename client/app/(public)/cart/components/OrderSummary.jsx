@@ -1,5 +1,4 @@
 'use client'
-
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Shield, CreditCard, CheckCircle, Copy } from 'lucide-react'
@@ -7,7 +6,6 @@ import { formatCurrency, formatPromoDisplay } from '../utils'
 import { CHECKOUT_FEATURES } from '../constants'
 import CartPromoDisplay from '@/components/features/cart/CartPromoDisplay'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
-
 export default function OrderSummary({
     subtotal,
     totalSavings,
@@ -21,28 +19,18 @@ export default function OrderSummary({
     handleCheckout,
     cartItems
 }) {
-    // Inline notification state
     const [notification, setNotification] = useState(null)
-
-    // Show inline notification messages
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
-        // Auto-dismiss after 5 seconds
         setTimeout(() => setNotification(null), 5000)
     }
-
-    // Clear notification
     const clearNotification = () => setNotification(null)
-
-    // Ensure numeric values for calculations
     const numericSubtotal = typeof subtotal === 'number' ? subtotal : parseFloat(subtotal) || 0
     const numericTotalSavings = typeof totalSavings === 'number' ? totalSavings : parseFloat(totalSavings) || 0
     const numericDiscount = typeof discount === 'number' ? discount : parseFloat(discount) || 0
     const numericTotal = typeof total === 'number' ? total : parseFloat(total) || 0
-
     return (
         <div className="lg:col-span-1">
-            {/* Inline Notification */}
             {notification && (
                 <InlineNotification
                     type={notification.type}
@@ -50,28 +38,23 @@ export default function OrderSummary({
                     onDismiss={clearNotification}
                 />
             )}
-
             <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 className="bg-[#0f0f10] border border-gray-800 rounded-2xl p-6 lg:sticky lg:top-8"
                 role="region"
                 aria-label="Order summary">
-                {/* Header */}
                 <div className="flex items-start justify-between gap-4 mb-6">
                     <div className="flex-1">
                         <h2 className="text-2xl lg:text-3xl font-bold text-white">Order Summary</h2>
                         <p className="text-sm text-gray-400 mt-1">Review your items and proceed to checkout</p>
                     </div>
-
                     <div className="hidden lg:flex flex-col items-end">
                         <span className="text-sm text-gray-400">Total</span>
                         <span className="text-2xl font-extrabold text-[#00FF89]">{formatCurrency(numericTotal)}</span>
                         {promocodeData && <span className="text-xs text-gray-400 mt-1">Promo: {promocodeData.code}</span>}
                     </div>
                 </div>
-
-                {/* Show CartPromoDisplay only if no promo is applied */}
                 {!promocodeData && (
                     <div className="max-h-80 overflow-hidden">
                         <CartPromoDisplay
@@ -82,8 +65,6 @@ export default function OrderSummary({
                         />
                     </div>
                 )}
-
-                {/* Price Breakdown */}
                 <div className="space-y-3 py-4 border-t border-gray-700">
                     <PriceRow
                         label="Subtotal"
@@ -112,8 +93,6 @@ export default function OrderSummary({
                         />
                     </div>
                 </div>
-
-                {/* Checkout CTA */}
                 <div className="mt-6">
                     <button
                         onClick={handleCheckout}
@@ -123,8 +102,6 @@ export default function OrderSummary({
                         Proceed to Checkout
                     </button>
                 </div>
-
-                {/* Security & Features */}
                 <div className="mt-6 pt-6 border-t border-gray-700">
                     <SecurityBadge />
                     <CheckoutFeatures />
@@ -133,8 +110,6 @@ export default function OrderSummary({
         </div>
     )
 }
-
-// Sub-components
 function PriceRow({ label, amount, size = 'normal', highlight = null }) {
     const sizeClasses = size === 'large' ? 'text-lg font-semibold' : ''
     const colorClasses =
@@ -143,7 +118,6 @@ function PriceRow({ label, amount, size = 'normal', highlight = null }) {
             total: 'text-[#00FF89]',
             null: 'text-gray-300'
         }[highlight] || 'text-gray-300'
-
     return (
         <div className={`flex justify-between ${sizeClasses} ${colorClasses}`}>
             <span>{label}</span>
@@ -151,10 +125,8 @@ function PriceRow({ label, amount, size = 'normal', highlight = null }) {
         </div>
     )
 }
-
 function PromoDiscountRow({ promocodeData, discount, onRemove }) {
     const [copied, setCopied] = useState(false)
-
     const handleCopy = () => {
         if (promocodeData?.code) {
             navigator.clipboard.writeText(promocodeData.code)
@@ -162,12 +134,9 @@ function PromoDiscountRow({ promocodeData, discount, onRemove }) {
             setTimeout(() => setCopied(false), 2000)
         }
     }
-
-    // Don't render if no promocode or no discount
     if (!promocodeData || discount <= 0) {
         return null
     }
-
     return (
         <div className="p-3 bg-[#00FF89]/10 border border-[#00FF89]/30 rounded-lg">
             <div className="flex justify-between items-start">
@@ -202,7 +171,6 @@ function PromoDiscountRow({ promocodeData, discount, onRemove }) {
         </div>
     )
 }
-
 function SecurityBadge() {
     return (
         <div className="flex items-center gap-2 text-sm text-gray-400 mb-4">
@@ -211,7 +179,6 @@ function SecurityBadge() {
         </div>
     )
 }
-
 function CheckoutFeatures() {
     return (
         <div className="space-y-2">
@@ -226,4 +193,3 @@ function CheckoutFeatures() {
         </div>
     )
 }
-

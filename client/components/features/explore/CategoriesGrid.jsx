@@ -1,5 +1,4 @@
 'use client'
-
 import { useEffect, useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import productsAPI from '@/lib/api/products'
@@ -7,14 +6,12 @@ import { PRODUCT_CATEGORIES } from '@/lib/constants/filterMappings'
 import { Package, ChevronRight, BarChart3, Users, ArrowUpRight } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
 import { motion, AnimatePresence } from 'framer-motion'
-
 export default function CategoriesGrid({ blogCategories = [] }) {
   const [counts, setCounts] = useState({})
   const [categoryProducts, setCategoryProducts] = useState({})
   const [hoveredCard, setHoveredCard] = useState(null)
   const refsMap = useRef({})
   const observerRef = useRef(null)
-
   const fetchCount = useCallback(async (catId) => {
     if (counts[catId] !== undefined && counts[catId] !== -1) return
     setCounts((prev) => ({ ...prev, [catId]: -1 }))
@@ -30,8 +27,7 @@ export default function CategoriesGrid({ blogCategories = [] }) {
     } catch (err) {
       setCounts((prev) => ({ ...prev, [catId]: null }))
     }
-  }, []) // Remove counts dependency to prevent infinite loop
-
+  }, []) 
   useEffect(() => {
     observerRef.current = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
@@ -43,18 +39,14 @@ export default function CategoriesGrid({ blogCategories = [] }) {
         }
       })
     }, { rootMargin: '200px' })
-
     Object.values(refsMap.current).forEach((el) => {
       if (el) observerRef.current.observe(el)
     })
-
     return () => {
       if (observerRef.current) observerRef.current.disconnect()
     }
-  }, [fetchCount]) // fetchCount is now stable with empty deps
-
+  }, [fetchCount]) 
   const humanizeId = (id) => id.replace(/[_-]/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase())
-
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -65,7 +57,6 @@ export default function CategoriesGrid({ blogCategories = [] }) {
       }
     }
   }
-
   const itemVariants = {
     hidden: {
       opacity: 0,
@@ -80,14 +71,10 @@ export default function CategoriesGrid({ blogCategories = [] }) {
       }
     }
   }
-
   return (
     <div className="min-h-screen bg-[#121212]">
-      {/* Subtle gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
-
       <Container className="relative z-10 py-16">
-        {/* Professional Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -98,18 +85,14 @@ export default function CategoriesGrid({ blogCategories = [] }) {
             <BarChart3 className="w-4 h-4 text-green-400" />
             <span className="text-sm text-gray-300 font-medium">Product Categories</span>
           </div>
-
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
             Browse by Category
           </h1>
-
           <p className="text-lg text-gray-400 leading-relaxed">
             Explore our comprehensive collection of AI-powered solutions,
             organized by business function and use case.
           </p>
         </motion.div>
-
-        {/* Professional Grid Layout */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -119,7 +102,6 @@ export default function CategoriesGrid({ blogCategories = [] }) {
           {PRODUCT_CATEGORIES.map((cat, index) => {
             const Icon = cat.icon || Package
             const isHovered = hoveredCard === cat.id
-
             return (
               <motion.div
                 key={cat.id}
@@ -138,13 +120,11 @@ export default function CategoriesGrid({ blogCategories = [] }) {
                   data-category-id={cat.id}
                   className="block h-full p-6 bg-gray-900/40 backdrop-blur-sm border border-gray-800/50 rounded-xl transition-all duration-300 hover:bg-gray-900/60 hover:border-green-500/30 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 focus:ring-offset-black"
                 >
-                  {/* Header with Icon */}
                   <div className="flex items-start justify-between mb-6">
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 bg-gradient-to-br from-green-500/10 to-green-500/5 rounded-lg flex items-center justify-center border border-green-500/20">
                         <Icon className="w-7 h-7 text-green-400 group-hover:text-green-300 transition-colors duration-300" />
                       </div>
-
                       <div>
                         <div className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-1">
                           {humanizeId(cat.id)}
@@ -154,18 +134,13 @@ export default function CategoriesGrid({ blogCategories = [] }) {
                         </h3>
                       </div>
                     </div>
-
                     <ArrowUpRight className="w-5 h-5 text-gray-600 group-hover:text-green-400 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300" />
                   </div>
-
-                  {/* Description */}
                   {cat.description && (
                     <p className="text-gray-400 group-hover:text-gray-300 mb-6 text-sm leading-relaxed transition-colors duration-300">
                       {cat.description}
                     </p>
                   )}
-
-                  {/* Product Preview */}
                   {categoryProducts[cat.id] && categoryProducts[cat.id].length > 0 && (
                     <div className="mb-6 p-4 bg-black/20 rounded-lg border border-gray-700/30">
                       <div className="text-xs text-gray-500 mb-2 font-medium">Product:</div>
@@ -174,8 +149,6 @@ export default function CategoriesGrid({ blogCategories = [] }) {
                       </div>
                     </div>
                   )}
-
-                  {/* Stats Footer */}
                   <div className="flex items-center justify-between pt-4 border-t border-gray-700/30 mt-auto">
                     <div className="flex items-center gap-2">
                       {counts[cat.id] === -1 || counts[cat.id] === undefined ? (
@@ -196,7 +169,6 @@ export default function CategoriesGrid({ blogCategories = [] }) {
                         </>
                       )}
                     </div>
-
                     <div className="text-xs text-gray-500 group-hover:text-green-400 transition-colors duration-300 font-medium">
                       VIEW ALL
                     </div>
@@ -206,8 +178,6 @@ export default function CategoriesGrid({ blogCategories = [] }) {
             )
           })}
         </motion.div>
-
-
       </Container>
     </div>
   )

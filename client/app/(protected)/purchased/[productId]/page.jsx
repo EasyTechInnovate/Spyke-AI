@@ -1,5 +1,4 @@
 'use client'
-
 import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -43,14 +42,10 @@ import {
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { productsAPI, purchaseAPI } from '@/lib/api'
-
-// ShareButton Component
 function ShareButton({ product, onNotification }) {
     const [isOpen, setIsOpen] = useState(false)
     const [copied, setCopied] = useState(false)
-
     const shareUrl = typeof window !== 'undefined' ? window.location.href.replace('/purchased/', '/products/') : ''
-
     const handleCopyLink = async () => {
         try {
             await navigator.clipboard.writeText(shareUrl)
@@ -64,7 +59,6 @@ function ShareButton({ product, onNotification }) {
             onNotification('Failed to copy link', 'error')
         }
     }
-
     const shareOptions = [
         {
             name: 'Copy Link',
@@ -92,7 +86,6 @@ function ShareButton({ product, onNotification }) {
             color: 'text-blue-600'
         }
     ]
-
     return (
         <div className="relative">
             <button
@@ -101,11 +94,9 @@ function ShareButton({ product, onNotification }) {
                 <Share2 className="w-4 h-4" />
                 <span className="text-sm">Share</span>
             </button>
-
             <AnimatePresence>
                 {isOpen && (
                     <>
-                        {/* Backdrop */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -113,8 +104,6 @@ function ShareButton({ product, onNotification }) {
                             className="fixed inset-0 z-40"
                             onClick={() => setIsOpen(false)}
                         />
-
-                        {/* Share Menu */}
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -143,7 +132,6 @@ function ShareButton({ product, onNotification }) {
         </div>
     )
 }
-
 export default function PurchasedProductPage() {
     const [notifications, setNotifications] = useState([])
     const [product, setProduct] = useState(null)
@@ -154,47 +142,34 @@ export default function PurchasedProductPage() {
     const [selectedImage, setSelectedImage] = useState(0)
     const [liked, setLiked] = useState(false)
     const [showCopied, setShowCopied] = useState(false)
-
     const params = useParams()
     const router = useRouter()
     const productSlug = params.productId
     const { user, isAuthenticated, loading: authLoading } = useAuth()
-
-    // Add notification function
     const addNotification = useCallback((message, type = 'info') => {
         const id = Date.now() + Math.random()
         const newNotification = { id, message, type }
         setNotifications((prev) => [...prev, newNotification])
     }, [])
-
-    // Remove notification function
     const removeNotification = useCallback((id) => {
         setNotifications((prev) => prev.filter((notification) => notification.id !== id))
     }, [])
-
-    // Fetch product and purchase data
     useEffect(() => {
         const fetchData = async () => {
-            // Wait for auth to finish loading before checking authentication
             if (authLoading) {
                 return
             }
-
             if (!isAuthenticated) {
                 router.push('/signin')
                 return
             }
-
             try {
                 setLoading(true)
                 setError(null)
-
-                // Try to fetch product by slug first, then by ID if that fails
                 let productResponse
                 try {
                     productResponse = await productsAPI.getProductBySlug(productSlug)
                 } catch (slugError) {
-                    // If slug fetch fails, try by ID
                     try {
                         productResponse = await productsAPI.getProductById(productSlug)
                     } catch (idError) {
@@ -202,26 +177,19 @@ export default function PurchasedProductPage() {
                         return
                     }
                 }
-
                 if (!productResponse?.data) {
                     setError('Product not found')
                     return
                 }
-
                 setProduct(productResponse.data)
-
-                // Fetch user's purchases to verify ownership and get purchase details
                 const purchasesResponse = await purchaseAPI.getUserPurchases()
                 const userPurchase = purchasesResponse.purchases?.find(
                     (p) => p.product?._id === productResponse.data._id || p.product?.slug === productSlug
                 )
-
                 if (!userPurchase) {
-                    // User hasn't purchased this product, redirect to regular product page
                     router.push(`/products/${productResponse.data.slug || productResponse.data._id}`)
                     return
                 }
-
                 setPurchaseDetails(userPurchase)
             } catch (err) {
                 console.error('Error fetching data:', err)
@@ -237,31 +205,21 @@ export default function PurchasedProductPage() {
                 setLoading(false)
             }
         }
-
         fetchData()
     }, [productSlug, isAuthenticated, router, addNotification, authLoading])
-
-    // Event handlers
     const handleBack = useCallback(() => {
         router.push('/purchases')
     }, [router])
-
     const handleDownload = useCallback(async () => {
         try {
-            // Check if product has downloadable files
             if (product.files && product.files.length > 0) {
-                // Download the first file or open download modal
                 addNotification('Downloading product files...', 'success')
-                // TODO: Implement actual file download logic
-                // For now, scroll to the implementation guide
                 setExpandedSection('implementation')
                 document.querySelector('#product-tabs')?.scrollIntoView({ behavior: 'smooth' })
             } else if (product.accessUrl) {
-                // Open external access URL
                 window.open(product.accessUrl, '_blank')
                 addNotification('Opening product access link...', 'info')
             } else {
-                // Show implementation guide since no files available
                 setExpandedSection('implementation')
                 document.querySelector('#product-tabs')?.scrollIntoView({ behavior: 'smooth' })
                 addNotification('View the implementation guide below to get started', 'info')
@@ -270,10 +228,8 @@ export default function PurchasedProductPage() {
             addNotification('Failed to access product resources', 'error')
         }
     }, [product, addNotification])
-
     const handleShare = useCallback(async () => {
         const url = typeof window !== 'undefined' ? window.location.href.replace('/purchased/', '/products/') : ''
-
         if (navigator.share) {
             try {
                 await navigator.share({
@@ -282,7 +238,6 @@ export default function PurchasedProductPage() {
                     url
                 })
             } catch (err) {
-                // Share cancelled
             }
         } else if (navigator.clipboard) {
             try {
@@ -295,7 +250,6 @@ export default function PurchasedProductPage() {
             }
         }
     }, [product, addNotification])
-
     const handleLike = useCallback(async () => {
         try {
             setLiked(!liked)
@@ -306,8 +260,6 @@ export default function PurchasedProductPage() {
             addNotification('Failed to update favorite', 'error')
         }
     }, [liked, product, addNotification])
-
-    // Loading state
     if (loading) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
@@ -334,8 +286,6 @@ export default function PurchasedProductPage() {
             </div>
         )
     }
-
-    // Error state
     if (error || !product) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
@@ -358,14 +308,10 @@ export default function PurchasedProductPage() {
             </div>
         )
     }
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-            {/* Animated Background */}
             <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-950 to-slate-950"></div>
             <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-[#00FF89]/10 via-transparent to-transparent"></div>
-
-            {/* Floating Notifications */}
             <AnimatePresence>
                 {notifications.map((notification) => (
                     <motion.div
@@ -385,7 +331,6 @@ export default function PurchasedProductPage() {
                     </motion.div>
                 ))}
             </AnimatePresence>
-
             <div className="relative z-10">
                 <div className="fixed top-0 left-0 right-0 z-[60] bg-slate-950/95 backdrop-blur-md border-b border-slate-800/50">
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
@@ -401,11 +346,8 @@ export default function PurchasedProductPage() {
                         </div>
                     </div>
                 </div>
-
-                {/* Main Content - Add top padding to account for fixed breadcrumb */}
                 <main className="pt-10 pb-20 relative z-10">
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-                        {/* Visible Breadcrumb inside content area */}
                         <div className="mb-6 lg:mb-8">
                             <button
                                 onClick={() => router.push('/purchases')}
@@ -414,21 +356,15 @@ export default function PurchasedProductPage() {
                                 <span>Back to Library</span>
                             </button>
                         </div>
-
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-                            {/* Left Column - Product Details */}
                             <div className="lg:col-span-2 space-y-6 lg:space-y-8">
-                                {/* Hero Card */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     className="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-2xl lg:rounded-3xl p-4 sm:p-6 lg:p-8 overflow-hidden relative">
-                                    {/* Background Pattern */}
                                     <div className="absolute inset-0 bg-gradient-to-br from-[#00FF89]/5 to-blue-500/5"></div>
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#00FF89]/10 to-transparent rounded-full blur-2xl"></div>
-
                                     <div className="relative z-10">
-                                        {/* Product Image & Video */}
                                         <div className="mb-6 lg:mb-8 pt-4">
                                             <div className="aspect-video bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl lg:rounded-2xl overflow-hidden relative group border border-slate-700/30">
                                                 {product.thumbnail ? (
@@ -447,8 +383,6 @@ export default function PurchasedProductPage() {
                                                     style={{ display: product.thumbnail ? 'none' : 'flex' }}>
                                                     <Package className="w-20 h-20 text-slate-600" />
                                                 </div>
-
-                                                {/* Video Overlay */}
                                                 {product.previewVideo && (
                                                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                                         <button
@@ -458,16 +392,12 @@ export default function PurchasedProductPage() {
                                                         </button>
                                                     </div>
                                                 )}
-
-                                                {/* Type Badge */}
                                                 <div className="absolute top-4 left-4">
                                                     <span className="px-4 py-2 bg-black/60 backdrop-blur-sm text-white border border-white/20 rounded-xl text-sm font-semibold capitalize">
                                                         {product.type}
                                                     </span>
                                                 </div>
                                             </div>
-
-                                            {/* Additional Images */}
                                             {product.images && product.images.length > 0 && (
                                                 <div className="flex gap-2 lg:gap-3 mt-3 lg:mt-4 overflow-x-auto pb-2 scrollbar-hide">
                                                     {product.images.slice(0, 6).map((image, index) => (
@@ -489,10 +419,7 @@ export default function PurchasedProductPage() {
                                                 </div>
                                             )}
                                         </div>
-
-                                        {/* Product Info */}
                                         <div className="space-y-4 lg:space-y-6">
-                                            {/* Title & Description */}
                                             <div>
                                                 <div className="flex flex-wrap items-center gap-2 lg:gap-3 mb-3 lg:mb-4">
                                                     <span className="px-2 py-1 lg:px-3 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-lg text-xs lg:text-sm font-medium capitalize">
@@ -508,7 +435,6 @@ export default function PurchasedProductPage() {
                                                         </span>
                                                     )}
                                                 </div>
-
                                                 <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-3 lg:mb-4 leading-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
                                                     {product.title}
                                                 </h1>
@@ -516,8 +442,6 @@ export default function PurchasedProductPage() {
                                                     {product.shortDescription || product.fullDescription}
                                                 </p>
                                             </div>
-
-                                            {/* Quick Stats */}
                                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 lg:gap-4">
                                                 <div className="text-center p-3 lg:p-4 bg-slate-700/30 rounded-xl lg:rounded-2xl border border-slate-600/30">
                                                     <div className="text-lg lg:text-2xl font-bold text-[#00FF89]">{product.views || 0}</div>
@@ -543,10 +467,7 @@ export default function PurchasedProductPage() {
                                         </div>
                                     </div>
                                 </motion.div>
-
-                                {/* Expandable Content Sections */}
                                 <div className="space-y-3 lg:space-y-4">
-                                    {/* Overview Section */}
                                     <ExpandableSection
                                         id="overview"
                                         title="What's Included"
@@ -554,14 +475,11 @@ export default function PurchasedProductPage() {
                                         expanded={expandedSection === 'overview'}
                                         onToggle={setExpandedSection}>
                                         <div className="space-y-6">
-                                            {/* Description */}
                                             <div className="prose prose-slate prose-invert max-w-none">
                                                 <p className="text-slate-300 text-lg leading-relaxed">
                                                     {product.fullDescription || product.shortDescription || 'No detailed description available.'}
                                                 </p>
                                             </div>
-
-                                            {/* Benefits */}
                                             {product.benefits && product.benefits.length > 0 && (
                                                 <div>
                                                     <h4 className="text-xl font-semibold text-white mb-4">Key Benefits</h4>
@@ -577,8 +495,6 @@ export default function PurchasedProductPage() {
                                                     </div>
                                                 </div>
                                             )}
-
-                                            {/* Use Cases */}
                                             {product.useCaseExamples && product.useCaseExamples.length > 0 && (
                                                 <div>
                                                     <h4 className="text-xl font-semibold text-white mb-4">Use Cases</h4>
@@ -596,8 +512,6 @@ export default function PurchasedProductPage() {
                                             )}
                                         </div>
                                     </ExpandableSection>
-
-                                    {/* Implementation Guide */}
                                     <ExpandableSection
                                         id="implementation"
                                         title="Implementation Guide"
@@ -605,7 +519,6 @@ export default function PurchasedProductPage() {
                                         expanded={expandedSection === 'implementation'}
                                         onToggle={setExpandedSection}>
                                         <div className="space-y-6">
-                                            {/* How It Works Steps */}
                                             {product.howItWorks && product.howItWorks.length > 0 ? (
                                                 <div className="space-y-4">
                                                     {product.howItWorks.map((step, index) => (
@@ -628,8 +541,6 @@ export default function PurchasedProductPage() {
                                                     <p className="text-slate-400">Implementation guide will be available soon.</p>
                                                 </div>
                                             )}
-
-                                            {/* Setup Time */}
                                             {product.setupTime && (
                                                 <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-6">
                                                     <div className="flex items-center gap-3 mb-2">
@@ -642,8 +553,6 @@ export default function PurchasedProductPage() {
                                                     </p>
                                                 </div>
                                             )}
-
-                                            {/* Expected Outcomes */}
                                             {product.outcome && product.outcome.length > 0 && (
                                                 <div>
                                                     <h4 className="text-xl font-semibold text-white mb-4">Expected Outcomes</h4>
@@ -661,8 +570,6 @@ export default function PurchasedProductPage() {
                                             )}
                                         </div>
                                     </ExpandableSection>
-
-                                    {/* Technical Details */}
                                     <ExpandableSection
                                         id="technical"
                                         title="Technical Specifications"
@@ -670,7 +577,6 @@ export default function PurchasedProductPage() {
                                         expanded={expandedSection === 'technical'}
                                         onToggle={setExpandedSection}>
                                         <div className="space-y-6">
-                                            {/* Tools Used */}
                                             {product.toolsUsed && product.toolsUsed.length > 0 && (
                                                 <div>
                                                     <h4 className="text-xl font-semibold text-white mb-4">Tools & Technologies</h4>
@@ -700,8 +606,6 @@ export default function PurchasedProductPage() {
                                                     </div>
                                                 </div>
                                             )}
-
-                                            {/* Technical Specs Grid */}
                                             <div className="grid sm:grid-cols-2 gap-4">
                                                 <div className="p-4 bg-slate-700/30 rounded-xl border border-slate-600/30">
                                                     <div className="text-slate-400 text-sm mb-1">Target Audience</div>
@@ -729,11 +633,8 @@ export default function PurchasedProductPage() {
                                     </ExpandableSection>
                                 </div>
                             </div>
-
-                            {/* Right Column - Sidebar */}
                             <div className="order-first lg:order-last lg:sticky lg:top-24 lg:h-[calc(100vh-6rem)] lg:overflow-hidden">
                                 <div className="space-y-4 lg:space-y-6 h-full overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent">
-                                    {/* Access Card */}
                                     <motion.div
                                         initial={{ opacity: 0, x: 20 }}
                                         animate={{ opacity: 1, x: 0 }}
@@ -745,14 +646,10 @@ export default function PurchasedProductPage() {
                                             <h3 className="text-xl lg:text-2xl font-bold text-white mb-2">Ready to Use</h3>
                                             <p className="text-slate-400 text-sm lg:text-base">Access your purchased product instantly</p>
                                         </div>
-
-                                        {/* Price Display */}
                                         <div className="text-center mb-4 lg:mb-6 p-3 lg:p-4 bg-slate-800/50 rounded-xl lg:rounded-2xl border border-slate-700/50">
                                             <div className="text-2xl lg:text-3xl font-bold text-emerald-400 mb-1">${product.price}</div>
                                             <div className="text-slate-500 text-xs lg:text-sm mt-2">One-time purchase</div>
                                         </div>
-
-                                        {/* Purchase Info */}
                                         {purchaseDetails && (
                                             <div className="mb-4 lg:mb-6 p-3 lg:p-4 bg-slate-800/30 rounded-xl lg:rounded-2xl border border-slate-700/30">
                                                 <div className="space-y-2 lg:space-y-3 text-xs lg:text-sm">
@@ -775,8 +672,6 @@ export default function PurchasedProductPage() {
                                                 </div>
                                             </div>
                                         )}
-
-                                        {/* Action Buttons */}
                                         <div className="space-y-3">
                                             <div className="grid grid-cols-2 gap-2 lg:gap-3">
                                                 <button
@@ -785,7 +680,6 @@ export default function PurchasedProductPage() {
                                                     <Heart className={`w-4 h-4 ${liked ? 'fill-current text-red-400' : ''}`} />
                                                     <span className="text-xs lg:text-sm">{liked ? 'Liked' : 'Like'}</span>
                                                 </button>
-
                                                 <ShareButton
                                                     product={product}
                                                     onNotification={addNotification}
@@ -793,8 +687,6 @@ export default function PurchasedProductPage() {
                                             </div>
                                         </div>
                                     </motion.div>
-
-                                    {/* Seller Card */}
                                     {product.sellerId && (
                                         <motion.div
                                             initial={{ opacity: 0, x: 20 }}
@@ -802,7 +694,6 @@ export default function PurchasedProductPage() {
                                             transition={{ delay: 0.1 }}
                                             className="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-3xl p-6">
                                             <h4 className="text-lg font-semibold text-white mb-4">Created by</h4>
-
                                             <div className="flex items-start gap-4 mb-4">
                                                 <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-xl flex items-center justify-center">
                                                     <User className="w-6 h-6 text-white" />
@@ -818,12 +709,9 @@ export default function PurchasedProductPage() {
                                                     )}
                                                 </div>
                                             </div>
-
                                             {product.sellerId.bio && (
                                                 <p className="text-slate-300 text-sm mb-4 line-clamp-3">{product.sellerId.bio}</p>
                                             )}
-
-                                            {/* Seller Stats */}
                                             {product.sellerId.stats && (
                                                 <div className="grid grid-cols-2 gap-3">
                                                     <div className="text-center p-3 bg-slate-700/30 rounded-xl">
@@ -838,15 +726,12 @@ export default function PurchasedProductPage() {
                                             )}
                                         </motion.div>
                                     )}
-
-                                    {/* Support Card */}
                                     <motion.div
                                         initial={{ opacity: 0, x: 20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: 0.2 }}
                                         className="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-3xl p-6">
                                         <h4 className="text-lg font-semibold text-white mb-4">Need Help?</h4>
-
                                         <div className="space-y-3">
                                             <button className="w-full flex items-center gap-3 p-3 bg-slate-700/30 hover:bg-slate-700/50 rounded-xl transition-colors text-left">
                                                 <MessageSquare className="w-5 h-5 text-blue-400" />
@@ -855,7 +740,6 @@ export default function PurchasedProductPage() {
                                                     <div className="text-slate-400 text-xs">Get help with this product</div>
                                                 </div>
                                             </button>
-
                                             <button className="w-full flex items-center gap-3 p-3 bg-slate-700/30 hover:bg-slate-700/50 rounded-xl transition-colors text-left">
                                                 <FileText className="w-5 h-5 text-emerald-400" />
                                                 <div>
@@ -863,7 +747,6 @@ export default function PurchasedProductPage() {
                                                     <div className="text-slate-400 text-xs">View user guides</div>
                                                 </div>
                                             </button>
-
                                             <button className="w-full flex items-center gap-3 p-3 bg-slate-700/30 hover:bg-slate-700/50 rounded-xl transition-colors text-left">
                                                 <ExternalLinkIcon className="w-5 h-5 text-purple-400" />
                                                 <div>
@@ -882,8 +765,6 @@ export default function PurchasedProductPage() {
         </div>
     )
 }
-
-// Expandable Section Component
 function ExpandableSection({ id, title, icon: Icon, expanded, onToggle, children }) {
     return (
         <motion.div
@@ -901,7 +782,6 @@ function ExpandableSection({ id, title, icon: Icon, expanded, onToggle, children
                 </div>
                 <ChevronDown className={`w-6 h-6 text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`} />
             </button>
-
             <AnimatePresence>
                 {expanded && (
                     <motion.div
@@ -917,4 +797,3 @@ function ExpandableSection({ id, title, icon: Icon, expanded, onToggle, children
         </motion.div>
     )
 }
-

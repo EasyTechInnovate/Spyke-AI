@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
     DollarSign,
@@ -47,10 +46,8 @@ import {
 } from 'recharts'
 import { adminAPI } from '@/lib/api/admin'
 import { CHART_COLORS } from '@/lib/constants/analytics'
-
 const MetricCard = ({ title, value, change, icon: Icon, color = 'emerald', trend, suffix = '', subtitle }) => {
     const isPositive = change >= 0
-
     const colorClasses = {
         emerald: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
         blue: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
@@ -60,7 +57,6 @@ const MetricCard = ({ title, value, change, icon: Icon, color = 'emerald', trend
         indigo: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400',
         cyan: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400'
     }
-
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -103,7 +99,6 @@ const MetricCard = ({ title, value, change, icon: Icon, color = 'emerald', trend
         </motion.div>
     )
 }
-
 const ChartCard = ({ title, children, height = 350, icon: Icon, subtitle, action }) => (
     <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -122,7 +117,6 @@ const ChartCard = ({ title, children, height = 350, icon: Icon, subtitle, action
         <div style={{ height: `${height}px` }}>{children}</div>
     </motion.div>
 )
-
 const EmptyStateCard = ({ title, description, icon: Icon, action }) => (
     <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -138,7 +132,6 @@ const EmptyStateCard = ({ title, description, icon: Icon, action }) => (
         {action && <div className="flex justify-center">{action}</div>}
     </motion.div>
 )
-
 const LoadingCard = () => (
     <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 animate-pulse">
         <div className="flex items-center gap-3 mb-4">
@@ -151,7 +144,6 @@ const LoadingCard = () => (
         <div className="h-64 bg-gray-700/50 rounded"></div>
     </div>
 )
-
 const StatusBadge = ({ status, count }) => {
     const statusConfig = {
         completed: { color: 'text-emerald-400 bg-emerald-500/10', icon: CheckCircle },
@@ -160,10 +152,8 @@ const StatusBadge = ({ status, count }) => {
         failed: { color: 'text-rose-400 bg-rose-500/10', icon: XCircle },
         cancelled: { color: 'text-gray-400 bg-gray-500/10', icon: AlertCircle }
     }
-
     const config = statusConfig[status] || statusConfig.pending
     const Icon = config.icon
-
     return (
         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${config.color}`}>
             <Icon className="w-4 h-4" />
@@ -172,24 +162,19 @@ const StatusBadge = ({ status, count }) => {
         </div>
     )
 }
-
 export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }) {
     const [analyticsData, setAnalyticsData] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [refreshing, setRefreshing] = useState(false)
-
     const fetchAnalytics = useCallback(async (isRefresh = false) => {
         try {
             if (isRefresh) setRefreshing(true)
             else setLoading(true)
             setError(null)
-
             const response = await adminAPI.payouts.analytics({
                 period: timeRange.replace('d', '')
             })
-
-            // Extract data from API response
             setAnalyticsData(response.data || {})
         } catch (err) {
             console.error('Error fetching payout analytics:', err)
@@ -199,23 +184,17 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
             setRefreshing(false)
         }
     }, [timeRange])
-
     useEffect(() => {
         fetchAnalytics()
     }, [fetchAnalytics])
-
-    // Enhanced data processing
     const processedData = useMemo(() => {
         if (!analyticsData) return null
-
         const {
             statusBreakdown = [],
             dailyTrends = [],
             methodBreakdown = [],
             processingTimes = {}
         } = analyticsData
-
-        // Calculate comprehensive totals
         const totals = statusBreakdown.reduce(
             (acc, status) => {
                 acc.totalCount += status.count || 0
@@ -224,8 +203,6 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
             },
             { totalCount: 0, totalAmount: 0 }
         )
-
-        // Enhanced status data with better formatting
         const statusData = statusBreakdown.map((status) => ({
             name: status._id?.charAt(0).toUpperCase() + status._id?.slice(1) || 'Unknown',
             value: status.count || 0,
@@ -233,8 +210,6 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
             percentage: totals.totalCount > 0 ? (((status.count || 0) / totals.totalCount) * 100).toFixed(1) : 0,
             avgAmount: status.count > 0 ? (status.totalAmount / status.count).toFixed(2) : 0
         }))
-
-        // Enhanced daily trends with better date formatting
         const trendsData = dailyTrends.map((day) => ({
             date: new Date(day._id?.year, day._id?.month - 1, day._id?.day).toLocaleDateString('en-US', {
                 month: 'short',
@@ -244,34 +219,25 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
             amount: day.totalAmount || 0,
             fullDate: new Date(day._id?.year, day._id?.month - 1, day._id?.day)
         })).sort((a, b) => a.fullDate - b.fullDate)
-
-        // Enhanced method breakdown
         const methodData = methodBreakdown.map((method) => ({
             name: method._id?.charAt(0).toUpperCase() + method._id?.slice(1) || 'Unknown',
             value: method.count || 0,
             amount: method.totalAmount || 0,
             percentage: totals.totalCount > 0 ? (((method.count || 0) / totals.totalCount) * 100).toFixed(1) : 0
         }))
-
-        // Calculate key metrics
         const completedPayouts = statusBreakdown.find((s) => s._id === 'completed')?.count || 0
         const pendingPayouts = statusBreakdown.find((s) => s._id === 'pending')?.count || 0
         const failedPayouts = statusBreakdown.find((s) => s._id === 'failed')?.count || 0
-
         const completionRate = totals.totalCount > 0 ? ((completedPayouts / totals.totalCount) * 100).toFixed(1) : 0
         const failureRate = totals.totalCount > 0 ? ((failedPayouts / totals.totalCount) * 100).toFixed(1) : 0
         const pendingRate = totals.totalCount > 0 ? ((pendingPayouts / totals.totalCount) * 100).toFixed(1) : 0
-
         const avgProcessingTime = processingTimes?.avgProcessingTime || 0
         const avgPayoutAmount = totals.totalCount > 0 ? (totals.totalAmount / totals.totalCount).toFixed(2) : 0
-
-        // Calculate trends (mock data for now - in real app, compare with previous period)
         const trends = {
             payoutVolume: Math.random() > 0.5 ? Math.random() * 20 - 10 : 0,
             completionRate: Math.random() > 0.5 ? Math.random() * 15 - 7.5 : 0,
             processingTime: Math.random() > 0.5 ? Math.random() * 10 - 5 : 0
         }
-
         return {
             totals,
             statusData,
@@ -286,9 +252,7 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
             hasData: totals.totalCount > 0
         }
     }, [analyticsData])
-
     const isLoading = loading || parentLoading
-
     if (error) {
         return (
             <motion.div
@@ -309,7 +273,6 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
             </motion.div>
         )
     }
-
     if (isLoading) {
         return (
             <div className="space-y-8">
@@ -330,7 +293,6 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
             </div>
         )
     }
-
     if (!processedData) {
         return (
             <EmptyStateCard
@@ -348,7 +310,6 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
             />
         )
     }
-
     const {
         totals,
         statusData,
@@ -362,11 +323,9 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
         trends,
         hasData
     } = processedData
-
     if (!hasData) {
         return (
             <div className="space-y-8">
-                {/* Header with refresh */}
                 <div className="flex items-center justify-between">
                     <div>
                         <h2 className="text-2xl font-bold text-white">Payout Analytics</h2>
@@ -380,8 +339,6 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                         Refresh
                     </button>
                 </div>
-
-                {/* Empty state cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <EmptyStateCard
                         title="No Payouts Yet"
@@ -404,8 +361,6 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                         icon={Target}
                     />
                 </div>
-
-                {/* Getting started section */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -440,10 +395,8 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
             </div>
         )
     }
-
     return (
         <div className="space-y-8">
-            {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-2xl font-bold text-white">Payout Analytics</h2>
@@ -463,8 +416,6 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                     </button>
                 </div>
             </div>
-
-            {/* Key Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <MetricCard
                     title="Total Payouts"
@@ -504,10 +455,7 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                     subtitle="Across all methods"
                 />
             </div>
-
-            {/* Status Overview */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Status Distribution */}
                 <ChartCard
                     title="Status Distribution"
                     icon={PieChartIcon}
@@ -542,8 +490,6 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                         </RechartsPieChart>
                     </ResponsiveContainer>
                 </ChartCard>
-
-                {/* Status Summary */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -564,8 +510,6 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                         ))}
                     </div>
                 </motion.div>
-
-                {/* Quick Stats */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -594,10 +538,7 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                     </div>
                 </motion.div>
             </div>
-
-            {/* Charts Section */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                {/* Payout Trends */}
                 <ChartCard
                     title="Payout Trends"
                     icon={LineChart}
@@ -645,8 +586,6 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                         </ComposedChart>
                     </ResponsiveContainer>
                 </ChartCard>
-
-                {/* Payment Methods */}
                 <ChartCard
                     title="Payment Methods"
                     icon={CreditCard}
@@ -680,8 +619,6 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                     </ResponsiveContainer>
                 </ChartCard>
             </div>
-
-            {/* Performance Insights */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -699,7 +636,6 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                         <p className="text-white text-lg font-bold">{completionRate}%</p>
                         <p className="text-gray-400 text-sm">{completedPayouts} of {totals.totalCount} payouts completed</p>
                     </div>
-
                     <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                         <div className="flex items-center gap-2 mb-2">
                             <Clock className="w-4 h-4 text-amber-400" />
@@ -708,7 +644,6 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                         <p className="text-white text-lg font-bold">{avgProcessingTime.toFixed(1)} days</p>
                         <p className="text-gray-400 text-sm">Average time from request to completion</p>
                     </div>
-
                     <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                         <div className="flex items-center gap-2 mb-2">
                             <TrendingUp className="w-4 h-4 text-blue-400" />

@@ -1,5 +1,4 @@
 'use client'
-
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -13,29 +12,21 @@ import ContactWidget from '@/components/features/seller/profile/ContactWidget'
 import { useEnhancedSellerProfile } from '@/hooks/useEnhancedSellerProfile'
 import { Star, Users, Sparkles, Award, Zap, Target, TrendingUp, Clock, Shield, Globe } from 'lucide-react'
 import { formatLocation } from '@/lib/utils/seller'
-
-
 export default function PublicSellerProfile() {
     const params = useParams()
     const sellerId = params.sellerId
-
     const [activeTab, setActiveTab] = useState('products')
     const [isContactWidgetOpen, setIsContactWidgetOpen] = useState(false)
-
     const { seller, products, reviews, similarSellers, loading, error, productFilters, updateProductFilters } = useEnhancedSellerProfile(sellerId)
-
     const handleTabChange = (tab) => {
         setActiveTab(tab)
     }
-
     const handleProductClick = (productId) => {
         window.location.href = `/products/${productId}`
     }
-
     const handleContactClick = () => {
         setIsContactWidgetOpen(true)
     }
-
     if (loading) {
         return (
             <div className="min-h-screen bg-[#121212]">
@@ -56,7 +47,6 @@ export default function PublicSellerProfile() {
             </div>
         )
     }
-
     if (error || !seller) {
         return (
             <div className="min-h-screen bg-[#121212]">
@@ -91,7 +81,6 @@ export default function PublicSellerProfile() {
             </div>
         )
     }
-
     return (
         <div className="min-h-screen bg-[#121212] text-[#FFFFFF]">
             <main className=" pb-16">
@@ -131,7 +120,6 @@ export default function PublicSellerProfile() {
                                 </div>
                             </nav>
                         </div>
-
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={activeTab}
@@ -148,11 +136,9 @@ export default function PublicSellerProfile() {
                                         onProductClick={handleProductClick}
                                     />
                                 )}
-
                                 {activeTab === 'about' && (
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                         <div className="lg:col-span-2 space-y-8">
-                                            {/* Achievement Badges Section */}
                                             <motion.div
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
@@ -189,8 +175,6 @@ export default function PublicSellerProfile() {
                                                     />
                                                 </div>
                                             </motion.div>
-
-                                            {/* Skills & Tools Section */}
                                             <motion.div
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
@@ -238,11 +222,9 @@ export default function PublicSellerProfile() {
                                                     )}
                                                 </div>
                                             </motion.div>
-
                                             <SellerAbout seller={seller} />
                                         </div>
                                         <div className="space-y-6">
-                                            {/* Quick Stats Sidebar */}
                                             <div className="bg-[#1f1f1f] rounded-2xl p-6 border border-[#6b7280]/20">
                                                 <h3 className="text-[#FFFFFF] mb-4 text-lg font-[var(--font-league-spartan)]">
                                                     Quick Stats
@@ -275,8 +257,6 @@ export default function PublicSellerProfile() {
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            {/* Contact Card */}
                                             <div className="bg-[#1f1f1f] rounded-2xl p-6 border border-[#6b7280]/20">
                                                 <h3 className="text-[#FFFFFF] mb-4 text-lg font-[var(--font-league-spartan)]">
                                                     Get in Touch
@@ -292,8 +272,6 @@ export default function PublicSellerProfile() {
                                                     </button>
                                                 </div>
                                             </div>
-
-                                            {/* Social Proof Section */}
                                             <motion.div
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
@@ -335,7 +313,6 @@ export default function PublicSellerProfile() {
                                         </div>
                                     </div>
                                 )}
-
                                 {activeTab === 'reviews' && (
                                     <SellerReviews
                                         reviews={reviews}
@@ -345,8 +322,6 @@ export default function PublicSellerProfile() {
                                 )}
                             </motion.div>
                         </AnimatePresence>
-
-                        {/* Similar Sellers Section */}
                         {similarSellers.length > 0 && (
                             <motion.section
                                 initial={{ opacity: 0, y: 40 }}
@@ -375,7 +350,6 @@ export default function PublicSellerProfile() {
                     </div>
                 </Container>
             </main>
-
             <ContactWidget
                 seller={seller}
                 isOpen={isContactWidgetOpen}
@@ -385,7 +359,6 @@ export default function PublicSellerProfile() {
         </div>
     )
 }
-
 function TabButton({ label, count, isActive, onClick, icon }) {
     return (
         <button
@@ -407,7 +380,6 @@ function TabButton({ label, count, isActive, onClick, icon }) {
         </button>
     )
 }
-
 function SimilarSellerCard({ seller, onClick }) {
     return (
         <motion.div
@@ -423,7 +395,6 @@ function SimilarSellerCard({ seller, onClick }) {
                     <p className="text-sm text-[#9ca3af] font-[var(--font-kumbh-sans)]">{formatLocation(seller.location)}</p>
                 </div>
             </div>
-
             <div className="flex items-center justify-between text-sm">
                 <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">{seller.stats?.totalProducts || 0} products</span>
                 <div className="flex items-center gap-1 text-[#FFC050]">
@@ -434,7 +405,6 @@ function SimilarSellerCard({ seller, onClick }) {
         </motion.div>
     )
 }
-
 function AchievementBadge({ icon: Icon, title, earned, color = 'gray' }) {
     const colorClasses = {
         emerald: earned ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-gray-800 text-gray-500 border-gray-700',
@@ -443,24 +413,20 @@ function AchievementBadge({ icon: Icon, title, earned, color = 'gray' }) {
         amber: earned ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-gray-800 text-gray-500 border-gray-700',
         gray: 'bg-gray-800 text-gray-500 border-gray-700'
     }
-
     return (
         <motion.div
             whileHover={{ scale: earned ? 1.05 : 1 }}
             className={`relative flex flex-col items-center text-center p-4 rounded-xl border transition-all ${
                 colorClasses[color]
             } ${earned ? 'hover:shadow-lg cursor-pointer' : 'opacity-60'}`}>
-            
             <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
                 earned ? 'bg-current/20' : 'bg-gray-700'
             }`}>
                 <Icon className="w-6 h-6" />
             </div>
-            
             <h4 className="text-sm font-medium font-[var(--font-kumbh-sans)] leading-tight">
                 {title}
             </h4>
-            
             {earned && (
                 <motion.div
                     initial={{ scale: 0 }}

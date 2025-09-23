@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, MoreHorizontal, Loader2 } from 'lucide-react'
 import { useMemo } from 'react'
-
 export default function Pagination({ 
   currentPage, 
   totalPages, 
@@ -12,74 +11,52 @@ export default function Pagination({
   showPageInfo = true,
   maxVisiblePages = 7
 }) {
-  // Generate page numbers with smart truncation
   const pageNumbers = useMemo(() => {
     if (totalPages <= maxVisiblePages) {
       return Array.from({ length: totalPages }, (_, i) => i + 1)
     }
-
     const pages = []
     const halfVisible = Math.floor(maxVisiblePages / 2)
-    
-    // Always show first page
     pages.push(1)
-    
     let startPage = Math.max(2, currentPage - halfVisible)
     let endPage = Math.min(totalPages - 1, currentPage + halfVisible)
-    
-    // Adjust range if we're near the beginning or end
     if (currentPage <= halfVisible) {
       endPage = Math.min(totalPages - 1, maxVisiblePages - 1)
     } else if (currentPage >= totalPages - halfVisible) {
       startPage = Math.max(2, totalPages - maxVisiblePages + 2)
     }
-    
-    // Add ellipsis after first page if needed
     if (startPage > 2) {
       pages.push('ellipsis-start')
     }
-    
-    // Add middle pages
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i)
     }
-    
-    // Add ellipsis before last page if needed
     if (endPage < totalPages - 1) {
       pages.push('ellipsis-end')
     }
-    
-    // Always show last page (if more than 1 page)
     if (totalPages > 1) {
       pages.push(totalPages)
     }
-    
     return pages
   }, [currentPage, totalPages, maxVisiblePages])
-
   const handlePageClick = (page) => {
     if (page !== currentPage && !isLoading) {
       onPageChange(page)
     }
   }
-
   const handlePrevious = () => {
     if (hasPrevPage && currentPage > 1 && !isLoading) {
       onPageChange(currentPage - 1)
     }
   }
-
   const handleNext = () => {
     if (hasNextPage && currentPage < totalPages && !isLoading) {
       onPageChange(currentPage + 1)
     }
   }
-
   if (totalPages <= 1) return null
-
   return (
     <div className="flex flex-col items-center gap-6">
-      {/* Page Info */}
       {showPageInfo && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -95,10 +72,7 @@ export default function Pagination({
           )}
         </motion.div>
       )}
-
-      {/* Pagination Controls */}
       <nav aria-label="Pagination Navigation" className="flex items-center gap-2">
-        {/* Previous Button */}
         <motion.button
           whileHover={{ scale: hasPrevPage && !isLoading ? 1.05 : 1 }}
           whileTap={{ scale: hasPrevPage && !isLoading ? 0.95 : 1 }}
@@ -116,8 +90,6 @@ export default function Pagination({
           <ChevronLeft className="w-4 h-4" />
           <span className="hidden sm:inline">Previous</span>
         </motion.button>
-
-        {/* Page Numbers */}
         <div className="flex items-center gap-1">
           {pageNumbers.map((page, index) => {
             if (typeof page === 'string' && page.startsWith('ellipsis')) {
@@ -131,10 +103,8 @@ export default function Pagination({
                 </div>
               )
             }
-
             const isActive = page === currentPage
             const isClickable = !isLoading && page !== currentPage
-
             return (
               <motion.button
                 key={page}
@@ -163,8 +133,6 @@ export default function Pagination({
             )
           })}
         </div>
-
-        {/* Next Button */}
         <motion.button
           whileHover={{ scale: hasNextPage && !isLoading ? 1.05 : 1 }}
           whileTap={{ scale: hasNextPage && !isLoading ? 0.95 : 1 }}
@@ -183,8 +151,6 @@ export default function Pagination({
           <ChevronRight className="w-4 h-4" />
         </motion.button>
       </nav>
-
-      {/* Quick Jump (for large page counts) */}
       {totalPages > 10 && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}

@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -7,33 +6,27 @@ import { motion } from 'framer-motion'
 import { Mail, RefreshCw, AlertTriangle, Loader, ArrowLeft, CheckCircle, Sparkles, Shield } from 'lucide-react'
 import api from '@/lib/api'
 import Notification from '@/components/shared/Notification'
-
 export default function VerifyEmailContent({ email }) {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [cooldown, setCooldown] = useState(0)
     const [notification, setNotification] = useState(null)
-
     const fadeInUp = {
         initial: { opacity: 0, y: 30 },
         animate: { opacity: 1, y: 0 },
         transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] }
     }
-
     const scaleIn = {
         initial: { opacity: 0, scale: 0.95 },
         animate: { opacity: 1, scale: 1 },
         transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
     }
-
-    // Handle cooldown timer
     useEffect(() => {
         if (cooldown > 0) {
             const timer = setTimeout(() => setCooldown(cooldown - 1), 1000)
             return () => clearTimeout(timer)
         }
     }, [cooldown])
-
     const showNotification = (message, type = 'info') => {
         setNotification({
             id: Date.now(),
@@ -42,33 +35,25 @@ export default function VerifyEmailContent({ email }) {
             duration: type === 'error' ? 6000 : 4000
         })
     }
-
     const handleResendEmail = async () => {
         if (!email) {
             showNotification('Please provide your email address to resend verification email.', 'error')
             return
         }
-
         setLoading(true)
-
-        // Simulate API call delay
         setTimeout(() => {
             showNotification('Verification email sent! Check your inbox and spam folder.', 'success')
             setCooldown(60)
             setLoading(false)
         }, 1000)
     }
-
     return (
         <div className="min-h-screen bg-[#121212] text-white font-league-spartan relative overflow-hidden">
-            {/* Simple Background */}
             <div className="absolute inset-0">
                 <div className="absolute inset-0 bg-[#121212]" />
                 <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#00FF89]/6 rounded-full blur-3xl animate-pulse opacity-50" />
                 <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-[#00FF89]/4 rounded-full blur-3xl animate-pulse opacity-30" />
             </div>
-
-            {/* Notification */}
             {notification && (
                 <div className="fixed top-8 left-1/2 transform -translate-x-1/2 z-[60]">
                     <Notification
@@ -77,8 +62,6 @@ export default function VerifyEmailContent({ email }) {
                     />
                 </div>
             )}
-
-            {/* Back Button */}
             <motion.div
                 className="absolute top-8 left-8 z-20"
                 initial={{ opacity: 0, x: -20 }}
@@ -91,45 +74,31 @@ export default function VerifyEmailContent({ email }) {
                     <span className="text-base font-medium text-gray-300 group-hover:text-white transition-colors">Back</span>
                 </Link>
             </motion.div>
-
-            {/* Main Content */}
             <div className="relative min-h-screen flex items-center justify-center px-6 pt-24">
                 <motion.div
                     className="w-full max-w-2xl"
                     initial="initial"
                     animate="animate"
                     variants={fadeInUp}>
-                    {/* Main Card */}
                     <div className="relative">
-                        {/* Card glow effect */}
                         <div className="absolute -inset-1 bg-[#00FF89]/20 rounded-3xl blur-xl opacity-40" />
-
                         <motion.div
                             className="relative bg-[#1a1a1a] border border-gray-700 rounded-3xl shadow-2xl"
                             variants={scaleIn}>
-                            {/* Header Section */}
                             <div className="text-center p-12 pb-8">
-                                {/* Icon with animated ring */}
                                 <motion.div
                                     className="relative w-24 h-24 mx-auto mb-8"
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
                                     transition={{ delay: 0.5, type: 'spring', stiffness: 200 }}>
-                                    {/* Animated ring */}
                                     <div className="absolute inset-0 rounded-full border-2 border-[#00FF89]/30">
                                         <div className="absolute inset-0 rounded-full border-t-2 border-[#00FF89] animate-spin" />
                                     </div>
-
-                                    {/* Icon background */}
                                     <div className="absolute inset-2 bg-[#00FF89]/20 rounded-full" />
-
-                                    {/* Mail icon */}
                                     <div className="absolute inset-0 flex items-center justify-center">
                                         <Mail className="w-10 h-10 text-[#00FF89]" />
                                     </div>
                                 </motion.div>
-
-                                {/* Title */}
                                 <motion.h1
                                     className="text-4xl font-bold text-white mb-6 tracking-tight"
                                     initial={{ opacity: 0, y: 20 }}
@@ -137,8 +106,6 @@ export default function VerifyEmailContent({ email }) {
                                     transition={{ delay: 0.7 }}>
                                     Check Your Email
                                 </motion.h1>
-
-                                {/* Subtitle */}
                                 <motion.p
                                     className="text-gray-300 text-xl leading-relaxed mb-4"
                                     initial={{ opacity: 0, y: 20 }}
@@ -146,8 +113,6 @@ export default function VerifyEmailContent({ email }) {
                                     transition={{ delay: 0.8 }}>
                                     We sent a verification link to
                                 </motion.p>
-
-                                {/* Email display */}
                                 <motion.div
                                     className="inline-flex items-center gap-3 px-6 py-3 bg-[#00FF89]/10 border border-[#00FF89]/30 rounded-xl"
                                     initial={{ opacity: 0, scale: 0.9 }}
@@ -157,8 +122,6 @@ export default function VerifyEmailContent({ email }) {
                                     <span className="text-[#00FF89] font-semibold text-lg">{email}</span>
                                 </motion.div>
                             </div>
-
-                            {/* Warning Section */}
                             <motion.div
                                 className="mx-12 mb-8"
                                 initial={{ opacity: 0, y: 20 }}
@@ -175,15 +138,12 @@ export default function VerifyEmailContent({ email }) {
                                     </div>
                                 </div>
                             </motion.div>
-
-                            {/* Action Buttons */}
                             <motion.div
                                 className="px-12 pb-12"
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 1.1 }}>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {/* Resend Button */}
                                     <button
                                         onClick={handleResendEmail}
                                         disabled={loading || cooldown > 0}
@@ -211,8 +171,6 @@ export default function VerifyEmailContent({ email }) {
                                             )}
                                         </div>
                                     </button>
-
-                                    {/* Sign In Button */}
                                     <Link
                                         href="/signin"
                                         className="group relative overflow-hidden px-6 py-4 bg-[#2a2a2a] hover:bg-[#333333] border border-gray-700 hover:border-gray-600 rounded-2xl font-semibold text-lg text-white transition-all duration-300 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98]">
@@ -220,8 +178,6 @@ export default function VerifyEmailContent({ email }) {
                                     </Link>
                                 </div>
                             </motion.div>
-
-                            {/* Footer */}
                             <motion.div
                                 className="border-t border-gray-700 px-12 py-8"
                                 initial={{ opacity: 0 }}
@@ -232,7 +188,6 @@ export default function VerifyEmailContent({ email }) {
                                         <Shield className="w-5 h-5 text-[#00FF89]" />
                                         <span>Secure & encrypted</span>
                                     </div>
-
                                     <Link
                                         href="/contactus"
                                         className="text-gray-400 hover:text-[#00FF89] transition-colors flex items-center gap-2">
@@ -248,4 +203,3 @@ export default function VerifyEmailContent({ email }) {
         </div>
     )
 }
-

@@ -1,44 +1,29 @@
 'use client'
-
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowLeft, Sparkles, Clock } from 'lucide-react'
-
-// Hooks
 import { useCart } from '@/hooks/useCart'
-
-// Components
 import Container from '@/components/shared/layout/Container'
 import CartItem from './components/CartItem'
 import OrderSummary from './components/OrderSummary'
 import EmptyCart from './components/EmptyCart'
 import CartLoading from './components/CartLoading'
-
-// Utils & Constants
 import { calculateSubtotal, calculateTotalSavings, calculatePromoDiscount, calculateTotal, formatCurrency, getItemId } from './utils'
-
 export default function CartPage() {
     const router = useRouter()
     const { cartItems, cartData, loading, updateQuantity: updateCartQuantity, removeFromCart, applyPromocode, removePromocode } = useCart()
-
-    // Local state for promo code handling
     const [promoCode, setPromoCode] = useState('')
     const [promoLoading, setPromoLoading] = useState(false)
     const [promoError, setPromoError] = useState('')
-
-    // Memoized calculations
     const calculations = useMemo(() => {
         const subtotal = calculateSubtotal(cartItems)
         const totalSavings = calculateTotalSavings(cartItems)
         const discount = calculatePromoDiscount(cartData, subtotal)
         const total = calculateTotal(cartData, subtotal, discount)
-
         return { subtotal, totalSavings, discount, total }
     }, [cartItems, cartData])
-
-    // Handlers
     const handleUpdateQuantity = useCallback(
         (itemId, newQuantity) => {
             if (newQuantity < 1) return
@@ -46,21 +31,17 @@ export default function CartPage() {
         },
         [updateCartQuantity]
     )
-
     const handleRemoveItem = useCallback(
         (itemId) => {
             removeFromCart(itemId)
         },
         [removeFromCart]
     )
-
     const handleApplyPromo = useCallback(async (code) => {
         const codeToApply = code || promoCode?.trim()
         if (!codeToApply) return
-
         setPromoLoading(true)
         setPromoError('')
-
         try {
             await applyPromocode(codeToApply)
             setPromoCode('')
@@ -70,25 +51,19 @@ export default function CartPage() {
             setPromoLoading(false)
         }
     }, [promoCode, applyPromocode])
-
     const handleRemovePromo = useCallback(async () => {
         try {
             await removePromocode()
             setPromoError('')
         } catch (error) {
-            // Error removing promocode
         }
     }, [removePromocode])
-
     const handleCheckout = useCallback(async () => {
         router.push('/checkout')
     }, [router])
-
-    // Render states
     if (loading) {
         return <CartLoading />
     }
-
     if (cartItems.length === 0) {
         return (
             <div className="min-h-screen bg-[#121212]">
@@ -100,10 +75,8 @@ export default function CartPage() {
             </div>
         )
     }
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#0A0A0A] via-[#121212] to-[#1A1A1A] text-white">
-
             <main className="pt-24 pb-16">
                 <Container>
                     <div className="max-w-7xl mx-auto">
@@ -112,10 +85,7 @@ export default function CartPage() {
                             total={calculations.total}
                             totalSavings={calculations.totalSavings}
                         />
-
-                        {/* Main Content */}
                         <div className="grid lg:grid-cols-3 gap-8">
-                            {/* Cart Items */}
                             <div className="lg:col-span-2 space-y-4">
                                 {cartItems.map((item, index) => (
                                     <CartItem
@@ -127,8 +97,6 @@ export default function CartPage() {
                                     />
                                 ))}
                             </div>
-
-                            {/* Order Summary */}
                             <OrderSummary
                                 {...calculations}
                                 promoCode={promoCode}
@@ -142,8 +110,6 @@ export default function CartPage() {
                                 cartItems={cartItems}
                             />
                         </div>
-
-                        {/* Additional Sections */}
                         <RelatedProductsSection />
                         <ContinueShoppingLink />
                     </div>
@@ -152,8 +118,6 @@ export default function CartPage() {
         </div>
     )
 }
-
-// Sub-components
 function CartHeader({ itemCount, total, totalSavings }) {
     return (
         <motion.div
@@ -184,7 +148,6 @@ function CartHeader({ itemCount, total, totalSavings }) {
         </motion.div>
     )
 }
-
 function RelatedProductsSection() {
     return (
         <motion.div
@@ -212,7 +175,6 @@ function RelatedProductsSection() {
         </motion.div>
     )
 }
-
 function ContinueShoppingLink() {
     return (
         <motion.div

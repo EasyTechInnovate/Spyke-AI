@@ -1,6 +1,5 @@
 'use client'
 export const dynamic = 'force-dynamic'
-
 import { useState, useEffect, useMemo, useCallback, useRef, useId } from 'react'
 import { adminAPI } from '@/lib/api/admin'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
@@ -38,10 +37,8 @@ import {
     UserCheck,
     Package
 } from 'lucide-react'
-
 const BRAND = '#00FF89'
 const AMBER = '#FFC050'
-
 function formatDate(date) {
     if (!date) return 'N/A'
     const d = new Date(date)
@@ -52,39 +49,27 @@ function formatDate(date) {
     if (diffDays < 7) return `${diffDays} days ago`
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
 }
-
 export default function ActiveSellersPage() {
-    // Inline notification state
     const [notification, setNotification] = useState(null)
-
-    // Show inline notification messages  
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
-        // Auto-dismiss after 5 seconds
         setTimeout(() => setNotification(null), 5000)
     }
-
-    // Clear notification
     const clearNotification = () => setNotification(null)
-
     const [sellers, setSellers] = useState([])
     const [loading, setLoading] = useState(true)
     const [tabSwitching, setTabSwitching] = useState(false)
     const [listOpacity, setListOpacity] = useState(1)
-
     const [selectedSeller, setSelectedSeller] = useState(null)
     const [showSellerDetailsModal, setShowSellerDetailsModal] = useState(false)
     const [showEditModal, setShowEditModal] = useState(false)
-
     const [page, setPage] = useState(1)
     const [totalPages, setTotalPages] = useState(1)
     const [pagination, setPagination] = useState({})
     const [searchQuery, setSearchQuery] = useState('')
     const [debouncedQuery, setDebouncedQuery] = useState('')
-
     const [selectedSellers, setSelectedSellers] = useState(new Set())
     const [actionLoading, setActionLoading] = useState(false)
-
     const [sortBy, setSortBy] = useState('joinedDate')
     const [sortOrder, setSortOrder] = useState('desc')
     const [advancedFilters, setAdvancedFilters] = useState({
@@ -95,13 +80,10 @@ export default function ActiveSellersPage() {
         dateRange: ''
     })
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
-
     const [realTimeUpdates, setRealTimeUpdates] = useState(true)
     const [notifications, setNotifications] = useState([])
-
     const latestReqIdRef = useRef(0)
     const cacheRef = useRef(new Map())
-
     const sortOptions = [
         { value: 'joinedDate', label: 'Join Date' },
         { value: 'fullName', label: 'Name' },
@@ -110,7 +92,6 @@ export default function ActiveSellersPage() {
         { value: 'stats.totalRevenue', label: 'Revenue' },
         { value: 'stats.avgRating', label: 'Rating' }
     ]
-
     const handleSortChange = (newSortBy) => {
         if (sortBy === newSortBy) {
             setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))
@@ -120,7 +101,6 @@ export default function ActiveSellersPage() {
         }
         fetchList()
     }
-
     const exportSellersData = (sellersData) => {
         const csvContent = [
             ['Name', 'Email', 'Country', 'Join Date', 'Products', 'Sales', 'Revenue', 'Rating', 'Website'],
@@ -138,7 +118,6 @@ export default function ActiveSellersPage() {
         ]
             .map((row) => row.map((field) => `"${field}"`).join(','))
             .join('\n')
-
         const blob = new Blob([csvContent], { type: 'text/csv' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -149,32 +128,24 @@ export default function ActiveSellersPage() {
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
     }
-
     const fetchList = useCallback(
         async ({ isManualRefresh = false, silent = false } = {}) => {
             const key = `active:${page}`
-
             if (isManualRefresh) setListOpacity(0.6)
             if (!silent) setLoading(true)
-
-            // Serve cached quickly while fetching fresh
             if (cacheRef.current.has(key)) {
                 const cached = cacheRef.current.get(key)
                 setSellers(cached.list)
                 setPagination(cached.pagination || {})
                 setTotalPages(cached.pagination?.totalPages || 1)
             }
-
             try {
                 const reqId = ++latestReqIdRef.current
                 const res = await adminAPI.sellers.getByStatus.fetch('approved', page, 30)
                 if (reqId !== latestReqIdRef.current) return
-
                 const payload = res?.data?.profiles ? res.data : res
                 const profiles = payload?.profiles || []
                 const serverPagination = payload?.pagination || {}
-
-                // Enhance sellers with computed fields
                 const enhancedSellers = profiles.map((seller) => ({
                     ...seller,
                     stats: seller.stats || {
@@ -187,10 +158,7 @@ export default function ActiveSellersPage() {
                     socialLinks: seller.socialLinks || {},
                     joinedDate: seller.createdAt || seller.verification?.approvedAt || new Date().toISOString()
                 }))
-
-                // Cache fresh
                 cacheRef.current.set(key, { list: enhancedSellers, pagination: serverPagination })
-
                 setSellers(enhancedSellers)
                 setPagination(serverPagination || {})
                 setTotalPages(serverPagination?.totalPages || 1)
@@ -209,20 +177,15 @@ export default function ActiveSellersPage() {
         },
         [page]
     )
-
     useEffect(() => {
         fetchList()
     }, [fetchList])
-
     useEffect(() => {
         const id = setTimeout(() => setDebouncedQuery(searchQuery.trim().toLowerCase()), 220)
         return () => clearTimeout(id)
     }, [searchQuery])
-
     const filteredSellers = useMemo(() => {
         let filtered = sellers
-
-        // Text search
         if (debouncedQuery) {
             filtered = filtered.filter((seller) => {
                 const q = debouncedQuery
@@ -235,12 +198,9 @@ export default function ActiveSellersPage() {
                 )
             })
         }
-
-        // Advanced filters
         if (advancedFilters.country) {
             filtered = filtered.filter((seller) => seller.location?.country === advancedFilters.country)
         }
-
         if (advancedFilters.performanceLevel) {
             filtered = filtered.filter((seller) => {
                 const products = seller.stats?.totalProducts || 0
@@ -256,12 +216,10 @@ export default function ActiveSellersPage() {
                 }
             })
         }
-
         if (advancedFilters.hasWebsite) {
             const hasWebsite = advancedFilters.hasWebsite === 'yes'
             filtered = filtered.filter((seller) => !!seller.websiteUrl === hasWebsite)
         }
-
         if (advancedFilters.ratingRange) {
             filtered = filtered.filter((seller) => {
                 const rating = seller.stats?.avgRating || 0
@@ -279,21 +237,15 @@ export default function ActiveSellersPage() {
                 }
             })
         }
-
         return filtered
     }, [debouncedQuery, sellers, advancedFilters])
-
-    // Real-time updates
     useEffect(() => {
         if (!realTimeUpdates) return
-
         const interval = setInterval(() => {
             fetchList({ silent: true })
         }, 30000)
-
         return () => clearInterval(interval)
     }, [realTimeUpdates, fetchList])
-
     const addNotification = (message, type = 'info') => {
         const id = Date.now()
         setNotifications((prev) => [...prev, { id, message, type, timestamp: new Date() }])
@@ -301,7 +253,6 @@ export default function ActiveSellersPage() {
             setNotifications((prev) => prev.filter((n) => n.id !== id))
         }, 5000)
     }
-
     const handleSelectSeller = (sellerId) => {
         setSelectedSellers((prev) => {
             const newSet = new Set(prev)
@@ -313,7 +264,6 @@ export default function ActiveSellersPage() {
             return newSet
         })
     }
-
     const handleSelectAll = () => {
         if (selectedSellers.size === filteredSellers.length) {
             setSelectedSellers(new Set())
@@ -321,10 +271,8 @@ export default function ActiveSellersPage() {
             setSelectedSellers(new Set(filteredSellers.map((s) => s._id)))
         }
     }
-
     const handleBulkAction = async (action) => {
         if (selectedSellers.size === 0) return
-
         setActionLoading(true)
         try {
             switch (action) {
@@ -334,7 +282,6 @@ export default function ActiveSellersPage() {
                     showMessage('Sellers data exported', 'success')
                     break
                 case 'suspend':
-                    // TODO: Implement suspension logic
                     showMessage('Suspension feature coming soon', 'info')
                     break
                 default:
@@ -347,7 +294,6 @@ export default function ActiveSellersPage() {
             setActionLoading(false)
         }
     }
-
     const anyModalOpen = showSellerDetailsModal || showEditModal
     useEffect(() => {
         if (typeof document === 'undefined') return
@@ -369,10 +315,8 @@ export default function ActiveSellersPage() {
             }
         }
     }, [anyModalOpen])
-
     return (
         <div className="space-y-6">
-            {/* Inline Notification */}
             {notification && (
                 <InlineNotification
                     type={notification.type}
@@ -380,9 +324,6 @@ export default function ActiveSellersPage() {
                     onDismiss={clearNotification}
                 />
             )}
-
-            
-            {/* Header */}
             <div className="relative overflow-hidden rounded-2xl border border-gray-800 bg-[#141414]">
                 <div
                     className="absolute inset-0 pointer-events-none"
@@ -409,7 +350,6 @@ export default function ActiveSellersPage() {
                                 </p>
                             </div>
                         </div>
-
                         <div className="grid grid-cols-4 gap-2 sm:gap-3 w-full lg:w-auto">
                             <MiniKPI
                                 label="Total"
@@ -458,8 +398,6 @@ export default function ActiveSellersPage() {
                         </div>
                     </div>
                 </div>
-
-                {/* Search Bar */}
                 <div className="px-4 sm:px-6 pb-4">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -483,17 +421,13 @@ export default function ActiveSellersPage() {
                     </div>
                 </div>
             </div>
-
             {debouncedQuery && (
                 <div className="text-xs sm:text-sm text-gray-400 px-1">
                     Showing {filteredSellers.length} results for "{debouncedQuery}".
                 </div>
             )}
-
-            {/* Advanced Sorting & Filtering Controls */}
             <div className="bg-[#171717] border border-gray-800 rounded-xl p-4">
                 <div className="flex flex-col lg:flex-row lg:items-center gap-4 justify-between">
-                    {/* Left: Sort Controls */}
                     <div className="flex items-center gap-3">
                         <span className="text-sm text-gray-400">Sort by:</span>
                         <div className="flex items-center gap-2">
@@ -516,8 +450,6 @@ export default function ActiveSellersPage() {
                             </button>
                         </div>
                     </div>
-
-                    {/* Right: Filter Controls */}
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
@@ -526,14 +458,12 @@ export default function ActiveSellersPage() {
                             Advanced Filters
                             {showAdvancedFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                         </button>
-
                         <button
                             onClick={() => exportSellersData(filteredSellers)}
                             className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm">
                             <Download className="w-4 h-4" />
                             Export CSV
                         </button>
-
                         {filteredSellers.length > 0 && (
                             <div className="flex items-center gap-2">
                                 <input
@@ -545,7 +475,6 @@ export default function ActiveSellersPage() {
                                 <span className="text-sm text-gray-400">Select All</span>
                             </div>
                         )}
-
                         <button
                             type="button"
                             onClick={() => fetchList({ isManualRefresh: true })}
@@ -556,8 +485,6 @@ export default function ActiveSellersPage() {
                         </button>
                     </div>
                 </div>
-
-                {/* Advanced Filters Panel */}
                 {showAdvancedFilters && (
                     <div className="mt-4 pt-4 border-t border-gray-800">
                         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -575,7 +502,6 @@ export default function ActiveSellersPage() {
                                     <option value="Australia">Australia</option>
                                 </select>
                             </div>
-
                             <div>
                                 <label className="block text-xs font-medium text-gray-400 mb-1">Performance</label>
                                 <select
@@ -588,7 +514,6 @@ export default function ActiveSellersPage() {
                                     <option value="low">Low (0-2 products)</option>
                                 </select>
                             </div>
-
                             <div>
                                 <label className="block text-xs font-medium text-gray-400 mb-1">Website</label>
                                 <select
@@ -600,7 +525,6 @@ export default function ActiveSellersPage() {
                                     <option value="no">No Website</option>
                                 </select>
                             </div>
-
                             <div>
                                 <label className="block text-xs font-medium text-gray-400 mb-1">Rating</label>
                                 <select
@@ -611,10 +535,8 @@ export default function ActiveSellersPage() {
                                     <option value="excellent">Excellent (4.5+)</option>
                                     <option value="good">Good (3.5-4.4)</option>
                                     <option value="fair">Fair (2.5-3.4)</option>
-                                    {/* <option value="poor">Poor (< 2.5)</option> */}
                                 </select>
                             </div>
-
                             <div className="flex items-end">
                                 <button
                                     onClick={() =>
@@ -634,8 +556,6 @@ export default function ActiveSellersPage() {
                     </div>
                 )}
             </div>
-
-            {/* Sellers List */}
             <section
                 aria-busy={loading}
                 className="transition-opacity duration-200"
@@ -665,7 +585,6 @@ export default function ActiveSellersPage() {
                     </div>
                 )}
             </section>
-
             {totalPages > 1 && !debouncedQuery && (
                 <div className="flex items-center justify-center gap-2 mt-2">
                     <button
@@ -687,8 +606,6 @@ export default function ActiveSellersPage() {
                     </button>
                 </div>
             )}
-
-            {/* Seller Details Modal */}
             {showSellerDetailsModal && selectedSeller && (
                 <Modal
                     onClose={() => {
@@ -698,7 +615,6 @@ export default function ActiveSellersPage() {
                     <div className="max-w-4xl w-full">
                         <h3 className="text-lg sm:text-xl font-bold text-white mb-3">Seller Profile</h3>
                         <div className="space-y-6">
-                            {/* Header */}
                             <div className="flex items-start gap-4">
                                 <div
                                     className="w-16 h-16 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0"
@@ -729,8 +645,6 @@ export default function ActiveSellersPage() {
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Performance Metrics */}
                             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                                 <StatTile
                                     label="Products"
@@ -767,21 +681,15 @@ export default function ActiveSellersPage() {
                                     <Eye className="w-4 h-4 text-gray-400" />
                                 </StatTile>
                             </div>
-
-                            {/* Bio & Links */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <BioBlock seller={selectedSeller} />
                                 <ContactBlock seller={selectedSeller} />
                             </div>
-
-                            {/* Skills & Expertise */}
                             <ExpertiseBlock seller={selectedSeller} />
                         </div>
                     </div>
                 </Modal>
             )}
-
-            {/* Edit Profile Modal - Simplified version */}
             {showEditModal && selectedSeller && (
                 <Modal
                     onClose={() => {
@@ -809,8 +717,6 @@ export default function ActiveSellersPage() {
                     </div>
                 </Modal>
             )}
-
-            {/* Quick Actions Toolbar */}
             {selectedSellers.size > 0 && (
                 <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
                     <div className="bg-[#1a1a1a] border border-gray-700 rounded-xl px-4 py-3 shadow-2xl">
@@ -840,8 +746,6 @@ export default function ActiveSellersPage() {
                     </div>
                 </div>
             )}
-
-            {/* Notifications */}
             {notifications.length > 0 && (
                 <div className="fixed top-6 right-6 z-50 space-y-2">
                     {notifications.map((notification) => (
@@ -862,8 +766,6 @@ export default function ActiveSellersPage() {
         </div>
     )
 }
-
-// Utility Components
 function MiniKPI({ label, value, icon }) {
     return (
         <div className="relative rounded-lg border border-gray-800 bg-[#0f0f0f] px-3 py-2">
@@ -875,7 +777,6 @@ function MiniKPI({ label, value, icon }) {
         </div>
     )
 }
-
 function Loader() {
     return (
         <div className="flex items-center justify-center h-64">
@@ -886,7 +787,6 @@ function Loader() {
         </div>
     )
 }
-
 function EmptyState({ query }) {
     return (
         <div className="bg-[#171717] border border-gray-800 rounded-xl p-10 text-center">
@@ -896,7 +796,6 @@ function EmptyState({ query }) {
         </div>
     )
 }
-
 function StatTile({ label, value, children }) {
     return (
         <div className="bg-[#121212] rounded-lg p-3 sm:p-4 border border-gray-800">
@@ -908,7 +807,6 @@ function StatTile({ label, value, children }) {
         </div>
     )
 }
-
 function BioBlock({ seller }) {
     const hasBio = !!seller.bio
     return (
@@ -926,7 +824,6 @@ function BioBlock({ seller }) {
         </div>
     )
 }
-
 function ContactBlock({ seller }) {
     return (
         <div>
@@ -939,7 +836,6 @@ function ContactBlock({ seller }) {
                     </div>
                     <p className="text-sm text-white break-all">{seller.email || seller.userId?.emailAddress || 'Not provided'}</p>
                 </div>
-
                 {seller.websiteUrl && (
                     <div className="bg-[#121212] rounded-lg p-3 border border-gray-800">
                         <div className="flex items-center gap-2 mb-1">
@@ -959,13 +855,10 @@ function ContactBlock({ seller }) {
         </div>
     )
 }
-
 function ExpertiseBlock({ seller }) {
     const hasNiches = Array.isArray(seller.niches) && seller.niches.length > 0
     const hasTools = Array.isArray(seller.toolsSpecialization) && seller.toolsSpecialization.length > 0
-
     if (!hasNiches && !hasTools) return null
-
     return (
         <div className="space-y-4">
             {hasNiches && (
@@ -982,7 +875,6 @@ function ExpertiseBlock({ seller }) {
                     </div>
                 </div>
             )}
-
             {hasTools && (
                 <div>
                     <h4 className="text-xs sm:text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">Tool Expertise</h4>
@@ -1000,30 +892,23 @@ function ExpertiseBlock({ seller }) {
         </div>
     )
 }
-
 function SellerCard({ seller, isSelected, onSelect, onEdit, onViewDetails }) {
     return (
         <div className="rounded-xl border border-gray-800 bg-[#171717] overflow-hidden">
             <div className="p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-4">
-                    {/* Left: Checkbox + Identity */}
                     <div className="flex items-start gap-3 flex-1 min-w-0">
-                        {/* Selection Checkbox */}
                         <input
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => onSelect(seller._id)}
                             className="mt-1 w-4 h-4 text-[#00FF89] bg-[#0f0f0f] border-gray-700 rounded focus:ring-[#00FF89]/50"
                         />
-
-                        {/* Avatar */}
                         <div
                             className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0"
                             style={{ backgroundColor: '#00FF891a', color: '#00FF89' }}>
                             {(seller.fullName || 'S').charAt(0).toUpperCase()}
                         </div>
-
-                        {/* Info */}
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                                 <h3 className="text-lg font-semibold text-white truncate">{seller.fullName || 'Unnamed Seller'}</h3>
@@ -1032,7 +917,6 @@ function SellerCard({ seller, isSelected, onSelect, onEdit, onViewDetails }) {
                                     Active
                                 </span>
                             </div>
-
                             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs sm:text-sm text-gray-400">
                                 <span className="flex items-center gap-1 min-w-0">
                                     <Mail className="w-3 h-3" />
@@ -1051,16 +935,12 @@ function SellerCard({ seller, isSelected, onSelect, onEdit, onViewDetails }) {
                                     {(seller.stats?.avgRating || 0).toFixed(1)} rating
                                 </span>
                             </div>
-
-                            {/* Quick Stats */}
                             <div className="flex items-center gap-4 mt-2 text-sm">
                                 <span className="text-[#00FF89] font-medium">${seller.stats?.totalRevenue || 0} revenue</span>
                                 <span className="text-gray-400">{seller.stats?.totalSales || 0} sales</span>
                             </div>
                         </div>
                     </div>
-
-                    {/* Right: Actions */}
                     <div className="flex items-center gap-2">
                         <button
                             onClick={onEdit}
@@ -1068,7 +948,6 @@ function SellerCard({ seller, isSelected, onSelect, onEdit, onViewDetails }) {
                             <Edit3 className="w-3.5 h-3.5" />
                             Edit
                         </button>
-
                         <button
                             onClick={onViewDetails}
                             className="p-2 bg-[#0f0f0f] text-gray-400 rounded-lg hover:bg-[#1b1b1b] transition-colors">
@@ -1080,7 +959,6 @@ function SellerCard({ seller, isSelected, onSelect, onEdit, onViewDetails }) {
         </div>
     )
 }
-
 function Modal({ onClose, children }) {
     return (
         <div

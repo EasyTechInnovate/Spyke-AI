@@ -1,5 +1,4 @@
 import { cn } from '@/lib/utils/cn'
-
 export default function Card({ className, children, hover = true, ...props }) {
   return (
     <div

@@ -1,30 +1,6 @@
 'use client'
-
 import React, { useState } from 'react'
 import { X, Plus } from 'lucide-react'
-
-/**
- * @typedef {Object} FormTagInputProps
- * @property {string} [label] - Field label
- * @property {string} name - Field name
- * @property {string[]} [value=[]] - Array of tags
- * @property {function} onAddTag - Add tag handler
- * @property {function} onRemoveTag - Remove tag handler
- * @property {string} [error] - Error message
- * @property {string} [placeholder] - Placeholder text
- * @property {string} [helperText] - Helper text
- * @property {boolean} [required] - Whether field is required
- * @property {string} [className] - Additional CSS classes
- * @property {number} [maxItems] - Maximum number of tags
- * @property {string[]} [suggestions=[]] - Suggested tags
- * @property {boolean} [disabled] - Whether field is disabled
- * @property {string} [addButtonText='Add'] - Add button text
- */
-
-/**
- * Reusable form tag input component
- * @param {FormTagInputProps} props
- */
 export default function FormTagInput({
     label,
     name,
@@ -42,7 +18,6 @@ export default function FormTagInput({
     addButtonText = 'Add',
 }) {
     const [inputValue, setInputValue] = useState('')
-
     const handleAdd = () => {
         if (inputValue.trim() && !value.includes(inputValue.trim())) {
             if (maxItems && value.length >= maxItems) {
@@ -52,16 +27,13 @@ export default function FormTagInput({
             setInputValue('')
         }
     }
-
     const handleKeyPress = (e) => {
         if (e.key === 'Enter') {
             e.preventDefault()
             handleAdd()
         }
     }
-
     const availableSuggestions = suggestions.filter(s => !value.includes(s))
-
     return (
         <div className={className}>
             {label && (
@@ -72,7 +44,6 @@ export default function FormTagInput({
                     )}
                 </label>
             )}
-
             <div className="space-y-3">
                 <div className="flex gap-2">
                     <input
@@ -99,7 +70,6 @@ export default function FormTagInput({
                         {addButtonText}
                     </button>
                 </div>
-
                 {value.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                         {value.map((tag) => (
@@ -120,7 +90,6 @@ export default function FormTagInput({
                         ))}
                     </div>
                 )}
-
                 {availableSuggestions.length > 0 && value.length < (maxItems || Infinity) && (
                     <div className="flex flex-wrap gap-2">
                         {availableSuggestions.slice(0, 10).map((suggestion) => (
@@ -138,11 +107,9 @@ export default function FormTagInput({
                     </div>
                 )}
             </div>
-
             {error && (
                 <p className="mt-1 text-sm text-red-400">{error}</p>
             )}
-
             {maxItems && (
                 <p className="mt-1 text-sm text-gray-500">
                     {value.length}/{maxItems} items

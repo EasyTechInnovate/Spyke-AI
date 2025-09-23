@@ -1,5 +1,4 @@
 'use client'
-
 import { useMemo, useCallback } from 'react'
 import { X, LogOut, HelpCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import { logoutService } from '@/lib/services/logout'
@@ -7,8 +6,6 @@ import { useAdmin } from '@/providers/AdminProvider'
 import { useAdminNavigation } from './hooks/useAdminNavigation'
 import { NavigationSection } from './navigation/NavigationComponents'
 import { createNavigationItems, COMING_SOON } from './navigation/navigationConfig'
-
-// Admin Profile Component
 const AdminProfile = ({ isCollapsed }) => (
   <div className={`px-6 py-3 border-b border-white/5 flex-shrink-0 transition-all duration-300 ${isCollapsed ? 'px-3 py-2' : ''}`}>
     <div className={`flex items-center gap-3 transition-all duration-300 ${isCollapsed ? 'justify-center gap-0' : ''}`}>
@@ -38,8 +35,6 @@ const AdminProfile = ({ isCollapsed }) => (
     </div>
   </div>
 )
-
-// Header Brand Component
 const HeaderBrand = ({ isCollapsed }) => (
   <div className={`px-6 py-4 border-b border-white/5 flex-shrink-0 transition-all duration-300 ${isCollapsed ? 'px-3 py-3' : ''}`}>
     <div className="flex items-center justify-between">
@@ -52,8 +47,6 @@ const HeaderBrand = ({ isCollapsed }) => (
         </div>
         <p className="text-xs text-white/40 font-light tracking-wide">Platform Management</p>
       </div>
-
-      {/* Collapsed state logo */}
       <div className={`items-center justify-center w-full transition-all duration-300 ${isCollapsed ? 'flex' : 'hidden'}`}>
         <div className="w-6 h-6 rounded-xl bg-gradient-to-br from-[#00FF89] to-[#00FF89]/80 flex items-center justify-center">
           <span className="text-black font-bold text-xs">A</span>
@@ -62,8 +55,6 @@ const HeaderBrand = ({ isCollapsed }) => (
     </div>
   </div>
 )
-
-// Bottom Actions Component
 const BottomActions = ({ isCollapsed, onLogout }) => (
   <div className="flex-shrink-0 border-t border-white/5 bg-gradient-to-t from-black/50 to-transparent backdrop-blur-sm">
     <div className={`pt-2 pb-1 transition-all duration-300 ${isCollapsed ? 'px-2' : 'px-4'}`}>
@@ -80,7 +71,6 @@ const BottomActions = ({ isCollapsed, onLogout }) => (
         </div>
       </div>
     </div>
-
     <div className={`pb-3 transition-all duration-300 ${isCollapsed ? 'px-2' : 'px-4'}`}>
       <button
         onClick={onLogout}
@@ -94,8 +84,6 @@ const BottomActions = ({ isCollapsed, onLogout }) => (
     </div>
   </div>
 )
-
-// Mobile Header Component
 const MobileHeader = ({ onClose }) => (
   <div className="px-6 py-3 border-b border-white/5 flex-shrink-0">
     <div className="flex items-center justify-between">
@@ -108,7 +96,6 @@ const MobileHeader = ({ onClose }) => (
         </div>
         <p className="text-xs text-white/40 font-light tracking-wide">Platform Management</p>
       </div>
-
       <button
         onClick={onClose}
         className="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200">
@@ -117,19 +104,13 @@ const MobileHeader = ({ onClose }) => (
     </div>
   </div>
 )
-
-// Main AdminSidebar Component
 const AdminSidebar = ({ currentPath }) => {
   const { counts, loading } = useAdmin()
   const navigation = useAdminNavigation(currentPath)
-  
-  // Create navigation items with current counts
   const navigationItems = useMemo(() => 
     createNavigationItems(counts), 
     [counts]
   )
-
-  // Logout handler
   const handleLogout = useCallback(async () => {
     try {
       await logoutService.logout()
@@ -137,18 +118,14 @@ const AdminSidebar = ({ currentPath }) => {
       console.error('Logout failed:', error)
     }
   }, [])
-
   return (
     <>
-      {/* Mobile overlay */}
       <div
         className={`fixed inset-0 z-40 bg-black/50 lg:hidden transition-opacity duration-300 ${
           navigation.sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={navigation.closeSidebar}
       />
-
-      {/* Desktop Sidebar */}
       <aside
         className={`hidden lg:flex fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-black/95 to-black/98 backdrop-blur-xl border-r border-white/5 transition-all duration-300 ease-out flex-col shadow-2xl admin-sidebar-fix ${
           navigation.isCollapsed ? 'w-20' : 'w-64'
@@ -161,18 +138,14 @@ const AdminSidebar = ({ currentPath }) => {
           bottom: 0
         }}
         aria-label="Admin navigation sidebar">
-        
-        {/* Desktop Collapse Toggle Button */}
         <button
           onClick={navigation.toggleCollapse}
           className="absolute -right-3 top-8 w-6 h-6 bg-black border border-white/10 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:border-[#00FF89]/30 transition-all duration-300 z-50"
           aria-label={navigation.isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
           {navigation.isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
         </button>
-
         <HeaderBrand isCollapsed={navigation.isCollapsed} />
         <AdminProfile isCollapsed={navigation.isCollapsed} />
-        
         <NavigationSection
           items={navigationItems}
           expandedMenus={navigation.expandedMenus}
@@ -183,23 +156,18 @@ const AdminSidebar = ({ currentPath }) => {
           currentPath={currentPath}
           comingSoonItems={COMING_SOON}
         />
-        
         <BottomActions 
           isCollapsed={navigation.isCollapsed} 
           onLogout={handleLogout} 
         />
       </aside>
-
-      {/* Mobile Sidebar */}
       <aside
         className={`lg:hidden fixed top-0 left-0 z-60 h-screen w-80 bg-gradient-to-b from-black/95 to-black/98 backdrop-blur-xl border-r border-white/5 transition-transform duration-300 ease-out flex flex-col shadow-2xl ${
           navigation.sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         aria-label="Admin navigation sidebar">
-        
         <MobileHeader onClose={navigation.closeSidebar} />
         <AdminProfile isCollapsed={false} />
-        
         <NavigationSection
           items={navigationItems}
           expandedMenus={navigation.expandedMenus}
@@ -210,7 +178,6 @@ const AdminSidebar = ({ currentPath }) => {
           currentPath={currentPath}
           comingSoonItems={COMING_SOON}
         />
-        
         <BottomActions 
           isCollapsed={false} 
           onLogout={handleLogout} 
@@ -219,5 +186,4 @@ const AdminSidebar = ({ currentPath }) => {
     </>
   )
 }
-
 export default AdminSidebar

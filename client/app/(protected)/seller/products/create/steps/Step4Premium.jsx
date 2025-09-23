@@ -1,11 +1,8 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import { useState, useMemo } from 'react'
 import { Plus, X, FileText, Code, Settings, HelpCircle, Save, Check, Sparkles, Package, File } from 'lucide-react'
 import { useProductCreateStore } from '@/store/productCreate'
-
-// Enhanced tooltips with contextual help
 const FIELD_HELP = {
     promptText: {
         title: "Prompt Text Guide",
@@ -38,8 +35,6 @@ const FIELD_HELP = {
         examples: ["Zapier automation templates", "Sample data files", "Configuration examples"]
     }
 }
-
-// Enhanced error messages
 const getEnhancedErrorMessage = (field, error) => {
     const errorMap = {
         promptText: {
@@ -59,14 +54,10 @@ const getEnhancedErrorMessage = (field, error) => {
             'maxItems': 'Too many steps can overwhelm users. Focus on the essential ones.'
         }
     }
-
     return errorMap[field]?.[error] || error
 }
-
-// Tooltip component (reused from Step1)
 const Tooltip = ({ content, examples }) => {
     const [isVisible, setIsVisible] = useState(false)
-
     return (
         <div className="relative inline-block">
             <button
@@ -78,7 +69,6 @@ const Tooltip = ({ content, examples }) => {
                 className="p-1 text-gray-400 hover:text-[#00FF89] transition-colors">
                 <HelpCircle className="w-4 h-4" />
             </button>
-
             {isVisible && (
                 <motion.div
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -104,13 +94,10 @@ const Tooltip = ({ content, examples }) => {
         </div>
     )
 }
-
-// Auto-save indicator (reused from Step1)
 const AutoSaveIndicator = () => {
     const lastSaved = useProductCreateStore((state) => state.lastSaved)
     const isDirty = useProductCreateStore((state) => state.isDirty)
     const [showSaved, setShowSaved] = useState(false)
-
     const status = useMemo(() => {
         if (isDirty) return { icon: Save, text: 'Unsaved changes', color: 'text-yellow-400' }
         if (lastSaved) {
@@ -120,7 +107,6 @@ const AutoSaveIndicator = () => {
         }
         return { icon: Save, text: 'Auto-save enabled', color: 'text-gray-400' }
     }, [lastSaved, isDirty, showSaved])
-
     return (
         <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -131,47 +117,36 @@ const AutoSaveIndicator = () => {
         </motion.div>
     )
 }
-
 export default function Step4Premium() {
     const premiumContent = useProductCreateStore((state) => state.premiumContent)
     const productType = useProductCreateStore((state) => state.type)
     const errors = useProductCreateStore((state) => state.errors)
     const touchedFields = useProductCreateStore((state) => state.touchedFields)
-
     const setField = useProductCreateStore((state) => state.setField)
     const addToArray = useProductCreateStore((state) => state.addToArray)
     const removeFromArray = useProductCreateStore((state) => state.removeFromArray)
     const updateArrayItem = useProductCreateStore((state) => state.updateArrayItem)
     const markFieldTouched = useProductCreateStore((state) => state.markFieldTouched)
     const validateTouchedFields = useProductCreateStore((state) => state.validateTouchedFields)
-
     const updatePremiumField = (field, value) => {
         setField(`premiumContent.${field}`, value)
     }
-
     const handleFieldBlur = (fieldName) => {
         markFieldTouched(fieldName)
         validateTouchedFields()
     }
-
     const showError = (fieldName) => {
         return touchedFields[fieldName] && errors[fieldName]
     }
-
     return (
         <div className="space-y-10">
-            {/* Auto-save indicator */}
             <div className="flex justify-end">
                 <AutoSaveIndicator />
             </div>
-
-            {/* Visual break - Welcome section */}
             <div className="text-center pb-6 border-b border-gray-700/50">
                 <h2 className="text-2xl font-semibold text-white mb-2">Premium Content & Assets</h2>
                 <p className="text-lg text-gray-400">Add valuable content that customers receive after purchase</p>
             </div>
-
-            {/* Info Banner */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -181,8 +156,6 @@ export default function Step4Premium() {
                     <span className="font-medium">Premium Content:</span> All fields are optional but can significantly increase your product's value
                 </p>
             </motion.div>
-
-            {/* Content Section */}
             <div className="flex items-center my-8">
                 <div className="flex-1 border-t border-gray-700"></div>
                 <div className="px-4 text-lg text-gray-400 flex items-center space-x-2">
@@ -191,8 +164,6 @@ export default function Step4Premium() {
                 </div>
                 <div className="flex-1 border-t border-gray-700"></div>
             </div>
-
-            {/* Prompt Text */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -221,8 +192,6 @@ export default function Step4Premium() {
                     </div>
                 )}
             </motion.div>
-
-            {/* Prompt Instructions */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -251,8 +220,6 @@ export default function Step4Premium() {
                     </div>
                 )}
             </motion.div>
-
-            {/* Automation Instructions */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -281,8 +248,6 @@ export default function Step4Premium() {
                     </div>
                 )}
             </motion.div>
-
-            {/* Configuration Section */}
             <div className="flex items-center my-8">
                 <div className="flex-1 border-t border-gray-700"></div>
                 <div className="px-4 text-lg text-gray-400 flex items-center space-x-2">
@@ -291,8 +256,6 @@ export default function Step4Premium() {
                 </div>
                 <div className="flex-1 border-t border-gray-700"></div>
             </div>
-
-            {/* Agent Configuration */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -339,8 +302,6 @@ export default function Step4Premium() {
                     className="w-full px-5 py-4 text-lg bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-[#00FF89] transition-all resize-none font-mono"
                 />
             </motion.div>
-
-            {/* Process Section */}
             <div className="flex items-center my-8">
                 <div className="flex-1 border-t border-gray-700"></div>
                 <div className="px-4 text-lg text-gray-400 flex items-center space-x-2">
@@ -349,8 +310,6 @@ export default function Step4Premium() {
                 </div>
                 <div className="flex-1 border-t border-gray-700"></div>
             </div>
-
-            {/* Detailed How it Works */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -400,8 +359,6 @@ export default function Step4Premium() {
                     </button>
                 </div>
             </motion.div>
-
-            {/* File Attachments Section */}
             <div className="flex items-center my-8">
                 <div className="flex-1 border-t border-gray-700"></div>
                 <div className="px-4 text-lg text-gray-400 flex items-center space-x-2">
@@ -410,8 +367,6 @@ export default function Step4Premium() {
                 </div>
                 <div className="flex-1 border-t border-gray-700"></div>
             </div>
-
-            {/* File Attachments */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -425,9 +380,7 @@ export default function Step4Premium() {
                     <Tooltip content={FIELD_HELP.fileAttachments} examples={FIELD_HELP.fileAttachments.examples} />
                 </div>
                 <p className="text-base text-gray-400 mb-6">Upload additional files that buyers will receive with their purchase</p>
-
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Automation Files */}
                     <div className="space-y-4">
                         <label className="block text-lg font-semibold text-white">Automation Files</label>
                         <div className="space-y-4">
@@ -485,8 +438,6 @@ export default function Step4Premium() {
                             </button>
                         </div>
                     </div>
-
-                    {/* Agent Files */}
                     <div className="space-y-4">
                         <label className="block text-lg font-semibold text-white">Agent Files</label>
                         <div className="space-y-4">
@@ -545,8 +496,6 @@ export default function Step4Premium() {
                     </div>
                 </div>
             </motion.div>
-
-            {/* Premium Content Preview */}
             {Object.values(premiumContent || {}).some((value) => (Array.isArray(value) ? value.length > 0 : value)) && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}

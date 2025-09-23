@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { promocodeAPI, sellerAPI } from '@/lib/api'
 import { useNotifications } from '@/hooks/useNotifications'
@@ -32,10 +31,8 @@ import PromocodeForm from '@/components/features/promocode/PromocodeForm'
 import PromocodeStats from '@/components/features/promocode/PromocodeStats'
 import LoadingSpinner from '@/components/shared/ui/LoadingSpinner'
 import Notification from '@/components/shared/Notification'
-
 export default function PromocodesPage() {
     const { addNotification, notifications, removeNotification } = useNotifications()
-
     const [sellerProfile, setSellerProfile] = useState(null)
     const [promocodes, setPromocodes] = useState([])
     const [loading, setLoading] = useState(true)
@@ -51,7 +48,6 @@ export default function PromocodesPage() {
         total: 0,
         totalPages: 0
     })
-
     const showMessage = (message, type = 'info') => {
         addNotification({
             message,
@@ -59,7 +55,6 @@ export default function PromocodesPage() {
             duration: 4000
         })
     }
-
     useEffect(() => {
         const fetchSellerProfile = async () => {
             try {
@@ -73,11 +68,9 @@ export default function PromocodesPage() {
         }
         fetchSellerProfile()
     }, [])
-
     useEffect(() => {
         fetchPromocodes()
     }, [pagination.page, filterStatus])
-
     const fetchPromocodes = async () => {
         try {
             setLoading(true)
@@ -87,7 +80,6 @@ export default function PromocodesPage() {
                 status: filterStatus !== 'all' ? filterStatus : undefined,
                 search: searchTerm || undefined
             })
-
             setPromocodes(response.promocodes || [])
             setPagination({
                 ...pagination,
@@ -101,21 +93,17 @@ export default function PromocodesPage() {
             setLoading(false)
         }
     }
-
     const handleSearch = (e) => {
         e.preventDefault()
         setPagination({ ...pagination, page: 1 })
         fetchPromocodes()
     }
-
     const handleCreateEdit = (promocode = null) => {
         setSelectedPromocode(promocode)
         setShowForm(true)
     }
-
     const handleDelete = async (promocodeId) => {
         if (!confirm('Are you sure you want to delete this promocode? This action cannot be undone.')) return
-
         try {
             await promocodeAPI.deletePromocode(promocodeId)
             showMessage('Promocode deleted successfully', 'success')
@@ -125,7 +113,6 @@ export default function PromocodesPage() {
             console.error('Error deleting promocode:', error)
         }
     }
-
     const handleToggleStatus = async (promocodeId, currentStatus) => {
         try {
             await promocodeAPI.togglePromocodeStatus(promocodeId)
@@ -136,19 +123,16 @@ export default function PromocodesPage() {
             console.error('Error toggling status:', error)
         }
     }
-
     const handleShowStats = (promocode) => {
         setSelectedPromocode(promocode)
         setShowStats(true)
     }
-
     const copyToClipboard = (code) => {
         navigator.clipboard.writeText(code)
         setCopiedCode(code)
         showMessage(`Code "${code}" copied to clipboard!`, 'success')
         setTimeout(() => setCopiedCode(null), 2000)
     }
-
     const handleFormClose = (refreshData = false) => {
         setShowForm(false)
         setSelectedPromocode(null)
@@ -156,13 +140,10 @@ export default function PromocodesPage() {
             fetchPromocodes()
         }
     }
-
     const handleStatsClose = () => {
         setShowStats(false)
         setSelectedPromocode(null)
     }
-
-    // Calculate stats
     const activeCount = promocodes.filter((p) => p.isActive).length
     const totalUses = promocodes.reduce((sum, p) => sum + (p.currentUsageCount || 0), 0)
     const totalDiscount = promocodes.reduce((sum, p) => {
@@ -171,14 +152,10 @@ export default function PromocodesPage() {
         }
         return sum
     }, 0)
-
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white relative overflow-hidden">
-            {/* Background Pattern */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,_#00FF89_0%,_transparent_50%)] opacity-[0.03]" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,_#FFC050_0%,_transparent_50%)] opacity-[0.03]" />
-
-            {/* Notifications */}
             <div className="fixed top-4 right-4 z-50 space-y-2">
                 {notifications.map((notification) => (
                     <Notification
@@ -188,9 +165,7 @@ export default function PromocodesPage() {
                     />
                 ))}
             </div>
-
             <div className="relative z-10 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-                {/* Header */}
                 <div className="mb-8">
                     <div className="flex items-center gap-3 mb-4">
                         <div className="p-3 bg-gradient-to-br from-[#00FF89]/20 to-[#00DD78]/20 rounded-2xl border border-[#00FF89]/30">
@@ -201,8 +176,6 @@ export default function PromocodesPage() {
                             <p className="text-gray-400 text-lg">Create and manage discount codes</p>
                         </div>
                     </div>
-
-                    {/* Quick Stats */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border border-gray-800/50 rounded-2xl p-5 hover:border-[#00FF89]/30 transition-all">
                             <div className="flex items-center justify-between">
@@ -215,7 +188,6 @@ export default function PromocodesPage() {
                                 </div>
                             </div>
                         </div>
-
                         <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border border-gray-800/50 rounded-2xl p-5 hover:border-[#00FF89]/30 transition-all">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -227,7 +199,6 @@ export default function PromocodesPage() {
                                 </div>
                             </div>
                         </div>
-
                         <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border border-gray-800/50 rounded-2xl p-5 hover:border-[#FFC050]/30 transition-all">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -239,7 +210,6 @@ export default function PromocodesPage() {
                                 </div>
                             </div>
                         </div>
-
                         <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border border-gray-800/50 rounded-2xl p-5 hover:border-[#00FF89]/30 transition-all">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -253,8 +223,6 @@ export default function PromocodesPage() {
                         </div>
                     </div>
                 </div>
-
-                {/* Controls */}
                 <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border border-gray-800/50 rounded-2xl p-6 mb-8">
                     <div className="flex flex-col lg:flex-row gap-4">
                         <form
@@ -277,7 +245,6 @@ export default function PromocodesPage() {
                                 <span className="hidden sm:inline">Search</span>
                             </button>
                         </form>
-
                         <div className="flex gap-3">
                             <select
                                 value={filterStatus}
@@ -287,7 +254,6 @@ export default function PromocodesPage() {
                                 <option value="active">Active Only</option>
                                 <option value="inactive">Inactive Only</option>
                             </select>
-
                             <button
                                 onClick={() => handleCreateEdit()}
                                 className="px-6 py-3 bg-gradient-to-r from-[#00FF89] to-[#00DD78] text-[#0a0a0a] rounded-xl font-semibold hover:from-[#00DD78] hover:to-[#00CC6A] transition-all flex items-center gap-2 shadow-lg shadow-[#00FF89]/25">
@@ -297,8 +263,6 @@ export default function PromocodesPage() {
                         </div>
                     </div>
                 </div>
-
-                {/* Promocodes Grid */}
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20">
                         <LoadingSpinner />
@@ -329,12 +293,10 @@ export default function PromocodesPage() {
                                     : 0
                                 const isExpiringSoon =
                                     promocode.validUntil && new Date(promocode.validUntil) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-
                                 return (
                                     <div
                                         key={promocode._id}
                                         className="group bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border border-gray-800/50 rounded-2xl p-6 hover:border-[#00FF89]/30 transition-all duration-300 hover:shadow-lg hover:shadow-[#00FF89]/10">
-                                        {/* Header */}
                                         <div className="flex items-start justify-between mb-4">
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-3 mb-2">
@@ -348,12 +310,9 @@ export default function PromocodesPage() {
                                                         {promocode.isActive ? 'Active' : 'Inactive'}
                                                     </div>
                                                 </div>
-
                                                 {promocode.description && (
                                                     <p className="text-sm text-gray-400 line-clamp-2 mb-3">{promocode.description}</p>
                                                 )}
-
-                                                {/* Discount Display */}
                                                 <div className="flex items-center gap-2 mb-4">
                                                     <div
                                                         className={`p-2 rounded-xl ${
@@ -379,8 +338,6 @@ export default function PromocodesPage() {
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            {/* Action Menu */}
                                             <div className="flex gap-1">
                                                 <button
                                                     onClick={() => copyToClipboard(promocode.code)}
@@ -396,14 +353,12 @@ export default function PromocodesPage() {
                                                         <Copy className="w-4 h-4" />
                                                     )}
                                                 </button>
-
                                                 <button
                                                     onClick={() => handleShowStats(promocode)}
                                                     className="p-2 bg-[#2a2a2a] text-gray-400 rounded-lg hover:bg-[#FFC050]/10 hover:text-[#FFC050] transition-all"
                                                     title="View statistics">
                                                     <BarChart3 className="w-4 h-4" />
                                                 </button>
-
                                                 <button
                                                     onClick={() => handleCreateEdit(promocode)}
                                                     className="p-2 bg-[#2a2a2a] text-gray-400 rounded-lg hover:bg-[#00FF89]/10 hover:text-[#00FF89] transition-all"
@@ -412,8 +367,6 @@ export default function PromocodesPage() {
                                                 </button>
                                             </div>
                                         </div>
-
-                                        {/* Stats */}
                                         <div className="grid grid-cols-2 gap-4 mb-4">
                                             <div className="text-center">
                                                 <p className="text-xs text-gray-500">Uses</p>
@@ -422,7 +375,6 @@ export default function PromocodesPage() {
                                                     {promocode.usageLimit && `/${promocode.usageLimit}`}
                                                 </p>
                                             </div>
-
                                             {promocode.minimumOrderAmount ? (
                                                 <div className="text-center">
                                                     <p className="text-xs text-gray-500">Min Order</p>
@@ -442,8 +394,6 @@ export default function PromocodesPage() {
                                                 </div>
                                             )}
                                         </div>
-
-                                        {/* Usage Progress */}
                                         {promocode.usageLimit && (
                                             <div className="mb-4">
                                                 <div className="flex items-center justify-between text-xs mb-2">
@@ -464,8 +414,6 @@ export default function PromocodesPage() {
                                                 </div>
                                             </div>
                                         )}
-
-                                        {/* Tags */}
                                         <div className="flex flex-wrap gap-2 mb-4">
                                             {promocode.applicableProducts && promocode.applicableProducts.length > 0 && (
                                                 <span className="inline-flex items-center gap-1 px-2 py-1 bg-[#00FF89]/10 text-[#00FF89] text-xs rounded-lg border border-[#00FF89]/20">
@@ -492,8 +440,6 @@ export default function PromocodesPage() {
                                                 </span>
                                             )}
                                         </div>
-
-                                        {/* Bottom Actions */}
                                         <div className="flex items-center justify-between pt-4 border-t border-gray-800/50">
                                             <button
                                                 onClick={() => handleToggleStatus(promocode._id, promocode.isActive)}
@@ -514,7 +460,6 @@ export default function PromocodesPage() {
                                                     </>
                                                 )}
                                             </button>
-
                                             <button
                                                 onClick={() => handleDelete(promocode._id)}
                                                 className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
@@ -526,8 +471,6 @@ export default function PromocodesPage() {
                                 )
                             })}
                         </div>
-
-                        {/* Pagination */}
                         {pagination.totalPages > 1 && (
                             <div className="mt-8 flex justify-center items-center gap-4">
                                 <button
@@ -536,7 +479,6 @@ export default function PromocodesPage() {
                                     className="px-4 py-2 bg-[#2a2a2a] border border-gray-700 rounded-lg text-white hover:bg-[#00FF89]/10 hover:border-[#00FF89] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                                     Previous
                                 </button>
-
                                 <div className="flex items-center gap-2">
                                     {[...Array(Math.min(5, pagination.totalPages))].map((_, i) => {
                                         let pageNum
@@ -549,7 +491,6 @@ export default function PromocodesPage() {
                                         } else {
                                             pageNum = pagination.page - 2 + i
                                         }
-
                                         return (
                                             <button
                                                 key={pageNum}
@@ -564,7 +505,6 @@ export default function PromocodesPage() {
                                         )
                                     })}
                                 </div>
-
                                 <button
                                     disabled={pagination.page === pagination.totalPages}
                                     onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}
@@ -576,15 +516,12 @@ export default function PromocodesPage() {
                     </>
                 )}
             </div>
-
-            {/* Modals */}
             {showForm && (
                 <PromocodeForm
                     promocode={selectedPromocode}
                     onClose={handleFormClose}
                 />
             )}
-
             {showStats && selectedPromocode && (
                 <PromocodeStats
                     promocode={selectedPromocode}
@@ -594,4 +531,3 @@ export default function PromocodesPage() {
         </div>
     )
 }
-

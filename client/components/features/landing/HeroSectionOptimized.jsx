@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { ArrowRight, Sparkles, Star, Zap } from 'lucide-react'
@@ -12,7 +11,6 @@ import { motion } from 'framer-motion'
 import { useHeroPerformance } from '@/hooks/useHeroPerformance'
 import { useAuth } from '@/hooks/useAuth'
 import './hero/HeroMobile.css'
-
 import {
   DSContainer,
   DSStack,
@@ -23,53 +21,36 @@ import {
   DSStatsCard,
   DSLoadingState
 } from '@/lib/design-system/components'
-
-// Use the lightweight background effects
 const BackgroundEffectsLight = dynamic(() => import('./hero/BackgroundEffectsLight'), {
   ssr: false,
   loading: () => <DSLoadingState type="skeleton" height="100vh" className="absolute inset-0" />
 })
-
-// Constants with design system structure
 const STATS = [
   { label: 'AI Prompts', value: '10,000+', icon: Sparkles },
   { label: 'Active Creators', value: '5,000+', icon: Star },
   { label: 'Happy Customers', value: '50,000+', icon: Zap }
 ]
-
 const POPULAR_TAGS = ['ChatGPT Prompts', 'Automation Tools', 'Sales Scripts', 'Content Creation']
-
 export default function HeroSectionOptimized() {
   const [mounted, setMounted] = useState(false)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [dimensions, setDimensions] = useState({ height: '90vh' })
   const [isLoading, setIsLoading] = useState(true)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
-
-  // Track performance metrics
   const metrics = useHeroPerformance()
   const { user } = useAuth()
-
   useEffect(() => {
     setMounted(true)
-
-    // Set proper dimensions to prevent layout shift
     if (typeof window !== 'undefined') {
       const updateDimensions = () => {
         setDimensions({ height: `${Math.min(window.innerHeight * 0.9, 800)}px` })
       }
-
       updateDimensions()
       window.addEventListener('resize', updateDimensions)
-
-      // Check reduced motion preference
       const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
       setPrefersReducedMotion(mediaQuery.matches)
-
       const handleMotionChange = (e) => setPrefersReducedMotion(e.matches)
       mediaQuery.addEventListener('change', handleMotionChange)
-
-      // Mouse move handler for elegant glow effect
       const handleMouseMove = (e) => {
         if (!prefersReducedMotion) {
           setMousePosition({
@@ -78,14 +59,10 @@ export default function HeroSectionOptimized() {
           })
         }
       }
-
       window.addEventListener('mousemove', handleMouseMove)
-
-      // Simulate component loading completion
       const loadingTimer = setTimeout(() => {
         setIsLoading(false)
       }, 800)
-
       return () => {
         window.removeEventListener('resize', updateDimensions)
         mediaQuery.removeEventListener('change', handleMotionChange)
@@ -94,12 +71,9 @@ export default function HeroSectionOptimized() {
       }
     }
   }, [prefersReducedMotion])
-
   const handleSearch = (query) => {
     console.log('🎯 [HeroSectionOptimized] Search initiated:', query)
   }
-
-  // Show loading state during initial render
   if (!mounted || isLoading) {
     return (
       <section
@@ -108,31 +82,19 @@ export default function HeroSectionOptimized() {
         aria-label="Loading hero section"
       >
         <div className="absolute inset-0 bg-black" />
-
         <DSContainer>
           <DSStack gap="large" align="center" className="text-center">
-            {/* Badge Skeleton */}
             <DSLoadingState type="skeleton" width="200px" height="40px" />
-
-            {/* Heading Skeleton */}
             <div className="space-y-4">
               <DSLoadingState type="skeleton" width="600px" height="60px" />
               <DSLoadingState type="skeleton" width="500px" height="60px" />
             </div>
-
-            {/* Subheading Skeleton */}
             <DSLoadingState type="skeleton" width="400px" height="24px" />
-
-            {/* Search Bar Skeleton */}
             <DSLoadingState type="skeleton" width="100%" height="64px" className="max-w-3xl" />
-
-            {/* CTA Buttons Skeleton */}
             <div className="flex gap-4">
               <DSLoadingState type="skeleton" width="180px" height="48px" />
               <DSLoadingState type="skeleton" width="150px" height="48px" />
             </div>
-
-            {/* Stats Skeleton */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-12">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="text-center space-y-3">
@@ -147,7 +109,6 @@ export default function HeroSectionOptimized() {
       </section>
     )
   }
-
   return (
     <HeroAccessibility>
       <section
@@ -158,7 +119,6 @@ export default function HeroSectionOptimized() {
         }}
         aria-label="Hero section with AI marketplace search"
       >
-        {/* Mouse Follow Glow Effect */}
         {mounted && !prefersReducedMotion && (
           <div
             className="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300"
@@ -167,21 +127,13 @@ export default function HeroSectionOptimized() {
             }}
           />
         )}
-
-        {/* Pure black background with subtle overlay */}
         <div className="absolute inset-0 bg-black">
-          {/* Minimal elegant gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-br from-black via-black to-gray-900/20" />
-
-          {/* Enhanced background effects - lazy loaded */}
           {mounted && <BackgroundEffectsLight />}
         </div>
-
         <DSContainer className="relative z-0 mt-2 pb-16 sm:pb-20 lg:pb-24">
           <div className="max-w-5xl mx-auto">
-            {/* Main Content */}
             <DSStack gap="large" align="center" className="text-center">
-              {/* Badge with green theme */}
               <motion.div
                 initial={prefersReducedMotion ? {} : { opacity: 0, y: 20 }}
                 animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
@@ -194,8 +146,6 @@ export default function HeroSectionOptimized() {
                   </span>
                 </div>
               </motion.div>
-
-              {/* Hero heading with enhanced green gradient */}
               <motion.div
                 initial={prefersReducedMotion ? {} : { opacity: 0, y: 30 }}
                 animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
@@ -223,8 +173,6 @@ export default function HeroSectionOptimized() {
                   </span>
                 </DSHeading>
               </motion.div>
-
-              {/* Clean white subheading */}
               <motion.div
                 initial={prefersReducedMotion ? {} : { opacity: 0, y: 20 }}
                 animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
@@ -237,8 +185,6 @@ export default function HeroSectionOptimized() {
                   {appConfig.company.tagline}
                 </DSText>
               </motion.div>
-
-              {/* Enhanced Search Bar */}
               <motion.div
                 initial={prefersReducedMotion ? {} : { opacity: 0, y: 20 }}
                 animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
@@ -250,8 +196,6 @@ export default function HeroSectionOptimized() {
                   onSearch={handleSearch}
                 />
               </motion.div>
-
-              {/* Refined CTA Buttons with role-based conditional rendering */}
               <motion.div
                 initial={prefersReducedMotion ? {} : { opacity: 0, y: 20 }}
                 animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
@@ -264,15 +208,12 @@ export default function HeroSectionOptimized() {
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
                     </button>
                   </Link>
-
                   <div className="w-full sm:w-auto">
                     <SellerButton />
                   </div>
                 </div>
               </motion.div>
             </DSStack>
-
-            {/* Clean stats section with green accents */}
             <motion.div
               initial={prefersReducedMotion ? {} : { opacity: 0, y: 30 }}
               animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}

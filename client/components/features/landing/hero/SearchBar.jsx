@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Sparkles, TrendingUp, Hash, X, Package, Star, ChevronRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import productsAPI from '@/lib/api/products'
-
 export default function SearchBar({ popularTags = [], onSearch }) {
     const router = useRouter()
     const [query, setQuery] = useState('')
@@ -13,31 +12,23 @@ export default function SearchBar({ popularTags = [], onSearch }) {
     const [isSearching, setIsSearching] = useState(false)
     const inputRef = useRef(null)
     const searchContainerRef = useRef(null)
-
-    // Perform search API call
     const performSearch = async (searchQuery) => {
         if (!searchQuery.trim()) {
             setSearchResults({ products: [] })
             return
         }
-
         setIsSearching(true)
-
         try {
             const response = await productsAPI.getProducts({
                 search: searchQuery.trim(),
                 limit: 5
             })
-
-            // The server returns: { message: "success", data: { products: [...], pagination: {...} } }
-            // Extract products from the correct path
             let products = []
             if (response?.data?.products && Array.isArray(response.data.products)) {
                 products = response.data.products
             } else if (response?.products && Array.isArray(response.products)) {
                 products = response.products
             }
-
             setSearchResults({ products })
         } catch (error) {
             setSearchResults({ products: [] })
@@ -45,76 +36,55 @@ export default function SearchBar({ popularTags = [], onSearch }) {
             setIsSearching(false)
         }
     }
-
-    // Debounced search effect
     useEffect(() => {
         if (query.trim().length > 2) {
             const timer = setTimeout(() => {
                 performSearch(query)
             }, 300)
-
             return () => clearTimeout(timer)
         } else {
             setSearchResults({ products: [] })
         }
     }, [query])
-
-    // Click outside handler
     useEffect(() => {
         const handleClickOutside = (event) => {
-            // Don't close if clicking on a product button
             if (event.target.closest('button[data-product-click]')) {
                 return
             }
-
             if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
                 setIsFocused(false)
             }
         }
-
         document.addEventListener('mousedown', handleClickOutside)
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
-
     const handleSearch = (e) => {
         e.preventDefault()
         if (query.trim() || selectedTags.length > 0) {
             const searchQuery = selectedTags.length > 0 ? `${query} ${selectedTags.join(' ')}`.trim() : query
-
-            // Navigate to explore page with search
             router.push(`/explore?search=${encodeURIComponent(searchQuery)}`)
             setIsFocused(false)
-
             if (onSearch) onSearch(searchQuery)
         }
     }
-
     const handleProductClick = (product) => {
-        // Use slug if available, otherwise fallback to id or _id
         const identifier = product.slug || product.id || product._id
-
         if (!identifier) {
             return
         }
-
         const productUrl = `/products/${identifier}`
-
-        // Close dropdown and navigate immediately
         setIsFocused(false)
         setQuery('')
         router.push(productUrl)
     }
-
     const handleTagClick = (tag) => {
         if (!selectedTags.includes(tag)) {
             setSelectedTags([...selectedTags, tag])
         }
     }
-
     const removeTag = (tagToRemove) => {
         setSelectedTags(selectedTags.filter((tag) => tag !== tagToRemove))
     }
-
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
             handleSearch(e)
@@ -123,9 +93,7 @@ export default function SearchBar({ popularTags = [], onSearch }) {
             inputRef.current?.blur()
         }
     }
-
     const showResults = isFocused && (query.length > 2 || searchResults.products.length > 0)
-
     return (
         <div
             className="w-full max-w-4xl mx-auto space-y-4 relative px-2 sm:px-4"
@@ -139,19 +107,13 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                 transition={{ duration: 0.5 }}
                 role="search"
                 aria-label="Search AI prompts and automation tools">
-
-                {/* Main Search Container */}
                 <div
                     className={`relative overflow-hidden bg-gradient-to-r from-gray-900/80 via-gray-800/60 to-gray-900/80 backdrop-blur-2xl border transition-all duration-500 ease-out rounded-xl sm:rounded-2xl ${isFocused
                         ? 'border-[#00FF89]/40 shadow-[0_0_40px_rgba(0,255,137,0.15)] bg-gray-900/90'
                         : 'border-gray-700/50 hover:border-gray-600/70 shadow-[0_4px_20px_rgba(0,0,0,0.3)]'
                         }`}>
-
-                    {/* Animated background gradient */}
                     <div className={`absolute inset-0 bg-gradient-to-r from-[#00FF89]/5 via-transparent to-[#00FF89]/5 opacity-0 transition-opacity duration-500 ${isFocused ? 'opacity-100' : ''}`} />
-
                     <div className="relative flex items-center min-h-[56px] sm:min-h-[68px]">
-                        {/* Search Icon */}
                         <div className="flex items-center justify-center w-12 sm:w-16 h-full flex-shrink-0 pl-3 sm:pl-4">
                             <motion.div
                                 animate={isFocused ? { scale: 1.1, rotate: 5 } : { scale: 1, rotate: 0 }}
@@ -162,8 +124,6 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                                 />
                             </motion.div>
                         </div>
-
-                        {/* Input Field */}
                         <input
                             ref={inputRef}
                             type="text"
@@ -191,8 +151,6 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                             aria-label="Search AI prompts and tools"
                             aria-describedby="search-help"
                         />
-
-                        {/* Selected Tags - Refined */}
                         <AnimatePresence>
                             {selectedTags.length > 0 && (
                                 <motion.div
@@ -227,8 +185,6 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                                 </motion.div>
                             )}
                         </AnimatePresence>
-
-                        {/* Search Button - Refined */}
                         <div className="flex items-center px-2 sm:px-4">
                             <motion.button
                                 type="submit"
@@ -240,29 +196,22 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                                 whileHover={{ y: -1 }}
                                 whileTap={{ scale: 0.98 }}
                                 aria-label="Search">
-
-                                {/* Button shine effect */}
                                 <motion.div
                                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full"
                                     animate={query.trim() || selectedTags.length > 0 ? { x: '200%' } : {}}
                                     transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 3 }}
                                 />
-
                                 <span className="relative z-10 hidden sm:inline tracking-wide">Search</span>
                                 <Search className="relative z-10 w-4 h-4 sm:hidden" />
                             </motion.button>
                         </div>
                     </div>
                 </div>
-
-                {/* Search Help Text */}
                 <div
                     id="search-help"
                     className="sr-only">
                     Search for AI prompts, automation tools, and scripts. Results will appear below as you type.
                 </div>
-
-                {/* Search Results Dropdown */}
                 <AnimatePresence>
                     {showResults && (
                         <motion.div
@@ -336,8 +285,6 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                                             </motion.button>
                                         ))}
                                     </div>
-
-                                    {/* View All Results */}
                                     <motion.button
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
@@ -382,8 +329,6 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                     )}
                 </AnimatePresence>
             </motion.form>
-
-            {/* Enhanced Popular Tags - Centered with conditional margin */}
             <AnimatePresence>
                 {popularTags.length > 0 && (
                     <motion.div
@@ -396,7 +341,6 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                             <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-[#00FF89]" />
                             <span className="font-medium">Trending searches:</span>
                         </div>
-
                         <div className="flex flex-wrap justify-center gap-1.5 sm:gap-3 px-2">
                             {popularTags.map((tag, index) => (
                                 <motion.button
@@ -409,7 +353,6 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                                     onClick={() => handleTagClick(tag)}
                                     className={`group relative px-2.5 sm:px-4 py-1.5 sm:py-2 bg-gray-800/40 hover:bg-gray-700/50 border border-gray-600 hover:border-[#00FF89]/40 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 min-h-[32px] sm:min-h-[36px] ${selectedTags.includes(tag) ? 'bg-[#00FF89]/10 border-[#00FF89]/50 text-[#00FF89]' : 'text-gray-300 hover:text-white'}`}
                                     aria-label={`Add ${tag} filter`}>
-                                    {/* Sparkle effect on hover */}
                                     <motion.div
                                         className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100"
                                         initial={{ rotate: 0 }}
@@ -417,7 +360,6 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                                         transition={{ duration: 0.3 }}>
                                         <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#00FF89]" />
                                     </motion.div>
-
                                     <Hash className="inline w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1 opacity-50" />
                                     <span className="truncate max-w-[60px] sm:max-w-none">{tag}</span>
                                 </motion.button>

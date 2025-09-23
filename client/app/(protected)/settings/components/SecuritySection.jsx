@@ -1,75 +1,58 @@
 'use client'
-
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Lock, Eye, EyeOff, Smartphone, AlertTriangle } from 'lucide-react'
 import { authAPI } from '@/lib/api/auth'
-
 export default function SecuritySection({ onSuccess, onError }) {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
-
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   })
-
   const [passwordErrors, setPasswordErrors] = useState({})
-
-  // Password validation
   const validatePassword = (password) => {
     const errors = {}
     if (!password) errors.required = 'Password is required'
     else if (password.length < 6) errors.length = 'Password must be at least 6 characters long'
     return errors
   }
-
   const validatePasswordMatch = (newPassword, confirmPassword) => {
     if (newPassword !== confirmPassword) {
       return { match: 'Passwords do not match' }
     }
     return {}
   }
-
   const handlePasswordChange = async (e) => {
     e.preventDefault()
-    
-    // Validate passwords
     const newPasswordErrors = validatePassword(passwordData.newPassword)
     const confirmPasswordErrors = validatePassword(passwordData.confirmPassword)
     const matchErrors = validatePasswordMatch(passwordData.newPassword, passwordData.confirmPassword)
-    
     const allErrors = {
       ...newPasswordErrors,
       ...confirmPasswordErrors,
       ...matchErrors
     }
-
     if (Object.keys(allErrors).length > 0) {
       setPasswordErrors(allErrors)
       return
     }
-
     setLoading(true)
     setPasswordErrors({})
-    
     try {
       await authAPI.changePassword(
         passwordData.currentPassword,
         passwordData.newPassword,
         passwordData.confirmPassword
       )
-      
-      // Clear form on success
       setPasswordData({
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
       })
-      
       onSuccess('Password changed successfully!')
     } catch (error) {
       console.error('Password change failed:', error)
@@ -79,14 +62,12 @@ export default function SecuritySection({ onSuccess, onError }) {
       setLoading(false)
     }
   }
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6"
     >
-      {/* Change Password */}
       <div className="bg-[#1f1f1f] rounded-xl border border-gray-800 p-8">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-12 h-12 bg-[#00FF89]/10 rounded-xl flex items-center justify-center border border-[#00FF89]/20">
@@ -97,7 +78,6 @@ export default function SecuritySection({ onSuccess, onError }) {
             <p className="text-gray-300">Update your account password</p>
           </div>
         </div>
-
         <form onSubmit={handlePasswordChange} className="space-y-4">
           <div>
             <label className="block text-sm font-semibold text-gray-300 mb-2">
@@ -122,7 +102,6 @@ export default function SecuritySection({ onSuccess, onError }) {
               </button>
             </div>
           </div>
-
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-300 mb-2">
@@ -153,7 +132,6 @@ export default function SecuritySection({ onSuccess, onError }) {
                 </p>
               )}
             </div>
-
             <div>
               <label className="block text-sm font-semibold text-gray-300 mb-2">
                 Confirm New Password *
@@ -174,8 +152,6 @@ export default function SecuritySection({ onSuccess, onError }) {
               )}
             </div>
           </div>
-
-          {/* Password Requirements */}
           <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
             <p className="text-blue-300 text-sm font-medium mb-2">Password requirements:</p>
             <ul className="text-blue-200/80 text-sm space-y-1">
@@ -189,7 +165,6 @@ export default function SecuritySection({ onSuccess, onError }) {
               </li>
             </ul>
           </div>
-
           <button
             type="submit"
             disabled={loading}
@@ -206,8 +181,6 @@ export default function SecuritySection({ onSuccess, onError }) {
           </button>
         </form>
       </div>
-
-      
     </motion.div>
   )
 }

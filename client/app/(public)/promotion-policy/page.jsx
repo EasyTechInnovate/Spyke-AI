@@ -1,17 +1,14 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import Container from '@/components/shared/layout/Container'
 import ConditionalHeader from '@/components/shared/layout/ConditionalHeader'
 import { Calendar, Mail, Globe, Percent, Gift, Tag, Users, AlertTriangle, Star, CheckCircle } from 'lucide-react'
-
 export default function PromotionPolicyPage() {
     const fadeInUp = {
         initial: { opacity: 0, y: 20 },
         animate: { opacity: 1, y: 0 },
         transition: { duration: 0.6 }
     }
-
     const staggerContainer = {
         animate: {
             transition: {
@@ -19,7 +16,6 @@ export default function PromotionPolicyPage() {
             }
         }
     }
-
     const promotionHighlights = [
         {
             icon: Gift,
@@ -46,7 +42,6 @@ export default function PromotionPolicyPage() {
             type: "success"
         }
     ]
-
     const promotionTypes = [
         {
             icon: Percent,
@@ -85,7 +80,6 @@ export default function PromotionPolicyPage() {
             features: ["Subject to the Affiliate Policy"]
         }
     ]
-
     const guidelines = [
         {
             title: "Accuracy",
@@ -108,18 +102,15 @@ export default function PromotionPolicyPage() {
             description: "Promotions must adhere to applicable laws and SpykeAI policies"
         }
     ]
-
     const violations = [
         "Suspend or terminate promotions violating the policy",
         "Take action against sellers misusing promotions (including delisting)",
         "Restrict future promotional privileges for repeat violators"
     ]
-
     return (
         <>
             <ConditionalHeader />
             <div className="min-h-screen bg-[#121212] text-white">
-                {/* Header Section */}
                 <section className="relative py-16">
                     <Container>
                         <motion.div
@@ -134,7 +125,6 @@ export default function PromotionPolicyPage() {
                             >
                                 Promotion Policy
                             </motion.h1>
-
                             <motion.div
                                 variants={fadeInUp}
                                 className="flex items-center justify-center gap-2 text-gray-400 mb-6"
@@ -142,7 +132,6 @@ export default function PromotionPolicyPage() {
                                 <Calendar className="w-4 h-4" />
                                 <span className="text-sm">Effective Date: August 26, 2025</span>
                             </motion.div>
-
                             <motion.p
                                 variants={fadeInUp}
                                 className="text-lg text-gray-300 leading-relaxed mb-8"
@@ -150,8 +139,6 @@ export default function PromotionPolicyPage() {
                                 At SpykeAI, we aim to provide transparent, fair, and effective promotions for both Sellers and Buyers.
                                 This Promotion Policy outlines the types of promotions available, who can initiate them, and the general terms governing promotional activities.
                             </motion.p>
-
-                            {/* Promotion Highlights */}
                             <motion.div
                                 variants={fadeInUp}
                                 className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8"
@@ -164,7 +151,6 @@ export default function PromotionPolicyPage() {
                                     const iconColor = highlight.type === 'success' ? 'text-green-500' :
                                         highlight.type === 'warning' ? 'text-yellow-500' :
                                             'text-[#00FF89]'
-
                                     return (
                                         <div key={index} className={`bg-[#1f1f1f] rounded-xl p-4 border ${borderColor} hover:${borderColor.replace('/30', '/50')} transition-colors`}>
                                             <Icon className={`w-6 h-6 ${iconColor} mx-auto mb-2`} />
@@ -177,8 +163,6 @@ export default function PromotionPolicyPage() {
                         </motion.div>
                     </Container>
                 </section>
-
-                {/* Main Content */}
                 <section className="py-16">
                     <Container>
                         <motion.div
@@ -188,10 +172,8 @@ export default function PromotionPolicyPage() {
                             variants={staggerContainer}
                         >
                             <div className="prose prose-lg prose-invert max-w-none">
-                                {/* Section 1 - Types of Promotions */}
                                 <motion.div variants={fadeInUp} className="mb-16">
                                     <h2 className="text-3xl font-bold text-[#00FF89] mb-8 font-league-spartan">1. Types of Promotions</h2>
-
                                     <div className="grid gap-6">
                                         {promotionTypes.map((type, index) => {
                                             const Icon = type.icon
@@ -223,13 +205,9 @@ export default function PromotionPolicyPage() {
                                         })}
                                     </div>
                                 </motion.div>
-
-                                {/* Section 2 - Who Can Initiate Promotions */}
                                 <motion.div variants={fadeInUp} className="mb-16">
                                     <h2 className="text-3xl font-bold text-[#00FF89] mb-8 font-league-spartan">2. Who Can Initiate Promotions</h2>
-
                                     <div className="space-y-8">
-                                        {/* Marketplace-Initiated */}
                                         <div className="bg-[#1f1f1f] rounded-xl p-6 border border-gray-800">
                                             <h3 className="text-xl font-semibold text-white mb-4 font-league-spartan">
                                                 a. Marketplace-Initiated Promotions (SpykeAI)
@@ -240,8 +218,6 @@ export default function PromotionPolicyPage() {
                                                 <li>SpykeAI promotions will be clearly labeled as "Marketplace Promotion"</li>
                                             </ul>
                                         </div>
-
-                                        {/* Seller-Initiated */}
                                         <div className="bg-[#1f1f1f] rounded-xl p-6 border border-gray-800">
                                             <h3 className="text-xl font-semibold text-white mb-4 font-league-spartan">
                                                 b. Seller-Initiated Promotions
@@ -254,11 +230,8 @@ export default function PromotionPolicyPage() {
                                         </div>
                                     </div>
                                 </motion.div>
-
-                                {/* Section 3 - General Guidelines */}
                                 <motion.div variants={fadeInUp} className="mb-16">
                                     <h2 className="text-3xl font-bold text-[#00FF89] mb-8 font-league-spartan">3. General Guidelines for Promotions</h2>
-
                                     <div className="grid gap-4">
                                         {guidelines.map((guideline, index) => (
                                             <div key={index} className="bg-[#1f1f1f] rounded-xl p-6 border border-gray-800 hover:border-[#00FF89]/30 transition-all duration-300">
@@ -275,11 +248,8 @@ export default function PromotionPolicyPage() {
                                         ))}
                                     </div>
                                 </motion.div>
-
-                                {/* Section 4 - Limitations & Disclaimer */}
                                 <motion.div variants={fadeInUp} className="mb-16">
                                     <h2 className="text-3xl font-bold text-[#00FF89] mb-8 font-league-spartan">4. Limitations & Disclaimer</h2>
-
                                     <div className="bg-yellow-500/10 rounded-xl p-6 border border-yellow-500/20">
                                         <div className="flex items-start gap-4 mb-4">
                                             <AlertTriangle className="w-6 h-6 text-yellow-500 flex-shrink-0 mt-1" />
@@ -292,11 +262,8 @@ export default function PromotionPolicyPage() {
                                         </ul>
                                     </div>
                                 </motion.div>
-
-                                {/* Section 5 - Violation of Promotion Policy */}
                                 <motion.div variants={fadeInUp} className="mb-16">
                                     <h2 className="text-3xl font-bold text-[#00FF89] mb-8 font-league-spartan">5. Violation of Promotion Policy</h2>
-
                                     <div className="bg-red-500/10 rounded-xl p-6 border border-red-500/20">
                                         <div className="flex items-start gap-4 mb-4">
                                             <AlertTriangle className="w-6 h-6 text-red-500 flex-shrink-0 mt-1" />
@@ -314,8 +281,6 @@ export default function PromotionPolicyPage() {
                                         </div>
                                     </div>
                                 </motion.div>
-
-                                {/* Contact Section */}
                                 <motion.div variants={fadeInUp} className="mb-12">
                                     <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">Contact Information</h2>
                                     <div className="bg-[#1f1f1f] rounded-xl p-6 border border-gray-800">

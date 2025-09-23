@@ -1,11 +1,8 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import { Check, X } from 'lucide-react'
-
 export default function MessageAlert({ successMessage, errorMessage }) {
   if (!successMessage && !errorMessage) return null
-
   return (
     <motion.div
       initial={{ opacity: 0, y: -10 }}
@@ -20,7 +17,6 @@ export default function MessageAlert({ successMessage, errorMessage }) {
           </div>
         </div>
       )}
-      
       {errorMessage && (
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
           <div className="flex items-center gap-3">

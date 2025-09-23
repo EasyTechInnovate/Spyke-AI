@@ -1,9 +1,7 @@
 'use client'
-
 import { useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts'
 import { Calendar, TrendingUp, DollarSign } from 'lucide-react'
-
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
         return (
@@ -26,11 +24,8 @@ const CustomTooltip = ({ active, payload, label }) => {
     }
     return null
 }
-
 export default function RevenueChart({ recentOrders = [], className = '' }) {
     const [selectedPeriod, setSelectedPeriod] = useState('7d')
-
-    // Generate chart data from real recent orders
     const generateChartData = () => {
         if (!recentOrders || recentOrders.length === 0) {
             return Array.from({ length: 7 }, (_, i) => {
@@ -43,26 +38,19 @@ export default function RevenueChart({ recentOrders = [], className = '' }) {
                 }
             })
         }
-
-        // Group orders by day
         const dailyData = {}
         const days = selectedPeriod === '7d' ? 7 : selectedPeriod === '30d' ? 30 : 90
-
-        // Initialize all days with zero values
         for (let i = days - 1; i >= 0; i--) {
             const date = new Date()
             date.setDate(date.getDate() - i)
             const dateKey = date.toISOString().split('T')[0]
             const displayDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-
             dailyData[dateKey] = {
                 date: displayDate,
                 revenue: 0,
                 sales: 0
             }
         }
-
-        // Add real order data
         recentOrders.forEach((order) => {
             const orderDate = new Date(order.orderDate).toISOString().split('T')[0]
             if (dailyData[orderDate]) {
@@ -70,22 +58,17 @@ export default function RevenueChart({ recentOrders = [], className = '' }) {
                 dailyData[orderDate].sales += 1
             }
         })
-
         return Object.values(dailyData)
     }
-
     const chartData = generateChartData()
-
     const periods = [
         { value: '7d', label: '7 Days' },
         { value: '30d', label: '30 Days' },
         { value: '90d', label: '90 Days' }
     ]
-
     const totalRevenue = chartData.reduce((sum, item) => sum + item.revenue, 0)
     const totalSales = chartData.reduce((sum, item) => sum + item.sales, 0)
     const averageDaily = totalRevenue / chartData.length
-
     return (
         <div className={`bg-[#1f1f1f] border border-gray-800 rounded-2xl ${className}`}>
             <div className="p-6 border-b border-gray-800">
@@ -99,7 +82,6 @@ export default function RevenueChart({ recentOrders = [], className = '' }) {
                             <p className="text-sm text-gray-400">Track your earnings over time</p>
                         </div>
                     </div>
-
                     <div className="flex items-center gap-2">
                         {periods.map((period) => (
                             <button
@@ -115,8 +97,6 @@ export default function RevenueChart({ recentOrders = [], className = '' }) {
                         ))}
                     </div>
                 </div>
-
-                {/* Quick Stats */}
                 <div className="grid grid-cols-3 gap-4">
                     <div className="text-center">
                         <div className="text-xl font-bold text-white">${totalRevenue.toFixed(0)}</div>
@@ -132,7 +112,6 @@ export default function RevenueChart({ recentOrders = [], className = '' }) {
                     </div>
                 </div>
             </div>
-
             <div className="p-6">
                 <div className="h-80">
                     <ResponsiveContainer

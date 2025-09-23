@@ -2,7 +2,6 @@ import { memo, useCallback } from 'react'
 import { FixedSizeGrid as Grid } from 'react-window'
 import ProductCardLite from './ProductCardLite'
 import { Package2, AlertCircle } from 'lucide-react'
-
 const VirtualizedProductGrid = memo(function VirtualizedProductGrid({
   products,
   viewMode,
@@ -22,7 +21,6 @@ const VirtualizedProductGrid = memo(function VirtualizedProductGrid({
       </div>
     )
   }
-
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -40,7 +38,6 @@ const VirtualizedProductGrid = memo(function VirtualizedProductGrid({
       </div>
     )
   }
-
   if (products.length === 0) {
     return (
       <div className="text-center py-16">
@@ -58,22 +55,16 @@ const VirtualizedProductGrid = memo(function VirtualizedProductGrid({
       </div>
     )
   }
-
-  // Calculate grid dimensions based on view mode
   const columnCount = viewMode === 'grid' 
     ? containerWidth < 768 ? 1 : containerWidth < 1280 ? 2 : 3
     : 1
-  
   const columnWidth = Math.floor(containerWidth / columnCount)
   const rowHeight = viewMode === 'grid' ? 380 : 180
   const rowCount = Math.ceil(products.length / columnCount)
-
   const Cell = useCallback(({ columnIndex, rowIndex, style }) => {
     const index = rowIndex * columnCount + columnIndex
     if (index >= products.length) return null
-    
     const product = products[index]
-    
     return (
       <div style={{
         ...style,
@@ -86,7 +77,6 @@ const VirtualizedProductGrid = memo(function VirtualizedProductGrid({
       </div>
     )
   }, [products, viewMode, columnCount])
-
   return (
     <Grid
       columnCount={columnCount}
@@ -102,5 +92,4 @@ const VirtualizedProductGrid = memo(function VirtualizedProductGrid({
     </Grid>
   )
 })
-
 export default VirtualizedProductGrid

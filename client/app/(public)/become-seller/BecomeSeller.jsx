@@ -1,12 +1,10 @@
 'use client'
-
 import React, { useEffect } from 'react'
 import { Check } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
 import { MultiStepForm, FormInput, FormTextArea, FormSelect, FormTagInput, FormCheckbox, FormSearchableSelect, ImageUpload } from '@/components/shared/forms'
 import { useSellerForm } from '@/hooks/forms/useSellerForm'
 import { formSteps, formFields, countries, timezones, popularNiches, popularTools } from '@/lib/config/forms/SellerFormConfig'
-
 export default function BecomeSellerPage() {
     const {
         formData,
@@ -22,7 +20,6 @@ export default function BecomeSellerPage() {
         validateStep,
         handleSubmit
     } = useSellerForm()
-
     const renderStepContent = ({ currentStep }) => {
         switch (currentStep) {
             case 1:
@@ -38,7 +35,6 @@ export default function BecomeSellerPage() {
                             required={formFields.fullName.required}
                             error={errors.fullName}
                         />
-
                         <FormInput
                             label={formFields.email.label}
                             name="email"
@@ -50,7 +46,6 @@ export default function BecomeSellerPage() {
                             required={formFields.email.required}
                             error={errors.email}
                         />
-
                         <FormInput
                             label={formFields.websiteUrl.label}
                             name="websiteUrl"
@@ -66,7 +61,6 @@ export default function BecomeSellerPage() {
                                 'data-enable-grammarly': 'false'
                             }}
                         />
-
                         <FormTextArea
                             label={formFields.bio.label}
                             name="bio"
@@ -79,7 +73,6 @@ export default function BecomeSellerPage() {
                             rows={formFields.bio.rows}
                             error={errors.bio}
                         />
-
                         <ImageUpload
                             label={formFields.sellerBanner.label}
                             value={formData.sellerBanner}
@@ -99,7 +92,6 @@ export default function BecomeSellerPage() {
                         />
                     </>
                 )
-
             case 2:
                 return (
                     <>
@@ -116,7 +108,6 @@ export default function BecomeSellerPage() {
                             suggestions={popularNiches}
                             error={errors.niches}
                         />
-
                         <FormTagInput
                             label={formFields.toolsSpecialization.label}
                             name="toolsSpecialization"
@@ -130,7 +121,6 @@ export default function BecomeSellerPage() {
                             suggestions={popularTools}
                             error={errors.toolsSpecialization}
                         />
-
                         <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
                             <FormCheckbox
                                 name="customAutomationServices"
@@ -142,7 +132,6 @@ export default function BecomeSellerPage() {
                         </div>
                     </>
                 )
-
             case 3:
                 return (
                     <>
@@ -157,7 +146,6 @@ export default function BecomeSellerPage() {
                                 required={formFields?.location?.fields?.country?.required}
                                 error={errors['location.country']}
                             />
-
                             <FormSearchableSelect
                                 label={formFields?.location?.fields?.timezone?.label || 'Timezone'}
                                 name="location.timezone"
@@ -173,7 +161,6 @@ export default function BecomeSellerPage() {
                                 error={errors['location.timezone']}
                             />
                         </div>
-
                         <div>
                             <h4 className="text-lg font-medium text-white mb-4">Social Media (Optional)</h4>
                             <div className="grid md:grid-cols-2 gap-4">
@@ -203,7 +190,6 @@ export default function BecomeSellerPage() {
                                 />
                             </div>
                         </div>
-
                         <FormTagInput
                             label={(formFields?.portfolioLinks?.label || 'Portfolio Links') + ' (Optional)'}
                             name="portfolioLinks"
@@ -215,7 +201,6 @@ export default function BecomeSellerPage() {
                             maxItems={formFields?.portfolioLinks?.maxItems}
                             error={errors.portfolioLinks}
                         />
-
                         <div className="bg-brand-primary/10 p-6 rounded-lg border border-brand-primary/30 space-y-4">
                             <h4 className="text-lg font-medium text-white">Payout Information</h4>
                             <p className="text-sm text-gray-400 -mt-2">Select your preferred payout method and provide required details.</p>
@@ -227,8 +212,6 @@ export default function BecomeSellerPage() {
                                 options={formFields?.payoutInfo?.fields?.method?.options || []}
                                 required={formFields?.payoutInfo?.fields?.method?.required}
                             />
-
-                            {/* Dynamic payout fields */}
                             {Object.entries(formFields?.payoutInfo?.fields || {})
                                 .filter(([key]) => key !== 'method')
                                 .map(([key, cfg]) => {
@@ -246,7 +229,6 @@ export default function BecomeSellerPage() {
                                         placeholder: cfg.placeholder,
                                         error: errors[fieldName]
                                     }
-                                    // Determine component based on type
                                     if (cfg.type === 'email' || cfg.type === 'text') {
                                         return (
                                             <FormInput
@@ -258,8 +240,6 @@ export default function BecomeSellerPage() {
                                     return null
                                 })}
                         </div>
-
-                        {/* Revenue Share Agreement */}
                         <div className="bg-gray-800/60 p-5 rounded-lg border border-gray-700 space-y-3">
                             <h4 className="text-lg font-medium text-white">Revenue Share Agreement</h4>
                             <p className="text-sm text-gray-400">
@@ -276,16 +256,12 @@ export default function BecomeSellerPage() {
                         </div>
                     </>
                 )
-
             default:
                 return null
         }
     }
-
     return (
         <>
-
-            {/* Hero Section */}
             <section className="relative bg-black pt-24 pb-16">
                 <div className="absolute inset-0">
                     <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/20 via-transparent to-brand-secondary/20"></div>
@@ -316,8 +292,6 @@ export default function BecomeSellerPage() {
                     </div>
                 </Container>
             </section>
-
-            {/* Form Section */}
             <section className="py-16 bg-black border-t border-gray-800">
                 <Container>
                     <MultiStepForm

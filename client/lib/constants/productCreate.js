@@ -199,7 +199,7 @@ export const SMART_SUGGESTIONS = {
   
 }
 
-export default {
+const productCreateConstants = {
   PRODUCT_TYPES,
   CATEGORIES,
   INDUSTRIES,
@@ -211,3 +211,5 @@ export default {
   STEP_HELPERS,
   SMART_SUGGESTIONS
 }
+
+export default productCreateConstants

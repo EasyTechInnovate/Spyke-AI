@@ -1,5 +1,4 @@
 'use client'
-
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Container from '@/components/shared/layout/Container'
@@ -22,7 +21,6 @@ import {
     AlertCircle
 } from 'lucide-react'
 import Link from 'next/link'
-
 export default function ContactUsPage() {
     const [formData, setFormData] = useState({
         name: '',
@@ -32,13 +30,11 @@ export default function ContactUsPage() {
     })
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [submitStatus, setSubmitStatus] = useState(null)
-
     const fadeInUp = {
         initial: { opacity: 0, y: 20 },
         animate: { opacity: 1, y: 0 },
         transition: { duration: 0.6 }
     }
-
     const staggerContainer = {
         animate: {
             transition: {
@@ -46,7 +42,6 @@ export default function ContactUsPage() {
             }
         }
     }
-
     const contactInfo = [
         {
             icon: Mail,
@@ -85,7 +80,6 @@ export default function ContactUsPage() {
             href: null
         }
     ]
-
     const supportLinks = [
         {
             icon: HelpCircle,
@@ -112,7 +106,6 @@ export default function ContactUsPage() {
             href: "/privacy-policy"
         }
     ]
-
     const socialLinks = [
         {
             icon: Twitter,
@@ -130,7 +123,6 @@ export default function ContactUsPage() {
             href: "https://www.instagram.com/spykeai/"
         }
     ]
-
     const subjectOptions = [
         { value: '', label: 'Select a subject' },
         { value: 'support', label: 'Support' },
@@ -139,7 +131,6 @@ export default function ContactUsPage() {
         { value: 'partnership', label: 'Partnership' },
         { value: 'other', label: 'Other' }
     ]
-
     const handleInputChange = (e) => {
         const { name, value } = e.target
         setFormData(prev => ({
@@ -147,45 +138,32 @@ export default function ContactUsPage() {
             [name]: value
         }))
     }
-
-
     const handleSubmit = async (e) => {
         e.preventDefault()
         setIsSubmitting(true)
         setSubmitStatus(null)
-
         try {
-            // Replace this URL with your Google Apps Script Web App URL
             const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby7R0o7qelmwnIgtfvNqfdIVuRZ3aPO5xJt2oke4aPjuEBF1SUS5iHt1_78aFKgh6NhRA/exec'
-
             const response = await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors', // Required for Google Apps Script
+                mode: 'no-cors', 
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(formData)
             })
-
-            // Since we're using no-cors mode, we can't check response status
-            // We'll assume it was successful if no error was thrown
             setSubmitStatus('success')
-
-            // Reset form
             setFormData({
                 name: '',
                 email: '',
                 subject: '',
                 message: ''
             })
-
-            // Track form submission with analytics
             if (typeof window !== 'undefined' && window.spykeAnalytics) {
                 window.spykeAnalytics.trackEvent('Contact Form Submitted', {
                     subject: formData.subject
                 })
             }
-
         } catch (error) {
             console.error('Error submitting form:', error)
             setSubmitStatus('error')
@@ -193,10 +171,8 @@ export default function ContactUsPage() {
             setIsSubmitting(false)
         }
     }
-
     return (
         <div className="min-h-screen bg-[#121212] text-white">
-            {/* Hero Section */}
             <section className="relative py-16 lg:py-20 border-b border-gray-800">
                 <Container>
                     <motion.div
@@ -207,14 +183,12 @@ export default function ContactUsPage() {
                     >
                         <motion.div variants={fadeInUp} className="mb-8">
                         </motion.div>
-
                         <motion.h1
                             variants={fadeInUp}
                             className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 font-league-spartan"
                         >
                             Contact Us
                         </motion.h1>
-
                         <motion.p
                             variants={fadeInUp}
                             className="text-lg md:text-xl text-gray-300 leading-relaxed max-w-3xl mx-auto"
@@ -225,8 +199,6 @@ export default function ContactUsPage() {
                     </motion.div>
                 </Container>
             </section>
-
-            {/* Contact Information Grid */}
             <section className="py-16 lg:py-20">
                 <Container>
                     <motion.div
@@ -244,7 +216,6 @@ export default function ContactUsPage() {
                                 Choose the best way to reach us
                             </p>
                         </motion.div>
-
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {contactInfo.map((info, index) => {
                                 const Icon = info.icon
@@ -265,7 +236,6 @@ export default function ContactUsPage() {
                                         </div>
                                     </div>
                                 )
-
                                 return (
                                     <motion.div key={index} variants={fadeInUp}>
                                         {info.href ? (
@@ -287,8 +257,6 @@ export default function ContactUsPage() {
                     </motion.div>
                 </Container>
             </section>
-
-            {/* Contact Form */}
             <section className="py-16 lg:py-20 bg-[#0f0f0f]">
                 <Container>
                     <motion.div
@@ -306,7 +274,6 @@ export default function ContactUsPage() {
                                 Fill out the form below and we'll get back to you as soon as possible
                             </p>
                         </motion.div>
-
                         <motion.div variants={fadeInUp} className="bg-[#1f1f1f] rounded-2xl p-8 border border-gray-800">
                             {submitStatus === 'success' && (
                                 <div className="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-xl flex items-center gap-3">
@@ -314,14 +281,12 @@ export default function ContactUsPage() {
                                     <p className="text-green-400">Message sent successfully! We'll get back to you soon.</p>
                                 </div>
                             )}
-
                             {submitStatus === 'error' && (
                                 <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3">
                                     <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
                                     <p className="text-red-400">Something went wrong. Please try again or contact us directly.</p>
                                 </div>
                             )}
-
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <div className="grid md:grid-cols-2 gap-6">
                                     <div>
@@ -339,7 +304,6 @@ export default function ContactUsPage() {
                                             placeholder="Your full name"
                                         />
                                     </div>
-
                                     <div>
                                         <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
                                             Email Address <span className="text-red-400">*</span>
@@ -356,7 +320,6 @@ export default function ContactUsPage() {
                                         />
                                     </div>
                                 </div>
-
                                 <div>
                                     <label htmlFor="subject" className="block text-sm font-medium text-gray-300 mb-2">
                                         Subject <span className="text-red-400">*</span>
@@ -376,7 +339,6 @@ export default function ContactUsPage() {
                                         ))}
                                     </select>
                                 </div>
-
                                 <div>
                                     <label htmlFor="message" className="block text-sm font-medium text-gray-300 mb-2">
                                         Message <span className="text-red-400">*</span>
@@ -392,9 +354,6 @@ export default function ContactUsPage() {
                                         placeholder="Tell us how we can help you..."
                                     />
                                 </div>
-
-                                
-
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
@@ -417,8 +376,6 @@ export default function ContactUsPage() {
                     </motion.div>
                 </Container>
             </section>
-
-            {/* Support Links */}
             <section className="py-16 lg:py-20">
                 <Container>
                     <motion.div
@@ -436,7 +393,6 @@ export default function ContactUsPage() {
                                 Find quick answers and helpful information
                             </p>
                         </motion.div>
-
                         <div className="grid md:grid-cols-2 gap-6">
                             {supportLinks.map((link, index) => {
                                 const Icon = link.icon
@@ -467,8 +423,6 @@ export default function ContactUsPage() {
                     </motion.div>
                 </Container>
             </section>
-
-            {/* Social Media & Community */}
             <section className="py-16 lg:py-20 bg-[#0f0f0f]">
                 <Container>
                     <motion.div
@@ -486,7 +440,6 @@ export default function ContactUsPage() {
                                 Follow us on social media for updates and community discussions
                             </p>
                         </motion.div>
-
                         <motion.div variants={fadeInUp} className="flex justify-center gap-6">
                             {socialLinks.map((social, index) => {
                                 const Icon = social.icon

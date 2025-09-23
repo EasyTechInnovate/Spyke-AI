@@ -1,18 +1,13 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import { BookOpen, Clock, ArrowRight } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-
-// Use the same background effects as hero section
 const BackgroundEffectsLight = dynamic(() => import('./hero/BackgroundEffectsLight'), {
   ssr: false,
   loading: () => null
 })
-
-// Simple blog highlights - just preview cards
 const blogHighlights = [
   {
     id: 'ai-automation-trends-2025',
@@ -45,16 +40,12 @@ const blogHighlights = [
     readTime: '6 min read'
   }
 ]
-
 export default function BlogHighlights() {
   return (
     <section className="relative py-20 lg:py-24 bg-black">
-      {/* Background Effects */}
       <BackgroundEffectsLight />
-      
       <Container>
         <div className="relative z-10">
-          {/* Section Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -69,8 +60,6 @@ export default function BlogHighlights() {
               Stay ahead with expert tips, tutorials, and industry insights
             </p>
           </motion.div>
-
-          {/* Blog Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
             {blogHighlights.map((post, index) => (
               <motion.article
@@ -83,17 +72,12 @@ export default function BlogHighlights() {
               >
                 <Link href={`/blog/${post.id}`} className="block h-full">
                   <div className="relative h-full bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-6 hover:border-brand-primary/30 transition-all duration-300 hover:bg-gray-900/70">
-                    {/* Title */}
                     <h3 className="font-league-spartan font-bold text-xl mb-3 line-clamp-2 group-hover:text-brand-primary transition-colors leading-tight">
                       {post.title}
                     </h3>
-                    
-                    {/* Excerpt */}
                     <p className="text-gray-400 text-sm line-clamp-3 mb-6 leading-relaxed">
                       {post.excerpt}
                     </p>
-                    
-                    {/* Author & Meta */}
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-brand-primary/20 rounded-full flex items-center justify-center">
@@ -106,14 +90,11 @@ export default function BlogHighlights() {
                           <p className="text-xs text-gray-500">{post.date}</p>
                         </div>
                       </div>
-                      
                       <div className="flex items-center gap-1 text-gray-500">
                         <Clock className="w-3 h-3" />
                         <span className="text-xs">{post.readTime}</span>
                       </div>
                     </div>
-                    
-                    {/* Read More */}
                     <div className="flex items-center text-brand-primary group-hover:text-brand-primary/80 transition-colors">
                       <span className="text-sm font-medium">Read more</span>
                       <ArrowRight className="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" />
@@ -123,8 +104,6 @@ export default function BlogHighlights() {
               </motion.article>
             ))}
           </div>
-
-          {/* Simple CTA */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}

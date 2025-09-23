@@ -1,7 +1,6 @@
 import { Package2, AlertCircle } from 'lucide-react'
 import ProductCardLite from './ProductCardLite'
 import { memo } from 'react'
-
 const SkeletonCard = () => (
   <div className="rounded-2xl border border-[#1e1e1e] bg-gradient-to-b from-[#121212] to-[#0d0d0d] p-4 animate-pulse">
     <div className="aspect-[4/3] rounded-xl bg-[#1f1f1f] mb-4" />
@@ -10,7 +9,6 @@ const SkeletonCard = () => (
     <div className="h-3 bg-[#1f1f1f] rounded w-2/5" />
   </div>
 )
-
 const ProductGrid = memo(function ProductGrid({ 
   products, 
   viewMode, 
@@ -27,7 +25,6 @@ const ProductGrid = memo(function ProductGrid({
       </div>
     )
   }
-
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-[320px]">
@@ -48,7 +45,6 @@ const ProductGrid = memo(function ProductGrid({
       </div>
     )
   }
-
   if (products.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[300px]">
@@ -66,7 +62,6 @@ const ProductGrid = memo(function ProductGrid({
       </div>
     )
   }
-
   return (
     <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'} transition-all`}> 
       {products.map((product) => (
@@ -79,5 +74,4 @@ const ProductGrid = memo(function ProductGrid({
     </div>
   )
 })
-
 export default ProductGrid

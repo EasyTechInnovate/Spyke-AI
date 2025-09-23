@@ -1,10 +1,8 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Tag, DollarSign, Users, TrendingUp, Percent, BarChart3, Activity, Target, Calendar, Clock, CheckCircle, XCircle } from 'lucide-react'
 import { ResponsiveContainer, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip, Area, Bar, Line, PieChart, Pie, Cell, AreaChart, BarChart, LineChart, RadialBarChart, RadialBar, Legend } from 'recharts'
-
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -13,17 +11,13 @@ const formatCurrency = (amount) => {
         maximumFractionDigits: 0
     }).format(amount || 0)
 }
-
 const formatNumber = (num) => {
     return new Intl.NumberFormat('en-US').format(num || 0)
 }
-
 const formatPercentage = (num) => {
     return `${(num || 0).toFixed(1)}%`
 }
-
 const clamp = (num, min, max) => Math.min(Math.max(num ?? 0, min), max)
-
 const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null
     return (
@@ -39,7 +33,6 @@ const CustomTooltip = ({ active, payload, label }) => {
         </div>
     )
 }
-
 const PromocodeTooltip = ({ active, payload }) => {
     if (!active || !payload?.length) return null
     const data = payload[0].payload
@@ -55,10 +48,8 @@ const PromocodeTooltip = ({ active, payload }) => {
         </div>
     )
 }
-
 export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
     const [promocodesData, setPromocodesData] = useState(null)
-
     const generateTimeSeriesData = (promocodes, timeRange) => {
         const getDaysFromTimeRange = (period) => {
             switch (period) {
@@ -69,30 +60,24 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
                 default: return 30
             }
         }
-
         const days = getDaysFromTimeRange(timeRange)
         const endDate = new Date()
         const startDate = new Date()
         startDate.setDate(endDate.getDate() - (days - 1))
-
         const trends = []
         for (let i = 0; i < days; i++) {
             const currentDate = new Date(startDate)
             currentDate.setDate(startDate.getDate() + i)
-            
             const dateString = currentDate.toISOString().split('T')[0]
             const dayName = currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-            
             const dayData = promocodes.filter(promo => {
                 const promoDate = new Date(promo.createdAt).toISOString().split('T')[0]
                 return promoDate === dateString
             })
-
             const totalUsage = dayData.reduce((sum, promo) => sum + (promo.totalUsage || 0), 0)
             const totalSavings = dayData.reduce((sum, promo) => sum + (promo.totalSavings || 0), 0)
             const totalRevenue = dayData.reduce((sum, promo) => sum + (promo.totalRevenue || 0), 0)
             const activePromocodes = dayData.filter(promo => promo.isActive).length
-
             trends.push({
                 date: dayName,
                 usage: totalUsage,
@@ -102,10 +87,8 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
                 avgSavingsPerUse: totalUsage > 0 ? totalSavings / totalUsage : 0
             })
         }
-
         return trends
     }
-
     const calculateMetrics = (promocodes) => {
         const total = promocodes.length
         const active = promocodes.filter(p => p.isActive).length
@@ -114,7 +97,6 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
         const totalSavings = promocodes.reduce((sum, p) => sum + (p.totalSavings || 0), 0)
         const totalRevenue = promocodes.reduce((sum, p) => sum + (p.totalRevenue || 0), 0)
         const avgSavingsPerUse = totalUsage > 0 ? totalSavings / totalUsage : 0
-
         return {
             totalPromocodes: total,
             activePromocodes: active,
@@ -126,41 +108,35 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
             usageRate: total > 0 ? (promocodes.filter(p => p.totalUsage > 0).length / total) * 100 : 0
         }
     }
-
     const getDiscountTypeDistribution = (promocodes) => {
         const distribution = promocodes.reduce((acc, promo) => {
             const type = promo.discountType === 'percentage' ? 'Percentage' : 'Fixed Amount'
             acc[type] = (acc[type] || 0) + 1
             return acc
         }, {})
-
         return Object.entries(distribution).map(([name, count]) => ({
             name,
             count,
             percentage: promocodes.length > 0 ? (count / promocodes.length) * 100 : 0
         }))
     }
-
     const getStatusDistribution = (promocodes) => {
         const now = new Date()
         const active = promocodes.filter(p => p.isActive && new Date(p.validUntil) > now).length
         const inactive = promocodes.filter(p => !p.isActive).length
         const expired = promocodes.filter(p => new Date(p.validUntil) <= now).length
-
         return [
             { name: 'Active', count: active, color: '#00FF89' },
             { name: 'Inactive', count: inactive, color: '#6B7280' },
             { name: 'Expired', count: expired, color: '#EF4444' }
         ].filter(item => item.count > 0)
     }
-
     const getTopPerformingPromocodes = (promocodes) => {
         return promocodes
             .filter(p => p.totalUsage > 0)
             .sort((a, b) => (b.totalRevenue || 0) - (a.totalRevenue || 0))
             .slice(0, 10)
     }
-
     const getUsageEfficiencyData = (promocodes) => {
         return promocodes
             .filter(p => p.usageLimit && p.totalUsage > 0)
@@ -173,7 +149,6 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
             .sort((a, b) => b.efficiency - a.efficiency)
             .slice(0, 8)
     }
-
     useEffect(() => {
         if (analyticsData?.promocodes) {
             const promocodes = analyticsData.promocodes
@@ -183,7 +158,6 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
             const discountTypeDistribution = getDiscountTypeDistribution(promocodes)
             const statusDistribution = getStatusDistribution(promocodes)
             const usageEfficiency = getUsageEfficiencyData(promocodes)
-
             setPromocodesData({
                 metrics,
                 trends,
@@ -195,7 +169,6 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
             })
         }
     }, [analyticsData, timeRange])
-
     if (loading) {
         return (
             <div className="space-y-6">
@@ -214,7 +187,6 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
             </div>
         )
     }
-
     if (!promocodesData) {
         return (
             <div className="space-y-6">
@@ -233,10 +205,8 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
             </div>
         )
     }
-
     const { metrics, trends, topPromocodes, discountTypeDistribution, statusDistribution, usageEfficiency } = promocodesData
     const CHART_COLORS = ['#00FF89', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981', '#F97316', '#6366F1']
-
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -253,7 +223,6 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
                     <div className="text-2xl font-bold text-white mb-1">{formatNumber(metrics.totalPromocodes)}</div>
                     <div className="text-sm text-[#00FF89]">{formatNumber(metrics.activePromocodes)} active</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -268,7 +237,6 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
                     <div className="text-2xl font-bold text-white mb-1">{formatNumber(metrics.totalUsage)}</div>
                     <div className="text-sm text-gray-400">{formatPercentage(metrics.usageRate)} usage rate</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -283,7 +251,6 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
                     <div className="text-2xl font-bold text-white mb-1">{formatCurrency(metrics.totalSavings)}</div>
                     <div className="text-sm text-gray-400">Avg: {formatCurrency(metrics.avgSavingsPerUse)} per use</div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -299,7 +266,6 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
                     <div className="text-sm text-[#00FF89]">From promocode usage</div>
                 </motion.div>
             </div>
-
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -385,7 +351,6 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
                     )}
                 </div>
             </motion.div>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -429,7 +394,6 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
                         )}
                     </div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -468,7 +432,6 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
                     </div>
                 </motion.div>
             </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -511,7 +474,6 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
                         )}
                     </div>
                 </motion.div>
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}

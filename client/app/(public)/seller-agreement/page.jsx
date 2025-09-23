@@ -1,19 +1,16 @@
 'use client'
-
 import { motion } from 'framer-motion'
 import Container from '@/components/shared/layout/Container'
 import ConditionalHeader from '@/components/shared/layout/ConditionalHeader'
 import Footer from '@/components/shared/layout/Footer'
 import { Calendar, Mail, Globe, Handshake, DollarSign, Shield, AlertTriangle, Scale, FileText } from 'lucide-react'
 import Link from 'next/link'
-
 export default function SellerAgreementPage() {
     const fadeInUp = {
         initial: { opacity: 0, y: 20 },
         animate: { opacity: 1, y: 0 },
         transition: { duration: 0.6 }
     }
-
     const staggerContainer = {
         animate: {
             transition: {
@@ -21,7 +18,6 @@ export default function SellerAgreementPage() {
             }
         }
     }
-
     const agreementHighlights = [
         {
             icon: Handshake,
@@ -48,31 +44,26 @@ export default function SellerAgreementPage() {
             type: "success"
         }
     ]
-
     const prohibitedItems = [
         "Content that infringes third-party intellectual property rights",
         "Stolen, pirated, or unauthorized content",
         "Harmful, malicious, or illegal software"
     ]
-
     const prohibitedConduct = [
         "Attempt to bypass SpykeAI's payment system",
         "Manipulate ratings, reviews, or transactions",
         "Use the Platform for unlawful or fraudulent activity",
         "Share or sell Buyer data outside of what's necessary to fulfill orders"
     ]
-
     const terminationReasons = [
         "Violate this Agreement or any applicable law",
         "Engage in fraudulent, harmful, or illegal conduct",
         "Repeatedly fail to meet Buyer expectations"
     ]
-
     return (
         <>
             <ConditionalHeader />
             <div className="min-h-screen bg-[#121212] text-white">
-                {/* Header Section */}
                 <section className="relative py-16">
                     <Container>
                         <motion.div 
@@ -87,7 +78,6 @@ export default function SellerAgreementPage() {
                             >
                                 SpykeAI Seller Agreement
                             </motion.h1>
-                            
                             <motion.div 
                                 variants={fadeInUp}
                                 className="flex items-center justify-center gap-2 text-gray-400 mb-6"
@@ -95,7 +85,6 @@ export default function SellerAgreementPage() {
                                 <Calendar className="w-4 h-4" />
                                 <span className="text-sm">Effective Date: August 26, 2025</span>
                             </motion.div>
-                            
                             <motion.p 
                                 variants={fadeInUp}
                                 className="text-lg text-gray-300 leading-relaxed mb-8"
@@ -103,8 +92,6 @@ export default function SellerAgreementPage() {
                                 This Seller Agreement governs your relationship with SpykeAI as a marketplace seller. 
                                 By registering as a Seller, you agree to be bound by this Agreement, along with our Terms & Conditions and Privacy Policy.
                             </motion.p>
-
-                            {/* Agreement Highlights */}
                             <motion.div 
                                 variants={fadeInUp}
                                 className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8"
@@ -117,7 +104,6 @@ export default function SellerAgreementPage() {
                                     const iconColor = highlight.type === 'success' ? 'text-green-500' : 
                                                     highlight.type === 'warning' ? 'text-yellow-500' : 
                                                     'text-[#00FF89]'
-                                    
                                     return (
                                         <div key={index} className={`bg-[#1f1f1f] rounded-xl p-4 border ${borderColor} hover:${borderColor.replace('/30', '/50')} transition-colors`}>
                                             <Icon className={`w-6 h-6 ${iconColor} mx-auto mb-2`} />
@@ -130,8 +116,6 @@ export default function SellerAgreementPage() {
                         </motion.div>
                     </Container>
                 </section>
-
-                {/* Main Content */}
                 <section className="py-16">
                     <Container>
                         <motion.div 
@@ -141,7 +125,6 @@ export default function SellerAgreementPage() {
                             variants={staggerContainer}
                         >
                             <div className="prose prose-lg prose-invert max-w-none">
-                                {/* Introduction */}
                                 <motion.div variants={fadeInUp} className="mb-12">
                                     <div className="bg-[#1f1f1f] rounded-xl p-6 border border-gray-800 mb-8">
                                         <p className="text-gray-300 leading-relaxed">
@@ -150,8 +133,6 @@ export default function SellerAgreementPage() {
                                         </p>
                                     </div>
                                 </motion.div>
-
-                                {/* Section 1 */}
                                 <motion.div variants={fadeInUp} className="mb-12">
                                     <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">1. Eligibility</h2>
                                     <div className="space-y-4 text-gray-300">
@@ -161,13 +142,10 @@ export default function SellerAgreementPage() {
                                         </ul>
                                     </div>
                                 </motion.div>
-
-                                {/* Section 2 */}
                                 <motion.div variants={fadeInUp} className="mb-12">
                                     <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">2. Seller Responsibilities</h2>
                                     <div className="space-y-6 text-gray-300">
                                         <p>You are solely responsible for the accuracy, quality, and legality of the products, prompts, workflows, or services you list.</p>
-                                        
                                         <div>
                                             <h3 className="text-xl font-semibold text-white mb-4">You must not sell:</h3>
                                             <div className="grid gap-3">
@@ -181,15 +159,12 @@ export default function SellerAgreementPage() {
                                                 ))}
                                             </div>
                                         </div>
-
                                         <ul className="list-disc list-inside space-y-3 ml-4">
                                             <li>You agree to clearly state product details, licensing terms, and any restrictions.</li>
                                             <li>You must provide timely support to Buyers regarding your products or services.</li>
                                         </ul>
                                     </div>
                                 </motion.div>
-
-                                {/* Section 3 */}
                                 <motion.div variants={fadeInUp} className="mb-12">
                                     <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">3. Intellectual Property</h2>
                                     <div className="space-y-4 text-gray-300">
@@ -200,8 +175,6 @@ export default function SellerAgreementPage() {
                                         </ul>
                                     </div>
                                 </motion.div>
-
-                                {/* Section 4 */}
                                 <motion.div variants={fadeInUp} className="mb-12">
                                     <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan flex items-center gap-3">
                                         <DollarSign className="w-6 h-6" />
@@ -219,8 +192,6 @@ export default function SellerAgreementPage() {
                                         </div>
                                     </div>
                                 </motion.div>
-
-                                {/* Section 5 */}
                                 <motion.div variants={fadeInUp} className="mb-12">
                                     <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">5. Refunds & Disputes</h2>
                                     <div className="space-y-4 text-gray-300">
@@ -231,8 +202,6 @@ export default function SellerAgreementPage() {
                                         </ul>
                                     </div>
                                 </motion.div>
-
-                                {/* Section 6 */}
                                 <motion.div variants={fadeInUp} className="mb-12">
                                     <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">6. Prohibited Conduct</h2>
                                     <div className="space-y-4 text-gray-300 mb-6">
@@ -249,8 +218,6 @@ export default function SellerAgreementPage() {
                                         ))}
                                     </div>
                                 </motion.div>
-
-                                {/* Section 7 */}
                                 <motion.div variants={fadeInUp} className="mb-12">
                                     <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">7. Account Suspension & Termination</h2>
                                     <div className="space-y-4 text-gray-300">
@@ -264,8 +231,6 @@ export default function SellerAgreementPage() {
                                         </div>
                                     </div>
                                 </motion.div>
-
-                                {/* Section 8 */}
                                 <motion.div variants={fadeInUp} className="mb-12">
                                     <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">8. Limitation of Liability</h2>
                                     <div className="space-y-4 text-gray-300">
@@ -276,8 +241,6 @@ export default function SellerAgreementPage() {
                                         </ul>
                                     </div>
                                 </motion.div>
-
-                                {/* Section 9 */}
                                 <motion.div variants={fadeInUp} className="mb-12">
                                     <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">9. Indemnification</h2>
                                     <div className="space-y-4 text-gray-300">
@@ -289,8 +252,6 @@ export default function SellerAgreementPage() {
                                         </ul>
                                     </div>
                                 </motion.div>
-
-                                {/* Section 10 */}
                                 <motion.div variants={fadeInUp} className="mb-12">
                                     <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">10. Modifications</h2>
                                     <div className="space-y-4 text-gray-300">
@@ -300,8 +261,6 @@ export default function SellerAgreementPage() {
                                         </p>
                                     </div>
                                 </motion.div>
-
-                                {/* Section 11 */}
                                 <motion.div variants={fadeInUp} className="mb-12">
                                     <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">11. Governing Law</h2>
                                     <div className="space-y-4 text-gray-300">
@@ -310,8 +269,6 @@ export default function SellerAgreementPage() {
                                         </p>
                                     </div>
                                 </motion.div>
-
-                                {/* Section 12 - Contact */}
                                 <motion.div variants={fadeInUp} className="mb-12">
                                     <h2 className="text-2xl font-bold text-[#00FF89] mb-6 font-league-spartan">12. Contact Information</h2>
                                     <div className="bg-[#1f1f1f] rounded-xl p-6 border border-gray-800">
@@ -330,8 +287,6 @@ export default function SellerAgreementPage() {
                                         </div>
                                     </div>
                                 </motion.div>
-
-                                {/* CTA Section */}
                                 <motion.div variants={fadeInUp} className="mb-12">
                                     <div className="bg-gradient-to-r from-[#00FF89]/10 via-transparent to-[#00FF89]/10 rounded-2xl p-8 border border-[#00FF89]/20 text-center">
                                         <h3 className="text-2xl font-bold text-white mb-4 font-league-spartan">

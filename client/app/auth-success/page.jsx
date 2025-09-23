@@ -1,11 +1,9 @@
 'use client'
-
 import { Suspense } from 'react'
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CheckCircle, Loader2, XCircle, Phone } from 'lucide-react'
 import { authAPI } from '@/lib/api/auth'
-
 function PhoneNumberCollection({ onComplete, onSkip }) {
     const [phoneData, setPhoneData] = useState({
         countryCode: '+1',
@@ -13,7 +11,6 @@ function PhoneNumberCollection({ onComplete, onSkip }) {
     })
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
-
     const countryOptions = [
         { value: '+1', label: '+1 (US/Canada)' },
         { value: '+44', label: '+44 (UK)' },
@@ -24,53 +21,40 @@ function PhoneNumberCollection({ onComplete, onSkip }) {
         { value: '+81', label: '+81 (Japan)' },
         { value: '+61', label: '+61 (Australia)' }
     ]
-
     const formatPhoneNumber = (value, code) => {
         const cleaned = value.replace(/\D/g, '').slice(0, code === '+1' ? 10 : 15)
-
         if (code === '+1' && cleaned.length <= 10) {
             if (cleaned.length <= 3) return cleaned
             if (cleaned.length <= 6) return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`
             return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`
         }
-
         return cleaned
     }
-
     const validatePhone = (phone, code) => {
         const cleaned = phone.replace(/\D/g, '')
         return code === '+1' ? cleaned.length === 10 : cleaned.length >= 6 && cleaned.length <= 15
     }
-
     const handlePhoneChange = (e) => {
         const value = e.target.value
         const formatted = formatPhoneNumber(value, phoneData.countryCode)
         setPhoneData((prev) => ({ ...prev, phoneNumber: formatted }))
         setError('')
     }
-
     const handleSubmit = async (e) => {
         e.preventDefault()
-
         if (!validatePhone(phoneData.phoneNumber, phoneData.countryCode)) {
             setError('Please enter a valid phone number')
             return
         }
-
         setLoading(true)
         setError('')
-
         try {
-            // Prepare phone number for backend
             const countryCodeDigits = phoneData.countryCode.replace(/\D/g, '')
             const phoneNumberDigits = phoneData.phoneNumber.replace(/\D/g, '')
             const fullPhoneNumber = countryCodeDigits + phoneNumberDigits
-
-            // Update profile with phone number
             await authAPI.updateProfile({
                 phoneNumber: fullPhoneNumber
             })
-
             onComplete()
         } catch (err) {
             setError(err.message || 'Failed to save phone number. Please try again.')
@@ -78,7 +62,6 @@ function PhoneNumberCollection({ onComplete, onSkip }) {
             setLoading(false)
         }
     }
-
     return (
         <div className="bg-[#1a1a1a]/90 border border-gray-700/50 rounded-2xl p-6 backdrop-blur-sm">
             <div className="flex justify-center mb-6">
@@ -86,22 +69,19 @@ function PhoneNumberCollection({ onComplete, onSkip }) {
                     <Phone className="w-6 h-6 text-[#00FF89]" />
                 </div>
             </div>
-
             <h2 className="text-2xl font-bold text-white mb-2 text-center">Complete Your Profile</h2>
             <p className="text-gray-300 mb-6 text-center">Please add your phone number to complete your account setup</p>
-
             <form
                 onSubmit={handleSubmit}
                 className="space-y-4">
                 <div className="flex gap-3">
-                    {/* Country Code Dropdown */}
                     <select
                         value={phoneData.countryCode}
                         onChange={(e) =>
                             setPhoneData((prev) => ({
                                 ...prev,
                                 countryCode: e.target.value,
-                                phoneNumber: '' // Reset phone when country changes
+                                phoneNumber: '' 
                             }))
                         }
                         className="w-40 px-3 py-3 bg-[#121212] border border-gray-600 rounded-xl text-white focus:border-[#00FF89] focus:ring-2 focus:ring-[#00FF89]/20 transition-all"
@@ -114,8 +94,6 @@ function PhoneNumberCollection({ onComplete, onSkip }) {
                             </option>
                         ))}
                     </select>
-
-                    {/* Phone Number Input */}
                     <input
                         type="tel"
                         value={phoneData.phoneNumber}
@@ -126,9 +104,7 @@ function PhoneNumberCollection({ onComplete, onSkip }) {
                         required
                     />
                 </div>
-
                 {error && <p className="text-red-400 text-sm">{error}</p>}
-
                 <div className="flex gap-3">
                     <button
                         type="submit"
@@ -143,7 +119,6 @@ function PhoneNumberCollection({ onComplete, onSkip }) {
                             'Continue'
                         )}
                     </button>
-
                     <button
                         type="button"
                         onClick={onSkip}
@@ -153,63 +128,48 @@ function PhoneNumberCollection({ onComplete, onSkip }) {
                     </button>
                 </div>
             </form>
-
             <p className="text-xs text-gray-500 mt-4 text-center">Your phone number helps secure your account and enables important notifications</p>
         </div>
     )
 }
-
 function AuthSuccessContent() {
-    const [status, setStatus] = useState('processing') // processing, success, error, phone_required
+    const [status, setStatus] = useState('processing') 
     const [countdown, setCountdown] = useState(3)
     const [errorMessage, setErrorMessage] = useState('')
     const [userProfile, setUserProfile] = useState(null)
     const router = useRouter()
     const searchParams = useSearchParams()
-
     useEffect(() => {
         const handleAuthSuccess = async () => {
             try {
                 const token = searchParams.get('token')
-
                 if (!token) {
                     setStatus('error')
                     setErrorMessage('No authentication token provided')
                     return
                 }
-
                 const apiClient = (await import('@/lib/api/client')).default
                 apiClient.setAuthToken(token)
-
                 const cookieOptions = 'path=/; max-age=86400; SameSite=strict; secure=' + (window.location.protocol === 'https:')
                 document.cookie = `accessToken=${token}; ${cookieOptions}`
                 document.cookie = `authToken=${token}; ${cookieOptions}`
                 localStorage.setItem('authToken', token)
                 localStorage.setItem('loginTime', new Date().toISOString())
-
                 try {
                     const profile = await authAPI.getCurrentUser()
                     console.log('Fetched user profile:', profile)
-
                     if (profile) {
                         setUserProfile(profile)
-
-                        // Store user data and roles
                         localStorage.setItem('user', JSON.stringify(profile))
-
                         if (profile.roles) {
                             localStorage.setItem('roles', JSON.stringify(profile.roles))
                             document.cookie = `roles=${JSON.stringify(profile.roles)}; ${cookieOptions}`
                         }
-
-                        // Check if user has phone number
                         const hasPhoneNumber =
                             profile.phoneNumber &&
                             ((typeof profile.phoneNumber === 'object' && profile.phoneNumber.internationalNumber) ||
                                 (typeof profile.phoneNumber === 'string' && profile.phoneNumber.length > 0))
-
                         if (!hasPhoneNumber) {
-                            // Show phone number collection
                             setStatus('phone_required')
                             return
                         }
@@ -219,57 +179,41 @@ function AuthSuccessContent() {
                 } catch (profileError) {
                     console.warn('⚠️ Failed to fetch user profile:', profileError)
                 }
-
-                // If we reach here, proceed with redirect
                 proceedWithRedirect()
             } catch (error) {
                 setStatus('error')
                 setErrorMessage(error.message || 'Authentication failed. Please try again.')
             }
         }
-
         handleAuthSuccess()
     }, [searchParams, router])
-
     const proceedWithRedirect = () => {
         setStatus('success')
-
         const countdownInterval = setInterval(() => {
             setCountdown((prev) => {
                 if (prev <= 1) {
                     clearInterval(countdownInterval)
-
-                    // Determine redirect path based on user role
                     let redirectPath = localStorage.getItem('redirectAfterLogin')
-
                     if (!redirectPath) {
-                        // Role-based default redirects
                         const roles = userProfile?.roles || []
-
                         if (roles.includes('admin')) {
                             redirectPath = '/admin/dashboard'
                         } else if (roles.includes('seller')) {
                             redirectPath = '/seller/dashboard'
                         } else {
-                            // Regular users go to dashboard
                             redirectPath = '/dashboard'
                         }
                     }
-
-                    localStorage.removeItem('redirectAfterLogin') // Clean up
-
+                    localStorage.removeItem('redirectAfterLogin') 
                     router.push(redirectPath)
                     return 0
                 }
                 return prev - 1
             })
         }, 1000)
-
         return () => clearInterval(countdownInterval)
     }
-
     const handlePhoneComplete = async () => {
-        // Refresh user profile to get updated data
         try {
             const updatedProfile = await authAPI.getCurrentUser()
             if (updatedProfile) {
@@ -279,14 +223,11 @@ function AuthSuccessContent() {
         } catch (error) {
             console.warn('Failed to refresh user profile:', error)
         }
-
         proceedWithRedirect()
     }
-
     const handlePhoneSkip = () => {
         proceedWithRedirect()
     }
-
     const getStatusContent = () => {
         switch (status) {
             case 'processing':
@@ -298,7 +239,7 @@ function AuthSuccessContent() {
                     borderColor: 'border-[#00FF89]/20'
                 }
             case 'phone_required':
-                return null // Special case - handled separately
+                return null 
             case 'success':
                 return {
                     icon: <CheckCircle className="w-12 h-12 text-[#00FF89]" />,
@@ -325,18 +266,13 @@ function AuthSuccessContent() {
                 }
         }
     }
-
     const statusContent = getStatusContent()
-
     return (
         <div className="min-h-screen bg-[#121212] flex items-center justify-center p-4">
-            {/* Background Effects */}
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#00FF89]/10 rounded-full blur-3xl" />
                 <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
             </div>
-
-            {/* Main Content */}
             <div className="relative z-10 w-full max-w-md">
                 {status === 'phone_required' ? (
                     <PhoneNumberCollection
@@ -346,16 +282,9 @@ function AuthSuccessContent() {
                 ) : (
                     statusContent && (
                         <div className={`${statusContent.bgColor} ${statusContent.borderColor} border rounded-2xl p-8 text-center backdrop-blur-sm`}>
-                            {/* Status Icon */}
                             <div className="flex justify-center mb-6">{statusContent.icon}</div>
-
-                            {/* Title */}
                             <h1 className="text-2xl font-bold text-white mb-4">{statusContent.title}</h1>
-
-                            {/* Message */}
                             <p className="text-gray-300 mb-6">{statusContent.message}</p>
-
-                            {/* Action Button for Error State */}
                             {status === 'error' && (
                                 <div className="space-y-3">
                                     <button
@@ -370,8 +299,6 @@ function AuthSuccessContent() {
                                     </button>
                                 </div>
                             )}
-
-                            {/* Loading indicator for success */}
                             {status === 'success' && (
                                 <div className="flex justify-center">
                                     <div className="w-6 h-6 border-2 border-[#00FF89]/30 border-t-[#00FF89] rounded-full animate-spin" />
@@ -380,7 +307,6 @@ function AuthSuccessContent() {
                         </div>
                     )
                 )}
-
                 {status !== 'phone_required' && (
                     <div className="text-center mt-6">
                         <p className="text-gray-500 text-sm">You're being signed in with Google</p>
@@ -390,7 +316,6 @@ function AuthSuccessContent() {
         </div>
     )
 }
-
 function LoadingFallback() {
     return (
         <div className="min-h-screen bg-[#121212] flex items-center justify-center p-4">
@@ -404,7 +329,6 @@ function LoadingFallback() {
         </div>
     )
 }
-
 export default function AuthSuccessPage() {
     return (
         <Suspense fallback={<LoadingFallback />}>

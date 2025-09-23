@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
@@ -18,11 +17,8 @@ import {
 } from 'lucide-react'
 import { useAdmin } from '@/providers/AdminProvider'
 import Link from 'next/link'
-
-// Modern metric card component following the new design system
 const MetricCard = ({ icon: Icon, label, value, change, color, loading, href }) => {
     const isPositive = change && change.startsWith('+')
-
     return (
         <motion.article
             initial={{ opacity: 0, y: 20 }}
@@ -40,7 +36,6 @@ const MetricCard = ({ icon: Icon, label, value, change, color, loading, href }) 
                     </div>
                 )}
             </div>
-
             {loading ? (
                 <div className="animate-pulse">
                     <div className="h-8 bg-gray-700 rounded mb-2"></div>
@@ -52,7 +47,6 @@ const MetricCard = ({ icon: Icon, label, value, change, color, loading, href }) 
                     <p className="text-sm text-gray-400">{label}</p>
                 </>
             )}
-
             {href && (
                 <Link
                     href={href}
@@ -63,8 +57,6 @@ const MetricCard = ({ icon: Icon, label, value, change, color, loading, href }) 
         </motion.article>
     )
 }
-
-// Quick action button component
 const QuickActionButton = ({ icon: Icon, label, variant = 'secondary', onClick, href }) => {
     const baseClasses =
         'px-4 py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50'
@@ -72,9 +64,7 @@ const QuickActionButton = ({ icon: Icon, label, variant = 'secondary', onClick, 
         primary: 'bg-[#00FF89] text-black hover:bg-[#00FF89]/90',
         secondary: 'bg-gray-800/50 text-white border border-white/20 hover:bg-gray-700/50 hover:border-[#00FF89]/30'
     }
-
     const Component = href ? Link : 'button'
-
     return (
         <Component
             href={href}
@@ -85,8 +75,6 @@ const QuickActionButton = ({ icon: Icon, label, variant = 'secondary', onClick, 
         </Component>
     )
 }
-
-// Recent activity item component
 const ActivityItem = ({ activity }) => {
     const getIcon = (type) => {
         switch (type) {
@@ -102,7 +90,6 @@ const ActivityItem = ({ activity }) => {
                 return Activity
         }
     }
-
     const getStatusColor = (status) => {
         switch (status) {
             case 'completed':
@@ -115,9 +102,7 @@ const ActivityItem = ({ activity }) => {
                 return 'text-gray-400'
         }
     }
-
     const Icon = getIcon(activity.type)
-
     return (
         <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -136,36 +121,26 @@ const ActivityItem = ({ activity }) => {
         </motion.div>
     )
 }
-
 export default function AdminDashboardPage() {
     const { counts, loading, refreshData, error } = useAdmin()
     const [refreshing, setRefreshing] = useState(false)
     const [recentActivity, setRecentActivity] = useState([])
-
-    // Load real recent activity data when API becomes available
     useEffect(() => {
         const loadRecentActivity = async () => {
             try {
-                // TODO: Replace with real API call when available
-                // const activity = await adminAPI.getRecentActivity()
-                // setRecentActivity(activity)
-                setRecentActivity([]) // Keep empty until real API is available
+                setRecentActivity([]) 
             } catch (error) {
                 console.error('Failed to load recent activity:', error)
                 setRecentActivity([])
             }
         }
-
         loadRecentActivity()
     }, [])
-
-    // Calculate metrics from AdminProvider data only - no additional API calls
     const metrics = useMemo(() => [
         {
             icon: Users,
             label: 'Total Sellers',
             value: counts.sellers.pending + counts.sellers.active,
-            // Remove static change - will calculate from real data when growth API is available
             color: 'from-blue-500/20 to-blue-600/20',
             href: '/admin/sellers/active'
         },
@@ -181,7 +156,6 @@ export default function AdminDashboardPage() {
             icon: Package,
             label: 'Products Listed',
             value: counts.products.pending + counts.products.flagged + counts.products.featured,
-            // Remove static change - will calculate from real data when growth API is available
             color: 'from-purple-500/20 to-purple-600/20',
             href: '/admin/products/pending'
         },
@@ -194,8 +168,6 @@ export default function AdminDashboardPage() {
             href: '/admin/products/flagged'
         }
     ], [counts])
-
-    // Handle manual refresh only - no automatic fetching
     const handleRefresh = useCallback(async () => {
         setRefreshing(true)
         try {
@@ -204,8 +176,6 @@ export default function AdminDashboardPage() {
             setRefreshing(false)
         }
     }, [refreshData])
-
-    // Show error state if AdminProvider has errors
     if (error) {
         return (
             <main className="space-y-8 max-w-7xl mx-auto">
@@ -221,16 +191,13 @@ export default function AdminDashboardPage() {
             </main>
         )
     }
-
     return (
         <main className="space-y-8 max-w-7xl mx-auto">
-            {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold text-white mb-2">Dashboard Overview</h1>
                     <p className="text-gray-400">Monitor your platform's performance and activity</p>
                 </div>
-
                 <div className="flex items-center gap-3">
                     <button
                         onClick={handleRefresh}
@@ -239,7 +206,6 @@ export default function AdminDashboardPage() {
                         <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
                         Refresh
                     </button>
-
                     <Link
                         href="/admin/analytics/platform"
                         className="px-4 py-2 bg-[#00FF89] text-black rounded-lg hover:bg-[#00FF89]/90 transition-colors flex items-center gap-2">
@@ -248,8 +214,6 @@ export default function AdminDashboardPage() {
                     </Link>
                 </div>
             </div>
-
-            {/* Quick Actions */}
             <section>
                 <h2 className="text-lg font-semibold text-white mb-4">Quick Actions</h2>
                 <div className="flex flex-wrap gap-3">
@@ -276,8 +240,6 @@ export default function AdminDashboardPage() {
                     />
                 </div>
             </section>
-
-            {/* Metrics Grid */}
             <section>
                 <h2 className="text-lg font-semibold text-white mb-4">Platform Metrics</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -290,10 +252,7 @@ export default function AdminDashboardPage() {
                     ))}
                 </div>
             </section>
-
-            {/* Charts and Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Platform Overview Chart */}
                 <div className="lg:col-span-2 bg-gradient-to-br from-gray-900/50 to-gray-800/30 backdrop-blur-sm border border-white/10 rounded-xl p-6">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-lg font-semibold text-white">Platform Activity</h3>
@@ -315,8 +274,6 @@ export default function AdminDashboardPage() {
                         </div>
                     </div>
                 </div>
-
-                {/* Recent Activity */}
                 <div className="bg-gradient-to-br from-gray-900/50 to-gray-800/30 backdrop-blur-sm border border-white/10 rounded-xl p-6">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-lg font-semibold text-white">Recent Activity</h3>
@@ -326,7 +283,6 @@ export default function AdminDashboardPage() {
                             View all
                         </Link>
                     </div>
-
                     <div className="space-y-2">
                         {recentActivity.map((activity, index) => (
                             <ActivityItem
@@ -337,8 +293,6 @@ export default function AdminDashboardPage() {
                     </div>
                 </div>
             </div>
-
-            {/* System Status */}
             <section>
                 <div className="bg-gradient-to-br from-gray-900/50 to-gray-800/30 backdrop-blur-sm border border-white/10 rounded-xl p-6">
                     <h3 className="text-lg font-semibold text-white mb-4">System Status</h3>
@@ -364,4 +318,3 @@ export default function AdminDashboardPage() {
         </main>
     )
 }
-

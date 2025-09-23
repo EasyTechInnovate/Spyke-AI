@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -8,8 +7,6 @@ import { useProductCreateStore, useProductCreateSelectors } from '@/store/produc
 import { STEP_HELPERS } from '@/lib/constants/productCreate'
 import { productsAPI } from '@/lib/api'
 import { useNotifications } from '@/hooks/useNotifications'
-
-// Step Components
 import Step1Basic from './steps/Step1Basic'
 import Step2Details from './steps/Step2Details'
 import Step3Technical from './steps/Step3Technical'
@@ -19,7 +16,6 @@ import Step6Launch from './steps/Step6Launch'
 import LivePreview from './components/LivePreview'
 import HelperRail from './components/HelperRail'
 import ReviewSubmit from './components/ReviewSubmit'
-
 const STEP_COMPONENTS = {
     1: Step1Basic,
     2: Step2Details,
@@ -28,23 +24,18 @@ const STEP_COMPONENTS = {
     5: Step5MediaPricing,
     6: Step6Launch
 }
-
 export default function ProductCreatePage() {
     const router = useRouter()
-    const [mode, setMode] = useState('form') // 'form' | 'preview'
+    const [mode, setMode] = useState('form') 
     const [showReview, setShowReview] = useState(false)
     const [notification, setNotification] = useState(null)
     const [showResetConfirm, setShowResetConfirm] = useState(false)
-
-    // Store state
     const currentStep = useProductCreateStore(useProductCreateSelectors.currentStep)
     const isDirty = useProductCreateStore(useProductCreateSelectors.isDirty)
     const lastSaved = useProductCreateStore(useProductCreateSelectors.lastSaved)
     const isSubmitting = useProductCreateStore(useProductCreateSelectors.isSubmitting)
     const completionPercentage = useProductCreateStore(useProductCreateSelectors.completionPercentage)
     const errors = useProductCreateStore((state) => state.errors)
-
-    // Store actions
     const setStep = useProductCreateStore((state) => state.setStep)
     const nextStep = useProductCreateStore((state) => state.nextStep)
     const prevStep = useProductCreateStore((state) => state.prevStep)
@@ -54,18 +45,14 @@ export default function ProductCreatePage() {
     const reset = useProductCreateStore((state) => state.reset)
     const toApiPayload = useProductCreateStore((state) => state.toApiPayload)
     const setSubmitting = useProductCreateStore((state) => state.setSubmitting)
-
     const { showSuccess, showError, showInfo } = useNotifications()
-
     const handleStepClick = useCallback((targetStep) => {
         if (targetStep <= currentStep) {
             setStep(targetStep)
             return
         }
-
         let canNavigate = true
         let blockingStep = null
-
         for (let step = 1; step < targetStep; step++) {
             if (!validateStep(step)) {
                 canNavigate = false
@@ -73,7 +60,6 @@ export default function ProductCreatePage() {
                 break
             }
         }
-
         if (canNavigate) {
             setStep(targetStep)
         } else {
@@ -85,27 +71,19 @@ export default function ProductCreatePage() {
                 5: 'Media & Pricing',
                 6: 'Final Details'
             }
-
             showError(`Please complete Step ${blockingStep}: ${stepNames[blockingStep]} before proceeding to Step ${targetStep}`)
         }
     }, [currentStep, validateStep, setStep, showError])
-
-    // Auto-scroll to top when step changes - Enhanced version
     useEffect(() => {
-        // Use requestAnimationFrame to ensure DOM is updated before scrolling
         requestAnimationFrame(() => {
-            // Try both document and window scroll methods for better compatibility
             document.documentElement.scrollTo({ top: 0, behavior: 'smooth' })
             window.scrollTo({ top: 0, behavior: 'smooth' })
-
-            // Also scroll any potential scroll containers
             const mainContent = document.querySelector('.min-h-screen')
             if (mainContent) {
                 mainContent.scrollTop = 0
             }
         })
     }, [currentStep, showReview, mode])
-
     const handleNext = useCallback(() => {
         const isValid = validateStep(currentStep)
         if (isValid) {
@@ -113,63 +91,48 @@ export default function ProductCreatePage() {
             if (currentStep < 6) {
                 nextStep()
             } else {
-                // Last step, show review
                 setShowReview(true)
             }
         } else {
             showError('Please fix the errors before proceeding')
         }
     }, [currentStep, validateStep, markStepComplete, nextStep, showError])
-
     const handlePrev = useCallback(() => {
         if (currentStep > 1) {
             prevStep()
         }
     }, [currentStep, prevStep])
-
     const handleSave = useCallback(() => {
         save()
         showSuccess('Progress saved automatically')
     }, [save, showSuccess])
-
     const handleReset = useCallback(() => {
         setShowResetConfirm(true)
     }, [])
-
     const confirmReset = useCallback(() => {
         reset()
         setShowResetConfirm(false)
         showInfo('Form reset successfully')
     }, [reset, showInfo])
-
     const handleSubmit = useCallback(async () => {
         try {
             setSubmitting(true)
-
-            // Final validation of all steps
             let allValid = true
             for (let step = 1; step <= 6; step++) {
                 if (!validateStep(step)) {
                     allValid = false
                 }
             }
-
             if (!allValid) {
                 showError('Please fix all errors before submitting')
                 return
             }
-
             const payload = toApiPayload()
-
-            // Handle file uploads if needed (since backend expects URLs)
             if (payload.thumbnail instanceof File) {
-                // For now, require URL. In production, implement file upload adapter
                 showError('Please provide image URLs instead of files for now')
                 return
             }
-
             const response = await productsAPI.createProduct(payload)
-
             if (response.data) {
                 showSuccess('Product created successfully!')
                 setTimeout(() => {
@@ -179,25 +142,17 @@ export default function ProductCreatePage() {
             }
         } catch (error) {
             console.error('Submission error:', error)
-
-            // Enhanced error handling for API responses with detailed field-specific messages
             if (error.response?.data) {
                 const errorData = error.response.data
-
-                // Handle validation errors with field-specific messages
                 if (errorData.errors && Array.isArray(errorData.errors)) {
-                    // Show each field error as a separate notification
                     errorData.errors.forEach((err) => {
                         const fieldName = err.field ? err.field.charAt(0).toUpperCase() + err.field.slice(1) : 'Field'
                         showError(`${fieldName}: ${err.message}`)
                     })
-
-                    // Also show the main message if available
                     if (errorData.message) {
                         showError(errorData.message)
                     }
                 } else if (errorData.message) {
-                    // Handle general error messages
                     showError(errorData.message)
                 } else {
                     showError('Failed to create product')
@@ -211,7 +166,6 @@ export default function ProductCreatePage() {
             setSubmitting(false)
         }
     }, [validateStep, toApiPayload, showError, showSuccess, router, reset, setSubmitting])
-
     const CurrentStepComponent = STEP_COMPONENTS[currentStep]
     const stepInfo = STEP_HELPERS[currentStep] || {}
     const hasStepErrors = Object.keys(errors).some((key) => {
@@ -225,7 +179,6 @@ export default function ProductCreatePage() {
         }
         return stepFields[currentStep]?.includes(key)
     })
-
     useEffect(() => {
         requestAnimationFrame(() => {
             document.documentElement.scrollTo({ top: 0, behavior: 'smooth' })
@@ -236,16 +189,12 @@ export default function ProductCreatePage() {
             }
         })
     }, [currentStep, showReview, mode])
-
     return (
         <div>
-            {/* Smart Stepper Header - Fixed positioning */}
             <div className="border-b border-gray-700 bg-gray-900/95 backdrop-blur-md sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between py-4 gap-4">
-                        {/* Step Progress */}
                         <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-                            {/* Step Circles */}
                             <div className="flex items-center justify-center sm:justify-start">
                                 <div className="flex items-center space-x-2 sm:space-x-3">
                                     {[1, 2, 3, 4, 5, 6].map((step, index) => (
@@ -266,7 +215,6 @@ export default function ProductCreatePage() {
                                                     <span className="text-xs">{step}</span>
                                                 )}
                                             </button>
-                                            {/* Connector Line */}
                                             {index < 5 && (
                                                 <div
                                                     className={`w-3 sm:w-4 h-0.5 mx-1 sm:mx-1.5 transition-all duration-300 ${step < currentStep ? 'bg-[#00FF89]' : 'bg-gray-600'
@@ -277,8 +225,6 @@ export default function ProductCreatePage() {
                                     ))}
                                 </div>
                             </div>
-
-                            {/* Step Info */}
                             <div className="text-center sm:text-left">
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3">
                                     <div className="flex items-center justify-center sm:justify-start space-x-2">
@@ -295,7 +241,6 @@ export default function ProductCreatePage() {
                                 </div>
                                 <div className="flex items-center justify-center sm:justify-start mt-1">
                                     <div className="text-sm text-[#00FF89] font-medium">{completionPercentage}% complete</div>
-                                    {/* Progress Bar */}
                                     <div className="ml-3 w-16 sm:w-20 h-1.5 bg-gray-700 rounded-full overflow-hidden">
                                         <div
                                             className="h-full bg-[#00FF89] transition-all duration-500 ease-out rounded-full"
@@ -305,10 +250,7 @@ export default function ProductCreatePage() {
                                 </div>
                             </div>
                         </div>
-
-                        {/* Mode Toggle & Actions */}
                         <div className="flex flex-col sm:flex-row items-center gap-3">
-                            {/* Mode Toggle */}
                             <div className="flex items-center bg-gray-800/70 rounded-xl p-1 border border-gray-700">
                                 <button
                                     onClick={() => setMode('form')}
@@ -331,8 +273,6 @@ export default function ProductCreatePage() {
                                     <span className="sm:hidden">Preview</span>
                                 </button>
                             </div>
-
-                            {/* Action Buttons */}
                             <div className="flex items-center space-x-2">
                                 <button
                                     onClick={handleSave}
@@ -340,15 +280,12 @@ export default function ProductCreatePage() {
                                     title="Save Progress">
                                     <Save className="w-4 h-4" />
                                 </button>
-
                                 <button
                                     onClick={handleReset}
                                     className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-800/70 rounded-lg transition-all duration-200 border border-transparent hover:border-gray-600"
                                     title="Reset Form">
                                     <RotateCcw className="w-4 h-4" />
                                 </button>
-
-                                {/* Save Status */}
                                 <div className="hidden lg:block text-xs text-gray-400 ml-2 px-2 py-1 bg-gray-800/50 rounded border border-gray-700">
                                     {lastSaved
                                         ? `Saved ${new Date(lastSaved).toLocaleTimeString()}`
@@ -361,12 +298,9 @@ export default function ProductCreatePage() {
                     </div>
                 </div>
             </div>
-
-            {/* Main Content - Add proper top spacing */}
             <div className="pt-6">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex gap-6">
-                        {/* Main Form/Preview Area - Better width management */}
                         <div className="flex-1 max-w-4xl">
                             <AnimatePresence mode="wait">
                                 {showReview ? (
@@ -400,11 +334,7 @@ export default function ProductCreatePage() {
                                                     </ul>
                                                 )}
                                             </div>
-
-                                            {/* Step content - Remove extra wrapper that was constraining width */}
                                             <CurrentStepComponent />
-
-                                            {/* Step Navigation */}
                                             <div className="flex flex-col sm:flex-row items-center justify-between mt-8 pt-6 border-t border-gray-700 gap-4">
                                                 <button
                                                     onClick={handlePrev}
@@ -413,7 +343,6 @@ export default function ProductCreatePage() {
                                                     <ArrowLeft className="w-4 h-4" />
                                                     <span>Previous</span>
                                                 </button>
-
                                                 <motion.button
                                                     onClick={handleNext}
                                                     whileHover={{ scale: 1.02 }}
@@ -440,8 +369,6 @@ export default function ProductCreatePage() {
                                 )}
                             </AnimatePresence>
                         </div>
-
-                        {/* Helper Rail - Fixed width sidebar */}
                         <div className="hidden lg:block w-80 flex-shrink-0">
                             <div className="sticky top-24">
                                 <HelperRail currentStep={currentStep} />
@@ -450,8 +377,6 @@ export default function ProductCreatePage() {
                     </div>
                 </div>
             </div>
-
-            {/* Reset Confirmation Modal */}
             <AnimatePresence>
                 {showResetConfirm && (
                     <motion.div
@@ -460,10 +385,7 @@ export default function ProductCreatePage() {
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 z-[100] flex items-center justify-center p-4"
                         onClick={() => setShowResetConfirm(false)}>
-                        {/* Backdrop */}
                         <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
-
-                        {/* Modal */}
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -471,30 +393,21 @@ export default function ProductCreatePage() {
                             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                             onClick={(e) => e.stopPropagation()}
                             className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl border border-red-500/30 shadow-2xl max-w-md w-full mx-4">
-                            {/* Close Button */}
                             <button
                                 onClick={() => setShowResetConfirm(false)}
                                 className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors">
                                 <X className="w-5 h-5" />
                             </button>
-
-                            {/* Content */}
                             <div className="p-8">
-                                {/* Warning Icon */}
                                 <div className="flex justify-center mb-6">
                                     <div className="relative">
                                         <div className="w-16 h-16 bg-gradient-to-br from-red-500/20 to-orange-500/20 rounded-full flex items-center justify-center">
                                             <AlertTriangle className="w-8 h-8 text-red-400" />
                                         </div>
-                                        {/* Pulse Effect */}
                                         <div className="absolute inset-0 w-16 h-16 bg-red-500/20 rounded-full animate-ping" />
                                     </div>
                                 </div>
-
-                                {/* Title */}
                                 <h3 className="text-2xl font-bold text-white text-center mb-3">Reset All Progress?</h3>
-
-                                {/* Description */}
                                 <div className="text-center mb-8">
                                     <p className="text-gray-300 text-base leading-relaxed mb-4">
                                         This will permanently delete all your progress and cannot be undone.
@@ -514,8 +427,6 @@ export default function ProductCreatePage() {
                                         </div>
                                     </div>
                                 </div>
-
-                                {/* Action Buttons */}
                                 <div className="flex flex-col sm:flex-row gap-3">
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}
@@ -524,7 +435,6 @@ export default function ProductCreatePage() {
                                         className="flex-1 px-6 py-3 border border-gray-600 text-white rounded-xl hover:bg-gray-800/50 transition-all duration-200 font-medium text-base">
                                         Cancel
                                     </motion.button>
-
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}

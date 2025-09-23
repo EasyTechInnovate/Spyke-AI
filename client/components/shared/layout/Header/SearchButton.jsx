@@ -1,5 +1,4 @@
 import { Search } from 'lucide-react'
-
 export default function SearchButton({ onClick }) {
     return (
         <button
@@ -8,7 +7,6 @@ export default function SearchButton({ onClick }) {
             onClick={onClick}
         >
             <Search className="h-4 w-4 sm:h-5 sm:w-5" />
-            
         </button>
     )
 }
