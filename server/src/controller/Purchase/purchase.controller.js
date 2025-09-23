@@ -8,8 +8,9 @@ import sellerProfileModel from '../../model/seller.profile.model.js'
 import Promocode from '../../model/promocode.model.js'
 import { notificationService } from '../../util/notification.js'
 import { EProductStatusNew, EUserRole } from '../../constant/application.js'
+import stripeService from '../../service/stripe.service.js'
 
-export default {
+const purchaseControllerExport = {
     self: (req, res, next) => {
         try {
             httpResponse(req, res, 200, responseMessage.SERVICE('Purchase'))
@@ -182,6 +183,85 @@ export default {
         }
     },
 
+    createPaymentIntent: async (req, res, next) => {
+        try {
+            const { authenticatedUser } = req
+
+            const cart = await Cart.getOrCreateCart(authenticatedUser.id)
+            await cart.populate('items.productId', 'title price type category')
+
+            if (cart.items.length === 0) {
+                return httpError(next, new Error(responseMessage.CART.EMPTY_CART), req, 400)
+            }
+
+            await cart.calculateTotals()
+
+            if (cart.finalAmount <= 0) {
+                return httpError(next, new Error('No payment required for free items'), req, 400)
+            }
+
+            const paymentIntentData = await stripeService.createPaymentIntent(
+                cart.finalAmount,
+                {
+                    userId: authenticatedUser.id,
+                    cartId: cart._id.toString(),
+                    userEmail: authenticatedUser.emailAddress || authenticatedUser.email,
+                    itemCount: cart.items.length,
+                    totalAmount: cart.totalAmount,
+                    discountAmount: cart.appliedPromocode?.discountAmount || 0,
+                    promocodeCode: cart.appliedPromocode?.code || null
+                }
+            )
+
+            httpResponse(req, res, 200, responseMessage.SUCCESS, {
+                ...paymentIntentData,
+                cartSummary: {
+                    totalAmount: cart.totalAmount,
+                    discountAmount: cart.appliedPromocode?.discountAmount || 0,
+                    finalAmount: cart.finalAmount,
+                    itemCount: cart.items.length,
+                    appliedPromocode: cart.appliedPromocode
+                }
+            })
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+
+    confirmStripePayment: async (req, res, next) => {
+        try {
+            const { authenticatedUser } = req
+            const { paymentIntentId } = req.body
+
+            if (!paymentIntentId) {
+                return httpError(next, new Error('Payment intent ID is required'), req, 400)
+            }
+
+            const paymentIntent = await stripeService.retrievePaymentIntent(paymentIntentId)
+
+            if (!paymentIntent) {
+                return httpError(next, new Error('Invalid payment intent'), req, 400)
+            }
+
+            if (!stripeService.isPaymentSuccessful(paymentIntent)) {
+                return httpError(next, new Error('Payment not completed'), req, 400)
+            }
+
+            if (paymentIntent.metadata.userId !== authenticatedUser.id) {
+                return httpError(next, new Error('Unauthorized payment intent'), req, 403)
+            }
+
+            req.body = {
+                paymentMethod: 'stripe',
+                paymentReference: paymentIntentId
+            }
+
+            return purchaseControllerExport.createPurchase(req, res, next)
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
+    },
+
     createPurchase: async (req, res, next) => {
         try {
             const { authenticatedUser } = req
@@ -291,9 +371,10 @@ export default {
     getUserPurchases: async (req, res, next) => {
         try {
             const { authenticatedUser } = req
+
             const { page = 1, limit = 10, type } = req.query
 
-            const result = await Purchase.getUserPurchases(authenticatedUser.id, {
+            const result = await Purchase.getUserPurchases(authenticatedUser._id, {
                 page: parseInt(page),
                 limit: parseInt(limit),
                 type
@@ -309,7 +390,7 @@ export default {
         try {
             const { authenticatedUser } = req
 
-            const result = await Purchase.getUserPurchasesByType(authenticatedUser.id)
+            const result = await Purchase.getUserPurchasesByType(authenticatedUser._id)
 
             const responseData = {
                 summary: {
@@ -486,5 +567,204 @@ export default {
         } catch (err) {
             httpError(next, err, req, 500)
         }
+    },
+
+    handleStripeWebhook: async (req, res, next) => {
+        try {
+            const signature = req.headers['stripe-signature']
+
+            if (!signature) {
+                return httpError(next, new Error('Missing stripe signature'), req, 400)
+            }
+
+            const event = await stripeService.constructWebhookEvent(req.body, signature)
+
+            console.log(`Received webhook event: ${event.type}`)
+
+            switch (event.type) {
+                case 'payment_intent.succeeded':
+                    await handlePaymentSucceeded(event.data.object)
+                    break
+                case 'payment_intent.payment_failed':
+                    await handlePaymentFailed(event.data.object)
+                    break
+                case 'payment_intent.canceled':
+                case 'payment_intent.cancelled':
+                    await handlePaymentCanceled(event.data.object)
+                    break
+                case 'payment_intent.created':
+                    console.log(`Payment intent created: ${event.data.object.id}`)
+                    break
+                case 'payment_intent.requires_action':
+                    console.log(`Payment requires action: ${event.data.object.id}`)
+                    break
+                case 'checkout.session.async_payment_succeeded':
+                    console.log(`Checkout session async payment succeeded: ${event.data.object.id}`)
+                    if (event.data.object.payment_intent) {
+                        const paymentIntent = await stripeService.retrievePaymentIntent(event.data.object.payment_intent)
+                        await handlePaymentSucceeded(paymentIntent)
+                    }
+                    break
+                case 'checkout.session.completed':
+                    console.log(`Checkout session completed: ${event.data.object.id}`)
+                    if (event.data.object.payment_intent) {
+                        const paymentIntent = await stripeService.retrievePaymentIntent(event.data.object.payment_intent)
+                        await handlePaymentSucceeded(paymentIntent)
+                    }
+                    break
+                case 'charge.succeeded':
+                    console.log(`Charge succeeded (backup event): ${event.data.object.id}`)
+                    if (event.data.object.payment_intent) {
+                        const paymentIntent = await stripeService.retrievePaymentIntent(event.data.object.payment_intent)
+                        await handlePaymentSucceeded(paymentIntent)
+                    }
+                    break
+                case 'charge.failed':
+                    console.log(`Charge failed (backup event): ${event.data.object.id}`)
+                    if (event.data.object.payment_intent) {
+                        const paymentIntent = await stripeService.retrievePaymentIntent(event.data.object.payment_intent)
+                        await handlePaymentFailed(paymentIntent)
+                    }
+                    break
+                default:
+                    console.log(`Unhandled event type: ${event.type}`)
+            }
+
+            res.status(200).json({ received: true })
+        } catch (err) {
+            console.error('Webhook error:', err.message)
+            httpError(next, err, req, 400)
+        }
     }
 }
+
+async function handlePaymentSucceeded(paymentIntent) {
+    try {
+        console.log(`Payment succeeded for: ${paymentIntent.id}`)
+
+        const { userId, cartId } = paymentIntent.metadata
+
+        if (!userId) {
+            console.error('No userId in payment intent metadata')
+            return
+        }
+
+        const existingPurchase = await Purchase.findOne({
+            paymentReference: paymentIntent.id
+        })
+
+        if (existingPurchase) {
+            console.log(`Purchase already exists for payment intent: ${paymentIntent.id}`)
+            return
+        }
+
+        const cart = await Cart.findById(cartId)
+        if (!cart) {
+            console.error(`Cart not found: ${cartId}`)
+            return
+        }
+
+        await cart.populate('items.productId')
+
+        const purchaseItems = []
+        for (const item of cart.items) {
+            if (item.productId && item.productId.status === EProductStatusNew.PUBLISHED) {
+                purchaseItems.push({
+                    productId: item.productId._id,
+                    sellerId: item.productId.sellerId,
+                    price: item.productId.price
+                })
+            }
+        }
+
+        if (purchaseItems.length === 0) {
+            console.error('No valid items found in cart')
+            return
+        }
+
+        const purchase = new Purchase({
+            userId,
+            items: purchaseItems,
+            totalAmount: cart.totalAmount,
+            discountAmount: cart.appliedPromocode?.discountAmount || 0,
+            finalAmount: stripeService.formatAmount(paymentIntent.amount),
+            appliedPromocode: cart.appliedPromocode,
+            paymentMethod: 'stripe',
+            paymentReference: paymentIntent.id,
+            paymentStatus: 'COMPLETED',
+            orderStatus: 'COMPLETED'
+        })
+
+        await purchase.grantAccess()
+
+        if (cart.appliedPromocode && cart.appliedPromocode.code) {
+            const promocode = await Promocode.findOne({ code: cart.appliedPromocode.code })
+            if (promocode) {
+                await promocode.recordUsage(
+                    userId,
+                    purchase._id,
+                    cart.appliedPromocode.discountAmount
+                )
+            }
+        }
+
+        for (const item of purchaseItems) {
+            await Product.findByIdAndUpdate(item.productId, { $inc: { sales: 1 } })
+
+            const seller = await sellerProfileModel.findById(item.sellerId)
+            if (seller) {
+                await notificationService.sendToUser(
+                    seller.userId,
+                    'New Sale!',
+                    'Your product has been purchased via Stripe.',
+                    'success'
+                )
+            }
+        }
+
+        await notificationService.sendToUser(
+            userId,
+            'Purchase Successful!',
+            'Thank you for your purchase. You now have access to your products.',
+            'success'
+        )
+
+        await cart.clearCart()
+
+        console.log(`Purchase created successfully: ${purchase._id}`)
+    } catch (error) {
+        console.error('Error handling payment success:', error)
+    }
+}
+
+async function handlePaymentFailed(paymentIntent) {
+    console.log(`Payment failed for: ${paymentIntent.id}`)
+
+    const { userId } = paymentIntent.metadata
+
+    if (userId) {
+        await notificationService.sendToUser(
+            userId,
+            'Payment Failed',
+            'Your payment could not be processed. Please try again.',
+            'error'
+        )
+    }
+}
+
+async function handlePaymentCanceled(paymentIntent) {
+    console.log(`Payment canceled for: ${paymentIntent.id}`)
+
+    const { userId } = paymentIntent.metadata
+
+    if (userId) {
+        await notificationService.sendToUser(
+            userId,
+            'Payment Canceled',
+            'Your payment was canceled. Your cart items are still saved.',
+            'warning'
+        )
+    }
+}
+
+export default purchaseControllerExport

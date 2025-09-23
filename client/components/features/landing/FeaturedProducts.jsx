@@ -6,7 +6,7 @@ import { ArrowRight, Star, Eye, CheckCircle, Sparkles, Loader2, Activity, Heart,
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import OptimizedImage from '@/components/shared/ui/OptimizedImage'
+import Image from 'next/image'
 import { useCart } from '@/hooks/useCart'
 import { productsAPI } from '@/lib/api'
 
@@ -385,7 +385,7 @@ function ProductCard({ product, onClick }) {
 
                 <div className="relative aspect-[16/9] bg-[#1b1b1b] overflow-hidden">
                     {!imageError ? (
-                        <OptimizedImage
+                        <Image
                             src={productImage}
                             alt={title}
                             width={300}
@@ -397,6 +397,7 @@ function ProductCard({ product, onClick }) {
                                 setIsImageLoading(false)
                             }}
                             loading="lazy"
+                            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center">

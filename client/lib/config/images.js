@@ -59,6 +59,8 @@ export const ALLOWED_IMAGE_DOMAINS = [
   'res.cloudinary.com',
   'i.imgur.com',
   'picsum.photos',
+  'ik.imagekit.io', // ImageKit CDN for SpykeAI
+  'assets.promptbase.com', // PromptBase assets
   // Add your CDN domains here
   process.env.NEXT_PUBLIC_CDN_DOMAIN,
   process.env.NEXT_PUBLIC_IMAGE_DOMAIN
@@ -150,25 +152,31 @@ export const generateOptimizedImageUrl = (src, options = {}) => {
  */
 export const validateImageDomain = (src) => {
   if (!src || typeof src !== 'string') return false
-  
+
+  // Allow relative URLs and data URLs
+  if (src.startsWith('/') || src.startsWith('data:') || src.startsWith('blob:')) {
+    return true
+  }
+
   try {
     const url = new URL(src)
     const hostname = url.hostname.toLowerCase()
-    
+
     // Check if domain is explicitly blocked
     if (BLOCKED_IMAGE_DOMAINS.some(domain => hostname.includes(domain.toLowerCase()))) {
       return false
     }
-    
+
     // If allowed domains are specified, check against them
     if (ALLOWED_IMAGE_DOMAINS.length > 0) {
-      return ALLOWED_IMAGE_DOMAINS.some(domain => 
-        domain && hostname.includes(domain.toLowerCase())
+      return ALLOWED_IMAGE_DOMAINS.some(domain =>
+        domain && (hostname === domain.toLowerCase() || hostname.includes(domain.toLowerCase()))
       )
     }
-    
+
     return true
   } catch {
-    return false
+    // If URL parsing fails, allow it to pass through (might be relative)
+    return true
   }
 }

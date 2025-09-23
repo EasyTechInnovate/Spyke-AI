@@ -1,0 +1,267 @@
+### Stripe Payment Integration API Testing
+
+@baseUrl = http://localhost:5000/v1
+@authToken = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODZmYWI1ODgyN2U4ZjEyZDFkYzQyY2MiLCJlbWFpbEFkZHJlc3MiOiJ0ZXN0M0BnbWFpbC5jb20iLCJyb2xlcyI6WyJ1c2VyIiwic2VsbGVyIl0sImlhdCI6MTc1MzQ3MzUyNywiZXhwIjoxNzUzNDc3MTI3fQ.08vFp5PxcsQzBL2IAthFSi4baZsl9K8knqSdayeuWNk
+
+### --- STRIPE PAYMENT FLOW ---
+
+### 1. Add Products to Cart
+POST {{baseUrl}}/purchase/cart/add
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "productId": "REPLACE_WITH_PRODUCT_ID"
+}
+
+### 2. Add Another Product to Cart
+POST {{baseUrl}}/purchase/cart/add
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "productId": "REPLACE_WITH_ANOTHER_PRODUCT_ID"
+}
+
+### 3. Apply Promocode (Optional)
+POST {{baseUrl}}/purchase/cart/promocode
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "code": "DISCOUNT10"
+}
+
+### 4. Get Cart Summary
+GET {{baseUrl}}/purchase/cart
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 5. Create Payment Intent (Stripe) - Cart Already Has Promocode Applied
+POST {{baseUrl}}/purchase/payment-intent
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 6. Confirm Stripe Payment (Uses Existing createPurchase Flow)
+POST {{baseUrl}}/purchase/confirm-stripe-payment
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "paymentIntentId": "pi_STRIPE_PAYMENT_INTENT_ID_HERE"
+}
+
+### --- WEBHOOK TESTING ---
+
+### 7. Stripe Webhook - Payment Succeeded (Called by Stripe)
+POST {{baseUrl}}/purchase/stripe/webhook
+Content-Type: application/json
+Stripe-Signature: whsec_test_signature
+
+{
+  "id": "evt_test_webhook",
+  "object": "event",
+  "api_version": "2020-08-27",
+  "created": 1609459200,
+  "data": {
+    "object": {
+      "id": "pi_test_payment_intent",
+      "object": "payment_intent",
+      "amount": 2000,
+      "currency": "usd",
+      "status": "succeeded",
+      "metadata": {
+        "userId": "USER_ID_HERE",
+        "cartId": "CART_ID_HERE",
+        "userEmail": "user@example.com",
+        "itemCount": "2"
+      }
+    }
+  },
+  "livemode": false,
+  "pending_webhooks": 1,
+  "request": {
+    "id": "req_test",
+    "idempotency_key": null
+  },
+  "type": "payment_intent.succeeded"
+}
+
+### 7a. Stripe Webhook - Payment Failed (Called by Stripe)
+POST {{baseUrl}}/purchase/stripe/webhook
+Content-Type: application/json
+Stripe-Signature: whsec_test_signature
+
+{
+  "id": "evt_test_webhook_failed",
+  "object": "event",
+  "api_version": "2020-08-27",
+  "created": 1609459200,
+  "data": {
+    "object": {
+      "id": "pi_test_payment_intent_failed",
+      "object": "payment_intent",
+      "amount": 2000,
+      "currency": "usd",
+      "status": "requires_payment_method",
+      "metadata": {
+        "userId": "USER_ID_HERE",
+        "cartId": "CART_ID_HERE",
+        "userEmail": "user@example.com",
+        "itemCount": "2"
+      }
+    }
+  },
+  "livemode": false,
+  "pending_webhooks": 1,
+  "request": {
+    "id": "req_test",
+    "idempotency_key": null
+  },
+  "type": "payment_intent.payment_failed"
+}
+
+### 7b. Stripe Webhook - Charge Succeeded (Backup Event)
+POST {{baseUrl}}/purchase/stripe/webhook
+Content-Type: application/json
+Stripe-Signature: whsec_test_signature
+
+{
+  "id": "evt_test_charge_succeeded",
+  "object": "event",
+  "api_version": "2020-08-27",
+  "created": 1609459200,
+  "data": {
+    "object": {
+      "id": "ch_test_charge",
+      "object": "charge",
+      "amount": 2000,
+      "currency": "usd",
+      "status": "succeeded",
+      "payment_intent": "pi_test_payment_intent"
+    }
+  },
+  "livemode": false,
+  "pending_webhooks": 1,
+  "request": {
+    "id": "req_test",
+    "idempotency_key": null
+  },
+  "type": "charge.succeeded"
+}
+
+### --- ERROR TESTING ---
+
+### 8. Test Payment Intent with Empty Cart
+POST {{baseUrl}}/purchase/payment-intent
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 9. Test Confirm Payment with Invalid Payment Intent
+POST {{baseUrl}}/purchase/confirm-stripe-payment
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "paymentIntentId": "pi_invalid_payment_intent_id"
+}
+
+### 10. Test Confirm Payment without Payment Intent ID
+POST {{baseUrl}}/purchase/confirm-stripe-payment
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+}
+
+### --- PURCHASE HISTORY ---
+
+### 11. Get User Purchases
+GET {{baseUrl}}/purchase/my-purchases?page=1&limit=10
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 12. Get Purchases by Type
+GET {{baseUrl}}/purchase/my-purchases/by-type
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### 13. Get Product Access
+GET {{baseUrl}}/purchase/access/PURCHASE_ID_HERE
+Content-Type: application/json
+Authorization: {{authToken}}
+
+### --- COMPLETE WORKFLOW EXAMPLE ---
+
+### 14. Complete Stripe Payment Flow
+# Step 1: Add product to cart
+POST {{baseUrl}}/purchase/cart/add
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "productId": "68adfd2c8a75b5e275f1093d"
+}
+
+###
+# Step 2: Apply promocode (optional)
+POST {{baseUrl}}/purchase/cart/promocode
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "code": "DISCOUNT10"
+}
+
+###
+# Step 3: Create payment intent (uses cart with promocodes already applied)
+POST {{baseUrl}}/purchase/payment-intent
+Content-Type: application/json
+Authorization: {{authToken}}
+
+###
+# Step 4: Use the clientSecret from step 3 with Stripe.js on frontend
+# After successful payment, get paymentIntentId and confirm
+
+###
+# Step 5: Confirm payment (calls existing createPurchase method)
+POST {{baseUrl}}/purchase/confirm-stripe-payment
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "paymentIntentId": "pi_FROM_STRIPE_RESPONSE"
+}
+
+### TESTING NOTES:
+# 1. Replace authToken with valid user JWT
+# 2. Replace product IDs with actual product IDs from your database
+# 3. Test both successful and failed payment scenarios
+# 4. Ensure Stripe webhook endpoint is accessible from Stripe
+# 5. Test with different cart amounts and promocodes
+# 6. Verify payment statuses and purchase creation
+# 7. Check email notifications and seller notifications
+# 8. Test access control after successful purchase
+# 9. Promocodes are handled by existing backend cart system
+# 10. Payment confirmation uses existing createPurchase method
+
+### STRIPE INTEGRATION CHECKLIST:
+# ✅ Environment variables configured (STRIPE_PUBLISHABLE_KEY, STRIPE_SECRET_KEY)
+# ✅ Stripe service module created (/service/stripe.service.js)
+# ✅ Payment intent creation endpoint (/purchase/payment-intent)
+# ✅ Payment confirmation endpoint (/purchase/confirm-stripe-payment)
+# ✅ Webhook handler for payment events (/purchase/stripe/webhook)
+# ✅ Integration with existing createPurchase method
+# ✅ Integration with existing cart and promocode system
+# ✅ Error handling using responseMessage constants
+# ✅ Notifications using existing notification system
+# ✅ Cart clearing using existing purchase flow
+
+### FRONTEND INTEGRATION:
+# 1. Install @stripe/stripe-js on frontend
+# 2. Create payment intent using /payment-intent endpoint
+# 3. Use Stripe Elements to collect payment details
+# 4. Confirm payment with Stripe.js
+# 5. Call /confirm-stripe-payment with payment intent ID
+# 6. Handle success/error responses
+# 7. Redirect to success/failure pages
