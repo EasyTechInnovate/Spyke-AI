@@ -92,4 +92,23 @@ router.post(
   purchaseController.confirmPayment
 )
 
+router.post(
+  '/payment-intent',
+  authenticate,
+  rateLimiter,
+  purchaseController.createPaymentIntent
+)
+
+router.post(
+  '/confirm-stripe-payment',
+  authenticate,
+  rateLimiter,
+  purchaseController.confirmStripePayment
+)
+
+router.post(
+  '/stripe/webhook',
+  purchaseController.handleStripeWebhook
+)
+
 export default router
