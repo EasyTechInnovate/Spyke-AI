@@ -5,9 +5,18 @@ let stripePromise
 const getStripe = async () => {
     if (!stripePromise) {
         const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-        console.log('Stripe publishable key:', publishableKey)
+        
+        console.log('=== STRIPE ENVIRONMENT VARIABLES ===')
+        console.log('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:', publishableKey)
+        console.log('STRIPE_SECRET_KEY:', process.env.STRIPE_SECRET_KEY)
+        console.log('STRIPE_WEBHOOK_SECRET:', process.env.STRIPE_WEBHOOK_SECRET)
+        console.log('NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL)
+        console.log('NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL)
+        console.log('NODE_ENV:', process.env.NODE_ENV)
+        console.log('=====================================')
 
         if (!publishableKey) {
+            console.error('❌ STRIPE_PUBLISHABLE_KEY is missing!')
             return null
         }
 

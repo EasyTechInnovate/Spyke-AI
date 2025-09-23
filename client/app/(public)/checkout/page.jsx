@@ -76,6 +76,11 @@ export default function CheckoutPage() {
     }, [cartLoading])
 
     useEffect(() => {
+        if (hasCheckedCart && !cartLoading && !initialLoad && !isAuthenticated) {
+            router.push('/auth/signup?redirect=/checkout')
+            return
+        }
+
         // Add a small delay to ensure cart has fully loaded after auth changes
         const timer = setTimeout(() => {
             // If skipCartRedirect is set (we're navigating to success), avoid auto-redirect to /cart
@@ -85,7 +90,7 @@ export default function CheckoutPage() {
         }, 500) // 500ms delay to handle auth transitions
 
         return () => clearTimeout(timer)
-    }, [cartItems.length, cartLoading, hasCheckedCart, initialLoad, router, skipCartRedirect])
+    }, [cartItems.length, cartLoading, hasCheckedCart, initialLoad, router, skipCartRedirect, isAuthenticated])
 
     // Calculate totals
     const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)

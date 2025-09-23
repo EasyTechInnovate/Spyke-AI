@@ -17,6 +17,11 @@ export function useStripePayment() {
   const { addNotification } = useNotifications()
 
   const createPaymentIntent = useCallback(async (amount) => {
+    if (!user) {
+      setError('User not authenticated')
+      return null
+    }
+
     setIsLoading(true)
     setError(null)
 
