@@ -17,7 +17,7 @@ export function useStripePayment() {
   const { addNotification } = useNotifications()
 
   // Create payment intent
-  const createPaymentIntent = useCallback(async () => {
+  const createPaymentIntent = useCallback(async (amount) => {
     if (!user) {
       setError('User not authenticated')
       return null
@@ -31,7 +31,12 @@ export function useStripePayment() {
       
       if (response.success && response.data) {
         setPaymentIntent(response.data)
-        return response.data
+        return {
+          clientSecret: response.data.clientSecret,
+          paymentIntentId: response.data.paymentIntentId,
+          amount: response.data.amount,
+          cartSummary: response.data.cartSummary
+        }
       } else {
         throw new Error(response.message || 'Failed to create payment intent')
       }
