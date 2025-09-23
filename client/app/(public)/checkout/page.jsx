@@ -30,6 +30,8 @@ import { useAuth } from '@/hooks/useAuth'
 import Link from 'next/link'
 import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
+import StripePaymentForm from '@/components/features/payment/StripePaymentForm'
+import { useStripePayment } from '@/hooks/useStripePayment'
 
 export default function CheckoutPage() {
     // Inline notification state
@@ -48,6 +50,15 @@ export default function CheckoutPage() {
     const router = useRouter()
     const { isAuthenticated } = useAuth()
     const { cartItems, cartData, loading: cartLoading, clearCart, removeFromCart } = useCart()
+    
+    // Stripe payment hook
+    const { 
+        createPaymentIntent, 
+        paymentStatus, 
+        paymentError, 
+        isProcessing, 
+        resetPayment 
+    } = useStripePayment()
 
     const [loading, setLoading] = useState(false)
     const [initialLoad, setInitialLoad] = useState(true)
@@ -55,6 +66,7 @@ export default function CheckoutPage() {
     const [skipCartRedirect, setSkipCartRedirect] = useState(false)
     const [step, setStep] = useState(1) // 1: Review, 2: Payment
     const [paymentMethod, setPaymentMethod] = useState('manual')
+    const [clientSecret, setClientSecret] = useState(null)
 
     useEffect(() => {
         if (!cartLoading) {
@@ -102,9 +114,23 @@ export default function CheckoutPage() {
     }
 
     // Handle step navigation
-    const handleNextStep = () => {
+    const handleNextStep = async () => {
         if (step === 1) {
-            setStep(2)
+            // If Stripe is selected, create payment intent before moving to payment step
+            if (paymentMethod === 'stripe') {
+                try {
+                    setLoading(true)
+                    const { clientSecret: secret } = await createPaymentIntent(total)
+                    setClientSecret(secret)
+                    setStep(2)
+                } catch (error) {
+                    showMessage('Failed to initialize payment. Please try again.', 'error')
+                } finally {
+                    setLoading(false)
+                }
+            } else {
+                setStep(2)
+            }
         }
     }
 
@@ -117,7 +143,11 @@ export default function CheckoutPage() {
         setLoading(true)
 
         try {
-            // Create purchase with payment details
+            if (paymentMethod === 'stripe') {
+                showMessage('Processing Stripe payment...', 'info')
+                return
+            }
+
             const purchaseData = {
                 paymentMethod: paymentMethod,
                 paymentReference: `${paymentMethod.toUpperCase()}-${Date.now()}`
@@ -125,7 +155,6 @@ export default function CheckoutPage() {
 
             const result = await cartAPI.createPurchase(purchaseData)
 
-            // Enhanced purchase ID extraction with better error handling
             const purchaseId =
                 result?.purchaseId || result?._id || result?.data?.purchaseId || result?.completed?.data?.purchaseId || result?.completed?.purchaseId
 
@@ -133,50 +162,88 @@ export default function CheckoutPage() {
                 throw new Error('Failed to create purchase - no purchase ID returned')
             }
 
-            // Prepare success page data
-            const successData = {
-                orderId: purchaseId,
-                isManual: paymentMethod === 'manual',
-                orderDetails: {
-                    items: cartItems.map((item) => ({
-                        id: item._id || item.id,
-                        title: (item.productId || item).title,
-                        price: (item.productId || item).price,
-                        type: (item.productId || item).type,
-                        thumbnail: (item.productId || item).thumbnail
-                    })),
-                    subtotal: subtotal,
-                    discount: discount,
-                    total: total,
-                    paymentMethod: paymentMethod,
-                    appliedPromocode: cartData.appliedPromocode
-                }
-            }
+            // Complete the checkout process
+            await completeCheckout(purchaseId, paymentMethod)
 
-            // Prevent cart redirect during navigation
-            setSkipCartRedirect(true)
-
-            // Store order details in sessionStorage for success page
-            if (typeof window !== 'undefined') {
-                sessionStorage.setItem('lastOrderDetails', JSON.stringify(successData))
-            }
-
-            // Navigate to success page with enhanced data
-            const successUrl = `/checkout/success?orderId=${purchaseId}&manual=${paymentMethod === 'manual'}&total=${total}&items=${cartItems.length}`
-            router.push(successUrl)
-
-            // Clear cart after successful navigation
-            await clearCart()
-            setSkipCartRedirect(false)
-
-            // Show success message
-            showMessage('Order completed successfully!', 'success')
         } catch (error) {
             console.error('Checkout error:', error)
             showMessage(error.message || 'Checkout failed. Please try again.', 'error')
         } finally {
             setLoading(false)
         }
+    }
+
+    // Handle successful Stripe payment
+    const handleStripePaymentSuccess = async (paymentIntentId) => {
+        try {
+            setLoading(true)
+            
+            // Create purchase with Stripe payment details
+            const purchaseData = {
+                paymentMethod: 'stripe',
+                paymentReference: paymentIntentId
+            }
+
+            const result = await cartAPI.createPurchase(purchaseData)
+            
+            const purchaseId =
+                result?.purchaseId || result?._id || result?.data?.purchaseId || result?.completed?.data?.purchaseId || result?.completed?.purchaseId
+
+            if (!purchaseId) {
+                throw new Error('Failed to create purchase - no purchase ID returned')
+            }
+
+            // Complete the checkout process
+            await completeCheckout(purchaseId, 'stripe')
+            
+        } catch (error) {
+            console.error('Stripe checkout error:', error)
+            showMessage(error.message || 'Failed to complete order. Please contact support.', 'error')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    // Complete checkout process (shared logic)
+    const completeCheckout = async (purchaseId, method) => {
+        // Prepare success page data
+        const successData = {
+            orderId: purchaseId,
+            isManual: method === 'manual',
+            orderDetails: {
+                items: cartItems.map((item) => ({
+                    id: item._id || item.id,
+                    title: (item.productId || item).title,
+                    price: (item.productId || item).price,
+                    type: (item.productId || item).type,
+                    thumbnail: (item.productId || item).thumbnail
+                })),
+                subtotal: subtotal,
+                discount: discount,
+                total: total,
+                paymentMethod: method,
+                appliedPromocode: cartData.appliedPromocode
+            }
+        }
+
+        // Prevent cart redirect during navigation
+        setSkipCartRedirect(true)
+
+        // Store order details in sessionStorage for success page
+        if (typeof window !== 'undefined') {
+            sessionStorage.setItem('lastOrderDetails', JSON.stringify(successData))
+        }
+
+        // Navigate to success page with enhanced data
+        const successUrl = `/checkout/success?orderId=${purchaseId}&manual=${method === 'manual'}&total=${total}&items=${cartItems.length}`
+        router.push(successUrl)
+
+        // Clear cart after successful navigation
+        await clearCart()
+        setSkipCartRedirect(false)
+
+        // Show success message
+        showMessage('Order completed successfully!', 'success')
     }
 
     if (cartLoading || !hasCheckedCart) {
@@ -295,10 +362,24 @@ export default function CheckoutPage() {
                                 )}
 
                                 {step === 2 && (
-                                    <PaymentMethodStep
-                                        paymentMethod={paymentMethod}
-                                        setPaymentMethod={setPaymentMethod}
-                                    />
+                                    <>
+                                        <PaymentMethodStep
+                                            paymentMethod={paymentMethod}
+                                            setPaymentMethod={setPaymentMethod}
+                                        />
+                                        
+                                        {/* Stripe Payment Form */}
+                                        {paymentMethod === 'stripe' && clientSecret && (
+                                            <div className="mt-8">
+                                                <StripePaymentForm
+                                                    clientSecret={clientSecret}
+                                                    amount={total}
+                                                    onSuccess={handleStripePaymentSuccess}
+                                                    onError={(error) => showMessage(error, 'error')}
+                                                />
+                                            </div>
+                                        )}
+                                    </>
                                 )}
 
                                 {/* Navigation Buttons - Improved spacing and states */}
@@ -333,13 +414,18 @@ export default function CheckoutPage() {
                                     ) : (
                                         <button
                                             onClick={handleCheckout}
-                                            disabled={loading}
+                                            disabled={loading || (paymentMethod === 'stripe' && !clientSecret)}
                                             className="flex items-center justify-center gap-2 px-6 py-3 bg-brand-primary text-black font-semibold rounded-xl hover:bg-brand-primary/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/50 focus:ring-offset-2 focus:ring-offset-gray-900 order-1 sm:order-2"
                                             aria-label={loading ? 'Processing purchase' : 'Complete purchase'}>
                                             {loading ? (
                                                 <>
                                                     <Loader2 className="w-4 h-4 animate-spin" />
                                                     Processing...
+                                                </>
+                                            ) : paymentMethod === 'stripe' ? (
+                                                <>
+                                                    <CreditCard className="w-4 h-4" />
+                                                    Pay with Stripe
                                                 </>
                                             ) : (
                                                 <>
@@ -574,7 +660,7 @@ function PaymentMethodStep({ paymentMethod, setPaymentMethod }) {
             name: 'Credit/Debit Card',
             description: 'Pay securely with Stripe',
             icon: CreditCard,
-            comingSoon: true
+            recommended: false
         },
         {
             id: 'paypal',

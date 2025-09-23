@@ -43,6 +43,11 @@ const config = {
         GMAIL_CLIENT_SECRET: process.env.GMAIL_CLIENT_SECRET,
         GMAIL_CALLBACK_URL: process.env.GMAIL_CALLBACK_URL || "http://localhost:4000/v1/auth/google/callback",
     },
+    stripe: {
+        publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+        secretKey: process.env.STRIPE_SECRET_KEY,
+        webhookSecret: process.env.STRIPE_WEBHOOK_SECRET
+    }
 }
 
 export default config
