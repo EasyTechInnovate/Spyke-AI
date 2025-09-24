@@ -226,12 +226,12 @@ export const getProductsSchema = z.object({
   type: z.enum([...Object.values(EProductType), 'all']).optional(),
   
   category: z.string()
-    .regex(/^[0-9a-fA-F]{24}$/, 'Category must be a valid ObjectId')
+    // .regex(/^[0-9a-fA-F]{24}$/, 'Category must be a valid ObjectId')
     .or(z.enum(['all']))
     .optional(),
   
   industry: z.string()
-    .regex(/^[0-9a-fA-F]{24}$/, 'Industry must be a valid ObjectId')
+    // .regex(/^[0-9a-fA-F]{24}$/, 'Industry must be a valid ObjectId')
     .or(z.enum(['all']))
     .optional(),
   
