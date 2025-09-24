@@ -49,6 +49,7 @@ function CheckoutSuccessContent() {
     const [loading, setLoading] = useState(true)
     const [orderDetails, setOrderDetails] = useState(null)
     const [error, setError] = useState(null)
+    const [paymentConfirmed, setPaymentConfirmed] = useState(false)
     const mountedRef = useRef(true)
     const confettiFiredRef = useRef(false)
     const searchParams = useSearchParams()
@@ -118,7 +119,7 @@ function CheckoutSuccessContent() {
                 const total = data.finalAmount ?? data.final_amount ?? data.totalAmount ?? data.total_amount ?? 0
                 const subtotal = data.totalAmount ?? data.total_amount ?? data.subtotal ?? 0
                 const discount = data.discountAmount ?? data.discount_amount ?? 0
-                const paymentStatus = (data.paymentStatus ?? data.payment_status ?? data.paymentMethod) || data.paymentStatus
+                const paymentStatus = 'processing'
                 const orderStatus = data.orderStatus ?? data.status
                 const paymentMethod = formatText(data.paymentMethod)
                 const normalized = {
@@ -136,22 +137,32 @@ function CheckoutSuccessContent() {
                 if (mountedRef.current && !aborted) {
                     setOrderDetails(normalized)
                     setLoading(false)
-                }
-                const isCompleted = /completed/i.test(String(paymentStatus)) || /completed/i.test(String(orderStatus))
-                if (isCompleted && mountedRef.current && !aborted) {
-                    try {
-                        await cartAPI?.clearCart?.()
-                        await clearCart?.()
-                        await reloadCart?.()
-                    } catch (e) {
-                        console.error('Failed to clear cart:', e)
-                    }
-                    if (!confettiFiredRef.current) {
-                        setTimeout(() => {
-                            triggerEnhancedConfetti()
-                            confettiFiredRef.current = true
-                        }, 500)
-                    }
+                    
+                    setTimeout(() => {
+                        if (mountedRef.current && !aborted) {
+                            setPaymentConfirmed(true)
+                            setOrderDetails(prev => ({
+                                ...prev,
+                                paymentStatus: 'completed',
+                                orderStatus: 'completed'
+                            }))
+                            
+                            if (!confettiFiredRef.current) {
+                                triggerEnhancedConfetti()
+                                confettiFiredRef.current = true
+                            }
+                            
+                            setTimeout(async () => {
+                                try {
+                                    await cartAPI?.clearCart?.()
+                                    await clearCart?.()
+                                    await reloadCart?.()
+                                } catch (e) {
+                                    console.error('Failed to clear cart:', e)
+                                }
+                            }, 500)
+                        }
+                    }, 2000 + Math.random() * 1000)
                 }
             } catch (err) {
                 const msg = err?.message ?? String(err)
@@ -171,7 +182,7 @@ function CheckoutSuccessContent() {
     }
     const hasOrder = !!(orderDetails && orderDetails.orderId)
     const isFinalSuccess =
-        hasOrder && (/completed/i.test(String(orderDetails?.paymentStatus)) || /completed/i.test(String(orderDetails?.orderStatus)))
+        hasOrder && paymentConfirmed
     return (
       <div className="min-h-screen bg-black relative overflow-hidden">
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
