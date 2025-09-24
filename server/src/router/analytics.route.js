@@ -41,6 +41,9 @@ router.route('/seller/revenue')
 router.route('/seller/customers')
     .get(authentication, authorization([EUserRole.SELLER]), sellerAnalyticsController.getCustomerAnalytics)
 
+router.route('/seller/tools')
+    .get(authentication, authorization([EUserRole.SELLER]), sellerAnalyticsController.getToolsAnalytics)
+
 router.route('/admin/platform')
     .get(authentication, authorization([EUserRole.ADMIN]), adminAnalyticsController.getPlatformAnalytics)
 

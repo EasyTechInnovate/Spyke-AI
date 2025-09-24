@@ -1,17 +1,19 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Search, Edit, Trash2, Grid3X3, Target, X, Loader2, ToggleLeft, ToggleRight, Package, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, Grid3X3, Target, X, Loader2, ToggleLeft, ToggleRight, Package, Calendar, ChevronLeft, ChevronRight, Wrench } from 'lucide-react'
 import { Button } from '@/components/shared/ui/button'
 import Input from '@/components/shared/ui/input'
 import Card from '@/components/shared/ui/card'
 import Badge from '@/components/shared/ui/badge'
 import Notification from '@/components/shared/Notification'
-import { categoryAPI, industryAPI } from '@/lib/api/toolsNiche'
+import { categoryAPI, industryAPI, toolAPI } from '@/lib/api/toolsNiche'
+
 export default function ToolsNichePage() {
     const [activeTab, setActiveTab] = useState('category')
     const [categories, setCategories] = useState([])
     const [industries, setIndustries] = useState([])
+    const [tools, setTools] = useState([])
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
     const [showCreateModal, setShowCreateModal] = useState(false)
@@ -24,23 +26,34 @@ export default function ToolsNichePage() {
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(12)
     const [notifications, setNotifications] = useState([])
+
     const addNotification = useCallback((message, type = 'info') => {
         const id = Date.now() + Math.random()
         const newNotification = { id, message, type }
         setNotifications((prev) => [...prev, newNotification])
     }, [])
+
     const removeNotification = useCallback((id) => {
         setNotifications((prev) => prev.filter((notification) => notification.id !== id))
     }, [])
+
     const fetchData = useCallback(
         async (showLoader = true) => {
             try {
                 if (showLoader) setLoading(true)
-                const [categoriesRes, industriesRes] = await Promise.all([categoryAPI.getCategories(), industryAPI.getIndustries()])
+                const [categoriesRes, industriesRes, toolsRes] = await Promise.all([
+                    categoryAPI.getCategories(), 
+                    industryAPI.getIndustries(),
+                    toolAPI.getTools()
+                ])
+                
                 const categoriesData = categoriesRes?.data?.categories || categoriesRes?.categories || categoriesRes?.data || []
                 const industriesData = industriesRes?.data?.industries || industriesRes?.industries || industriesRes?.data || []
+                const toolsData = toolsRes?.data?.tools || toolsRes?.tools || toolsRes?.data || []
+                
                 setCategories(Array.isArray(categoriesData) ? categoriesData : [])
                 setIndustries(Array.isArray(industriesData) ? industriesData : [])
+                setTools(Array.isArray(toolsData) ? toolsData : [])
             } catch (error) {
                 console.error('Fetch Data Error:', error)
                 addNotification(`Failed to load data: ${error?.response?.data?.message || error?.message || 'Unknown error'}`, 'error')
@@ -50,20 +63,26 @@ export default function ToolsNichePage() {
         },
         [addNotification]
     )
+
     useEffect(() => {
         fetchData()
     }, [fetchData])
-    const currentData = activeTab === 'category' ? categories : industries
+
+    const currentData = activeTab === 'category' ? categories : activeTab === 'industry' ? industries : tools
+
     const filteredData = currentData.filter(
         (item) => item.name?.toLowerCase().includes(searchTerm.toLowerCase()) || item.description?.toLowerCase().includes(searchTerm.toLowerCase())
     )
+
     const totalPages = Math.ceil(filteredData.length / itemsPerPage)
     const startIndex = (currentPage - 1) * itemsPerPage
     const endIndex = startIndex + itemsPerPage
     const paginatedData = filteredData.slice(startIndex, endIndex)
+
     useEffect(() => {
         setCurrentPage(1)
     }, [searchTerm, activeTab])
+
     const handlePageChange = (page) => {
         if (page >= 1 && page <= totalPages) {
             setCurrentPage(page)
@@ -73,10 +92,12 @@ export default function ToolsNichePage() {
             })
         }
     }
+
     const handleItemsPerPageChange = (newItemsPerPage) => {
         setItemsPerPage(newItemsPerPage)
         setCurrentPage(1) 
     }
+
     const getPageNumbers = () => {
         const pages = []
         const maxVisiblePages = 5
@@ -97,11 +118,13 @@ export default function ToolsNichePage() {
         }
         return pages
     }
+
     const handleCreate = () => {
         setEditingItem(null)
         setFormData({ name: '', description: '' })
         setShowCreateModal(true)
     }
+
     const handleEdit = (item) => {
         setEditingItem(item)
         setFormData({
@@ -110,6 +133,7 @@ export default function ToolsNichePage() {
         })
         setShowCreateModal(true)
     }
+
     const handleSubmit = async (e) => {
         e.preventDefault()
         if (!formData.name.trim()) {
@@ -126,14 +150,18 @@ export default function ToolsNichePage() {
             if (editingItem) {
                 if (activeTab === 'category') {
                     response = await categoryAPI.updateCategory(editingItem._id, data)
-                } else {
+                } else if (activeTab === 'industry') {
                     response = await industryAPI.updateIndustry(editingItem._id, data)
+                } else {
+                    response = await toolAPI.updateTool(editingItem._id, data)
                 }
             } else {
                 if (activeTab === 'category') {
                     response = await categoryAPI.createCategory(data)
-                } else {
+                } else if (activeTab === 'industry') {
                     response = await industryAPI.createIndustry(data)
+                } else {
+                    response = await toolAPI.createTool(data)
                 }
             }
             const isSuccess = response?.success !== false && response?.statusCode !== 409 && response?.statusCode !== 400
@@ -164,6 +192,7 @@ export default function ToolsNichePage() {
             setSubmitting(false)
         }
     }
+
     const handleToggleStatus = async (item) => {
         const newStatus = item.isActive ? false : true
         const operationKey = `toggle-${item._id}`
@@ -172,8 +201,10 @@ export default function ToolsNichePage() {
             let response
             if (activeTab === 'category') {
                 response = await categoryAPI.updateCategory(item._id, { isActive: newStatus })
-            } else {
+            } else if (activeTab === 'industry') {
                 response = await industryAPI.updateIndustry(item._id, { isActive: newStatus })
+            } else {
+                response = await toolAPI.updateTool(item._id, { isActive: newStatus })
             }
             const isSuccess = response?.success === true && response?.statusCode === 200
             if (isSuccess) {
@@ -181,8 +212,10 @@ export default function ToolsNichePage() {
                 addNotification(`${capitalizedTab} ${newStatus ? 'activated' : 'deactivated'} successfully`, 'success')
                 if (activeTab === 'category') {
                     setCategories((prev) => prev.map((cat) => (cat._id === item._id ? { ...cat, isActive: newStatus } : cat)))
-                } else {
+                } else if (activeTab === 'industry') {
                     setIndustries((prev) => prev.map((industry) => (industry._id === item._id ? { ...industry, isActive: newStatus } : industry)))
+                } else {
+                    setTools((prev) => prev.map((tool) => (tool._id === item._id ? { ...tool, isActive: newStatus } : tool)))
                 }
             } else {
                 const errorMessage = response?.message || `Failed to update ${activeTab} status`
@@ -207,10 +240,12 @@ export default function ToolsNichePage() {
             })
         }
     }
+
     const handleDelete = (item) => {
         setItemToDelete(item)
         setShowDeleteModal(true)
     }
+
     const confirmDelete = async () => {
         if (!itemToDelete) return
         const operationKey = `delete-${itemToDelete._id}`
@@ -219,8 +254,10 @@ export default function ToolsNichePage() {
             let response
             if (activeTab === 'category') {
                 response = await categoryAPI.deleteCategory(itemToDelete._id)
-            } else {
+            } else if (activeTab === 'industry') {
                 response = await industryAPI.deleteIndustry(itemToDelete._id)
+            } else {
+                response = await toolAPI.deleteTool(itemToDelete._id)
             }
             const isSuccess = response?.success !== false && response?.statusCode !== 404
             if (isSuccess) {
@@ -228,8 +265,10 @@ export default function ToolsNichePage() {
                 addNotification(`${capitalizedTab} deleted successfully`, 'success')
                 if (activeTab === 'category') {
                     setCategories((prev) => prev.filter((cat) => cat._id !== itemToDelete._id))
-                } else {
+                } else if (activeTab === 'industry') {
                     setIndustries((prev) => prev.filter((industry) => industry._id !== itemToDelete._id))
+                } else {
+                    setTools((prev) => prev.filter((tool) => tool._id !== itemToDelete._id))
                 }
             } else {
                 const errorMessage = response?.message || `Failed to delete ${activeTab}`
@@ -256,13 +295,17 @@ export default function ToolsNichePage() {
             setItemToDelete(null)
         }
     }
+
     const handleView = (item) => {
         addNotification(`Viewing ${item.name} details`, 'info')
     }
+
     const tabs = [
         { id: 'category', label: 'Category', icon: Grid3X3 },
-        { id: 'industry', label: 'Industry', icon: Target }
+        { id: 'industry', label: 'Industry', icon: Target },
+        { id: 'tools', label: 'Tools', icon: Wrench }
     ]
+
     if (loading) {
         return (
             <div className="flex items-center justify-center py-16">
@@ -273,6 +316,7 @@ export default function ToolsNichePage() {
             </div>
         )
     }
+
     return (
         <div className="space-y-6">
             <div className="fixed top-4 right-4 z-50 space-y-2">
@@ -286,18 +330,20 @@ export default function ToolsNichePage() {
                     ))}
                 </AnimatePresence>
             </div>
+
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-white">Tools & Industry Management</h1>
-                    <p className="text-gray-400">Manage categories and industries for your platform</p>
+                    <p className="text-gray-400">Manage categories, industries and tools for your platform</p>
                 </div>
                 <Button
                     onClick={handleCreate}
                     className="bg-[#00FF89] text-black hover:bg-[#00DD78] font-medium px-4 py-2 rounded-lg flex items-center gap-2">
                     <Plus className="w-4 h-4" />
-                    Create {activeTab === 'category' ? 'Category' : 'Industry'}
+                    Create {activeTab === 'category' ? 'Category' : activeTab === 'industry' ? 'Industry' : 'Tool'}
                 </Button>
             </div>
+
             <div className="border-b border-gray-700">
                 <nav className="flex space-x-8">
                     {tabs.map((tab) => {
@@ -317,51 +363,54 @@ export default function ToolsNichePage() {
                     })}
                 </nav>
             </div>
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-1">
-                        <div className="relative flex-1 max-w-md">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                            <input
-                                type="text"
-                                placeholder={`Search ${activeTab === 'category' ? 'categories' : 'industries'}...`}
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00FF89] focus:border-transparent"
-                            />
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-400">
-                            <span>Show:</span>
-                            <select
-                                value={itemsPerPage}
-                                onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-                                className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]"
-                            >
-                                <option value={6}>6</option>
-                                <option value={12}>12</option>
-                                <option value={24}>24</option>
-                                <option value={48}>48</option>
-                            </select>
-                            <span>per page</span>
-                        </div>
+
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-1">
+                    <div className="relative flex-1 max-w-md">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                        <input
+                            type="text"
+                            placeholder={`Search ${activeTab === 'category' ? 'categories' : activeTab === 'industry' ? 'industries' : 'tools'}...`}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00FF89] focus:border-transparent"
+                        />
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-400">
+                        <span>Show:</span>
+                        <select
+                            value={itemsPerPage}
+                            onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                            className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]"
+                        >
+                            <option value={6}>6</option>
+                            <option value={12}>12</option>
+                            <option value={24}>24</option>
+                            <option value={48}>48</option>
+                        </select>
+                        <span>per page</span>
                     </div>
                 </div>
-                <div className="mb-6" data-pagination-content>
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-sm text-gray-400">
-                        <div>
-                            Showing {startIndex + 1}-{Math.min(endIndex, filteredData.length)} of {filteredData.length} {activeTab === 'category' ? 'categories' : 'industries'}
-                            {searchTerm && (
-                                <span className="ml-1">
-                                    matching "{searchTerm}"
-                                </span>
-                            )}
-                        </div>
-                        {totalPages > 1 && (
-                            <div className="text-gray-500">
-                                Page {currentPage} of {totalPages}
-                            </div>
+            </div>
+
+            <div className="mb-6" data-pagination-content>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-sm text-gray-400">
+                    <div>
+                        Showing {startIndex + 1}-{Math.min(endIndex, filteredData.length)} of {filteredData.length} {activeTab === 'category' ? 'categories' : activeTab === 'industry' ? 'industries' : 'tools'}
+                        {searchTerm && (
+                            <span className="ml-1">
+                                matching "{searchTerm}"
+                            </span>
                         )}
                     </div>
+                    {totalPages > 1 && (
+                        <div className="text-gray-500">
+                            Page {currentPage} of {totalPages}
+                        </div>
+                    )}
                 </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Card className="p-4">
                     <div className="flex items-center justify-between">
@@ -369,7 +418,9 @@ export default function ToolsNichePage() {
                             <p className="text-2xl font-bold text-white">{currentData.length}</p>
                             <p className="text-sm text-gray-400">Total</p>
                         </div>
-                        <Grid3X3 className="w-8 h-8 text-gray-400" />
+                        {activeTab === 'category' ? <Grid3X3 className="w-8 h-8 text-gray-400" /> : 
+                         activeTab === 'industry' ? <Target className="w-8 h-8 text-gray-400" /> :
+                         <Wrench className="w-8 h-8 text-gray-400" />}
                     </div>
                 </Card>
                 <Card className="p-4">
@@ -391,15 +442,18 @@ export default function ToolsNichePage() {
                     </div>
                 </Card>
             </div>
+
             <Card className="p-6">
                 {filteredData.length === 0 ? (
                     <div className="text-center py-12">
                         <div className="w-16 h-16 bg-gray-800 rounded-lg flex items-center justify-center mx-auto mb-4">
-                            {activeTab === 'category' ? <Grid3X3 className="w-8 h-8 text-gray-500" /> : <Target className="w-8 h-8 text-gray-500" />}
+                            {activeTab === 'category' ? <Grid3X3 className="w-8 h-8 text-gray-500" /> : 
+                             activeTab === 'industry' ? <Target className="w-8 h-8 text-gray-500" /> :
+                             <Wrench className="w-8 h-8 text-gray-500" />}
                         </div>
-                        <h4 className="text-lg font-medium text-white mb-2">No {activeTab === 'category' ? 'categories' : 'industries'} found</h4>
+                        <h4 className="text-lg font-medium text-white mb-2">No {activeTab === 'category' ? 'categories' : activeTab === 'industry' ? 'industries' : 'tools'} found</h4>
                         <p className="text-gray-400 mb-4">
-                            {searchTerm ? `No ${activeTab === 'category' ? 'categories' : 'industries'} match your search.` : `Create your first ${activeTab} to get started.`}
+                            {searchTerm ? `No ${activeTab === 'category' ? 'categories' : activeTab === 'industry' ? 'industries' : 'tools'} match your search.` : `Create your first ${activeTab} to get started.`}
                         </p>
                     </div>
                 ) : (
@@ -413,8 +467,10 @@ export default function ToolsNichePage() {
                                         <div className="w-8 h-8 bg-gray-800 rounded-lg flex items-center justify-center">
                                             {activeTab === 'category' ? (
                                                 <Grid3X3 className="w-4 h-4 text-gray-400" />
-                                            ) : (
+                                            ) : activeTab === 'industry' ? (
                                                 <Target className="w-4 h-4 text-gray-400" />
+                                            ) : (
+                                                <Wrench className="w-4 h-4 text-gray-400" />
                                             )}
                                         </div>
                                         <div>
@@ -476,6 +532,7 @@ export default function ToolsNichePage() {
                     </div>
                 )}
             </Card>
+
             {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center gap-2">
@@ -518,6 +575,7 @@ export default function ToolsNichePage() {
                     </div>
                 </div>
             )}
+
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex items-center justify-center p-4">
                     <motion.div
@@ -526,7 +584,7 @@ export default function ToolsNichePage() {
                         className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6 w-full max-w-md">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-medium text-white">
-                                {editingItem ? 'Edit' : 'Create'} {activeTab === 'category' ? 'Category' : 'Industry'}
+                                {editingItem ? 'Edit' : 'Create'} {activeTab === 'category' ? 'Category' : activeTab === 'industry' ? 'Industry' : 'Tool'}
                             </h3>
                             <Button
                                 variant="ghost"
@@ -577,6 +635,7 @@ export default function ToolsNichePage() {
                     </motion.div>
                 </div>
             )}
+
             {showDeleteModal && itemToDelete && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex items-center justify-center p-4">
                     <motion.div
@@ -603,7 +662,7 @@ export default function ToolsNichePage() {
                                 </div>
                                 <div>
                                     <p className="text-white font-medium">Delete "{itemToDelete.name}"?</p>
-                                    <p className="text-gray-400 text-sm">{activeTab === 'category' ? 'Category' : 'Industry'}</p>
+                                    <p className="text-gray-400 text-sm">{activeTab === 'category' ? 'Category' : activeTab === 'industry' ? 'Industry' : 'Tool'}</p>
                                 </div>
                             </div>
                             <p className="text-gray-300 text-sm">Are you sure you want to delete this {activeTab}? This action cannot be undone.</p>

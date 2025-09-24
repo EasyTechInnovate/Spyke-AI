@@ -10,6 +10,7 @@ import analyticsRoutes from './analytics.route.js'
 import adminRoutes from './admin.route.js'
 import categoryRoutes from '../routes/category.routes.js'
 import industryRoutes from '../routes/industry.routes.js'
+import toolRoutes from '../routes/tool.routes.js'
 
 const router = Router()
 
@@ -24,5 +25,6 @@ router.use('/analytics', analyticsRoutes)
 router.use('/admin', adminRoutes)
 router.use('/categories', categoryRoutes)
 router.use('/industries', industryRoutes)
+router.use('/tools', toolRoutes)
 
 export default router

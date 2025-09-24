@@ -10,7 +10,6 @@ export const NAVIGATION = [
 
 export const USER_MENU_ITEMS = [
     { name: 'My Purchases', href: '/purchases', icon: Package, prefetch: false },
-    { name: 'Messages', href: '/account/messages', icon: MessageSquare, prefetch: false },
     { name: 'Profile', href: '/account/profile', icon: User, prefetch: false },
     { name: 'Settings', href: '/settings', icon: Settings, prefetch: false }
 ]
@@ -20,7 +19,6 @@ export const SELLER_MENU_ITEMS = [
     { name: 'My Products', href: '/seller/products', icon: Package, prefetch: false },
     { name: 'Analytics', href: '/seller/analytics', icon: BarChart3, prefetch: false },
     { name: 'Earnings', href: '/seller/earnings', icon: DollarSign, prefetch: false },
-    { name: 'Messages', href: '/seller/messages', icon: MessageSquare, prefetch: false },
     { name: 'Profile', href: '/seller/profile', icon: User, prefetch: false },
     { name: 'Settings', href: '/seller/settings', icon: Settings, prefetch: false }
 ]

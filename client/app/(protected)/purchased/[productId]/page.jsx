@@ -4,15 +4,11 @@ import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     ArrowLeft,
-    Heart,
-    Share2,
-    Download,
     FileText,
     CheckCircle,
     User,
     Clock,
     Package,
-    ExternalLink,
     Settings,
     Wrench,
     Shield,
@@ -25,82 +21,12 @@ import {
     MessageSquare,
     ChevronRight,
     ChevronDown,
-    Copy,
     ExternalLinkIcon
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { productsAPI, purchaseAPI } from '@/lib/api'
-function ShareButton({ product, onNotification }) {
-    const [isOpen, setIsOpen] = useState(false)
-    const [copied, setCopied] = useState(false)
-    const shareUrl = typeof window !== 'undefined' ? window.location.href.replace('/purchased/', '/products/') : ''
-    const handleCopyLink = async () => {
-        try {
-            await navigator.clipboard.writeText(shareUrl)
-            setCopied(true)
-            onNotification('Link copied to clipboard!', 'success')
-            setTimeout(() => {
-                setCopied(false)
-                setIsOpen(false)
-            }, 2000)
-        } catch (err) {
-            onNotification('Failed to copy link', 'error')
-        }
-    }
-    const shareOptions = [
-        {
-            name: 'Copy Link',
-            icon: Copy,
-            action: handleCopyLink,
-            color: 'text-white'
-        }
-    ]
-    return (
-        <div className="relative">
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="px-4 py-3 bg-slate-700/50 hover:bg-slate-700 text-white rounded-xl transition-colors flex items-center justify-center gap-2 border border-slate-600/30 w-full">
-                <Share2 className="w-4 h-4" />
-                <span className="text-sm">Share</span>
-            </button>
-            <AnimatePresence>
-                {isOpen && (
-                    <>
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-40"
-                            onClick={() => setIsOpen(false)}
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                            className="absolute bottom-full right-0 mb-2 w-48 bg-slate-800/90 backdrop-blur-md border border-slate-700/50 rounded-2xl p-2 shadow-2xl z-50">
-                            <div className="space-y-1">
-                                {shareOptions.map((option, index) => {
-                                    const IconComponent = option.icon
-                                    return (
-                                        <button
-                                            key={option.name}
-                                            onClick={option.action}
-                                            className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-slate-700/50 rounded-xl transition-colors group">
-                                            <IconComponent className={`w-4 h-4 ${option.color} group-hover:scale-110 transition-transform`} />
-                                            <span className="text-white text-sm font-medium">
-                                                {option.name === 'Copy Link' && copied ? 'Copied!' : option.name}
-                                            </span>
-                                        </button>
-                                    )
-                                })}
-                            </div>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
-        </div>
-    )
-}
+import Notification from '@/components/shared/Notification'
+
 export default function PurchasedProductPage() {
     const [notifications, setNotifications] = useState([])
     const [product, setProduct] = useState(null)
@@ -109,20 +35,21 @@ export default function PurchasedProductPage() {
     const [error, setError] = useState(null)
     const [expandedSection, setExpandedSection] = useState('overview')
     const [selectedImage, setSelectedImage] = useState(0)
-    const [liked, setLiked] = useState(false)
-    const [showCopied, setShowCopied] = useState(false)
     const params = useParams()
     const router = useRouter()
     const productSlug = params.productId
-    const { user, isAuthenticated, loading: authLoading } = useAuth()
+    const { isAuthenticated, loading: authLoading } = useAuth()
+
     const addNotification = useCallback((message, type = 'info') => {
         const id = Date.now() + Math.random()
         const newNotification = { id, message, type }
         setNotifications((prev) => [...prev, newNotification])
     }, [])
+
     const removeNotification = useCallback((id) => {
         setNotifications((prev) => prev.filter((notification) => notification.id !== id))
     }, [])
+
     useEffect(() => {
         const fetchData = async () => {
             if (authLoading) {
@@ -176,62 +103,9 @@ export default function PurchasedProductPage() {
         }
         fetchData()
     }, [productSlug, isAuthenticated, router, addNotification, authLoading])
-    const handleBack = useCallback(() => {
-        router.push('/purchases')
-    }, [router])
-    const handleDownload = useCallback(async () => {
-        try {
-            if (product.files && product.files.length > 0) {
-                addNotification('Downloading product files...', 'success')
-                setExpandedSection('implementation')
-                document.querySelector('#product-tabs')?.scrollIntoView({ behavior: 'smooth' })
-            } else if (product.accessUrl) {
-                window.open(product.accessUrl, '_blank')
-                addNotification('Opening product access link...', 'info')
-            } else {
-                setExpandedSection('implementation')
-                document.querySelector('#product-tabs')?.scrollIntoView({ behavior: 'smooth' })
-                addNotification('View the implementation guide below to get started', 'info')
-            }
-        } catch (error) {
-            addNotification('Failed to access product resources', 'error')
-        }
-    }, [product, addNotification])
-    const handleShare = useCallback(async () => {
-        const url = typeof window !== 'undefined' ? window.location.href.replace('/purchased/', '/products/') : ''
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: product?.title,
-                    text: product?.shortDescription,
-                    url
-                })
-            } catch (err) {
-            }
-        } else if (navigator.clipboard) {
-            try {
-                await navigator.clipboard.writeText(url)
-                setShowCopied(true)
-                setTimeout(() => setShowCopied(false), 2000)
-                addNotification('Link copied to clipboard!', 'success')
-            } catch (err) {
-                addNotification('Unable to copy link', 'error')
-            }
-        }
-    }, [product, addNotification])
-    const handleLike = useCallback(async () => {
-        try {
-            setLiked(!liked)
-            await productsAPI.toggleFavorite(product._id, !liked)
-            addNotification(liked ? 'Removed from favorites' : 'Added to favorites', 'success')
-        } catch (error) {
-            setLiked(liked)
-            addNotification('Failed to update favorite', 'error')
-        }
-    }, [liked, product, addNotification])
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+            <div className="min-h-screen bg-black">
                 <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-black via-slate-950 to-slate-950"></div>
                 <div className="relative z-10">
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
@@ -257,7 +131,7 @@ export default function PurchasedProductPage() {
     }
     if (error || !product) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+            <div className="min-h-screen bg-black flex items-center justify-center">
                 <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-black via-slate-950 to-slate-950"></div>
                 <div className="relative z-10 text-center max-w-md mx-auto px-4">
                     <div className="w-20 h-20 bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm border border-slate-700/50">
@@ -278,28 +152,25 @@ export default function PurchasedProductPage() {
         )
     }
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <div className="min-h-screen bg-black">
             <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-black via-slate-950 to-slate-950"></div>
             <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-[#00FF89]/10 via-transparent to-transparent"></div>
-            <AnimatePresence>
-                {notifications.map((notification) => (
-                    <motion.div
-                        key={notification.id}
-                        initial={{ opacity: 0, y: -100, scale: 0.9 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -100, scale: 0.9 }}
-                        className="fixed top-6 right-6 z-50 bg-slate-800/90 backdrop-blur-md border border-slate-700/50 rounded-2xl p-4 shadow-2xl max-w-sm">
-                        <div className="flex items-center gap-3">
-                            <div
-                                className={`w-3 h-3 rounded-full ${
-                                    notification.type === 'success' ? 'bg-emerald-500' : notification.type === 'error' ? 'bg-red-500' : 'bg-black'
-                                }`}
-                            />
-                            <p className="text-white text-sm font-medium">{notification.message}</p>
-                        </div>
-                    </motion.div>
-                ))}
-            </AnimatePresence>
+
+            <div className="fixed top-25 right-6 z-[70] space-y-3">
+                <AnimatePresence>
+                    {notifications.map((notification) => (
+                        <Notification
+                            key={notification.id}
+                            id={notification.id}
+                            type={notification.type}
+                            message={notification.message}
+                            duration={4000}
+                            onClose={removeNotification}
+                        />
+                    ))}
+                </AnimatePresence>
+            </div>
+
             <div className="relative z-10">
                 <div className="fixed top-0 left-0 right-0 z-[60] bg-slate-950/95 backdrop-blur-md border-b border-slate-800/50">
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
@@ -563,7 +434,7 @@ export default function PurchasedProductPage() {
                                                                         e.target.nextSibling.style.display = 'flex'
                                                                     }}
                                                                 />
-                                                                <div className="w-8 h-8 bg-slate-600 rounded flex items-center justify-center hidden">
+                                                                <div className="w-8 h-8 bg-slate-600 rounded hidden">
                                                                     <Settings className="w-4 h-4 text-slate-400" />
                                                                 </div>
                                                                 <div>
@@ -610,7 +481,7 @@ export default function PurchasedProductPage() {
                                         className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 backdrop-blur-sm border border-emerald-500/20 rounded-2xl lg:rounded-3xl p-4 lg:p-6">
                                         <div className="text-center mb-4 lg:mb-6">
                                             <div className="w-12 h-12 lg:w-16 lg:h-16 bg-emerald-500/20 rounded-xl lg:rounded-2xl flex items-center justify-center mx-auto mb-3 lg:mb-4">
-                                                <Download className="w-6 h-6 lg:w-8 lg:h-8 text-emerald-400" />
+                                                <CheckCircle className="w-6 h-6 lg:w-8 lg:h-8 text-emerald-400" />
                                             </div>
                                             <h3 className="text-xl lg:text-2xl font-bold text-white mb-2">Ready to Use</h3>
                                             <p className="text-slate-400 text-sm lg:text-base">Access your purchased product instantly</p>
@@ -641,20 +512,6 @@ export default function PurchasedProductPage() {
                                                 </div>
                                             </div>
                                         )}
-                                        <div className="space-y-3">
-                                            <div className="grid grid-cols-2 gap-2 lg:gap-3">
-                                                <button
-                                                    onClick={handleLike}
-                                                    className="px-3 py-2 lg:px-4 lg:py-3 bg-slate-700/50 hover:bg-slate-700 text-white rounded-lg lg:rounded-xl transition-colors flex items-center justify-center gap-2 border border-slate-600/30">
-                                                    <Heart className={`w-4 h-4 ${liked ? 'fill-current text-red-400' : ''}`} />
-                                                    <span className="text-xs lg:text-sm">{liked ? 'Liked' : 'Like'}</span>
-                                                </button>
-                                                <ShareButton
-                                                    product={product}
-                                                    onNotification={addNotification}
-                                                />
-                                            </div>
-                                        </div>
                                     </motion.div>
                                     {product.sellerId && (
                                         <motion.div
@@ -695,36 +552,7 @@ export default function PurchasedProductPage() {
                                             )}
                                         </motion.div>
                                     )}
-                                    <motion.div
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.2 }}
-                                        className="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-3xl p-6">
-                                        <h4 className="text-lg font-semibold text-white mb-4">Need Help?</h4>
-                                        <div className="space-y-3">
-                                            <button className="w-full flex items-center gap-3 p-3 bg-slate-700/30 hover:bg-slate-700/50 rounded-xl transition-colors text-left">
-                                                <MessageSquare className="w-5 h-5 text-white" />
-                                                <div>
-                                                    <div className="text-white font-medium text-sm">Contact Support</div>
-                                                    <div className="text-slate-400 text-xs">Get help with this product</div>
-                                                </div>
-                                            </button>
-                                            <button className="w-full flex items-center gap-3 p-3 bg-slate-700/30 hover:bg-slate-700/50 rounded-xl transition-colors text-left">
-                                                <FileText className="w-5 h-5 text-emerald-400" />
-                                                <div>
-                                                    <div className="text-white font-medium text-sm">Documentation</div>
-                                                    <div className="text-slate-400 text-xs">View user guides</div>
-                                                </div>
-                                            </button>
-                                            <button className="w-full flex items-center gap-3 p-3 bg-slate-700/30 hover:bg-slate-700/50 rounded-xl transition-colors text-left">
-                                                <ExternalLinkIcon className="w-5 h-5 text-purple-400" />
-                                                <div>
-                                                    <div className="text-white font-medium text-sm">View Original</div>
-                                                    <div className="text-slate-400 text-xs">See public product page</div>
-                                                </div>
-                                            </button>
-                                        </div>
-                                    </motion.div>
+                                    
                                 </div>
                             </div>
                         </div>
@@ -766,3 +594,4 @@ function ExpandableSection({ id, title, icon: Icon, expanded, onToggle, children
         </motion.div>
     )
 }
+

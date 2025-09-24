@@ -109,6 +109,17 @@ const analyticsAPI = {
                 console.error('Error fetching seller customers:', error)
                 throw error
             }
+        },
+
+        getTools: async (params = {}) => {
+            try {
+                const queryString = new URLSearchParams(params).toString()
+                const response = await apiClient.get(`v1/analytics/seller/tools${queryString ? `?${queryString}` : ''}`)
+                return response.data || response
+            } catch (error) {
+                console.error('Error fetching seller tools analytics:', error)
+                throw error
+            }
         }
     },
 

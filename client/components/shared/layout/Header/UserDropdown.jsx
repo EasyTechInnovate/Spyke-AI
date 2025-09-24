@@ -1,18 +1,11 @@
-import { useState, forwardRef } from 'react'
+import { forwardRef } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     ChevronDown,
     ChevronRight,
     LogOut,
-    Package,
-    Heart,
-    MessageSquare,
     User,
-    Settings,
-    Briefcase,
-    BarChart3,
-    DollarSign,
     Store
 } from 'lucide-react'
 import UserAvatar, { getDisplayName } from './UserAvatar'

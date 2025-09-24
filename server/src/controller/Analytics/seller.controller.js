@@ -589,5 +589,182 @@ export default {
         } catch (err) {
             httpError(next, err, req, 500)
         }
+    },
+
+    getToolsAnalytics: async (req, res, next) => {
+        try {
+            const { authenticatedUser } = req
+            const { page = 1, limit = 20, period = '30d' } = req.query
+
+            const sellerProfile = await sellerProfileModel.findOne({ userId: authenticatedUser.id })
+            if (!sellerProfile) {
+                return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('Seller Profile')), req, 404)
+            }
+
+            const skip = (parseInt(page) - 1) * parseInt(limit)
+
+            let dateFilter
+            switch (period) {
+                case '7d':
+                    dateFilter = dayjs().subtract(7, 'day').toDate()
+                    break
+                case '30d':
+                    dateFilter = dayjs().subtract(30, 'day').toDate()
+                    break
+                case '90d':
+                    dateFilter = dayjs().subtract(90, 'day').toDate()
+                    break
+                case '1y':
+                    dateFilter = dayjs().subtract(1, 'year').toDate()
+                    break
+                default:
+                    dateFilter = dayjs().subtract(30, 'day').toDate()
+            }
+
+            const toolsUsage = await productModel.aggregate([
+                {
+                    $match: {
+                        sellerId: sellerProfile._id,
+                        isDeleted: { $ne: true },
+                        status: 'published'
+                    }
+                },
+                { $unwind: '$toolsUsed' },
+                {
+                    $group: {
+                        _id: '$toolsUsed.name',
+                        toolName: { $first: '$toolsUsed.name' },
+                        totalProducts: { $sum: 1 },
+                        totalViews: { $sum: '$views' },
+                        totalSales: { $sum: '$sales' },
+                        avgRating: { $avg: '$averageRating' }
+                    }
+                },
+                { $sort: { totalProducts: -1 } },
+                { $skip: skip },
+                { $limit: parseInt(limit) }
+            ])
+
+            const toolsPerformance = await productModel.aggregate([
+                {
+                    $match: {
+                        sellerId: sellerProfile._id,
+                        isDeleted: { $ne: true },
+                        status: 'published',
+                        createdAt: { $gte: dateFilter }
+                    }
+                },
+                { $unwind: '$toolsUsed' },
+                {
+                    $group: {
+                        _id: {
+                            tool: '$toolsUsed.name',
+                            date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }
+                        },
+                        productsCreated: { $sum: 1 },
+                        totalViews: { $sum: '$views' },
+                        totalSales: { $sum: '$sales' }
+                    }
+                },
+                { $sort: { '_id.date': 1 } }
+            ])
+
+            const profitableTools = await purchaseModel.aggregate([
+                { $unwind: '$items' },
+                {
+                    $match: {
+                        'items.sellerId': sellerProfile._id,
+                        orderStatus: 'completed',
+                        createdAt: { $gte: dateFilter }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'products',
+                        localField: 'items.productId',
+                        foreignField: '_id',
+                        as: 'product'
+                    }
+                },
+                { $unwind: '$product' },
+                { $unwind: '$product.toolsUsed' },
+                {
+                    $group: {
+                        _id: '$product.toolsUsed.name',
+                        totalRevenue: { $sum: '$items.price' },
+                        totalSales: { $sum: 1 },
+                        avgOrderValue: { $avg: '$items.price' }
+                    }
+                },
+                { $sort: { totalRevenue: -1 } },
+                { $limit: 10 }
+            ])
+
+            const toolsSummary = await productModel.aggregate([
+                {
+                    $match: {
+                        sellerId: sellerProfile._id,
+                        isDeleted: { $ne: true },
+                        status: 'published'
+                    }
+                },
+                { $unwind: '$toolsUsed' },
+                {
+                    $group: {
+                        _id: null,
+                        uniqueTools: { $addToSet: '$toolsUsed.name' },
+                        totalToolsUsed: { $sum: 1 }
+                    }
+                }
+            ])
+
+            const avgToolsPerProduct = await productModel.aggregate([
+                {
+                    $match: {
+                        sellerId: sellerProfile._id,
+                        isDeleted: { $ne: true },
+                        status: 'published'
+                    }
+                },
+                {
+                    $addFields: {
+                        toolCount: { $size: { $ifNull: ['$toolsUsed', []] } }
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        avgToolsPerProduct: { $avg: '$toolCount' }
+                    }
+                }
+            ])
+
+            const summary = toolsSummary.length > 0 && avgToolsPerProduct.length > 0 ? {
+                uniqueToolsCount: toolsSummary[0].uniqueTools.length,
+                totalToolsUsed: toolsSummary[0].totalToolsUsed,
+                avgToolsPerProduct: Math.round(avgToolsPerProduct[0].avgToolsPerProduct * 10) / 10
+            } : {
+                uniqueToolsCount: 0,
+                totalToolsUsed: 0,
+                avgToolsPerProduct: 0
+            }
+
+            httpResponse(req, res, 200, responseMessage.SUCCESS, {
+                toolsUsage,
+                toolsPerformance,
+                profitableTools,
+                summary,
+                period,
+                pagination: {
+                    currentPage: parseInt(page),
+                    totalPages: Math.ceil(toolsUsage.length / parseInt(limit)),
+                    totalCount: toolsUsage.length,
+                    hasNextPage: parseInt(page) < Math.ceil(toolsUsage.length / parseInt(limit)),
+                    hasPrevPage: parseInt(page) > 1
+                }
+            })
+        } catch (err) {
+            httpError(next, err, req, 500)
+        }
     }
 }

@@ -1,26 +1,44 @@
 'use client'
 import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle, AlertTriangle, Edit3, Send, ArrowLeft, Eye, AlertCircle, Loader2, Sparkles, Trophy, Zap, Star, HelpCircle, Info, Clock, Save, Check } from 'lucide-react'
+import {
+    CheckCircle,
+    AlertTriangle,
+    Edit3,
+    Send,
+    ArrowLeft,
+    Eye,
+    AlertCircle,
+    Loader2,
+    Sparkles,
+    Trophy,
+    Zap,
+    Star,
+    HelpCircle,
+    Info,
+    Clock,
+    Save,
+    Check
+} from 'lucide-react'
 import { useProductCreateStore } from '@/store/productCreate'
 import { productsAPI } from '@/lib/api'
 import { useRouter } from 'next/navigation'
 const ERROR_HELP = {
-    title: "Product title is required for listing your product in the marketplace",
-    type: "Select whether your product is an automation, template, or consultation",
-    category: "Choose the most relevant category to help customers find your product",
-    industry: "Select the industry that best matches your target customers",
-    shortDescription: "A brief summary that appears in product listings and search results",
-    fullDescription: "Detailed explanation of what your product does and how it works",
-    howItWorks: "At least 3 clear steps showing customers how to use your product",
-    toolsUsed: "List the tools and platforms your product integrates with",
-    toolsConfiguration: "Explain how customers should set up the required tools",
-    setupTimeEstimate: "Give customers realistic expectations for implementation time",
-    thumbnailImage: "A compelling image that represents your product professionally",
-    additionalImages: "Show different aspects of your product with 2-3 quality images",
-    productTags: "Add searchable keywords to help customers discover your product",
-    supportAndMaintenance: "Explain what support customers can expect after purchase",
-    faq: "Answer common questions customers ask before buying"
+    title: 'Product title is required for listing your product in the marketplace',
+    type: 'Select whether your product is an automation, template, or consultation',
+    category: 'Choose the most relevant category to help customers find your product',
+    industry: 'Select the industry that best matches your target customers',
+    shortDescription: 'A brief summary that appears in product listings and search results',
+    fullDescription: 'Detailed explanation of what your product does and how it works',
+    howItWorks: 'At least 3 clear steps showing customers how to use your product',
+    toolsUsed: 'List the tools and platforms your product integrates with',
+    toolsConfiguration: 'Explain how customers should set up the required tools',
+    setupTimeEstimate: 'Give customers realistic expectations for implementation time',
+    thumbnailImage: 'A compelling image that represents your product professionally',
+    additionalImages: 'Show different aspects of your product with 2-3 quality images',
+    productTags: 'Add searchable keywords to help customers discover your product',
+    supportAndMaintenance: 'Explain what support customers can expect after purchase',
+    faq: 'Answer common questions customers ask before buying'
 }
 const Tooltip = ({ content }) => {
     const [isVisible, setIsVisible] = useState(false)
@@ -228,35 +246,6 @@ export default function ReviewSubmit({ onBackToStep }) {
     const validateStep = useProductCreateStore((state) => state.validateStep)
     const toApiPayload = useProductCreateStore((state) => state.toApiPayload)
     const reset = useProductCreateStore((state) => state.reset)
-    const validationSummary = useMemo(() => {
-        const criticalFields = ['title', 'type', 'category', 'industry', 'shortDescription', 'fullDescription', 'supportAndMaintenance']
-        const mediaFields = ['thumbnailImage', 'additionalImages', 'productTags']
-        const processFields = ['howItWorks', 'toolsUsed', 'toolsConfiguration', 'setupTimeEstimate']
-        const supportFields = ['faq']
-        const checkFields = (fields) => fields.filter(field => {
-            switch (field) {
-                case 'howItWorks':
-                    return state.howItWorks.filter(s => s.title.trim() && s.detail.trim()).length < 3
-                case 'additionalImages':
-                    return state.additionalImages.length === 0
-                case 'productTags':
-                    return state.productTags.length === 0
-                case 'toolsUsed':
-                    return state.toolsUsed.length === 0
-                case 'faq':
-                    return state.faq.filter(f => f.question.trim() && f.answer.trim()).length === 0
-                default:
-                    return !state[field]?.toString().trim()
-            }
-        })
-        const critical = checkFields(criticalFields)
-        const media = checkFields(mediaFields)
-        const process = checkFields(processFields)
-        const support = checkFields(supportFields)
-        const total = critical.length + media.length + process.length + support.length
-        const isComplete = total === 0
-        return { critical, media, process, support, total, isComplete }
-    }, [state])
     const handleSubmit = async () => {
         setIsSubmitting(true)
         setSubmitError('')
@@ -317,7 +306,21 @@ export default function ReviewSubmit({ onBackToStep }) {
         }
         const step = fieldToStep[fieldName]
         if (step && onBackToStep) {
-            onBackToStep(step)
+            setTimeout(() => {
+                onBackToStep(step)
+                const element =
+                    document.getElementById(fieldName) ||
+                    document.querySelector(`[data-field="${fieldName}"]`) ||
+                    document.querySelector(`[name="${fieldName}"]`)
+                if (element) {
+                    setTimeout(() => {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                        element.focus()
+                    }, 100)
+                }
+            }, 50)
+        } else {
+            console.warn('No step found for field:', fieldName, 'or onBackToStep not available')
         }
     }
     return (
@@ -340,128 +343,10 @@ export default function ReviewSubmit({ onBackToStep }) {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-br from-gray-900/80 to-gray-800/80 rounded-xl border border-gray-700 p-6">
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-white">Readiness Check</h2>
-                    <div className="flex items-center space-x-2">
-                        {validationSummary.isComplete ? (
-                            <CheckCircle className="w-6 h-6 text-[#00FF89]" />
-                        ) : (
-                            <AlertTriangle className="w-6 h-6 text-amber-400" />
-                        )}
-                        <span className="text-base font-medium text-white">
-                            {validationSummary.isComplete ? 'Ready to Submit!' : `${validationSummary.total} items need attention`}
-                        </span>
-                    </div>
-                </div>
-                {validationSummary.isComplete ? (
-                    <div className="bg-[#00FF89]/10 border border-[#00FF89]/20 rounded-lg p-4">
-                        <div className="flex items-center text-[#00FF89] mb-2">
-                            <CheckCircle className="w-5 h-5 mr-2" />
-                            <span className="font-semibold text-base">All Requirements Met</span>
-                        </div>
-                        <p className="text-[#00FF89]/80 text-sm">
-                            Your product is complete and ready for submission. Our team will review it within 24-48 hours.
-                        </p>
-                    </div>
-                ) : (
-                    <div className="space-y-3">
-                        {validationSummary.critical.length > 0 && (
-                            <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center text-red-300">
-                                        <AlertCircle className="w-5 h-5 mr-2" />
-                                        <span className="font-semibold text-base">Required Information</span>
-                                    </div>
-                                    <span className="text-sm bg-red-500/20 text-red-300 px-2 py-1 rounded-full">
-                                        {validationSummary.critical.length} missing
-                                    </span>
-                                </div>
-                                <div className="space-y-2">
-                                    {validationSummary.critical.map((field) => (
-                                        <div key={field} className="flex items-center justify-between text-sm">
-                                            <div className="flex items-center">
-                                                <span className="text-red-200 capitalize">{field.replace(/([A-Z])/g, ' $1')}</span>
-                                                <Tooltip content={ERROR_HELP[field]} />
-                                            </div>
-                                            <button
-                                                onClick={() => jumpToField(field)}
-                                                className="text-red-400 hover:text-red-300 underline">
-                                                Fix →
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                        {validationSummary.media.length > 0 && (
-                            <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center text-amber-300">
-                                        <AlertTriangle className="w-5 h-5 mr-2" />
-                                        <span className="font-semibold text-base">Media & Tags</span>
-                                    </div>
-                                    <span className="text-sm bg-amber-500/20 text-amber-300 px-2 py-1 rounded-full">
-                                        {validationSummary.media.length} needed
-                                    </span>
-                                </div>
-                                <div className="space-y-2">
-                                    {validationSummary.media.map((field) => (
-                                        <div key={field} className="flex items-center justify-between text-sm">
-                                            <div className="flex items-center">
-                                                <span className="text-amber-200 capitalize">{field.replace(/([A-Z])/g, ' $1')}</span>
-                                                <Tooltip content={ERROR_HELP[field]} />
-                                            </div>
-                                            <button
-                                                onClick={() => jumpToField(field)}
-                                                className="text-amber-400 hover:text-amber-300 underline">
-                                                Add →
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                        {validationSummary.process.length > 0 && (
-                            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center text-blue-300">
-                                        <Info className="w-5 h-5 mr-2" />
-                                        <span className="font-semibold text-base">Process Details</span>
-                                    </div>
-                                    <span className="text-sm bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full">
-                                        {validationSummary.process.length} missing
-                                    </span>
-                                </div>
-                                <div className="space-y-2">
-                                    {validationSummary.process.map((field) => (
-                                        <div key={field} className="flex items-center justify-between text-sm">
-                                            <div className="flex items-center">
-                                                <span className="text-blue-200 capitalize">{field.replace(/([A-Z])/g, ' $1')}</span>
-                                                <Tooltip content={ERROR_HELP[field]} />
-                                            </div>
-                                            <button
-                                                onClick={() => jumpToField(field)}
-                                                className="text-blue-400 hover:text-blue-300 underline">
-                                                Complete →
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )}
-            </motion.div>
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
                 className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-gray-800/50 border border-gray-700 p-4 rounded-lg text-center">
-                    <div className="text-2xl font-bold text-[#00FF89] mb-1">
-                        {state.howItWorks.filter(s => s.title && s.detail).length}
-                    </div>
+                    <div className="text-2xl font-bold text-[#00FF89] mb-1">{state.howItWorks.filter((s) => s.title && s.detail).length}</div>
                     <div className="text-sm text-gray-400">Process Steps</div>
                 </div>
                 <div className="bg-gray-800/50 border border-gray-700 p-4 rounded-lg text-center">
@@ -473,9 +358,7 @@ export default function ReviewSubmit({ onBackToStep }) {
                     <div className="text-sm text-gray-400">Tags Added</div>
                 </div>
                 <div className="bg-gray-800/50 border border-gray-700 p-4 rounded-lg text-center">
-                    <div className="text-2xl font-bold text-[#00FF89] mb-1">
-                        {state.faq.filter(f => f.question && f.answer).length}
-                    </div>
+                    <div className="text-2xl font-bold text-[#00FF89] mb-1">{state.faq.filter((f) => f.question && f.answer).length}</div>
                     <div className="text-sm text-gray-400">FAQ Items</div>
                 </div>
             </motion.div>
@@ -515,15 +398,11 @@ export default function ReviewSubmit({ onBackToStep }) {
                         </div>
                         <div>
                             <span className="text-sm text-gray-400">Support Level</span>
-                            <p className="text-white text-base">
-                                {state.supportAndMaintenance ? 'Included' : 'Not specified'}
-                            </p>
+                            <p className="text-white text-base">{state.supportAndMaintenance ? 'Included' : 'Not specified'}</p>
                         </div>
                         <div>
                             <span className="text-sm text-gray-400">Pricing</span>
-                            <p className="text-white text-base font-semibold">
-                                {state.price ? `$${state.price}` : 'Not set'}
-                            </p>
+                            <p className="text-white text-base font-semibold">{state.price ? `$${state.price}` : 'Not set'}</p>
                         </div>
                     </div>
                 </div>
@@ -556,16 +435,12 @@ export default function ReviewSubmit({ onBackToStep }) {
                     </button>
                 </div>
                 <div className="flex items-center space-x-4">
-                    {state.lastSaved && (
-                        <div className="text-sm text-gray-400">
-                            Last saved: {new Date(state.lastSaved).toLocaleTimeString()}
-                        </div>
-                    )}
+                    {state.lastSaved && <div className="text-sm text-gray-400">Last saved: {new Date(state.lastSaved).toLocaleTimeString()}</div>}
                     <button
                         onClick={handleSubmit}
-                        disabled={!validationSummary.isComplete || isSubmitting}
+                        disabled={isSubmitting}
                         className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all text-base ${
-                            validationSummary.isComplete && !isSubmitting
+                            !isSubmitting
                                 ? 'bg-[#00FF89] text-black hover:bg-[#00FF89]/90 hover:scale-105'
                                 : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                         }`}>

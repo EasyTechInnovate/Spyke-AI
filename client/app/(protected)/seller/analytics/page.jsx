@@ -1,19 +1,22 @@
 'use client'
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { Clock, RefreshCw, Download, Calendar, BarChart3, Package, ShoppingCart, DollarSign, Users } from 'lucide-react'
+import { Clock, RefreshCw, Download, Calendar, BarChart3, Package, ShoppingCart, DollarSign, Users, Wrench } from 'lucide-react'
 import analyticsAPI from '@/lib/api/analytics'
 import CustomSelect from '@/components/shared/CustomSelect'
 import { PageHeader, LoadingSkeleton, ErrorState } from '@/components/admin'
 import { motion, AnimatePresence } from 'framer-motion'
 import { TIME_RANGE_OPTIONS } from '@/lib/constants/analytics'
-import { OverviewTab, ProductsTab, SalesTab, RevenueTab, CustomersTab } from '@/components/features/seller/analytics/tabs'
+import { OverviewTab, ProductsTab, SalesTab, RevenueTab, CustomersTab, ToolsTab } from '@/components/features/seller/analytics/tabs'
+
 const SELLER_TAB_OPTIONS = [
     { value: 'overview', label: 'Overview', icon: 'BarChart3' },
     { value: 'products', label: 'Products', icon: 'Package' },
     { value: 'sales', label: 'Sales', icon: 'ShoppingCart' },
     { value: 'revenue', label: 'Revenue', icon: 'DollarSign' },
-    { value: 'customers', label: 'Customers', icon: 'Users' }
+    { value: 'customers', label: 'Customers', icon: 'Users' },
+    { value: 'tools', label: 'Tools', icon: 'Wrench' }
 ]
+
 const getIconComponent = (iconName) => {
     const iconMap = {
         Clock: Clock,
@@ -22,7 +25,8 @@ const getIconComponent = (iconName) => {
         Package: Package,
         ShoppingCart: ShoppingCart,
         DollarSign: DollarSign,
-        Users: Users
+        Users: Users,
+        Wrench: Wrench
     }
     return iconMap[iconName] || Clock
 }
@@ -61,6 +65,8 @@ export default function SellerAnalytics() {
                 return () => analyticsAPI.seller.getRevenue(apiParams)
             case 'customers':
                 return () => analyticsAPI.seller.getCustomers(apiParams)
+            case 'tools':
+                return () => analyticsAPI.seller.getTools(apiParams)
             default:
                 return () => analyticsAPI.seller.getDashboard()
         }
@@ -217,6 +223,8 @@ export default function SellerAnalytics() {
                 return <RevenueTab {...tabProps} />
             case 'customers':
                 return <CustomersTab {...tabProps} />
+            case 'tools':
+                return <ToolsTab {...tabProps} />
             default:
                 return <OverviewTab {...tabProps} />
         }

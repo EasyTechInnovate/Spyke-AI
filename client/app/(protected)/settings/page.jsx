@@ -6,10 +6,7 @@ import SettingsNavigation from './components/SettingsNavigation'
 import MessageAlert from './components/MessageAlert'
 import ProfileSection from './components/ProfileSection'
 import SecuritySection from './components/SecuritySection'
-import PaymentMethodsSection from './components/PaymentMethodsSection'
-import OrderHistorySection from './components/OrderHistorySection'
-import CommunicationSection from './components/CommunicationSection'
-import ActiveSessionsSection from './components/ActiveSessionsSection'
+
 export default function SettingsPage() {
     const [activeSection, setActiveSection] = useState('profile')
     const [successMessage, setSuccessMessage] = useState('')
@@ -77,7 +74,7 @@ export default function SettingsPage() {
         }
     }
     return (
-        <div className="min-h-screen bg-[#121212] text-white pt-20">
+        <div className="min-h-screen bg-[#121212] text-white">
             <Container>
                 <div className="max-w-6xl mx-auto py-8">
                     <motion.div
