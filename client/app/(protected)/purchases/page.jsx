@@ -1,19 +1,7 @@
 'use client'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { motion } from 'framer-motion'
-import {
-    Package,
-    Search,
-    Calendar,
-    CreditCard,
-    ChevronRight,
-    FileText,
-    Zap,
-    Bot,
-    Layers,
-    Loader2,
-    List,
-    Grid as GridIcon} from 'lucide-react'
+import { Package, Search, Calendar, CreditCard, ChevronRight, FileText, Zap, Bot, Layers, Loader2, List, Grid as GridIcon } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
 import { useAuth } from '@/hooks/useAuth'
 import { purchaseAPI } from '@/lib/api'
@@ -47,8 +35,8 @@ export default function PurchasesPage() {
     const [searchTerm, setSearchTerm] = useState('')
     const [page, setPage] = useState(1)
     const [pagination, setPagination] = useState(null)
-    const [viewMode, setViewMode] = useState('grid') 
-    const [sort, setSort] = useState('recent') 
+    const [viewMode, setViewMode] = useState('grid')
+    const [sort, setSort] = useState('recent')
     const [selected, setSelected] = useState(new Set())
     const [showMobileFilters, setShowMobileFilters] = useState(false)
     useEffect(() => {
@@ -292,14 +280,7 @@ function PurchaseCard({ purchase, selected = false, onToggle }) {
                         <span className="text-xs font-medium capitalize">{product.type}</span>
                     </div>
                 </div>
-                <div className="absolute top-4 right-4">
-                    <input
-                        type="checkbox"
-                        checked={selected}
-                        onChange={onToggle}
-                        className="w-5 h-5 rounded border-2 border-gray-600 bg-[#121212] checked:bg-[#00FF89] checked:border-[#00FF89] focus:ring-[#00FF89] focus:ring-2"
-                    />
-                </div>
+
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
             <div className="p-6">
@@ -435,12 +416,6 @@ function OrdersTable({ purchases = [], selected = new Set(), onToggle = () => {}
                 <table className="min-w-full">
                     <thead className="bg-[#121212] border-b border-gray-800">
                         <tr>
-                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                                <input
-                                    type="checkbox"
-                                    className="w-4 h-4"
-                                />
-                            </th>
                             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Order</th>
                             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Product</th>
                             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Type</th>
@@ -457,14 +432,6 @@ function OrdersTable({ purchases = [], selected = new Set(), onToggle = () => {}
                                 <tr
                                     key={purchase.purchaseId}
                                     className="hover:bg-[#2a2a2a] transition-colors">
-                                    <td className="px-6 py-4">
-                                        <input
-                                            type="checkbox"
-                                            checked={selected.has(purchase.purchaseId)}
-                                            onChange={() => onToggle(purchase.purchaseId)}
-                                            className="w-4 h-4 rounded border-2 border-gray-600 bg-[#121212]"
-                                        />
-                                    </td>
                                     <td className="px-6 py-4 text-sm text-gray-300">#{String(purchase.purchaseId).slice(-6)}</td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">

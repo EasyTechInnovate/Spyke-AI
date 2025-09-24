@@ -169,11 +169,9 @@ export const authAPI = {
         return response?.data || response
     },
 
-    // Note: resendVerificationEmail endpoint doesn't exist on backend
-    // Using confirmation resend if needed, or handle via register flow
-    resendVerificationEmail: async (data) => {
-        // This endpoint doesn't exist on backend - remove or implement on backend first
-        throw new Error('Resend verification endpoint not implemented on backend')
+    resendVerificationEmail: async (emailAddress) => {
+        const response = await apiClient.post('v1/auth/resend-verification', { emailAddress })
+        return response?.data || response
     },
 
     isAuthenticated: () => {

@@ -8,38 +8,26 @@ import {
     Share2,
     Download,
     FileText,
-    Calendar,
     CheckCircle,
-    Star,
     User,
-    Globe,
     Clock,
     Package,
     ExternalLink,
     Settings,
     Wrench,
     Shield,
-    Eye,
-    DollarSign,
-    Tag,
     MapPin,
-    Users,
     TrendingUp,
-    Award,
-    Zap,
     PlayCircle,
     BookOpen,
     Target,
-    Layers,
     Code,
-    Briefcase,
     MessageSquare,
     ChevronRight,
     ChevronDown,
     Copy,
     ExternalLinkIcon
 } from 'lucide-react'
-import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { productsAPI, purchaseAPI } from '@/lib/api'
 function ShareButton({ product, onNotification }) {
@@ -64,26 +52,7 @@ function ShareButton({ product, onNotification }) {
             name: 'Copy Link',
             icon: Copy,
             action: handleCopyLink,
-            color: 'text-blue-400'
-        },
-        {
-            name: 'Twitter',
-            icon: ExternalLink,
-            action: () => {
-                const text = `Check out "${product.title}" - ${product.shortDescription}`
-                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`, '_blank')
-                setIsOpen(false)
-            },
-            color: 'text-sky-400'
-        },
-        {
-            name: 'LinkedIn',
-            icon: ExternalLink,
-            action: () => {
-                window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`, '_blank')
-                setIsOpen(false)
-            },
-            color: 'text-blue-600'
+            color: 'text-white'
         }
     ]
     return (
@@ -263,7 +232,7 @@ export default function PurchasedProductPage() {
     if (loading) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-                <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-950 to-slate-950"></div>
+                <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-black via-slate-950 to-slate-950"></div>
                 <div className="relative z-10">
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
                         <div className="pt-24 pb-16">
@@ -289,7 +258,7 @@ export default function PurchasedProductPage() {
     if (error || !product) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
-                <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-950 to-slate-950"></div>
+                <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-black via-slate-950 to-slate-950"></div>
                 <div className="relative z-10 text-center max-w-md mx-auto px-4">
                     <div className="w-20 h-20 bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm border border-slate-700/50">
                         <Package className="w-10 h-10 text-slate-400" />
@@ -310,7 +279,7 @@ export default function PurchasedProductPage() {
     }
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-            <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-950 to-slate-950"></div>
+            <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-black via-slate-950 to-slate-950"></div>
             <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-[#00FF89]/10 via-transparent to-transparent"></div>
             <AnimatePresence>
                 {notifications.map((notification) => (
@@ -323,7 +292,7 @@ export default function PurchasedProductPage() {
                         <div className="flex items-center gap-3">
                             <div
                                 className={`w-3 h-3 rounded-full ${
-                                    notification.type === 'success' ? 'bg-emerald-500' : notification.type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+                                    notification.type === 'success' ? 'bg-emerald-500' : notification.type === 'error' ? 'bg-red-500' : 'bg-black'
                                 }`}
                             />
                             <p className="text-white text-sm font-medium">{notification.message}</p>
@@ -362,7 +331,7 @@ export default function PurchasedProductPage() {
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     className="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-2xl lg:rounded-3xl p-4 sm:p-6 lg:p-8 overflow-hidden relative">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-[#00FF89]/5 to-blue-500/5"></div>
+                                    <div className="absolute inset-0 bg-gradient-to-br from-[#00FF89]/5 to-black/5"></div>
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#00FF89]/10 to-transparent rounded-full blur-2xl"></div>
                                     <div className="relative z-10">
                                         <div className="mb-6 lg:mb-8 pt-4">
@@ -422,7 +391,7 @@ export default function PurchasedProductPage() {
                                         <div className="space-y-4 lg:space-y-6">
                                             <div>
                                                 <div className="flex flex-wrap items-center gap-2 lg:gap-3 mb-3 lg:mb-4">
-                                                    <span className="px-2 py-1 lg:px-3 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-lg text-xs lg:text-sm font-medium capitalize">
+                                                    <span className="px-2 py-1 lg:px-3 bg-black/10 text-white border border-black/20 rounded-lg text-xs lg:text-sm font-medium capitalize">
                                                         {product.category?.replace('_', ' ')}
                                                     </span>
                                                     <span className="px-2 py-1 lg:px-3 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-lg text-xs lg:text-sm font-medium capitalize">
@@ -448,7 +417,7 @@ export default function PurchasedProductPage() {
                                                     <div className="text-slate-400 text-xs lg:text-sm">Views</div>
                                                 </div>
                                                 <div className="text-center p-3 lg:p-4 bg-slate-700/30 rounded-xl lg:rounded-2xl border border-slate-600/30">
-                                                    <div className="text-lg lg:text-2xl font-bold text-blue-400">{product.sales || 0}</div>
+                                                    <div className="text-lg lg:text-2xl font-bold text-white">{product.sales || 0}</div>
                                                     <div className="text-slate-400 text-xs lg:text-sm">Sales</div>
                                                 </div>
                                                 <div className="text-center p-3 lg:p-4 bg-slate-700/30 rounded-xl lg:rounded-2xl border border-slate-600/30">
@@ -502,8 +471,8 @@ export default function PurchasedProductPage() {
                                                         {product.useCaseExamples.map((useCase, index) => (
                                                             <div
                                                                 key={index}
-                                                                className="flex items-start gap-3 p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl">
-                                                                <Target className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                                                                className="flex items-start gap-3 p-4 bg-black/5 border border-black/20 rounded-xl">
+                                                                <Target className="w-5 h-5 text-white mt-0.5 flex-shrink-0" />
                                                                 <span className="text-slate-300">{useCase}</span>
                                                             </div>
                                                         ))}
@@ -695,7 +664,7 @@ export default function PurchasedProductPage() {
                                             className="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-3xl p-6">
                                             <h4 className="text-lg font-semibold text-white mb-4">Created by</h4>
                                             <div className="flex items-start gap-4 mb-4">
-                                                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-xl flex items-center justify-center">
+                                                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-black rounded-xl flex items-center justify-center">
                                                     <User className="w-6 h-6 text-white" />
                                                 </div>
                                                 <div className="flex-1">
@@ -719,7 +688,7 @@ export default function PurchasedProductPage() {
                                                         <div className="text-slate-400 text-xs">Sales</div>
                                                     </div>
                                                     <div className="text-center p-3 bg-slate-700/30 rounded-xl">
-                                                        <div className="text-blue-400 font-bold">{product.sellerId.stats.averageRating}★</div>
+                                                        <div className="text-white font-bold">{product.sellerId.stats.averageRating}★</div>
                                                         <div className="text-slate-400 text-xs">Rating</div>
                                                     </div>
                                                 </div>
@@ -734,7 +703,7 @@ export default function PurchasedProductPage() {
                                         <h4 className="text-lg font-semibold text-white mb-4">Need Help?</h4>
                                         <div className="space-y-3">
                                             <button className="w-full flex items-center gap-3 p-3 bg-slate-700/30 hover:bg-slate-700/50 rounded-xl transition-colors text-left">
-                                                <MessageSquare className="w-5 h-5 text-blue-400" />
+                                                <MessageSquare className="w-5 h-5 text-white" />
                                                 <div>
                                                     <div className="text-white font-medium text-sm">Contact Support</div>
                                                     <div className="text-slate-400 text-xs">Get help with this product</div>

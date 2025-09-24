@@ -15,7 +15,6 @@ function CheckoutSuccessContent() {
     const { clearCart, reload: reloadCart } = useCart()
     const orderId = searchParams.get('orderId')
     const sessionId = searchParams.get('session_id')
-    const isManualPayment = searchParams.get('manual') === 'true'
     const orderTotal = searchParams.get('total')
     const orderItems = searchParams.get('items')
     const [loading, setLoading] = useState(true)
@@ -89,7 +88,7 @@ function CheckoutSuccessContent() {
                     total: orderTotal ? parseFloat(orderTotal) : 0,
                     itemCount: orderItems ? parseInt(orderItems) : 0,
                     email: 'user@example.com',
-                    paymentMethod: isManualPayment ? 'manual' : 'unknown',
+                    paymentMethod: 'stripe',
                     items: []
                 }
                 setOrderDetails(fallbackDetails)
@@ -103,7 +102,7 @@ function CheckoutSuccessContent() {
         }
         const timer = setTimeout(loadOrderDetails, 800)
         return () => clearTimeout(timer)
-    }, [orderId, sessionId, isManualPayment, orderTotal, orderItems])
+    }, [orderId, sessionId, orderTotal, orderItems])
     if (loading) {
         return (
             <div className="min-h-screen bg-black">
@@ -158,12 +157,10 @@ function CheckoutSuccessContent() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.2 }}>
                                 <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                                    {isManualPayment ? 'Order Placed Successfully!' : 'Purchase Successful!'}
+                                    Purchase Successful!
                                 </h1>
                                 <p className="text-xl text-gray-400 mb-8">
-                                    {isManualPayment
-                                        ? 'Your test order has been confirmed. You now have access to your products.'
-                                        : 'Thank you for your purchase. Your order has been confirmed and processed.'}
+                                    Thank you for your purchase. Your order has been confirmed and processed.
                                 </p>
                                 <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-8 max-w-md mx-auto">
                                     <div className="text-center">
@@ -185,11 +182,10 @@ function CheckoutSuccessContent() {
                                                 </div>
                                                 <div className="flex justify-between items-center">
                                                     <span className="text-gray-400">Payment:</span>
-                                                    <span className="text-white capitalize">{orderDetails.paymentMethod || 'Manual'}</span>
+                                                    <span className="text-white capitalize">{orderDetails.paymentMethod || 'Stripe'}</span>
                                                 </div>
                                             </div>
                                         )}
-                                        {isManualPayment && <p className="text-xs text-brand-primary mt-4">Test Mode - Manual Payment</p>}
                                     </div>
                                 </div>
                             </motion.div>

@@ -2,9 +2,6 @@
 // This file is kept for compatibility but should not be used in new code
 // Use InlineNotification component and showMessage function instead
 
-if (process.env.NODE_ENV !== 'production') {
-  console.warn('toast.js is deprecated - use InlineNotification component instead')
-}
 
 // Legacy compatibility - these functions now do nothing
 export const toastSuccess = (message, options = {}) => {

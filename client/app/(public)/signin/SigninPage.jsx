@@ -2,15 +2,19 @@
 export const dynamic = 'force-dynamic'
 import { useState } from 'react'
 import Link from 'next/link'
-import { Eye, EyeOff, AlertCircle, Mail, Lock, ArrowRight, Sparkles, Shield, Zap } from 'lucide-react'
+import { Eye, EyeOff, AlertCircle, Mail, Lock, ArrowRight, Sparkles, Shield, Zap, RefreshCw } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import Header from '@/components/shared/layout/Header'
-import { DSContainer, DSStack, DSHeading, DSText, DSButton, DSBadge, DSLoadingState } from '@/lib/design-system'
+import { DSStack, DSHeading, DSText, DSButton, DSBadge } from '@/lib/design-system'
+import { authAPI } from '@/lib/api/auth'
+import { useNotifications } from '@/components/shared/NotificationProvider'
 export default function SignInPage() {
-    const { login, authService } = useAuth()
+    const { login } = useAuth()
+    const { showError, showSuccess } = useNotifications()
     const [loading, setLoading] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
     const [loginError, setLoginError] = useState('')
+    const [resendLoading, setResendLoading] = useState(false)
     const [formData, setFormData] = useState({
         emailAddress: '',
         password: ''
@@ -31,7 +35,12 @@ export default function SignInPage() {
             await login(formData)
         } catch (error) {
             const errorMessage = error?.message || error?.data?.message || 'Login failed. Please try again.'
-            setLoginError(errorMessage)
+            if (errorMessage.toLowerCase().includes('account not confirmed')) {
+                showSuccess('Please check your email and verify your account to continue.')
+                setLoginError('account_not_confirmed')
+            } else {
+                setLoginError(errorMessage)
+            }
         } finally {
             setLoading(false)
         }
@@ -44,10 +53,21 @@ export default function SignInPage() {
         }
     }
     const handleResendVerification = async () => {
+        if (!formData.emailAddress) {
+            showError('Please enter your email address first')
+            return
+        }
+
+        setResendLoading(true)
         try {
-            authService.showToast('verification', toast.info, '📧 Please re-register with your email or contact support for verification help.')
+            await authAPI.resendVerificationEmail(formData.emailAddress)
+            showSuccess('Verification email sent! Check your inbox and spam folder.')
+            setLoginError('')
         } catch (error) {
-            authService.handleAuthError(error, 'resend verification')
+            const errorMessage = error?.response?.data?.message || error?.data?.message || error?.message || 'Failed to send verification email'
+            showError(errorMessage)
+        } finally {
+            setResendLoading(false)
         }
     }
     return (
@@ -175,38 +195,6 @@ export default function SignInPage() {
                                         <form
                                             onSubmit={handleLogin}
                                             className="space-y-4">
-                                            {loginError && (
-                                                <div className="relative">
-                                                    <div className="absolute -inset-1 bg-gradient-to-r from-red-500/40 to-orange-500/40 rounded-xl blur opacity-75" />
-                                                    <div className="relative flex items-start gap-3 p-5 bg-red-900/30 border border-red-500/40 rounded-xl backdrop-blur-sm">
-                                                        <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                                                        <div className="flex-1">
-                                                            <DSText
-                                                                size="sm"
-                                                                className="text-red-300 font-medium leading-relaxed">
-                                                                {loginError}
-                                                            </DSText>
-                                                            {loginError.toLowerCase().includes('account not confirmed') && (
-                                                                <div className="mt-4 pt-3 border-t border-red-500/20">
-                                                                    <DSText
-                                                                        size="sm"
-                                                                        className="text-red-200/80 mb-3">
-                                                                        Please check your email and verify your account to continue.
-                                                                    </DSText>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={handleResendVerification}
-                                                                        className="inline-flex items-center gap-2 px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 hover:text-white font-medium text-sm rounded-lg transition-all duration-200 hover:scale-105"
-                                                                        disabled={loading || !formData.emailAddress}>
-                                                                        <Mail className="w-4 h-4" />
-                                                                        <span>Resend verification email</span>
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
                                             <div className="space-y-1">
                                                 <label className="block text-sm font-semibold text-gray-300 pl-1">Email Address</label>
                                                 <div className="relative group">
@@ -253,6 +241,51 @@ export default function SignInPage() {
                                                     </button>
                                                 </div>
                                             </div>
+                                            {loginError && (
+                                                <div className="space-y-3">
+                                                    {loginError === 'account_not_confirmed' ? (
+                                                        <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                                                            <div className="flex items-center gap-2 mb-3">
+                                                                <AlertCircle className="w-4 h-4 text-amber-400" />
+                                                                <DSText
+                                                                    size="sm"
+                                                                    className="text-amber-200 font-medium">
+                                                                    Account verification required
+                                                                </DSText>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={handleResendVerification}
+                                                                className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-100 hover:text-white font-medium text-sm rounded-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                disabled={loading || resendLoading || !formData.emailAddress}>
+                                                                {resendLoading ? (
+                                                                    <>
+                                                                        <div className="w-4 h-4 border-2 border-amber-200/30 border-t-amber-200 rounded-full animate-spin" />
+                                                                        <span>Sending...</span>
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <RefreshCw className="w-4 h-4" />
+                                                                        <span>Resend verification email</span>
+                                                                    </>
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                                                            <div className="flex items-center gap-2">
+                                                                <AlertCircle className="w-4 h-4 text-red-400" />
+                                                                <DSText
+                                                                    size="sm"
+                                                                    className="text-red-200 font-medium">
+                                                                    {loginError}
+                                                                </DSText>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
                                             <DSButton
                                                 variant="primary"
                                                 size="medium"
@@ -334,3 +367,4 @@ export default function SignInPage() {
         </div>
     )
 }
+

@@ -92,19 +92,31 @@ export default function CheckoutPage() {
     const handleCheckout = async () => {
         setLoading(true)
         try {
-            const purchaseData = {
-                paymentMethod: paymentMethod,
-                paymentReference: `${paymentMethod.toUpperCase()}-${Date.now()}`
+            // Only allow Stripe payments
+            if (paymentMethod !== 'stripe') {
+                throw new Error('Only Stripe payments are supported')
             }
-            const result = await cartAPI.createPurchase(purchaseData)
-            const purchaseId =
-                result?.purchaseId || result?._id || result?.data?.purchaseId || result?.completed?.data?.purchaseId || result?.completed?.purchaseId
-            if (!purchaseId) {
-                throw new Error('Failed to create purchase - no purchase ID returned')
+
+            // Create Stripe payment intent
+            const paymentIntentData = {
+                paymentMethod: 'stripe'
             }
-            await completeCheckout(purchaseId, paymentMethod)
+            
+            const result = await paymentAPI.createPaymentIntent(paymentIntentData)
+            
+            if (!result?.clientSecret) {
+                throw new Error('Failed to create payment intent')
+            }
+
+            // Redirect to Stripe checkout or handle payment intent
+            // This would typically redirect to Stripe's hosted checkout page
+            // or use Stripe Elements for embedded payment form
+            
+            // For now, we'll show an error since Stripe integration needs to be completed
+            throw new Error('Stripe integration is not yet configured. Please contact support.')
+            
         } catch (error) {
-            showMessage(error.message || 'Checkout failed. Please try again.', 'error')
+            showMessage(error.message || 'Payment failed. Please try again.', 'error')
         } finally {
             setLoading(false)
         }
@@ -471,19 +483,11 @@ function ReviewStep({ cartItems, total, subtotal, discount, promocode, onRemoveI
 function PaymentMethodStep({ paymentMethod, setPaymentMethod, onPaymentMethodChange }) {
     const paymentOptions = [
         {
-            id: 'manual',
-            name: 'Manual Payment',
-            description: 'Complete payment manually',
-            icon: Zap,
-            recommended: true,
-            info: 'For testing purposes - instant access'
-        },
-        {
             id: 'stripe',
             name: 'Credit/Debit Card',
             description: 'Pay securely with Stripe',
             icon: CreditCard,
-            recommended: false
+            recommended: true
         },
         {
             id: 'paypal',
@@ -500,6 +504,17 @@ function PaymentMethodStep({ paymentMethod, setPaymentMethod, onPaymentMethodCha
             comingSoon: true
         }
     ]
+
+    // Set default payment method to stripe if no method is selected or if manual was selected
+    useEffect(() => {
+        if (!paymentMethod || paymentMethod === 'manual') {
+            setPaymentMethod('stripe')
+            if (onPaymentMethodChange) {
+                onPaymentMethodChange('stripe')
+            }
+        }
+    }, [paymentMethod, setPaymentMethod, onPaymentMethodChange])
+
     return (
         <div>
             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
@@ -574,23 +589,6 @@ function PaymentMethodStep({ paymentMethod, setPaymentMethod, onPaymentMethodCha
                     <div className="flex items-center gap-2 text-xs text-gray-500">
                         <Lock className="w-4 h-4" />
                         Your payment information is encrypted and secure
-                    </div>
-                </div>
-            )}
-            {paymentMethod === 'manual' && (
-                <div className="mt-6 p-4 bg-gray-800 rounded-xl">
-                    <p className="text-sm text-gray-400 mb-4">
-                        This is a test payment method. Your order will be processed immediately without actual payment.
-                    </p>
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <CheckCircle className="w-4 h-4 text-green-400" />
-                            Instant access to purchased products
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <AlertCircle className="w-4 h-4 text-yellow-400" />
-                            For testing purposes only
-                        </div>
                     </div>
                 </div>
             )}
