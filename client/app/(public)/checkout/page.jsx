@@ -97,23 +97,17 @@ export default function CheckoutPage() {
                 throw new Error('Only Stripe payments are supported')
             }
 
-            // Create Stripe payment intent
-            const paymentIntentData = {
-                paymentMethod: 'stripe'
-            }
+            const baseUrl = window.location.origin
+            const successUrl = `${baseUrl}/checkout/success`
+            const cancelUrl = `${baseUrl}/checkout`
+
+            const result = await paymentAPI.createCheckoutSession(successUrl, cancelUrl)
             
-            const result = await paymentAPI.createPaymentIntent(paymentIntentData)
-            
-            if (!result?.clientSecret) {
-                throw new Error('Failed to create payment intent')
+            if (!result?.url) {
+                throw new Error('Failed to create checkout session')
             }
 
-            // Redirect to Stripe checkout or handle payment intent
-            // This would typically redirect to Stripe's hosted checkout page
-            // or use Stripe Elements for embedded payment form
-            
-            // For now, we'll show an error since Stripe integration needs to be completed
-            throw new Error('Stripe integration is not yet configured. Please contact support.')
+            window.location.href = result.url
             
         } catch (error) {
             showMessage(error.message || 'Payment failed. Please try again.', 'error')

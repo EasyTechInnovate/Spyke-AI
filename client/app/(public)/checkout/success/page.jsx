@@ -53,6 +53,9 @@ function CheckoutSuccessContent() {
                         sessionStorage.setItem('lastOrderDetails', JSON.stringify(orderData))
                         try {
                             await cartAPI.clearCart()
+                            if (typeof window !== 'undefined') {
+                                window.location.reload()
+                            }
                             await clearCart()
                             await reloadCart()
                         } catch (error) {
@@ -83,15 +86,6 @@ function CheckoutSuccessContent() {
                         return
                     }
                 }
-                const fallbackDetails = {
-                    orderId: orderId || 'Unknown',
-                    total: orderTotal ? parseFloat(orderTotal) : 0,
-                    itemCount: orderItems ? parseInt(orderItems) : 0,
-                    email: 'user@example.com',
-                    paymentMethod: 'stripe',
-                    items: []
-                }
-                setOrderDetails(fallbackDetails)
                 triggerConfetti()
             } catch (err) {
                 console.error('Error loading order details:', err)
@@ -165,7 +159,7 @@ function CheckoutSuccessContent() {
                                 <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-8 max-w-md mx-auto">
                                     <div className="text-center">
                                         <p className="text-sm text-gray-400 mb-2">Order Number</p>
-                                        <p className="text-2xl font-mono font-bold text-white mb-4">{orderId}</p>
+                                        <p className="text-2xl font-mono font-bold text-white mb-4">{orderDetails?.orderId}</p>
                                         {orderDetails && (
                                             <div className="space-y-2 text-sm">
                                                 <div className="flex justify-between items-center">
