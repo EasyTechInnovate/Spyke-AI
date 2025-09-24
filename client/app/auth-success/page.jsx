@@ -201,7 +201,7 @@ function AuthSuccessContent() {
                         } else if (roles.includes('seller')) {
                             redirectPath = '/seller/dashboard'
                         } else {
-                            redirectPath = '/dashboard'
+                            redirectPath = '/'
                         }
                     }
                     localStorage.removeItem('redirectAfterLogin') 
