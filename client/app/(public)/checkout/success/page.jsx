@@ -35,11 +35,12 @@ function CheckoutSuccessContent() {
                     try {
                         const { paymentAPI } = await import('@/lib/api')
                         const result = await paymentAPI?.confirmCheckoutSession(sessionId)
-                        if (!result) {
+                        if (!result || !result.success || !result.data || !result.data.purchaseId) {
                             console.error('Session confirmation failed:', result?.message || 'Unknown error')
                             throw new Error(result?.message || 'Session validation failed')
                         }
-                        const responseData = result
+                        const responseData = result.data
+                        console.log('Resposne Data:', responseData);
                         const orderData = {
                             orderId: responseData?.purchaseId,
                             items: responseData?.items || [],
@@ -53,11 +54,9 @@ function CheckoutSuccessContent() {
                         sessionStorage.setItem('lastOrderDetails', JSON.stringify(orderData))
                         try {
                             await cartAPI.clearCart()
-                            if (typeof window !== 'undefined') {
-                                window.location.reload()
-                            }
                             await clearCart()
                             await reloadCart()
+                            window.location.reload()
                         } catch (error) {
                             console.error('Failed to clear cart:', error)
                         }
