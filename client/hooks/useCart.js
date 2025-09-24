@@ -52,10 +52,8 @@ export function useCart() {
     setLoading(true)
     try {
       if (isAuthenticated) {
-        // Load from backend
         const cart = await cartAPI.getCart()
 
-        // Transform backend cart items to match frontend structure
         const transformedItems = cart.items?.map(item => ({
           id: item.productId?._id || item.productId?.id,
           _id: item.productId?._id,
@@ -64,12 +62,11 @@ export function useCart() {
           description: item.productId?.shortDescription || '',
           price: item.productId?.price || 0,
           originalPrice: item.productId?.originalPrice || item.productId?.price || 0,
-          quantity: item.quantity || 1, // Ensure quantity exists
+          quantity: item.quantity || 1,
           category: item.productId?.category || '',
           seller: item.productId?.sellerId || item.productId?.seller || { name: 'Unknown Seller' },
           image: item.productId?.thumbnail || '',
           addedAt: item.addedAt,
-          // Keep original structure for calculations
           productId: item.productId
         })) || []
 
