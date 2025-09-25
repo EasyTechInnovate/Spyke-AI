@@ -10,7 +10,7 @@ import SellerAbout from '@/components/features/seller/profile/SellerAbout'
 import SellerReviews from '@/components/features/seller/profile/SellerReviews'
 import ContactWidget from '@/components/features/seller/profile/ContactWidget'
 import { useEnhancedSellerProfile } from '@/hooks/useEnhancedSellerProfile'
-import { Star, Users, Sparkles, Award, Zap, Target, TrendingUp, Clock, Shield, Globe } from 'lucide-react'
+import { Star, Users, Sparkles, Award, Zap, Target, TrendingUp, Clock, Shield, Globe, MapPin, Calendar, Eye, Heart } from 'lucide-react'
 import { formatLocation } from '@/lib/utils/seller'
 export default function PublicSellerProfile() {
     const params = useParams()
@@ -18,15 +18,14 @@ export default function PublicSellerProfile() {
     const [activeTab, setActiveTab] = useState('products')
     const [isContactWidgetOpen, setIsContactWidgetOpen] = useState(false)
     const { seller, products, reviews, similarSellers, loading, error, productFilters, updateProductFilters } = useEnhancedSellerProfile(sellerId)
+    console.log('PublicSellerProfile render', { sellerId, activeTab, isContactWidgetOpen, loading, error, seller })
     const handleTabChange = (tab) => {
         setActiveTab(tab)
     }
     const handleProductClick = (productId) => {
         window.location.href = `/products/${productId}`
     }
-    const handleContactClick = () => {
-        setIsContactWidgetOpen(true)
-    }
+    
     if (loading) {
         return (
             <div className="min-h-screen bg-[#121212]">
@@ -87,7 +86,6 @@ export default function PublicSellerProfile() {
                 <div className="w-full">
                     <SellerHero
                         seller={seller}
-                        onContactClick={handleContactClick}
                     />
                 </div>
                 <Container>
@@ -139,6 +137,24 @@ export default function PublicSellerProfile() {
                                 {activeTab === 'about' && (
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                         <div className="lg:col-span-2 space-y-8">
+                                            {/* Bio Section */}
+                                            {seller?.bio && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: 0.1 }}
+                                                    className="bg-[#1f1f1f] rounded-2xl p-6 border border-[#6b7280]/20">
+                                                    <h3 className="text-[#FFFFFF] mb-6 text-xl font-[var(--font-league-spartan)] flex items-center gap-2">
+                                                        <Users className="w-5 h-5 text-[#00FF89]" />
+                                                        About {seller.fullName}
+                                                    </h3>
+                                                    <p className="text-[#e5e7eb] leading-relaxed font-[var(--font-kumbh-sans)] text-base">
+                                                        {seller.bio}
+                                                    </p>
+                                                </motion.div>
+                                            )}
+
+                                            {/* Achievements & Badges */}
                                             <motion.div
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
@@ -152,29 +168,31 @@ export default function PublicSellerProfile() {
                                                     <AchievementBadge 
                                                         icon={Shield} 
                                                         title="Verified Creator" 
-                                                        earned={seller?.isVerified} 
+                                                        earned={seller?.isVerified || seller?.trustScore > 15} 
                                                         color="emerald"
                                                     />
                                                     <AchievementBadge 
                                                         icon={Target} 
                                                         title="Top Seller" 
-                                                        earned={seller?.metrics?.totalSales > 50} 
+                                                        earned={seller?.metrics?.totalSales > 30 || seller?.stats?.totalSales > 30} 
                                                         color="blue"
                                                     />
                                                     <AchievementBadge 
                                                         icon={TrendingUp} 
                                                         title="Rising Star" 
-                                                        earned={seller?.metrics?.profileViews > 1000} 
+                                                        earned={seller?.metrics?.profileViews > 1000 || seller?.stats?.profileViews > 1000} 
                                                         color="purple"
                                                     />
                                                     <AchievementBadge 
                                                         icon={Clock} 
                                                         title="Quick Responder" 
-                                                        earned={seller?.responseTime === '< 24h'} 
+                                                        earned={seller?.avgResponseTime?.includes('< 2h') || seller?.responseTime?.includes('< 2h')} 
                                                         color="amber"
                                                     />
                                                 </div>
                                             </motion.div>
+
+                                            {/* Skills & Expertise */}
                                             <motion.div
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
@@ -185,11 +203,11 @@ export default function PublicSellerProfile() {
                                                     Skills & Expertise
                                                 </h3>
                                                 <div className="space-y-6">
-                                                    {seller?.niches?.length > 0 && (
+                                                    {(seller?.niches?.length > 0 || seller?.specialties?.length > 0) && (
                                                         <div>
                                                             <h4 className="text-[#9ca3af] text-sm font-medium mb-3 uppercase tracking-wider">Specializations</h4>
                                                             <div className="flex flex-wrap gap-2">
-                                                                {seller.niches.map((niche, index) => (
+                                                                {(seller?.niches || seller?.specialties || []).map((niche, index) => (
                                                                     <motion.span
                                                                         key={index}
                                                                         initial={{ opacity: 0, scale: 0.8 }}
@@ -222,31 +240,82 @@ export default function PublicSellerProfile() {
                                                     )}
                                                 </div>
                                             </motion.div>
+
+                                            {/* Services Offered */}
+                                            {seller?.customAutomationServices && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: 0.3 }}
+                                                    className="bg-[#1f1f1f] rounded-2xl p-6 border border-[#6b7280]/20">
+                                                    <h3 className="text-[#FFFFFF] mb-6 text-xl font-[var(--font-league-spartan)] flex items-center gap-2">
+                                                        <Sparkles className="w-5 h-5 text-[#9333ea]" />
+                                                        Services Offered
+                                                    </h3>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div className="flex items-center gap-3 p-4 bg-[#121212] rounded-lg border border-[#6b7280]/20">
+                                                            <div className="w-10 h-10 bg-[#9333ea]/20 rounded-lg flex items-center justify-center">
+                                                                <Zap className="w-5 h-5 text-[#9333ea]" />
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="text-[#FFFFFF] font-medium font-[var(--font-league-spartan)]">Custom Automation</h4>
+                                                                <p className="text-[#9ca3af] text-sm font-[var(--font-kumbh-sans)]">Tailored solutions for your needs</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-3 p-4 bg-[#121212] rounded-lg border border-[#6b7280]/20">
+                                                            <div className="w-10 h-10 bg-[#00FF89]/20 rounded-lg flex items-center justify-center">
+                                                                <Target className="w-5 h-5 text-[#00FF89]" />
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="text-[#FFFFFF] font-medium font-[var(--font-league-spartan)]">Consultation</h4>
+                                                                <p className="text-[#9ca3af] text-sm font-[var(--font-kumbh-sans)]">Expert guidance and advice</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+
                                             <SellerAbout seller={seller} />
                                         </div>
+
+                                        {/* Right Sidebar */}
                                         <div className="space-y-6">
+                                            {/* Quick Stats */}
                                             <div className="bg-[#1f1f1f] rounded-2xl p-6 border border-[#6b7280]/20">
                                                 <h3 className="text-[#FFFFFF] mb-4 text-lg font-[var(--font-league-spartan)]">
-                                                    Quick Stats
+                                                    Performance Stats
                                                 </h3>
                                                 <div className="space-y-4">
                                                     <div className="flex justify-between items-center">
                                                         <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Products</span>
                                                         <span className="text-[#FFFFFF] font-[var(--font-league-spartan)]">
-                                                            {seller?.metrics?.totalProducts || 0}
+                                                            {seller?.stats?.totalProducts || seller?.metrics?.totalProducts || 0}
                                                         </span>
                                                     </div>
                                                     <div className="flex justify-between items-center">
                                                         <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Total Sales</span>
                                                         <span className="text-[#FFFFFF] font-[var(--font-league-spartan)]">
-                                                            {seller?.metrics?.totalSales || 0}
+                                                            {seller?.stats?.totalSales || seller?.metrics?.totalSales || 0}
                                                         </span>
                                                     </div>
                                                     <div className="flex justify-between items-center">
                                                         <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Rating</span>
                                                         <span className="text-[#FFFFFF] flex items-center gap-1 font-[var(--font-league-spartan)]">
                                                             <Star className="w-3 h-3 fill-[#FFC050] text-[#FFC050]" />
-                                                            {seller?.metrics?.avgRating ? seller.metrics.avgRating.toFixed(1) : 'N/A'}
+                                                            {seller?.stats?.averageRating || seller?.metrics?.avgRating ? 
+                                                                (seller?.stats?.averageRating || seller?.metrics?.avgRating).toFixed(1) : 'N/A'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Reviews</span>
+                                                        <span className="text-[#FFFFFF] font-[var(--font-league-spartan)]">
+                                                            {seller?.stats?.totalReviews || seller?.metrics?.totalReviews || 0}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Profile Views</span>
+                                                        <span className="text-[#FFFFFF] font-[var(--font-league-spartan)]">
+                                                            {seller?.stats?.profileViews || seller?.metrics?.profileViews || 0}
                                                         </span>
                                                     </div>
                                                     <div className="flex justify-between items-center">
@@ -257,21 +326,49 @@ export default function PublicSellerProfile() {
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="bg-[#1f1f1f] rounded-2xl p-6 border border-[#6b7280]/20">
+
+                                            {/* Location & Availability */}
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: 0.3 }}
+                                                className="bg-[#1f1f1f] rounded-2xl p-6 border border-[#6b7280]/20">
                                                 <h3 className="text-[#FFFFFF] mb-4 text-lg font-[var(--font-league-spartan)]">
-                                                    Get in Touch
+                                                    Location & Availability
                                                 </h3>
-                                                <div className="space-y-3">
-                                                    <button
-                                                        onClick={handleContactClick}
-                                                        className="w-full p-4 bg-[#00FF89] text-[#121212] rounded-xl hover:shadow-lg hover:shadow-[#00FF89]/25 transition-all font-[var(--font-kumbh-sans)]">
-                                                        Send Message
-                                                    </button>
-                                                    <button className="w-full p-4 bg-[#121212] text-[#FFFFFF] border border-[#6b7280]/20 rounded-xl hover:bg-[#2a2a2a] hover:border-[#00FF89]/30 transition-all font-[var(--font-kumbh-sans)]">
-                                                        Schedule Call
-                                                    </button>
+                                                <div className="space-y-4">
+                                                    {(seller?.location?.country || seller?.locationText) && (
+                                                        <div className="flex items-center gap-3">
+                                                            <MapPin className="w-4 h-4 text-[#00FF89]" />
+                                                            <div>
+                                                                <span className="text-[#FFFFFF] font-[var(--font-kumbh-sans)]">
+                                                                    {seller?.location?.country || seller?.locationText}
+                                                                </span>
+                                                                {seller?.location?.timezone && (
+                                                                    <p className="text-xs text-[#9ca3af]">{seller.location.timezone}</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex items-center gap-3">
+                                                        <Clock className="w-4 h-4 text-[#FFC050]" />
+                                                        <div>
+                                                            <span className="text-[#FFFFFF] font-[var(--font-kumbh-sans)]">
+                                                                Responds in {seller?.avgResponseTime || seller?.responseTime || '< 24h'}
+                                                            </span>
+                                                            <p className="text-xs text-[#9ca3af]">Average response time</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-3 h-3 rounded-full ${seller?.isOnline ? 'bg-[#00FF89]' : 'bg-[#6b7280]'}`} />
+                                                        <span className={`font-[var(--font-kumbh-sans)] ${seller?.isOnline ? 'text-[#00FF89]' : 'text-[#9ca3af]'}`}>
+                                                            {seller?.isOnline ? 'Online now' : 'Offline'}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            </motion.div>
+                                            
+                                            {/* Trust & Credibility */}
                                             <motion.div
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
@@ -284,21 +381,36 @@ export default function PublicSellerProfile() {
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Member Since</span>
                                                         <span className="text-[#FFFFFF] font-[var(--font-league-spartan)]">
-                                                            {seller?.createdAt ? new Date(seller.createdAt).getFullYear() : 'N/A'}
+                                                            {seller?.memberSince ? new Date(seller.memberSince).getFullYear() : 
+                                                             seller?.joinedDate || 
+                                                             (seller?.createdAt ? new Date(seller.createdAt).getFullYear() : 'N/A')}
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Last Active</span>
-                                                        <span className="text-[#00FF89] font-[var(--font-league-spartan)]">
-                                                            {seller?.isOnline ? 'Online now' : 'Recently'}
-                                                        </span>
+                                                        <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Trust Score</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-16 h-2 bg-[#6b7280]/30 rounded-full overflow-hidden">
+                                                                <div 
+                                                                    className="h-full bg-gradient-to-r from-[#00FF89] to-[#FFC050] rounded-full transition-all"
+                                                                    style={{ width: `${Math.min((seller?.trustScore || 0) * 5, 100)}%` }}
+                                                                />
+                                                            </div>
+                                                            <span className="text-[#FFFFFF] font-[var(--font-league-spartan)] text-sm">
+                                                                {seller?.trustScore || 0}/20
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Verification</span>
-                                                        <div className="flex items-center gap-1">
-                                                            <Shield className={`w-4 h-4 ${seller?.isVerified ? 'text-[#00FF89]' : 'text-[#6b7280]'}`} />
-                                                            <span className={`text-sm font-[var(--font-league-spartan)] ${seller?.isVerified ? 'text-[#00FF89]' : 'text-[#6b7280]'}`}>
-                                                                {seller?.isVerified ? 'Verified' : 'Pending'}
+                                                        <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Seller Level</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <div className={`w-3 h-3 rounded-full ${
+                                                                seller?.sellerLevel?.level === 'Gold' ? 'bg-yellow-500' :
+                                                                seller?.sellerLevel?.level === 'Silver' ? 'bg-gray-400' :
+                                                                seller?.sellerLevel?.level === 'Bronze' ? 'bg-orange-400' :
+                                                                'bg-[#6b7280]'
+                                                            }`} />
+                                                            <span className="text-[#FFFFFF] font-[var(--font-league-spartan)] text-sm">
+                                                                {seller?.sellerLevel?.level || 'New Seller'}
                                                             </span>
                                                         </div>
                                                     </div>

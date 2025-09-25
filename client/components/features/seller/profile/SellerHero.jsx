@@ -1,38 +1,22 @@
 'use client'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import {
-    Star,
-    MapPin,
-    Clock,
-    Globe,
-    MessageCircle,
-    Heart,
-    Shield,
-    Zap,
-    Trophy,
-    TrendingUp,
-    Users,
-    ExternalLink,
-    Phone,
-    Mail,
-    Calendar,
-    CheckCircle,
-    Award,
-    Eye
-} from 'lucide-react'
+import { Star, MapPin, Clock, Globe, Heart, Shield, Trophy, TrendingUp, Users, Eye, Award, Calendar } from 'lucide-react'
 import { formatNumber, formatRating } from '@/lib/utils/seller'
-export default function SellerHero({ seller, onContactClick }) {
+export default function SellerHero({ seller }) {
     const [imageLoaded, setImageLoaded] = useState(false)
     const [isFollowing, setIsFollowing] = useState(false)
     const [bioExpanded, setBioExpanded] = useState(false)
-    const sellerLevelText = seller && typeof seller.sellerLevel === 'object' && seller.sellerLevel !== null
-        ? seller.sellerLevel.level
-        : seller?.sellerLevel
-    if (typeof window !== 'undefined') {
-        console.debug('[SellerHero] props received', { id: seller?.id || seller?._id, sellerLevel: seller?.sellerLevel, sellerLevelText })
-    }
-    const sellerLocation = seller?.location?.country || (typeof seller?.location === 'string' ? seller.location : '')
+    const sellerLevelText = seller?.sellerLevel?.level || seller?.sellerLevel || 'Pro Seller'
+    const sellerLocation = seller?.location?.country || seller?.locationText || seller?.locationObj?.country || ''
+    const averageRating = seller?.stats?.averageRating || seller?.metrics?.avgRating || seller?.averageRating || 0
+    const totalSales = seller?.metrics?.totalSales || seller?.stats?.totalSales || seller?.totalSales || 0
+    const totalProducts = seller?.stats?.totalProducts || seller?.metrics?.totalProducts || 0
+    const totalReviews = seller?.stats?.totalReviews || seller?.metrics?.totalReviews || 0
+    const profileViews = seller?.stats?.profileViews || seller?.metrics?.profileViews || 0
+    const totalCustomers = seller?.metrics?.totalCustomers || seller?.stats?.totalCustomers || 0
+    const responseTime = seller?.avgResponseTime || seller?.responseTime || '< 24h'
+    const memberSince = seller?.memberSince ? new Date(seller.memberSince).getFullYear() : seller?.joinedDate || null
     if (!seller) return null
     return (
         <div className="relative overflow-hidden">
@@ -114,39 +98,103 @@ export default function SellerHero({ seller, onContactClick }) {
                                                 </h1>
                                                 <div className="flex flex-wrap items-center gap-2 lg:gap-3">
                                                     <div className="flex items-center gap-1.5 lg:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-[#00FF89]/20 to-[#FFC050]/20 border border-[#00FF89]/30 rounded-lg sm:rounded-xl">
-                                                        <Trophy className="w-3 h-3 sm:w-4 sm:h-4 text-[#FFC050] icon-decorative" aria-hidden="true" />
+                                                        <Trophy
+                                                            className="w-3 h-3 sm:w-4 sm:h-4 text-[#FFC050] icon-decorative"
+                                                            aria-hidden="true"
+                                                        />
                                                         <span
                                                             className="text-xs sm:text-sm text-contrast-strong"
                                                             style={{ fontFamily: 'var(--font-kumbh-sans)', fontWeight: '600' }}>
-                                                            {sellerLevelText || 'Pro Seller'}
+                                                            {sellerLevelText}
                                                         </span>
                                                     </div>
-                                                    {seller.averageRating != null && (
+                                                    {averageRating > 0 && (
                                                         <div className="flex items-center gap-1 lg:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-[#FFC050]/20 border border-[#FFC050]/30 rounded-lg sm:rounded-xl">
-                                                            <Star className="w-3 h-3 sm:w-4 sm:h-4 text-[#FFC050] fill-current icon-decorative" aria-hidden="true" />
+                                                            <Star
+                                                                className="w-3 h-3 sm:w-4 sm:h-4 text-[#FFC050] fill-current icon-decorative"
+                                                                aria-hidden="true"
+                                                            />
                                                             <span
                                                                 className="text-xs sm:text-sm text-contrast-strong"
                                                                 style={{ fontFamily: 'var(--font-kumbh-sans)', fontWeight: '600' }}>
-                                                                {formatRating(seller.averageRating, { withStar: false })}
+                                                                {formatRating
+                                                                    ? formatRating(averageRating, { withStar: false })
+                                                                    : averageRating.toFixed(1)}
                                                             </span>
                                                             <span className="sr-only">Average rating</span>
                                                         </div>
                                                     )}
-                                                    {seller.totalSales > 0 && (
+                                                    {totalSales > 0 && (
                                                         <div className="flex items-center gap-1 lg:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-[#FFFFFF]/10 border border-[#FFFFFF]/20 rounded-lg sm:rounded-xl">
-                                                            <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-[#FFFFFF] icon-decorative" aria-hidden="true" />
+                                                            <TrendingUp
+                                                                className="w-3 h-3 sm:w-4 sm:h-4 text-[#FFFFFF] icon-decorative"
+                                                                aria-hidden="true"
+                                                            />
                                                             <span
                                                                 className="text-xs sm:text-sm text-contrast-strong"
                                                                 style={{ fontFamily: 'var(--font-kumbh-sans)', fontWeight: '600' }}>
-                                                                {formatNumber(seller.totalSales)} Sales
+                                                                {formatNumber ? formatNumber(totalSales) : totalSales} Sales
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    {totalProducts > 0 && (
+                                                        <div className="flex items-center gap-1 lg:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-[#9333ea]/20 border border-[#9333ea]/30 rounded-lg sm:rounded-xl">
+                                                            <Award
+                                                                className="w-3 h-3 sm:w-4 sm:h-4 text-[#9333ea] icon-decorative"
+                                                                aria-hidden="true"
+                                                            />
+                                                            <span
+                                                                className="text-xs sm:text-sm text-contrast-strong"
+                                                                style={{ fontFamily: 'var(--font-kumbh-sans)', fontWeight: '600' }}>
+                                                                {totalProducts} Product{totalProducts !== 1 ? 's' : ''}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    {seller.responseRate && (
+                                                        <div className="flex items-center gap-1 lg:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-[#10b981]/20 border border-[#10b981]/30 rounded-lg sm:rounded-xl">
+                                                            <Clock
+                                                                className="w-3 h-3 sm:w-4 sm:h-4 text-[#10b981] icon-decorative"
+                                                                aria-hidden="true"
+                                                            />
+                                                            <span
+                                                                className="text-xs sm:text-sm text-contrast-strong"
+                                                                style={{ fontFamily: 'var(--font-kumbh-sans)', fontWeight: '600' }}>
+                                                                {seller.responseRate} Response Rate
                                                             </span>
                                                         </div>
                                                     )}
                                                 </div>
                                             </div>
+                                            {seller.specialties && seller.specialties.length > 0 && (
+                                                <div className="space-y-2">
+                                                    <h3
+                                                        className="text-sm font-semibold text-[#9ca3af]"
+                                                        style={{ fontFamily: 'var(--font-kumbh-sans)' }}>
+                                                        Specialties
+                                                    </h3>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {seller.specialties.slice(0, 5).map((specialty, index) => (
+                                                            <span
+                                                                key={index}
+                                                                className="px-2 py-1 text-xs bg-[#1f1f1f] border border-[#6b7280]/30 rounded-lg text-[#e5e7eb]"
+                                                                style={{ fontFamily: 'var(--font-kumbh-sans)' }}>
+                                                                {specialty}
+                                                            </span>
+                                                        ))}
+                                                        {seller.specialties.length > 5 && (
+                                                            <span className="px-2 py-1 text-xs bg-[#1f1f1f] border border-[#6b7280]/30 rounded-lg text-[#9ca3af]">
+                                                                +{seller.specialties.length - 5} more
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
                                             {seller.bio && (
                                                 <div>
-                                                    <p className={`text-sm sm:text-base leading-relaxed font-[var(--font-kumbh-sans)] ${bioExpanded ? '' : 'line-clamp-3'} text-[#9ca3af]`}>{seller.bio}</p>
+                                                    <p
+                                                        className={`text-sm sm:text-base leading-relaxed font-[var(--font-kumbh-sans)] ${bioExpanded ? '' : 'line-clamp-3'} text-[#9ca3af]`}>
+                                                        {seller.bio}
+                                                    </p>
                                                     {seller.bio.length > 240 && (
                                                         <button
                                                             onClick={() => setBioExpanded((s) => !s)}
@@ -161,14 +209,29 @@ export default function SellerHero({ seller, onContactClick }) {
                                             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-sm text-[#9ca3af]">
                                                 {sellerLocation && (
                                                     <div className="flex items-center gap-2">
-                                                        <MapPin className="w-4 h-4 text-[#00FF89] flex-shrink-0 icon-decorative" aria-hidden="true" />
+                                                        <MapPin
+                                                            className="w-4 h-4 text-[#00FF89] flex-shrink-0 icon-decorative"
+                                                            aria-hidden="true"
+                                                        />
                                                         <span className="font-[var(--font-kumbh-sans)] truncate">{sellerLocation}</span>
                                                     </div>
                                                 )}
                                                 <div className="flex items-center gap-2">
-                                                    <Clock className="w-4 h-4 text-[#00FF89] flex-shrink-0 icon-decorative" aria-hidden="true" />
-                                                    <span className="font-[var(--font-kumbh-sans)]">Responds in {seller.responseTime || '< 24h'}</span>
+                                                    <Clock
+                                                        className="w-4 h-4 text-[#00FF89] flex-shrink-0 icon-decorative"
+                                                        aria-hidden="true"
+                                                    />
+                                                    <span className="font-[var(--font-kumbh-sans)]">Responds in {responseTime}</span>
                                                 </div>
+                                                {memberSince && (
+                                                    <div className="flex items-center gap-2">
+                                                        <Calendar
+                                                            className="w-4 h-4 text-[#00FF89] flex-shrink-0 icon-decorative"
+                                                            aria-hidden="true"
+                                                        />
+                                                        <span className="font-[var(--font-kumbh-sans)]">Member since {memberSince}</span>
+                                                    </div>
+                                                )}
                                                 {seller.languages && seller.languages.length > 0 && (
                                                     <div className="flex items-center gap-2">
                                                         <Globe className="w-4 h-4 text-[#00FF89] flex-shrink-0" />
@@ -183,16 +246,6 @@ export default function SellerHero({ seller, onContactClick }) {
                                                 <motion.button
                                                     whileHover={{ scale: 1.02 }}
                                                     whileTap={{ scale: 0.98 }}
-                                                    onClick={onContactClick}
-                                                    aria-label={`Contact ${seller.fullName}`}
-                                                    className="flex-1 sm:flex-none px-6 sm:px-8 py-3 sm:py-4 bg-[#00FF89] text-[#121212] rounded-xl sm:rounded-2xl font-bold transition-all duration-300 hover:bg-[#00FF89]/90 hover:shadow-[0_0_30px_rgba(0,255,137,0.3)] flex items-center justify-center gap-2 touch-target"
-                                                    style={{ fontFamily: 'var(--font-league-spartan)' }}>
-                                                    <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 icon-decorative" aria-hidden="true" />
-                                                    <span className="text-sm sm:text-base">Contact Seller</span>
-                                                </motion.button>
-                                                <motion.button
-                                                    whileHover={{ scale: 1.02 }}
-                                                    whileTap={{ scale: 0.98 }}
                                                     onClick={() => setIsFollowing(!isFollowing)}
                                                     aria-pressed={isFollowing}
                                                     aria-label={isFollowing ? `Unfollow ${seller.fullName}` : `Follow ${seller.fullName}`}
@@ -202,7 +255,10 @@ export default function SellerHero({ seller, onContactClick }) {
                                                             : 'bg-transparent text-[#00FF89] border-[#00FF89] hover:bg-[#00FF89]/10'
                                                     }`}
                                                     style={{ fontFamily: 'var(--font-league-spartan)', fontWeight: 'bold' }}>
-                                                    <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${isFollowing ? 'fill-current icon-decorative' : 'icon-decorative'}`} aria-hidden="true" />
+                                                    <Heart
+                                                        className={`w-4 h-4 sm:w-5 sm:h-5 ${isFollowing ? 'fill-current icon-decorative' : 'icon-decorative'}`}
+                                                        aria-hidden="true"
+                                                    />
                                                     <span className="text-sm sm:text-base">{isFollowing ? 'Following' : 'Follow'}</span>
                                                 </motion.button>
                                             </div>
@@ -213,48 +269,71 @@ export default function SellerHero({ seller, onContactClick }) {
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.4, duration: 0.5 }}
-                                    className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 px-2 sm:px-0">
+                                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5 lg:gap-6 px-2 sm:px-0">
                                     {[
                                         {
                                             icon: TrendingUp,
-                                            value: seller.metrics.totalSales || 0,
+                                            value: totalSales,
                                             label: 'Total Sales',
-                                            color: 'text-[#00FF89]'
+                                            color: 'text-[#00FF89]',
+                                            show: totalSales > 0
                                         },
                                         {
-                                            icon: Users,
-                                            value: seller.metrics.totalCustomers || 0,
-                                            label: 'Customers',
-                                            color: 'text-[#FFC050]'
+                                            icon: Award,
+                                            value: totalProducts,
+                                            label: 'Products',
+                                            color: 'text-[#9333ea]',
+                                            show: totalProducts > 0
                                         },
                                         {
                                             icon: Star,
-                                            value: seller.metrics.averageRating != null ? formatRating(seller.averageRating) : 'N/A',
+                                            value:
+                                                averageRating > 0 ? (formatRating ? formatRating(averageRating) : averageRating.toFixed(1)) : 'N/A',
                                             label: 'Rating',
-                                            color: 'text-[#FFC050]'
+                                            color: 'text-[#FFC050]',
+                                            show: true
+                                        },
+                                        {
+                                            icon: Users,
+                                            value: totalReviews,
+                                            label: 'Reviews',
+                                            color: 'text-[#10b981]',
+                                            show: totalReviews > 0
                                         },
                                         {
                                             icon: Eye,
-                                            value: seller.metrics.profileViews || 0,
+                                            value: profileViews,
                                             label: 'Profile Views',
-                                            color: 'text-[#FFFFFF]'
+                                            color: 'text-[#FFFFFF]',
+                                            show: profileViews > 0
                                         }
-                                    ].map((stat, index) => {
-                                        const IconComponent = stat.icon
-                                        return (
-                                            <div
-                                                key={index}
-                                                className="bg-[#1f1f1f]/70 backdrop-blur-sm border border-[#6b7280]/20 rounded-xl lg:rounded-2xl p-5 sm:p-6 lg:p-8 text-center hover:border-[#00FF89]/30 transition-all min-h-[92px] lg:min-h-[140px] flex flex-col justify-center">
-                                                <IconComponent className={`w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 ${stat.color} mx-auto mb-3 icon-decorative`} aria-hidden="true" />
+                                    ]
+                                        .filter((stat) => stat.show)
+                                        .map((stat, index) => {
+                                            const IconComponent = stat.icon
+                                            return (
                                                 <div
-                                                    className={`text-lg sm:text-xl lg:text-2xl ${stat.color} mb-1`}
-                                                    style={{ fontFamily: 'var(--font-league-spartan)', fontWeight: '700' }}>
-                                                    {typeof stat.value === 'number' ? formatNumber(stat.value) : stat.value}
+                                                    key={index}
+                                                    className="bg-[#1f1f1f]/70 backdrop-blur-sm border border-[#6b7280]/20 rounded-xl lg:rounded-2xl p-4 sm:p-5 lg:p-6 text-center hover:border-[#00FF89]/30 transition-all min-h-[80px] lg:min-h-[120px] flex flex-col justify-center">
+                                                    <IconComponent
+                                                        className={`w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 ${stat.color} mx-auto mb-2 icon-decorative`}
+                                                        aria-hidden="true"
+                                                    />
+                                                    <div
+                                                        className={`text-base sm:text-lg lg:text-xl ${stat.color} mb-1`}
+                                                        style={{ fontFamily: 'var(--font-league-spartan)', fontWeight: '700' }}>
+                                                        {typeof stat.value === 'number'
+                                                            ? formatNumber
+                                                                ? formatNumber(stat.value)
+                                                                : stat.value
+                                                            : stat.value}
+                                                    </div>
+                                                    <div className="text-xs sm:text-sm text-[#9ca3af] font-[var(--font-kumbh-sans)]">
+                                                        {stat.label}
+                                                    </div>
                                                 </div>
-                                                <div className="text-xs sm:text-sm text-[#9ca3af] font-[var(--font-kumbh-sans)]">{stat.label}</div>
-                                            </div>
-                                        )
-                                    })}
+                                            )
+                                        })}
                                 </motion.div>
                             </div>
                         </div>

@@ -27,7 +27,6 @@ import { useCart } from '@/hooks/useCart'
 import { paymentAPI, cartAPI } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
 import Link from 'next/link'
-import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
 export default function CheckoutPage() {
     const [notification, setNotification] = useState(null)
@@ -347,6 +346,17 @@ function ReviewStep({ cartItems, total, subtotal, discount, promocode, onRemoveI
             null
         return imageUrl
     }
+
+    const handleImageError = (e) => {
+        console.warn('Checkout product image failed to load:', e.target.src)
+        // Hide the broken image and show fallback
+        const fallbackDiv = e.target.nextElementSibling
+        if (fallbackDiv) {
+            e.target.style.display = 'none'
+            fallbackDiv.style.display = 'flex'
+        }
+    }
+
     return (
         <div>
             <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
@@ -362,17 +372,20 @@ function ReviewStep({ cartItems, total, subtotal, discount, promocode, onRemoveI
                             key={item._id || item.id}
                             className="bg-gray-800 border border-gray-700 rounded-xl p-4">
                             <div className="flex items-start gap-4">
-                                <div className="flex-shrink-0 w-20 h-20">
+                                <div className="flex-shrink-0 w-20 h-20 relative">
                                     {imageUrl ? (
-                                        <OptimizedImage
-                                            src={imageUrl}
-                                            alt={product.title || item.title || 'Product'}
-                                            width={80}
-                                            height={80}
-                                            className="w-full h-full object-cover rounded-lg border border-gray-600"
-                                            fallbackSrc="/icons/package.svg"
-                                            showFallbackIcon={true}
-                                        />
+                                        <>
+                                            <img
+                                                src={imageUrl}
+                                                alt={product.title || item.title || 'Product'}
+                                                className="w-full h-full object-cover rounded-lg border border-gray-600"
+                                                onError={handleImageError}
+                                                loading="lazy"
+                                            />
+                                            <div className="w-full h-full bg-gradient-to-br from-brand-primary/20 to-gray-700/30 rounded-lg border border-gray-600 items-center justify-center absolute inset-0 hidden">
+                                                <Package className="w-8 h-8 text-brand-primary/60" />
+                                            </div>
+                                        </>
                                     ) : (
                                         <div className="w-full h-full bg-gradient-to-br from-brand-primary/20 to-gray-700/30 rounded-lg border border-gray-600 flex items-center justify-center">
                                             <Package className="w-8 h-8 text-brand-primary/60" />
@@ -605,6 +618,17 @@ function OrderSummary({ cartItems, subtotal, discount, total, promocode }) {
             null
         return imageUrl
     }
+
+    const handleImageError = (e) => {
+        console.warn('Checkout summary image failed to load:', e.target.src)
+        // Hide the broken image and show fallback
+        const fallbackDiv = e.target.nextElementSibling
+        if (fallbackDiv) {
+            e.target.style.display = 'none'
+            fallbackDiv.style.display = 'flex'
+        }
+    }
+
     return (
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 sticky top-8">
             <h3 className="text-xl font-semibold text-white mb-6">Order Summary</h3>
@@ -616,17 +640,20 @@ function OrderSummary({ cartItems, subtotal, discount, total, promocode }) {
                         <div
                             key={item._id || item.id}
                             className="flex items-center gap-3">
-                            <div className="w-12 h-12 flex-shrink-0">
+                            <div className="w-12 h-12 flex-shrink-0 relative">
                                 {imageUrl ? (
-                                    <OptimizedImage
-                                        src={imageUrl}
-                                        alt={product.title || item.title || 'Product'}
-                                        width={48}
-                                        height={48}
-                                        className="w-full h-full object-cover rounded-lg border border-gray-600"
-                                        fallbackSrc="/icons/package.svg"
-                                        showFallbackIcon={true}
-                                    />
+                                    <>
+                                        <img
+                                            src={imageUrl}
+                                            alt={product.title || item.title || 'Product'}
+                                            className="w-full h-full object-cover rounded-lg border border-gray-600"
+                                            onError={handleImageError}
+                                            loading="lazy"
+                                        />
+                                        <div className="w-full h-full bg-gradient-to-br from-brand-primary/20 to-gray-700/30 rounded-lg border border-gray-600 items-center justify-center absolute inset-0 hidden">
+                                            <Package className="w-4 h-4 text-brand-primary/60" />
+                                        </div>
+                                    </>
                                 ) : (
                                     <div className="w-full h-full bg-gradient-to-br from-brand-primary/20 to-gray-700/30 rounded-lg border border-gray-600 flex items-center justify-center">
                                         <Package className="w-4 h-4 text-brand-primary/60" />
