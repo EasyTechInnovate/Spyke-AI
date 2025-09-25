@@ -141,12 +141,12 @@ export default function CartPromoDisplay({
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="mb-4 p-4 bg-gradient-to-r from-[#00FF89]/20 to-[#FFC050]/20 border border-[#00FF89]/50 rounded-xl"
+                    className="mb-4 p-4 bg-gray-800/50 border border-[#00FF89]/50 rounded-xl"
                 >
                     <div className="flex items-center gap-2 mb-2">
                         <Zap className="w-5 h-5 text-[#00FF89]" />
                         <span className="font-bold text-[#00FF89]">Best Deal Available</span>
-                        <Gift className="w-4 h-4 text-[#FFC050]" />
+                        <Gift className="w-4 h-4 text-gray-400" />
                     </div>
                     <div className="flex items-center justify-between">
                         <div className="flex-1">
@@ -221,7 +221,7 @@ export default function CartPromoDisplay({
                                             isCurrentlyApplied 
                                                 ? 'border-[#00FF89] bg-[#00FF89]/20' 
                                                 : isBestDeal
-                                                ? 'border-[#FFC050]/50 bg-gradient-to-r from-[#00FF89]/5 to-[#FFC050]/5'
+                                                ? 'border-[#00FF89]/50 bg-gray-800/40'
                                                 : 'border-[#00FF89]/30 hover:border-[#00FF89]/50 bg-gray-800/30'
                                         }`}
                                     >
@@ -237,7 +237,7 @@ export default function CartPromoDisplay({
                                                         {formatDiscount(promocode)}
                                                     </span>
                                                     {potentialSavings > 0 && (
-                                                        <span className="text-xs bg-[#FFC050]/20 text-[#FFC050] px-2 py-0.5 rounded-full">
+                                                        <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full">
                                                             Save ${potentialSavings.toFixed(2)}
                                                         </span>
                                                     )}

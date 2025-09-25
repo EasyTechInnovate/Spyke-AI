@@ -126,7 +126,7 @@ export default function ProductReviews({ product, onProductUpdate }) {
                         </p>
                         <button
                             onClick={requireAuth}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-[#00FF89] hover:bg-[#00FF89]/90 text-black rounded-lg font-medium transition-colors"
                         >
                             <LogIn className="w-4 h-4" />
                             Sign in to add review
@@ -196,7 +196,7 @@ export default function ProductReviews({ product, onProductUpdate }) {
                     {!isAuthenticated && (
                         <button
                             onClick={requireAuth}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-[#00FF89] hover:bg-[#00FF89]/90 text-black rounded-lg font-medium transition-colors"
                         >
                             <LogIn className="w-4 h-4" />
                             Sign in to add review

@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { ArrowLeft, Sparkles, Clock } from 'lucide-react'
+import { ArrowLeft, Sparkles, Clock, ShoppingBag, Package, TrendingUp, Star, Shield, Zap } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 import Container from '@/components/shared/layout/Container'
 import CartItem from './components/CartItem'
@@ -68,7 +68,7 @@ export default function CartPage() {
         return (
             <div className="min-h-screen bg-[#121212]">
                 <Container>
-                    <div className="pt-24 pb-16">
+                    <div className="pt-10 pb-16">
                         <EmptyCart />
                     </div>
                 </Container>
@@ -77,7 +77,7 @@ export default function CartPage() {
     }
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#0A0A0A] via-[#121212] to-[#1A1A1A] text-white">
-            <main className="pt-24 pb-16">
+            <main className="pt-10 pb-16">
                 <Container>
                     <div className="max-w-7xl mx-auto">
                         <CartHeader
@@ -85,18 +85,137 @@ export default function CartPage() {
                             total={calculations.total}
                             totalSavings={calculations.totalSavings}
                         />
+                        
                         <div className="grid lg:grid-cols-3 gap-8">
-                            <div className="lg:col-span-2 space-y-4">
-                                {cartItems.map((item, index) => (
-                                    <CartItem
-                                        key={getItemId(item)}
-                                        item={item}
-                                        index={index}
-                                        onUpdateQuantity={handleUpdateQuantity}
-                                        onRemove={handleRemoveItem}
-                                    />
-                                ))}
+                            <div className="lg:col-span-2 space-y-6">
+                                {/* Cart Summary Cards */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.1 }}
+                                        className="bg-gradient-to-r from-[#00FF89]/10 to-[#00FF89]/5 border border-[#00FF89]/20 rounded-xl p-4"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-[#00FF89]/20 rounded-lg">
+                                                <ShoppingBag className="w-5 h-5 text-[#00FF89]" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-400">Items in Cart</p>
+                                                <p className="text-lg font-bold text-white">{cartItems.length}</p>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.2 }}
+                                        className="bg-gradient-to-r from-blue-500/10 to-blue-400/5 border border-blue-400/20 rounded-xl p-4"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-blue-400/20 rounded-lg">
+                                                <Package className="w-5 h-5 text-blue-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-400">Digital Products</p>
+                                                <p className="text-lg font-bold text-white">{cartItems.length}</p>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+
+                                    {calculations.totalSavings > 0 && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.3 }}
+                                            className="bg-gradient-to-r from-yellow-500/10 to-yellow-400/5 border border-yellow-400/20 rounded-xl p-4"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-yellow-400/20 rounded-lg">
+                                                    <TrendingUp className="w-5 h-5 text-yellow-400" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-gray-400">Total Savings</p>
+                                                    <p className="text-lg font-bold text-white">{formatCurrency(calculations.totalSavings)}</p>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </div>
+
+                                {/* Trust Indicators */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.4 }}
+                                    className="bg-gray-800/30 border border-gray-700/50 rounded-xl p-4 mb-6"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-6">
+                                            <div className="flex items-center gap-2">
+                                                <Shield className="w-4 h-4 text-[#00FF89]" />
+                                                <span className="text-sm text-gray-300">Secure Checkout</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Zap className="w-4 h-4 text-blue-400" />
+                                                <span className="text-sm text-gray-300">Instant Download</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Star className="w-4 h-4 text-yellow-400" />
+                                                <span className="text-sm text-gray-300">Premium Quality</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+
+                                {/* Cart Items */}
+                                <div className="space-y-4">
+                                    {cartItems.map((item, index) => (
+                                        <CartItem
+                                            key={getItemId(item)}
+                                            item={item}
+                                            index={index}
+                                            onUpdateQuantity={handleUpdateQuantity}
+                                            onRemove={handleRemoveItem}
+                                        />
+                                    ))}
+                                </div>
+
+                                {/* Additional Info Section */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.6 }}
+                                    className="bg-gradient-to-r from-gray-800/40 to-gray-700/20 border border-gray-600/30 rounded-xl p-6 mt-6"
+                                >
+                                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                                        <Sparkles className="w-5 h-5 text-[#00FF89]" />
+                                        What's Next?
+                                    </h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="flex items-start gap-3">
+                                            <div className="p-2 bg-[#00FF89]/20 rounded-lg mt-1">
+                                                <Package className="w-4 h-4 text-[#00FF89]" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-medium text-white mb-1">Instant Access</h4>
+                                                <p className="text-sm text-gray-400">Get immediate download links after payment</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <div className="p-2 bg-blue-400/20 rounded-lg mt-1">
+                                                <Shield className="w-4 h-4 text-blue-400" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-medium text-white mb-1">Lifetime Support</h4>
+                                                <p className="text-sm text-gray-400">Get help from our expert team anytime</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
                             </div>
+
                             <OrderSummary
                                 {...calculations}
                                 promoCode={promoCode}

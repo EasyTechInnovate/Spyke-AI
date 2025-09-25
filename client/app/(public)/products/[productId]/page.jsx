@@ -4,11 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     ArrowLeft,
-    Heart,
-    Share2,
     ShoppingCart,
-    Download,
-    ThumbsUp,
     BookOpen,
     Sparkles,
     Play,
@@ -28,7 +24,6 @@ import ProductHowItWorks from '@/components/product/ProductHowItWorks'
 import ProductSpecs from '@/components/product/ProductSpecs'
 import ProductFAQ from '@/components/product/ProductFAQ'
 import ProductReviews from '@/components/product/ProductReviews'
-import ProductPromoDisplay from '@/components/features/product/ProductPromoDisplay'
 import { ErrorBoundary } from 'next/dist/client/components/error-boundary'
 import ProductBreadcrumb from '@/components/product/ProductBreadcrumb'
 import ProductHero from '@/components/product/ProductHero'
@@ -667,7 +662,7 @@ export default function ProductPage() {
                                                 onClick={() => setActiveTab(tab.id)}
                                                 className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
                                                     isActive
-                                                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                                                        ? 'bg-[#00FF89]/10 text-[#00FF89]'
                                                         : 'bg-gray-100 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
                                                 }`}>
                                                 <IconComponent className="w-4 h-4" />
@@ -729,7 +724,7 @@ export default function ProductPage() {
                                                         onClick={() => setActiveTab(tab.id)}
                                                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left ${
                                                             isActive
-                                                                ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                                                                ? 'bg-[#00FF89]/10 text-[#00FF89]'
                                                                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-white'
                                                         }`}>
                                                         <IconComponent className="w-5 h-5" />
@@ -744,7 +739,7 @@ export default function ProductPage() {
                                         <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                                             <div className="grid grid-cols-1 gap-3">
                                                 <div className="text-center py-2">
-                                                    <div className="text-xl font-semibold text-emerald-600 dark:text-emerald-400">
+                                                    <div className="text-xl font-semibold text-[#00FF89]">
                                                         {product?.averageRating?.toFixed(1) || '5.0'}
                                                     </div>
                                                     <div className="text-sm text-gray-500 dark:text-gray-400">Rating</div>
@@ -756,7 +751,7 @@ export default function ProductPage() {
                                                     <div className="text-sm text-gray-500 dark:text-gray-400">Views</div>
                                                 </div>
                                                 <div className="text-center py-2">
-                                                    <div className="text-xl font-semibold text-emerald-600 dark:text-emerald-400">
+                                                    <div className="text-xl font-semibold text-[#00FF89]">
                                                         {product?.sales || 0}
                                                     </div>
                                                     <div className="text-sm text-gray-500 dark:text-gray-400">Sales</div>

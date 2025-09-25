@@ -73,7 +73,7 @@ const ReviewCard = memo(function ReviewCard({ review, index, expandedReviews, sh
                     <div className="flex flex-col xs:flex-row xs:items-center gap-1 xs:gap-2 mb-1">
                         <span className="font-medium text-white text-sm sm:text-base truncate">{review.userId?.name || 'Anonymous'}</span>
                         {review.isVerified && (
-                            <span className="text-xs sm:text-sm text-green-400 flex items-center gap-1 flex-shrink-0">
+                            <span className="text-xs sm:text-sm text-[#00FF89] flex items-center gap-1 flex-shrink-0">
                                 <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
                                 <span className="hidden xs:inline">Verified</span>
                                 <span className="xs:hidden">✓</span>
