@@ -1,58 +1,40 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-    User,
-    CreditCard,
-    Package,
-    FileText,
-    Shield,
-    Bell,
-    Settings,
-    Upload,
-    Save,
-    X,
-    Plus,
-    AlertCircle,
-    Camera,
-    Edit3
-} from 'lucide-react'
+import { User, CreditCard, Settings, Upload, Save, X, Plus, AlertCircle, Camera, Edit3 } from 'lucide-react'
 import { useSellerProfile } from '@/hooks/useSellerProfile'
 import { useSellerSettings } from '@/hooks/useSellerSettings'
 import { useNotifications } from '@/hooks/useNotifications'
+import Notification from '@/components/shared/Notification'
 const SETTINGS_SECTIONS = [
     { id: 'profile', label: 'Profile', icon: User },
-    { id: 'payment', label: 'Payment & Payouts', icon: CreditCard },
-    { id: 'gigs', label: 'Gigs Management', icon: Package },
-    { id: 'orders', label: 'Order History', icon: FileText },
-    { id: 'security', label: 'Security', icon: Shield },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'account', label: 'Account Management', icon: Settings }
+    { id: 'payment', label: 'Payment & Payouts', icon: CreditCard }
 ]
 export default function SellerSettings() {
     const { data: seller, loading, error, mutate } = useSellerProfile()
-    const {
-        updateProfile,
-        updateProfileImage,
-        updateBanner,
-        updatePayoutInfo,
-        loading: apiLoading,
-        uploading,
-        uploadProgress
-    } = useSellerSettings()
+    const { updateProfile, updateProfileImage, updateBanner, updatePayoutInfo, loading: apiLoading, uploading, uploadProgress } = useSellerSettings()
     const { addNotification } = useNotifications()
     const [activeSection, setActiveSection] = useState('profile')
     const [formData, setFormData] = useState({})
+    const [notification, setNotification] = useState(null)
+    const showNotification = (type, message, title = null) => {
+        setNotification({ 
+            id: Date.now(), 
+            type, 
+            message, 
+            title: title || (type === 'error' ? 'Update Failed' : 'Success')
+        })
+    }
     useEffect(() => {
         if (seller) {
-            setFormData({
+            const mappedFormData = {
                 fullName: seller.fullName || '',
                 email: seller.email || '',
                 bio: seller.bio || '',
-                skills: seller.niches || [],
-                languages: seller.languages || [],
+                skills: Array.isArray(seller.niches) ? seller.niches : [],
+                languages: Array.isArray(seller.languages) ? seller.languages : [],
                 websiteUrl: seller.websiteUrl || '',
-                socialLinks: seller.socialHandles || {},
+                socialLinks: seller.socialHandles && typeof seller.socialHandles === 'object' ? seller.socialHandles : {},
                 profileImage: seller.profileImage || '',
                 bannerImage: seller.sellerBanner || '',
                 paypalEmail: seller.payoutInfo?.paypalEmail || '',
@@ -61,32 +43,41 @@ export default function SellerSettings() {
                     marketingEmails: seller.settings?.marketingEmails ?? false,
                     autoApproveProducts: seller.settings?.autoApproveProducts ?? false
                 }
-            })
+            }
+            setFormData(mappedFormData)
         }
     }, [seller])
     const handleSave = async (section, data = null) => {
         const dataToSave = data || formData
-        let result
         try {
+            let result
             switch (section) {
                 case 'profile':
-                    result = await updateProfile({
+                    const profileData = {
                         fullName: dataToSave.fullName,
                         email: dataToSave.email,
                         bio: dataToSave.bio,
                         niches: dataToSave.skills,
                         languages: dataToSave.languages,
                         websiteUrl: dataToSave.websiteUrl,
-                        socialHandles: dataToSave.socialLinks,
-                        profileImage: dataToSave.profileImage,
-                        sellerBanner: dataToSave.bannerImage
-                    })
+                        socialHandles: dataToSave.socialLinks
+                    }
+                    if (dataToSave.profileImage && dataToSave.profileImage.trim()) {
+                        profileData.profileImage = dataToSave.profileImage
+                    }
+                    if (dataToSave.bannerImage && dataToSave.bannerImage.trim()) {
+                        profileData.sellerBanner = dataToSave.bannerImage
+                    }
+                    result = await updateProfile(profileData)
                     break
                 case 'payment':
                     result = await updatePayoutInfo({
                         method: 'paypal',
                         paypalEmail: dataToSave.paypalEmail
                     })
+                    if (!result.success) {
+                        throw new Error(result.error)
+                    }
                     break
                 case 'notifications':
                     result = await updateProfile({
@@ -96,23 +87,12 @@ export default function SellerSettings() {
                 default:
                     result = await updateProfile(dataToSave)
             }
-            if (result.success) {
-                addNotification({
-                    type: 'success',
-                    message: 'Settings saved successfully!'
-                })
-                mutate()
-            } else {
-                addNotification({
-                    type: 'error',
-                    message: result.error || 'Failed to save settings'
-                })
-            }
+            showNotification('success', 'Settings saved successfully!')
+            mutate()
         } catch (error) {
-            addNotification({
-                type: 'error',
-                message: 'An unexpected error occurred'
-            })
+            console.error('[SellerSettings] Save error:', error)
+            const backendMessage = error.response?.data?.message || error.message || 'An unexpected error occurred'
+            showNotification('error', backendMessage)
         }
     }
     const handleFileUpload = async (file, type) => {
@@ -123,16 +103,10 @@ export default function SellerSettings() {
             result = await updateBanner(file)
         }
         if (result.success) {
-            addNotification({
-                type: 'success',
-                message: `${type === 'profile' ? 'Profile image' : 'Banner'} updated successfully!`
-            })
-            mutate() 
+            showNotification('success', `${type === 'profile' ? 'Profile image' : 'Banner'} updated successfully!`)
+            mutate()
         } else {
-            addNotification({
-                type: 'error',
-                message: result.error || `Failed to update ${type} image`
-            })
+            showNotification('error', result.error || `Failed to update ${type} image`)
         }
     }
     if (loading) {
@@ -158,6 +132,20 @@ export default function SellerSettings() {
     }
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white">
+            <AnimatePresence>
+                {notification && (
+                    <div className="fixed top-4 right-4 z-50">
+                        <Notification
+                            id={notification.id}
+                            type={notification.type}
+                            title={notification.title}
+                            message={notification.message}
+                            onClose={() => setNotification(null)}
+                            duration={5000}
+                        />
+                    </div>
+                )}
+            </AnimatePresence>
             <div className="border-b border-gray-800 bg-[#0f0f0f]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="flex items-center gap-3">
@@ -181,11 +169,11 @@ export default function SellerSettings() {
                                     <button
                                         key={section.id}
                                         onClick={() => setActiveSection(section.id)}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${activeSection === section.id
-                                            ? 'bg-[#00FF89] text-black'
-                                            : 'text-gray-300 hover:text-white hover:bg-[#1f1f1f]'
-                                            }`}
-                                    >
+                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
+                                            activeSection === section.id
+                                                ? 'bg-[#00FF89] text-black'
+                                                : 'text-gray-300 hover:text-white hover:bg-[#1f1f1f]'
+                                        }`}>
                                         <Icon className="w-5 h-5" />
                                         <span className="font-medium">{section.label}</span>
                                     </button>
@@ -200,8 +188,7 @@ export default function SellerSettings() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 0.2 }}
-                            >
+                                transition={{ duration: 0.2 }}>
                                 {activeSection === 'profile' && (
                                     <ProfileSettings
                                         formData={formData}
@@ -246,54 +233,59 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
     const [originalData, setOriginalData] = useState({})
     const [hasChanges, setHasChanges] = useState(false)
     useEffect(() => {
-        if (formData && Object.keys(formData).length > 0) {
+        if (formData && Object.keys(formData).length > 0 && Object.keys(originalData).length === 0) {
             setOriginalData({ ...formData })
         }
     }, [formData])
     useEffect(() => {
-        if (Object.keys(originalData).length > 0) {
+        if (Object.keys(originalData).length > 0 && isEditing) {
             const changes = checkForChanges(originalData, formData)
             setHasChanges(changes)
         }
-    }, [formData, originalData])
+    }, [formData, originalData, isEditing])
     const checkForChanges = (original, current) => {
-        const fieldsToCompare = [
-            'fullName', 'email', 'bio', 'websiteUrl', 'profileImage', 'bannerImage'
-        ]
+        const fieldsToCompare = ['fullName', 'email', 'bio', 'websiteUrl', 'profileImage', 'bannerImage']
         for (const field of fieldsToCompare) {
-            if (original[field] !== current[field]) {
+            const originalValue = original[field] || ''
+            const currentValue = current[field] || ''
+            if (originalValue !== currentValue) {
                 return true
             }
         }
-        if (JSON.stringify(original.skills || []) !== JSON.stringify(current.skills || [])) {
+        const originalSkills = JSON.stringify((original.skills || []).sort())
+        const currentSkills = JSON.stringify((current.skills || []).sort())
+        if (originalSkills !== currentSkills) {
             return true
         }
-        if (JSON.stringify(original.languages || []) !== JSON.stringify(current.languages || [])) {
+        const originalLanguages = JSON.stringify((original.languages || []).sort())
+        const currentLanguages = JSON.stringify((current.languages || []).sort())
+        if (originalLanguages !== currentLanguages) {
             return true
         }
-        if (JSON.stringify(original.socialLinks || {}) !== JSON.stringify(current.socialLinks || {})) {
+        const originalSocial = JSON.stringify(original.socialLinks || {})
+        const currentSocial = JSON.stringify(current.socialLinks || {})
+        if (originalSocial !== currentSocial) {
             return true
         }
         return false
     }
     const handleEdit = () => {
         setIsEditing(true)
-        setOriginalData({ ...formData }) 
     }
     const handleCancel = () => {
-        setFormData({ ...originalData }) 
+        setFormData({ ...originalData })
         setIsEditing(false)
         setHasChanges(false)
     }
     const handleSave = async () => {
         await onSave()
         setIsEditing(false)
-        setOriginalData({ ...formData }) 
+        setOriginalData({ ...formData })
         setHasChanges(false)
     }
     const handleInputChange = (field, value) => {
         if (isEditing) {
-            setFormData(prev => ({ ...prev, [field]: value }))
+            setFormData((prev) => ({ ...prev, [field]: value }))
         }
     }
     const handleFileChange = async (e, type) => {
@@ -312,7 +304,7 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
     }
     const handleSkillAdd = (skill) => {
         if (isEditing && skill && !formData.skills?.includes(skill)) {
-            setFormData(prev => ({
+            setFormData((prev) => ({
                 ...prev,
                 skills: [...(prev.skills || []), skill]
             }))
@@ -320,9 +312,9 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
     }
     const handleSkillRemove = (skillToRemove) => {
         if (isEditing) {
-            setFormData(prev => ({
+            setFormData((prev) => ({
                 ...prev,
-                skills: prev.skills?.filter(skill => skill !== skillToRemove) || []
+                skills: prev.skills?.filter((skill) => skill !== skillToRemove) || []
             }))
         }
     }
@@ -334,8 +326,7 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                     {!isEditing ? (
                         <button
                             onClick={handleEdit}
-                            className="flex items-center gap-2 px-4 py-2 bg-[#0f0f0f] border border-gray-700 text-white rounded-lg hover:bg-[#2a2a2a] transition-colors"
-                        >
+                            className="flex items-center gap-2 px-4 py-2 bg-[#0f0f0f] border border-gray-700 text-white rounded-lg hover:bg-[#2a2a2a] transition-colors">
                             <Edit3 className="w-4 h-4" />
                             Edit Profile
                         </button>
@@ -343,16 +334,14 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                         <>
                             <button
                                 onClick={handleCancel}
-                                className="flex items-center gap-2 px-4 py-2 bg-[#0f0f0f] border border-gray-700 text-white rounded-lg hover:bg-[#2a2a2a] transition-colors"
-                            >
+                                className="flex items-center gap-2 px-4 py-2 bg-[#0f0f0f] border border-gray-700 text-white rounded-lg hover:bg-[#2a2a2a] transition-colors">
                                 <X className="w-4 h-4" />
                                 Cancel
                             </button>
                             <button
                                 onClick={handleSave}
                                 disabled={saving || !hasChanges}
-                                className="flex items-center gap-2 px-4 py-2 bg-[#00FF89] text-black rounded-lg hover:bg-[#00FF89]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
+                                className="flex items-center gap-2 px-4 py-2 bg-[#00FF89] text-black rounded-lg hover:bg-[#00FF89]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                 {saving ? (
                                     <>
                                         <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
@@ -394,7 +383,9 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                                 )}
                             </div>
                             <div className="space-y-2">
-                                <label className={`flex items-center gap-2 px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-sm text-white transition-colors cursor-pointer ${isEditing ? 'hover:bg-[#2a2a2a]' : 'opacity-50 cursor-not-allowed'
+                                <label
+                                    className={`flex items-center gap-2 px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-sm text-white transition-colors cursor-pointer ${
+                                        isEditing ? 'hover:bg-[#2a2a2a]' : 'opacity-50 cursor-not-allowed'
                                     }`}>
                                     <Camera className="w-4 h-4" />
                                     Upload Photo
@@ -412,7 +403,9 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-3">Profile Banner (Optional)</label>
-                        <div className={`w-full h-20 bg-[#0f0f0f] border-2 border-dashed border-gray-700 rounded-lg flex items-center justify-center relative overflow-hidden ${!isEditing ? 'opacity-50' : ''
+                        <div
+                            className={`w-full h-20 bg-[#0f0f0f] border-2 border-dashed border-gray-700 rounded-lg flex items-center justify-center relative overflow-hidden ${
+                                !isEditing ? 'opacity-50' : ''
                             }`}>
                             {formData.bannerImage ? (
                                 <img
@@ -421,7 +414,9 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                                     className="w-full h-full object-cover"
                                 />
                             ) : (
-                                <label className={`flex items-center gap-2 text-sm text-gray-400 transition-colors cursor-pointer ${isEditing ? 'hover:text-white' : 'cursor-not-allowed'
+                                <label
+                                    className={`flex items-center gap-2 text-sm text-gray-400 transition-colors cursor-pointer ${
+                                        isEditing ? 'hover:text-white' : 'cursor-not-allowed'
                                     }`}>
                                     <Upload className="w-4 h-4" />
                                     Upload Banner
@@ -454,9 +449,10 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                             value={formData.fullName || ''}
                             onChange={(e) => handleInputChange('fullName', e.target.value)}
                             disabled={!isEditing}
-                            className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${!isEditing ? 'opacity-70 cursor-not-allowed' : ''
-                                }`}
-                            placeholder={isEditing ? "Your full legal name" : ""}
+                            className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
+                                !isEditing ? 'opacity-70 cursor-not-allowed' : ''
+                            }`}
+                            placeholder={isEditing ? 'Your full legal name' : ''}
                         />
                     </div>
                     <div>
@@ -466,9 +462,10 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                             value={formData.email || ''}
                             onChange={(e) => handleInputChange('email', e.target.value)}
                             disabled={!isEditing}
-                            className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${!isEditing ? 'opacity-70 cursor-not-allowed' : ''
-                                }`}
-                            placeholder={isEditing ? "your@email.com" : ""}
+                            className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
+                                !isEditing ? 'opacity-70 cursor-not-allowed' : ''
+                            }`}
+                            placeholder={isEditing ? 'your@email.com' : ''}
                         />
                     </div>
                     <div className="md:col-span-2">
@@ -478,13 +475,12 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                             value={formData.websiteUrl || ''}
                             onChange={(e) => handleInputChange('websiteUrl', e.target.value)}
                             disabled={!isEditing}
-                            className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${!isEditing ? 'opacity-70 cursor-not-allowed' : ''
-                                }`}
-                            placeholder={isEditing ? "https://your-website.com" : ""}
+                            className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
+                                !isEditing ? 'opacity-70 cursor-not-allowed' : ''
+                            }`}
+                            placeholder={isEditing ? 'https://your-website.com' : ''}
                         />
-                        {!isEditing && !formData.websiteUrl && (
-                            <p className="text-sm text-gray-500 italic mt-1">No website URL provided</p>
-                        )}
+                        {!isEditing && !formData.websiteUrl && <p className="text-sm text-gray-500 italic mt-1">No website URL provided</p>}
                     </div>
                 </div>
             </div>
@@ -495,16 +491,13 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                     onChange={(e) => handleInputChange('bio', e.target.value)}
                     disabled={!isEditing}
                     rows={4}
-                    className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent resize-none transition-colors ${!isEditing ? 'opacity-70 cursor-not-allowed' : ''
-                        }`}
-                    placeholder={isEditing ? "Tell potential customers about yourself, your experience, and what makes you unique..." : ""}
+                    className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent resize-none transition-colors ${
+                        !isEditing ? 'opacity-70 cursor-not-allowed' : ''
+                    }`}
+                    placeholder={isEditing ? 'Tell potential customers about yourself, your experience, and what makes you unique...' : ''}
                 />
-                {!isEditing && !formData.bio && (
-                    <p className="text-sm text-gray-500 italic mt-2">No bio provided</p>
-                )}
-                {(isEditing || formData.bio) && (
-                    <p className="text-xs text-gray-400 mt-2">{formData.bio?.length || 0}/500 characters</p>
-                )}
+                {!isEditing && !formData.bio && <p className="text-sm text-gray-500 italic mt-2">No bio provided</p>}
+                {(isEditing || formData.bio) && <p className="text-xs text-gray-400 mt-2">{formData.bio?.length || 0}/500 characters</p>}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <SkillsSection
@@ -519,7 +512,12 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                     title="Languages"
                     skills={formData.languages || []}
                     onAdd={(lang) => handleInputChange('languages', [...(formData.languages || []), lang])}
-                    onRemove={(lang) => handleInputChange('languages', formData.languages?.filter(l => l !== lang))}
+                    onRemove={(lang) =>
+                        handleInputChange(
+                            'languages',
+                            formData.languages?.filter((l) => l !== lang)
+                        )
+                    }
                     placeholder="e.g., English, Spanish, French"
                     isEditing={isEditing}
                 />
@@ -562,11 +560,9 @@ function SkillsSection({ title, skills, onAdd, onRemove, placeholder, isEditing 
                         <button
                             onClick={handleAdd}
                             disabled={!inputValue.trim()}
-                            className={`p-2 bg-[#00FF89] text-black rounded-lg transition-colors ${inputValue.trim()
-                                    ? 'hover:bg-[#00FF89]/90'
-                                    : 'opacity-50 cursor-not-allowed'
-                                }`}
-                        >
+                            className={`p-2 bg-[#00FF89] text-black rounded-lg transition-colors ${
+                                inputValue.trim() ? 'hover:bg-[#00FF89]/90' : 'opacity-50 cursor-not-allowed'
+                            }`}>
                             <Plus className="w-4 h-4" />
                         </button>
                     </div>
@@ -575,14 +571,12 @@ function SkillsSection({ title, skills, onAdd, onRemove, placeholder, isEditing 
                     {skills.map((skill, index) => (
                         <span
                             key={index}
-                            className="inline-flex items-center gap-1 px-3 py-1 bg-[#00FF89]/20 text-[#00FF89] rounded-full text-sm border border-[#00FF89]/30"
-                        >
+                            className="inline-flex items-center gap-1 px-3 py-1 bg-[#00FF89]/20 text-[#00FF89] rounded-full text-sm border border-[#00FF89]/30">
                             {skill}
                             {isEditing && (
                                 <button
                                     onClick={() => onRemove(skill)}
-                                    className="ml-1 hover:text-red-400 transition-colors"
-                                >
+                                    className="ml-1 hover:text-red-400 transition-colors">
                                     <X className="w-3 h-3" />
                                 </button>
                             )}
@@ -613,7 +607,7 @@ function SocialLinksSection({ socialLinks, onUpdate, isEditing }) {
             })
         }
     }
-    const hasAnyLinks = socialPlatforms.some(platform => socialLinks[platform.key])
+    const hasAnyLinks = socialPlatforms.some((platform) => socialLinks[platform.key])
     return (
         <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6">
             <h3 className="text-lg font-semibold text-white mb-4">Social Links</h3>
@@ -626,13 +620,12 @@ function SocialLinksSection({ socialLinks, onUpdate, isEditing }) {
                             value={socialLinks[platform.key] || ''}
                             onChange={(e) => handleLinkChange(platform.key, e.target.value)}
                             disabled={!isEditing}
-                            className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${!isEditing ? 'opacity-70 cursor-not-allowed' : ''
-                                }`}
-                            placeholder={isEditing ? platform.placeholder : ""}
+                            className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
+                                !isEditing ? 'opacity-70 cursor-not-allowed' : ''
+                            }`}
+                            placeholder={isEditing ? platform.placeholder : ''}
                         />
-                        {!isEditing && !socialLinks[platform.key] && (
-                            <p className="text-xs text-gray-500 italic mt-1">Not provided</p>
-                        )}
+                        {!isEditing && !socialLinks[platform.key] && <p className="text-xs text-gray-500 italic mt-1">Not provided</p>}
                     </div>
                 ))}
                 {!isEditing && !hasAnyLinks && (
@@ -640,6 +633,345 @@ function SocialLinksSection({ socialLinks, onUpdate, isEditing }) {
                         <p className="text-sm text-gray-500 italic">No social links added yet</p>
                     </div>
                 )}
+            </div>
+        </div>
+    )
+}
+function PaymentSettings({ formData, setFormData, onSave, saving }) {
+    const [isEditing, setIsEditing] = useState(false)
+    const [originalData, setOriginalData] = useState({})
+    const [hasChanges, setHasChanges] = useState(false)
+    const { data: seller } = useSellerProfile()
+    useEffect(() => {
+        if (seller?.payoutInfo && Object.keys(originalData).length === 0) {
+            const payoutData = {
+                method: seller.payoutInfo.method || 'paypal',
+                paypalEmail: seller.payoutInfo.paypalEmail || '',
+                stripeAccountId: seller.payoutInfo.stripeAccountId || '',
+                wiseEmail: seller.payoutInfo.wiseEmail || '',
+                accountHolderName: seller.payoutInfo.bankDetails?.accountHolderName || '',
+                accountNumber: seller.payoutInfo.bankDetails?.accountNumber || '',
+                routingNumber: seller.payoutInfo.bankDetails?.routingNumber || '',
+                bankName: seller.payoutInfo.bankDetails?.bankName || '',
+                swiftCode: seller.payoutInfo.bankDetails?.swiftCode || ''
+            }
+            setOriginalData(payoutData)
+            setFormData(prev => ({ ...prev, ...payoutData }))
+        } else if (!seller?.payoutInfo && Object.keys(originalData).length === 0) {
+            const defaultData = {
+                method: 'paypal',
+                paypalEmail: formData.paypalEmail || '',
+                stripeAccountId: '',
+                wiseEmail: '',
+                accountHolderName: '',
+                accountNumber: '',
+                routingNumber: '',
+                bankName: '',
+                swiftCode: ''
+            }
+            setOriginalData(defaultData)
+            setFormData(prev => ({ ...prev, ...defaultData }))
+        }
+    }, [seller])
+    useEffect(() => {
+        if (Object.keys(originalData).length > 0 && isEditing) {
+            const changes = checkForPayoutChanges(originalData, formData)
+            setHasChanges(changes)
+        }
+    }, [formData, originalData, isEditing])
+    const checkForPayoutChanges = (original, current) => {
+        const fieldsToCheck = ['method', 'paypalEmail', 'stripeAccountId', 'wiseEmail', 
+                              'accountHolderName', 'accountNumber', 'routingNumber', 'bankName', 'swiftCode']
+        for (const field of fieldsToCheck) {
+            if ((original[field] || '') !== (current[field] || '')) {
+                return true
+            }
+        }
+        return false
+    }
+    const handleEdit = () => {
+        setIsEditing(true)
+    }
+    const handleCancel = () => {
+        setFormData(prev => ({ ...prev, ...originalData }))
+        setIsEditing(false)
+        setHasChanges(false)
+    }
+    const handleSave = async () => {
+        const payoutData = {
+            method: formData.method,
+            ...(formData.method === 'paypal' && { paypalEmail: formData.paypalEmail }),
+            ...(formData.method === 'stripe' && { stripeAccountId: formData.stripeAccountId }),
+            ...(formData.method === 'wise' && { wiseEmail: formData.wiseEmail }),
+            ...(formData.method === 'bank' && {
+                bankDetails: {
+                    accountHolderName: formData.accountHolderName,
+                    accountNumber: formData.accountNumber,
+                    routingNumber: formData.routingNumber,
+                    bankName: formData.bankName,
+                    swiftCode: formData.swiftCode || undefined
+                }
+            })
+        }
+        try {
+            const { updatePayoutInfo } = useSellerSettings()
+            const result = await updatePayoutInfo(payoutData)
+            if (!result.success) {
+                throw new Error(result.error)
+            }
+            await onSave() 
+        } catch (error) {
+            throw error 
+        }
+        setIsEditing(false)
+        setOriginalData({ ...formData })
+        setHasChanges(false)
+    }
+    const handleInputChange = (field, value) => {
+        if (isEditing) {
+            setFormData(prev => ({ ...prev, [field]: value }))
+        }
+    }
+    const payoutMethods = [
+        { value: 'paypal', label: 'PayPal', icon: '💙', description: 'Fast and secure PayPal transfers' },
+        { value: 'stripe', label: 'Stripe', icon: '💳', description: 'Direct bank account via Stripe' },
+        { value: 'wise', label: 'Wise', icon: '🌍', description: 'International transfers with Wise' },
+        { value: 'bank', label: 'Bank Transfer', icon: '🏦', description: 'Traditional bank wire transfer' }
+    ]
+    const currentMethod = formData.method || 'paypal'
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-white">Payment & Payouts</h2>
+                <div className="flex items-center gap-3">
+                    {!isEditing ? (
+                        <button
+                            onClick={handleEdit}
+                            className="flex items-center gap-2 px-4 py-2 bg-[#0f0f0f] border border-gray-700 text-white rounded-lg hover:bg-[#2a2a2a] transition-colors">
+                            <Edit3 className="w-4 h-4" />
+                            Edit Payment Info
+                        </button>
+                    ) : (
+                        <>
+                            <button
+                                onClick={handleCancel}
+                                className="flex items-center gap-2 px-4 py-2 bg-[#0f0f0f] border border-gray-700 text-white rounded-lg hover:bg-[#2a2a2a] transition-colors">
+                                <X className="w-4 h-4" />
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSave}
+                                disabled={saving || !hasChanges}
+                                className="flex items-center gap-2 px-4 py-2 bg-[#00FF89] text-black rounded-lg hover:bg-[#00FF89]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                {saving ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                                        Saving...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save className="w-4 h-4" />
+                                        Save Changes
+                                    </>
+                                )}
+                            </button>
+                        </>
+                    )}
+                </div>
+            </div>
+            <div className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-[#00FF89]/20 rounded-lg flex items-center justify-center">
+                        <CreditCard className="w-5 h-5 text-[#00FF89]" />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-semibold text-white">Current Payout Method</h3>
+                        <p className="text-sm text-gray-400">
+                            {payoutMethods.find(m => m.value === currentMethod)?.label || 'PayPal'} 
+                            {seller?.payoutInfo?.isVerified ? 
+                                <span className="ml-2 text-[#00FF89]">✓ Verified</span> : 
+                                <span className="ml-2 text-amber-400">⏳ Pending Verification</span>
+                            }
+                        </p>
+                    </div>
+                </div>
+                {isEditing && (
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-300 mb-3">Payout Method</label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {payoutMethods.map((method) => (
+                                <label
+                                    key={method.value}
+                                    className={`cursor-pointer p-4 rounded-lg border-2 transition-colors ${
+                                        currentMethod === method.value
+                                            ? 'border-[#00FF89] bg-[#00FF89]/10'
+                                            : 'border-gray-700 bg-[#0f0f0f] hover:border-gray-600'
+                                    }`}>
+                                    <input
+                                        type="radio"
+                                        name="payoutMethod"
+                                        value={method.value}
+                                        checked={currentMethod === method.value}
+                                        onChange={(e) => handleInputChange('method', e.target.value)}
+                                        className="sr-only"
+                                    />
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-xl">{method.icon}</span>
+                                        <div>
+                                            <div className="font-medium text-white">{method.label}</div>
+                                            <div className="text-xs text-gray-400">{method.description}</div>
+                                        </div>
+                                    </div>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                )}
+                <div className="space-y-4">
+                    {currentMethod === 'paypal' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">PayPal Email</label>
+                            <input
+                                type="email"
+                                value={formData.paypalEmail || ''}
+                                onChange={(e) => handleInputChange('paypalEmail', e.target.value)}
+                                disabled={!isEditing}
+                                className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
+                                    !isEditing ? 'opacity-70 cursor-not-allowed' : ''
+                                }`}
+                                placeholder={isEditing ? "your-paypal@email.com" : ""}
+                            />
+                            {!isEditing && !formData.paypalEmail && (
+                                <p className="text-sm text-gray-500 italic mt-1">No PayPal email configured</p>
+                            )}
+                        </div>
+                    )}
+                    {currentMethod === 'stripe' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Stripe Account ID</label>
+                            <input
+                                type="text"
+                                value={formData.stripeAccountId || ''}
+                                onChange={(e) => handleInputChange('stripeAccountId', e.target.value)}
+                                disabled={!isEditing}
+                                className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
+                                    !isEditing ? 'opacity-70 cursor-not-allowed' : ''
+                                }`}
+                                placeholder={isEditing ? "acct_XXXXXXXXXXXXXX" : ""}
+                            />
+                            {!isEditing && !formData.stripeAccountId && (
+                                <p className="text-sm text-gray-500 italic mt-1">No Stripe account configured</p>
+                            )}
+                        </div>
+                    )}
+                    {currentMethod === 'wise' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Wise Account Email</label>
+                            <input
+                                type="email"
+                                value={formData.wiseEmail || ''}
+                                onChange={(e) => handleInputChange('wiseEmail', e.target.value)}
+                                disabled={!isEditing}
+                                className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
+                                    !isEditing ? 'opacity-70 cursor-not-allowed' : ''
+                                }`}
+                                placeholder={isEditing ? "your-wise@email.com" : ""}
+                            />
+                            {!isEditing && !formData.wiseEmail && (
+                                <p className="text-sm text-gray-500 italic mt-1">No Wise email configured</p>
+                            )}
+                        </div>
+                    )}
+                    {currentMethod === 'bank' && (
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">Account Holder Name</label>
+                                    <input
+                                        type="text"
+                                        value={formData.accountHolderName || ''}
+                                        onChange={(e) => handleInputChange('accountHolderName', e.target.value)}
+                                        disabled={!isEditing}
+                                        className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
+                                            !isEditing ? 'opacity-70 cursor-not-allowed' : ''
+                                        }`}
+                                        placeholder={isEditing ? "John Doe" : ""}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">Bank Name</label>
+                                    <input
+                                        type="text"
+                                        value={formData.bankName || ''}
+                                        onChange={(e) => handleInputChange('bankName', e.target.value)}
+                                        disabled={!isEditing}
+                                        className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
+                                            !isEditing ? 'opacity-70 cursor-not-allowed' : ''
+                                        }`}
+                                        placeholder={isEditing ? "Bank of America" : ""}
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">Account Number / IBAN</label>
+                                    <input
+                                        type="text"
+                                        value={formData.accountNumber || ''}
+                                        onChange={(e) => handleInputChange('accountNumber', e.target.value)}
+                                        disabled={!isEditing}
+                                        className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
+                                            !isEditing ? 'opacity-70 cursor-not-allowed' : ''
+                                        }`}
+                                        placeholder={isEditing ? "123456789 or IBAN" : ""}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">Routing Number</label>
+                                    <input
+                                        type="text"
+                                        value={formData.routingNumber || ''}
+                                        onChange={(e) => handleInputChange('routingNumber', e.target.value)}
+                                        disabled={!isEditing}
+                                        className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
+                                            !isEditing ? 'opacity-70 cursor-not-allowed' : ''
+                                        }`}
+                                        placeholder={isEditing ? "021000021" : ""}
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">SWIFT/BIC Code (Optional)</label>
+                                <input
+                                    type="text"
+                                    value={formData.swiftCode || ''}
+                                    onChange={(e) => handleInputChange('swiftCode', e.target.value)}
+                                    disabled={!isEditing}
+                                    className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
+                                        !isEditing ? 'opacity-70 cursor-not-allowed' : ''
+                                    }`}
+                                    placeholder={isEditing ? "BOFAUS3N" : ""}
+                                />
+                            </div>
+                            {(!isEditing && !formData.accountHolderName && !formData.bankName) && (
+                                <p className="text-sm text-gray-500 italic">No bank details configured</p>
+                            )}
+                        </div>
+                    )}
+                </div>
+                <div className="mt-6 p-4 bg-[#0f0f0f] rounded-lg border border-gray-700">
+                    <div className="flex items-center gap-2 mb-2">
+                        <AlertCircle className="w-4 h-4 text-amber-400" />
+                        <span className="text-sm font-medium text-amber-400">Payout Information</span>
+                    </div>
+                    <div className="space-y-1 text-xs text-gray-400">
+                        <p>• Payouts are processed bi-monthly (1st-15th paid on 25th, 16th-31st paid on 10th)</p>
+                        <p>• Minimum payout threshold must be met</p>
+                        <p>• Processing fees may apply based on your chosen method</p>
+                        <p>• Changes require verification and may take 1-2 business days</p>
+                        <p>• Contact support for assistance with payout method changes</p>
+                    </div>
+                </div>
             </div>
         </div>
     )

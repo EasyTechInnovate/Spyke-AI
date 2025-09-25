@@ -13,10 +13,7 @@ export const useSellerSettings = () => {
             return { success: true, data: result }
         } catch (error) {
             console.error('Profile update error:', error)
-            return {
-                success: false,
-                error: error.response?.data?.message || error.message || 'Failed to update profile'
-            }
+            throw error
         } finally {
             setLoading(false)
         }

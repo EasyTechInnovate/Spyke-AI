@@ -47,14 +47,6 @@ const NAVIGATION_ITEMS = [
         href: '/seller/promocodes'
     },
     {
-        id: 'orders',
-        label: 'Orders',
-        icon: ShoppingCart,
-        href: '/seller/orders',
-        disabled: true,
-        badge: 'Soon'
-    },
-    {
         id: 'analytics',
         label: 'Analytics',
         icon: BarChart3,

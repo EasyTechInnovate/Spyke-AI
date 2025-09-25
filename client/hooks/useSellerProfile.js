@@ -19,12 +19,9 @@ export const useSellerProfile = () => {
         setLoading(true)
         const response = await sellerAPI.getProfile()
         
-        // Transform the raw API response to match the expected structure
         const transformedData = {
           ...response,
-          // Map verification status for consistency
           verificationStatus: response?.verification?.status || 'pending',
-          // Add computed properties for easier access
           isApproved: response?.verification?.status === 'approved',
           isCommissionAccepted: response?.commissionOffer?.status === 'accepted' && response?.commissionOffer?.acceptedAt,
         }
@@ -50,7 +47,6 @@ export const useSellerProfile = () => {
       setLoading(true)
       const response = await sellerAPI.getProfile()
       
-      // Apply same transformation on refetch
       const transformedData = {
         ...response,
         verificationStatus: response?.verification?.status || 'pending',
