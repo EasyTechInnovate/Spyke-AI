@@ -245,6 +245,8 @@ export default function ProductPage() {
             image: Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : product.thumbnail
         }
         try {
+            await new Promise(resolve => setTimeout(resolve, 2000))
+            
             const success = await addToCart(cartProduct)
             if (success) {
                 addNotification(`"${product.title}" has been added to your cart!`, 'success')
@@ -635,6 +637,7 @@ export default function ProductPage() {
                             hasPurchased={hasPurchased}
                             isOwner={isOwner}
                             inCart={inCart}
+                            addingToCart={addingToCart}
                             discountPercentage={discountPercentage}
                             savingsAmount={savingsAmount}
                             onAddToCart={handleAddToCart}

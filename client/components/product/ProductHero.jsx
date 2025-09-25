@@ -79,6 +79,7 @@ export default function ProductHero({
     hasPurchased,
     isOwner,
     inCart,
+    addingToCart,
     discountPercentage,
     savingsAmount,
     onAddToCart,
@@ -477,10 +478,10 @@ export default function ProductHero({
                                         </button>
                                         <button
                                             onClick={onAddToCart}
-                                            disabled={inCart}
+                                            disabled={inCart || addingToCart}
                                             className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 dark:bg-[#1f1f1f] hover:bg-[#00FF89]/10 text-[#121212] dark:text-[#00FF89] rounded-lg font-medium transition-colors border border-gray-200 dark:border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
                                             <ShoppingCart className="w-4 h-4" />
-                                            {inCart ? 'Already in Cart' : 'Add to Cart'}
+                                            {addingToCart ? 'Adding to Cart...' : inCart ? 'Already in Cart' : 'Add to Cart'}
                                         </button>
                                     </>
                                 )}
