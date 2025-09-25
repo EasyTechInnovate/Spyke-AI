@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Search, X, Mic, Package, Tag, History, TrendingUp as TrendingUpIcon, ChevronRight, Star } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Search, X, Mic, Package, History, TrendingUp as TrendingUpIcon, ChevronRight, Star } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import toast from '@/lib/utils/toast'
 import productsAPI from '@/lib/api/products'

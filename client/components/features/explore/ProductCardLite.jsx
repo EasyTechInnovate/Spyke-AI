@@ -1,12 +1,12 @@
 import { motion } from 'framer-motion'
 import { Star, Heart, ShoppingCart, Eye, CheckCircle2, ExternalLink, TrendingUp } from 'lucide-react'
-import { useState, memo } from 'react'
+import { useState, memo, useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'grid' }) {
     const [isImageLoading, setIsImageLoading] = useState(true)
     const [imageError, setImageError] = useState(false)
     const [isLiked, setIsLiked] = useState(false)
+    const [imageLoadAttempts, setImageLoadAttempts] = useState(0)
     const {
         _id: id,
         slug,
@@ -41,8 +41,36 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
         typeof productAverageRating === 'number' && productAverageRating > 0 ? productAverageRating : legacyRating > 0 ? legacyRating : 0
     const description = (shortDescription || product?.description || fullDescription || 'No description available').trim()
     const productUrl = `/products/${slug || id}`
-    const productImage = image || thumbnail || images?.[0] || '/images/placeholder-product.svg'
-    console.log('Product Image:', productImage) 
+    const getProductImage = () => {
+        const imageSources = [
+            image,
+            thumbnail, 
+            images?.[0],
+            product?.featuredImage,
+            product?.mainImage
+        ].filter(Boolean) 
+        for (const src of imageSources) {
+            if (src && typeof src === 'string' && src.trim() !== '') {
+                if (!src.includes('via.placeholder.com') && !src.includes('placeholder')) {
+                    return src
+                }
+            }
+        }
+        return '/images/placeholder-product.svg'
+    }
+    const productImage = getProductImage()
+    useEffect(() => {
+    }, [id, title, productImage, isImageLoading, imageError, imageLoadAttempts])
+    const handleImageLoad = () => {
+        setIsImageLoading(false)
+        setImageError(false)
+    }
+    const handleImageError = (error) => {
+        const newAttempts = imageLoadAttempts + 1
+        setImageError(true)
+        setIsImageLoading(false)
+        setImageLoadAttempts(newAttempts)
+    }
     const actualDiscountPrice = discountPrice || (originalPrice && originalPrice > price ? price : null)
     const actualOriginalPrice = originalPrice || (discountPrice && discountPrice < price ? price : null)
     const discountPercentage = actualOriginalPrice && actualDiscountPrice && actualOriginalPrice > actualDiscountPrice ? 
@@ -90,20 +118,20 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
                     <div className="flex p-7 gap-7">
                         <div className="relative w-36 h-36 flex-shrink-0 rounded-xl overflow-hidden bg-[#1c1c1c]">
                             {!imageError ? (
-                                <Image
+                                <img
                                     src={productImage}
                                     alt={title}
-                                    fill
-                                    className={`object-cover transition-opacity duration-500 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
-                                    onLoad={() => setIsImageLoading(false)}
-                                    onError={() => {
-                                        setImageError(true)
-                                        setIsImageLoading(false)
-                                    }}
+                                    className={`w-full h-full object-cover transition-opacity duration-500 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
+                                    onLoad={handleImageLoad}
+                                    onError={handleImageError}
+                                    loading="lazy"
                                 />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center">
                                     <Eye className="w-7 h-7 text-gray-600" />
+                                    <div className="absolute bottom-1 right-1 text-[8px] text-gray-500 bg-black/50 px-1 rounded">
+                                        ERR
+                                    </div>
                                 </div>
                             )}
                             {isImageLoading && <div className="absolute inset-0 bg-gray-700/30 animate-pulse" />}
@@ -198,24 +226,29 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
                 className="flex flex-col h-full">
                 <div className="relative aspect-[16/9] bg-[#1b1b1b] overflow-hidden">
                     {!imageError ? (
-                        <Image
+                        <img
                             src={productImage}
                             alt={title}
-                            fill
-                            className={`object-cover transition-transform duration-[1100ms] ease-out group-hover:scale-105 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
-                            onLoad={() => setIsImageLoading(false)}
-                            onError={() => {
-                                setImageError(true)
-                                setIsImageLoading(false)
-                            }}
+                            className={`w-full h-full object-cover transition-transform duration-[1100ms] ease-out group-hover:scale-105 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
+                            onLoad={handleImageLoad}
+                            onError={handleImageError}
+                            loading="lazy"
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center">
                             <Eye className="w-10 h-10 text-gray-600" />
+                            <div className="absolute bottom-2 right-2 text-xs text-gray-400 bg-black/70 px-2 py-1 rounded">
+                                IMG ERROR (Attempt: {imageLoadAttempts})
+                            </div>
                         </div>
                     )}
-                    {isImageLoading && <div className="absolute inset-0 bg-gray-700/30 animate-pulse" />}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent opacity-60 pointer-events-none" />
+                    {isImageLoading && (
+                        <div className="absolute inset-0 bg-gray-700/30 animate-pulse">
+                            <div className="absolute bottom-2 left-2 text-xs text-gray-400 bg-black/70 px-2 py-1 rounded">
+                                Loading...
+                            </div>
+                        </div>
+                    )}
                     <div className="absolute top-2 left-2 flex flex-col gap-1">
                         {isFeatured && (
                             <span className="px-2.5 py-1 rounded-full bg-black/55 backdrop-blur text-[11px] font-semibold tracking-wide text-[#00FF89] border border-[#00FF89]/30">

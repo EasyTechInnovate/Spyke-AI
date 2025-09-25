@@ -2,7 +2,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 import { Plus, Minus, Package, Trash2, Heart, ExternalLink, Clock, Star, Download, Shield, Award } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { calculateDiscountPercentage, formatCurrency, getItemId } from '../utils'
@@ -31,8 +30,6 @@ export default function CartItem({ item, index, onUpdateQuantity, onRemove }) {
     const navigateToProduct = () => {
         const productSlug = item.productId?.slug || item.slug
         const productId = item.productId?._id || item.productId?.id || item.id || item._id
-        
-        // Navigate using slug if available, otherwise use ID
         const url = productSlug ? `/products/${productSlug}` : `/products/${productId}`
         router.push(url)
     }
@@ -82,25 +79,48 @@ export default function CartItem({ item, index, onUpdateQuantity, onRemove }) {
     )
 }
 function ProductImage({ item, discountPercentage, onClick }) {
+    const [imageError, setImageError] = useState(false)
+    const [imageLoading, setImageLoading] = useState(true)
+    
+    const handleImageLoad = () => {
+        setImageLoading(false)
+        setImageError(false)
+    }
+    
+    const handleImageError = () => {
+        setImageError(true)
+        setImageLoading(false)
+        console.warn('Cart item image failed to load:', item.image || item.thumbnail)
+    }
+    
     return (
         <div className="relative">
             <div 
                 className="w-full lg:w-48 h-40 lg:h-36 bg-gradient-to-br from-gray-700/30 to-gray-800/50 rounded-xl flex-shrink-0 overflow-hidden group/image cursor-pointer border border-gray-600/40 hover:border-gray-500/60 transition-all duration-300 shadow-lg"
                 onClick={onClick}
             >
-                {item.image || item.thumbnail ? (
-                    <OptimizedImage
+                {(item.image || item.thumbnail) && !imageError ? (
+                    <img
                         src={item.image || item.thumbnail}
                         alt={item.title}
-                        width={192}
-                        height={144}
-                        className="w-full h-full object-cover group-hover/image:scale-110 transition-transform duration-500"
+                        className={`w-full h-full object-cover group-hover/image:scale-110 transition-transform duration-500 ${
+                            imageLoading ? 'opacity-0' : 'opacity-100'
+                        }`}
+                        onLoad={handleImageLoad}
+                        onError={handleImageError}
+                        loading="lazy"
                     />
                 ) : (
                     <div className="w-full h-full bg-gradient-to-br from-gray-600/20 to-gray-700/40 flex items-center justify-center">
                         <Package className="w-12 h-12 text-gray-400" />
                     </div>
                 )}
+                
+                {imageLoading && (item.image || item.thumbnail) && (
+                    <div className="absolute inset-0 bg-gray-700/30 animate-pulse" />
+                )}
+                
+                {/* Hover overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover/image:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                     <div className="flex items-center gap-2 text-white font-medium">
                         <ExternalLink className="w-4 h-4" />
