@@ -22,7 +22,7 @@ export default function ProductPromoDisplay({ product }) {
             setLoading(true)
             const response = await promocodeAPI.getApplicablePromocodes(product._id)
             console.log('📊 Promocode API response:', response)
-            if (response.success && response.data?.applicablePromocodes) {
+            if (response) {
                 const allApplicable = [
                     ...(response.data.applicablePromocodes.global || []),
                     ...(response.data.applicablePromocodes.productSpecific || []),

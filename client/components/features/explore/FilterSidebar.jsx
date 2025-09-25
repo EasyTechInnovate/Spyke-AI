@@ -1,22 +1,26 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronUp, ChevronDown, Star, CheckCircle2, X, DollarSign } from 'lucide-react'
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { Button } from '@/lib/design-system'
 import { cn } from '@/lib/utils'
 import { 
-  PRODUCT_CATEGORIES, 
   PRODUCT_TYPES, 
-  PRODUCT_INDUSTRIES, 
   PRODUCT_SETUP_TIMES,
   PRODUCT_PRICE_CATEGORIES,
   DEFAULT_FILTERS 
 } from '@/lib/constants/filterMappings'
+import { categoryAPI, industryAPI } from '@/lib/api/toolsNiche'
+
 export default function FilterSidebar({ 
   filters, 
   onFilterChange,
   productCounts = {},
   className
 }) {
+  const [categories, setCategories] = useState([])
+  const [loadingCategories, setLoadingCategories] = useState(true)
+  const [industries, setIndustries] = useState([])
+  const [loadingIndustries, setLoadingIndustries] = useState(true)
   const [expandedSections, setExpandedSections] = useState({
     productType: true,
     category: true,
@@ -26,6 +30,71 @@ export default function FilterSidebar({
     rating: true,
     seller: true
   })
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoadingCategories(true)
+        const response = await categoryAPI.getCategories()
+        
+        let categoriesData = response?.data?.categories || response?.categories || response?.data || []
+        
+        if (!Array.isArray(categoriesData)) {
+          categoriesData = []
+        }
+
+        const formattedCategories = categoriesData.map(cat => ({
+          id: cat._id || cat.id,
+          name: cat.name || cat.title,
+          icon: cat.icon || 'Package',
+          productCount: cat.productCount || 0,
+          isActive: cat.isActive !== false
+        })).filter(cat => cat.isActive)
+
+        setCategories(formattedCategories)
+      } catch (error) {
+        console.error('Failed to fetch categories:', error)
+        setCategories([])
+      } finally {
+        setLoadingCategories(false)
+      }
+    }
+
+    fetchCategories()
+  }, [])
+
+  useEffect(() => {
+    const fetchIndustries = async () => {
+      try {
+        setLoadingIndustries(true)
+        const response = await industryAPI.getIndustries()
+        
+        let industriesData = response?.data?.industries || response?.industries || response?.data || []
+        
+        if (!Array.isArray(industriesData)) {
+          industriesData = []
+        }
+
+        const formattedIndustries = industriesData.map(ind => ({
+          id: ind._id || ind.id,
+          name: ind.name || ind.title,
+          icon: ind.icon || 'Building',
+          productCount: ind.productCount || 0,
+          isActive: ind.isActive !== false
+        })).filter(ind => ind.isActive)
+
+        setIndustries(formattedIndustries)
+      } catch (error) {
+        console.error('Failed to fetch industries:', error)
+        setIndustries([])
+      } finally {
+        setLoadingIndustries(false)
+      }
+    }
+
+    fetchIndustries()
+  }, [])
+
   const handleProductTypeChange = useCallback((typeId) => {
     onFilterChange({ ...filters, type: typeId })
   }, [filters, onFilterChange])
@@ -78,12 +147,12 @@ export default function FilterSidebar({
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "w-72 bg-[#171717] border border-gray-800 rounded-xl sticky top-1",
-        "max-h-[calc(100vh-1rem)] overflow-hidden flex flex-col shadow-xl",
+        "w-72 bg-[#171717] border border-gray-800 rounded-xl sticky top-4",
+        "h-fit max-h-[calc(100vh-2rem)] overflow-hidden flex flex-col shadow-xl",
         className
       )}
     >
-      <header className="flex items-center justify-between p-4 border-b border-gray-800 flex-shrink-0">
+      <header className="flex items-center justify-between p-4 border-b border-gray-800 flex-shrink-0 bg-[#171717] relative z-10">
         <h2 className="text-lg font-bold text-white">Filters</h2>
         {hasActiveFilters && (
           <Button
@@ -97,57 +166,96 @@ export default function FilterSidebar({
           </Button>
         )}
       </header>
-      <div className="flex-1 overflow-y-auto overscroll-contain">
-        <div className="p-4 space-y-4">
-          <FilterSection
-            title="Product Type"
-            isExpanded={expandedSections.productType}
-            onToggle={() => toggleSection('productType')}
-            count={PRODUCT_TYPES.length}
-          >
-            <div className="space-y-1">
-              {PRODUCT_TYPES.slice(0, expandedSections.productType ? undefined : 4).map(type => (
-                <FilterOption
-                  key={type.id}
-                  label={type.name}
-                  isSelected={filters.type === type.id}
-                  onSelect={() => handleProductTypeChange(type.id)}
-                  count={productCounts.productTypes?.[type.id] || 0}
-                />
-              ))}
-              {!expandedSections.productType && PRODUCT_TYPES.length > 4 && (
-                <button
-                  onClick={() => toggleSection('productType')}
-                  className="w-full text-left text-xs text-gray-400 hover:text-white py-1 px-2 rounded transition-colors"
-                >
-                  +{PRODUCT_TYPES.length - 4} more
-                </button>
+      <div 
+        className="flex-1 overflow-y-auto overflow-x-hidden"
+        style={{
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#4b5563 #1f2937'
+        }}
+      >
+        <div className="p-4 space-y-4 pb-6">
+          {/* Product Type Filter - Ensure header is always visible */}
+          <div className="border-b border-gray-800 pb-3">
+            <button
+              onClick={() => toggleSection('productType')}
+              className="w-full flex items-center justify-between p-2 hover:bg-gray-800/50 transition-colors rounded-lg group focus:outline-none focus:ring-2 focus:ring-[#00FF89] focus:ring-opacity-50"
+            >
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-medium text-white group-hover:text-[#00FF89] transition-colors">
+                  Product Type
+                </h3>
+                <span className="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full">
+                  {PRODUCT_TYPES.length}
+                </span>
+              </div>
+              {expandedSections.productType ? (
+                <ChevronUp className="w-4 h-4 text-gray-400 group-hover:text-[#00FF89] transition-colors" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-400 group-hover:text-[#00FF89] transition-colors" />
               )}
-            </div>
-          </FilterSection>
+            </button>
+            
+            <AnimatePresence initial={false}>
+              {expandedSections.productType && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: 'easeInOut' }}
+                  className="overflow-hidden mt-2"
+                >
+                  <div className="space-y-1">
+                    {PRODUCT_TYPES.map(type => (
+                      <FilterOption
+                        key={type.id}
+                        label={type.name}
+                        isSelected={filters.type === type.id}
+                        onSelect={() => handleProductTypeChange(type.id)}
+                        count={productCounts.productTypes?.[type.id] || 0}
+                      />
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           <FilterSection
             title="Category"
             isExpanded={expandedSections.category}
             onToggle={() => toggleSection('category')}
-            count={PRODUCT_CATEGORIES.length}
+            count={categories.length}
           >
-            <div className="space-y-1">
-              {PRODUCT_CATEGORIES.slice(0, expandedSections.category ? undefined : 4).map(category => (
-                <FilterOption
-                  key={category.id}
-                  label={category.name}
-                  isSelected={filters.category === category.id}
-                  onSelect={() => handleCategoryChange(category.id)}
-                  count={productCounts.categories?.[category.id] || 0}
-                />
-              ))}
-              {!expandedSections.category && PRODUCT_CATEGORIES.length > 4 && (
-                <button
-                  onClick={() => toggleSection('category')}
-                  className="w-full text-left text-xs text-gray-400 hover:text-white py-1 px-2 rounded transition-colors"
-                >
-                  +{PRODUCT_CATEGORIES.length - 4} more
-                </button>
+            <div className="space-y-1 min-h-[60px]">
+              {loadingCategories ? (
+                <div className="flex items-center justify-center py-6">
+                  <div className="w-5 h-5 border-2 border-[#00FF89] border-t-transparent rounded-full animate-spin"></div>
+                  <span className="ml-3 text-sm text-gray-400">Loading categories...</span>
+                </div>
+              ) : categories.length === 0 ? (
+                <div className="text-center py-6">
+                  <span className="text-sm text-gray-400">No categories available</span>
+                </div>
+              ) : (
+                <>
+                  {categories.slice(0, expandedSections.category ? undefined : 4).map(category => (
+                    <FilterOption
+                      key={category.id || category._id}
+                      label={category.name || category.title}
+                      isSelected={filters.category === (category.id || category._id)}
+                      onSelect={() => handleCategoryChange(category.id || category._id)}
+                      count={productCounts.categories?.[category.id || category._id] || 0}
+                    />
+                  ))}
+                  {!expandedSections.category && categories.length > 4 && (
+                    <button
+                      onClick={() => toggleSection('category')}
+                      className="w-full text-left text-xs text-gray-400 hover:text-white py-1 px-2 rounded transition-colors"
+                    >
+                      +{categories.length - 4} more
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </FilterSection>
@@ -228,25 +336,38 @@ export default function FilterSidebar({
             title="Industry"
             isExpanded={expandedSections.industry}
             onToggle={() => toggleSection('industry')}
-            count={PRODUCT_INDUSTRIES.length}
+            count={industries.length}
           >
-            <div className="space-y-1">
-              {PRODUCT_INDUSTRIES.slice(0, expandedSections.industry ? undefined : 3).map(industry => (
-                <FilterOption
-                  key={industry.id}
-                  label={industry.name}
-                  isSelected={filters.industry === industry.id}
-                  onSelect={() => handleIndustryChange(industry.id)}
-                  count={productCounts.industries?.[industry.id] || 0}
-                />
-              ))}
-              {!expandedSections.industry && PRODUCT_INDUSTRIES.length > 3 && (
-                <button
-                  onClick={() => toggleSection('industry')}
-                  className="w-full text-left text-xs text-gray-400 hover:text-white py-1 px-2 rounded transition-colors"
-                >
-                  +{PRODUCT_INDUSTRIES.length - 3} more
-                </button>
+            <div className="space-y-1 min-h-[60px]">
+              {loadingIndustries ? (
+                <div className="flex items-center justify-center py-6">
+                  <div className="w-5 h-5 border-2 border-[#00FF89] border-t-transparent rounded-full animate-spin"></div>
+                  <span className="ml-3 text-sm text-gray-400">Loading industries...</span>
+                </div>
+              ) : industries.length === 0 ? (
+                <div className="text-center py-6">
+                  <span className="text-sm text-gray-400">No industries available</span>
+                </div>
+              ) : (
+                <>
+                  {industries.slice(0, expandedSections.industry ? undefined : 3).map(industry => (
+                    <FilterOption
+                      key={industry.id}
+                      label={industry.name}
+                      isSelected={filters.industry === industry.id}
+                      onSelect={() => handleIndustryChange(industry.id)}
+                      count={productCounts.industries?.[industry.id] || 0}
+                    />
+                  ))}
+                  {!expandedSections.industry && industries.length > 3 && (
+                    <button
+                      onClick={() => toggleSection('industry')}
+                      className="w-full text-left text-xs text-gray-400 hover:text-white py-1 px-2 rounded transition-colors"
+                    >
+                      +{industries.length - 3} more
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </FilterSection>

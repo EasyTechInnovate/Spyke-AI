@@ -8,11 +8,6 @@ export default function ProductBreadcrumb({ product }) {
     const breadcrumbItems = [
         { href: '/', label: 'Home', icon: Home },
         { href: '/explore', label: 'Products' },
-        { 
-            href: `/explore?category=${product.category}`, 
-            label: product.category?.replace('_', ' ').charAt(0).toUpperCase() + 
-                   product.category?.slice(1).replace('_', ' ') || 'Category'
-        },
         { label: product.title, current: true }
     ]
     return (

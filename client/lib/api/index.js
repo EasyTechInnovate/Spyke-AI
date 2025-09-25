@@ -11,6 +11,7 @@ export { default as analyticsAPI } from './analytics'
 export { default as metadataAPI } from './metadata'
 export { default as payoutAPI } from './payout'
 export { paymentAPI } from './payment'
+export { default as categoriesAPI } from './categories'
 
 import apiClient from './client'
 import { authAPI } from './auth'

@@ -652,6 +652,14 @@ export default function ProductPage() {
                             ctaRef={ctaRef}
                         />
                     </section>
+
+                    {/* Promocode Display Section */}
+                    <section className="relative py-6">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <ProductPromoDisplay product={product} />
+                        </div>
+                    </section>
+
                     <section className="relative py-12 lg:py-16">
                         <DSContainer
                             maxWidth="hero"
