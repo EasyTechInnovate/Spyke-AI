@@ -34,14 +34,14 @@ export default function CartPromoDisplay({
                 setBestDeal(null)
                 return
             }
-            const response = await fetch(`/api/v1/promocode/applicable?productIds=${cartProductIds.join(',')}`)
-            const data = await response.json()
-            if (data.success && data.data.applicablePromocodes) {
+            const response = await promocodeAPI.getApplicablePromocodes(cartProductIds.join(','))
+            console.log('📊 Cart Promocode API response:', response)
+            if (response) {
                 const allApplicable = [
-                    ...data.data.applicablePromocodes.global,
-                    ...data.data.applicablePromocodes.productSpecific,
-                    ...data.data.applicablePromocodes.categorySpecific,
-                    ...data.data.applicablePromocodes.industrySpecific
+                    ...(response.applicablePromocodes.global || []),
+                    ...(response.applicablePromocodes.productSpecific || []),
+                    ...(response.applicablePromocodes.categorySpecific || []),
+                    ...(response.applicablePromocodes.industrySpecific || [])
                 ]
                 const sortedPromos = allApplicable.sort((a, b) => {
                     const aValue = calculatePotentialSavings(a)
@@ -50,6 +50,9 @@ export default function CartPromoDisplay({
                 })
                 setPromocodes(sortedPromos)
                 setBestDeal(sortedPromos[0] || null)
+            } else {
+                setPromocodes([])
+                setBestDeal(null)
             }
         } catch (error) {
             console.error('Failed to fetch smart promocodes:', error)

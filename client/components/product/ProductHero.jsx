@@ -486,9 +486,6 @@ export default function ProductHero({
                                 )}
                             </div>
                         </motion.div>
-                        <ProductPromoDisplay 
-                            product={product}
-                        />
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
