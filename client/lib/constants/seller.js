@@ -1,6 +1,5 @@
 export const VERIFICATION_STATUSES = {
   PENDING: 'pending',
-  UNDER_REVIEW: 'under_review',
   COMMISSION_OFFERED: 'commission_offered',
   APPROVED: 'approved',
   REJECTED: 'rejected'
