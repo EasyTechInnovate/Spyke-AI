@@ -1,16 +1,18 @@
-import passport from "passport";
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import logger from "../util/logger.js";
-import config from "../config/config.js";
-import { EAuthProvider, EUserRole } from "../constant/application.js";
-import quicker from "../util/quicker.js";
-import userModel from "../model/user.model.js";
+import passport from 'passport'
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20'
+import logger from '../util/logger.js'
+import config from '../config/config.js'
+import { EAuthProvider, EUserRole } from '../constant/application.js'
+import quicker from '../util/quicker.js'
+import userModel from '../model/user.model.js'
+import emailTemplates from '../util/email.formatter.js'
+import emailService from './email.service.js'
 
 class PassportService {
-    passport;
+    passport
     constructor() {
-        this.passport = passport;
-        this.initializeStrategies();
+        this.passport = passport
+        this.initializeStrategies()
     }
 
     initializeStrategies() {
@@ -20,14 +22,14 @@ class PassportService {
                 {
                     clientID: config.google.GMAIL_CLIENT_ID,
                     clientSecret: config.google.GMAIL_CLIENT_SECRET,
-                    callbackURL: config.google.GMAIL_CALLBACK_URL,
+                    callbackURL: config.google.GMAIL_CALLBACK_URL
                 },
                 async (accessToken, refreshToken, profile, done) => {
                     try {
-                        let user = await userModel.findOne({ "googleAuth.googleId": profile.id });
+                        let user = await userModel.findOne({ 'googleAuth.googleId': profile.id })
 
                         if (!user && profile.emails) {
-                            user = await userModel.findOne({ emailAddress: profile.emails[0].value });
+                            user = await userModel.findOne({ emailAddress: profile.emails[0].value })
 
                             if (user) {
                                 user.googleAuth = {
@@ -35,38 +37,38 @@ class PassportService {
                                     profile: {
                                         name: profile.displayName,
                                         picture: profile.photos && profile.photos[0] ? profile.photos[0].value : null,
-                                        email: profile.emails[0].value,
-                                    },
-                                };
-                                user.accountConfirmation.status = true;
-                                user.accountConfirmation.timestamp = new Date();
-                                await user.save();
+                                        email: profile.emails[0].value
+                                    }
+                                }
+                                user.accountConfirmation.status = true
+                                user.accountConfirmation.timestamp = new Date()
+                                await user.save()
                             } else {
-                                const token = quicker.generateRandomId();
-                                const code = quicker.generateOtp(6);
+                                const token = quicker.generateRandomId()
+                                const code = quicker.generateOtp(6)
 
                                 user = new userModel({
-                                    name: profile.displayName || (profile.name?.givenName + ' ' + profile.name?.familyName) || 'Google User',
+                                    name: profile.displayName || profile.name?.givenName + ' ' + profile.name?.familyName || 'Google User',
                                     emailAddress: profile.emails[0].value,
                                     googleAuth: {
                                         googleId: profile.id,
                                         profile: {
                                             name: profile.displayName,
                                             picture: profile.photos && profile.photos[0] ? profile.photos[0].value : null,
-                                            email: profile.emails[0].value,
-                                        },
+                                            email: profile.emails[0].value
+                                        }
                                     },
                                     avatar: profile.photos && profile.photos[0] ? profile.photos[0].value : null,
                                     accountConfirmation: {
                                         status: true,
                                         token,
                                         code,
-                                        timestamp: new Date(),
+                                        timestamp: new Date()
                                     },
                                     passwordReset: {
                                         token: null,
                                         expiry: null,
-                                        lastResetAt: null,
+                                        lastResetAt: null
                                     },
                                     consent: true,
                                     timezone: 'UTC',
@@ -75,57 +77,75 @@ class PassportService {
                                         lastLogin: new Date(),
                                         loginCount: 0,
                                         lastLoginIP: null,
-                                        registrationIP: null,
+                                        registrationIP: null
                                     },
                                     phoneNumber: {
                                         isoCode: null,
                                         countryCode: null,
-                                        internationalNumber: null,
+                                        internationalNumber: null
                                     },
                                     userLocation: {
                                         lat: null,
-                                        long: null,
+                                        long: null
                                     },
                                     roles: [EUserRole.USER],
-                                    notifications: [],
-                                });
+                                    notifications: []
+                                })
 
-                                await user.save();
+                                const dashboardUrl = `${config.client.url}/`
+
+                                const confirmationEmail = emailTemplates.confirmation({
+                                    emailAddress: user.emailAddress,
+                                    dashboardUrl
+                                })
+
+                                try {
+                                    await emailService.sendEmail(
+                                        user.emailAddress,
+                                        confirmationEmail.subject,
+                                        confirmationEmail.text,
+                                        confirmationEmail.html
+                                    )
+                                } catch (emailError) {
+                                    console.error('Failed to send confirmation email:', emailError)
+                                }
+
+                                await user.save()
                             }
                         }
 
-                        return done(null, user);
+                        return done(null, user)
                     } catch (error) {
-                        logger.error("Google strategy error:", error);
-                        return done(error);
+                        logger.error('Google strategy error:', error)
+                        return done(error)
                     }
                 }
             )
-        );
+        )
 
         this.passport.serializeUser((user, done) => {
-            done(null, user.emailAddress);
-        });
+            done(null, user.emailAddress)
+        })
 
         this.passport.deserializeUser(async (emailAddress, done) => {
             try {
-                const user = await userModel.findOne({ emailAddress });
-                done(null, user);
+                const user = await userModel.findOne({ emailAddress })
+                done(null, user)
             } catch (error) {
-                logger.error("Deserialize user error:", error);
-                done(error);
+                logger.error('Deserialize user error:', error)
+                done(error)
             }
-        });
+        })
     }
 
     initialize() {
-        return this.passport.initialize();
+        return this.passport.initialize()
     }
 
     session() {
-        return this.passport.session();
+        return this.passport.session()
     }
 }
 
-const passportService = new PassportService();
-export { passportService };
+const passportService = new PassportService()
+export { passportService }

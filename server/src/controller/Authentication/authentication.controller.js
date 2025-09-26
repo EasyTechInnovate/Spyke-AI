@@ -162,7 +162,7 @@ export default {
 
             await user.save()
 
-            const dashboardUrl = `${config.client.url}/dashboard`
+            const dashboardUrl = `${config.client.url}/`
 
             const confirmationEmail = emailTemplates.confirmation({
                 emailAddress: user.emailAddress,
