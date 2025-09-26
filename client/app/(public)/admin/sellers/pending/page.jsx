@@ -27,14 +27,9 @@ import {
     XCircle,
     Info,
     X as CloseIcon,
-    Download} from 'lucide-react'
-import { 
-    PageHeader, 
-    LoadingSkeleton, 
-    EmptyState, 
-    QuickActionsBar,
-    StatsGrid
-} from '@/components/admin'
+    Download
+} from 'lucide-react'
+import { PageHeader, LoadingSkeleton, EmptyState, QuickActionsBar, StatsGrid } from '@/components/admin'
 const BRAND = '#00FF89'
 const AMBER = '#FFC050'
 function formatDate(date) {
@@ -48,10 +43,12 @@ function formatDate(date) {
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 function mapStatus(seller) {
+    // Handle commission offer statuses first
     const cs = seller?.commissionOffer?.status
     if (cs === 'counter_offered') return 'counter_offered'
     if (cs === 'offered' || cs === 'commission_offered') return 'commission_offered'
-    if (seller?.review?.status === 'under_review') return 'under_review'
+    
+    // Return verification status (includes under_review)
     return seller?.verification?.status || seller?.status || 'pending'
 }
 const statusConfig = {
@@ -60,14 +57,14 @@ const statusConfig = {
         chip: 'bg-[#352a14] text-[#FFC050]',
         label: 'Pending Review',
         icon: Clock,
-        hint: 'Application submitted. Start review to proceed.'
+        hint: 'Waiting for seller to upload documents and submit for verification.'
     },
     under_review: {
         color: 'text-[#7dd3fc]',
         chip: 'bg-[#0b2833] text-[#7dd3fc]',
         label: 'Under Review',
         icon: Eye,
-        hint: 'Assess details and offer a commission rate.'
+        hint: 'Documents submitted. Admin can now offer commission rate.'
     },
     commission_offered: {
         color: 'text-[#00FF89]',
@@ -120,7 +117,7 @@ export default function PendingSellersPage() {
     })
     const [actionLoading, setActionLoading] = useState(false)
     const latestReqIdRef = useRef(0)
-    const cacheRef = useRef(new Map()) 
+    const cacheRef = useRef(new Map())
     const [sortBy, setSortBy] = useState('submittedAt')
     const [sortOrder, setSortOrder] = useState('desc')
     const [advancedFilters, setAdvancedFilters] = useState({
@@ -188,7 +185,7 @@ export default function PendingSellersPage() {
             try {
                 const reqId = ++latestReqIdRef.current
                 const res = await adminAPI.sellers.getByStatus.fetch(activeStatusFilter, page, 30)
-                if (reqId !== latestReqIdRef.current) return 
+                if (reqId !== latestReqIdRef.current) return
                 const payload = res?.data?.profiles ? res.data : res
                 const profiles = payload?.profiles || []
                 const serverPagination = payload?.pagination || {}
@@ -308,25 +305,10 @@ export default function PendingSellersPage() {
             setActionLoading(false)
         }
     }
-    const handleStartReview = async (sellerId) => {
-        if (!sellerId) return
-        setActionLoading(true)
-        try {
-            await adminAPI.sellers.profile.startReview(sellerId)
-            showMessage('Review started successfully!', 'success')
-            fetchList()
-        } catch (err) {
-            console.error('Failed to start review:', err)
-            const message = err?.response?.data?.message || err?.message || 'Failed to start review'
-            showMessage(message, 'error')
-        } finally {
-            setActionLoading(false)
-        }
-    }
     const handleSubmitCommission = async () => {
         if (!selectedSeller) return
-        if (Number.isNaN(commissionRate) || commissionRate < 1 || commissionRate > 50) {
-            showMessage('Commission must be between 1% and 50%', 'error')
+        if (Number.isNaN(commissionRate) || commissionRate < 1 || commissionRate > 100) {
+            showMessage('Commission must be between 1% and 100%', 'error')
             return
         }
         setActionLoading(true)
@@ -366,7 +348,7 @@ export default function PendingSellersPage() {
         }
     }
     const handleResendOffer = async (sellerId) => {
-        const seller = sellers.find(s => s._id === sellerId)
+        const seller = sellers.find((s) => s._id === sellerId)
         if (!seller?.commissionOffer?.rate) return showMessage('No previous offer to resend', 'info')
         setActionLoading(true)
         try {
@@ -423,7 +405,7 @@ export default function PendingSellersPage() {
         if (!realTimeUpdates) return
         const interval = setInterval(() => {
             fetchList({ silent: true })
-        }, 30000) 
+        }, 30000)
         return () => clearInterval(interval)
     }, [realTimeUpdates, fetchList])
     const addNotification = (message, type = 'info') => {
@@ -442,7 +424,7 @@ export default function PendingSellersPage() {
                     onDismiss={clearNotification}
                 />
             )}
-            <PageHeader 
+            <PageHeader
                 title="Seller Applications"
                 subtitle="Manage pending seller applications and commission offers"
                 actions={[
@@ -465,25 +447,25 @@ export default function PendingSellersPage() {
                 ]}
             />
             <LegendBannerAlways statusConfig={statusConfig} />
-            <StatsGrid 
+            <StatsGrid
                 stats={[
                     {
-                        label: "Avg Time",
+                        label: 'Avg Time',
                         value: sellers.length ? '2.5d' : '0d',
                         icon: Timer
                     },
                     {
-                        label: "Conversion", 
+                        label: 'Conversion',
                         value: sellers.length ? '87%' : '0%',
                         icon: TrendingUp
                     },
                     {
-                        label: "Counters",
+                        label: 'Counters',
                         value: counts.counter_offered ?? 0,
                         icon: Zap
                     },
                     {
-                        label: "Total Pending",
+                        label: 'Total Pending',
                         value: counts.all ?? 0,
                         icon: Users
                     }
@@ -596,7 +578,7 @@ export default function PendingSellersPage() {
                 ) : loading ? (
                     <Loader />
                 ) : filteredSellers.length === 0 ? (
-                    <EmptyState 
+                    <EmptyState
                         title={debouncedQuery ? 'No matching sellers' : 'No Pending Sellers'}
                         description={debouncedQuery ? 'Try a different search.' : 'All applications have been processed.'}
                         icon={Users}
@@ -607,7 +589,6 @@ export default function PendingSellersPage() {
                             <SellerCard
                                 key={seller._id}
                                 seller={seller}
-                                onStartReview={handleStartReview}
                                 onOpenCommission={() => {
                                     setSelectedSeller(seller)
                                     setCommissionRate(seller?.commissionOffer?.rate || 15)
@@ -678,7 +659,7 @@ export default function PendingSellersPage() {
                         <input
                             type="number"
                             min="1"
-                            max="50"
+                            max="100"
                             value={commissionRate}
                             onChange={(e) => setCommissionRate(Number(e.target.value))}
                             className="w-full px-4 py-3 bg-[#121212] border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FF89]/50 focus:border-transparent"
@@ -1262,17 +1243,13 @@ function openProfile(seller) {
         showMessage('Profile page coming soon.', 'info')
     }
 }
-function SellerCard({ seller, onStartReview, onOpenCommission, onAcceptCounter, onResendOffer, onReject, onViewDetails }) {
+function SellerCard({ seller, onOpenCommission, onAcceptCounter, onResendOffer, onReject, onViewDetails }) {
     const status = seller.currentStatus || 'pending'
     const cfg = statusConfig[status] || statusConfig.pending
     const hasCounter = !!seller?.commissionOffer?.counterOffer
-    const handleStartReview = () => onStartReview(seller._id)
     const handleAcceptCounter = () => onAcceptCounter(seller._id, seller?.commissionOffer?.counterOffer?.rate)
     const handleResendOffer = () => onResendOffer(seller._id)
     const primaryAction = (() => {
-        if (status === 'pending') {
-            return { label: 'Start Review', icon: Eye, onClick: handleStartReview }
-        }
         if (status === 'under_review') {
             return { label: 'Offer Commission', icon: DollarSign, onClick: onOpenCommission }
         }
@@ -1377,7 +1354,7 @@ function SellerCard({ seller, onStartReview, onOpenCommission, onAcceptCounter, 
                                 <div
                                     className="w-[140px] h-12 invisible"
                                     aria-hidden
-                                /> 
+                                />
                             )}
                             <button
                                 type="button"
