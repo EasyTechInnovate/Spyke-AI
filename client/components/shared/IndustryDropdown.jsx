@@ -62,39 +62,26 @@ export default function IndustryDropdown({
                 onClick={() => !disabled && setIsOpen(!isOpen)}
                 disabled={disabled || loading}
                 className={`
-                    w-full px-4 py-3 bg-gray-800 border rounded-lg text-left flex items-center justify-between
-                    transition-colors duration-200 min-h-[48px]
-                    ${disabled || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-750 cursor-pointer'}
-                    ${error ? 'border-red-500' : 'border-gray-700 focus:border-[#00FF89] focus:ring-1 focus:ring-[#00FF89]'}
-                    ${isOpen ? 'border-[#00FF89] ring-1 ring-[#00FF89]' : ''}
+                    w-full px-4 py-3 bg-black/90 border rounded-lg text-left flex items-center justify-between
+                    transition-colors duration-200 min-h-[48px] backdrop-blur-sm
+                    ${disabled || loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-black/95 cursor-pointer'}
+                    ${error ? 'border-red-500' : 'border-gray-600 focus:border-[#00FF89] focus:ring-2 focus:ring-[#00FF89]/30'}
+                    ${isOpen ? 'border-[#00FF89] ring-2 ring-[#00FF89]/30' : ''}
                 `}>
                 <div className="flex items-center gap-3">
-                    <Building2 className="w-4 h-4 text-gray-400" />
-                    <span className={selectedIndustry ? 'text-white' : 'text-gray-400'}>
+                    <Building2 className="w-4 h-4 text-[#00FF89]" />
+                    <span className={selectedIndustry ? 'text-[#00FF89] font-medium' : 'text-gray-300'}>
                         {loading ? 'Loading...' : selectedIndustry?.name || placeholder}
                     </span>
                 </div>
                 {loading ? (
-                    <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
+                    <Loader2 className="w-4 h-4 text-[#00FF89] animate-spin" />
                 ) : (
-                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 text-[#00FF89] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                 )}
             </button>
             {isOpen && !loading && (
-                <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                    {showAllOption && (
-                        <button
-                            type="button"
-                            onClick={() => handleSelect('')}
-                            className={`w-full px-4 py-3 text-left hover:bg-gray-700 transition-colors border-b border-gray-700 flex items-center gap-3 ${!value ? 'bg-[#00FF89]/10 text-[#00FF89]' : 'text-gray-300'}`}
-                        >
-                            <Building2 className="w-4 h-4" />
-                            <div>
-                                <div className="font-medium">All Industries</div>
-                                <div className="text-sm text-gray-400">Show all products</div>
-                            </div>
-                        </button>
-                    )}
+                <div className="absolute z-50 w-full mt-1 bg-black/95 border border-gray-600 rounded-lg shadow-2xl max-h-60 overflow-y-auto backdrop-blur-sm">
                     {industries.length === 0 ? (
                         <div className="px-4 py-6 text-center text-gray-400">No industries available</div>
                     ) : (
@@ -103,9 +90,12 @@ export default function IndustryDropdown({
                                 key={industry.id}
                                 type="button"
                                 onClick={() => handleSelect(industry.id)}
-                                className={`w-full px-4 py-3 text-left hover:bg-gray-700 transition-colors flex items-center gap-3 ${value === industry.id ? 'bg-[#00FF89]/10 text-[#00FF89]' : 'text-gray-300'}`}
-                            >
-                                <Building2 className="w-4 h-4" />
+                                className={`
+                                    w-full px-4 py-3 text-left hover:bg-[#00FF89]/20 transition-colors
+                                    flex items-center gap-3
+                                    ${value === industry.id ? 'bg-[#00FF89]/20 text-[#00FF89] font-medium' : 'text-gray-200'}
+                                `}>
+                                <Building2 className="w-4 h-4 text-[#00FF89]" />
                                 <div>
                                     <div className="font-medium">{industry.name}</div>
                                     {industry.description && (

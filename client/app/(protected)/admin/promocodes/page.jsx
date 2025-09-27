@@ -157,7 +157,7 @@ export default function AdminPromocodesPage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <Card className="p-4">
                     <div className="text-sm text-gray-600 mb-1">Total Promocodes</div>
-                    <div className="text-2xl font-bold">{pagination.total}</div>
+                    <div className="text-2xl font-bold">{promocodes?.length}</div>
                 </Card>
                 <Card className="p-4">
                     <div className="text-sm text-gray-600 mb-1">Active Codes</div>
@@ -189,14 +189,14 @@ export default function AdminPromocodesPage() {
                             className="flex-1"
                         />
                         <Button type="submit" variant="secondary">
-                            <Search className="w-4 h-4" />
+                            <Search className="w-4 h-4 mt-4" />
                         </Button>
                     </form>
                     <div className="flex gap-2">
                         <select
                             value={filterStatus}
                             onChange={(e) => setFilterStatus(e.target.value)}
-                            className="px-4 py-2 border rounded-lg"
+                            className="px-4 py-2 border rounded-lg mt-2"
                         >
                             <option value="all">All Status</option>
                             <option value="active">Active</option>
@@ -206,7 +206,7 @@ export default function AdminPromocodesPage() {
                         <select
                             value={filterType}
                             onChange={(e) => setFilterType(e.target.value)}
-                            className="px-4 py-2 border rounded-lg"
+                            className="px-4 py-2 border rounded-lg mt-2"
                         >
                             <option value="all">All Types</option>
                             <option value="percentage">Percentage</option>
@@ -215,13 +215,16 @@ export default function AdminPromocodesPage() {
                         <Button 
                             onClick={exportPromocodes} 
                             variant="outline"
-                            className="gap-2"
+                            className="gap-2 mt-2"
                             disabled={promocodes.length === 0}
                         >
                             <Download className="w-4 h-4" />
                             Export
                         </Button>
-                        <Button onClick={() => handleCreateEdit()} className="gap-2">
+                        <Button 
+                            onClick={() => handleCreateEdit()} 
+                            className="gap-2 mt-2 bg-[#00FF89] text-black hover:bg-[#00FF89]/90 focus-visible:ring-[#00FF89]/40"
+                        >
                             <Plus className="w-4 h-4" />
                             Create Promocode
                         </Button>
@@ -247,19 +250,20 @@ export default function AdminPromocodesPage() {
                                 <div className="flex-1">
                                     <div className="flex items-center gap-3 mb-2">
                                         <h3 className="text-xl font-semibold">{promocode.code}</h3>
-                                        <Badge variant={promocode.status === 'active' ? 'success' : 'secondary'}>
-                                            {promocode.status}
-                                        </Badge>
+                                        <span className={`text-sm font-medium ${promocode.status === 'active' ? 'text-green-500' : 'text-red-500'}`}>
+                                            {promocode.status === 'active' ? 'Active' : 'Inactive'}
+                                        </span>
                                         <Badge variant="outline">
-                                            {promocode.discountType === 'percentage' 
+                                            {promocode.discountType === 'percentage'
                                                 ? `${promocode.discountValue}% OFF`
-                                                : `$${promocode.discountValue} OFF`
-                                            }
+                                                : `$${promocode.discountValue} OFF`}
                                         </Badge>
                                         {promocode.createdBy && (
                                             <Badge variant="secondary" className="gap-1">
                                                 <Users className="w-3 h-3" />
-                                                {promocode.createdBy.role === 'admin' ? 'Admin' : promocode.createdBy.businessName || promocode.createdBy.emailAddress}
+                                                {promocode.createdBy.role === 'admin'
+                                                    ? 'Admin'
+                                                    : promocode.createdBy.businessName || promocode.createdBy.emailAddress}
                                             </Badge>
                                         )}
                                     </div>
@@ -304,9 +308,9 @@ export default function AdminPromocodesPage() {
                                         title={promocode.status === 'active' ? 'Deactivate' : 'Activate'}
                                     >
                                         {promocode.status === 'active' ? (
-                                            <ToggleRight className="w-4 h-4 text-green-600" />
+                                            <ToggleRight className="w-4 h-4" />
                                         ) : (
-                                            <ToggleLeft className="w-4 h-4 text-gray-400" />
+                                            <ToggleLeft className="w-4 h-4" />
                                         )}
                                     </Button>
                                     <Button
@@ -322,7 +326,7 @@ export default function AdminPromocodesPage() {
                                         size="sm"
                                         onClick={() => handleDelete(promocode._id)}
                                         title="Delete"
-                                        className="text-red-600 hover:text-red-700"
+                                        className="text-red-500 hover:text-red-600"
                                     >
                                         <Trash2 className="w-4 h-4" />
                                     </Button>

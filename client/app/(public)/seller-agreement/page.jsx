@@ -62,7 +62,6 @@ export default function SellerAgreementPage() {
     ]
     return (
         <>
-            <ConditionalHeader />
             <div className="min-h-screen bg-[#121212] text-white">
                 <section className="relative py-16">
                     <Container>

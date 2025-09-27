@@ -139,7 +139,7 @@ export default function HelperRail({ currentStep }) {
     }
     const progressStatus = getProgressStatus()
     return (
-        <div className="space-y-6 sticky top-24">
+        <div className="space-y-6">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

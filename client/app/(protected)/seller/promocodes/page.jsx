@@ -301,14 +301,9 @@ export default function PromocodesPage() {
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-3 mb-2">
                                                     <h3 className="text-xl font-bold text-white font-mono truncate">{promocode.code}</h3>
-                                                    <div
-                                                        className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                                                            promocode.isActive
-                                                                ? 'bg-[#00FF89]/20 text-[#00FF89] border border-[#00FF89]/30'
-                                                                : 'bg-gray-700/50 text-gray-400 border border-gray-600'
-                                                        }`}>
+                                                    <span className={`text-sm font-medium ${promocode.isActive ? 'text-green-500' : 'text-red-500'}`}>
                                                         {promocode.isActive ? 'Active' : 'Inactive'}
-                                                    </div>
+                                                    </span>
                                                 </div>
                                                 {promocode.description && (
                                                     <p className="text-sm text-gray-400 line-clamp-2 mb-3">{promocode.description}</p>
