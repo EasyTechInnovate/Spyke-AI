@@ -2,10 +2,21 @@
 import React, { useState } from 'react'
 import { Check } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
-import { MultiStepForm, FormInput, FormTextArea, FormSelect, FormTagInput, FormCheckbox, FormSearchableSelect, ImageUpload } from '@/components/shared/forms'
+import {
+    MultiStepForm,
+    FormInput,
+    FormTextArea,
+    FormSelect,
+    FormTagInput,
+    FormCheckbox,
+    FormSearchableSelect,
+    ImageUpload
+} from '@/components/shared/forms'
 import { useSellerForm } from '@/hooks/forms/useSellerForm'
 import Notification from '@/components/shared/Notification'
 import { formSteps, formFields, countries, timezones, popularNiches, popularTools } from '@/lib/config/forms/SellerFormConfig'
+import { logoutService } from '@/lib/services/logout'
+import { useRouter } from 'next/navigation'
 
 export default function BecomeSellerPage() {
     const {
@@ -28,6 +39,8 @@ export default function BecomeSellerPage() {
         handleSubmit
     } = useSellerForm()
 
+    const router = useRouter()
+
     const [showValidationError, setShowValidationError] = useState(false)
     const handleFormSubmit = async (data) => {
         const isValid = validateStep(3)
@@ -37,6 +50,15 @@ export default function BecomeSellerPage() {
         }
         setShowValidationError(false)
         await handleSubmit(data)
+    }
+
+    const handleLogoutAndRedirect = async () => {
+        try {
+            await logoutService.logout()
+        } catch (error) {
+            console.error('Logout failed:', error)
+            router.push('/signin')
+        }
     }
 
     const SellerBannerUpload = ({ ...props }) => {
@@ -105,12 +127,14 @@ export default function BecomeSellerPage() {
                         <SellerBannerUpload
                             label={formFields.sellerBanner.label}
                             value={formData.sellerBanner}
-                            onChange={(e) => handleInputChange({
-                                target: {
-                                    name: 'sellerBanner',
-                                    value: e.target.value
-                                }
-                            })}
+                            onChange={(e) =>
+                                handleInputChange({
+                                    target: {
+                                        name: 'sellerBanner',
+                                        value: e.target.value
+                                    }
+                                })
+                            }
                             category="seller-banners"
                             required={formFields.sellerBanner.required}
                             error={errors.sellerBanner}
@@ -344,7 +368,7 @@ export default function BecomeSellerPage() {
                             onClick={() => setShowValidationError(false)}
                         />
                     )}
-                    
+
                     {!isSuccess ? (
                         <MultiStepForm
                             steps={formSteps}
@@ -363,18 +387,20 @@ export default function BecomeSellerPage() {
                     ) : (
                         <div className="text-center py-20">
                             <div className="max-w-2xl mx-auto">
-                                <h2 className="text-4xl font-kumbh-sans font-bold text-white mb-6">
-                                    🎉 Seller Profile Created Successfully!
-                                </h2>
-                                <p className="text-xl text-gray-300 mb-8">
-                                    Your seller profile has been submitted for review. 
-                                </p>
-                                <div className="bg-brand-primary/10 p-6 rounded-2xl border border-brand-primary/30">
+                                <h2 className="text-4xl font-kumbh-sans font-bold text-white mb-6">🎉 Seller Profile Created Successfully!</h2>
+                                <p className="text-xl text-gray-300 mb-8">Your seller profile has been submitted for review.</p>
+                                <div className="bg-brand-primary/10 p-6 rounded-2xl border border-brand-primary/30 mb-6">
                                     <h3 className="text-lg font-semibold text-brand-primary mb-2">Next Steps:</h3>
                                     <p className="text-gray-200">
-                                        Please relogin and visit your seller profile to complete the verification process and start selling your automation tools!
+                                        Please <span className="font-bold text-brand-primary underline decoration-2">relogin</span> and visit your
+                                        seller profile to start selling!
                                     </p>
                                 </div>
+                                <button
+                                    onClick={handleLogoutAndRedirect}
+                                    className="bg-brand-primary hover:bg-brand-primary/90 text-black font-semibold py-3 px-8 rounded-xl transition-all duration-200 transform hover:scale-105">
+                                    🚀 Ready to Start Selling? Sign In Again!
+                                </button>
                             </div>
                         </div>
                     )}
