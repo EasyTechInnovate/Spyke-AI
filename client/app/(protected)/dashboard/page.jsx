@@ -324,7 +324,7 @@ function UserDashboardContent() {
                         <p className="text-sm text-gray-400">Discover AI prompts and automation tools</p>
                     </a>
                     <a
-                        href="/become-seller"
+                        href="/seller-benefits"
                         className="p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors border border-gray-700 hover:border-brand-primary/50">
                         <TrendingUp className="w-6 h-6 text-brand-primary mb-3" />
                         <h3 className="font-semibold text-white mb-1">Become a Seller</h3>

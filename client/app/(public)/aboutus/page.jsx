@@ -127,7 +127,7 @@ export default function AboutUsPage() {
                                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                             </Link>
                             <Link
-                                href="/become-seller"
+                                href="/seller-benefits"
                                 className="group inline-flex items-center gap-2 px-8 py-4 border border-[#00FF89] text-[#00FF89] font-semibold rounded-xl hover:bg-[#00FF89] hover:text-black transition-all duration-300"
                             >
                                 Start Selling

@@ -161,7 +161,7 @@ export const formSteps = [
     id: 2,
     title: 'Expertise',
     subtitle: "What's your expertise?",
-    fields: ['niches', 'toolsSpecialization', 'customAutomationServices']
+    fields: ['toolsSpecialization', 'customAutomationServices']
   },
   {
     id: 3,
@@ -223,9 +223,12 @@ export const formFields = {
     label: 'Profile Banner URL',
     type: 'text',
     placeholder: 'https://example.com/banner.jpg',
-    required: false,
+    required: true,
     helperText: 'Recommended size: 1200x300px',
-    
+    validation: {
+      required: true,
+      message: 'Profile banner is required'
+    }
   },
   niches: {
     label: 'Niches',

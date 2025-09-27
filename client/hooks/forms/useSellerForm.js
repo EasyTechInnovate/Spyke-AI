@@ -1,32 +1,23 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import toast from '@/lib/utils/toast'
 import sellerAPI from '@/lib/api/seller'
 import { useFormValidation } from './useFormValidation'
 import { formFields, defaultFormValues, formSteps, timezones, countries } from '@/lib/config/forms/SellerFormConfig'
+import confetti from 'canvas-confetti'
 
-import InlineNotification from '@/components/shared/notifications/InlineNotification'
-/**
- * Custom hook for seller form management
- * @returns {Object} Form management utilities
- */
 export function useSellerForm() {
-    // Inline notification state
     const [notification, setNotification] = useState(null)
+    const [imageUploading, setImageUploading] = useState(false)
+    const [isSuccess, setIsSuccess] = useState(false)
 
-    // Show inline notification messages  
-    const showMessage = (message, type = 'info') => {
-        setNotification({ message, type })
-        // Auto-dismiss after 5 seconds
-        setTimeout(() => setNotification(null), 5000)
+    const showMessage = (message, type = 'info', duration = 4000) => {
+        setNotification({ id: Date.now(), message, type, duration })
     }
 
-    // Clear notification
-    const clearNotification = () => setNotification(null)
+    const dismissNotification = useCallback((id) => setNotification(null), [])
 
-    const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [submitError, setSubmitError] = useState('')
     const [formData, setFormData] = useState(defaultFormValues)
@@ -34,7 +25,6 @@ export function useSellerForm() {
 
     const { errors, setErrors, validateFields, clearError } = useFormValidation(formFields, formData)
 
-    // Prefill email + paypal
     useEffect(() => {
         if (typeof window === 'undefined') return
         const user = JSON.parse(localStorage.getItem('user') || '{}')
@@ -50,7 +40,6 @@ export function useSellerForm() {
         }
     }, [])
 
-    // Auto-detect timezone & country
     useEffect(() => {
         if (typeof window === 'undefined') return
         setFormData((prev) => {
@@ -109,21 +98,40 @@ export function useSellerForm() {
         })
     }, [])
 
+    const confettiFiredRef = useRef(false)
+    const triggerSellerConfetti = useCallback(() => {
+        if (confettiFiredRef.current) return
+        confettiFiredRef.current = true
+        confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } })
+    }, [])
+
+    const normalizeImageValue = (val) => {
+        if (!val) return ''
+        if (typeof val === 'string') return val
+        if (typeof val === 'object') {
+            return val.url || val.fileUrl || val.secure_url || val.data?.url || val.data?.fileUrl || ''
+        }
+        return ''
+    }
+
     const handleInputChange = useCallback(
         (e) => {
             const { name, value, type, checked } = e.target
-            if (!hasStartedForm) {
-                setHasStartedForm(true)
-            }
+            if (!hasStartedForm) setHasStartedForm(true)
             if (name.includes('.')) {
                 const [parent, child] = name.split('.')
                 setFormData((prev) => ({
                     ...prev,
-                    [parent]: { ...prev[parent], [child]: type === 'checkbox' ? checked : value }
+                    [parent]: {
+                        ...prev[parent],
+                        [child]: type === 'checkbox' ? checked : value
+                    }
                 }))
                 if (errors[`${parent}.${child}`]) clearError(`${parent}.${child}`)
             } else {
-                setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
+                const nextValue =
+                    name === 'sellerBanner' ? normalizeImageValue(type === 'checkbox' ? checked : value) : type === 'checkbox' ? checked : value
+                setFormData((prev) => ({ ...prev, [name]: nextValue }))
                 if (errors[name]) clearError(name)
             }
         },
@@ -180,9 +188,7 @@ export function useSellerForm() {
             if (step === 3 && !formData.revenueShareAgreement?.accepted) {
                 stepErrors['revenueShareAgreement.accepted'] = 'You must accept the revenue share agreement'
             }
-            if (Object.keys(stepErrors).length) {
-                showMessage(Object.values(stepErrors, 'error')[0] || 'Please fill required fields')
-            }
+            // Don't show notification here - let the form handle it
             return Object.keys(stepErrors).length === 0
         },
         [validateFields, formData.revenueShareAgreement]
@@ -192,7 +198,9 @@ export function useSellerForm() {
         async (data) => {
             setLoading(true)
             setSubmitError('')
+
             const payoutMethod = data.payoutInfo?.method
+
             const payoutInfo = (() => {
                 if (payoutMethod === 'bank')
                     return {
@@ -210,6 +218,7 @@ export function useSellerForm() {
                 if (payoutMethod === 'wise') return { method: 'wise', wiseEmail: data.payoutInfo.wiseEmail?.trim() }
                 return { method: payoutMethod }
             })()
+
             const payload = {
                 fullName: data.fullName.trim(),
                 email: data.email.trim(),
@@ -218,7 +227,7 @@ export function useSellerForm() {
                 niches: data.niches,
                 toolsSpecialization: data.toolsSpecialization,
                 location: { country: data.location.country, timezone: data.location.timezone },
-                sellerBanner: data.sellerBanner?.trim() || null,
+                sellerBanner: normalizeImageValue(data.sellerBanner)?.trim() || null,
                 socialHandles: data.socialHandles,
                 customAutomationServices: !!data.customAutomationServices,
                 portfolioLinks: data.portfolioLinks?.length ? data.portfolioLinks : [],
@@ -228,22 +237,12 @@ export function useSellerForm() {
 
             try {
                 const response = await sellerAPI.createProfile(payload)
-                
-                // Updated success detection - check for 201 status or success message
-                const isCreated = !!(
-                    response && (
-                        response.success === true || 
-                        response.statusCode === 201 || 
-                        response.status === 201 || 
-                        response?.data?.id || 
-                        response?.data?._id ||
-                        (response.message && response.message.includes('created')) ||
-                        (response.message && response.message.includes('Created'))
-                    )
-                )
-                
-                if (isCreated) {
-                    const sellerId = response?.data?.id || response?.data?._id
+                const body = response?.data ?? response
+                const profileData = body?.data ?? body
+                const sellerId = profileData?.id
+                const verificationStatus = profileData?.verification?.status
+
+                if (sellerId && verificationStatus === 'pending') {
                     if (typeof window !== 'undefined') {
                         const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
                         const existingRoles = Array.isArray(currentUser.roles) ? currentUser.roles : []
@@ -253,21 +252,28 @@ export function useSellerForm() {
                         localStorage.setItem('user', JSON.stringify(currentUser))
                     }
                     
-                    // Redirect to success page instead of profile
-                    router.push('/seller/success')
+                    // Set success state to hide form and show confetti
+                    setIsSuccess(true)
+                    
+                    // Fire confetti only after successful API response and localStorage update
+                    setTimeout(() => {
+                        triggerSellerConfetti()
+                        // Removed the showMessage call - no notification on success
+                    }, 100)
                 } else {
-                    throw new Error(response?.message || 'Failed to create seller profile')
+                    throw new Error('Profile creation failed')
                 }
             } catch (error) {
-                console.error('API Error:', error)
-                const errorMessage = error.message || 'Failed to create seller profile'
-                toast.seller.profileError(errorMessage)
+                const errorMessage = error.response?.data?.message || error.message || 'Failed to create seller profile'
+                try {
+                    toast.seller.profileError(errorMessage)
+                } catch {}
                 setSubmitError(errorMessage)
             } finally {
                 setLoading(false)
             }
         },
-        [router]
+        [triggerSellerConfetti]
     )
 
     return {
@@ -277,6 +283,11 @@ export function useSellerForm() {
         setErrors,
         loading,
         submitError,
+        notification,
+        dismissNotification,
+        imageUploading,
+        setImageUploading,
+        isSuccess,
         handleInputChange,
         handleSocialHandleChange,
         addTag,

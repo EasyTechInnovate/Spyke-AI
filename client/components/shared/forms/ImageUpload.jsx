@@ -13,7 +13,9 @@ const ImageUpload = ({
     placeholder = 'Click to upload image or enter URL',
     helperText,
     className = '',
-    showPreview = true
+    showPreview = true,
+    onUploadStart,
+    onUploadEnd
 }) => {
     const fileInputRef = useRef(null)
     const { uploading, progress, uploadImage, error: uploadError } = useImageUpload({
@@ -24,22 +26,29 @@ const ImageUpload = ({
             if (onChange) {
                 onChange({ target: { value: url } })
             }
+            onUploadEnd?.()
         },
         onError: (errorMessage) => {
             console.error('Image upload failed:', errorMessage)
+            onUploadEnd?.()
         }
     })
+
     const handleFileSelect = async (e) => {
         const file = e.target.files[0]
         if (!file) return
+        
+        onUploadStart?.()
         try {
             await uploadImage(file)
         } catch (err) {
+            // onUploadEnd is already called in the onError callback
         }
         if (fileInputRef.current) {
             fileInputRef.current.value = ''
         }
     }
+
     const handleUrlChange = (e) => {
         if (onChange) {
             onChange(e)
@@ -105,7 +114,7 @@ const ImageUpload = ({
                         )}
                         {uploading ? 'Uploading...' : 'Upload Image'}
                     </label>
-                    {uploading && (
+                    {uploading && progress > 0 && (
                         <div className="flex items-center gap-2 text-sm text-gray-400">
                             <span>{progress}%</span>
                             <div className="w-20 bg-gray-800 rounded-full h-2">

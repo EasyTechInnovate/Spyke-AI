@@ -4,8 +4,10 @@ import { CheckCircle2, Clock, Mail, FileText, ArrowRight, Home } from 'lucide-re
 import { useRouter } from 'next/navigation'
 import Header from '@/components/shared/layout/Header'
 import Container from '@/components/shared/layout/Container'
+
 export default function SellerSuccessPage() {
     const router = useRouter()
+    
     const nextSteps = [
         {
             icon: <FileText className="w-5 h-5" />,
@@ -18,8 +20,10 @@ export default function SellerSuccessPage() {
             description: "Once approved, you'll receive access to your seller dashboard."
         }
     ]
+    
     return (
         <>
+            <Header />
             <section className="min-h-screen bg-black pt-24 pb-16">
                 <Container>
                     <div className="max-w-2xl mx-auto text-center">
@@ -33,7 +37,7 @@ export default function SellerSuccessPage() {
                                 </div>
                             </div>
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-kumbh-sans font-bold mb-4 text-white">
+                        <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">
                             Profile Created Successfully!
                         </h1>
                         <p className="text-xl text-gray-300 mb-8">
