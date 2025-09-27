@@ -27,7 +27,11 @@ import {
     XCircle,
     Info,
     X as CloseIcon,
-    Download
+    Download,
+    EyeOff,
+    Inbox,
+    UserCheck,
+    SearchX
 } from 'lucide-react'
 import { PageHeader, LoadingSkeleton, EmptyState, QuickActionsBar, StatsGrid } from '@/components/admin'
 const BRAND = '#00FF89'
@@ -47,7 +51,7 @@ function mapStatus(seller) {
     const cs = seller?.commissionOffer?.status
     if (cs === 'counter_offered') return 'counter_offered'
     if (cs === 'offered' || cs === 'commission_offered') return 'commission_offered'
-    
+
     // Return verification status (includes under_review)
     return seller?.verification?.status || seller?.status || 'pending'
 }
@@ -98,6 +102,8 @@ export default function PendingSellersPage() {
     const [showSellerDetailsModal, setShowSellerDetailsModal] = useState(false)
     const [commissionRate, setCommissionRate] = useState(15)
     const [rejectReason, setRejectReason] = useState('')
+    const [showDocsModal, setShowDocsModal] = useState(false)
+    const [docsSeller, setDocsSeller] = useState(null)
     const [legendOpen, setLegendOpen] = useState(false)
     const [page, setPage] = useState(1)
     const [totalPages, setTotalPages] = useState(1)
@@ -105,9 +111,6 @@ export default function PendingSellersPage() {
     const [searchQuery, setSearchQuery] = useState('')
     const [debouncedQuery, setDebouncedQuery] = useState('')
     const [activeStatusFilter, setActiveStatusFilter] = useState('all')
-    const [selectedSellers, setSelectedSellers] = useState(new Set())
-    const [showBulkActions, setShowBulkActions] = useState(false)
-    const [bulkActionType, setBulkActionType] = useState(null)
     const [counts, setCounts] = useState({
         all: undefined,
         pending: undefined,
@@ -260,51 +263,6 @@ export default function PendingSellersPage() {
             )
         })
     }, [debouncedQuery, sellers])
-    const handleSelectSeller = (sellerId) => {
-        setSelectedSellers((prev) => {
-            const newSet = new Set(prev)
-            if (newSet.has(sellerId)) {
-                newSet.delete(sellerId)
-            } else {
-                newSet.add(sellerId)
-            }
-            return newSet
-        })
-    }
-    const handleSelectAll = () => {
-        if (selectedSellers.size === filteredSellers.length) {
-            setSelectedSellers(new Set())
-        } else {
-            setSelectedSellers(new Set(filteredSellers.map((s) => s._id)))
-        }
-    }
-    const handleBulkAction = async (action) => {
-        if (selectedSellers.size === 0) return
-        setActionLoading(true)
-        try {
-            switch (action) {
-                case 'approve':
-                    await Promise.all([...selectedSellers].map((id) => adminAPI.sellers.commission.offer(id, 15)))
-                    showMessage(`${selectedSellers.size} sellers approved`, 'success')
-                    break
-                case 'reject':
-                    setBulkActionType('reject')
-                    setShowBulkActions(true)
-                    return
-                case 'export':
-                    const sellersData = filteredSellers.filter((s) => selectedSellers.has(s._id))
-                    exportSellersData(sellersData)
-                    showMessage('Sellers data exported', 'success')
-                    break
-            }
-            setSelectedSellers(new Set())
-            fetchList()
-        } catch {
-            showMessage('Bulk action failed', 'error')
-        } finally {
-            setActionLoading(false)
-        }
-    }
     const handleSubmitCommission = async () => {
         if (!selectedSeller) return
         if (Number.isNaN(commissionRate) || commissionRate < 1 || commissionRate > 100) {
@@ -377,7 +335,12 @@ export default function PendingSellersPage() {
             setActionLoading(false)
         }
     }
-    const anyModalOpen = showCommissionModal || showRejectAppModal || showSellerDetailsModal
+    // NEW: open docs modal handler
+    const handleOpenDocsModal = (seller) => {
+        setDocsSeller(seller)
+        setShowDocsModal(true)
+    }
+    const anyModalOpen = showCommissionModal || showRejectAppModal || showSellerDetailsModal || showDocsModal
     useEffect(() => {
         if (typeof document === 'undefined') return
         const body = document.body
@@ -389,6 +352,7 @@ export default function PendingSellersPage() {
                     setShowCommissionModal(false)
                     setShowRejectAppModal(false)
                     setShowSellerDetailsModal(false)
+                    setShowDocsModal(false)
                     setSelectedSeller(null)
                 }
             }
@@ -578,10 +542,10 @@ export default function PendingSellersPage() {
                 ) : loading ? (
                     <Loader />
                 ) : filteredSellers.length === 0 ? (
-                    <EmptyState
-                        title={debouncedQuery ? 'No matching sellers' : 'No Pending Sellers'}
-                        description={debouncedQuery ? 'Try a different search.' : 'All applications have been processed.'}
-                        icon={Users}
+                    <EnhancedEmptyState
+                        isSearch={!!debouncedQuery}
+                        searchQuery={debouncedQuery}
+                        activeFilter={activeStatusFilter}
                     />
                 ) : (
                     <div className="space-y-3">
@@ -604,6 +568,8 @@ export default function PendingSellersPage() {
                                     setSelectedSeller(seller)
                                     setShowSellerDetailsModal(true)
                                 }}
+                                // NEW: open docs modal
+                                onOpenDocs={() => handleOpenDocsModal(seller)}
                             />
                         ))}
                     </div>
@@ -636,7 +602,7 @@ export default function PendingSellersPage() {
                         setShowCommissionModal(false)
                         setSelectedSeller(null)
                     }}>
-                    <div className="max-w-md w-full">
+                    <div className="max-w-md w-full mx-auto">
                         <h3 className="text-xl font-bold text-white mb-4">Commission Decision</h3>
                         <p className="text-sm text-gray-400 mb-4">
                             {selectedSeller.commissionOffer?.counterOffer
@@ -722,7 +688,7 @@ export default function PendingSellersPage() {
                         setSelectedSeller(null)
                         setRejectReason('')
                     }}>
-                    <div className="max-w-md w-full">
+                    <div className="max-w-md w-full mx-auto">
                         <div className="flex items-start gap-3 mb-4">
                             <div className="p-2 bg-red-500/10 rounded-lg">
                                 <XCircle className="w-5 h-5 text-red-500" />
@@ -786,7 +752,7 @@ export default function PendingSellersPage() {
                         setShowSellerDetailsModal(false)
                         setSelectedSeller(null)
                     }}>
-                    <div className="max-w-3xl w-full">
+                    <div className="max-w-3xl w-full mx-auto">
                         <h3 className="text-xl font-bold text-white mb-4">Seller Details</h3>
                         <div className="space-y-5">
                             <div className="flex items-start gap-4">
@@ -819,44 +785,101 @@ export default function PendingSellersPage() {
                                 <BioBlock seller={selectedSeller} />
                             </div>
                             <ExpertiseBlock seller={selectedSeller} />
+                            {/* Verification Documents Section with placeholders */}
+                            {(() => {
+                                const docs = selectedSeller?.verification?.documents || {}
+                                const entries = [
+                                    { key: 'identityProof', label: 'Identity Proof', url: docs.identityProof },
+                                    { key: 'businessProof', label: 'Business Proof', url: docs.businessProof },
+                                    { key: 'taxDocument', label: 'Tax Document', url: docs.taxDocument }
+                                ]
+                                return (
+                                    <div>
+                                        <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">Verification Documents</h4>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            {entries.map((d) =>
+                                                d.url ? (
+                                                    <a
+                                                        key={d.key}
+                                                        href={d.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center justify-between gap-3 px-4 py-3 bg-[#121212] border border-gray-800 rounded-lg text-sm text-gray-300 hover:text-white hover:border-gray-700 hover:bg-[#171717] transition-colors">
+                                                        <div className="flex items-center gap-2 min-w-0">
+                                                            <FileText className="w-4 h-4 text-[#7dd3fc]" />
+                                                            <span className="truncate">{d.label}</span>
+                                                        </div>
+                                                        <Download className="w-4 h-4 text-gray-500" />
+                                                    </a>
+                                                ) : (
+                                                    <div
+                                                        key={d.key}
+                                                        className="flex items-center justify-between gap-3 px-4 py-3 bg-[#0f0f0f] border border-dashed border-gray-800 rounded-lg text-sm text-gray-500">
+                                                        <div className="flex items-center gap-2 min-w-0">
+                                                            <EyeOff className="w-4 h-4 text-gray-600" />
+                                                            <span className="truncate">{d.label}</span>
+                                                        </div>
+                                                        <span className="text-xs text-gray-600">Not uploaded</span>
+                                                    </div>
+                                                )
+                                            )}
+                                        </div>
+                                    </div>
+                                )
+                            })()}
                         </div>
                     </div>
                 </Modal>
             )}
-            {selectedSellers.size > 0 && (
-                <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-                    <div className="bg-[#1a1a1a] border border-gray-700 rounded-xl px-5 py-4 shadow-2xl">
-                        <div className="flex items-center gap-4">
-                            <span className="text-sm text-gray-300">
-                                {selectedSellers.size} seller{selectedSellers.size !== 1 ? 's' : ''} selected
-                            </span>
-                            <div className="flex items-center gap-3">
-                                <button
-                                    onClick={() => handleBulkAction('approve')}
-                                    disabled={actionLoading}
-                                    className="px-4 py-2.5 bg-[#00FF89] text-[#121212] rounded-lg text-sm font-medium hover:bg-[#00FF89]/90 transition-colors disabled:opacity-50">
-                                    Approve All
-                                </button>
-                                <button
-                                    onClick={() => handleBulkAction('reject')}
-                                    disabled={actionLoading}
-                                    className="px-4 py-2.5 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50">
-                                    Reject All
-                                </button>
-                                <button
-                                    onClick={() => handleBulkAction('export')}
-                                    className="px-4 py-2.5 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">
-                                    Export
-                                </button>
-                                <button
-                                    onClick={() => setSelectedSellers(new Set())}
-                                    className="p-2 text-gray-400 hover:text-white transition-colors">
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
+            {showDocsModal && docsSeller && (
+                <Modal
+                    onClose={() => {
+                        setShowDocsModal(false)
+                        setDocsSeller(null)
+                    }}>
+                    <div className="max-w-md w-full mx-auto">
+                        <h3 className="text-xl font-bold text-white mb-1">Verification Documents</h3>
+                        <p className="text-sm text-gray-400 mb-4">Open the uploaded files in a new tab.</p>
+                        {(() => {
+                            const docs = docsSeller?.verification?.documents || {}
+                            const items = [
+                                { key: 'identityProof', label: 'Identity Proof', url: docs.identityProof },
+                                { key: 'businessProof', label: 'Business Proof', url: docs.businessProof },
+                                { key: 'taxDocument', label: 'Tax Document', url: docs.taxDocument }
+                            ]
+                            return (
+                                <div className="grid grid-cols-1 gap-3">
+                                    {items.map((d) =>
+                                        d.url ? (
+                                            <a
+                                                key={d.key}
+                                                href={d.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center justify-between gap-3 px-4 py-3 bg-[#121212] border border-gray-800 rounded-lg text-sm text-gray-300 hover:text-white hover:border-gray-700 hover:bg-[#171717] transition-colors">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <FileText className="w-4 h-4 text-[#7dd3fc]" />
+                                                    <span className="truncate">{d.label}</span>
+                                                </div>
+                                                <span className="text-xs text-gray-400">Open</span>
+                                            </a>
+                                        ) : (
+                                            <div
+                                                key={d.key}
+                                                className="flex items-center justify-between gap-3 px-4 py-3 bg-[#0f0f0f] border border-dashed border-gray-800 rounded-lg text-sm text-gray-500">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <EyeOff className="w-4 h-4 text-gray-600" />
+                                                    <span className="truncate">{d.label}</span>
+                                                </div>
+                                                <span className="text-xs text-gray-600">Not uploaded</span>
+                                            </div>
+                                        )
+                                    )}
+                                </div>
+                            )
+                        })()}
                     </div>
-                </div>
+                </Modal>
             )}
             {notifications.length > 0 && (
                 <div className="fixed top-6 right-6 z-50 space-y-2">
@@ -1217,24 +1240,30 @@ function InfoTip({ label = 'Info', children }) {
 }
 function Modal({ onClose, children }) {
     return (
-        <div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            role="dialog"
-            aria-modal="true"
-            onClick={onClose}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
             <div
-                className="bg-[#1a1a1a] border border-gray-800 rounded-xl p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}>
+                className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/70 backdrop-blur-sm"
+                onClick={onClose}
+            />
+            {/* Dialog */}
+            <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-gradient-to-b from-[#1a1a1a] to-[#141414] shadow-[0_10px_40px_rgba(0,0,0,0.55)] ring-1 ring-white/5 p-4 sm:p-6">
+                {/* Accent top line */}
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--neon,#00FF89)]/30 to-transparent" />
+                {/* Accent bottom line */}
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+                {/* Close button */}
+                <button
+                    type="button"
+                    aria-label="Close"
+                    onClick={onClose}
+                    className="absolute top-3 right-3 p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--neon,#00FF89)]/50">
+                    <X className="w-4 h-4" />
+                </button>
                 {children}
             </div>
         </div>
     )
-}
-function openDocs(seller) {
-    const docs = seller?.verification?.documents
-    if (!docs) return showMessage('No documents uploaded yet', 'info')
-    const firstDoc = docs.identityProof || docs.businessProof || docs.taxDocument
-    firstDoc ? window.open(firstDoc, '_blank', 'noopener,noreferrer') : showMessage('No documents available', 'info')
 }
 function openProfile(seller) {
     try {
@@ -1243,10 +1272,13 @@ function openProfile(seller) {
         showMessage('Profile page coming soon.', 'info')
     }
 }
-function SellerCard({ seller, onOpenCommission, onAcceptCounter, onResendOffer, onReject, onViewDetails }) {
+function SellerCard({ seller, onOpenCommission, onAcceptCounter, onResendOffer, onReject, onViewDetails, onOpenDocs }) {
     const status = seller.currentStatus || 'pending'
     const cfg = statusConfig[status] || statusConfig.pending
     const hasCounter = !!seller?.commissionOffer?.counterOffer
+    // NEW: doc count for badges
+    const docMap = seller?.verification?.documents || {}
+    const docCount = ['identityProof', 'businessProof', 'taxDocument'].filter((k) => !!docMap[k]).length
     const handleAcceptCounter = () => onAcceptCounter(seller._id, seller?.commissionOffer?.counterOffer?.rate)
     const handleResendOffer = () => onResendOffer(seller._id)
     const primaryAction = (() => {
@@ -1262,8 +1294,18 @@ function SellerCard({ seller, onOpenCommission, onAcceptCounter, onResendOffer, 
         return null
     })()
     const showBothCounterActions = status === 'counter_offered' && hasCounter
+
+    const handleCardClick = (e) => {
+        // Don't trigger if clicking on action buttons
+        if (e.target.closest('button')) return
+        onViewDetails()
+    }
+
     return (
-        <div className="rounded-xl border border-gray-800 bg-[#171717] overflow-hidden">
+        <div 
+            className="rounded-xl border border-gray-800 bg-[#171717] overflow-hidden hover:border-[var(--neon,#00FF89)]/30 transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:shadow-[0_8px_25px_rgba(0,255,137,0.08)] cursor-pointer"
+            onClick={handleCardClick}
+        >
             <div className="p-5">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                     <div className="flex items-start gap-4 flex-1 min-w-0">
@@ -1282,6 +1324,10 @@ function SellerCard({ seller, onOpenCommission, onAcceptCounter, onResendOffer, 
                                     </span>
                                 )}
                             </div>
+                            {/* NEW: docs summary */}
+                            <div className="mt-1 text-[16px] text-gray-500">
+                                Docs: <span className={`${docCount === 3 ? 'text-green-400' : 'text-[#FFC050]'}`}>{docCount}/3</span>
+                            </div>
                             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-gray-400">
                                 <span className="flex items-center gap-1.5 min-w-0">
                                     <Mail className="w-4 h-4" />
@@ -1296,20 +1342,6 @@ function SellerCard({ seller, onOpenCommission, onAcceptCounter, onResendOffer, 
                                     {formatDate(seller.verification?.submittedAt)}
                                 </span>
                             </div>
-                            {Array.isArray(seller.niches) && seller.niches.length > 0 && (
-                                <div className="flex items-center gap-2 flex-wrap mt-3">
-                                    <span className="text-xs text-gray-500">Niches:</span>
-                                    {seller.niches.slice(0, 3).map((n, i) => (
-                                        <span
-                                            key={i}
-                                            className="px-2.5 py-1 text-xs rounded bg-[#0d1f19]"
-                                            style={{ color: '#00FF89' }}>
-                                            {n}
-                                        </span>
-                                    ))}
-                                    {seller.niches.length > 3 && <span className="text-xs text-gray-500">+{seller.niches.length - 3}</span>}
-                                </div>
-                            )}
                             <Stepper current={status} />
                         </div>
                     </div>
@@ -1356,6 +1388,19 @@ function SellerCard({ seller, onOpenCommission, onAcceptCounter, onResendOffer, 
                                     aria-hidden
                                 />
                             )}
+                            {/* View Docs button opens modal with count badge */}
+                            <button
+                                type="button"
+                                onClick={onOpenDocs}
+                                title="View Documents"
+                                className="relative p-2.5 bg-[#0f0f0f] text-gray-400 rounded-lg hover:bg-[#1b1b1b] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00FF89]/60">
+                                <FileText className="w-4 h-4" />
+                                {docCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold bg-[var(--neon,#00FF89)] text-black">
+                                        {docCount}
+                                    </span>
+                                )}
+                            </button>
                             <button
                                 type="button"
                                 onClick={onReject}
@@ -1363,14 +1408,6 @@ function SellerCard({ seller, onOpenCommission, onAcceptCounter, onResendOffer, 
                                 className="p-2.5 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/60"
                                 aria-label="Reject application">
                                 <X className="w-4 h-4" />
-                            </button>
-                            <button
-                                type="button"
-                                onClick={onViewDetails}
-                                className="p-2.5 bg-[#0f0f0f] text-gray-400 rounded-lg hover:bg-[#1b1b1b] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00FF89]/60"
-                                aria-label="View Details"
-                                title="View Details">
-                                <Eye className="w-4 h-4" />
                             </button>
                         </div>
                     </div>
@@ -1420,3 +1457,132 @@ function LegendBannerAlways({ statusConfig }) {
         </div>
     )
 }
+
+// Enhanced Empty State Component with Illustrations
+function EnhancedEmptyState({ isSearch, searchQuery, activeFilter }) {
+    if (isSearch) {
+        return (
+            <div className="flex flex-col items-center justify-center py-16 px-4">
+                <div className="relative mb-6">
+                    <div className="w-20 h-20 rounded-full bg-gray-800/30 flex items-center justify-center">
+                        <SearchX className="w-10 h-10 text-gray-500" />
+                    </div>
+                    <div className="absolute -inset-2 border-2 border-dashed border-gray-700/50 rounded-full animate-pulse"></div>
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">No sellers found</h3>
+                <p className="text-gray-400 text-center max-w-md mb-6">
+                    We couldn't find any sellers matching <span className="text-white font-medium">"{searchQuery}"</span>. Try adjusting your search
+                    terms or clearing the filter.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="px-4 py-2 bg-[#00FF89] text-black rounded-lg text-sm font-medium hover:bg-[#00FF89]/90 transition-colors">
+                        Clear Search
+                    </button>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm font-medium hover:bg-gray-600 transition-colors">
+                        View All Sellers
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
+    // Filter-specific empty states
+    const getEmptyStateConfig = () => {
+        switch (activeFilter) {
+            case 'pending':
+                return {
+                    icon: Clock,
+                    title: 'No Pending Applications',
+                    description: 'All new seller applications have been reviewed. New applications will appear here.',
+                    illustration: (
+                        <div className="relative">
+                            <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center">
+                                <Clock className="w-10 h-10 text-[#FFC050]" />
+                            </div>
+                            <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                                <CheckCircle className="w-4 h-4 text-green-400" />
+                            </div>
+                        </div>
+                    )
+                }
+            case 'under_review':
+                return {
+                    icon: Eye,
+                    title: 'No Applications Under Review',
+                    description: 'No sellers have submitted documents for review at this time.',
+                    illustration: (
+                        <div className="relative">
+                            <div className="w-20 h-20 rounded-full bg-blue-500/10 flex items-center justify-center">
+                                <Eye className="w-10 h-10 text-[#7dd3fc]" />
+                            </div>
+                            <div className="absolute -inset-3 border-2 border-dashed border-blue-500/20 rounded-full animate-pulse"></div>
+                        </div>
+                    )
+                }
+            case 'commission_offered':
+                return {
+                    icon: DollarSign,
+                    title: 'No Pending Commission Offers',
+                    description: 'All commission offers have been responded to by sellers.',
+                    illustration: (
+                        <div className="relative">
+                            <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center">
+                                <DollarSign className="w-10 h-10 text-[#00FF89]" />
+                            </div>
+                            <div className="absolute -bottom-2 -right-2 w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center">
+                                <Clock className="w-4 h-4 text-[#FFC050]" />
+                            </div>
+                        </div>
+                    )
+                }
+            default:
+                return {
+                    icon: UserCheck,
+                    title: 'All Applications Processed',
+                    description:
+                        'Great work! All seller applications have been reviewed and processed. New applications will appear here when submitted.',
+                    illustration: (
+                        <div className="relative">
+                            <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center">
+                                <UserCheck className="w-10 h-10 text-[#00FF89]" />
+                            </div>
+                            <div className="absolute -inset-4">
+                                <div
+                                    className="w-full h-full border-2 border-dashed border-green-500/20 rounded-full animate-spin"
+                                    style={{ animationDuration: '8s' }}></div>
+                            </div>
+                        </div>
+                    )
+                }
+        }
+    }
+
+    const config = getEmptyStateConfig()
+
+    return (
+        <div className="flex flex-col items-center justify-center py-20 px-4">
+            <div className="mb-6">{config.illustration}</div>
+            <h3 className="text-xl font-semibold text-white mb-3">{config.title}</h3>
+            <p className="text-gray-400 text-center max-w-md mb-8 leading-relaxed">{config.description}</p>
+            <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                    onClick={() => window.location.reload()}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#00FF89] text-black rounded-lg text-sm font-medium hover:bg-[#00FF89]/90 transition-colors">
+                    <RefreshCw className="w-4 h-4" />
+                    Refresh
+                </button>
+                <button
+                    onClick={() => (window.location.href = '/admin/sellers/all')}
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg text-sm font-medium hover:bg-gray-600 transition-colors">
+                    <Users className="w-4 h-4" />
+                    View All Sellers
+                </button>
+            </div>
+        </div>
+    )
+}
+
