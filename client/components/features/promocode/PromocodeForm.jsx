@@ -5,6 +5,8 @@ import { categoryAPI } from '@/lib/api/toolsNiche'
 import { useNotifications } from '@/hooks/useNotifications'
 import { X, Calendar, Tag, Target, Filter, Percent, DollarSign, AlertCircle, CheckCircle } from 'lucide-react'
 import Notification from '@/components/shared/Notification'
+import { usePathname } from 'next/navigation'
+
 export default function PromocodeForm({ promocode, onClose }) {
     const { addNotification, notifications, removeNotification } = useNotifications()
     const isEditing = !!promocode
@@ -32,6 +34,9 @@ export default function PromocodeForm({ promocode, onClose }) {
     const [showSelectedOnly, setShowSelectedOnly] = useState(false)
     const [currentCategoryPage, setCurrentCategoryPage] = useState(1)
     const CATEGORIES_PER_PAGE = 10
+
+    const pathname = usePathname()
+
     const showMessage = (message, type = 'info') => {
         addNotification({
             message,
@@ -39,15 +44,18 @@ export default function PromocodeForm({ promocode, onClose }) {
             duration: 4000
         })
     }
+
     const getInputErrorStyles = (fieldName) => {
         const hasError = errors[fieldName] && touched[fieldName]
         return hasError
             ? 'border-red-500 bg-red-500/5 focus:border-red-500 focus:ring-red-500/30'
             : 'border-gray-700 bg-[#1f1f1f] focus:border-[#00FF89] focus:ring-[#00FF89]/30'
     }
+
     const handleFieldBlur = (fieldName) => {
         setTouched((prev) => ({ ...prev, [fieldName]: true }))
     }
+
     useEffect(() => {
         if (promocode) {
             setFormData({
@@ -66,9 +74,14 @@ export default function PromocodeForm({ promocode, onClose }) {
                 status: promocode.isActive ? 'active' : 'inactive'
             })
         }
-        fetchSellerProducts()
+        if (pathname && pathname.startsWith('/admin')) {
+            fetchAdminProdocut()
+        } else {
+            fetchSellerProducts()
+        }
         fetchCategories()
-    }, [promocode])
+    }, [promocode, pathname])
+
     const fetchSellerProducts = async () => {
         try {
             setLoadingProducts(true)
@@ -82,6 +95,21 @@ export default function PromocodeForm({ promocode, onClose }) {
             setLoadingProducts(false)
         }
     }
+
+    const fetchAdminProdocut = async () => {
+        try {
+            setLoadingProducts(true)
+            const response = await productsAPI.getAllProductsAdmin({ limit: 100 })
+            const products = response?.data?.products || response?.products || []
+            setSellerProducts(products)
+        } catch (error) {
+            console.error('Error fetching admin products:', error)
+            showMessage('Failed to load products', 'error')
+        } finally {
+            setLoadingProducts(false)
+        }
+    }
+
     const fetchCategories = async () => {
         try {
             setLoadingCategories(true)
@@ -106,6 +134,7 @@ export default function PromocodeForm({ promocode, onClose }) {
             setLoadingCategories(false)
         }
     }
+
     const handleInputChange = (e) => {
         const { name, value } = e.target
         setFormData((prev) => ({ ...prev, [name]: value }))
@@ -253,7 +282,9 @@ export default function PromocodeForm({ promocode, onClose }) {
                                 <Tag className="w-6 h-6 text-[#00FF89]" />
                             </div>
                             <div>
-                                <h2 className="text-2xl font-bold text-white font-[var(--font-league-spartan)]">
+                                <h2
+                                    className="text-2xl font-bold text-white"
+                                    style={{ fontFamily: 'var(--font-league-spartan)' }}>
                                     {isEditing ? 'Edit Promocode' : 'Create New Promocode'}
                                 </h2>
                                 <p className="text-gray-400">

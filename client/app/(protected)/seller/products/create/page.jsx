@@ -370,7 +370,7 @@ export default function ProductCreatePage() {
                             </AnimatePresence>
                         </div>
                         <div className="hidden lg:block w-80 flex-shrink-0">
-                            <div className="sticky top-24">
+                            <div className="sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto pr-2">
                                 <HelperRail currentStep={currentStep} />
                             </div>
                         </div>
