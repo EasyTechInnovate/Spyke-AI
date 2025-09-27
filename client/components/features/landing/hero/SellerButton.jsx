@@ -7,7 +7,7 @@ const SellerButton = () => {
     if (!isAuthenticated) {
         return (
             <Link
-                href="/signup?redirect=/become-seller"
+                href="/signup?redirect=/seller-benefits"
                 className="group w-full sm:w-auto">
                 <div className="relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-r from-[#00FF89]/10 via-[#00FF89]/5 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500 blur-sm group-hover:blur-none"></div>
@@ -48,7 +48,7 @@ const SellerButton = () => {
     }
     return (
         <Link
-            href="/become-seller"
+            href="/seller-benefits"
             className="group w-full sm:w-auto">
             <div className="relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-[#00FF89]/5 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500"></div>

@@ -25,7 +25,7 @@ export default function MobileMenu({
                 <nav className="flex flex-col py-4">
                     {showBecomeSeller && (
                         <Link
-                            href="/become-seller"
+                            href="/seller-benefits"
                             className="flex items-center gap-3 font-kumbh-sans font-medium text-base text-[#00FF89] hover:text-[#00e67a] px-6 py-4 hover:bg-[#00FF89]/10 transition-all border-b-2 border-[#00FF89]/20 bg-gradient-to-r from-[#00FF89]/5 to-transparent"
                             onClick={onClose}>
                             <TrendingUp className="h-5 w-5" />

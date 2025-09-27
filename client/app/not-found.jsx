@@ -49,7 +49,7 @@ export default function NotFound() {
               <Link href="/explore" className="text-brand-primary hover:text-white transition-colors">
                 Explore Products
               </Link>
-              <Link href="/become-seller" className="text-brand-primary hover:text-white transition-colors">
+              <Link href="/seller-benefits" className="text-brand-primary hover:text-white transition-colors">
                 Become a Seller
               </Link>
               <Link href="/help" className="text-brand-primary hover:text-white transition-colors">

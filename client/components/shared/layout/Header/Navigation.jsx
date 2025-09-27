@@ -52,7 +52,7 @@ export default function Navigation({ showBecomeSeller }) {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}>
                     <Link
-                        href="/become-seller"
+                        href="/seller-benefits"
                         className="nav-link flex items-center gap-2 px-4 py-3 text-base font-medium text-[#00FF89] hover:text-[#00e67a] rounded-md transition-all duration-200 hover:bg-[#00FF89]/10 whitespace-nowrap">
                         <TrendingUp className="w-4 h-4" />
                         Become a Seller

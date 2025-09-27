@@ -86,7 +86,7 @@ const UserDropdown = forwardRef(({ user, currentRole, isSeller, dropdownOpen, se
                         <div className="border-t border-gray-700">
                             {!isSeller && (
                                 <Link
-                                    href="/become-seller"
+                                    href="/seller-benefits"
                                     className="flex items-center justify-between px-5 py-3 text-sm hover:bg-gray-800/50 transition-colors group"
                                     onClick={() => {
                                         setDropdownOpen(false)

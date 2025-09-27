@@ -223,7 +223,7 @@ export default function AboutPage() {
                                     Explore marketplace
                                 </Button>
                             </Link>
-                            <Link href="/become-seller">
+                            <Link href="/seller-benefits">
                                 <Button variant="secondary" size="lg">
                                     Become a seller
                                 </Button>

@@ -1,16 +1,23 @@
 'use client'
-import React, { useEffect } from 'react'
+import React, { useState } from 'react'
 import { Check } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
 import { MultiStepForm, FormInput, FormTextArea, FormSelect, FormTagInput, FormCheckbox, FormSearchableSelect, ImageUpload } from '@/components/shared/forms'
 import { useSellerForm } from '@/hooks/forms/useSellerForm'
+import Notification from '@/components/shared/Notification'
 import { formSteps, formFields, countries, timezones, popularNiches, popularTools } from '@/lib/config/forms/SellerFormConfig'
+
 export default function BecomeSellerPage() {
     const {
         formData,
         errors,
         loading,
         submitError,
+        notification,
+        dismissNotification,
+        imageUploading,
+        setImageUploading,
+        isSuccess,
         handleInputChange,
         handleSocialHandleChange,
         addTag,
@@ -20,6 +27,28 @@ export default function BecomeSellerPage() {
         validateStep,
         handleSubmit
     } = useSellerForm()
+
+    const [showValidationError, setShowValidationError] = useState(false)
+    const handleFormSubmit = async (data) => {
+        const isValid = validateStep(3)
+        if (!isValid) {
+            setShowValidationError(true)
+            return
+        }
+        setShowValidationError(false)
+        await handleSubmit(data)
+    }
+
+    const SellerBannerUpload = ({ ...props }) => {
+        return (
+            <ImageUpload
+                {...props}
+                onUploadStart={() => setImageUploading(true)}
+                onUploadEnd={() => setImageUploading(false)}
+            />
+        )
+    }
+
     const renderStepContent = ({ currentStep }) => {
         switch (currentStep) {
             case 1:
@@ -73,7 +102,7 @@ export default function BecomeSellerPage() {
                             rows={formFields.bio.rows}
                             error={errors.bio}
                         />
-                        <ImageUpload
+                        <SellerBannerUpload
                             label={formFields.sellerBanner.label}
                             value={formData.sellerBanner}
                             onChange={(e) => handleInputChange({
@@ -260,6 +289,7 @@ export default function BecomeSellerPage() {
                 return null
         }
     }
+
     return (
         <>
             <section className="relative bg-black pt-24 pb-16">
@@ -294,21 +324,63 @@ export default function BecomeSellerPage() {
             </section>
             <section className="py-16 bg-black border-t border-gray-800">
                 <Container>
-                    <MultiStepForm
-                        steps={formSteps}
-                        formData={formData}
-                        onSubmit={handleSubmit}
-                        errors={errors}
-                        loading={loading}
-                        submitError={submitError}
-                        validateStep={validateStep}
-                        submitButtonText="Create Seller Profile"
-                        submitButtonIcon={<Check className="w-5 h-5" />}
-                        compactStepIndicator={false}>
-                        {renderStepContent}
-                    </MultiStepForm>
+                    {notification && (
+                        <Notification
+                            id={notification.id}
+                            type={notification.type}
+                            message={notification.message}
+                            duration={notification.duration}
+                            onClose={dismissNotification}
+                            onClick={dismissNotification}
+                        />
+                    )}
+                    {showValidationError && (
+                        <Notification
+                            id="validation-error"
+                            type="error"
+                            message="You must accept the revenue share agreement"
+                            duration={5000}
+                            onClose={() => setShowValidationError(false)}
+                            onClick={() => setShowValidationError(false)}
+                        />
+                    )}
+                    
+                    {!isSuccess ? (
+                        <MultiStepForm
+                            steps={formSteps}
+                            formData={formData}
+                            onSubmit={handleFormSubmit}
+                            errors={errors}
+                            loading={loading}
+                            submitError={submitError}
+                            validateStep={validateStep}
+                            submitButtonText="Create Seller Profile"
+                            submitButtonIcon={<Check className="w-5 h-5" />}
+                            compactStepIndicator={false}
+                            imageUploading={imageUploading}>
+                            {renderStepContent}
+                        </MultiStepForm>
+                    ) : (
+                        <div className="text-center py-20">
+                            <div className="max-w-2xl mx-auto">
+                                <h2 className="text-4xl font-kumbh-sans font-bold text-white mb-6">
+                                    🎉 Seller Profile Created Successfully!
+                                </h2>
+                                <p className="text-xl text-gray-300 mb-8">
+                                    Your seller profile has been submitted for review. 
+                                </p>
+                                <div className="bg-brand-primary/10 p-6 rounded-2xl border border-brand-primary/30">
+                                    <h3 className="text-lg font-semibold text-brand-primary mb-2">Next Steps:</h3>
+                                    <p className="text-gray-200">
+                                        Please relogin and visit your seller profile to complete the verification process and start selling your automation tools!
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </Container>
             </section>
         </>
     )
 }
+
