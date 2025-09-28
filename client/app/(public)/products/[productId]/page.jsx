@@ -2,17 +2,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-    ArrowLeft,
-    ShoppingCart,
-    BookOpen,
-    Sparkles,
-    Play,
-    HelpCircle,
-    BarChart3,
-    Package,
-    Star
-} from 'lucide-react'
+import { ArrowLeft, ShoppingCart, BookOpen, Sparkles, Play, HelpCircle, BarChart3, Package, Star } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { useCart } from '@/hooks/useCart'
@@ -172,10 +162,16 @@ export default function ProductPage() {
                 setError(null)
                 const response = await productsAPI.getProductBySlug(productSlug)
                 if (response && response.data) {
-                    setProduct(response.data)
-                    if (response.data._id) {
+                    const productData = response.data
+                    setProduct(productData)
+
+                    // Initialize liked state based on product data
+                    setLiked(productData.userInteractions?.isLiked || false)
+                    setUpvoted(productData.userInteractions?.isUpvoted || false)
+
+                    if (productData._id) {
                         try {
-                            const relatedResponse = await productsAPI.getRelatedProducts(response.data._id, 4)
+                            const relatedResponse = await productsAPI.getRelatedProducts(productData._id, 4)
                             if (relatedResponse && relatedResponse.data) {
                                 setRelatedProducts(relatedResponse.data)
                             }
@@ -245,8 +241,8 @@ export default function ProductPage() {
             image: Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : product.thumbnail
         }
         try {
-            await new Promise(resolve => setTimeout(resolve, 2000))
-            
+            await new Promise((resolve) => setTimeout(resolve, 2000))
+
             const success = await addToCart(cartProduct)
             if (success) {
                 addNotification(`"${product.title}" has been added to your cart!`, 'success')
@@ -255,7 +251,7 @@ export default function ProductPage() {
                 }, 500)
                 setTimeout(() => {
                     window.location.reload()
-                }, 1000) 
+                }, 1000)
             } else {
                 setAddingToCart(false)
             }
@@ -337,12 +333,58 @@ export default function ProductPage() {
             requireAuth()
             return
         }
+
+        if (!product?._id) {
+            addNotification('Product not found', 'error')
+            return
+        }
+
+        const newLiked = !liked
+        const previousFavorites = product.favorites || 0
+
         try {
-            setLiked(!liked)
-            await productsAPI.toggleFavorite(product._id, !liked)
+            // Optimistically update the UI
+            setLiked(newLiked)
+            setProduct((prevProduct) => ({
+                ...prevProduct,
+                favorites: newLiked ? previousFavorites + 1 : Math.max(0, previousFavorites - 1)
+            }))
+
+            // Make the API call - use isFavorited to match server expectation
+            const response = await productsAPI.toggleFavorite(product._id, newLiked)
+
+            // Update with actual response data if available
+            if (response?.data) {
+                setProduct((prevProduct) => ({
+                    ...prevProduct,
+                    favorites: response.data.favorites !== undefined ? response.data.favorites : prevProduct.favorites,
+                    userInteractions: {
+                        ...prevProduct.userInteractions,
+                        isLiked: response.data.isLiked !== undefined ? response.data.isLiked : newLiked
+                    }
+                }))
+                setLiked(response.data.isLiked !== undefined ? response.data.isLiked : newLiked)
+            }
+
+            addNotification(newLiked ? 'Added to favorites!' : 'Removed from favorites', 'success')
         } catch (error) {
+            // Revert the optimistic update on error
             setLiked(liked)
-            addNotification('Failed to update favorite', 'error')
+            setProduct((prevProduct) => ({
+                ...prevProduct,
+                favorites: previousFavorites
+            }))
+            console.error('Failed to update favorite:', error)
+
+            // More specific error messages
+            if (error.status === 401) {
+                addNotification('Please sign in to add favorites', 'error')
+                requireAuth()
+            } else if (error.status === 404) {
+                addNotification('Product not found', 'error')
+            } else {
+                addNotification('Failed to update favorite. Please try again.', 'error')
+            }
         }
     }, [isAuthenticated, liked, product, requireAuth, addNotification])
     const handleUpvote = useCallback(async () => {
@@ -391,8 +433,7 @@ export default function ProductPage() {
                     text: product?.shortDescription,
                     url
                 })
-            } catch (err) {
-            }
+            } catch (err) {}
         } else if (navigator.clipboard) {
             try {
                 await navigator.clipboard.writeText(url)
@@ -649,7 +690,7 @@ export default function ProductPage() {
                             onNavigateToReviews={handleNavigateToReviews}
                             ctaRef={ctaRef}
                         />
-                    </section>                    
+                    </section>
                     <section className="relative py-12 lg:py-16">
                         <DSContainer
                             maxWidth="hero"
@@ -754,9 +795,7 @@ export default function ProductPage() {
                                                     <div className="text-sm text-gray-500 dark:text-gray-400">Views</div>
                                                 </div>
                                                 <div className="text-center py-2">
-                                                    <div className="text-xl font-semibold text-[#00FF89]">
-                                                        {product?.sales || 0}
-                                                    </div>
+                                                    <div className="text-xl font-semibold text-[#00FF89]">{product?.sales || 0}</div>
                                                     <div className="text-sm text-gray-500 dark:text-gray-400">Sales</div>
                                                 </div>
                                             </div>
