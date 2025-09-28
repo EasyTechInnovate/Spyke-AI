@@ -23,25 +23,19 @@ export default {
         }
     },
 
-    // Get comprehensive platform analytics
     getPlatformAnalytics: async (req, res, next) => {
         try {
-            // Total users count
             const totalUsers = await userModel.countDocuments({})
 
-            // Total sellers count
             const totalSellers = await sellerProfileModel.countDocuments({})
 
-            // Total products count
             const totalProducts = await productModel.countDocuments({})
 
-            // Active products count
             const activeProducts = await productModel.countDocuments({
                 isActive: true,
-                                status: 'published'
+                status: 'published'
             })
 
-            // Total sales and revenue
             const salesAnalytics = await purchaseModel.aggregate([
                 { $match: { orderStatus: 'completed' } },
                 {
@@ -54,37 +48,34 @@ export default {
                 }
             ])
 
-            const salesData = salesAnalytics.length > 0 ? salesAnalytics[0] : {
-                totalSales: 0,
-                totalRevenue: 0,
-                avgOrderValue: 0
-            }
+            const salesData =
+                salesAnalytics.length > 0
+                    ? salesAnalytics[0]
+                    : {
+                          totalSales: 0,
+                          totalRevenue: 0,
+                          avgOrderValue: 0
+                      }
 
-            // Total platform views
-            const platformViews = await productModel.aggregate([
-                { $match: {} },
-                { $group: { _id: null, totalViews: { $sum: '$viewCount' } } }
-            ])
+            const platformViews = await productModel.aggregate([{ $match: {} }, { $group: { _id: null, totalViews: { $sum: '$viewCount' } } }])
 
             const totalViews = platformViews.length > 0 ? platformViews[0].totalViews : 0
 
-            // Growth metrics (30-day comparison)
             const thirtyDaysAgo = dayjs().subtract(30, 'day').toDate()
 
             const newUsersLast30Days = await userModel.countDocuments({
-                createdAt: { $gte: thirtyDaysAgo },
-                            })
+                createdAt: { $gte: thirtyDaysAgo }
+            })
 
             const newProductsLast30Days = await productModel.countDocuments({
-                createdAt: { $gte: thirtyDaysAgo },
-                            })
+                createdAt: { $gte: thirtyDaysAgo }
+            })
 
             const salesLast30Days = await purchaseModel.countDocuments({
                 createdAt: { $gte: thirtyDaysAgo },
                 orderStatus: 'completed'
             })
 
-            // Top categories by products count
             const topCategories = await productModel.aggregate([
                 { $match: {} },
                 {
@@ -95,6 +86,22 @@ export default {
                         totalViews: { $sum: '$viewCount' }
                     }
                 },
+                {
+                    $lookup: {
+                        from: 'categories',
+                        localField: '_id',
+                        foreignField: '_id',
+                        as: 'categoryInfo'
+                    }
+                },
+                {
+                    $addFields: {
+                        categoryName: {
+                            $ifNull: [{ $arrayElemAt: ['$categoryInfo.name', 0] }, 'Uncategorized']
+                        }
+                    }
+                },
+                { $unset: 'categoryInfo' },
                 { $sort: { productCount: -1 } },
                 { $limit: 10 }
             ])
@@ -179,13 +186,13 @@ export default {
             const registrationTrend = await userModel.aggregate([
                 {
                     $match: {
-                        createdAt: { $gte: dayjs().subtract(30, 'day').toDate() },
-                                            }
+                        createdAt: { $gte: dayjs().subtract(30, 'day').toDate() }
+                    }
                 },
                 {
                     $group: {
                         _id: {
-                            date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }
+                            date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
                         },
                         count: { $sum: 1 }
                     }
@@ -407,10 +414,7 @@ export default {
                             $cond: {
                                 if: { $gt: ['$viewCount', 0] },
                                 then: {
-                                    $multiply: [
-                                        { $divide: [{ $ifNull: [{ $arrayElemAt: ['$salesData.totalSales', 0] }, 0] }, '$viewCount'] },
-                                        100
-                                    ]
+                                    $multiply: [{ $divide: [{ $ifNull: [{ $arrayElemAt: ['$salesData.totalSales', 0] }, 0] }, '$viewCount'] }, 100]
                                 },
                                 else: 0
                             }
@@ -437,6 +441,22 @@ export default {
                         totalViews: { $sum: '$viewCount' }
                     }
                 },
+                {
+                    $lookup: {
+                        from: 'categories',
+                        localField: '_id',
+                        foreignField: '_id',
+                        as: 'categoryInfo'
+                    }
+                },
+                {
+                    $addFields: {
+                        name: {
+                            $ifNull: [{ $arrayElemAt: ['$categoryInfo.name', 0] }, 'Uncategorized']
+                        }
+                    }
+                },
+                { $unset: 'categoryInfo' },
                 { $sort: { count: -1 } }
             ])
 
@@ -490,16 +510,17 @@ export default {
             const skip = (parseInt(page) - 1) * parseInt(limit)
 
             // Get sales data with user and product details
-            const sales = await purchaseModel.find({
-                orderStatus: 'completed',
-                createdAt: { $gte: dateFilter }
-            })
-            .populate('userId', 'name emailAddress avatar')
-            .populate('items.productId', 'title thumbnail category sellerId')
-            .populate('items.sellerId', 'fullName email')
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(parseInt(limit))
+            const sales = await purchaseModel
+                .find({
+                    orderStatus: 'completed',
+                    createdAt: { $gte: dateFilter }
+                })
+                .populate('userId', 'name emailAddress avatar')
+                .populate('items.productId', 'title thumbnail category sellerId')
+                .populate('items.sellerId', 'fullName email')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit))
 
             const totalSalesCount = await purchaseModel.countDocuments({
                 orderStatus: 'completed',
@@ -530,16 +551,19 @@ export default {
                 { $group: { _id: null, totalViews: { $sum: '$viewCount' } } }
             ])
             const totalViews = platformViews.length > 0 ? platformViews[0].totalViews : 0
-            const summary = salesSummary.length > 0 ? {
-                ...salesSummary[0],
-                conversionRate: totalViews > 0 ? ((salesSummary[0].totalSales / totalViews) * 100) : 0
-            } : {
-                totalSales: 0,
-                totalRevenue: 0,
-                avgOrderValue: 0,
-                totalItems: 0,
-                conversionRate: 0
-            }
+            const summary =
+                salesSummary.length > 0
+                    ? {
+                          ...salesSummary[0],
+                          conversionRate: totalViews > 0 ? (salesSummary[0].totalSales / totalViews) * 100 : 0
+                      }
+                    : {
+                          totalSales: 0,
+                          totalRevenue: 0,
+                          avgOrderValue: 0,
+                          totalItems: 0,
+                          conversionRate: 0
+                      }
 
             // Daily sales trend
             const dailySales = await purchaseModel.aggregate([
@@ -552,7 +576,7 @@ export default {
                 {
                     $group: {
                         _id: {
-                            date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }
+                            date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
                         },
                         salesCount: { $sum: 1 },
                         revenue: { $sum: '$finalAmount' }
@@ -645,10 +669,7 @@ export default {
                         from: 'purchases',
                         localField: '_id',
                         foreignField: 'promocodeUsed',
-                        pipeline: [
-                            { $match: { orderStatus: 'completed' } },
-                            { $group: { _id: null, usage: { $sum: 1 } } }
-                        ],
+                        pipeline: [{ $match: { orderStatus: 'completed' } }, { $group: { _id: null, usage: { $sum: 1 } } }],
                         as: 'usage'
                     }
                 },
@@ -722,12 +743,13 @@ export default {
             const userRegistrations = await userModel.aggregate([
                 {
                     $match: {
-                        createdAt: { $gte: dateFilter }                    }
+                        createdAt: { $gte: dateFilter }
+                    }
                 },
                 {
                     $group: {
                         _id: {
-                            date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }
+                            date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
                         },
                         count: { $sum: 1 }
                     }
@@ -746,7 +768,7 @@ export default {
                 {
                     $group: {
                         _id: {
-                            date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }
+                            date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
                         },
                         activeUsers: { $addToSet: '$userId' },
                         purchases: { $sum: 1 }
@@ -765,13 +787,14 @@ export default {
             const roleDistribution = await userModel.aggregate([
                 {
                     $match: {
-                        createdAt: { $gte: dateFilter }                    }
+                        createdAt: { $gte: dateFilter }
+                    }
                 },
                 { $unwind: '$roles' },
                 {
                     $group: {
                         _id: {
-                            date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                            date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
                             role: '$roles'
                         },
                         count: { $sum: 1 }
@@ -783,23 +806,25 @@ export default {
             // User retention metrics
             const totalUsers = await userModel.countDocuments({})
             const newUsers = await userModel.countDocuments({
-                createdAt: { $gte: dateFilter },
-                            })
-            const activeUsers = await purchaseModel.distinct('userId', {
-                createdAt: { $gte: dateFilter },
-                orderStatus: 'completed'
-            }).then(users => users.length)
+                createdAt: { $gte: dateFilter }
+            })
+            const activeUsers = await purchaseModel
+                .distinct('userId', {
+                    createdAt: { $gte: dateFilter },
+                    orderStatus: 'completed'
+                })
+                .then((users) => users.length)
 
             // Growth rate calculation
-            const previousPeriodStart = dayjs().subtract(days * 2, 'day').toDate()
+            const previousPeriodStart = dayjs()
+                .subtract(days * 2, 'day')
+                .toDate()
             const previousPeriodEnd = dateFilter
             const previousPeriodUsers = await userModel.countDocuments({
-                createdAt: { $gte: previousPeriodStart, $lt: previousPeriodEnd },
-                            })
+                createdAt: { $gte: previousPeriodStart, $lt: previousPeriodEnd }
+            })
 
-            const growthRate = previousPeriodUsers > 0 
-                ? ((newUsers - previousPeriodUsers) / previousPeriodUsers) * 100 
-                : 0
+            const growthRate = previousPeriodUsers > 0 ? ((newUsers - previousPeriodUsers) / previousPeriodUsers) * 100 : 0
 
             httpResponse(req, res, 200, responseMessage.SUCCESS, {
                 period,
@@ -855,12 +880,13 @@ export default {
             const sellerRegistrations = await sellerProfileModel.aggregate([
                 {
                     $match: {
-                        createdAt: { $gte: dateFilter }                    }
+                        createdAt: { $gte: dateFilter }
+                    }
                 },
                 {
                     $group: {
                         _id: {
-                            date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }
+                            date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
                         },
                         count: { $sum: 1 }
                     }
@@ -872,12 +898,13 @@ export default {
             const sellerActivity = await productModel.aggregate([
                 {
                     $match: {
-                        createdAt: { $gte: dateFilter }                    }
+                        createdAt: { $gte: dateFilter }
+                    }
                 },
                 {
                     $group: {
                         _id: {
-                            date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }
+                            date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
                         },
                         activeSellers: { $addToSet: '$sellerId' },
                         productsCreated: { $sum: 1 }
@@ -896,12 +923,13 @@ export default {
             const verificationTrend = await sellerProfileModel.aggregate([
                 {
                     $match: {
-                        createdAt: { $gte: dateFilter }                    }
+                        createdAt: { $gte: dateFilter }
+                    }
                 },
                 {
                     $group: {
                         _id: {
-                            date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                            date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
                             status: '$verificationStatus'
                         },
                         count: { $sum: 1 }
@@ -913,23 +941,25 @@ export default {
             // Seller performance metrics
             const totalSellers = await sellerProfileModel.countDocuments({})
             const newSellers = await sellerProfileModel.countDocuments({
-                createdAt: { $gte: dateFilter },
-                            })
-            const activeSellers = await purchaseModel.distinct('items.sellerId', {
-                createdAt: { $gte: dateFilter },
-                orderStatus: 'completed'
-            }).then(sellers => sellers.length)
+                createdAt: { $gte: dateFilter }
+            })
+            const activeSellers = await purchaseModel
+                .distinct('items.sellerId', {
+                    createdAt: { $gte: dateFilter },
+                    orderStatus: 'completed'
+                })
+                .then((sellers) => sellers.length)
 
             // Growth rate calculation
-            const previousPeriodStart = dayjs().subtract(days * 2, 'day').toDate()
+            const previousPeriodStart = dayjs()
+                .subtract(days * 2, 'day')
+                .toDate()
             const previousPeriodEnd = dateFilter
             const previousPeriodSellers = await sellerProfileModel.countDocuments({
-                createdAt: { $gte: previousPeriodStart, $lt: previousPeriodEnd },
-                            })
+                createdAt: { $gte: previousPeriodStart, $lt: previousPeriodEnd }
+            })
 
-            const growthRate = previousPeriodSellers > 0 
-                ? ((newSellers - previousPeriodSellers) / previousPeriodSellers) * 100 
-                : 0
+            const growthRate = previousPeriodSellers > 0 ? ((newSellers - previousPeriodSellers) / previousPeriodSellers) * 100 : 0
 
             httpResponse(req, res, 200, responseMessage.SUCCESS, {
                 period,
@@ -981,7 +1011,7 @@ export default {
             const feedbackData = await productModel.aggregate([
                 {
                     $match: {
-                                                'reviews.0': { $exists: true }
+                        'reviews.0': { $exists: true }
                     }
                 },
                 { $unwind: '$reviews' },
@@ -1019,7 +1049,7 @@ export default {
             const totalFeedback = await productModel.aggregate([
                 {
                     $match: {
-                                                'reviews.0': { $exists: true }
+                        'reviews.0': { $exists: true }
                     }
                 },
                 { $unwind: '$reviews' },
@@ -1037,7 +1067,7 @@ export default {
             const feedbackSummary = await productModel.aggregate([
                 {
                     $match: {
-                                                'reviews.0': { $exists: true }
+                        'reviews.0': { $exists: true }
                     }
                 },
                 { $unwind: '$reviews' },
@@ -1068,21 +1098,24 @@ export default {
                 { $unset: 'ratingDistribution' }
             ])
 
-            const summary = feedbackSummary.length > 0 ? feedbackSummary[0] : {
-                totalReviews: 0,
-                avgRating: 0,
-                rating5: 0,
-                rating4: 0,
-                rating3: 0,
-                rating2: 0,
-                rating1: 0
-            }
+            const summary =
+                feedbackSummary.length > 0
+                    ? feedbackSummary[0]
+                    : {
+                          totalReviews: 0,
+                          avgRating: 0,
+                          rating5: 0,
+                          rating4: 0,
+                          rating3: 0,
+                          rating2: 0,
+                          rating1: 0
+                      }
 
             // Daily feedback trend
             const dailyFeedback = await productModel.aggregate([
                 {
                     $match: {
-                                                'reviews.0': { $exists: true }
+                        'reviews.0': { $exists: true }
                     }
                 },
                 { $unwind: '$reviews' },
@@ -1094,7 +1127,7 @@ export default {
                 {
                     $group: {
                         _id: {
-                            date: { $dateToString: { format: "%Y-%m-%d", date: "$reviews.createdAt" } }
+                            date: { $dateToString: { format: '%Y-%m-%d', date: '$reviews.createdAt' } }
                         },
                         reviewCount: { $sum: 1 },
                         avgRating: { $avg: '$reviews.rating' }
@@ -1148,21 +1181,19 @@ export default {
             }
 
             // Total product views (proxy for website visits)
-            const totalViews = await productModel.aggregate([
-                { $match: {} },
-                { $group: { _id: null, totalViews: { $sum: '$viewCount' } } }
-            ])
+            const totalViews = await productModel.aggregate([{ $match: {} }, { $group: { _id: null, totalViews: { $sum: '$viewCount' } } }])
 
             const platformViews = totalViews.length > 0 ? totalViews[0].totalViews : 0
 
             // Most viewed products
-            const topViewedProducts = await productModel.find({
-                updatedAt: { $gte: dateFilter }
-            })
-            .sort({ viewCount: -1 })
-            .limit(10)
-            .select('title viewCount category sellerId thumbnail')
-            .populate('sellerId', 'fullName')
+            const topViewedProducts = await productModel
+                .find({
+                    updatedAt: { $gte: dateFilter }
+                })
+                .sort({ viewCount: -1 })
+                .limit(10)
+                .select('title viewCount category sellerId thumbnail')
+                .populate('sellerId', 'fullName')
 
             // Category views distribution
             const categoryViews = await productModel.aggregate([
@@ -1206,10 +1237,7 @@ export default {
                             $cond: {
                                 if: { $gt: ['$viewCount', 0] },
                                 then: {
-                                    $multiply: [
-                                        { $divide: [{ $ifNull: [{ $arrayElemAt: ['$salesData.sales', 0] }, 0] }, '$viewCount'] },
-                                        100
-                                    ]
+                                    $multiply: [{ $divide: [{ $ifNull: [{ $arrayElemAt: ['$salesData.sales', 0] }, 0] }, '$viewCount'] }, 100]
                                 },
                                 else: 0
                             }
@@ -1226,27 +1254,28 @@ export default {
                 }
             ])
 
-            const conversion = conversionData.length > 0 ? conversionData[0] : {
-                totalViews: 0,
-                totalSales: 0,
-                avgConversionRate: 0
-            }
+            const conversion =
+                conversionData.length > 0
+                    ? conversionData[0]
+                    : {
+                          totalViews: 0,
+                          totalSales: 0,
+                          avgConversionRate: 0
+                      }
 
             // User engagement metrics
             const engagementMetrics = await userModel.aggregate([
                 {
                     $match: {
-                        createdAt: { $gte: dateFilter }                    }
+                        createdAt: { $gte: dateFilter }
+                    }
                 },
                 {
                     $lookup: {
                         from: 'purchases',
                         localField: '_id',
                         foreignField: 'userId',
-                        pipeline: [
-                            { $match: { orderStatus: 'completed' } },
-                            { $count: 'purchases' }
-                        ],
+                        pipeline: [{ $match: { orderStatus: 'completed' } }, { $count: 'purchases' }],
                         as: 'userPurchases'
                     }
                 },
@@ -1275,11 +1304,14 @@ export default {
                 }
             ])
 
-            const engagement = engagementMetrics.length > 0 ? engagementMetrics[0] : {
-                totalNewUsers: 0,
-                buyerUsers: 0,
-                engagementRate: 0
-            }
+            const engagement =
+                engagementMetrics.length > 0
+                    ? engagementMetrics[0]
+                    : {
+                          totalNewUsers: 0,
+                          buyerUsers: 0,
+                          engagementRate: 0
+                      }
 
             httpResponse(req, res, 200, responseMessage.SUCCESS, {
                 period,
@@ -1363,11 +1395,14 @@ export default {
                 }
             ])
 
-            const commission = commissionAnalytics.length > 0 ? commissionAnalytics[0] : {
-                totalRevenue: 0,
-                totalCommission: 0,
-                avgCommissionRate: 0
-            }
+            const commission =
+                commissionAnalytics.length > 0
+                    ? commissionAnalytics[0]
+                    : {
+                          totalRevenue: 0,
+                          totalCommission: 0,
+                          avgCommissionRate: 0
+                      }
 
             httpResponse(req, res, 200, responseMessage.SUCCESS, {
                 monthlyRevenue,
@@ -1382,9 +1417,9 @@ export default {
     getPayoutAnalytics: async (req, res, next) => {
         try {
             const { fromDate, toDate, period = '30' } = req.query
-            
+
             let matchQuery = {}
-            
+
             if (fromDate || toDate) {
                 matchQuery.requestedAt = {}
                 if (fromDate) matchQuery.requestedAt.$gte = new Date(fromDate)
@@ -1574,7 +1609,7 @@ export default {
                         }
                     }
                 ]),
-                
+
                 // Get actual orders using the existing getUserPurchases method
                 purchaseModel.getUserPurchases(userId, {
                     page: parseInt(page),
@@ -1602,7 +1637,6 @@ export default {
                     firstPurchase: summary.firstPurchase,
                     lastPurchase: summary.lastPurchase
                 },
-                // Orders data from getUserPurchases
                 ...ordersResult
             })
         } catch (err) {

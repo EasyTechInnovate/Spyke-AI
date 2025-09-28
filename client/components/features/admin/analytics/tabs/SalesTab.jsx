@@ -117,8 +117,20 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
         const customerMap = new Map()
         sales.forEach((sale) => {
             const customerId = sale.userId?._id
-            const customerName = sale.userId?.name || 'Anonymous'
-            const customerEmail = sale.userId?.emailAddress || 'unknown@email.com'
+            const customerEmail = sale.userId?.emailAddress || sale.userId?.email || 'unknown@email.com'
+            let customerName = 'Anonymous'
+            const userName = sale.userId?.name
+
+            if (userName && typeof userName === 'string' && userName.trim() !== '') {
+                customerName = userName.trim()
+            } else if (customerEmail && customerEmail !== 'unknown@email.com' && customerEmail.includes('@')) {
+                const emailParts = customerEmail.split('@')
+                if (emailParts.length > 0 && emailParts[0]) {
+                    const username = emailParts[0].toLowerCase()
+                    customerName = username.charAt(0).toUpperCase() + username.slice(1)
+                }
+            }
+
             const amount = sale.finalAmount || 0
             if (customerMap.has(customerId)) {
                 const existing = customerMap.get(customerId)
@@ -153,14 +165,30 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
                 paymentMethods: processPaymentMethods(analyticsData.sales || []),
                 topCustomers: processCustomerInsights(analyticsData.sales || []),
                 recentSales:
-                    analyticsData.sales?.slice(0, 5).map((sale) => ({
-                        _id: sale._id,
-                        customerName: sale.userId?.name || 'Anonymous',
-                        amount: sale.finalAmount || 0,
-                        status: sale.orderStatus,
-                        date: sale.purchaseDate,
-                        paymentMethod: sale.paymentMethod
-                    })) || []
+                    analyticsData.sales?.slice(0, 5).map((sale) => {
+                        const customerEmail = sale.userId?.emailAddress || sale.userId?.email || 'unknown@email.com'
+                        let customerName = 'Anonymous'
+                        const userName = sale.userId?.name
+
+                        if (userName && typeof userName === 'string' && userName.trim() !== '') {
+                            customerName = userName.trim()
+                        } else if (customerEmail && customerEmail !== 'unknown@email.com' && customerEmail.includes('@')) {
+                            const emailParts = customerEmail.split('@')
+                            if (emailParts.length > 0 && emailParts[0]) {
+                                const username = emailParts[0].toLowerCase()
+                                customerName = username.charAt(0).toUpperCase() + username.slice(1)
+                            }
+                        }
+
+                        return {
+                            _id: sale._id,
+                            customerName: customerName,
+                            amount: sale.finalAmount || 0,
+                            status: sale.orderStatus,
+                            date: sale.purchaseDate,
+                            paymentMethod: sale.paymentMethod
+                        }
+                    }) || []
             }
             setSalesData(processedData)
         }
@@ -581,3 +609,4 @@ export const SalesTab = ({ analyticsData, timeRange, loading }) => {
         </div>
     )
 }
+

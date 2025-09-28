@@ -148,7 +148,14 @@ export const ProductsTab = ({ analyticsData, timeRange, loading }) => {
         const categoryDistribution = rawCategories
             .map((c) => ({
                 _id: c._id,
-                name: c._id || 'Uncategorized',
+                // Prefer server-provided category name; fallback to formatted id or 'Uncategorized'
+                name: c.name
+                    ? String(c.name)
+                    : (c._id
+                        ? String(c._id)
+                            .replace(/_/g, ' ')
+                            .replace(/\b\w/g, l => l.toUpperCase())
+                        : 'Uncategorized'),
                 count: c.count || 0,
                 avgPrice: c.avgPrice || 0,
                 totalViews: c.totalViews || 0,

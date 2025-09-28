@@ -251,7 +251,7 @@ export const OverviewTab = ({ analyticsData, timeRange }) => {
                                                 <span className="text-sm font-bold text-[#00FF89]">{index + 1}</span>
                                             </div>
                                             <div>
-                                                <div className="text-white font-medium">{category._id.replace('_', ' ').toUpperCase()}</div>
+                                                <div className="text-white font-medium">{category.categoryName || 'Uncategorized'}</div>
                                                 <div className="text-gray-400 text-sm">{formatNumber(category.productCount)} products</div>
                                             </div>
                                         </div>
