@@ -38,12 +38,6 @@ export const createNavigationItems = (
                 href: '/admin/sellers/active',
                 badge: counts?.sellers?.active || undefined
             },
-            {
-                id: 'payouts',
-                label: 'Payouts',
-                href: '/admin/sellers/payouts',
-                badge: counts?.sellers?.payouts || undefined
-            }
         ]
     },
     {
@@ -57,12 +51,6 @@ export const createNavigationItems = (
                 label: 'Pending Review',
                 href: '/admin/products/pending',
                 badge: counts?.products?.pending || undefined
-            },
-            {
-                id: 'flagged-products',
-                label: 'Flagged Items',
-                href: '/admin/products/flagged',
-                badge: counts?.products?.flagged || undefined
             },
             {
                 id: 'featured-products',

@@ -263,17 +263,11 @@ export default function PurchasedProductPage() {
                                             <div>
                                                 <div className="flex flex-wrap items-center gap-2 lg:gap-3 mb-3 lg:mb-4">
                                                     <span className="px-2 py-1 lg:px-3 bg-black/10 text-white border border-black/20 rounded-lg text-xs lg:text-sm font-medium capitalize">
-                                                        {product.category?.replace('_', ' ')}
+                                                        {product.category?.name || product.category?.replace('_', ' ') || 'General'}
                                                     </span>
                                                     <span className="px-2 py-1 lg:px-3 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-lg text-xs lg:text-sm font-medium capitalize">
-                                                        {product.industry?.replace('_', ' ')}
+                                                        {product.industry?.name || product.industry?.replace('_', ' ') || 'General'}
                                                     </span>
-                                                    {product.isVerified && (
-                                                        <span className="px-2 py-1 lg:px-3 bg-[#00FF89]/10 text-[#00FF89] border border-[#00FF89]/20 rounded-lg text-xs lg:text-sm font-medium flex items-center gap-1">
-                                                            <Shield className="w-3 h-3" />
-                                                            Verified
-                                                        </span>
-                                                    )}
                                                 </div>
                                                 <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-3 lg:mb-4 leading-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
                                                     {product.title}

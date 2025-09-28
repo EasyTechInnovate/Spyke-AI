@@ -220,7 +220,7 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
                                                 </div>
                                                 <div className="bg-gray-800/50 p-4 rounded-lg">
                                                     <div className="text-gray-400 text-sm">Category</div>
-                                                    <div className="text-white font-medium">{product.category}</div>
+                                                    <div className="text-white font-medium">{product.category?.name || product.category}</div>
                                                 </div>
                                                 <div className="bg-gray-800/50 p-4 rounded-lg">
                                                     <div className="text-gray-400 text-sm">Type</div>
@@ -228,7 +228,7 @@ const AdminProductModal = ({ product, isOpen, onClose, onProductUpdate }) => {
                                                 </div>
                                                 <div className="bg-gray-800/50 p-4 rounded-lg">
                                                     <div className="text-gray-400 text-sm">Industry</div>
-                                                    <div className="text-white font-medium">{product.industry}</div>
+                                                    <div className="text-white font-medium">{product.industry?.name || product.industry}</div>
                                                 </div>
                                             </div>
                                             <div className="bg-gray-800/50 p-4 rounded-lg">

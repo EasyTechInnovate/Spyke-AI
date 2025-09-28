@@ -153,6 +153,14 @@ export default {
                         model: 'SellerProfile',
                         select: 'fullName avatar stats.averageRating verification.status'
                     })
+                    .populate({
+                        path: 'category',
+                        select: 'name icon'
+                    })
+                    .populate({
+                        path: 'industry',
+                        select: 'name icon'
+                    })
                     .sort(sort)
                     .skip(skip)
                     .limit(parseInt(limit))
@@ -191,6 +199,14 @@ export default {
                     path: 'sellerId',
                     model: 'SellerProfile',
                     select: 'fullName avatar bio stats location socialHandles customAutomationServices'
+                })
+                .populate({
+                    path: 'category',
+                    select: 'name icon'
+                })
+                .populate({
+                    path: 'industry', 
+                    select: 'name icon'
                 })
                 .populate('reviews.userId', 'name avatar')
                 .lean()
@@ -283,6 +299,14 @@ export default {
                     path: 'sellerId',
                     model: 'SellerProfile',
                     select: 'fullName avatar stats.averageRating verification.status'
+                })
+                .populate({
+                    path: 'category',
+                    select: 'name icon'
+                })
+                .populate({
+                    path: 'industry',
+                    select: 'name icon'
                 })
 
             await notificationService.sendToUser(
@@ -448,6 +472,14 @@ export default {
                     model: 'SellerProfile',
                     select: 'fullName avatar stats.averageRating verification.status'
                 })
+                .populate({
+                    path: 'category',
+                    select: 'name icon'
+                })
+                .populate({
+                    path: 'industry',
+                    select: 'name icon'
+                })
                 .limit(parseInt(limit))
                 .select('-reviews -faqs -versions -howItWorks -premiumContent')
                 .lean()
@@ -484,6 +516,14 @@ export default {
                         path: 'sellerId',
                         model: 'SellerProfile',
                         select: 'fullName email avatar userId'
+                    })
+                    .populate({
+                        path: 'category',
+                        select: 'name icon'
+                    })
+                    .populate({
+                        path: 'industry',
+                        select: 'name icon'
                     })
                     .sort(sort)
                     .skip(skip)
@@ -607,6 +647,14 @@ export default {
 
             const [products, totalCount] = await Promise.all([
                 Product.find(query)
+                    .populate({
+                        path: 'category',
+                        select: 'name icon'
+                    })
+                    .populate({
+                        path: 'industry',
+                        select: 'name icon'
+                    })
                     .sort({ createdAt: -1 })
                     .skip(skip)
                     .limit(parseInt(limit))
@@ -653,6 +701,14 @@ export default {
                     path: 'sellerId',
                     model: 'SellerProfile',
                     select: 'fullName avatar bio stats location socialHandles'
+                })
+                .populate({
+                    path: 'category',
+                    select: 'name icon'
+                })
+                .populate({
+                    path: 'industry',
+                    select: 'name icon'
                 })
                 .lean()
 

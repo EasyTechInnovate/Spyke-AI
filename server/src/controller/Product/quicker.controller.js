@@ -18,7 +18,40 @@ export default {
 
         const pipeline = [
             { $match: matchStage },
-            
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'category',
+                    foreignField: '_id',
+                    as: 'category',
+                    pipeline: [{ $project: { name: 1, icon: 1 } }]
+                }
+            },
+            {
+                $lookup: {
+                    from: 'industries', 
+                    localField: 'industry',
+                    foreignField: '_id',
+                    as: 'industry',
+                    pipeline: [{ $project: { name: 1, icon: 1 } }]
+                }
+            },
+            {
+                $lookup: {
+                    from: 'sellerprofiles',
+                    localField: 'sellerId',
+                    foreignField: '_id', 
+                    as: 'sellerId',
+                    pipeline: [{ $project: { fullName: 1, avatar: 1 } }]
+                }
+            },            
+            {
+                $addFields: {
+                    category: { $arrayElemAt: ['$category', 0] },
+                    industry: { $arrayElemAt: ['$industry', 0] },
+                    sellerId: { $arrayElemAt: ['$sellerId', 0] }
+                }
+            },
             {
                 $addFields: {
                     featuredScore: {
@@ -140,6 +173,14 @@ export default {
         })
         .limit(limit)
         .populate('sellerId', 'fullName avatar')
+        .populate({
+            path: 'category',
+            select: 'name icon'
+        })
+        .populate({
+            path: 'industry',
+            select: 'name icon'
+        })
     },
 
     async getHighRatedProducts(options = {}) {
@@ -160,6 +201,14 @@ export default {
         })
         .limit(limit)
         .populate('sellerId', 'fullName avatar')
+        .populate({
+            path: 'category',
+            select: 'name icon'
+        })
+        .populate({
+            path: 'industry',
+            select: 'name icon'
+        })
     },
 
     async getRecentlyAddedProducts(options = {}) {
@@ -179,5 +228,13 @@ export default {
         .sort({ createdAt: -1 })
         .limit(limit)
         .populate('sellerId', 'fullName avatar')
+        .populate({
+            path: 'category',
+            select: 'name icon'
+        })
+        .populate({
+            path: 'industry',
+            select: 'name icon'
+        })
     }
 }

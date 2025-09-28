@@ -50,7 +50,7 @@ const getVideoEmbedInfo = (url) => {
             type: 'vimeo',
             id: vimeoMatch[1],
             embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1&muted=1`,
-            thumbnailUrl: null 
+            thumbnailUrl: null
         }
     }
     if (url.match(/\.(mp4|webm|ogg|mov|avi)(\?.*)?$/i)) {
@@ -89,7 +89,7 @@ export default function ProductHero({
     onDownload,
     onShare,
     ctaRef,
-    onNavigateToReviews 
+    onNavigateToReviews
 }) {
     const [isPlaying, setIsPlaying] = useState(false)
     const [isMuted, setIsMuted] = useState(true)
@@ -97,6 +97,7 @@ export default function ProductHero({
     const [isImageFullscreen, setIsImageFullscreen] = useState(false)
     const [videoError, setVideoError] = useState(false)
     const [showVideoModal, setShowVideoModal] = useState(false)
+    const [imageAspectRatio, setImageAspectRatio] = useState(4 / 3) // Default to 4:3
     const videoRef = useRef(null)
     const iframeRef = useRef(null)
     if (!product) return null
@@ -199,41 +200,54 @@ export default function ProductHero({
                                 }
                             }}>
                             <div
-                                className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 h-80 sm:h-[520px] md:h-[640px] lg:h-[720px] bg-gray-100 dark:bg-[#1f1f1f] bg-center bg-cover"
-                                style={{
-                                    backgroundImage: `url(${(activeMedia?.type === 'image' ? activeMedia?.src : activeMedia?.poster) || product.thumbnail || ''})`
-                                }}>
-                                <AnimatePresence mode="wait">
-                                    <motion.div
-                                        key={currentImageIndex}
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.3 }}
-                                        className="w-full h-full relative">
-                                        {activeMedia?.type === 'video' ? (
-                                            <div className="relative w-full h-full">
-                                                {activeMedia?.videoInfo?.type === 'direct' ? (
-                                                    <video
-                                                        ref={videoRef}
-                                                        src={activeMedia.src}
-                                                        poster={activeMedia.poster}
-                                                        className="absolute inset-0 w-full h-full object-contain object-center"
-                                                        muted={isMuted}
-                                                        playsInline
-                                                        onPlay={() => setIsPlaying(true)}
-                                                        onPause={() => setIsPlaying(false)}
+                                className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#121212] relative cursor-pointer w-full max-w-2xl mx-auto"
+                                style={{ aspectRatio: imageAspectRatio }}
+                                onClick={() => activeMedia?.type === 'image' && setIsImageFullscreen(true)}>
+                                <div className="w-full h-full relative">
+                                    {activeMedia?.type === 'video' ? (
+                                        <div className="relative w-full h-full">
+                                            {activeMedia?.videoInfo?.type === 'direct' ? (
+                                                <video
+                                                    ref={videoRef}
+                                                    src={activeMedia.src}
+                                                    poster={activeMedia.poster}
+                                                    className="w-full h-full object-cover"
+                                                    muted={isMuted}
+                                                    playsInline
+                                                    onPlay={() => setIsPlaying(true)}
+                                                    onPause={() => setIsPlaying(false)}
+                                                />
+                                            ) : (
+                                                <>
+                                                    <img
+                                                        src={activeMedia.poster || product.thumbnail || '/images/placeholder-product.jpg'}
+                                                        alt={activeMedia.alt}
+                                                        className="w-full h-full object-cover"
+                                                        loading="lazy"
+                                                        onError={(e) => {
+                                                            console.log('Video poster failed to load:', e.target.src)
+                                                            e.target.style.display = 'none'
+                                                        }}
                                                     />
-                                                ) : (
                                                     <div
-                                                        className="absolute inset-0 w-full h-full flex items-center justify-center bg-black/20"
-                                                        onClick={() => setShowVideoModal(true)}>
-                                                        <ExternalLink className="w-16 h-16 text-[#00FF89]" />
+                                                        className="absolute inset-0 w-full h-full flex items-center justify-center bg-black/40 hover:bg-black/50 transition-colors"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            setShowVideoModal(true)
+                                                        }}>
+                                                        <div className="w-20 h-20 bg-[#00FF89]/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-[#00FF89]/30 transition-colors">
+                                                            <Play className="w-8 h-8 text-[#00FF89] ml-1" />
+                                                        </div>
                                                     </div>
-                                                )}
+                                                </>
+                                            )}
+                                            {activeMedia?.videoInfo?.type === 'direct' && (
                                                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                     <button
-                                                        onClick={togglePlayPause}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            togglePlayPause()
+                                                        }}
                                                         className="w-16 h-16 bg-[#121212]/80 rounded-full flex items-center justify-center hover:bg-[#121212] transition-colors">
                                                         {isPlaying ? (
                                                             <Pause className="w-8 h-8 text-[#00FF89]" />
@@ -242,35 +256,67 @@ export default function ProductHero({
                                                         )}
                                                     </button>
                                                 </div>
-                                            </div>
-                                        ) : (
+                                            )}
+                                        </div>
+                                    ) : activeMedia?.src || product.thumbnail ? (
+                                        <>
                                             <img
+                                                key={`main-image-${currentImageIndex}`}
                                                 src={activeMedia?.src || product.thumbnail || '/images/placeholder-product.jpg'}
                                                 alt={activeMedia?.alt || product.title}
-                                                className="absolute inset-0 w-full h-full object-contain object-center"
-                                                onError={(e) => {
-                                                    e.target.src = product.thumbnail || '/images/placeholder-product.jpg'
+                                                className="w-full h-full object-contain transition-all duration-300 hover:scale-105"
+                                                loading="lazy"
+                                                onLoad={(e) => {
+                                                    e.target.style.opacity = '1'
+                                                    const aspectRatio = e.target.naturalWidth / e.target.naturalHeight
+                                                    const constrainedRatio = Math.max(0.5, Math.min(3, aspectRatio))
+                                                    setImageAspectRatio(constrainedRatio)
                                                 }}
+                                                onError={(e) => {
+                                                    console.log('Image failed to load:', e.target.src)
+                                                    if (product.thumbnail && e.target.src !== product.thumbnail) {
+                                                        e.target.src = product.thumbnail
+                                                    } else {
+                                                        e.target.src = '/images/placeholder-product.jpg'
+                                                    }
+                                                }}
+                                                style={{ opacity: 0 }}
                                             />
-                                        )}
-                                        {mediaItems.length > 1 && (
-                                            <>
-                                                <button
-                                                    onClick={prevImage}
-                                                    aria-label="Previous media"
-                                                    className={`absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 dark:bg-[#1f1f1f]/90 rounded-full flex items-center justify-center transition-opacity hover:bg-white dark:hover:bg-[#1f1f1f] opacity-0 group-hover:opacity-100 focus-visible:opacity-100 ${focusRing}`}>
-                                                    <ChevronLeft className="w-5 h-5 text-[#121212] dark:text-[#00FF89]" />
-                                                </button>
-                                                <button
-                                                    onClick={nextImage}
-                                                    aria-label="Next media"
-                                                    className={`absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 dark:bg-[#1f1f1f]/90 rounded-full flex items-center justify-center transition-opacity hover:bg-white dark:hover:bg-[#1f1f1f] opacity-0 group-hover:opacity-100 focus-visible:opacity-100 ${focusRing}`}>
-                                                    <ChevronRight className="w-5 h-5 text-[#121212] dark:text-[#00FF89]" />
-                                                </button>
-                                            </>
-                                        )}
-                                    </motion.div>
-                                </AnimatePresence>
+                                            <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors duration-300 flex items-center justify-center opacity-0 hover:opacity-100">
+                                                <div className="px-4 py-2 bg-[#121212]/80 backdrop-blur-sm rounded-lg">
+                                                    <span className="text-[#00FF89] text-sm font-medium">Click to view full size</span>
+                                                </div>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800">
+                                            <Eye className="w-12 h-12 text-gray-500 dark:text-gray-400 mb-3" />
+                                            <span className="text-gray-600 dark:text-gray-300 text-sm">No image available</span>
+                                        </div>
+                                    )}
+                                    {mediaItems.length > 1 && (
+                                        <>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    prevImage()
+                                                }}
+                                                aria-label="Previous media"
+                                                className={`absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 dark:bg-[#1f1f1f]/90 backdrop-blur-sm rounded-full flex items-center justify-center transition-all hover:bg-white dark:hover:bg-[#1f1f1f] opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:scale-110 ${focusRing}`}>
+                                                <ChevronLeft className="w-5 h-5 text-[#121212] dark:text-[#00FF89]" />
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    nextImage()
+                                                }}
+                                                aria-label="Next media"
+                                                className={`absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 dark:bg-[#1f1f1f]/90 backdrop-blur-sm rounded-full flex items-center justify-center transition-all hover:bg-white dark:hover:bg-[#1f1f1f] opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:scale-110 ${focusRing}`}>
+                                                <ChevronRight className="w-5 h-5 text-[#121212] dark:text-[#00FF89]" />
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                             {mediaItems.length > 1 && (
                                 <div
@@ -299,9 +345,9 @@ export default function ProductHero({
                             <div className="grid grid-cols-5 gap-2">
                                 {mediaItems.slice(0, 5).map((media, index) => (
                                     <button
-                                        key={index}
+                                        key={`thumb-${index}`}
                                         onClick={() => setCurrentImageIndex(index)}
-                                        className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                                        className={`aspect-square rounded-lg overflow-hidden border-2 transition-all relative ${
                                             currentImageIndex === index
                                                 ? 'border-[#00FF89]'
                                                 : 'border-gray-200 dark:border-gray-700 hover:border-[#00FF89]/50'
@@ -310,6 +356,7 @@ export default function ProductHero({
                                             src={media.type === 'video' ? media.poster : media.src}
                                             alt={media.alt}
                                             className="w-full h-full object-cover"
+                                            loading="lazy"
                                         />
                                         {media.type === 'video' && (
                                             <div className="absolute inset-0 bg-[#121212]/30 flex items-center justify-center">
@@ -330,7 +377,7 @@ export default function ProductHero({
                             <div className="flex flex-wrap items-center gap-2">
                                 <div className="inline-flex items-center px-3 py-1 rounded-full bg-[#00FF89]/10 border border-[#00FF89]/30">
                                     <span className="text-sm font-medium text-emerald-700 dark:text-[#00FF89]">
-                                        {product.category?.replace('_', ' ')}
+                                        {product.category?.name || product.category?.replace('_', ' ') || 'General'}
                                     </span>
                                 </div>
                                 {(() => {
@@ -584,3 +631,4 @@ export default function ProductHero({
         </div>
     )
 }
+

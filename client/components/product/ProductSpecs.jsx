@@ -30,12 +30,12 @@ export default function ProductSpecs({ product }) {
         },
         {
             label: 'Category',
-            value: product.category?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Not specified',
+            value: product.category?.name || 'Not specified',
             icon: Layers
         },
         {
             label: 'Industry',
-            value: product.industry?.toUpperCase() || 'General',
+            value: product.industry?.name || 'General',
             icon: Target
         },
         {
@@ -64,6 +64,8 @@ export default function ProductSpecs({ product }) {
             icon: Star
         }
     ]
+
+    console.log("PRODUCT IN SPECS",product);
     return (
         <div className="max-w-3xl mx-auto space-y-8">
             <motion.div 

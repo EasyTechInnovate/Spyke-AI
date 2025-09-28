@@ -130,16 +130,7 @@ export default function ProductHowItWorks({ product }) {
                     </div>
                 </motion.div>
             )}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="text-center pt-4">
-                <div className="inline-flex items-center gap-2 text-[#00FF89] font-medium">
-                    <span>Ready to get started?</span>
-                    <ArrowRight className="w-4 h-4" />
-                </div>
-            </motion.div>
+            
         </div>
     )
 }
