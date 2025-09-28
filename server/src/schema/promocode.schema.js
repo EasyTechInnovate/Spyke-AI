@@ -76,14 +76,7 @@ export const updatePromocodeSchema = z.object({
   
   discountValue: z.number()
     .min(0, 'Discount value must be positive')
-    .refine((val, ctx) => {
-      // If discountType is percentage, limit to 100
-      const discountType = ctx.parent?.discountType || 'percentage'
-      if (discountType === 'percentage' && val > 100) {
-        return false
-      }
-      return true
-    }, { message: 'Percentage discount cannot exceed 100%' })
+    .max(100000, 'Discount value is too large')
     .optional(),
   
   maxDiscountAmount: z.number()
@@ -125,6 +118,14 @@ export const updatePromocodeSchema = z.object({
   isActive: z.boolean().optional(),
   
   isPublic: z.boolean().optional()
+}).refine((data) => {
+  if (data.discountValue !== undefined && data.discountType === 'percentage' && data.discountValue > 100) {
+    return false
+  }
+  return true
+}, {
+  message: 'Percentage discount cannot exceed 100%',
+  path: ['discountValue']
 })
 
 export const getPromocodesSchema = z.object({

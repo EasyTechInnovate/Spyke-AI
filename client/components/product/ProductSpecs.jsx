@@ -124,14 +124,11 @@ export default function ProductSpecs({ product }) {
                                 transition={{ delay: 0.1 * index + 1.0 }}
                                 className="bg-gray-50 dark:bg-[#1f1f1f] rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-[#1f1f1f]/80 transition-colors">
                                 <div className="flex items-center gap-3">
-                                    <img 
-                                        src={tool.logo} 
-                                        alt={tool.name}
-                                        className="w-8 h-8 object-contain"
-                                        onError={(e) => {
-                                            e.target.style.display = 'none'
-                                        }}
-                                    />
+                                    <div className="w-8 h-8 bg-[#00FF89]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <span className="text-[#00FF89] font-semibold text-sm">
+                                            {tool.name?.charAt(0).toUpperCase() || 'T'}
+                                        </span>
+                                    </div>
                                     <div>
                                         <div className="font-medium text-[#121212] dark:text-[#00FF89] text-sm">
                                             {tool.name}

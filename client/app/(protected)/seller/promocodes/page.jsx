@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { promocodeAPI, sellerAPI } from '@/lib/api'
-import { useNotifications } from '@/hooks/useNotifications'
 import {
     Plus,
     Search,
@@ -13,26 +12,18 @@ import {
     Copy,
     Filter,
     Tag,
-    Calendar,
     DollarSign,
     Percent,
     CheckCircle,
-    AlertCircle,
-    Sparkles,
-    MoreVertical,
-    TrendingUp,
-    Users,
     Target,
-    Clock,
-    Eye,
-    Settings
+    Clock
 } from 'lucide-react'
 import PromocodeForm from '@/components/features/promocode/PromocodeForm'
 import PromocodeStats from '@/components/features/promocode/PromocodeStats'
 import LoadingSpinner from '@/components/shared/ui/LoadingSpinner'
 import Notification from '@/components/shared/Notification'
 export default function PromocodesPage() {
-    const { addNotification, notifications, removeNotification } = useNotifications()
+    const [notifications, setNotifications] = useState([])
     const [sellerProfile, setSellerProfile] = useState(null)
     const [promocodes, setPromocodes] = useState([])
     const [loading, setLoading] = useState(true)
@@ -48,6 +39,20 @@ export default function PromocodesPage() {
         total: 0,
         totalPages: 0
     })
+    const addNotification = (notification) => {
+        const id = Date.now() + Math.random()
+        const newNotification = { id, ...notification }
+        setNotifications((prev) => [...prev, newNotification])
+        if (notification.duration > 0) {
+            setTimeout(() => {
+                removeNotification(id)
+            }, notification.duration)
+        }
+        return id
+    }
+    const removeNotification = (id) => {
+        setNotifications((prev) => prev.filter((notif) => notif.id !== id))
+    }
     const showMessage = (message, type = 'info') => {
         addNotification({
             message,
@@ -99,6 +104,11 @@ export default function PromocodesPage() {
         fetchPromocodes()
     }
     const handleCreateEdit = (promocode = null) => {
+        if (promocode && !promocode.isActive) {
+            showMessage('Please activate the promocode first to edit it', 'warning')
+            return
+        }
+
         setSelectedPromocode(promocode)
         setShowForm(true)
     }
@@ -161,7 +171,7 @@ export default function PromocodesPage() {
                     <Notification
                         key={notification.id}
                         {...notification}
-                        onClose={removeNotification}
+                        onClose={() => removeNotification(notification.id)}
                     />
                 ))}
             </div>
@@ -172,7 +182,7 @@ export default function PromocodesPage() {
                             <Tag className="w-7 h-7 text-[#00FF89]" />
                         </div>
                         <div>
-                            <h1 className="text-3xl sm:text-4xl font-bold text-white font-[var(--font-league-spartan)]">Promocodes</h1>
+                            <h1 className="text-3xl sm:text-4xl font-bold text-white">Promocodes</h1>
                             <p className="text-gray-400 text-lg">Create and manage discount codes</p>
                         </div>
                     </div>
@@ -181,7 +191,7 @@ export default function PromocodesPage() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-500 mb-1">Total Codes</p>
-                                    <p className="text-2xl font-bold text-white">{pagination.total}</p>
+                                    <p className="text-2xl font-bold text-white">{promocodes.length}</p>
                                 </div>
                                 <div className="p-2 bg-[#00FF89]/10 rounded-xl">
                                     <Tag className="w-5 h-5 text-[#00FF89]" />
@@ -298,10 +308,11 @@ export default function PromocodesPage() {
                                         key={promocode._id}
                                         className="group bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border border-gray-800/50 rounded-2xl p-6 hover:border-[#00FF89]/30 transition-all duration-300 hover:shadow-lg hover:shadow-[#00FF89]/10">
                                         <div className="flex items-start justify-between mb-4">
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-3 mb-2">
+                                            <div className="flex-1 min-w-0 pr-4">
+                                                <div className="flex items-center gap-3 mb-2 flex-wrap">
                                                     <h3 className="text-xl font-bold text-white font-mono truncate">{promocode.code}</h3>
-                                                    <span className={`text-sm font-medium ${promocode.isActive ? 'text-green-500' : 'text-red-500'}`}>
+                                                    <span
+                                                        className={`text-sm font-medium px-2 py-1 rounded-lg ${promocode.isActive ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10'}`}>
                                                         {promocode.isActive ? 'Active' : 'Inactive'}
                                                     </span>
                                                 </div>
@@ -378,14 +389,42 @@ export default function PromocodesPage() {
                                             ) : (
                                                 <div className="text-center">
                                                     <p className="text-xs text-gray-500">Expires</p>
-                                                    <p className="font-bold text-white">
-                                                        {promocode.validUntil
-                                                            ? new Date(promocode.validUntil).toLocaleDateString('en-US', {
-                                                                  month: 'short',
-                                                                  day: 'numeric'
-                                                              })
-                                                            : 'Never'}
-                                                    </p>
+                                                    <div className="flex items-center justify-center gap-1">
+                                                        <p className="font-bold text-white">
+                                                            {promocode.validUntil ? (() => {
+                                                                const now = new Date()
+                                                                const expiryDate = new Date(promocode.validUntil)
+                                                                const diffTime = expiryDate - now
+                                                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+                                                                
+                                                                if (diffDays < 0) {
+                                                                    return 'Expired'
+                                                                } else if (diffDays === 0) {
+                                                                    return 'Today'
+                                                                } else if (diffDays === 1) {
+                                                                    return '1 day'
+                                                                } else {
+                                                                    return `${diffDays} days`
+                                                                }
+                                                            })() : 'Never'}
+                                                        </p>
+                                                        {promocode.validUntil && (
+                                                            <div className="relative group">
+                                                                <div className="w-3 h-3 rounded-full bg-gray-600 flex items-center justify-center cursor-help">
+                                                                    <span className="text-[8px] text-white font-bold">i</span>
+                                                                </div>
+                                                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+                                                                    {new Date(promocode.validUntil).toLocaleDateString('en-US', {
+                                                                        weekday: 'short',
+                                                                        month: 'short',
+                                                                        day: 'numeric',
+                                                                        year: 'numeric'
+                                                                    })}
+                                                                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>

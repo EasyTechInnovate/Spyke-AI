@@ -91,12 +91,14 @@ function WeeklyIdeasForm() {
     )
 }
 export default function BlogListingPage() {
-    const [posts, setPosts] = useState([])
+    const [allPosts, setAllPosts] = useState([])
+    const [filteredPosts, setFilteredPosts] = useState([])
+    const [displayedPosts, setDisplayedPosts] = useState([])
     const [categories, setCategories] = useState([])
     const [authors, setAuthors] = useState([])
     const [tags, setTags] = useState([])
     const [loading, setLoading] = useState(true)
-    const [searchLoading, setSearchLoading] = useState(false)
+    const [viewMode, setViewMode] = useState('grid')
     const [filters, setFilters] = useState({
         category: '',
         author: '',
@@ -108,74 +110,93 @@ export default function BlogListingPage() {
     })
     const [pagination, setPagination] = useState({})
     useEffect(() => {
-        fetchBlogData()
-    }, [filters])
-    useEffect(() => {
-        fetchFilterOptions()
+        fetchAllData()
     }, [])
-    const fetchBlogData = async () => {
+    useEffect(() => {
+        applyFilters()
+    }, [filters, allPosts])
+    const fetchAllData = async () => {
         setLoading(true)
         try {
-            const params = new URLSearchParams()
-            Object.entries(filters).forEach(([key, value]) => {
-                if (value) params.append(key, value)
-            })
-            const response = await fetch(`/api/blog/posts?${params}`)
-            const data = await response.json()
-            setPosts(data.posts || [])
-            setPagination(data.pagination || {})
-        } catch (error) {
-            console.error('Error fetching posts:', error)
-        } finally {
-            setLoading(false)
-        }
-    }
-    const fetchFilterOptions = async () => {
-        try {
-            const [categoriesRes, authorsRes, tagsRes] = await Promise.all([
+            const [postsRes, categoriesRes, authorsRes, tagsRes] = await Promise.all([
+                fetch('/api/blog/posts?limit=1000'),
                 fetch('/api/blog/categories'),
                 fetch('/api/blog/authors'),
                 fetch('/api/blog/tags')
             ])
-            const [categoriesData, authorsData, tagsData] = await Promise.all([categoriesRes.json(), authorsRes.json(), tagsRes.json()])
+            const [postsData, categoriesData, authorsData, tagsData] = await Promise.all([
+                postsRes.json(),
+                categoriesRes.json(),
+                authorsRes.json(),
+                tagsRes.json()
+            ])
+            setAllPosts(postsData.posts || [])
             setCategories(categoriesData.categories || [])
             setAuthors(authorsData.authors || [])
             setTags(tagsData.tags || [])
         } catch (error) {
-            console.error('Error fetching filter options:', error)
+            console.error('Error fetching data:', error)
+        } finally {
+            setLoading(false)
         }
+    }
+    const applyFilters = () => {
+        let filtered = [...allPosts]
+        if (filters.category) {
+            filtered = filtered.filter((post) => post.category?.slug?.current === filters.category)
+        }
+        if (filters.author) {
+            filtered = filtered.filter((post) => post.author?.slug?.current === filters.author)
+        }
+        if (filters.tag) {
+            filtered = filtered.filter((post) => post.tags?.some((tag) => tag.slug?.current === filters.tag))
+        }
+        if (filters.search && filters.search.trim()) {
+            const searchTerm = filters.search.toLowerCase()
+            filtered = filtered.filter((post) => {
+                return (
+                    post.title?.toLowerCase().includes(searchTerm) ||
+                    post.summary?.toLowerCase().includes(searchTerm) ||
+                    post.author?.name?.toLowerCase().includes(searchTerm) ||
+                    post.category?.title?.toLowerCase().includes(searchTerm) ||
+                    post.tags?.some((tag) => tag.title?.toLowerCase().includes(searchTerm))
+                )
+            })
+        }
+        filtered.sort((a, b) => {
+            switch (filters.sort) {
+                case 'oldest':
+                    return new Date(a.publishedAt) - new Date(b.publishedAt)
+                case 'popular':
+                    return new Date(b._createdAt || b.publishedAt) - new Date(a._createdAt || a.publishedAt)
+                case 'featured':
+                    if (a.featured && !b.featured) return -1
+                    if (!a.featured && b.featured) return 1
+                    return new Date(b.publishedAt) - new Date(a.publishedAt)
+                default:
+                    return new Date(b.publishedAt) - new Date(a.publishedAt)
+            }
+        })
+        setFilteredPosts(filtered)
+        const totalPosts = filtered.length
+        const totalPages = Math.ceil(totalPosts / filters.limit)
+        const startIndex = (filters.page - 1) * filters.limit
+        const endIndex = startIndex + filters.limit
+        const paginatedPosts = filtered.slice(startIndex, endIndex)
+        setDisplayedPosts(paginatedPosts)
+        setPagination({
+            current: filters.page,
+            total: totalPages,
+            count: paginatedPosts.length,
+            totalPosts: totalPosts
+        })
     }
     const handleFilterChange = (key, value) => {
         setFilters((prev) => ({
             ...prev,
             [key]: value,
-            page: 1 
+            page: key !== 'page' ? 1 : value
         }))
-    }
-    const handleSearch = async (e) => {
-        e.preventDefault()
-        if (!filters.search.trim()) {
-            fetchBlogData()
-            return
-        }
-        setSearchLoading(true)
-        try {
-            const response = await fetch(`/api/blog/search?q=${encodeURIComponent(filters.search)}&limit=12`)
-            const data = await response.json()
-            if (data.posts && data.posts.length > 0) {
-                setPosts(data.posts)
-                setPagination({ current: 1, total: 1, count: data.count, totalPosts: data.count })
-            } else {
-                setPosts([])
-                setPagination({ current: 1, total: 1, count: 0, totalPosts: 0 })
-            }
-        } catch (error) {
-            console.error('Error searching posts:', error)
-            setPosts([])
-            setPagination({ current: 1, total: 1, count: 0, totalPosts: 0 })
-        } finally {
-            setSearchLoading(false)
-        }
     }
     const clearFilters = () => {
         setFilters({
@@ -238,7 +259,7 @@ export default function BlogListingPage() {
                         </div>
                         <div className="flex-shrink-0 w-full lg:w-96">
                             <form
-                                onSubmit={handleSearch}
+                                onSubmit={(e) => e.preventDefault()}
                                 className="relative group">
                                 <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/20 to-brand-secondary/20 rounded-xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                 <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
@@ -250,11 +271,6 @@ export default function BlogListingPage() {
                                         value={filters.search}
                                         onChange={(e) => handleFilterChange('search', e.target.value)}
                                     />
-                                    {searchLoading && (
-                                        <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                                            <div className="w-5 h-5 border-2 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
-                                        </div>
-                                    )}
                                 </div>
                             </form>
                         </div>
@@ -403,7 +419,7 @@ export default function BlogListingPage() {
                             ))}
                         </div>
                     </div>
-                ) : posts.length === 0 ? (
+                ) : filteredPosts.length === 0 ? (
                     <div className="text-center py-20">
                         <div className="relative mb-8">
                             <div className="w-32 h-32 mx-auto bg-gradient-to-br from-brand-primary/20 to-brand-secondary/20 rounded-3xl flex items-center justify-center">
@@ -430,7 +446,7 @@ export default function BlogListingPage() {
                         <div className="mb-8 flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <p className="text-gray-400 text-lg">
-                                    Showing <span className="text-white font-semibold">{posts.length}</span> of{' '}
+                                    Showing <span className="text-white font-semibold">{displayedPosts.length}</span> of{' '}
                                     <span className="text-white font-semibold">{pagination.totalPosts || 0}</span> articles
                                     {filters.search && (
                                         <span className="ml-2">
@@ -441,7 +457,9 @@ export default function BlogListingPage() {
                             </div>
                             <div className="hidden md:flex items-center gap-2 text-sm text-gray-500">
                                 <span>View:</span>
-                                <button className="p-2 bg-brand-primary/10 text-brand-primary rounded-lg">
+                                <button
+                                    className={`p-2 ${viewMode === 'grid' ? 'bg-brand-primary/10 text-brand-primary' : 'text-gray-400 hover:text-white'} rounded-lg`}
+                                    onClick={() => setViewMode('grid')}>
                                     <svg
                                         className="w-4 h-4"
                                         fill="currentColor"
@@ -449,7 +467,9 @@ export default function BlogListingPage() {
                                         <path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z" />
                                     </svg>
                                 </button>
-                                <button className="p-2 text-gray-400 hover:text-white transition-colors">
+                                <button
+                                    className={`p-2 ${viewMode === 'list' ? 'bg-brand-primary/10 text-brand-primary' : 'text-gray-400 hover:text-white'} rounded-lg`}
+                                    onClick={() => setViewMode('list')}>
                                     <svg
                                         className="w-4 h-4"
                                         fill="currentColor"
@@ -459,122 +479,250 @@ export default function BlogListingPage() {
                                 </button>
                             </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-                            {posts.map((post, index) => (
-                                <article
-                                    key={post._id}
-                                    className="group relative h-[600px]">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/5 to-brand-secondary/5 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform scale-105"></div>
-                                    <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all duration-500 group-hover:transform group-hover:scale-[1.02] h-full flex flex-col">
-                                        <div className="relative h-56 overflow-hidden flex-shrink-0">
-                                            {post.featuredImage ? (
-                                                <Image
-                                                    src={urlFor(post.featuredImage).width(400).height(240).url()}
-                                                    alt={post.featuredImage.alt || post.title}
-                                                    fill
-                                                    className="object-cover group-hover:scale-110 transition-transform duration-700"
-                                                    unoptimized={true}
-                                                    loader={({ src }) => src}
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full bg-gradient-to-br from-brand-primary/20 to-brand-secondary/20 flex items-center justify-center">
-                                                    <div className="text-5xl font-league-spartan font-bold text-white/30">{post.title.charAt(0)}</div>
-                                                </div>
-                                            )}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                                            {post.featured && (
-                                                <div className="absolute top-4 left-4">
-                                                    <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
-                                                        <Star className="w-3 h-3" />
-                                                        Featured
-                                                    </span>
-                                                </div>
-                                            )}
-                                            {post.estimatedReadingTime && (
-                                                <div className="absolute top-4 right-4">
-                                                    <span className="bg-black/70 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full flex items-center gap-1">
-                                                        <Clock className="w-3 h-3" />
-                                                        {post.estimatedReadingTime} min
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="p-6 flex flex-col flex-1">
-                                            {post.category && (
-                                                <div className="mb-4">
-                                                    <span
-                                                        className={`inline-flex items-center gap-2 text-xs font-medium px-3 py-1 rounded-full border ${getCategoryColor(post.category.color)}`}>
-                                                        <div className="w-2 h-2 rounded-full bg-current"></div>
-                                                        {post.category.title}
-                                                    </span>
-                                                </div>
-                                            )}
-                                            <h2 className="font-league-spartan font-bold text-xl mb-3 line-clamp-2 group-hover:text-brand-primary transition-colors duration-300">
-                                                {post.title}
-                                            </h2>
-                                            <p className="text-gray-400 text-sm line-clamp-3 mb-4 leading-relaxed">{post.summary}</p>
-                                            {post.tags && post.tags.length > 0 && (
-                                                <div className="flex flex-wrap gap-2 mb-6">
-                                                    {post.tags.slice(0, 3).map((tag) => (
-                                                        <span
-                                                            key={tag._id}
-                                                            className="text-xs text-brand-primary bg-brand-primary/10 border border-brand-primary/20 px-2 py-1 rounded-lg hover:bg-brand-primary/20 transition-colors cursor-pointer">
-                                                            #{tag.title}
+                        <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8' : 'space-y-6'} mb-16`}>
+                            {displayedPosts.map((post, index) =>
+                                viewMode === 'grid' ? (
+                                    // Grid View - existing card layout
+                                    <article
+                                        key={post._id}
+                                        className="group relative h-[600px]">
+                                        <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/5 to-brand-secondary/5 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform scale-105"></div>
+                                        <Link
+                                            href={`/blog/${post.slug.current}`}
+                                            className="block relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all duration-500 group-hover:transform group-hover:scale-[1.02] h-full cursor-pointer">
+                                            <div className="relative h-56 overflow-hidden flex-shrink-0">
+                                                {post.featuredImage ? (
+                                                    <Image
+                                                        src={urlFor(post.featuredImage).width(400).height(240).url()}
+                                                        alt={post.featuredImage.alt || post.title}
+                                                        fill
+                                                        className="object-cover group-hover:scale-110 transition-transform duration-700"
+                                                        unoptimized={true}
+                                                        loader={({ src }) => src}
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full bg-gradient-to-br from-brand-primary/20 to-brand-secondary/20 flex items-center justify-center">
+                                                        <div className="text-5xl font-league-spartan font-bold text-white/30">
+                                                            {post.title.charAt(0)}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                                {post.featured && (
+                                                    <div className="absolute top-4 left-4">
+                                                        <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                                                            <Star className="w-3 h-3" />
+                                                            Featured
                                                         </span>
-                                                    ))}
-                                                    {post.tags.length > 3 && (
-                                                        <span className="text-xs text-gray-500 px-2 py-1">+{post.tags.length - 3} more</span>
-                                                    )}
+                                                    </div>
+                                                )}
+                                                {post.estimatedReadingTime && (
+                                                    <div className="absolute top-4 right-4">
+                                                        <span className="bg-black/70 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full flex items-center gap-1">
+                                                            <Clock className="w-3 h-3" />
+                                                            {post.estimatedReadingTime} min
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="p-6 flex flex-col flex-1 h-[344px]">
+                                                {post.category && (
+                                                    <div className="mb-4">
+                                                        <span
+                                                            className={`inline-flex items-center gap-2 text-xs font-medium px-3 py-1 rounded-full border ${getCategoryColor(post.category.color)}`}>
+                                                            <div className="w-2 h-2 rounded-full bg-current"></div>
+                                                            {post.category.title}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                <h2 className="font-league-spartan font-bold text-xl mb-3 line-clamp-2 group-hover:text-brand-primary transition-colors duration-300">
+                                                    {post.title}
+                                                </h2>
+                                                <p className="text-gray-400 text-sm line-clamp-3 mb-4 leading-relaxed">{post.summary}</p>
+                                                {post.tags && post.tags.length > 0 && (
+                                                    <div className="flex flex-wrap gap-2 mb-6">
+                                                        {post.tags.slice(0, 3).map((tag) => (
+                                                            <span
+                                                                key={tag._id}
+                                                                className="text-xs text-brand-primary bg-brand-primary/10 border border-brand-primary/20 px-2 py-1 rounded-lg hover:bg-brand-primary/20 transition-colors">
+                                                                #{tag.title}
+                                                            </span>
+                                                        ))}
+                                                        {post.tags.length > 3 && (
+                                                            <span className="text-xs text-gray-500 px-2 py-1">+{post.tags.length - 3} more</span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                <div className="flex-1"></div>
+                                                <div className="mt-auto">
+                                                    <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+                                                        {post.author?.avatar ? (
+                                                            <Image
+                                                                src={urlFor(post.author.avatar).width(40).height(40).url()}
+                                                                alt={post.author.name}
+                                                                width={40}
+                                                                height={40}
+                                                                className="rounded-full ring-2 ring-white/20"
+                                                                unoptimized={true}
+                                                                loader={({ src }) => src}
+                                                            />
+                                                        ) : (
+                                                            <div className="w-10 h-10 bg-gradient-to-br from-brand-primary/20 to-brand-secondary/20 rounded-full flex items-center justify-center ring-2 ring-white/20">
+                                                                <User className="w-5 h-5 text-brand-primary" />
+                                                            </div>
+                                                        )}
+                                                        <div className="flex-1">
+                                                            <p className="text-sm font-medium text-white">{post.author?.name}</p>
+                                                            <div className="flex items-center gap-2 text-xs text-gray-400">
+                                                                <Calendar className="w-3 h-3" />
+                                                                {formatDate(post.publishedAt)}
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center text-brand-primary/60 group-hover:text-brand-primary transition-colors">
+                                                            <svg
+                                                                className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    strokeWidth={2}
+                                                                    d="M9 5l7 7-7 7"
+                                                                />
+                                                            </svg>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            )}
-                                            <div className="flex-1"></div>
-                                            <div className="space-y-4 mt-auto">
-                                                <div className="flex items-center gap-3 pt-4 border-t border-white/10">
-                                                    {post.author?.avatar ? (
+                                            </div>
+                                        </Link>
+                                    </article>
+                                ) : (
+                                    // List View - horizontal layout
+                                    <article
+                                        key={post._id}
+                                        className="group">
+                                        <Link
+                                            href={`/blog/${post.slug.current}`}
+                                            className="block bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all duration-300 group-hover:bg-white/[0.08] cursor-pointer">
+                                            <div className="flex flex-col sm:flex-row">
+                                                {/* Image Section */}
+                                                <div className="relative w-full sm:w-80 h-48 sm:h-56 flex-shrink-0 overflow-hidden">
+                                                    {post.featuredImage ? (
                                                         <Image
-                                                            src={urlFor(post.author.avatar).width(40).height(40).url()}
-                                                            alt={post.author.name}
-                                                            width={40}
-                                                            height={40}
-                                                            className="rounded-full ring-2 ring-white/20"
+                                                            src={urlFor(post.featuredImage).width(320).height(224).url()}
+                                                            alt={post.featuredImage.alt || post.title}
+                                                            fill
+                                                            className="object-cover group-hover:scale-105 transition-transform duration-500"
                                                             unoptimized={true}
                                                             loader={({ src }) => src}
                                                         />
                                                     ) : (
-                                                        <div className="w-10 h-10 bg-gradient-to-br from-brand-primary/20 to-brand-secondary/20 rounded-full flex items-center justify-center ring-2 ring-white/20">
-                                                            <User className="w-5 h-5 text-brand-primary" />
+                                                        <div className="w-full h-full bg-gradient-to-br from-brand-primary/20 to-brand-secondary/20 flex items-center justify-center">
+                                                            <div className="text-4xl font-league-spartan font-bold text-white/30">
+                                                                {post.title.charAt(0)}
+                                                            </div>
                                                         </div>
                                                     )}
-                                                    <div className="flex-1">
-                                                        <p className="text-sm font-medium text-white">{post.author?.name}</p>
-                                                        <div className="flex items-center gap-2 text-xs text-gray-400">
-                                                            <Calendar className="w-3 h-3" />
-                                                            {formatDate(post.publishedAt)}
+                                                    {post.featured && (
+                                                        <div className="absolute top-3 left-3">
+                                                            <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                                                                <Star className="w-3 h-3" />
+                                                                Featured
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    {post.estimatedReadingTime && (
+                                                        <div className="absolute top-3 right-3">
+                                                            <span className="bg-black/70 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                                                                <Clock className="w-3 h-3" />
+                                                                {post.estimatedReadingTime} min
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Content Section */}
+                                                <div className="flex-1 p-6 flex flex-col justify-between min-h-[224px]">
+                                                    <div>
+                                                        {post.category && (
+                                                            <div className="mb-3">
+                                                                <span
+                                                                    className={`inline-flex items-center gap-2 text-xs font-medium px-3 py-1 rounded-full border ${getCategoryColor(post.category.color)}`}>
+                                                                    <div className="w-2 h-2 rounded-full bg-current"></div>
+                                                                    {post.category.title}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                        <h2 className="font-league-spartan font-bold text-2xl mb-3 line-clamp-2 group-hover:text-brand-primary transition-colors duration-300">
+                                                            {post.title}
+                                                        </h2>
+                                                        <p className="text-gray-400 text-base line-clamp-3 mb-4 leading-relaxed">{post.summary}</p>
+                                                        {post.tags && post.tags.length > 0 && (
+                                                            <div className="flex flex-wrap gap-2 mb-4">
+                                                                {post.tags.slice(0, 4).map((tag) => (
+                                                                    <span
+                                                                        key={tag._id}
+                                                                        className="text-xs text-brand-primary bg-brand-primary/10 border border-brand-primary/20 px-2 py-1 rounded-lg hover:bg-brand-primary/20 transition-colors">
+                                                                        #{tag.title}
+                                                                    </span>
+                                                                ))}
+                                                                {post.tags.length > 4 && (
+                                                                    <span className="text-xs text-gray-500 px-2 py-1">
+                                                                        +{post.tags.length - 4} more
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Author and Date */}
+                                                    <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                                                        <div className="flex items-center gap-3">
+                                                            {post.author?.avatar ? (
+                                                                <Image
+                                                                    src={urlFor(post.author.avatar).width(40).height(40).url()}
+                                                                    alt={post.author.name}
+                                                                    width={40}
+                                                                    height={40}
+                                                                    className="rounded-full ring-2 ring-white/20"
+                                                                    unoptimized={true}
+                                                                    loader={({ src }) => src}
+                                                                />
+                                                            ) : (
+                                                                <div className="w-10 h-10 bg-gradient-to-br from-brand-primary/20 to-brand-secondary/20 rounded-full flex items-center justify-center ring-2 ring-white/20">
+                                                                    <User className="w-5 h-5 text-brand-primary" />
+                                                                </div>
+                                                            )}
+                                                            <div>
+                                                                <p className="text-sm font-medium text-white">{post.author?.name}</p>
+                                                                <div className="flex items-center gap-2 text-xs text-gray-400">
+                                                                    <Calendar className="w-3 h-3" />
+                                                                    {formatDate(post.publishedAt)}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center text-brand-primary/60 group-hover:text-brand-primary transition-colors">
+                                                            <svg
+                                                                className="w-6 h-6 group-hover:translate-x-1 transition-transform duration-300"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    strokeWidth={2}
+                                                                    d="M9 5l7 7-7 7"
+                                                                />
+                                                            </svg>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <Link
-                                                    href={`/blog/${post.slug.current}`}
-                                                    className="inline-flex items-center justify-center w-full bg-white/5 hover:bg-brand-primary/10 border border-white/10 hover:border-brand-primary/30 text-white hover:text-brand-primary font-medium text-sm py-3 px-4 rounded-lg transition-all duration-300 group/btn">
-                                                    Read Full Article
-                                                    <svg
-                                                        className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform duration-300"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth={2}
-                                                            d="M9 5l7 7-7 7"
-                                                        />
-                                                    </svg>
-                                                </Link>
                                             </div>
-                                        </div>
-                                    </div>
-                                </article>
-                            ))}
+                                        </Link>
+                                    </article>
+                                )
+                            )}
                         </div>
                         {pagination.total > 1 && (
                             <div className="flex justify-center items-center gap-3 py-8">
@@ -701,3 +849,4 @@ export default function BlogListingPage() {
         </div>
     )
 }
+

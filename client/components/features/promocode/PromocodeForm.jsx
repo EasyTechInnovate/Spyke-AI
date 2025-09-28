@@ -2,13 +2,13 @@
 import { useState, useEffect } from 'react'
 import { promocodeAPI, productsAPI } from '@/lib/api'
 import { categoryAPI } from '@/lib/api/toolsNiche'
-import { useNotifications } from '@/hooks/useNotifications'
 import { X, Calendar, Tag, Target, Filter, Percent, DollarSign, AlertCircle, CheckCircle } from 'lucide-react'
 import Notification from '@/components/shared/Notification'
 import { usePathname } from 'next/navigation'
 
 export default function PromocodeForm({ promocode, onClose }) {
-    const { addNotification, notifications, removeNotification } = useNotifications()
+    // Local notification state instead of useNotifications hook
+    const [notifications, setNotifications] = useState([])
     const isEditing = !!promocode
     const [loading, setLoading] = useState(false)
     const [loadingProducts, setLoadingProducts] = useState(false)
@@ -36,6 +36,26 @@ export default function PromocodeForm({ promocode, onClose }) {
     const CATEGORIES_PER_PAGE = 10
 
     const pathname = usePathname()
+
+    // Local notification management
+    const addNotification = (notification) => {
+        const id = Date.now() + Math.random()
+        const newNotification = { id, ...notification }
+        setNotifications((prev) => [...prev, newNotification])
+
+        // Auto remove after duration
+        if (notification.duration > 0) {
+            setTimeout(() => {
+                removeNotification(id)
+            }, notification.duration)
+        }
+
+        return id
+    }
+
+    const removeNotification = (id) => {
+        setNotifications((prev) => prev.filter((notif) => notif.id !== id))
+    }
 
     const showMessage = (message, type = 'info') => {
         addNotification({
@@ -234,21 +254,30 @@ export default function PromocodeForm({ promocode, onClose }) {
                 validUntil: formData.validUntil ? new Date(formData.validUntil).toISOString() : new Date().toISOString(),
                 isActive: formData.status === 'active'
             }
+
+            let response
             if (isEditing) {
-                await promocodeAPI.updatePromocode(promocode._id, payload)
-                showMessage('Promocode updated successfully', 'success')
+                response = await promocodeAPI.updatePromocode(promocode._id, payload)
             } else {
-                await promocodeAPI.createPromocode(payload)
-                showMessage('Promocode created successfully', 'success')
+                response = await promocodeAPI.createPromocode(payload)
             }
-            onClose(true)
+
+            if (response && response._id && response.code) {
+                const successMessage = isEditing ? 'Promocode updated successfully!' : 'Promocode created successfully!'
+                showMessage(successMessage, 'success')
+                setTimeout(() => {
+                    onClose(true)
+                }, 1200)
+            } else {
+                throw new Error('Invalid response from server')
+            }
         } catch (error) {
-            if (error.response?.data?.message) {
-                showMessage(error.response.data.message, 'error')
-            } else {
-                showMessage(isEditing ? 'Failed to update promocode' : 'Failed to create promocode', 'error')
-            }
             console.error('Error saving promocode:', error)
+
+            // Show error notification
+            const errorMessage =
+                error.response?.data?.message || error.message || (isEditing ? 'Failed to update promocode' : 'Failed to create promocode')
+            showMessage(errorMessage, 'error')
         } finally {
             setLoading(false)
         }
@@ -323,7 +352,7 @@ export default function PromocodeForm({ promocode, onClose }) {
                                         onChange={handleInputChange}
                                         onBlur={() => handleFieldBlur('code')}
                                         placeholder="e.g., SUMMER25, BLACKFRIDAY"
-                                        disabled={isEditing || loading}
+                                        disabled={loading}
                                         className={`w-full px-4 py-3 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-mono text-lg ${getInputErrorStyles('code')}`}
                                         required
                                     />
@@ -715,3 +744,4 @@ export default function PromocodeForm({ promocode, onClose }) {
         </div>
     )
 }
+
