@@ -1,29 +1,11 @@
 'use client'
 import { useState, useEffect, useMemo, useCallback, Suspense } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ErrorBoundary } from 'react-error-boundary'
-import { debounce } from '@/utils/debounce'
 import { sellerAPI } from '@/lib/api'
 import Link from 'next/link'
-import Image from 'next/image'
-import { 
-    Search, 
-    Users, 
-    Star, 
-    MapPin, 
-    Calendar, 
-    Package, 
-    Filter,
-    Loader2,
-    ChevronLeft,
-    ChevronRight,
-    Eye,
-    TrendingUp,
-    Award,
-    Heart,
-    ExternalLink
-} from 'lucide-react'
+import { Search, Users, Star, MapPin, Calendar, Filter, Loader2, ChevronLeft, ChevronRight, Eye, TrendingUp } from 'lucide-react'
 const ITEMS_PER_PAGE = 12
 function CreatorCardSkeleton() {
     return (
@@ -52,19 +34,13 @@ function HeroSection({ creatorsCount }) {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-            >
+                transition={{ duration: 0.6 }}>
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#00FF89]/10 border border-[#00FF89]/20 rounded-full mb-6">
                     <Users className="w-4 h-4 text-[#00FF89]" />
-                    <span className="text-sm font-medium text-[#00FF89]">
-                        {creatorsCount?.toLocaleString() || '0'} Active Creators
-                    </span>
+                    <span className="text-sm font-medium text-[#00FF89]">{creatorsCount?.toLocaleString() || '0'} Active Creators</span>
                 </div>
                 <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 leading-tight">
-                    Meet Our{' '}
-                    <span className="bg-gradient-to-r from-[#00FF89] to-emerald-400 bg-clip-text text-transparent">
-                        Creators
-                    </span>
+                    Meet Our <span className="bg-gradient-to-r from-[#00FF89] to-emerald-400 bg-clip-text text-transparent">Creators</span>
                 </h1>
                 <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
                     Discover talented automation experts and digital creators ready to transform your business
@@ -73,16 +49,7 @@ function HeroSection({ creatorsCount }) {
         </section>
     )
 }
-function SearchControls({ 
-    searchQuery, 
-    filters, 
-    sortBy, 
-    onSearchChange, 
-    onFilterChange, 
-    onSortChange,
-    onClearFilters,
-    creatorsCount 
-}) {
+function SearchControls({ searchQuery, filters, sortBy, onSearchChange, onFilterChange, onSortChange, onClearFilters, creatorsCount }) {
     const niches = ['E-commerce', 'Email Marketing', 'Lead Generation', 'Sales Automation']
     const tools = ['Zapier', 'Mailchimp']
     const countries = ['India']
@@ -92,8 +59,7 @@ function SearchControls({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="mb-12"
-        >
+            className="mb-12">
             <div className="relative mb-8">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
@@ -114,11 +80,15 @@ function SearchControls({
                     onChange={(e) => {
                         onFilterChange('niche', e.target.value)
                     }}
-                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50"
-                >
+                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50">
                     <option value="">All Niches</option>
-                    {niches.map(niche => (
-                        <option key={niche} value={niche} className="bg-gray-800">{niche}</option>
+                    {niches.map((niche) => (
+                        <option
+                            key={niche}
+                            value={niche}
+                            className="bg-gray-800">
+                            {niche}
+                        </option>
                     ))}
                 </select>
                 <select
@@ -126,11 +96,15 @@ function SearchControls({
                     onChange={(e) => {
                         onFilterChange('tool', e.target.value)
                     }}
-                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50"
-                >
+                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50">
                     <option value="">All Tools</option>
-                    {tools.map(tool => (
-                        <option key={tool} value={tool} className="bg-gray-800">{tool}</option>
+                    {tools.map((tool) => (
+                        <option
+                            key={tool}
+                            value={tool}
+                            className="bg-gray-800">
+                            {tool}
+                        </option>
                     ))}
                 </select>
                 <select
@@ -138,11 +112,15 @@ function SearchControls({
                     onChange={(e) => {
                         onFilterChange('country', e.target.value)
                     }}
-                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50"
-                >
+                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50">
                     <option value="">All Countries</option>
-                    {countries.map(country => (
-                        <option key={country} value={country} className="bg-gray-800">{country}</option>
+                    {countries.map((country) => (
+                        <option
+                            key={country}
+                            value={country}
+                            className="bg-gray-800">
+                            {country}
+                        </option>
                     ))}
                 </select>
                 <select
@@ -150,20 +128,34 @@ function SearchControls({
                     onChange={(e) => {
                         onSortChange(e.target.value)
                     }}
-                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50"
-                >
-                    <option value="createdAt-desc" className="bg-gray-800">Newest First</option>
-                    <option value="stats.averageRating-desc" className="bg-gray-800">Highest Rated</option>
-                    <option value="stats.totalProducts-desc" className="bg-gray-800">Most Products</option>
-                    <option value="stats.profileViews-desc" className="bg-gray-800">Most Popular</option>
+                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50">
+                    <option
+                        value="createdAt-desc"
+                        className="bg-gray-800">
+                        Newest First
+                    </option>
+                    <option
+                        value="stats.averageRating-desc"
+                        className="bg-gray-800">
+                        Highest Rated
+                    </option>
+                    <option
+                        value="stats.totalProducts-desc"
+                        className="bg-gray-800">
+                        Most Products
+                    </option>
+                    <option
+                        value="stats.profileViews-desc"
+                        className="bg-gray-800">
+                        Most Popular
+                    </option>
                 </select>
                 {hasActiveFilters && (
                     <button
                         onClick={() => {
                             onClearFilters()
                         }}
-                        className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl text-sm hover:bg-red-500/30 transition-all"
-                    >
+                        className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl text-sm hover:bg-red-500/30 transition-all">
                         Clear Filters
                     </button>
                 )}
@@ -187,50 +179,65 @@ function SearchControls({
                     )}
                 </div>
             )}
-            <div className="text-sm text-gray-400">
-                Showing {creatorsCount?.toLocaleString() || 0} creators
-            </div>
+            <div className="text-sm text-gray-400">Showing {creatorsCount?.toLocaleString() || 0} creators</div>
         </motion.div>
     )
 }
 function CreatorCard({ creator }) {
     const formatJoinDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'short' 
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short'
         })
     }
     const getInitials = (name) => {
-        return name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'CR'
+        return (
+            name
+                ?.split(' ')
+                .map((n) => n[0])
+                .join('')
+                .toUpperCase()
+                .slice(0, 2) || 'CR'
+        )
     }
+
+    const getAvatarUrl = (creator) => {
+        return creator.avatar || creator.profileImage || creator.userId?.avatar || creator.user?.avatar || null
+    }
+
+    const avatarUrl = getAvatarUrl(creator)
+
     return (
-        <Link href={`/profile/${creator._id}`} className="group block h-full">
+        <Link
+            href={`/profile/${creator._id}`}
+            className="group block h-full">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
+                viewport={{ once: true, margin: '-50px' }}
                 whileHover={{ y: -4 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className="h-full"
-            >
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className="h-full">
                 <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 h-full hover:border-[#00FF89]/30 hover:bg-white/10 transition-all duration-300 group flex flex-col">
                     <div className="flex items-start gap-4 mb-4 flex-shrink-0">
                         <div className="relative flex-shrink-0">
-                            {creator.userId?.avatar ? (
-                                <Image
-                                    src={creator.userId.avatar}
+                            {avatarUrl ? (
+                                <img
+                                    src={avatarUrl}
                                     alt={creator.fullName}
-                                    width={64}
-                                    height={64}
                                     className="w-16 h-16 rounded-full object-cover border-2 border-white/10"
+                                    onError={(e) => {
+                                        // Hide the img and show the fallback
+                                        e.target.style.display = 'none'
+                                        e.target.nextElementSibling.style.display = 'flex'
+                                    }}
                                 />
-                            ) : (
-                                <div className="w-16 h-16 bg-gradient-to-br from-[#00FF89]/20 to-emerald-400/20 rounded-full flex items-center justify-center border-2 border-[#00FF89]/30">
-                                    <span className="text-[#00FF89] font-bold text-lg">
-                                        {getInitials(creator.fullName)}
-                                    </span>
-                                </div>
-                            )}
+                            ) : null}
+                            {/* Fallback initials */}
+                            <div
+                                className={`w-16 h-16 bg-gradient-to-br from-[#00FF89]/20 to-emerald-400/20 rounded-full flex items-center justify-center border-2 border-[#00FF89]/30 ${avatarUrl ? 'hidden' : 'flex'}`}>
+                                <span className="text-[#00FF89] font-bold text-lg">{getInitials(creator.fullName)}</span>
+                            </div>
                             <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#00FF89] rounded-full border-2 border-black" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -258,10 +265,9 @@ function CreatorCard({ creator }) {
                         {creator.niches && creator.niches.length > 0 ? (
                             <div className="flex flex-wrap gap-1.5 min-h-[36px]">
                                 {creator.niches.slice(0, 2).map((niche, index) => (
-                                    <span 
+                                    <span
                                         key={index}
-                                        className="px-2.5 py-1 bg-[#00FF89]/20 text-[#00FF89] text-xs font-medium rounded-full border border-[#00FF89]/30 whitespace-nowrap flex-shrink-0"
-                                    >
+                                        className="px-2.5 py-1 bg-[#00FF89]/20 text-[#00FF89] text-xs font-medium rounded-full border border-[#00FF89]/30 whitespace-nowrap flex-shrink-0">
                                         {niche}
                                     </span>
                                 ))}
@@ -281,10 +287,9 @@ function CreatorCard({ creator }) {
                                 <p className="text-xs text-gray-500 mb-2">Tools:</p>
                                 <div className="flex flex-wrap gap-1 min-h-[28px]">
                                     {creator.toolsSpecialization.slice(0, 3).map((tool, index) => (
-                                        <span 
+                                        <span
                                             key={index}
-                                            className="px-2 py-1 bg-white/5 text-gray-300 text-xs rounded-lg border border-white/10"
-                                        >
+                                            className="px-2 py-1 bg-white/5 text-gray-300 text-xs rounded-lg border border-white/10">
                                             {tool}
                                         </span>
                                     ))}
@@ -298,21 +303,15 @@ function CreatorCard({ creator }) {
                     {creator.stats && (
                         <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/10 mb-4 flex-shrink-0">
                             <div className="text-center">
-                                <div className="text-lg font-bold text-white mb-1">
-                                    {creator.stats.totalProducts || 0}
-                                </div>
+                                <div className="text-lg font-bold text-white mb-1">{creator.stats.totalProducts || 0}</div>
                                 <div className="text-xs text-gray-400">Products</div>
                             </div>
                             <div className="text-center">
                                 <div className="flex items-center justify-center gap-1 mb-1">
                                     <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                                    <span className="text-lg font-bold text-white">
-                                        {creator.stats.averageRating || '0.0'}
-                                    </span>
+                                    <span className="text-lg font-bold text-white">{creator.stats.averageRating || '0.0'}</span>
                                 </div>
-                                <div className="text-xs text-gray-400">
-                                    {creator.stats.totalReviews || 0} reviews
-                                </div>
+                                <div className="text-xs text-gray-400">{creator.stats.totalReviews || 0} reviews</div>
                             </div>
                         </div>
                     )}
@@ -348,13 +347,10 @@ function CreatorsGrid({ creators, loading }) {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-center py-20"
-            >
+                className="text-center py-20">
                 <Users className="w-16 h-16 text-gray-600 mx-auto mb-6" />
                 <h3 className="text-2xl font-semibold text-white mb-4">No creators found</h3>
-                <p className="text-gray-400 max-w-md mx-auto">
-                    Try adjusting your search or filters to discover more creators
-                </p>
+                <p className="text-gray-400 max-w-md mx-auto">Try adjusting your search or filters to discover more creators</p>
             </motion.div>
         )
     }
@@ -365,8 +361,7 @@ function CreatorsGrid({ creators, loading }) {
                     key={creator._id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1, duration: 0.3 }}
-                >
+                    transition={{ delay: index * 0.1, duration: 0.3 }}>
                     <CreatorCard creator={creator} />
                 </motion.div>
             ))}
@@ -397,13 +392,11 @@ function Pagination({ currentPage, totalPages, onPageChange, loading }) {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-center gap-2 mt-16"
-        >
+            className="flex items-center justify-center gap-2 mt-16">
             <button
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 1 || loading}
-                className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-all"
-            >
+                className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-all">
                 <ChevronLeft className="w-4 h-4" />
                 Previous
             </button>
@@ -416,16 +409,14 @@ function Pagination({ currentPage, totalPages, onPageChange, loading }) {
                         pageNum === currentPage
                             ? 'bg-[#00FF89] text-black font-medium'
                             : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
-                    }`}
-                >
+                    }`}>
                     {pageNum}
                 </button>
             ))}
             <button
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages || loading}
-                className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-all"
-            >
+                className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-all">
                 Next
                 <ChevronRight className="w-4 h-4" />
             </button>
@@ -437,19 +428,15 @@ function ErrorState({ error, onRetry }) {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center py-20"
-        >
+            className="text-center py-20">
             <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <TrendingUp className="w-8 h-8 text-red-400" />
             </div>
             <h3 className="text-2xl font-semibold text-white mb-4">Something went wrong</h3>
-            <p className="text-gray-400 mb-8 max-w-md mx-auto">
-                {error || 'Failed to load creators. Please try again.'}
-            </p>
+            <p className="text-gray-400 mb-8 max-w-md mx-auto">{error || 'Failed to load creators. Please try again.'}</p>
             <button
                 onClick={onRetry}
-                className="px-6 py-3 bg-[#00FF89] text-black font-semibold rounded-xl hover:bg-[#00FF89]/90 transition-colors"
-            >
+                className="px-6 py-3 bg-[#00FF89] text-black font-semibold rounded-xl hover:bg-[#00FF89]/90 transition-colors">
                 Try Again
             </button>
         </motion.div>
@@ -506,27 +493,22 @@ function CreatorsPageContent() {
         let filtered = [...creators]
         if (searchInput.trim()) {
             const query = searchInput.toLowerCase()
-            filtered = filtered.filter(creator => 
-                creator.fullName?.toLowerCase().includes(query) ||
-                creator.bio?.toLowerCase().includes(query) ||
-                creator.niches?.some(niche => niche.toLowerCase().includes(query)) ||
-                creator.toolsSpecialization?.some(tool => tool.toLowerCase().includes(query))
+            filtered = filtered.filter(
+                (creator) =>
+                    creator.fullName?.toLowerCase().includes(query) ||
+                    creator.bio?.toLowerCase().includes(query) ||
+                    creator.niches?.some((niche) => niche.toLowerCase().includes(query)) ||
+                    creator.toolsSpecialization?.some((tool) => tool.toLowerCase().includes(query))
             )
         }
         if (filters.niche) {
-            filtered = filtered.filter(creator => 
-                creator.niches?.includes(filters.niche)
-            )
+            filtered = filtered.filter((creator) => creator.niches?.includes(filters.niche))
         }
         if (filters.tool) {
-            filtered = filtered.filter(creator => 
-                creator.toolsSpecialization?.includes(filters.tool)
-            )
+            filtered = filtered.filter((creator) => creator.toolsSpecialization?.includes(filters.tool))
         }
         if (filters.country) {
-            filtered = filtered.filter(creator => 
-                creator.location?.country === filters.country
-            )
+            filtered = filtered.filter((creator) => creator.location?.country === filters.country)
         }
         if (sortBy) {
             const [sortField, sortOrder] = sortBy.split('-')
@@ -558,7 +540,7 @@ function CreatorsPageContent() {
         const paginatedData = filteredAndSortedCreators.slice(startIndex, endIndex)
         const newTotal = filteredAndSortedCreators.length
         const newTotalPages = Math.ceil(newTotal / ITEMS_PER_PAGE)
-        setPagination(prev => ({
+        setPagination((prev) => ({
             ...prev,
             total: newTotal,
             totalPages: newTotalPages
@@ -567,24 +549,24 @@ function CreatorsPageContent() {
     }, [filteredAndSortedCreators, pagination.page])
     const handleSearchChange = useCallback((searchTerm) => {
         setSearchInput(searchTerm)
-        setPagination(prev => ({ ...prev, page: 1 }))
+        setPagination((prev) => ({ ...prev, page: 1 }))
     }, [])
     const handleFilterChange = useCallback((filterType, value) => {
-        setFilters(prev => ({ ...prev, [filterType]: value }))
-        setPagination(prev => ({ ...prev, page: 1 }))
+        setFilters((prev) => ({ ...prev, [filterType]: value }))
+        setPagination((prev) => ({ ...prev, page: 1 }))
     }, [])
     const handleSortChange = useCallback((newSort) => {
         setSortBy(newSort)
-        setPagination(prev => ({ ...prev, page: 1 }))
+        setPagination((prev) => ({ ...prev, page: 1 }))
     }, [])
     const handlePageChange = useCallback((page) => {
-        setPagination(prev => ({ ...prev, page }))
+        setPagination((prev) => ({ ...prev, page }))
         window.scrollTo({ top: 0, behavior: 'smooth' })
     }, [])
     const clearFilters = useCallback(() => {
         setFilters({ niche: '', tool: '', country: '' })
         setSearchInput('')
-        setPagination(prev => ({ ...prev, page: 1 }))
+        setPagination((prev) => ({ ...prev, page: 1 }))
     }, [])
     const handleRetry = useCallback(() => {
         fetchCreators(true)
@@ -607,10 +589,16 @@ function CreatorsPageContent() {
                     creatorsCount={filteredAndSortedCreators.length}
                 />
                 {error ? (
-                    <ErrorState error={error} onRetry={handleRetry} />
+                    <ErrorState
+                        error={error}
+                        onRetry={handleRetry}
+                    />
                 ) : (
                     <>
-                        <CreatorsGrid creators={paginatedCreators} loading={loading} />
+                        <CreatorsGrid
+                            creators={paginatedCreators}
+                            loading={loading}
+                        />
                         <Pagination
                             currentPage={pagination.page}
                             totalPages={pagination.totalPages}

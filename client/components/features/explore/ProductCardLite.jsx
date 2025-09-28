@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Star, Heart, ShoppingCart, Eye, CheckCircle2, ExternalLink, TrendingUp } from 'lucide-react'
+import { Star, Heart, Eye, CheckCircle2 } from 'lucide-react'
 import { useState, memo, useEffect } from 'react'
 import Link from 'next/link'
 const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'grid' }) {

@@ -1,13 +1,13 @@
 'use client'
 import React from 'react'
 import { motion } from 'framer-motion'
-import { 
-    Cpu, 
-    Zap, 
-    Database, 
-    Clock, 
-    Target, 
-    Star, 
+import {
+    Cpu,
+    Zap,
+    Database,
+    Clock,
+    Target,
+    Star,
     TrendingUp,
     Shield,
     Layers,
@@ -65,19 +65,14 @@ export default function ProductSpecs({ product }) {
         }
     ]
 
-    console.log("PRODUCT IN SPECS",product);
     return (
         <div className="max-w-3xl mx-auto space-y-8">
-            <motion.div 
+            <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center space-y-3">
-                <h2 className="text-xl font-medium text-[#121212] dark:text-[#00FF89]">
-                    Technical Specifications
-                </h2>
-                <p className="text-base text-[#6b7280] dark:text-[#9ca3af]">
-                    Detailed technical information and performance metrics
-                </p>
+                <h2 className="text-xl font-medium text-[#121212] dark:text-[#00FF89]">Technical Specifications</h2>
+                <p className="text-base text-[#6b7280] dark:text-[#9ca3af]">Detailed technical information and performance metrics</p>
             </motion.div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {specs.map((spec, index) => {
@@ -94,12 +89,8 @@ export default function ProductSpecs({ product }) {
                                     <IconComponent className="w-5 h-5 text-[#00FF89]" />
                                 </div>
                                 <div className="flex-1">
-                                    <h3 className="font-medium text-[#121212] dark:text-[#00FF89] mb-1">
-                                        {spec.label}
-                                    </h3>
-                                    <p className="text-lg font-semibold text-[#6b7280] dark:text-[#9ca3af]">
-                                        {spec.value}
-                                    </p>
+                                    <h3 className="font-medium text-[#121212] dark:text-[#00FF89] mb-1">{spec.label}</h3>
+                                    <p className="text-lg font-semibold text-[#6b7280] dark:text-[#9ca3af]">{spec.value}</p>
                                 </div>
                             </div>
                         </motion.div>
@@ -112,36 +103,28 @@ export default function ProductSpecs({ product }) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.9 }}
                     className="space-y-4">
-                    <h3 className="text-lg font-medium text-[#121212] dark:text-[#00FF89]">
-                        Technologies Used
-                    </h3>
+                    <h3 className="text-lg font-medium text-[#121212] dark:text-[#00FF89]">Technologies Used</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {product.toolsUsed.map((tool, index) => (
-                            <motion.div
-                                key={index}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.1 * index + 1.0 }}
-                                className="bg-gray-50 dark:bg-[#1f1f1f] rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-[#1f1f1f]/80 transition-colors">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-[#00FF89]/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <span className="text-[#00FF89] font-semibold text-sm">
-                                            {tool.name?.charAt(0).toUpperCase() || 'T'}
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <div className="font-medium text-[#121212] dark:text-[#00FF89] text-sm">
-                                            {tool.name}
+                        {product.toolsUsed
+                            .sort((a, b) => a.name?.localeCompare(b.name) || 0)
+                            .map((tool, index) => (
+                                <motion.div
+                                    key={index}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.1 * index + 1.0 }}
+                                    className="bg-gray-50 dark:bg-[#1f1f1f] rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-[#1f1f1f]/80 transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 bg-[#00FF89]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <span className="text-[#00FF89] font-semibold text-sm">{tool.name?.charAt(0).toUpperCase() || 'T'}</span>
                                         </div>
-                                        {tool.model && (
-                                            <div className="text-xs text-[#6b7280] dark:text-[#9ca3af]">
-                                                {tool.model}
-                                            </div>
-                                        )}
+                                        <div>
+                                            <div className="font-medium text-[#121212] dark:text-[#00FF89] text-sm">{tool.name}</div>
+                                            {tool.model && <div className="text-xs text-[#6b7280] dark:text-[#9ca3af]">{tool.model}</div>}
+                                        </div>
                                     </div>
-                                </div>
-                            </motion.div>
-                        ))}
+                                </motion.div>
+                            ))}
                     </div>
                 </motion.div>
             )}
@@ -151,9 +134,7 @@ export default function ProductSpecs({ product }) {
                 transition={{ delay: 1.2 }}
                 className="bg-[#00FF89]/5 dark:bg-[#00FF89]/10 rounded-lg p-6 border border-[#00FF89]/20 dark:border-[#00FF89]/30">
                 <div className="text-center space-y-4">
-                    <h3 className="text-lg font-medium text-[#121212] dark:text-[#00FF89]">
-                        Product Statistics
-                    </h3>
+                    <h3 className="text-lg font-medium text-[#121212] dark:text-[#00FF89]">Product Statistics</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="text-center">
                             <div className="text-xl font-bold text-[#00FF89]">{product.views || 0}</div>
@@ -180,16 +161,14 @@ export default function ProductSpecs({ product }) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1.3 }}
                     className={`p-4 rounded-lg border ${
-                        product.isVerified 
+                        product.isVerified
                             ? 'bg-[#00FF89]/5 dark:bg-[#00FF89]/10 border-[#00FF89]/20 dark:border-[#00FF89]/30'
                             : 'bg-gray-50 dark:bg-[#1f1f1f] border-gray-200 dark:border-gray-700'
                     }`}>
                     <div className="flex items-center gap-3">
                         <Shield className={`w-5 h-5 ${product.isVerified ? 'text-[#00FF89]' : 'text-[#6b7280] dark:text-[#9ca3af]'}`} />
                         <div>
-                            <div className="font-medium text-[#121212] dark:text-[#00FF89] text-sm">
-                                Verification Status
-                            </div>
+                            <div className="font-medium text-[#121212] dark:text-[#00FF89] text-sm">Verification Status</div>
                             <div className="text-sm text-[#6b7280] dark:text-[#9ca3af]">
                                 {product.isVerified ? 'Verified Product' : 'Pending Verification'}
                             </div>
@@ -201,16 +180,14 @@ export default function ProductSpecs({ product }) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1.4 }}
                     className={`p-4 rounded-lg border ${
-                        product.isTested 
+                        product.isTested
                             ? 'bg-[#00FF89]/5 dark:bg-[#00FF89]/10 border-[#00FF89]/20 dark:border-[#00FF89]/30'
                             : 'bg-gray-50 dark:bg-[#1f1f1f] border-gray-200 dark:border-gray-700'
                     }`}>
                     <div className="flex items-center gap-3">
                         <Zap className={`w-5 h-5 ${product.isTested ? 'text-[#00FF89]' : 'text-[#6b7280] dark:text-[#9ca3af]'}`} />
                         <div>
-                            <div className="font-medium text-[#121212] dark:text-[#00FF89] text-sm">
-                                Testing Status
-                            </div>
+                            <div className="font-medium text-[#121212] dark:text-[#00FF89] text-sm">Testing Status</div>
                             <div className="text-sm text-[#6b7280] dark:text-[#9ca3af]">
                                 {product.isTested ? 'Fully Tested' : 'Testing in Progress'}
                             </div>
