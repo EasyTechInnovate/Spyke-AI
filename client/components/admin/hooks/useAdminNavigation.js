@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 
+
+
 // Custom hook for persisted state with localStorage
 export function usePersistedState(key, initialValue) {
   // Always start with initialValue to match server rendering
