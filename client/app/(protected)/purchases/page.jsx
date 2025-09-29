@@ -9,6 +9,7 @@ import Link from 'next/link'
 import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 import ImagePlaceholder from '@/components/shared/ui/ImagePlaceholder'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
+import { useRouter } from 'next/navigation'
 const typeIcons = {
     prompt: FileText,
     automation: Zap,
@@ -28,6 +29,8 @@ export default function PurchasesPage() {
         setTimeout(() => setNotification(null), 5000)
     }
     const clearNotification = () => setNotification(null)
+    const { isAuthenticated, loading: authLoading } = useAuth()
+    const router = useRouter()
     const { user } = useAuth()
     const [purchases, setPurchases] = useState([])
     const [loading, setLoading] = useState(true)
@@ -39,9 +42,18 @@ export default function PurchasesPage() {
     const [sort, setSort] = useState('recent')
     const [selected, setSelected] = useState(new Set())
     const [showMobileFilters, setShowMobileFilters] = useState(false)
+
+    // Ensure auth before loading purchases
     useEffect(() => {
+        if (authLoading) return
+        if (!isAuthenticated) {
+            router.push('/signin')
+            return
+        }
         loadPurchases()
-    }, [page, filter])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [page, filter, authLoading, isAuthenticated])
+
     const loadPurchases = async () => {
         setLoading(true)
         try {
@@ -576,3 +588,4 @@ function AnimatedNumber({ value = 0, duration = 800, formatter = (v) => Math.rou
     }, [value, duration])
     return <span>{formatter(display)}</span>
 }
+

@@ -114,13 +114,6 @@ router.post(
 )
 
 router.post(
-  '/confirm-stripe-payment',
-  authenticate,
-  rateLimiter,
-  purchaseController.confirmStripePayment
-)
-
-router.post(
   '/stripe/webhook',
   purchaseController.handleStripeWebhook
 )

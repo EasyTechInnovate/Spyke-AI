@@ -411,8 +411,10 @@ export default {
             }
 
             const validProductIds = products.map(p => p._id)
-            const categories = [...new Set(products.map(p => p.category))]
-            const industries = [...new Set(products.map(p => p.industry))]
+            const categories = [...new Set(products.map(p => p.category).filter(Boolean))]
+            const industries = [...new Set(products.map(p => p.industry).filter(Boolean))]
+            const categoryStrings = categories.map(c => c.toString())
+            const industryStrings = industries.map(i => i.toString())
 
             const query = {
                 isActive: true,
@@ -422,8 +424,8 @@ export default {
                 $or: [
                     { isGlobal: true },
                     { applicableProducts: { $in: validProductIds } },
-                    { applicableCategories: { $in: categories } },
-                    { applicableIndustries: { $in: industries } }
+                    { applicableCategories: { $in: categoryStrings } },
+                    { applicableIndustries: { $in: industryStrings } }
                 ]
             }
 
@@ -451,14 +453,14 @@ export default {
                     }
                 } else if (promo.applicableCategories && promo.applicableCategories.length > 0) {
                     const applicableToCategories = promo.applicableCategories.some(cat =>
-                        categories.includes(cat)
+                        categoryStrings.includes(cat.toString())
                     )
                     if (applicableToCategories) {
                         categorizedPromocodes.categorySpecific.push(promo)
                     }
                 } else if (promo.applicableIndustries && promo.applicableIndustries.length > 0) {
                     const applicableToIndustries = promo.applicableIndustries.some(ind =>
-                        industries.includes(ind)
+                        industryStrings.includes(ind.toString())
                     )
                     if (applicableToIndustries) {
                         categorizedPromocodes.industrySpecific.push(promo)

@@ -333,7 +333,15 @@ export default function ContactUsPage() {
                                         className="w-full px-4 py-3 bg-[#121212] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89] focus:border-transparent"
                                     >
                                         {subjectOptions.map(option => (
-                                            <option key={option.value} value={option.value}>
+                                            <option
+                                                key={option.value}
+                                                value={option.value}
+                                                className="bg-[#1a1a1a] text-white"
+                                                style={{
+                                                    backgroundColor: '#1a1a1a',
+                                                    color: 'white'
+                                                }}
+                                            >
                                                 {option.label}
                                             </option>
                                         ))}

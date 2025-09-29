@@ -40,6 +40,24 @@ export default function PurchasedProductPage() {
     const productSlug = params.productId
     const { isAuthenticated, loading: authLoading } = useAuth()
 
+    // Safely format labels that may be strings, objects with name, or arrays
+    const formatLabel = useCallback((val) => {
+        if (!val) return ''
+        if (typeof val === 'string') return val.replace(/_/g, ' ')
+        if (Array.isArray(val)) {
+            return val
+                .map((v) => (typeof v === 'string' ? v : v?.name || ''))
+                .filter(Boolean)
+                .join(', ')
+                .replace(/_/g, ' ')
+        }
+        if (typeof val === 'object') {
+            const name = val.name ?? ''
+            return String(name).replace(/_/g, ' ')
+        }
+        return String(val)
+    }, [])
+
     const addNotification = useCallback((message, type = 'info') => {
         const id = Date.now() + Math.random()
         const newNotification = { id, message, type }
@@ -263,10 +281,10 @@ export default function PurchasedProductPage() {
                                             <div>
                                                 <div className="flex flex-wrap items-center gap-2 lg:gap-3 mb-3 lg:mb-4">
                                                     <span className="px-2 py-1 lg:px-3 bg-black/10 text-white border border-black/20 rounded-lg text-xs lg:text-sm font-medium capitalize">
-                                                        {product.category?.name || product.category?.replace('_', ' ') || 'General'}
+                                                        {formatLabel(product.category) || 'General'}
                                                     </span>
                                                     <span className="px-2 py-1 lg:px-3 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-lg text-xs lg:text-sm font-medium capitalize">
-                                                        {product.industry?.name || product.industry?.replace('_', ' ') || 'General'}
+                                                        {formatLabel(product.industry) || 'General'}
                                                     </span>
                                                 </div>
                                                 <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-3 lg:mb-4 leading-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
@@ -383,7 +401,7 @@ export default function PurchasedProductPage() {
                                                     </div>
                                                     <p className="text-slate-300">
                                                         Estimated setup time:{' '}
-                                                        <span className="font-semibold text-white">{product.setupTime.replace('_', ' ')}</span>
+                                                        <span className="font-semibold text-white">{formatLabel(product.setupTime)}</span>
                                                     </p>
                                                 </div>
                                             )}
@@ -448,7 +466,7 @@ export default function PurchasedProductPage() {
                                                 <div className="p-4 bg-slate-700/30 rounded-xl border border-slate-600/30">
                                                     <div className="text-slate-400 text-sm mb-1">Industry</div>
                                                     <div className="text-white font-semibold capitalize">
-                                                        {product.industry?.replace('_', ' ') || 'General'}
+                                                        {formatLabel(product.industry) || 'General'}
                                                     </div>
                                                 </div>
                                                 <div className="p-4 bg-slate-700/30 rounded-xl border border-slate-600/30">

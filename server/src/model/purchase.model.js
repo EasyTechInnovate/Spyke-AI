@@ -73,7 +73,6 @@ const purchaseSchema = new mongoose.Schema(
         paymentMethod: String,
         paymentReference: String,
         transactionId: String,
-        stripePaymentIntentId: String,
         
         purchaseDate: {
             type: Date,

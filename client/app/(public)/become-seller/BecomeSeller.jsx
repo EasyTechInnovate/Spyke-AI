@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react'
-import { Check } from 'lucide-react'
+import { Check, User, Store, Package, Settings, LogOut, ArrowRight } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
 import {
     MultiStepForm,
@@ -17,7 +17,6 @@ import Notification from '@/components/shared/Notification'
 import { formSteps, formFields, countries, timezones, popularNiches, popularTools } from '@/lib/config/forms/SellerFormConfig'
 import { logoutService } from '@/lib/services/logout'
 import { useRouter } from 'next/navigation'
-
 export default function BecomeSellerPage() {
     const {
         formData,
@@ -38,9 +37,7 @@ export default function BecomeSellerPage() {
         validateStep,
         handleSubmit
     } = useSellerForm()
-
     const router = useRouter()
-
     const [showValidationError, setShowValidationError] = useState(false)
     const handleFormSubmit = async (data) => {
         const isValid = validateStep(3)
@@ -51,17 +48,13 @@ export default function BecomeSellerPage() {
         setShowValidationError(false)
         await handleSubmit(data)
     }
-
     const handleLogoutAndRedirect = async () => {
         try {
-            await logoutService.logout()
-            window.location.href = '/signin'
-        } catch (error) {
-            console.error('Logout failed:', error)
-            window.location.href = '/signin'
+            logoutService.logout().catch(() => {})
+        } finally {
+            router.push('/signin')
         }
     }
-
     const SellerBannerUpload = ({ ...props }) => {
         return (
             <ImageUpload
@@ -71,7 +64,99 @@ export default function BecomeSellerPage() {
             />
         )
     }
-
+    function SellerModeVisualGuide() {
+        return (
+            <div className="pointer-events-none select-none max-w-3xl mx-auto">
+                <div className="relative bg-[#0a0f14] border border-gray-800/60 rounded-2xl shadow-xl overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3">
+                        <div className="flex items-center gap-3">
+                            <div className="h-7 w-7 rounded-md bg-emerald-500" />
+                            <div className="hidden md:flex items-center gap-3 opacity-60">
+                                <div className="h-3 w-16 rounded bg-gray-800" />
+                                <div className="h-3 w-14 rounded bg-gray-800" />
+                                <div className="h-3 w-20 rounded bg-gray-800" />
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="h-9 w-9 rounded-lg bg-gray-800" />
+                            <div className="h-9 w-9 rounded-lg bg-gray-800" />
+                            <div className="h-9 w-9 rounded-lg bg-gray-800 relative">
+                                <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-[10px] font-bold flex items-center justify-center">
+                                    8
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 rounded-2xl border border-emerald-400/60 p-1 pr-2 bg-[#0c131a]">
+                                <div className="flex items-center gap-1 rounded-xl bg-emerald-500/10 px-3 py-1">
+                                    <User className="h-4 w-4 text-emerald-400" />
+                                    <span className="text-sm text-emerald-400 font-medium">Buyer</span>
+                                </div>
+                                <div className="h-9 w-9 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400" />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="absolute right-4 top-16 w-[360px] rounded-2xl border border-gray-800 bg-[#0b1117] shadow-2xl">
+                        <div className="flex items-center gap-3 px-5 py-4">
+                            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 flex items-center justify-center text-black font-bold">
+                                A
+                            </div>
+                            <div>
+                                <div className="text-white font-semibold leading-tight">seller</div>
+                                <div className="text-gray-400 text-sm">anandseller1@gmail.com</div>
+                            </div>
+                        </div>
+                        <div className="h-px bg-gray-800" />
+                        <div className="px-5 py-3">
+                            <div className="text-[11px] uppercase tracking-wider text-gray-400 mb-2">Switch Mode</div>
+                            <div className="flex items-center gap-3">
+                                <div className="flex-1 flex items-center gap-2 rounded-xl bg-emerald-500 text-black px-4 py-2 shadow-inner">
+                                    <User className="h-4 w-4" />
+                                    <span className="text-sm font-semibold">Buy Mode</span>
+                                </div>
+                                <div className="relative flex-1">
+                                    <div className="flex items-center gap-2 rounded-xl bg-gray-800/70 px-4 py-2 border border-emerald-400/40">
+                                        <Store className="h-4 w-4 text-gray-300" />
+                                        <span className="text-sm text-gray-200">Sell Mode</span>
+                                    </div>
+                                    <ArrowRight className="absolute -left-10 top-1/2 -translate-y-1/2 h-12 w-12 text-red-500 drop-shadow-[0_0_12px_rgba(239,68,68,0.8)] animate-bounce" />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="h-px bg-gray-800" />
+                        <div className="px-5 py-3 space-y-2">
+                            <div className="flex items-center gap-3 text-gray-300">
+                                <div className="h-9 w-9 rounded-lg bg-gray-800/80 flex items-center justify-center">
+                                    <Package className="h-4 w-4 text-gray-400" />
+                                </div>
+                                <span className="text-[15px]">My Purchases</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-gray-300">
+                                <div className="h-9 w-9 rounded-lg bg-gray-800/80 flex items-center justify-center">
+                                    <User className="h-4 w-4 text-gray-400" />
+                                </div>
+                                <span className="text-[15px]">Profile</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-gray-300">
+                                <div className="h-9 w-9 rounded-lg bg-gray-800/80 flex items-center justify-center">
+                                    <Settings className="h-4 w-4 text-gray-400" />
+                                </div>
+                                <span className="text-[15px]">Settings</span>
+                            </div>
+                        </div>
+                        <div className="h-px bg-gray-800" />
+                        <div className="px-5 py-3">
+                            <div className="flex items-center gap-3 text-gray-300">
+                                <div className="h-9 w-9 rounded-lg bg-gray-800/80 flex items-center justify-center">
+                                    <LogOut className="h-4 w-4 text-gray-400" />
+                                </div>
+                                <span className="text-[15px]">Log out</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="h-64" />
+                </div>
+            </div>
+        )
+    }
     const renderStepContent = ({ currentStep }) => {
         switch (currentStep) {
             case 1:
@@ -314,7 +399,6 @@ export default function BecomeSellerPage() {
                 return null
         }
     }
-
     return (
         <>
             <section className="relative bg-black pt-24 pb-16">
@@ -369,42 +453,40 @@ export default function BecomeSellerPage() {
                             onClick={() => setShowValidationError(false)}
                         />
                     )}
-
-                    {!isSuccess ? (
-                        <MultiStepForm
-                            steps={formSteps}
-                            formData={formData}
-                            onSubmit={handleFormSubmit}
-                            errors={errors}
-                            loading={loading}
-                            submitError={submitError}
-                            validateStep={validateStep}
-                            submitButtonText="Create Seller Profile"
-                            submitButtonIcon={<Check className="w-5 h-5" />}
-                            compactStepIndicator={false}
-                            imageUploading={imageUploading}>
-                            {renderStepContent}
-                        </MultiStepForm>
-                    ) : (
-                        <div className="text-center py-20">
-                            <div className="max-w-2xl mx-auto">
-                                <h2 className="text-4xl font-kumbh-sans font-bold text-white mb-6">🎉 Seller Profile Created Successfully!</h2>
-                                <p className="text-xl text-gray-300 mb-8">Your seller profile has been submitted for review.</p>
-                                <div className="bg-brand-primary/10 p-6 rounded-2xl border border-brand-primary/30 mb-6">
-                                    <h3 className="text-lg font-semibold text-brand-primary mb-2">Next Steps:</h3>
-                                    <p className="text-gray-200">
-                                        Please <span className="font-bold text-brand-primary underline decoration-2">relogin</span> and visit your
-                                        seller profile to start selling!
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={handleLogoutAndRedirect}
-                                    className="bg-brand-primary hover:bg-brand-primary/90 text-black font-semibold py-3 px-8 rounded-xl transition-all duration-200 transform hover:scale-105">
-                                    🚀 Ready to Start Selling? Sign In Again!
-                                </button>
+                    <MultiStepForm
+                        steps={formSteps}
+                        formData={formData}
+                        onSubmit={handleFormSubmit}
+                        errors={errors}
+                        loading={loading}
+                        submitError={submitError}
+                        validateStep={validateStep}
+                        submitButtonText="Create Seller Profile"
+                        submitButtonIcon={<Check className="w-5 h-5" />}
+                        compactStepIndicator={false}
+                        imageUploading={imageUploading}>
+                        {renderStepContent}
+                    </MultiStepForm>
+                    <div className="text-center py-20">
+                        <div className="max-w-2xl mx-auto">
+                            <h2 className="text-4xl font-kumbh-sans font-bold text-white mb-6">🎉 Seller Profile Created Successfully!</h2>
+                            <p className="text-xl text-gray-300 mb-8">Your seller profile has been submitted for review.</p>
+                            <div className="bg-brand-primary/10 p-6 rounded-2xl border border-brand-primary/30 mb-6">
+                                <h3 className="text-lg font-semibold text-brand-primary mb-2">Next Steps:</h3>
+                                <p className="text-gray-200">
+                                    Please <span className="font-bold text-brand-primary underline decoration-2">relogin</span> and visit your seller
+                                    profile to start selling!
+                                </p>
                             </div>
+                            <SellerModeVisualGuide />
+                            <button
+                                type="button"
+                                onClick={handleLogoutAndRedirect}
+                                className="bg-brand-primary hover:bg-brand-primary/90 text-black font-semibold py-3 px-8 rounded-xl transition-all duration-200 transform hover:scale-105">
+                                🚀 Ready to Start Selling? Sign In Again!
+                            </button>
                         </div>
-                    )}
+                    </div>
                 </Container>
             </section>
         </>

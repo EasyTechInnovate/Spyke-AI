@@ -278,7 +278,7 @@ export default function EmailConfirmPage({ token, code }) {
                                 <p className="text-gray-400 text-sm">
                                     Need help?{' '}
                                     <Link
-                                        href="/support"
+                                        href="/contactus"
                                         className="text-[#00FF89] hover:underline font-medium">
                                         Contact Support
                                     </Link>{' '}

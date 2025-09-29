@@ -192,11 +192,21 @@ promocodeSchema.methods.isApplicableToCategories = function (categories) {
     if (this.isGlobal) return true
     
     if (this.applicableCategories.length > 0) {
-        return categories.some(category => 
-            this.applicableCategories.includes(category)
-        )
+        const categoryStrings = (categories || []).map(c => c?.toString())
+        return this.applicableCategories.some(cat => categoryStrings.includes(cat.toString()))
     }
     
+    return true
+}
+
+promocodeSchema.methods.isApplicableToIndustries = function (industries) {
+    if (this.isGlobal) return true
+
+    if (this.applicableIndustries.length > 0) {
+        const industryStrings = (industries || []).map(i => i?.toString())
+        return this.applicableIndustries.some(ind => industryStrings.includes(ind.toString()))
+    }
+
     return true
 }
 

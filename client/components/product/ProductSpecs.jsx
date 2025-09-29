@@ -1,27 +1,11 @@
 'use client'
 import React from 'react'
 import { motion } from 'framer-motion'
-import {
-    Cpu,
-    Zap,
-    Database,
-    Clock,
-    Target,
-    Star,
-    TrendingUp,
-    Shield,
-    Layers,
-    Sparkles,
-    Info,
-    Eye,
-    Heart,
-    ThumbsUp,
-    Package,
-    Users,
-    Calendar
-} from 'lucide-react'
+import { Cpu, Zap, Database, Clock, Target, Star, TrendingUp, Shield, Layers, Sparkles, Eye, Package, Users, Calendar } from 'lucide-react'
+
 export default function ProductSpecs({ product }) {
     if (!product) return null
+
     const specs = [
         {
             label: 'Product Type',
@@ -65,16 +49,42 @@ export default function ProductSpecs({ product }) {
         }
     ]
 
+    const statusItems = [
+        {
+            label: 'Verification Status',
+            value: product.isVerified ? 'Verified' : 'Pending',
+            icon: Shield,
+            active: product.isVerified
+        },
+        {
+            label: 'Testing Status',
+            value: product.isTested ? 'Tested' : 'In Progress',
+            icon: Zap,
+            active: product.isTested
+        }
+    ]
+
     return (
-        <div className="max-w-3xl mx-auto space-y-8">
+        <div className="w-full space-y-12">
+            {/* Header */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-center space-y-3">
-                <h2 className="text-xl font-medium text-[#121212] dark:text-[#00FF89]">Technical Specifications</h2>
-                <p className="text-base text-[#6b7280] dark:text-[#9ca3af]">Detailed technical information and performance metrics</p>
+                className="text-center space-y-4">
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-white via-green-100 to-green-200 bg-clip-text text-transparent">
+                    Technical Specifications
+                </h2>
+                <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed">
+                    Detailed technical information and performance metrics for this product
+                </p>
             </motion.div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            {/* Main Specs Grid */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {specs.map((spec, index) => {
                     const IconComponent = spec.icon
                     return (
@@ -82,45 +92,61 @@ export default function ProductSpecs({ product }) {
                             key={index}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.1 + 0.1 }}
-                            className="bg-gray-50 dark:bg-[#1f1f1f] rounded-lg p-6 hover:bg-gray-100 dark:hover:bg-[#1f1f1f]/80 transition-colors">
-                            <div className="flex items-start gap-4">
-                                <div className="flex-shrink-0 w-10 h-10 bg-[#00FF89]/10 rounded-lg flex items-center justify-center">
-                                    <IconComponent className="w-5 h-5 text-[#00FF89]" />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="font-medium text-[#121212] dark:text-[#00FF89] mb-1">{spec.label}</h3>
-                                    <p className="text-lg font-semibold text-[#6b7280] dark:text-[#9ca3af]">{spec.value}</p>
+                            transition={{ delay: index * 0.05 + 0.2 }}
+                            className="group relative">
+                            <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                            <div className="relative p-6 rounded-2xl bg-black/90 border border-green-500/20 backdrop-blur-sm hover:border-green-400/40 transition-all duration-300 shadow-xl">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-900/50 to-black border border-green-500/30 flex items-center justify-center group-hover:from-green-800/60 group-hover:border-green-400/50 transition-all duration-300 shadow-lg">
+                                        <IconComponent className="w-6 h-6 text-green-400 group-hover:text-green-300 transition-colors duration-300" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-gray-400 mb-2">{spec.label}</p>
+                                        <p className="text-lg font-semibold text-white truncate">{spec.value}</p>
+                                    </div>
                                 </div>
                             </div>
                         </motion.div>
                     )
                 })}
-            </div>
+            </motion.div>
+
+            {/* Technologies Section */}
             {product.toolsUsed && product.toolsUsed.length > 0 && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.9 }}
-                    className="space-y-4">
-                    <h3 className="text-lg font-medium text-[#121212] dark:text-[#00FF89]">Technologies Used</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    transition={{ delay: 0.4 }}
+                    className="space-y-8">
+                    <div className="text-center">
+                        <h3 className="text-2xl font-bold bg-gradient-to-r from-white via-green-100 to-green-200 bg-clip-text text-transparent mb-2">
+                            Technologies Used
+                        </h3>
+                        <p className="text-gray-400 leading-relaxed">Built with modern tools and frameworks for optimal performance</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {product.toolsUsed
                             .sort((a, b) => a.name?.localeCompare(b.name) || 0)
                             .map((tool, index) => (
                                 <motion.div
                                     key={index}
-                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ delay: 0.1 * index + 1.0 }}
-                                    className="bg-gray-50 dark:bg-[#1f1f1f] rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-[#1f1f1f]/80 transition-colors">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 bg-[#00FF89]/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                                            <span className="text-[#00FF89] font-semibold text-sm">{tool.name?.charAt(0).toUpperCase() || 'T'}</span>
-                                        </div>
-                                        <div>
-                                            <div className="font-medium text-[#121212] dark:text-[#00FF89] text-sm">{tool.name}</div>
-                                            {tool.model && <div className="text-xs text-[#6b7280] dark:text-[#9ca3af]">{tool.model}</div>}
+                                    transition={{ delay: 0.05 * index + 0.5 }}
+                                    className="group relative">
+                                    <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                                    <div className="relative p-4 rounded-xl bg-black/90 border border-green-500/20 backdrop-blur-sm hover:border-green-400/40 transition-all duration-300 shadow-xl">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-900/50 to-black border border-green-500/30 flex items-center justify-center group-hover:from-green-800/60 group-hover:border-green-400/50 transition-all duration-300 shadow-lg">
+                                                <span className="text-sm font-semibold text-green-400 group-hover:text-green-300 transition-colors duration-300">
+                                                    {tool.name?.charAt(0).toUpperCase() || 'T'}
+                                                </span>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-semibold text-white text-sm truncate">{tool.name}</div>
+                                                {tool.model && <div className="text-xs text-gray-400 truncate">{tool.model}</div>}
+                                            </div>
                                         </div>
                                     </div>
                                 </motion.div>
@@ -128,73 +154,67 @@ export default function ProductSpecs({ product }) {
                     </div>
                 </motion.div>
             )}
+
+            {/* Status Section */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.2 }}
-                className="bg-[#00FF89]/5 dark:bg-[#00FF89]/10 rounded-lg p-6 border border-[#00FF89]/20 dark:border-[#00FF89]/30">
-                <div className="text-center space-y-4">
-                    <h3 className="text-lg font-medium text-[#121212] dark:text-[#00FF89]">Product Statistics</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="text-center">
-                            <div className="text-xl font-bold text-[#00FF89]">{product.views || 0}</div>
-                            <div className="text-sm text-[#6b7280] dark:text-[#9ca3af]">Views</div>
-                        </div>
-                        <div className="text-center">
-                            <div className="text-xl font-bold text-[#00FF89]">{product.sales || 0}</div>
-                            <div className="text-sm text-[#6b7280] dark:text-[#9ca3af]">Sales</div>
-                        </div>
-                        <div className="text-center">
-                            <div className="text-xl font-bold text-[#00FF89]">{product.upvotes || 0}</div>
-                            <div className="text-sm text-[#6b7280] dark:text-[#9ca3af]">Upvotes</div>
-                        </div>
-                        <div className="text-center">
-                            <div className="text-xl font-bold text-[#00FF89]">{product.favorites || 0}</div>
-                            <div className="text-sm text-[#6b7280] dark:text-[#9ca3af]">Favorites</div>
-                        </div>
-                    </div>
+                transition={{ delay: 0.6 }}
+                className="space-y-6">
+                <div className="text-center">
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-white via-green-100 to-green-200 bg-clip-text text-transparent mb-2">
+                        Product Status
+                    </h3>
+                    <p className="text-gray-400 leading-relaxed">Current verification and testing status</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {statusItems.map((item, index) => {
+                        const IconComponent = item.icon
+                        return (
+                            <motion.div
+                                key={index}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.65 + index * 0.1 }}
+                                className="group relative">
+                                <div
+                                    className={`absolute inset-0 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500 ${
+                                        item.active
+                                            ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20'
+                                            : 'bg-gradient-to-r from-green-500/10 to-emerald-500/10'
+                                    }`}></div>
+                                <div
+                                    className={`relative p-6 rounded-2xl border backdrop-blur-sm transition-all duration-300 shadow-xl ${
+                                        item.active
+                                            ? 'bg-black/95 border-green-400/40 hover:border-green-300/60'
+                                            : 'bg-black/90 border-green-500/20 hover:border-green-400/40'
+                                    }`}>
+                                    <div className="flex items-center gap-4">
+                                        <div
+                                            className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 shadow-lg ${
+                                                item.active
+                                                    ? 'bg-gradient-to-br from-green-600/80 to-green-800/80 border border-green-400/50 group-hover:from-green-500/90 group-hover:to-green-700/90'
+                                                    : 'bg-gradient-to-br from-green-900/50 to-black border border-green-500/30 group-hover:from-green-800/60 group-hover:border-green-400/50'
+                                            }`}>
+                                            <IconComponent
+                                                className={`w-6 h-6 transition-colors duration-300 ${
+                                                    item.active ? 'text-white' : 'text-green-400 group-hover:text-green-300'
+                                                }`}
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-sm font-medium text-gray-400 mb-2">{item.label}</p>
+                                            <p className={`text-lg font-semibold ${item.active ? 'text-green-300' : 'text-white'}`}>{item.value}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )
+                    })}
                 </div>
             </motion.div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.3 }}
-                    className={`p-4 rounded-lg border ${
-                        product.isVerified
-                            ? 'bg-[#00FF89]/5 dark:bg-[#00FF89]/10 border-[#00FF89]/20 dark:border-[#00FF89]/30'
-                            : 'bg-gray-50 dark:bg-[#1f1f1f] border-gray-200 dark:border-gray-700'
-                    }`}>
-                    <div className="flex items-center gap-3">
-                        <Shield className={`w-5 h-5 ${product.isVerified ? 'text-[#00FF89]' : 'text-[#6b7280] dark:text-[#9ca3af]'}`} />
-                        <div>
-                            <div className="font-medium text-[#121212] dark:text-[#00FF89] text-sm">Verification Status</div>
-                            <div className="text-sm text-[#6b7280] dark:text-[#9ca3af]">
-                                {product.isVerified ? 'Verified Product' : 'Pending Verification'}
-                            </div>
-                        </div>
-                    </div>
-                </motion.div>
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.4 }}
-                    className={`p-4 rounded-lg border ${
-                        product.isTested
-                            ? 'bg-[#00FF89]/5 dark:bg-[#00FF89]/10 border-[#00FF89]/20 dark:border-[#00FF89]/30'
-                            : 'bg-gray-50 dark:bg-[#1f1f1f] border-gray-200 dark:border-gray-700'
-                    }`}>
-                    <div className="flex items-center gap-3">
-                        <Zap className={`w-5 h-5 ${product.isTested ? 'text-[#00FF89]' : 'text-[#6b7280] dark:text-[#9ca3af]'}`} />
-                        <div>
-                            <div className="font-medium text-[#121212] dark:text-[#00FF89] text-sm">Testing Status</div>
-                            <div className="text-sm text-[#6b7280] dark:text-[#9ca3af]">
-                                {product.isTested ? 'Fully Tested' : 'Testing in Progress'}
-                            </div>
-                        </div>
-                    </div>
-                </motion.div>
-            </div>
         </div>
     )
 }
+

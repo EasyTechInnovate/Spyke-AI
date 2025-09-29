@@ -707,7 +707,7 @@ export default function ProductPage() {
                                                 className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
                                                     isActive
                                                         ? 'bg-[#00FF89]/10 text-[#00FF89]'
-                                                        : 'bg-gray-100 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
+                                                        : 'bg-black-100 dark:bg-black-800/50 text-black-600 dark:text-black-400 hover:bg-black-200 dark:hover:bg-black-800'
                                                 }`}>
                                                 <IconComponent className="w-4 h-4" />
                                                 <span className="text-sm font-medium">{tab.label}</span>
@@ -715,7 +715,7 @@ export default function ProductPage() {
                                         )
                                     })}
                                 </div>
-                                <div className="bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+                                <div className="bg-black dark:bg-black-800/50 rounded-xl">
                                     <AnimatePresence mode="wait">
                                         <motion.div
                                             key={activeTab}
@@ -730,13 +730,13 @@ export default function ProductPage() {
                                                 if (!ComponentToRender) {
                                                     return (
                                                         <div className="text-center py-12">
-                                                            <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                                                                <Package className="w-6 h-6 text-gray-400" />
+                                                            <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-black-100 dark:bg-black-800 flex items-center justify-center">
+                                                                <Package className="w-6 h-6 text-black-400" />
                                                             </div>
-                                                            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                                                            <h3 className="text-lg font-medium text-black-900 dark:text-white mb-2">
                                                                 Content Coming Soon
                                                             </h3>
-                                                            <p className="text-gray-600 dark:text-gray-400">This section will be available soon.</p>
+                                                            <p className="text-black-600 dark:text-black-400">This section will be available soon.</p>
                                                         </div>
                                                     )
                                                 }
@@ -756,54 +756,101 @@ export default function ProductPage() {
                             </div>
                             <div className="hidden lg:flex gap-12">
                                 <div className="w-64 flex-shrink-0">
-                                    <div className="sticky top-24 space-y-2">
-                                        <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-6">Product Information</h3>
-                                        <nav className="space-y-1">
-                                            {PRODUCT_TABS.map((tab) => {
-                                                const IconComponent = tab.icon
-                                                const isActive = activeTab === tab.id
-                                                return (
-                                                    <button
-                                                        key={tab.id}
-                                                        onClick={() => setActiveTab(tab.id)}
-                                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left ${
-                                                            isActive
-                                                                ? 'bg-[#00FF89]/10 text-[#00FF89]'
-                                                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-white'
-                                                        }`}>
-                                                        <IconComponent className="w-5 h-5" />
-                                                        <div>
-                                                            <div className="font-medium text-base">{tab.label}</div>
-                                                            <div className="text-sm opacity-75 mt-0.5">{tab.description}</div>
-                                                        </div>
-                                                    </button>
-                                                )
-                                            })}
-                                        </nav>
-                                        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                                            <div className="grid grid-cols-1 gap-3">
-                                                <div className="text-center py-2">
-                                                    <div className="text-xl font-semibold text-[#00FF89]">
-                                                        {product?.averageRating?.toFixed(1) || '5.0'}
+                                    <div className="sticky top-24 space-y-6">
+                                        <div className="relative bg-black overflow-hidden rounded-2xl">
+                                            <div className="absolute inset-0">
+                                                <div className="absolute inset-0 bg-black" />
+                                                <motion.div
+                                                    animate={{
+                                                        rotate: [0, 360],
+                                                        scale: [1, 1.1, 1]
+                                                    }}
+                                                    transition={{
+                                                        duration: 30,
+                                                        repeat: Infinity,
+                                                        ease: 'linear'
+                                                    }}
+                                                    className="absolute top-1/4 right-1/4 w-32 h-32 bg-[#00FF89]/5 rounded-full blur-2xl"
+                                                />
+                                            </div>
+
+                                            <div className="relative z-10 p-6">
+                                                <div className="text-center mb-6">
+                                                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#00FF89]/10 border border-[#00FF89]/30 rounded-full mb-3">
+                                                        <Package className="w-4 h-4 text-[#00FF89]" />
+                                                        <span className="text-[#00FF89] font-medium text-sm">Product Information</span>
                                                     </div>
-                                                    <div className="text-sm text-gray-500 dark:text-gray-400">Rating</div>
+                                                    <h3 className="text-lg font-bold text-white">Navigate Sections</h3>
                                                 </div>
-                                                <div className="text-center py-2">
-                                                    <div className="text-xl font-semibold text-gray-700 dark:text-gray-300">
-                                                        {product?.views || 0}
-                                                    </div>
-                                                    <div className="text-sm text-gray-500 dark:text-gray-400">Views</div>
-                                                </div>
-                                                <div className="text-center py-2">
-                                                    <div className="text-xl font-semibold text-[#00FF89]">{product?.sales || 0}</div>
-                                                    <div className="text-sm text-gray-500 dark:text-gray-400">Sales</div>
-                                                </div>
+
+                                                <nav className="space-y-2">
+                                                    {PRODUCT_TABS.map((tab, index) => {
+                                                        const IconComponent = tab.icon
+                                                        const isActive = activeTab === tab.id
+                                                        return (
+                                                            <motion.button
+                                                                key={tab.id}
+                                                                initial={{ opacity: 0, x: -20 }}
+                                                                animate={{ opacity: 1, x: 0 }}
+                                                                transition={{ delay: index * 0.05 }}
+                                                                onClick={() => setActiveTab(tab.id)}
+                                                                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all group ${
+                                                                    isActive
+                                                                        ? 'bg-[#00FF89]/10 text-[#00FF89] border border-[#00FF89]/30'
+                                                                        : 'text-black-400 hover:bg-black-800/50 hover:text-white border border-transparent'
+                                                                }`}>
+                                                                <div
+                                                                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
+                                                                        isActive ? 'bg-[#00FF89]/20' : 'bg-black-800/50 group-hover:bg-[#00FF89]/10'
+                                                                    }`}>
+                                                                    <IconComponent
+                                                                        className={`w-5 h-5 transition-colors ${
+                                                                            isActive ? 'text-[#00FF89]' : 'text-black-400 group-hover:text-[#00FF89]'
+                                                                        }`}
+                                                                    />
+                                                                </div>
+                                                                <div className="text-left flex-1">
+                                                                    <div
+                                                                        className={`font-semibold text-sm transition-colors ${
+                                                                            isActive ? 'text-[#00FF89]' : 'text-white group-hover:text-[#00FF89]'
+                                                                        }`}>
+                                                                        {tab.label}
+                                                                    </div>
+                                                                    <div
+                                                                        className={`text-xs mt-0.5 transition-colors ${
+                                                                            isActive ? 'text-[#00FF89]/70' : 'text-black-500'
+                                                                        }`}>
+                                                                        {tab.description}
+                                                                    </div>
+                                                                </div>
+                                                            </motion.button>
+                                                        )
+                                                    })}
+                                                </nav>
+                                            </div>
+                                        </div>
+
+                                        <div className="relative bg-black overflow-hidden rounded-2xl">
+                                            <div className="absolute inset-0">
+                                                <div className="absolute inset-0 bg-black" />
+                                                <motion.div
+                                                    animate={{
+                                                        rotate: [360, 0],
+                                                        scale: [1, 1.2, 1]
+                                                    }}
+                                                    transition={{
+                                                        duration: 25,
+                                                        repeat: Infinity,
+                                                        ease: 'linear'
+                                                    }}
+                                                    className="absolute bottom-1/4 left-1/4 w-24 h-24 bg-[#00FF89]/3 rounded-full blur-2xl"
+                                                />
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+                                    <div className="bg-black dark:bg-black-800/50 rounded-xl">
                                         <AnimatePresence mode="wait">
                                             <motion.div
                                                 key={activeTab}
@@ -818,13 +865,13 @@ export default function ProductPage() {
                                                     if (!ComponentToRender) {
                                                         return (
                                                             <div className="text-center py-12">
-                                                                <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                                                                    <Package className="w-6 h-6 text-gray-400" />
+                                                                <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-black-100 dark:bg-black-800 flex items-center justify-center">
+                                                                    <Package className="w-6 h-6 text-black-400" />
                                                                 </div>
-                                                                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                                                                <h3 className="text-lg font-medium text-black-900 dark:text-white mb-2">
                                                                     Content Coming Soon
                                                                 </h3>
-                                                                <p className="text-gray-600 dark:text-gray-400">
+                                                                <p className="text-black-600 dark:text-black-400">
                                                                     This section will be available soon.
                                                                 </p>
                                                             </div>
@@ -854,11 +901,11 @@ export default function ProductPage() {
                             initial={{ y: 100, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             exit={{ y: 100, opacity: 0 }}
-                            className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-r from-gray-900/95 to-gray-800/95 backdrop-blur-xl border-t border-gray-700/50 shadow-2xl">
+                            className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-r from-black-900/95 to-black-800/95 backdrop-blur-xl border-t border-black-700/50 shadow-2xl">
                             <div className="max-w-7xl mx-auto px-4 py-4">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-800">
+                                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-black-800">
                                             {product?.thumbnail ? (
                                                 <img
                                                     src={product.thumbnail}
@@ -920,3 +967,4 @@ export default function ProductPage() {
         </ErrorBoundary>
     )
 }
+

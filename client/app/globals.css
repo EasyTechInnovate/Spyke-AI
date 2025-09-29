@@ -31,6 +31,10 @@
   --font-inter: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+:root, body, input, textarea, select {
+  color-scheme: dark;
+}
+
 /* Base Styles */
 * {
   box-sizing: border-box;
@@ -563,6 +567,12 @@ select {
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: white;
   transition: all 0.2s ease;
+}
+
+/* Ensure dropdown options stay readable on Windows (system white menu) */
+select option, select optgroup {
+  background-color: #1a1a1a;
+  color: #ffffff;
 }
 
 input:focus,

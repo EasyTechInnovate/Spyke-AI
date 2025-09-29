@@ -1,14 +1,7 @@
 import apiClient from './client'
 
 export const paymentAPI = {
-  createPaymentIntent: async () => {
-    try {
-      const response = await apiClient.post('/v1/payment-intent')
-      return response.data
-    } catch (error) {
-      throw error
-    }
-  },
+  // Removed: createPaymentIntent (not used in Stripe Checkout flow)
 
   createCheckoutSession: async (successUrl, cancelUrl) => {
     try {
@@ -33,16 +26,7 @@ export const paymentAPI = {
     }
   },
 
-  confirmStripePayment: async (paymentIntentId) => {
-    try {
-      const response = await apiClient.post('/purchase/confirm-stripe-payment', {
-        paymentIntentId
-      })
-      return response.data
-    } catch (error) {
-      throw error
-    }
-  },
+  // Removed: confirmStripePayment (not used in current flow)
 
   getCart: async () => {
     try {

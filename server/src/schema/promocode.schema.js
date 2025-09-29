@@ -1,6 +1,10 @@
 import { z } from 'zod'
 import { EProductCategory, EProductIndustry } from '../constant/application.js'
 
+const objectIdString = z.string().regex(/^[0-9a-fA-F]{24}$/)
+const categoryUnion = objectIdString.or(z.enum(Object.values(EProductCategory)))
+const industryUnion = objectIdString.or(z.enum(Object.values(EProductIndustry)))
+
 export const createPromocodeSchema = z.object({
   code: z.string()
     .min(3, 'Code must be at least 3 characters')
@@ -28,15 +32,17 @@ export const createPromocodeSchema = z.object({
     .optional(),
   
   applicableProducts: z.array(
-    z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid product ID')
+    objectIdString
   ).optional(),
   
+  // Accept either Category ObjectIds or legacy enum values
   applicableCategories: z.array(
-    z.enum(Object.values(EProductCategory))
+    categoryUnion
   ).optional(),
   
+  // Accept either Industry ObjectIds or legacy enum values
   applicableIndustries: z.array(
-    z.enum(Object.values(EProductIndustry))
+    industryUnion
   ).optional(),
   
   isGlobal: z.boolean().optional(),
@@ -88,15 +94,17 @@ export const updatePromocodeSchema = z.object({
     .optional(),
   
   applicableProducts: z.array(
-    z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid product ID')
+    objectIdString
   ).optional(),
   
+  // Accept either Category ObjectIds or legacy enum values
   applicableCategories: z.array(
-    z.enum(Object.values(EProductCategory))
+    categoryUnion
   ).optional(),
   
+  // Accept either Industry ObjectIds or legacy enum values
   applicableIndustries: z.array(
-    z.enum(Object.values(EProductIndustry))
+    industryUnion
   ).optional(),
   
   isGlobal: z.boolean().optional(),
@@ -119,6 +127,7 @@ export const updatePromocodeSchema = z.object({
   
   isPublic: z.boolean().optional()
 }).refine((data) => {
+  // If percentage, cap at 100
   if (data.discountValue !== undefined && data.discountType === 'percentage' && data.discountValue > 100) {
     return false
   }

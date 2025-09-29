@@ -438,7 +438,8 @@ export default function PromocodeForm({ promocode, onClose }) {
                                         onChange={handleInputChange}
                                         onBlur={() => handleFieldBlur('discountValue')}
                                         placeholder={formData.discountType === 'percentage' ? '20' : '10.00'}
-                                        className={`w-full px-4 py-3 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${getInputErrorStyles('discountValue')}`}
+                                        className={`w-full px-4 py-3 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-moz-inner-spin-button]:appearance-none [&::-moz-outer-spin-button]:appearance-none ${getInputErrorStyles('discountValue')}`}
+                                        style={{ MozAppearance: 'textfield' }}
                                         required
                                     />
                                     {errors.discountValue && touched.discountValue && (
@@ -460,7 +461,8 @@ export default function PromocodeForm({ promocode, onClose }) {
                                         onChange={handleInputChange}
                                         onBlur={() => handleFieldBlur('maxUses')}
                                         placeholder="Leave empty for unlimited"
-                                        className={`w-full px-4 py-3 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${getInputErrorStyles('maxUses')}`}
+                                        className={`w-full px-4 py-3 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-moz-inner-spin-button]:appearance-none [&::-moz-outer-spin-button]:appearance-none ${getInputErrorStyles('maxUses')}`}
+                                        style={{ MozAppearance: 'textfield' }}
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -474,7 +476,8 @@ export default function PromocodeForm({ promocode, onClose }) {
                                         onChange={handleInputChange}
                                         onBlur={() => handleFieldBlur('minPurchaseAmount')}
                                         placeholder="0.00"
-                                        className={`w-full px-4 py-3 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${getInputErrorStyles('minPurchaseAmount')}`}
+                                        className={`w-full px-4 py-3 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-moz-inner-spin-button]:appearance-none [&::-moz-outer-spin-button]:appearance-none ${getInputErrorStyles('minPurchaseAmount')}`}
+                                        style={{ MozAppearance: 'textfield' }}
                                     />
                                     {errors.minPurchaseAmount && touched.minPurchaseAmount && (
                                         <div className="flex items-center gap-2 text-red-400 text-sm">

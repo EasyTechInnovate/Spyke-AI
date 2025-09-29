@@ -1,8 +1,7 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useInView } from 'framer-motion'
 import Link from 'next/link'
-import ProductPromoDisplay from '@/components/features/product/ProductPromoDisplay'
 import {
     Heart,
     Share2,
@@ -21,52 +20,79 @@ import {
     ChevronRight,
     Eye,
     TrendingUp,
-    ExternalLink
+    ExternalLink,
+    MapPin,
+    Award,
+    Calendar,
+    Package,
+    Globe,
+    Users,
+    CheckCircle,
+    Sparkles,
+    Tag,
+    Target,
+    Building,
+    Verified,
+    BadgeCheck,
+    Copy,
+    ArrowUpRight,
+    ChevronDown,
+    Info,
+    DollarSign,
+    Percent,
+    Timer
 } from 'lucide-react'
-const TYPE_BADGE_STYLES = {
-    prompt: { bg: 'bg-indigo-500/10', border: 'border-indigo-500/30', text: 'text-indigo-400' },
-    hiring: { bg: 'bg-rose-500/10', border: 'border-rose-500/30', text: 'text-rose-400' },
-    default: { bg: 'bg-[#00FF89]/10', border: 'border-[#00FF89]/30', text: 'text-emerald-700 dark:text-[#00FF89]' }
+const AnimatedCounter = ({ value, duration = 2000 }) => {
+    const [count, setCount] = useState(0)
+    const ref = useRef(null)
+    const isInView = useInView(ref)
+    useEffect(() => {
+        if (isInView && value) {
+            let start = 0
+            const end = parseInt(value.toString()) || 0
+            if (start === end) return
+            const timer = setInterval(() => {
+                start += Math.ceil(end / (duration / 50))
+                if (start > end) {
+                    setCount(end)
+                    clearInterval(timer)
+                } else {
+                    setCount(start)
+                }
+            }, 50)
+            return () => clearInterval(timer)
+        }
+    }, [isInView, value, duration])
+    return <span ref={ref}>{count}</span>
 }
-const focusRing =
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00FF89] focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#121212]'
-const getVideoEmbedInfo = (url) => {
-    if (!url) return null
-    const youtubeRegex =
-        /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
-    const youtubeMatch = url.match(youtubeRegex)
-    if (youtubeMatch) {
-        return {
-            type: 'youtube',
-            id: youtubeMatch[1],
-            embedUrl: `https://www.youtube.com/embed/${youtubeMatch[1]}?autoplay=1&mute=1`,
-            thumbnailUrl: `https://img.youtube.com/vi/${youtubeMatch[1]}/maxresdefault.jpg`
-        }
+const StatCard = ({ icon: Icon, label, value, color = 'text-[#00FF89]', delay = 0 }) => (
+    <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay, duration: 0.5 }}
+        className="flex items-center gap-3 p-3 rounded-xl bg-white/5 dark:bg-white/5 backdrop-blur-sm border border-white/10 dark:border-gray-700/50 hover:border-[#00FF89]/30 transition-all duration-300">
+        <Icon className={`w-5 h-5 ${color}`} />
+        <div>
+            <div className={`text-lg font-bold ${color}`}>
+                <AnimatedCounter value={value} />
+            </div>
+            <div className="text-xs text-[#6b7280] dark:text-gray-400 font-medium">{label}</div>
+        </div>
+    </motion.div>
+)
+const FeatureBadge = ({ icon: Icon, text, variant = 'default' }) => {
+    const variants = {
+        default: 'bg-[#00FF89]/10 border-[#00FF89]/30 text-[#00FF89]',
+        verified: 'bg-green-500/10 border-green-500/30 text-green-400',
+        tested: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
+        guarantee: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'
     }
-    const vimeoRegex = /(?:https?:\/\/)?(?:www\.)?(?:vimeo\.com\/)([0-9]+)/
-    const vimeoMatch = url.match(vimeoRegex)
-    if (vimeoMatch) {
-        return {
-            type: 'vimeo',
-            id: vimeoMatch[1],
-            embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1&muted=1`,
-            thumbnailUrl: null
-        }
-    }
-    if (url.match(/\.(mp4|webm|ogg|mov|avi)(\?.*)?$/i)) {
-        return {
-            type: 'direct',
-            url: url,
-            embedUrl: url,
-            thumbnailUrl: null
-        }
-    }
-    return {
-        type: 'direct',
-        url: url,
-        embedUrl: url,
-        thumbnailUrl: null
-    }
+    return (
+        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium ${variants[variant]}`}>
+            <Icon className="w-4 h-4" />
+            <span>{text}</span>
+        </div>
+    )
 }
 export default function ProductHero({
     product,
@@ -91,19 +117,22 @@ export default function ProductHero({
     ctaRef,
     onNavigateToReviews
 }) {
-    const [isPlaying, setIsPlaying] = useState(false)
-    const [isMuted, setIsMuted] = useState(true)
     const [currentImageIndex, setCurrentImageIndex] = useState(selectedImage || 0)
     const [isImageFullscreen, setIsImageFullscreen] = useState(false)
-    const [videoError, setVideoError] = useState(false)
-    const [showVideoModal, setShowVideoModal] = useState(false)
-    const [imageAspectRatio, setImageAspectRatio] = useState(4 / 3) // Default to 4:3
-    const videoRef = useRef(null)
-    const iframeRef = useRef(null)
+    const [showSellerDetails, setShowSellerDetails] = useState(false)
+    const [copiedText, setCopiedText] = useState('')
+    const heroRef = useRef(null)
+    const isInView = useInView(heroRef, { once: true })
     if (!product) return null
-    const videoInfo = product.previewVideo ? getVideoEmbedInfo(product.previewVideo) : null
     const mediaItems = []
-    if (product.images && product.images.length > 0) {
+    if (product.thumbnail) {
+        mediaItems.push({
+            type: 'image',
+            src: product.thumbnail,
+            alt: `${product.title} - Thumbnail`
+        })
+    }
+    if (product.images && Array.isArray(product.images)) {
         product.images.forEach((image, index) => {
             mediaItems.push({
                 type: 'image',
@@ -112,518 +141,511 @@ export default function ProductHero({
             })
         })
     }
-    if (videoInfo) {
-        mediaItems.push({
-            type: 'video',
-            src: product.previewVideo,
-            poster: videoInfo.thumbnailUrl || product.images?.[0] || product.thumbnail,
-            alt: `${product.title} - Preview Video`,
-            videoInfo: videoInfo
-        })
-    }
-    if (mediaItems.length === 0 && product.thumbnail) {
-        mediaItems.push({
-            type: 'image',
-            src: product.thumbnail,
-            alt: product.title
-        })
-    }
     const activeMedia = mediaItems[currentImageIndex] || mediaItems[0]
-    useEffect(() => {
-        if (mediaItems.length > 1 && activeMedia?.type === 'image') {
-            const interval = setInterval(() => {
-                setCurrentImageIndex((prev) => (prev + 1) % mediaItems.length)
-            }, 5000)
-            return () => clearInterval(interval)
-        }
-    }, [mediaItems.length, activeMedia?.type])
-    const togglePlayPause = () => {
-        if (activeMedia?.videoInfo?.type === 'direct' && videoRef.current) {
-            if (isPlaying) {
-                videoRef.current.pause()
-            } else {
-                videoRef.current.play().catch((error) => {
-                    console.error('Video play failed:', error)
-                    setVideoError(true)
-                })
-            }
-            setIsPlaying(!isPlaying)
-        } else if (activeMedia?.videoInfo?.type === 'youtube' || activeMedia?.videoInfo?.type === 'vimeo') {
-            setShowVideoModal(true)
-        }
-    }
-    const toggleMute = () => {
-        if (videoRef.current) {
-            videoRef.current.muted = !isMuted
-            setIsMuted(!isMuted)
-        }
-    }
+    const calculatedDiscount =
+        product.originalPrice && product.price ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0
+    const calculatedSavings = product.originalPrice && product.price ? product.originalPrice - product.price : 0
     const nextImage = () => {
-        setCurrentImageIndex((prev) => (prev + 1) % mediaItems.length)
+        if (mediaItems.length > 1) {
+            setCurrentImageIndex((prev) => (prev + 1) % mediaItems.length)
+        }
     }
     const prevImage = () => {
-        setCurrentImageIndex((prev) => (prev - 1 + mediaItems.length) % mediaItems.length)
-    }
-    const handleNavigateToReviews = () => {
-        if (onNavigateToReviews) {
-            onNavigateToReviews()
+        if (mediaItems.length > 1) {
+            setCurrentImageIndex((prev) => (prev - 1 + mediaItems.length) % mediaItems.length)
         }
     }
+    useEffect(() => {
+        if (mediaItems.length > 1) {
+            const interval = setInterval(() => {
+                nextImage()
+            }, 4000)
+            return () => clearInterval(interval)
+        }
+    }, [mediaItems.length])
+    const copyToClipboard = async (text, label) => {
+        try {
+            await navigator.clipboard.writeText(text)
+            setCopiedText(label)
+            setTimeout(() => setCopiedText(''), 2000)
+        } catch (err) {
+            console.error('Failed to copy:', err)
+        }
+    }
+    const getSetupTimeDisplay = (setupTime) => {
+        if (!setupTime) return 'Quick Setup'
+        return setupTime.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
+    }
     return (
-        <div className="bg-white dark:bg-[#121212]">
-            <div className="max-w-7xl mx-auto px-4 py-8 lg:py-12">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+        <div
+            ref={heroRef}
+            className="relative bg-black">
+            <div className="absolute inset-0">
+                <div className="absolute inset-0 bg-black" />
+                <motion.div
+                    animate={{
+                        rotate: [0, 360],
+                        scale: [1, 1.1, 1]
+                    }}
+                    transition={{
+                        duration: 30,
+                        repeat: Infinity,
+                        ease: 'linear'
+                    }}
+                    className="absolute top-1/4 right-1/4 w-96 h-96 bg-[#00FF89]/5 rounded-full blur-3xl"
+                />
+            </div>
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 items-start">
                     <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.6 }}
-                        className="space-y-4">
-                        <div
-                            className="relative group"
-                            role="region"
-                            aria-roledescription="carousel"
-                            aria-label={`${product.title} media gallery`}
-                            tabIndex={0}
-                            onKeyDown={(e) => {
-                                if (e.key === 'ArrowRight') {
-                                    e.preventDefault()
-                                    nextImage()
-                                } else if (e.key === 'ArrowLeft') {
-                                    e.preventDefault()
-                                    prevImage()
-                                } else if (e.key === 'Home') {
-                                    e.preventDefault()
-                                    setCurrentImageIndex(0)
-                                } else if (e.key === 'End') {
-                                    e.preventDefault()
-                                    setCurrentImageIndex(mediaItems.length - 1)
-                                }
-                            }}>
+                        initial={{ opacity: 0, x: -50 }}
+                        animate={isInView ? { opacity: 1, x: 0 } : {}}
+                        transition={{ duration: 0.8 }}
+                        className="relative space-y-4">
+                        <div className="relative group">
                             <div
-                                className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#121212] relative cursor-pointer w-full max-w-2xl mx-auto"
-                                style={{ aspectRatio: imageAspectRatio }}
-                                onClick={() => activeMedia?.type === 'image' && setIsImageFullscreen(true)}>
-                                <div className="w-full h-full relative">
-                                    {activeMedia?.type === 'video' ? (
-                                        <div className="relative w-full h-full">
-                                            {activeMedia?.videoInfo?.type === 'direct' ? (
-                                                <video
-                                                    ref={videoRef}
-                                                    src={activeMedia.src}
-                                                    poster={activeMedia.poster}
-                                                    className="w-full h-full object-cover"
-                                                    muted={isMuted}
-                                                    playsInline
-                                                    onPlay={() => setIsPlaying(true)}
-                                                    onPause={() => setIsPlaying(false)}
-                                                />
-                                            ) : (
-                                                <>
-                                                    <img
-                                                        src={activeMedia.poster || product.thumbnail || '/images/placeholder-product.jpg'}
-                                                        alt={activeMedia.alt}
-                                                        className="w-full h-full object-cover"
-                                                        loading="lazy"
-                                                        onError={(e) => {
-                                                            console.log('Video poster failed to load:', e.target.src)
-                                                            e.target.style.display = 'none'
-                                                        }}
-                                                    />
-                                                    <div
-                                                        className="absolute inset-0 w-full h-full flex items-center justify-center bg-black/40 hover:bg-black/50 transition-colors"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
-                                                            setShowVideoModal(true)
-                                                        }}>
-                                                        <div className="w-20 h-20 bg-[#00FF89]/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-[#00FF89]/30 transition-colors">
-                                                            <Play className="w-8 h-8 text-[#00FF89] ml-1" />
-                                                        </div>
+                                className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-gray-900/80 border border-gray-700/50 cursor-pointer"
+                                onClick={() => setIsImageFullscreen(true)}>
+                                {activeMedia?.src ? (
+                                    <>
+                                        <img
+                                            src={activeMedia.src}
+                                            alt={activeMedia.alt}
+                                            className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105 cursor-pointer"
+                                            onError={(e) => {
+                                                e.target.src = '/images/placeholder-product.jpg'
+                                            }}
+                                        />
+                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer">
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                <div className="px-4 py-2 bg-black/80 backdrop-blur-sm rounded-lg border border-[#00FF89]/50">
+                                                    <div className="flex items-center gap-2 text-[#00FF89]">
+                                                        <Eye className="w-4 h-4" />
+                                                        <span className="text-sm font-medium">Click to enlarge</span>
                                                     </div>
-                                                </>
-                                            )}
-                                            {activeMedia?.videoInfo?.type === 'direct' && (
-                                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
-                                                            togglePlayPause()
-                                                        }}
-                                                        className="w-16 h-16 bg-[#121212]/80 rounded-full flex items-center justify-center hover:bg-[#121212] transition-colors">
-                                                        {isPlaying ? (
-                                                            <Pause className="w-8 h-8 text-[#00FF89]" />
-                                                        ) : (
-                                                            <Play className="w-8 h-8 text-[#00FF89] ml-1" />
-                                                        )}
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : activeMedia?.src || product.thumbnail ? (
-                                        <>
-                                            <img
-                                                key={`main-image-${currentImageIndex}`}
-                                                src={activeMedia?.src || product.thumbnail || '/images/placeholder-product.jpg'}
-                                                alt={activeMedia?.alt || product.title}
-                                                className="w-full h-full object-contain transition-all duration-300 hover:scale-105"
-                                                loading="lazy"
-                                                onLoad={(e) => {
-                                                    e.target.style.opacity = '1'
-                                                    const aspectRatio = e.target.naturalWidth / e.target.naturalHeight
-                                                    const constrainedRatio = Math.max(0.5, Math.min(3, aspectRatio))
-                                                    setImageAspectRatio(constrainedRatio)
-                                                }}
-                                                onError={(e) => {
-                                                    console.log('Image failed to load:', e.target.src)
-                                                    if (product.thumbnail && e.target.src !== product.thumbnail) {
-                                                        e.target.src = product.thumbnail
-                                                    } else {
-                                                        e.target.src = '/images/placeholder-product.jpg'
-                                                    }
-                                                }}
-                                                style={{ opacity: 0 }}
-                                            />
-                                            <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors duration-300 flex items-center justify-center opacity-0 hover:opacity-100">
-                                                <div className="px-4 py-2 bg-[#121212]/80 backdrop-blur-sm rounded-lg">
-                                                    <span className="text-[#00FF89] text-sm font-medium">Click to view full size</span>
                                                 </div>
                                             </div>
-                                        </>
-                                    ) : (
-                                        <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800">
-                                            <Eye className="w-12 h-12 text-gray-500 dark:text-gray-400 mb-3" />
-                                            <span className="text-gray-600 dark:text-gray-300 text-sm">No image available</span>
+                                            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+                                                {mediaItems.length > 1 && (
+                                                    <div className="px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-lg">
+                                                        <span className="text-white text-sm">
+                                                            {currentImageIndex + 1} / {mediaItems.length}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
-                                    )}
-                                    {mediaItems.length > 1 && (
-                                        <>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    prevImage()
-                                                }}
-                                                aria-label="Previous media"
-                                                className={`absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 dark:bg-[#1f1f1f]/90 backdrop-blur-sm rounded-full flex items-center justify-center transition-all hover:bg-white dark:hover:bg-[#1f1f1f] opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:scale-110 ${focusRing}`}>
-                                                <ChevronLeft className="w-5 h-5 text-[#121212] dark:text-[#00FF89]" />
-                                            </button>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    nextImage()
-                                                }}
-                                                aria-label="Next media"
-                                                className={`absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 dark:bg-[#1f1f1f]/90 backdrop-blur-sm rounded-full flex items-center justify-center transition-all hover:bg-white dark:hover:bg-[#1f1f1f] opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:scale-110 ${focusRing}`}>
-                                                <ChevronRight className="w-5 h-5 text-[#121212] dark:text-[#00FF89]" />
-                                            </button>
-                                        </>
-                                    )}
-                                </div>
+                                    </>
+                                ) : (
+                                    <div className="w-full h-full flex flex-col items-center justify-center">
+                                        <Package className="w-16 h-16 text-gray-500 mb-4" />
+                                        <span className="text-gray-400">No image available</span>
+                                    </div>
+                                )}
+                                {mediaItems.length > 1 && (
+                                    <>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                prevImage()
+                                            }}
+                                            className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100 z-10">
+                                            <ChevronLeft className="w-5 h-5 text-[#00FF89]" />
+                                        </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                nextImage()
+                                            }}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100 z-10">
+                                            <ChevronRight className="w-5 h-5 text-[#00FF89]" />
+                                        </button>
+                                    </>
+                                )}
                             </div>
                             {mediaItems.length > 1 && (
-                                <div
-                                    className="flex justify-center mt-3 gap-2"
-                                    role="tablist"
-                                    aria-label="Media selection">
-                                    {mediaItems.map((_, index) => (
+                                <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
+                                    {mediaItems.map((media, index) => (
                                         <button
                                             key={index}
-                                            role="tab"
-                                            aria-selected={currentImageIndex === index}
-                                            aria-label={`Go to media ${index + 1} of ${mediaItems.length}`}
-                                            aria-current={currentImageIndex === index ? 'true' : undefined}
                                             onClick={() => setCurrentImageIndex(index)}
-                                            className={`w-2 h-2 rounded-full transition-all ${focusRing} focus-visible:w-6 ${
+                                            className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
                                                 currentImageIndex === index
-                                                    ? 'bg-[#00FF89] w-6'
-                                                    : 'bg-[#6b7280] dark:bg-[#9ca3af] hover:bg-[#00FF89]/70'
-                                            }`}
-                                        />
+                                                    ? 'border-[#00FF89] ring-2 ring-[#00FF89]/25'
+                                                    : 'border-gray-600 hover:border-[#00FF89]/50'
+                                            }`}>
+                                            <img
+                                                src={media.src}
+                                                alt={media.alt}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </button>
                                     ))}
                                 </div>
                             )}
                         </div>
-                        {mediaItems.length > 1 && (
-                            <div className="grid grid-cols-5 gap-2">
-                                {mediaItems.slice(0, 5).map((media, index) => (
-                                    <button
-                                        key={`thumb-${index}`}
-                                        onClick={() => setCurrentImageIndex(index)}
-                                        className={`aspect-square rounded-lg overflow-hidden border-2 transition-all relative ${
-                                            currentImageIndex === index
-                                                ? 'border-[#00FF89]'
-                                                : 'border-gray-200 dark:border-gray-700 hover:border-[#00FF89]/50'
-                                        }`}>
-                                        <img
-                                            src={media.type === 'video' ? media.poster : media.src}
-                                            alt={media.alt}
-                                            className="w-full h-full object-cover"
-                                            loading="lazy"
-                                        />
-                                        {media.type === 'video' && (
-                                            <div className="absolute inset-0 bg-[#121212]/30 flex items-center justify-center">
-                                                <Play className="w-3 h-3 text-[#00FF89]" />
-                                            </div>
-                                        )}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <StatCard
+                                icon={Eye}
+                                label="Views"
+                                value={product.views || 0}
+                                delay={0.2}
+                            />
+                            <StatCard
+                                icon={TrendingUp}
+                                label="Sales"
+                                value={product.sales || 0}
+                                delay={0.3}
+                            />
+                            <StatCard
+                                icon={Heart}
+                                label="Favorites"
+                                value={product.favorites || 0}
+                                color="text-red-400"
+                                delay={0.4}
+                            />
+                            <StatCard
+                                icon={ThumbsUp}
+                                label="Upvotes"
+                                value={product.upvotes || 0}
+                                color="text-blue-400"
+                                delay={0.5}
+                            />
+                        </div>
                     </motion.div>
                     <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.6, delay: 0.1 }}
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={isInView ? { opacity: 1, x: 0 } : {}}
+                        transition={{ duration: 0.8, delay: 0.2 }}
                         className="space-y-6">
                         <div className="space-y-4">
                             <div className="flex flex-wrap items-center gap-2">
-                                <div className="inline-flex items-center px-3 py-1 rounded-full bg-[#00FF89]/10 border border-[#00FF89]/30">
-                                    <span className="text-sm font-medium text-emerald-700 dark:text-[#00FF89]">
-                                        {product.category?.name || product.category?.replace('_', ' ') || 'General'}
-                                    </span>
-                                </div>
-                                {(() => {
-                                    const key = (product.type || '').toLowerCase()
-                                    const style = TYPE_BADGE_STYLES[key] || TYPE_BADGE_STYLES.default
-                                    return (
-                                        <div className={`inline-flex items-center px-3 py-1 rounded-full ${style.bg} border ${style.border}`}>
-                                            <span className={`text-sm font-medium ${style.text}`}>{product.type}</span>
-                                        </div>
-                                    )
-                                })()}
+                                {product.category?.name && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: 0.4 }}
+                                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#00FF89]/10 border border-[#00FF89]/30 rounded-full">
+                                        <Package className="w-3 h-3 text-[#00FF89]" />
+                                        <span className="text-[#00FF89] font-medium text-xs">{product.category.name}</span>
+                                    </motion.div>
+                                )}
+                                {product.industry?.name && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: 0.5 }}
+                                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/30 rounded-full">
+                                        <Building className="w-3 h-3 text-blue-400" />
+                                        <span className="text-blue-400 font-medium text-xs">{product.industry.name}</span>
+                                    </motion.div>
+                                )}
+                                {product.type && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: 0.6 }}
+                                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-500/10 border border-purple-500/30 rounded-full">
+                                        <Sparkles className="w-3 h-3 text-purple-400" />
+                                        <span className="text-purple-400 font-medium text-xs capitalize">{product.type}</span>
+                                    </motion.div>
+                                )}
                             </div>
-                            <h1 className="text-2xl lg:text-3xl font-bold text-[#121212] dark:text-[#00FF89] leading-tight">{product.title}</h1>
-                            <p className="text-lg text-[#6b7280] dark:text-[#9ca3af] leading-relaxed">{product.shortDescription}</p>
-                            <div className="flex items-center gap-6">
+                            <motion.h1
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.7 }}
+                                className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight">
+                                {product.title}
+                            </motion.h1>
+                            <motion.p
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.8 }}
+                                className="text-base sm:text-lg text-gray-300 leading-relaxed">
+                                {product.shortDescription}
+                            </motion.p>
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.9 }}
+                                className="flex flex-wrap items-center gap-2">
+                                {product.isVerified && (
+                                    <FeatureBadge
+                                        icon={BadgeCheck}
+                                        text="Verified"
+                                        variant="verified"
+                                    />
+                                )}
+                                {product.isTested && (
+                                    <FeatureBadge
+                                        icon={CheckCircle}
+                                        text="Tested"
+                                        variant="tested"
+                                    />
+                                )}
+                                {product.hasGuarantee && (
+                                    <FeatureBadge
+                                        icon={Shield}
+                                        text="Guarantee"
+                                        variant="guarantee"
+                                    />
+                                )}
+                                <FeatureBadge
+                                    icon={Timer}
+                                    text={getSetupTimeDisplay(product.setupTime)}
+                                />
+                            </motion.div>
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 1 }}
+                                className="flex flex-wrap items-center gap-4">
                                 <button
-                                    onClick={handleNavigateToReviews}
-                                    className="flex items-center gap-1 hover:opacity-80 transition-opacity cursor-pointer group"
-                                    title="View reviews">
-                                    <Star className="w-4 h-4 text-[#FFC050] fill-current group-hover:scale-110 transition-transform" />
-                                    <span className="font-semibold text-[#121212] dark:text-[#00FF89] group-hover:underline">
-                                        {product.averageRating?.toFixed(1) || '5.0'}
-                                    </span>
-                                    <span className="text-[#6b7280] dark:text-[#9ca3af] group-hover:underline">
-                                        ({product.reviews?.length || 0} reviews)
-                                    </span>
+                                    onClick={onNavigateToReviews}
+                                    className="flex items-center gap-2 hover:opacity-80 transition-opacity group">
+                                    <div className="flex items-center">
+                                        {[...Array(5)].map((_, i) => (
+                                            <Star
+                                                key={i}
+                                                className={`w-4 h-4 ${
+                                                    i < Math.floor(product.averageRating || 5) ? 'text-yellow-400 fill-current' : 'text-gray-600'
+                                                }`}
+                                            />
+                                        ))}
+                                    </div>
+                                    <span className="text-white font-semibold text-sm">{product.averageRating?.toFixed(1) || '5.0'}</span>
+                                    <span className="text-gray-400 text-sm">({product.totalReviews || 0})</span>
                                 </button>
-                                <div className="flex items-center gap-1">
-                                    <TrendingUp className="w-4 h-4 text-[#00FF89]" />
-                                    <span className="font-semibold text-[#121212] dark:text-[#00FF89]">{product.sales || 0}</span>
-                                    <span className="text-[#6b7280] dark:text-[#9ca3af]">sold</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <Eye className="w-4 h-4 text-[#00FF89]" />
-                                    <span className="font-semibold text-[#121212] dark:text-[#00FF89]">{product.views || 0}</span>
-                                    <span className="text-[#6b7280] dark:text-[#9ca3af]">views</span>
-                                </div>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
                                     <button
                                         onClick={onUpvote}
                                         disabled={isUpvoting}
-                                        aria-pressed={!!upvoted}
-                                        aria-label={upvoted ? 'Remove upvote' : 'Upvote product'}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${focusRing} ${
+                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-sm ${
                                             upvoted
                                                 ? 'bg-[#00FF89]/10 border-[#00FF89]/30 text-[#00FF89]'
-                                                : 'bg-gray-50 dark:bg-[#1f1f1f] border-gray-200 dark:border-gray-700 text-[#6b7280] dark:text-[#9ca3af] hover:bg-[#00FF89]/5 hover:border-[#00FF89]/20'
+                                                : 'bg-white/5 border-gray-700 text-gray-300 hover:bg-[#00FF89]/5 hover:border-[#00FF89]/20'
                                         }`}>
                                         <ThumbsUp className="w-4 h-4" />
-                                        <span className="font-medium text-sm">{product.upvotes || 0}</span>
+                                        <span className="font-medium">{product.upvotes || 0}</span>
                                     </button>
                                     <button
                                         onClick={onLike}
-                                        aria-pressed={!!liked}
-                                        aria-label={liked ? 'Remove from favorites' : 'Add to favorites'}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${focusRing} ${
+                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-sm ${
                                             liked
-                                                ? 'bg-[#FFC050]/10 border-[#FFC050]/30 text-[#FFC050]'
-                                                : 'bg-gray-50 dark:bg-[#1f1f1f] border-gray-200 dark:border-gray-700 text-[#6b7280] dark:text-[#9ca3af] hover:bg-[#FFC050]/5 hover:border-[#FFC050]/20'
+                                                ? 'bg-red-500/10 border-red-500/30 text-red-400'
+                                                : 'bg-white/5 border-gray-700 text-gray-300 hover:bg-red-500/5 hover:border-red-500/20'
                                         }`}>
                                         <Heart className={`w-4 h-4 ${liked ? 'fill-current' : ''}`} />
-                                        <span className="font-medium text-sm">{product.favorites || 0}</span>
+                                        <span className="font-medium">{product.favorites || 0}</span>
+                                    </button>
+                                    <button
+                                        onClick={onShare}
+                                        className="relative flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-gray-700 hover:border-[#00FF89]/30 rounded-lg transition-all text-sm">
+                                        <Share2 className="w-4 h-4 text-gray-300" />
+                                        <span className="text-gray-300 font-medium">Share</span>
+                                        {showCopied && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#00FF89] text-black text-xs rounded whitespace-nowrap">
+                                                Copied!
+                                            </motion.div>
+                                        )}
                                     </button>
                                 </div>
-                                <button
-                                    onClick={onShare}
-                                    aria-label="Share product"
-                                    className={`flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-[#1f1f1f] hover:bg-[#00FF89]/10 hover:border-[#00FF89]/20 rounded-lg transition-colors border border-gray-200 dark:border-gray-700 relative ${focusRing}`}>
-                                    <Share2 className="w-4 h-4 text-[#121212] dark:text-[#00FF89]" />
-                                    <span className="text-[#121212] dark:text-[#00FF89] font-medium text-sm">Share</span>
-                                    {showCopied && (
-                                        <motion.span
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#121212] dark:bg-[#00FF89] text-[#00FF89] dark:text-[#121212] rounded text-xs whitespace-nowrap">
-                                            Copied!
-                                        </motion.span>
-                                    )}
-                                </button>
-                            </div>
+                            </motion.div>
                         </div>
                         <motion.div
                             ref={ctaRef}
-                            className="relative bg-gray-50 dark:bg-[#1f1f1f] rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-                            {discountPercentage > 0 && (
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 1.1 }}
+                            className="relative overflow-hidden rounded-2xl p-6 bg-gray-900/50 border border-gray-700/50">
+                            {calculatedDiscount > 0 && (
                                 <div className="absolute top-4 right-4">
-                                    <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#FFC050]/20 text-[#FFC050] text-sm font-medium border border-[#FFC050]/30">
-                                        {discountPercentage}% OFF
-                                    </span>
+                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-500 text-black rounded-full">
+                                        <Percent className="w-3 h-3" />
+                                        <span className="font-bold text-xs">{calculatedDiscount}% OFF</span>
+                                    </div>
                                 </div>
                             )}
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="text-3xl font-bold text-[#00FF89]">${Math.round(product.price || 0)}</div>
+                            <div className="flex items-baseline gap-3 mb-4">
+                                <div className="flex items-center gap-2">
+                                    <DollarSign className="w-6 h-6 text-[#00FF89]" />
+                                    <span className="text-3xl lg:text-4xl font-bold text-[#00FF89]">{product.price || 0}</span>
+                                </div>
                                 {product.originalPrice && product.originalPrice > product.price && (
-                                    <>
-                                        <div className="text-xl text-[#6b7280] dark:text-[#9ca3af] line-through">
-                                            ${Math.round(product.originalPrice)}
+                                    <div className="space-y-1">
+                                        <div className="text-lg text-gray-400 line-through">${product.originalPrice}</div>
+                                        <div className="px-2 py-1 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 text-xs font-medium rounded-full">
+                                            Save ${calculatedSavings}
                                         </div>
-                                        <div className="px-2 py-1 bg-[#FFC050]/20 text-[#FFC050] text-sm font-medium rounded-full border border-[#FFC050]/30">
-                                            Save ${Math.round(savingsAmount)}
-                                        </div>
-                                    </>
+                                    </div>
                                 )}
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
                                 <div className="flex items-center gap-2">
-                                    <Zap className="w-4 h-4 text-[#00FF89]" />
-                                    <span className="text-sm text-[#6b7280] dark:text-[#9ca3af]">Instant Access</span>
+                                    <CheckCircle className="w-4 h-4 text-[#00FF89] flex-shrink-0" />
+                                    <span className="text-gray-300 text-sm">Instant Access</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Shield className="w-4 h-4 text-[#00FF89]" />
-                                    <span className="text-sm text-[#6b7280] dark:text-[#9ca3af]">30-Day Guarantee</span>
+                                    <CheckCircle className="w-4 h-4 text-[#00FF89] flex-shrink-0" />
+                                    <span className="text-gray-300 text-sm">Lifetime Updates</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <MessageSquare className="w-4 h-4 text-[#00FF89]" />
-                                    <span className="text-sm text-[#6b7280] dark:text-[#9ca3af]">24/7 Support</span>
+                                    <CheckCircle className="w-4 h-4 text-[#00FF89] flex-shrink-0" />
+                                    <span className="text-gray-300 text-sm">24/7 Support</span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <Clock className="w-4 h-4 text-[#00FF89]" />
-                                    <span className="text-sm text-[#6b7280] dark:text-[#9ca3af]">Lifetime Updates</span>
-                                </div>
+                                {product.hasRefundPolicy && (
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle className="w-4 h-4 text-[#00FF89] flex-shrink-0" />
+                                        <span className="text-gray-300 text-sm">Refund Policy</span>
+                                    </div>
+                                )}
                             </div>
                             <div className="space-y-3">
                                 {hasPurchased ? (
-                                    <button
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
                                         onClick={onDownload}
-                                        className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#00FF89] hover:bg-[#00FF89]/90 text-[#121212] rounded-lg font-medium transition-colors">
-                                        <Download className="w-4 h-4" />
+                                        className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-[#00FF89] hover:bg-[#00FF89]/90 text-black rounded-xl font-bold transition-all duration-300">
+                                        <Download className="w-5 h-5" />
                                         Access Your Product
-                                    </button>
+                                    </motion.button>
                                 ) : isOwner ? (
                                     <Link href="/seller/products">
-                                        <button className="w-full px-6 py-3 bg-[#00FF89] hover:bg-[#00FF89]/90 text-[#121212] rounded-lg font-medium transition-colors">
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold transition-all duration-300">
                                             Manage Product
-                                        </button>
+                                        </motion.button>
                                     </Link>
                                 ) : (
                                     <>
-                                        <button
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
                                             onClick={onBuyNow}
-                                            className="w-full px-6 py-3 bg-[#00FF89] hover:bg-[#00FF89]/90 text-[#121212] rounded-lg font-medium transition-colors">
+                                            className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-[#00FF89] hover:bg-[#00FF89]/90 text-black rounded-xl font-bold transition-all duration-300">
+                                            <Zap className="w-5 h-5" />
                                             Buy Now - Instant Access
-                                        </button>
-                                        <button
+                                        </motion.button>
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
                                             onClick={onAddToCart}
                                             disabled={inCart || addingToCart}
-                                            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 dark:bg-[#1f1f1f] hover:bg-[#00FF89]/10 text-[#121212] dark:text-[#00FF89] rounded-lg font-medium transition-colors border border-gray-200 dark:border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                                            <ShoppingCart className="w-4 h-4" />
+                                            className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white/10 hover:bg-white/20 border border-gray-600 hover:border-[#00FF89]/50 text-white rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                                            <ShoppingCart className="w-5 h-5" />
                                             {addingToCart ? 'Adding to Cart...' : inCart ? 'Already in Cart' : 'Add to Cart'}
-                                        </button>
+                                        </motion.button>
                                     </>
                                 )}
                             </div>
                         </motion.div>
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.3 }}
-                            className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-[#1f1f1f] rounded-xl border border-gray-200 dark:border-gray-700">
-                            <div className="w-12 h-12 bg-[#00FF89]/10 rounded-full flex items-center justify-center">
-                                {product.sellerId?.avatar ? (
-                                    <img
-                                        src={product.sellerId.avatar}
-                                        alt={product.sellerId.fullName}
-                                        className="w-full h-full rounded-full object-cover"
-                                    />
-                                ) : (
-                                    <User className="w-6 h-6 text-[#00FF89]" />
-                                )}
-                            </div>
-                            <div className="flex-1">
-                                <div className="font-medium text-[#121212] dark:text-[#00FF89]">
-                                    {product.sellerId?.fullName || 'Anonymous Seller'}
+                        {product.sellerId && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 1.3 }}
+                                className="relative overflow-hidden rounded-xl p-4 bg-gray-900/30 border border-gray-700/50">
+                                <div className="flex items-start gap-3">
+                                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-[#00FF89]/20 flex-shrink-0 flex items-center justify-center">
+                                        <User className="w-6 h-6 text-[#00FF89]" />
+                                    </div>
+                                    <div className="flex-1 space-y-2">
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <h3 className="text-base font-bold text-white">{product.sellerId.fullName}</h3>
+                                                {product.sellerId.location?.country && (
+                                                    <div className="flex items-center gap-1 text-gray-400 text-sm">
+                                                        <MapPin className="w-3 h-3" />
+                                                        {product.sellerId.location.country}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <button
+                                                onClick={() => setShowSellerDetails(!showSellerDetails)}
+                                                className="px-3 py-1.5 bg-white/10 hover:bg-[#00FF89]/20 border border-gray-600 hover:border-[#00FF89]/50 text-white rounded-lg text-xs font-medium transition-all">
+                                                <div className="flex items-center gap-1">
+                                                    View
+                                                    <ArrowUpRight className="w-3 h-3" />
+                                                </div>
+                                            </button>
+                                        </div>
+                                        {product.sellerId.bio && (
+                                            <p className="text-gray-300 text-sm leading-relaxed line-clamp-2">{product.sellerId.bio}</p>
+                                        )}
+                                        <div className="grid grid-cols-3 gap-3 pt-2 border-t border-gray-700/50">
+                                            <div className="text-center">
+                                                <div className="text-sm font-bold text-[#00FF89]">{product.sellerId.stats?.totalProducts || 0}</div>
+                                                <div className="text-xs text-gray-400">Products</div>
+                                            </div>
+                                            <div className="text-center">
+                                                <div className="text-sm font-bold text-[#00FF89]">{product.sellerId.stats?.totalSales || 0}</div>
+                                                <div className="text-xs text-gray-400">Sales</div>
+                                            </div>
+                                            <div className="text-center">
+                                                <div className="text-sm font-bold text-[#00FF89]">
+                                                    {product.sellerId.stats?.averageRating || 5.0}★
+                                                </div>
+                                                <div className="text-xs text-gray-400">Rating</div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="text-sm text-[#6b7280] dark:text-[#9ca3af]">
-                                    {product.sellerId?.stats?.totalProducts || 0} products • {product.sellerId?.stats?.totalSales || 0} sales
-                                </div>
-                                <div className="flex items-center gap-1 mt-1">
-                                    {[...Array(5)].map((_, i) => (
-                                        <Star
-                                            key={i}
-                                            className={`w-3 h-3 ${
-                                                i < Math.floor(product.sellerId?.averageRating || 5)
-                                                    ? 'text-[#FFC050] fill-current'
-                                                    : 'text-[#6b7280] dark:text-[#9ca3af]'
-                                            }`}
-                                        />
+                            </motion.div>
+                        )}
+                        {product.tags && product.tags.length > 0 && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 1.4 }}
+                                className="space-y-2">
+                                <h4 className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                                    <Tag className="w-4 h-4" />
+                                    Tags
+                                </h4>
+                                <div className="flex flex-wrap gap-2">
+                                    {product.tags.slice(0, 6).map((tag, index) => (
+                                        <button
+                                            key={index}
+                                            onClick={() => copyToClipboard(tag, `Tag: ${tag}`)}
+                                            className="px-2 py-1 bg-white/5 hover:bg-[#00FF89]/10 border border-gray-700 hover:border-[#00FF89]/30 text-gray-300 hover:text-[#00FF89] rounded text-xs transition-all duration-300 flex items-center gap-1">
+                                            #{tag}
+                                            {copiedText === `Tag: ${tag}` && <CheckCircle className="w-3 h-3 text-[#00FF89]" />}
+                                        </button>
                                     ))}
                                 </div>
-                            </div>
-                            <a
-                                href={`/profile/${product.sellerId?.username || product.sellerId?._id}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="px-4 py-2 bg-gray-100 dark:bg-[#1f1f1f] hover:bg-[#00FF89]/10 hover:border-[#00FF89]/20 text-[#121212] dark:text-[#00FF89] rounded-lg text-sm font-medium transition-colors border border-gray-200 dark:border-gray-700">
-                                View Profile
-                            </a>
-                        </motion.div>
+                            </motion.div>
+                        )}
                     </motion.div>
                 </div>
             </div>
             <AnimatePresence>
-                {isImageFullscreen && (
+                {isImageFullscreen && activeMedia?.src && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-[#121212]/95 flex items-center justify-center p-4"
+                        className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
                         onClick={() => setIsImageFullscreen(false)}>
                         <button
                             onClick={() => setIsImageFullscreen(false)}
-                            className="absolute top-6 right-6 w-10 h-10 bg-[#00FF89]/20 rounded-full flex items-center justify-center hover:bg-[#00FF89]/30 transition-colors">
-                            <span className="text-[#00FF89] text-xl">×</span>
+                            className="absolute top-6 right-6 w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center transition-colors">
+                            <span className="text-white text-2xl">×</span>
                         </button>
-                        <img
-                            src={activeMedia?.src}
-                            alt={activeMedia?.alt}
-                            className="max-w-full max-h-full object-contain"
+                        <motion.img
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.8, opacity: 0 }}
+                            src={activeMedia.src}
+                            alt={activeMedia.alt}
+                            className="max-w-full max-h-full object-contain rounded-2xl"
                             onClick={(e) => e.stopPropagation()}
-                        />
-                    </motion.div>
-                )}
-            </AnimatePresence>
-            <AnimatePresence>
-                {showVideoModal && activeMedia?.videoInfo && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-[#121212]/95 flex items-center justify-center p-4"
-                        onClick={() => setShowVideoModal(false)}>
-                        <button
-                            onClick={() => setShowVideoModal(false)}
-                            className="absolute top-6 right-6 w-10 h-10 bg-[#00FF89]/20 rounded-full flex items-center justify-center hover:bg-[#00FF89]/30 transition-colors">
-                            <span className="text-[#00FF89] text-xl">×</span>
-                        </button>
-                        <iframe
-                            ref={iframeRef}
-                            src={activeMedia.videoInfo.embedUrl}
-                            title="Video Player"
-                            className="w-full max-w-4xl h-[70vh] rounded-lg"
-                            frameBorder="0"
-                            allow="autoplay; fullscreen"
-                            allowFullScreen
                         />
                     </motion.div>
                 )}
@@ -631,4 +653,3 @@ export default function ProductHero({
         </div>
     )
 }
-

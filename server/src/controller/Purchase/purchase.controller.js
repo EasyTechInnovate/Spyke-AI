@@ -24,7 +24,7 @@ const purchaseControllerExport = {
             const { authenticatedUser } = req
 
             const cart = await Cart.getOrCreateCart(authenticatedUser.id)
-            
+
             // Use safe population without category/industry to avoid casting errors
             await cart.populate('items.productId', 'title slug thumbnail price type status')
 
@@ -141,11 +141,13 @@ const purchaseControllerExport = {
             await cart.populate('items.productId', 'title slug thumbnail price type')
 
             const productIds = cart.items.map((item) => item.productId._id)
-            
+
             // For category/industry checking, fetch them separately to avoid casting errors
-            const products = await Product.find({ _id: { $in: productIds } }).select('category industry').lean()
-            const categories = [...new Set(products.map(p => p.category).filter(Boolean))]
-            const industries = [...new Set(products.map(p => p.industry).filter(Boolean))]
+            const products = await Product.find({ _id: { $in: productIds } })
+                .select('category industry')
+                .lean()
+            const categories = [...new Set(products.map((p) => p.category).filter(Boolean))]
+            const industries = [...new Set(products.map((p) => p.industry).filter(Boolean))]
 
             if (!promocode.isApplicableToProducts(productIds)) {
                 return httpError(next, new Error(responseMessage.PROMOCODE.NOT_APPLICABLE_TO_PRODUCTS), req, 400)
@@ -235,25 +237,25 @@ const purchaseControllerExport = {
 
     createCheckoutSession: async (req, res, next) => {
         try {
-            const { authenticatedUser } = req;
-            const { successUrl, cancelUrl } = req.body;
-    
+            const { authenticatedUser } = req
+            const { successUrl, cancelUrl } = req.body
+
             if (!successUrl || !cancelUrl) {
-                return httpError(next, new Error('Success URL and Cancel URL are required'), req, 400);
+                return httpError(next, new Error('Success URL and Cancel URL are required'), req, 400)
             }
-    
-            const cart = await Cart.findOne({ userId: authenticatedUser.id }).populate('items.productId');
-    
+
+            const cart = await Cart.findOne({ userId: authenticatedUser.id }).populate('items.productId')
+
             if (!cart || cart.items.length === 0) {
-                return httpError(next, new Error(responseMessage.CART.EMPTY_CART), req, 400);
+                return httpError(next, new Error(responseMessage.CART.EMPTY_CART), req, 400)
             }
-    
-            await cart.calculateTotals();
-    
+
+            await cart.calculateTotals()
+
             if (cart.finalAmount <= 0) {
-                return httpError(next, new Error('No payment required for free items'), req, 400);
+                return httpError(next, new Error('No payment required for free items'), req, 400)
             }
-    
+
             const checkoutSessionData = await stripeService.createCheckoutSession(
                 cart.finalAmount,
                 {
@@ -267,8 +269,8 @@ const purchaseControllerExport = {
                 },
                 successUrl,
                 cancelUrl
-            );
-    
+            )
+
             return httpResponse(req, res, 200, responseMessage.SUCCESS, {
                 ...checkoutSessionData,
                 cartSummary: {
@@ -278,73 +280,85 @@ const purchaseControllerExport = {
                     itemCount: cart.items.length,
                     appliedPromocode: cart.appliedPromocode
                 }
-            });
+            })
         } catch (err) {
-            return httpError(next, err, req, 500);
+            return httpError(next, err, req, 500)
         }
     },
-    
-    
+
     confirmCheckoutSession: async (req, res, next) => {
         try {
-            const { authenticatedUser } = req;
-            const { sessionId } = req.body;
-    
+            const { authenticatedUser } = req
+            const { sessionId } = req.body
+
             if (!sessionId) {
-                return httpError(next, new Error('Session ID is required'), req, 400);
+                return httpError(next, new Error('Session ID is required'), req, 400)
             }
-    
-            const session = await stripeService.retrieveCheckoutSession(sessionId);
-            if (!session) return httpError(next, new Error('Invalid checkout session'), req, 400);
-    
+
+            const session = await stripeService.retrieveCheckoutSession(sessionId)
+            if (!session) return httpError(next, new Error('Invalid checkout session'), req, 400)
+
             if (!stripeService.isCheckoutSessionSuccessful(session)) {
                 return httpError(
                     next,
                     new Error(`Payment not completed. Status: ${session.status}, Payment Status: ${session.payment_status}`),
                     req,
                     400
-                );
+                )
             }
-    
+
             if (session.metadata.userId !== authenticatedUser.id) {
-                return httpError(next, new Error('Unauthorized checkout session'), req, 403);
+                return httpError(next, new Error('Unauthorized checkout session'), req, 403)
             }
-    
-            // Check if purchase already exists (webhook/duplicate retry)
+
+            let paymentIntentId = null
+            try {
+                if (session.payment_intent) {
+                    const pi = await stripeService.retrievePaymentIntent(session.payment_intent)
+                    if (pi && stripeService.isPaymentSuccessful(pi) && pi.metadata?.userId === authenticatedUser.id) {
+                        paymentIntentId = pi.id
+                    }
+                }
+            } catch (_) {
+                // ignore and fallback to session.id if needed
+            }
+
+            const idempotencyKey = paymentIntentId || session.id
+
             const existingPurchase = await Purchase.findOne({
-                paymentReference: session.id,
+                paymentReference: idempotencyKey,
                 userId: authenticatedUser.id
-            });
-    
+            })
+
             if (existingPurchase) {
-                return httpResponse(req, res, 200, responseMessage.PRODUCT.PURCHASE_SUCCESSFUL, existingPurchase);
+                return httpResponse(req, res, 200, responseMessage.PRODUCT.PURCHASE_SUCCESSFUL, existingPurchase)
             }
-    
+
             // Get cart data before creating purchase
-            const cart = await Cart.getOrCreateCart(authenticatedUser.id);
+            const cart = await Cart.getOrCreateCart(authenticatedUser.id)
             // Safe population without category field to avoid casting errors
-            await cart.populate('items.productId', 'title slug thumbnail price type status sellerId');
-    
+            await cart.populate('items.productId', 'title slug thumbnail price type status sellerId')
+
             if (!cart.items || cart.items.length === 0) {
-                return httpError(next, new Error(responseMessage.CART.EMPTY_CART), req, 400);
+                return httpError(next, new Error(responseMessage.CART.EMPTY_CART), req, 400)
             }
-    
+
             // Prepare purchase items
-            const purchaseItems = [];
+            const purchaseItems = []
             for (const item of cart.items) {
-                if (item.productId?.status !== EProductStatusNew.PUBLISHED) continue;
+                if (item.productId?.status !== EProductStatusNew.PUBLISHED) continue
                 purchaseItems.push({
                     productId: item.productId._id,
                     sellerId: item.productId.sellerId,
                     price: item.productId.price
-                });
+                })
             }
-    
+
             if (purchaseItems.length === 0) {
-                return httpError(next, new Error(responseMessage.CART.NO_VALID_ITEMS), req, 400);
+                return httpError(next, new Error(responseMessage.CART.NO_VALID_ITEMS), req, 400)
             }
-    
-            // Create purchase record first
+
+            // Create purchase record first, using paymentIntentId if available
             const purchase = await Purchase.create({
                 userId: authenticatedUser.id,
                 items: purchaseItems,
@@ -353,34 +367,34 @@ const purchaseControllerExport = {
                 finalAmount: cart.finalAmount,
                 appliedPromocode: cart.appliedPromocode,
                 paymentMethod: 'stripe_checkout',
-                paymentReference: session.id,
+                paymentReference: idempotencyKey,
                 ipAddress: req.ip,
                 userAgent: req.get('User-Agent')
-            });
-    
+            })
+
             // Grant access after record creation
-            await purchase.grantAccess();
-    
+            await purchase.grantAccess()
+
             // Update promocode usage if applicable
             if (cart.appliedPromocode?.code) {
-                const promocode = await Promocode.findOne({ code: cart.appliedPromocode.code });
+                const promocode = await Promocode.findOne({ code: cart.appliedPromocode.code })
                 if (promocode) {
-                    await promocode.recordUsage(authenticatedUser.id, purchase._id, cart.appliedPromocode.discountAmount);
+                    await promocode.recordUsage(authenticatedUser.id, purchase._id, cart.appliedPromocode.discountAmount)
                 }
             }
-    
+
             // Update product sales and notify sellers
             for (const item of purchaseItems) {
-                await Product.findByIdAndUpdate(item.productId, { $inc: { sales: 1 } });
-    
-                const seller = await sellerProfileModel.findById(item.sellerId);
+                await Product.findByIdAndUpdate(item.productId, { $inc: { sales: 1 } })
+
+                const seller = await sellerProfileModel.findById(item.sellerId)
                 if (seller) {
-                    seller.updateStats('totalSales', 1);
-                    await seller.save();
-                    await notificationService.sendToUser(seller.userId, 'New Sale!', 'Your product has been purchased.', 'success');
+                    seller.updateStats('totalSales', 1)
+                    await seller.save()
+                    await notificationService.sendToUser(seller.userId, 'New Sale!', 'Your product has been purchased.', 'success')
                 }
             }
-    
+
             // Prepare response before clearing cart
             const responseData = {
                 purchaseId: purchase._id,
@@ -393,7 +407,7 @@ const purchaseControllerExport = {
                 purchaseDate: purchase.purchaseDate,
                 paymentMethod: 'stripe_checkout',
                 appliedPromocode: purchase.appliedPromocode,
-                items: cart.items.map(item => ({
+                items: cart.items.map((item) => ({
                     productId: item.productId._id,
                     title: item.productId.title,
                     thumbnail: item.productId.thumbnail,
@@ -401,56 +415,22 @@ const purchaseControllerExport = {
                     type: item.productId.type,
                     quantity: item?.quantity
                 }))
-            };
-    
+            }
+
             // Clear cart after preparing response
-            await cart.clearCart();
-    
+            await cart.clearCart()
+
             // Notify buyer
             await notificationService.sendToUser(
                 authenticatedUser.id,
                 'Purchase Successful!',
                 'Thank you for your purchase. You now have access to your products.',
                 'success'
-            );
-    
-            return httpResponse(req, res, 200, responseMessage.PRODUCT.PURCHASE_SUCCESSFUL, responseData);
+            )
+
+            return httpResponse(req, res, 200, responseMessage.PRODUCT.PURCHASE_SUCCESSFUL, responseData)
         } catch (err) {
-            return httpError(next, err, req, 500);
-        }
-    },
-    
-    confirmStripePayment: async (req, res, next) => {
-        try {
-            const { authenticatedUser } = req
-            const { paymentIntentId } = req.body
-
-            if (!paymentIntentId) {
-                return httpError(next, new Error('Payment intent ID is required'), req, 400)
-            }
-
-            const paymentIntent = await stripeService.retrievePaymentIntent(paymentIntentId)
-
-            if (!paymentIntent) {
-                return httpError(next, new Error('Invalid payment intent'), req, 400)
-            }
-
-            if (!stripeService.isPaymentSuccessful(paymentIntent)) {
-                return httpError(next, new Error(`Payment not completed. Status: ${paymentIntent.status}`), req, 400)
-            }
-
-            if (paymentIntent.metadata.userId !== authenticatedUser.id) {
-                return httpError(next, new Error('Unauthorized payment intent'), req, 403)
-            }
-
-            req.body = {
-                paymentMethod: 'stripe',
-                paymentReference: paymentIntentId
-            }
-
-            return purchaseControllerExport.createPurchase(req, res, next)
-        } catch (err) {
-            httpError(next, err, req, 500)
+            return httpError(next, err, req, 500)
         }
     },
 
@@ -780,18 +760,22 @@ const purchaseControllerExport = {
                     break
                 case 'payment_intent.requires_action':
                     break
-                case 'checkout.session.async_payment_succeeded':
-                    if (event.data.object.payment_intent) {
-                        const paymentIntent = await stripeService.retrievePaymentIntent(event.data.object.payment_intent)
-                        await handlePaymentSucceeded(paymentIntent)
+                case 'checkout.session.async_payment_succeeded': {
+                    const session = event.data.object
+                    if (session.payment_intent) {
+                        const paymentIntent = await stripeService.retrievePaymentIntent(session.payment_intent)
+                        await handlePaymentSucceeded(paymentIntent, session.id)
                     }
                     break
-                case 'checkout.session.completed':
-                    if (event.data.object.payment_intent) {
-                        const paymentIntent = await stripeService.retrievePaymentIntent(event.data.object.payment_intent)
-                        await handlePaymentSucceeded(paymentIntent)
+                }
+                case 'checkout.session.completed': {
+                    const session = event.data.object
+                    if (session.payment_intent) {
+                        const paymentIntent = await stripeService.retrievePaymentIntent(session.payment_intent)
+                        await handlePaymentSucceeded(paymentIntent, session.id)
                     }
                     break
+                }
                 case 'charge.succeeded':
                     if (event.data.object.payment_intent) {
                         const paymentIntent = await stripeService.retrievePaymentIntent(event.data.object.payment_intent)
@@ -815,26 +799,20 @@ const purchaseControllerExport = {
     }
 }
 
-async function handlePaymentSucceeded(paymentIntent) {
+async function handlePaymentSucceeded(paymentIntent, sessionId = null) {
     try {
-        const { userId, cartId } = paymentIntent.metadata
+        const { userId, cartId } = paymentIntent.metadata || {}
+        if (!userId) return
 
-        if (!userId) {
-            return
-        }
-
+        // Dedupe across both PI and Session IDs for the same user
         const existingPurchase = await Purchase.findOne({
-            paymentReference: paymentIntent.id
+            userId,
+            $or: [{ paymentReference: paymentIntent.id }, ...(sessionId ? [{ paymentReference: sessionId }] : [])]
         })
-
-        if (existingPurchase) {
-            return httpResponse(req, res, 200, responseMessage.SUCCESS, existingPurchase);
-        }
+        if (existingPurchase) return
 
         const cart = await Cart.findById(cartId)
-        if (!cart) {
-            return
-        }
+        if (!cart) return
 
         await cart.populate('items.productId')
 
@@ -848,10 +826,7 @@ async function handlePaymentSucceeded(paymentIntent) {
                 })
             }
         }
-
-        if (purchaseItems.length === 0) {
-            return
-        }
+        if (purchaseItems.length === 0) return
 
         const purchase = new Purchase({
             userId,
@@ -893,7 +868,7 @@ async function handlePaymentSucceeded(paymentIntent) {
 
         await cart.clearCart()
     } catch (error) {
-        // Error handling without console logging
+        // swallow
     }
 }
 
@@ -922,3 +897,4 @@ async function handlePaymentCanceled(paymentIntent) {
 }
 
 export default purchaseControllerExport
+

@@ -13,18 +13,17 @@ export function middleware(request) {
     try {
         roles = rolesCookie ? JSON.parse(rolesCookie.value) : []
     } catch (e) {
-        // Silent fail
     }
 
-    // User is authenticated if either token exists (backend prefers accessToken)
     const isAuthenticated = !!(accessToken || authToken)
 
     const isAdminRoute = path.startsWith('/admin')
-    const isSellerRoute = path.startsWith('/seller/') // Fixed: Added trailing slash
+    const isSellerRoute = path.startsWith('/seller/')
     const isProtectedRoute = path.startsWith('/protected')
     const isSettingsRoute = path.startsWith('/settings')
     const isAuthRoute = path === '/signin' || path === '/signup'
     const isHomePage = path === '/'
+    const isPurchasesRoute = path === '/purchases' || path.startsWith('/purchased')
 
     if (isHomePage && isAuthenticated && roles.includes('admin')) {
         return NextResponse.redirect(new URL('/admin/dashboard', request.url))
@@ -62,6 +61,13 @@ export function middleware(request) {
 
     // Protect settings route - requires authentication
     if (isSettingsRoute) {
+        if (!isAuthenticated) {
+            return NextResponse.redirect(new URL('/signin', request.url))
+        }
+    }
+
+    // Protect purchases and purchased routes - requires authentication
+    if (isPurchasesRoute || isProtectedRoute) {
         if (!isAuthenticated) {
             return NextResponse.redirect(new URL('/signin', request.url))
         }

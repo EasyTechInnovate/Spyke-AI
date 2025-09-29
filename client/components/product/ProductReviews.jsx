@@ -7,14 +7,17 @@ import { useNotificationProvider } from '@/components/shared/notifications/Notif
 import productsAPI from '@/lib/api/products'
 import UnifiedReviewForm from '@/components/product/UnifiedReviewForm'
 import ReviewsList from '@/components/product/ReviewsList'
+
 const fadeInUp = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
     exit: { opacity: 0, y: -20 }
 }
+
 export default function ProductReviews({ product, onProductUpdate }) {
     const { isAuthenticated, requireAuth } = useAuth()
     const { showSuccess, showError } = useNotificationProvider()
+
     const handleReviewSubmit = useCallback(
         async (reviewData) => {
             if (!isAuthenticated) {
@@ -58,6 +61,7 @@ export default function ProductReviews({ product, onProductUpdate }) {
         },
         [isAuthenticated, product, requireAuth, showSuccess, showError, onProductUpdate]
     )
+
     const reviewMetrics = useMemo(() => {
         const totalReviews = product?.totalReviews || product?.reviews?.length || 0
         const averageRating = product?.averageRating || 0
@@ -93,6 +97,7 @@ export default function ProductReviews({ product, onProductUpdate }) {
             hasReviews: totalReviews > 0
         }
     }, [product])
+
     const getRatingLabel = (rating) => {
         if (rating >= 4.5) return 'Excellent'
         if (rating >= 4.0) return 'Very Good'
@@ -100,110 +105,154 @@ export default function ProductReviews({ product, onProductUpdate }) {
         if (rating >= 3.0) return 'Average'
         return 'Fair'
     }
+
     return (
-        <motion.div
-            variants={fadeInUp}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="space-y-4 sm:space-y-6">
-            {isAuthenticated ? (
-                <UnifiedReviewForm
-                    variant="quickReview"
-                    productId={product?._id}
-                    onReviewSubmit={handleReviewSubmit}
-                    showHeader={true}
+        <div className="relative bg-black">
+            <div className="absolute inset-0">
+                <div className="absolute inset-0 bg-black" />
+                <motion.div
+                    animate={{
+                        rotate: [0, 360],
+                        scale: [1, 1.1, 1]
+                    }}
+                    transition={{
+                        duration: 30,
+                        repeat: Infinity,
+                        ease: 'linear'
+                    }}
+                    className="absolute top-1/4 right-1/4 w-96 h-96 bg-[#00FF89]/5 rounded-full blur-3xl"
                 />
-            ) : (
-                <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-                    <div className="text-center">
-                        <div className="inline-flex items-center justify-center w-12 h-12 bg-brand-primary/10 rounded-full mb-4">
-                            <MessageSquare className="w-6 h-6 text-brand-primary" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-white mb-2">Share Your Experience</h3>
-                        <p className="text-gray-400 text-sm mb-4 max-w-sm mx-auto">
-                            Help others make informed decisions by sharing your experience with this product.
-                        </p>
-                        <button
-                            onClick={requireAuth}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-[#00FF89] hover:bg-[#00FF89]/90 text-black rounded-lg font-medium transition-colors"
-                        >
-                            <LogIn className="w-4 h-4" />
-                            Sign in to add review
-                        </button>
+            </div>
+
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center space-y-4">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#00FF89]/10 border border-[#00FF89]/30 rounded-full">
+                        <MessageSquare className="w-4 h-4 text-[#00FF89]" />
+                        <span className="text-[#00FF89] font-medium text-sm">Customer Reviews</span>
                     </div>
-                </div>
-            )}
-            {reviewMetrics.hasReviews && (
-                <div className="bg-gray-900 rounded-xl sm:rounded-2xl border border-gray-800">
-                    <div className="p-4 sm:p-6 border-b border-gray-800">
-                        <div className="flex flex-col gap-3 sm:gap-4">
-                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
-                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                                    <h3 className="text-lg sm:text-xl font-semibold text-white">Customer Reviews</h3>
+                    <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">What customers are saying</h2>
+                </motion.div>
+
+                {isAuthenticated ? (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="relative overflow-hidden rounded-2xl p-8 bg-black/50 border border-gray-700/50">
+                        <UnifiedReviewForm
+                            variant="quickReview"
+                            productId={product?._id}
+                            onReviewSubmit={handleReviewSubmit}
+                            showHeader={true}
+                        />
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="relative overflow-hidden rounded-2xl p-8 bg-black/50 border border-gray-700/50">
+                        <div className="text-center">
+                            <div className="inline-flex items-center justify-center w-16 h-16 bg-[#00FF89]/10 rounded-full mb-6">
+                                <MessageSquare className="w-8 h-8 text-[#00FF89]" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-3">Share Your Experience</h3>
+                            <p className="text-lg text-gray-300 mb-6 max-w-md mx-auto leading-relaxed">
+                                Help others make informed decisions by sharing your experience with this product.
+                            </p>
+                            <button
+                                onClick={requireAuth}
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-[#00FF89] hover:bg-[#00FF89]/90 text-black rounded-xl font-medium text-lg transition-all hover:scale-105">
+                                <LogIn className="w-5 h-5" />
+                                Sign in to add review
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+
+                {reviewMetrics.hasReviews && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="space-y-6">
+                        <div className="flex items-center gap-3">
+                            <Star className="w-6 h-6 text-[#00FF89]" />
+                            <h3 className="text-2xl font-bold text-white">Customer Feedback</h3>
+                        </div>
+
+                        <div className="relative overflow-hidden rounded-2xl p-8 bg-black/50 border border-gray-700/50">
+                            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                                     <div className="flex items-center gap-2">
-                                        <div className="flex items-center gap-0.5 sm:gap-1">
+                                        <div className="flex items-center gap-1">
                                             {[1, 2, 3, 4, 5].map((star) => (
                                                 <Star
                                                     key={star}
-                                                    className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors ${
+                                                    className={`w-6 h-6 transition-colors ${
                                                         star <= reviewMetrics.averageRating ? 'text-amber-400 fill-current' : 'text-gray-600'
                                                     }`}
                                                 />
                                             ))}
                                         </div>
-                                        <span className="text-base sm:text-lg font-semibold text-white">
-                                            {reviewMetrics.averageRating.toFixed(1)}
-                                        </span>
-                                        <div className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-amber-400/10 text-amber-400 text-xs font-medium">
-                                            <Award className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                                            <span className="hidden xs:inline">{getRatingLabel(reviewMetrics.averageRating)}</span>
-                                            <span className="xs:hidden">{getRatingLabel(reviewMetrics.averageRating).slice(0, 4)}</span>
-                                        </div>
+                                        <span className="text-2xl font-bold text-white ml-2">{reviewMetrics.averageRating.toFixed(1)}</span>
+                                    </div>
+                                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-400/10 text-amber-400 border border-amber-400/30">
+                                        <Award className="w-5 h-5" />
+                                        <span className="font-medium text-lg">{getRatingLabel(reviewMetrics.averageRating)}</span>
                                     </div>
                                 </div>
-                                <div className="text-xs sm:text-sm text-gray-400 flex flex-col xs:flex-row xs:items-center gap-1 xs:gap-2">
-                                    <span>
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-gray-300">
+                                    <span className="text-lg font-medium">
                                         {reviewMetrics.totalReviews} review{reviewMetrics.totalReviews !== 1 ? 's' : ''}
                                     </span>
-                                    <span className="hidden xs:inline">•</span>
-                                    <span>{reviewMetrics.satisfaction}% satisfaction</span>
+                                    <span className="hidden sm:inline text-gray-500">•</span>
+                                    <span className="text-lg">{reviewMetrics.satisfaction}% satisfaction</span>
                                 </div>
                             </div>
+
+                            <ReviewsList
+                                reviews={product?.reviews || []}
+                                totalReviews={reviewMetrics.totalReviews}
+                                averageRating={reviewMetrics.averageRating}
+                                reviewStats={product?.reviewStats || {}}
+                            />
                         </div>
-                    </div>
-                    <div className="p-3 sm:p-6">
-                        <ReviewsList
-                            reviews={product?.reviews || []}
-                            totalReviews={reviewMetrics.totalReviews}
-                            averageRating={reviewMetrics.averageRating}
-                            reviewStats={product?.reviewStats || {}}
-                        />
-                    </div>
-                </div>
-            )}
-            {!reviewMetrics.hasReviews && (
-                <div className="text-center py-6 sm:py-8">
-                    <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">
-                        {isAuthenticated ? 'Be the First to Review' : 'No Reviews Yet'}
-                    </h3>
-                    <p className="text-gray-400 text-sm max-w-xs sm:max-w-sm mx-auto mb-4 sm:mb-6 px-4">
-                        {isAuthenticated 
-                            ? 'Share your experience with this product and help the seller improve their offering.'
-                            : 'Be the first to share your experience with this product.'
-                        }
-                    </p>
-                    {!isAuthenticated && (
-                        <button
-                            onClick={requireAuth}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-[#00FF89] hover:bg-[#00FF89]/90 text-black rounded-lg font-medium transition-colors"
-                        >
-                            <LogIn className="w-4 h-4" />
-                            Sign in to add review
-                        </button>
-                    )}
-                </div>
-            )}
-        </motion.div>
+                    </motion.div>
+                )}
+
+                {!reviewMetrics.hasReviews && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="relative overflow-hidden rounded-2xl p-12 bg-black/50 border border-gray-700/50">
+                        <div className="text-center">
+                            <div className="inline-flex items-center justify-center w-20 h-20 bg-[#00FF89]/10 rounded-full mb-6">
+                                <Star className="w-10 h-10 text-[#00FF89]" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-4">{isAuthenticated ? 'Be the First to Review' : 'No Reviews Yet'}</h3>
+                            <p className="text-lg text-gray-300 max-w-md mx-auto mb-8 leading-relaxed">
+                                {isAuthenticated
+                                    ? 'Share your experience with this product and help the seller improve their offering.'
+                                    : 'Be the first to share your experience with this product.'}
+                            </p>
+                            {!isAuthenticated && (
+                                <button
+                                    onClick={requireAuth}
+                                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#00FF89] hover:bg-[#00FF89]/90 text-black rounded-xl font-medium text-lg transition-all hover:scale-105">
+                                    <LogIn className="w-5 h-5" />
+                                    Sign in to add review
+                                </button>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+            </div>
+        </div>
     )
 }
+
