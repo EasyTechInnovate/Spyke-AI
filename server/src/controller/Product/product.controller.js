@@ -557,6 +557,10 @@ export default {
             if (status) query.status = status
             if (sellerId) query.sellerId = sellerId
 
+            // Ensure referenced fields are valid ObjectIds to prevent populate casting errors
+            if (!query.category) query.category = { $type: 'objectId' }
+            if (!query.industry) query.industry = { $type: 'objectId' }
+
             const sort = {}
             sort[sortBy] = sortOrder === 'desc' ? -1 : 1
 
@@ -907,34 +911,6 @@ export default {
             }
 
             httpResponse(req, res, 200, responseMessage.PRODUCT.SUBMITTED_FOR_REVIEW, responseData)
-        } catch (err) {
-            httpError(next, err, req, 500)
-        }
-    },
-
-    getFeaturedProducts: async (req, res, next) => {
-        try {
-            const { 
-                limit = 12, 
-                category, 
-                type,
-                minRating = 3.5 
-            } = req.query
-
-            const options = {
-                limit: parseInt(limit),
-                category,
-                minRating: parseFloat(minRating)
-            }
-
-            const featuredProducts = await productQuicker.getFeaturedProductsAlgorithm(options)
-
-            if (type) {
-                const filteredProducts = featuredProducts.filter(product => product.type === type)
-                return httpResponse(req, res, 200, responseMessage.SUCCESS, filteredProducts)
-            }
-
-            httpResponse(req, res, 200, responseMessage.SUCCESS, featuredProducts)
         } catch (err) {
             httpError(next, err, req, 500)
         }

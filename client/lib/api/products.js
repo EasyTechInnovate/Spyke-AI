@@ -126,23 +126,8 @@ class ProductsAPI {
         return apiClient.get(endpoint)
     }
 
-    // Get featured products using the backend algorithm
-    async getFeaturedProducts(params = {}) {
-        const queryParams = new URLSearchParams()
-        
-        Object.entries(params).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== '' && value !== 'all') {
-                queryParams.append(key, value)
-            }
-        })
-        
-        const queryString = queryParams.toString()
-        const endpoint = queryString ? `v1/products/featured?${queryString}` : 'v1/products/featured'
-        
-        return apiClient.get(endpoint)
-    }
+    
 
-    // Get trending products
     async getTrendingProducts(params = {}) {
         const queryParams = new URLSearchParams()
         
@@ -158,13 +143,51 @@ class ProductsAPI {
         return apiClient.get(endpoint)
     }
 
-    // Get complete product discovery (featured, trending, high-rated, recently added)
     async getProductDiscovery() {
         return apiClient.get('v1/products/discovery')
     }
+
+    async getAdminFeaturedList(params = {}) {
+        const queryParams = new URLSearchParams()
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+                queryParams.append(key, value)
+            }
+        })
+        const qs = queryParams.toString()
+        const endpoint = qs ? `v1/products/admin/featured-list?${qs}` : 'v1/products/admin/featured-list'
+        return apiClient.get(endpoint)
+    }
+
+    async setProductFeatured(productId, body = {}) {
+        return apiClient.put(`v1/products/${productId}/featured`, body)
+    }
+
+    async getFeaturedSuggestions(params = {}) {
+        const queryParams = new URLSearchParams()
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+                queryParams.append(key, value)
+            }
+        })
+        const qs = queryParams.toString()
+        const endpoint = qs ? `v1/products/admin/featured-suggestions?${qs}` : 'v1/products/admin/featured-suggestions'
+        return apiClient.get(endpoint)
+    }
+
+    async getFeaturedHybrid(params = {}) {
+        const queryParams = new URLSearchParams()
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '' && value !== 'all') {
+                queryParams.append(key, value)
+            }
+        })
+        const qs = queryParams.toString()
+        const endpoint = qs ? `v1/products/featured-hybrid?${qs}` : 'v1/products/featured-hybrid'
+        return apiClient.get(endpoint)
+    }
 }
 
-// Create singleton instance
 const productsAPI = new ProductsAPI()
 
 export default productsAPI

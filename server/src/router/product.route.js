@@ -15,16 +15,22 @@ import {
   submitForReviewSchema,
 } from '../schema/product.schema.js'
 import rateLimiter from '../middleware/rateLimit.js'
+import featuredController from '../controller/Product/featured.controller.js'
+import { adminFeaturedListQuerySchema, setFeaturedBodySchema, featuredSuggestionsQuerySchema, featuredHybridQuerySchema } from '../schema/featured.schema.js'
 
 const router = Router()
 
 router.get('/self', productController.self)
 
-router.get('/featured', productController.getFeaturedProducts)
 router.get('/trending', productController.getTrendingProducts)
 router.get('/high-rated', productController.getHighRatedProducts)
 router.get('/recently-added', productController.getRecentlyAdded)
 router.get('/discovery', productController.getProductDiscovery)
+router.get(
+  '/featured-hybrid',
+  validateRequest(featuredHybridQuerySchema, 'query'),
+  featuredController.getFeaturedHybrid
+)
 
 router.get(
   '/',
@@ -138,6 +144,30 @@ router.post(
   authorize(['admin']),
   validateRequest(verifyProductSchema),
   productController.verifyProduct
+)
+
+router.get(
+  '/admin/featured-list',
+  authenticate,
+  authorize(['admin']),
+  validateRequest(adminFeaturedListQuerySchema, 'query'),
+  featuredController.getAdminFeaturedList
+)
+
+router.put(
+  '/:productId/featured',
+  authenticate,
+  authorize(['admin']),
+  validateRequest(setFeaturedBodySchema),
+  featuredController.setFeatured
+)
+
+router.get(
+  '/admin/featured-suggestions',
+  authenticate,
+  authorize(['admin']),
+  validateRequest(featuredSuggestionsQuerySchema, 'query'),
+  featuredController.getFeaturedSuggestions
 )
 
 export default router

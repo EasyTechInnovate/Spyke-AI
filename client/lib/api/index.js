@@ -1,4 +1,3 @@
-// API barrel export
 export { default as apiClient } from './client'
 export { authAPI } from './auth'
 export { default as sellerAPI } from './seller'

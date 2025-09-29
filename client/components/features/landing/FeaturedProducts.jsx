@@ -47,15 +47,20 @@ const FeaturedProducts = memo(function FeaturedProducts() {
             try {
                 setLoading(true)
                 setError(null)
-                const response = await productsAPI.getFeaturedProducts({
-                    limit: 8,
-                    minRating: 3.5
-                })
-                if (response?.data) {
-                    setFeaturedProducts(response.data)
-                } else {
-                    setFeaturedProducts([])
-                }
+                const res = await productsAPI.getFeaturedHybrid({ status: 'active', limit: 8 })
+                const list = Array.isArray(res?.data)
+                    ? res.data
+                    : Array.isArray(res?.data?.items)
+                    ? res.data.items
+                    : Array.isArray(res?.items)
+                    ? res.items
+                    : Array.isArray(res?.products)
+                    ? res.products
+                    : Array.isArray(res)
+                    ? res
+                    : []
+                const items = list.map((p) => ({ ...p, isFeatured: true }))
+                setFeaturedProducts(items)
             } catch (err) {
                 setError(err.message || 'Failed to load featured products')
                 setFeaturedProducts([])
@@ -94,7 +99,7 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                         <DSText
                             variant="subhero"
                             style={{ color: '#9ca3af' }}>
-                            Discover verified AI tools and prompts chosen by our algorithm for quality and performance
+                            Discover admin‑featured AI tools curated by our team for quality and performance
                         </DSText>
                     </motion.div>
                     <div className="mb-8 sm:mb-12">
@@ -311,7 +316,6 @@ function ProductCard({ product, onClick }) {
         setIsImageLoading(false)
         setImageError(false)
     }
-
     const handleImageError = () => {
         setImageError(true)
         setIsImageLoading(false)

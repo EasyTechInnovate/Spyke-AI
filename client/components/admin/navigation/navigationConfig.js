@@ -47,17 +47,22 @@ export const createNavigationItems = (
         badge: (counts?.products?.pending || 0) + (counts?.products?.flagged || 0) + (counts?.products?.featured || 0) || undefined,
         subItems: [
             {
+                id: 'all-products',
+                label: 'All Products',
+                href: '/admin/products/all'
+            },
+            {
                 id: 'pending-products',
                 label: 'Pending Review',
                 href: '/admin/products/pending',
                 badge: counts?.products?.pending || undefined
             },
-            {
-                id: 'featured-products',
-                label: 'Featured',
-                href: '/admin/products/featured',
-                badge: counts?.products?.featured || undefined
-            }
+            // {
+            //     id: 'featured-products',
+            //     label: 'Featured',
+            //     href: '/admin/products/featured',
+            //     badge: counts?.products?.featured || undefined
+            // }
         ]
     },
     {
