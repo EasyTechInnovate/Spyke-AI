@@ -689,7 +689,7 @@ export default {
     getMyProducts: async (req, res, next) => {
         try {
             const { authenticatedUser } = req
-            const { page = 1, limit = 10, status } = req.query
+            const { page = 1, limit = 10, status, sortBy = 'updatedAt', sortOrder = 'desc', category, type, priceRange } = req.query
 
             const sellerProfile = await sellerProfileModel.findOne({ userId: authenticatedUser.id })
             if (!sellerProfile) {
@@ -699,25 +699,116 @@ export default {
             const query = { sellerId: sellerProfile._id }
             if (status) query.status = status
 
+            // Add additional filters
+            if (category && category !== 'all') query.category = category
+            if (type && type !== 'all') query.type = type
+            if (priceRange && priceRange !== 'all') {
+                switch (priceRange) {
+                    case 'free':
+                        query.price = 0
+                        break
+                    case 'under-20':
+                        query.price = { $gt: 0, $lt: 20 }
+                        break
+                    case '20-50':
+                        query.price = { $gte: 20, $lte: 50 }
+                        break
+                    case '50-100':
+                        query.price = { $gte: 50, $lte: 100 }
+                        break
+                    case 'over-100':
+                        query.price = { $gt: 100 }
+                        break
+                }
+            }
+
             const skip = (parseInt(page) - 1) * parseInt(limit)
 
-            const [products, totalCount] = await Promise.all([
+            // Sorting options
+            const sort = {}
+            switch (sortBy) {
+                case 'title':
+                    sort.title = sortOrder === 'desc' ? -1 : 1
+                    break
+                case 'price':
+                    sort.price = sortOrder === 'desc' ? -1 : 1
+                    break
+                case 'status':
+                    sort.status = sortOrder === 'desc' ? -1 : 1
+                    break
+                case 'views':
+                    sort.views = sortOrder === 'desc' ? -1 : 1
+                    break
+                case 'sales':
+                    sort.sales = sortOrder === 'desc' ? -1 : 1
+                    break
+                case 'createdAt':
+                    sort.createdAt = sortOrder === 'desc' ? -1 : 1
+                    break
+                default:
+                    sort.updatedAt = sortOrder === 'desc' ? -1 : 1
+            }
+
+            // First, get products without population to avoid casting errors
+            const [productsRaw, totalCount] = await Promise.all([
                 Product.find(query)
-                    .populate({
-                        path: 'category',
-                        select: 'name icon'
-                    })
-                    .populate({
-                        path: 'industry',
-                        select: 'name icon'
-                    })
-                    .sort({ createdAt: -1 })
+                    .sort(sort)
                     .skip(skip)
                     .limit(parseInt(limit))
                     .select('-reviews')
                     .lean(),
                 Product.countDocuments(query)
             ])
+
+            const products = await Promise.all(productsRaw.map(async (product) => {
+                const populatedProduct = { ...product }
+                if (product.category && mongoose.Types.ObjectId.isValid(product.category)) {
+                    try {
+                        const category = await Category.findById(product.category).select('name icon').lean()
+                        populatedProduct.category = category
+                    } catch (error) {
+                        console.warn(`Failed to populate category ${product.category}:`, error.message)
+                        populatedProduct.category = null
+                    }
+                } else {
+                    if (typeof product.category === 'string') {
+                        try {
+                            const category = await Category.findOne({ 
+                                name: new RegExp(`^${product.category.replace(/[_-]/g, ' ')}$`, 'i') 
+                            }).select('name icon').lean()
+                            populatedProduct.category = category || { name: product.category.replace(/[_-]/g, ' '), icon: 'Package' }
+                        } catch (error) {
+                            populatedProduct.category = { name: product.category.replace(/[_-]/g, ' '), icon: 'Package' }
+                        }
+                    } else {
+                        populatedProduct.category = null
+                    }
+                }
+
+                if (product.industry && mongoose.Types.ObjectId.isValid(product.industry)) {
+                    try {
+                        const industry = await Industry.findById(product.industry).select('name icon').lean()
+                        populatedProduct.industry = industry
+                    } catch (error) {
+                        console.warn(`Failed to populate industry ${product.industry}:`, error.message)
+                        populatedProduct.industry = null
+                    }
+                } else {
+                    if (typeof product.industry === 'string') {
+                        try {
+                            const industry = await Industry.findOne({ 
+                                name: new RegExp(`^${product.industry.replace(/[_-]/g, ' ')}$`, 'i') 
+                            }).select('name icon').lean()
+                            populatedProduct.industry = industry || { name: product.industry.replace(/[_-]/g, ' '), icon: 'Briefcase' }
+                        } catch (error) {
+                            populatedProduct.industry = { name: product.industry.replace(/[_-]/g, ' '), icon: 'Briefcase' }
+                        }
+                    } else {
+                        populatedProduct.industry = null
+                    }
+                }
+                return populatedProduct
+            }))
 
             const totalPages = Math.ceil(totalCount / parseInt(limit))
 
