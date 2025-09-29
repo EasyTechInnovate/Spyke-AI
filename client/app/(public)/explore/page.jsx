@@ -9,7 +9,7 @@ import ActiveFilters from '@/components/features/explore/ActiveFilters'
 import ProductGrid from '@/components/features/explore/ProductGrid'
 import Pagination from '@/components/features/explore/Pagination'
 import { productsAPI } from '@/lib/api'
-import { CATEGORIES, PRODUCT_TYPES, INDUSTRIES, SETUP_TIMES, ITEMS_PER_PAGE, DEFAULT_FILTERS } from '@/data/explore/constants'
+import { CATEGORIES, PRODUCT_TYPES, INDUSTRIES, SETUP_TIMES, ITEMS_PER_PAGE, DEFAULT_FILTERS, SORT_OPTIONS } from '@/data/explore/constants'
 import { Loader2, AlertTriangle } from 'lucide-react'
 import { useDebounce } from '@/hooks/useDebounce'
 const FilterSidebar = dynamic(() => import('@/components/features/explore/FilterSidebar'), { ssr: false })
@@ -86,6 +86,7 @@ function useExploreData(initialURLState) {
             }
             setLoading(true)
             setError(null)
+            const sortOpt = SORT_OPTIONS.find((o) => o.id === (filters.sort || 'newest')) || SORT_OPTIONS[0]
             const params = {
                 page: filters.page,
                 limit: ITEMS_PER_PAGE,
@@ -96,6 +97,8 @@ function useExploreData(initialURLState) {
                 ...(filters.search && { search: filters.search.trim().slice(0, 100) }),
                 ...(filters.rating > 0 && { minRating: filters.rating }),
                 ...(filters.verifiedOnly && { verifiedOnly: 'true' }),
+                sortBy: sortOpt.sortBy,
+                sortOrder: sortOpt.sortOrder,
                 ...(() => {
                     const [min, max] = filters.priceRange
                     if (min === 0 && max >= 1000) return {}
@@ -164,15 +167,16 @@ function ExplorePageContent() {
         rating: urlState.rating,
         verifiedOnly: urlState.verifiedOnly
     })
+    const [sortId, setSortId] = useState(urlState.sort)
     const [page, setPage] = useState(urlState.page)
     const [showFilters, setShowFilters] = useState(true)
     const [showMobileFilters, setShowMobileFilters] = useState(false)
     const [viewMode, setViewMode] = useState('grid')
     const debouncedSearch = useDebounce(filters.search, 350)
-    const { products, totalItems, loading, error, fetchProducts } = useExploreData({ ...filters, page })
+    const { products, totalItems, loading, error, fetchProducts } = useExploreData({ ...filters, page, sort: urlState.sort })
     useEffect(() => {
-        fetchProducts({ ...filters, search: debouncedSearch, page })
-    }, [filters.category, filters.type, filters.industry, filters.setupTime, debouncedSearch, filters.rating, filters.verifiedOnly, filters.priceRange[0], filters.priceRange[1], page, fetchProducts])
+        fetchProducts({ ...filters, search: debouncedSearch, page, sort: sortId })
+    }, [filters.category, filters.type, filters.industry, filters.setupTime, debouncedSearch, filters.rating, filters.verifiedOnly, filters.priceRange[0], filters.priceRange[1], page, sortId, fetchProducts])
     useEffect(() => {
         const params = new URLSearchParams()
         if (filters.category !== 'all') params.set('category', filters.category)
@@ -185,9 +189,10 @@ function ExplorePageContent() {
         if (filters.priceRange[0] > 0) params.set('minPrice', String(filters.priceRange[0]))
         if (filters.priceRange[1] < 1000) params.set('maxPrice', String(filters.priceRange[1]))
         if (page > 1) params.set('page', String(page))
+        if (sortId) params.set('sort', sortId)
         const qs = params.toString()
         router.replace(qs ? `/explore?${qs}` : '/explore')
-    }, [filters, page, router])
+    }, [filters, page, sortId, router])
     const totalPages = useMemo(() => Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE)), [totalItems])
     const hasActiveFilters = useMemo(
         () =>
@@ -237,6 +242,12 @@ function ExplorePageContent() {
                     onViewModeChange={setViewMode}
                     onToggleFilters={() => setShowFilters((v) => !v)}
                     onToggleMobileFilters={() => setShowMobileFilters(true)}
+                    sortId={sortId}
+                    sortOptions={SORT_OPTIONS}
+                    onSortChange={(id) => {
+                        setSortId(id)
+                        setPage(1)
+                    }}
                 />
                 <ActiveFilters
                     filters={filters}

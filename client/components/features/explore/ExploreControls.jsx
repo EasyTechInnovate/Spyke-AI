@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { Search, Filter, SlidersHorizontal, Grid3X3, List } from 'lucide-react'
-export default function ExploreControls({ filters, viewMode, showFilters, onSearch, onViewModeChange, onToggleFilters, onToggleMobileFilters }) {
+export default function ExploreControls({ filters, viewMode, showFilters, onSearch, onViewModeChange, onToggleFilters, onToggleMobileFilters, sortId, sortOptions = [], onSortChange }) {
     const hasActiveFilters =
         Object.keys(filters).filter(
             (k) =>
@@ -30,7 +30,7 @@ export default function ExploreControls({ filters, viewMode, showFilters, onSear
                         aria-label="Search products"
                     />
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-stretch">
                     <button
                         onClick={onToggleMobileFilters}
                         className="lg:hidden flex items-center gap-2 px-4 py-2 bg-gray-900 border border-gray-800 rounded-xl hover:bg-gray-800 transition-colors"
@@ -46,6 +46,20 @@ export default function ExploreControls({ filters, viewMode, showFilters, onSear
                         <SlidersHorizontal className="w-4 h-4" />
                         {showFilters ? 'Hide' : 'Show'} Filters
                     </button>
+                    <div className="flex items-center bg-gray-900 border border-gray-800 rounded-xl h-12 px-2">
+                        <label htmlFor="sort" className="sr-only">Sort</label>
+                        <select
+                            id="sort"
+                            value={sortId || ''}
+                            onChange={(e) => onSortChange?.(e.target.value)}
+                            className="bg-transparent text-sm text-gray-300 hover:text-white focus:outline-none">
+                            {sortOptions.map((opt) => (
+                                <option key={opt.id} value={opt.id} className="bg-gray-900 text-gray-300">
+                                    {opt.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                     <div className="flex items-center gap-1 bg-gray-900 border border-gray-800 rounded-xl p-1 h-12">
                         <button
                             onClick={() => onViewModeChange('grid')}

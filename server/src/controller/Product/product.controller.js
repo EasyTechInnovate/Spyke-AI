@@ -11,6 +11,9 @@ import { notificationService } from '../../util/notification.js'
 import { EProductPriceCategory, EProductStatusNew, EUserRole } from '../../constant/application.js'
 import { v4 as uuidv4 } from 'uuid'
 import productQuicker from './quicker.controller.js'
+import mongoose from 'mongoose'
+import Category from '../../model/category.model.js'
+import Industry from '../../model/industry.model.js'
 
 dayjs.extend(utc)
 
@@ -94,8 +97,8 @@ export default {
                 page = 1,
                 limit = 12,
                 type,
-                category,
-                industry,
+                category: categoryParam,
+                industry: industryParam,
                 priceCategory,
                 setupTime,
                 minRating,
@@ -109,13 +112,65 @@ export default {
             const query = { status: EProductStatusNew.PUBLISHED }
 
             if (type && type !== 'all') query.type = type
-            if (category && category !== 'all') query.category = category
-            if (industry && industry !== 'all') query.industry = industry
             if (priceCategory && priceCategory !== 'all') query.priceCategory = priceCategory
             if (setupTime && setupTime !== 'all') query.setupTime = setupTime
             if (minRating) query.averageRating = { $gte: parseFloat(minRating) }
             if (verifiedOnly === 'true') query.isVerified = true
             if (sellerId) query.sellerId = sellerId
+
+            if (categoryParam && categoryParam !== 'all') {
+                let categoryId = null
+                if (mongoose.Types.ObjectId.isValid(categoryParam)) {
+                    categoryId = categoryParam
+                } else {
+                    const cat = await Category.findOne({ name: new RegExp(`^${categoryParam}$`, 'i') }, { _id: 1 }).lean()
+                    if (cat) categoryId = cat._id
+                }
+                if (categoryId) {
+                    query.category = categoryId
+                } else {
+                    // Unknown category param: short-circuit with empty result
+                    return httpResponse(req, res, 200, responseMessage.SUCCESS, {
+                        products: [],
+                        pagination: {
+                            currentPage: parseInt(page),
+                            totalPages: 0,
+                            totalItems: 0,
+                            itemsPerPage: parseInt(limit),
+                            hasNextPage: false,
+                            hasPreviousPage: false
+                        }
+                    })
+                }
+            }
+
+            if (industryParam && industryParam !== 'all') {
+                let industryId = null
+                if (mongoose.Types.ObjectId.isValid(industryParam)) {
+                    industryId = industryParam
+                } else {
+                    const ind = await Industry.findOne({ name: new RegExp(`^${industryParam}$`, 'i') }, { _id: 1 }).lean()
+                    if (ind) industryId = ind._id
+                }
+                if (industryId) {
+                    query.industry = industryId
+                } else {
+                    return httpResponse(req, res, 200, responseMessage.SUCCESS, {
+                        products: [],
+                        pagination: {
+                            currentPage: parseInt(page),
+                            totalPages: 0,
+                            totalItems: 0,
+                            itemsPerPage: parseInt(limit),
+                            hasNextPage: false,
+                            hasPreviousPage: false
+                        }
+                    })
+                }
+            }
+
+            if (!query.category) query.category = { $type: 'objectId' }
+            if (!query.industry) query.industry = { $type: 'objectId' }
 
             if (search) {
                 query.$or = [
@@ -215,16 +270,13 @@ export default {
                 return httpError(next, new Error(responseMessage.PRODUCT.NOT_FOUND), req, 404)
             }
 
-            // Check if user has purchased the product
             let hasPurchased = false
             let isOwner = false
             
             if (authenticatedUser) {
-                // Check if user is the seller/owner
                 const sellerProfile = await sellerProfileModel.findOne({ userId: authenticatedUser.id })
                 isOwner = sellerProfile && product.sellerId.toString() === sellerProfile._id.toString()
                 
-                // Check if user has purchased the product
                 if (!isOwner) {
                     hasPurchased = await Purchase.hasPurchased(authenticatedUser.id, product._id)
                 }
