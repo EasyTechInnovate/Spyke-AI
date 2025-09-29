@@ -24,7 +24,9 @@ const purchaseControllerExport = {
             const { authenticatedUser } = req
 
             const cart = await Cart.getOrCreateCart(authenticatedUser.id)
-            await cart.populate('items.productId', 'title slug thumbnail price type category status')
+            
+            // Use safe population without category/industry to avoid casting errors
+            await cart.populate('items.productId', 'title slug thumbnail price type status')
 
             const validItems = cart.items.filter((item) => item.productId && item.productId.status === EProductStatusNew.PUBLISHED)
 
@@ -68,7 +70,8 @@ const purchaseControllerExport = {
 
             try {
                 await cart.addItem(productId)
-                await cart.populate('items.productId', 'title slug thumbnail price type category')
+                // Safe population without category/industry fields
+                await cart.populate('items.productId', 'title slug thumbnail price type')
 
                 httpResponse(req, res, 200, responseMessage.CART.ITEM_ADDED, {
                     cart,
@@ -96,7 +99,8 @@ const purchaseControllerExport = {
 
             const cart = await Cart.getOrCreateCart(authenticatedUser.id)
             await cart.removeItem(productId)
-            await cart.populate('items.productId', 'title slug thumbnail price type category')
+            // Safe population without category/industry fields
+            await cart.populate('items.productId', 'title slug thumbnail price type')
 
             httpResponse(req, res, 200, responseMessage.CART.ITEM_REMOVED, cart)
         } catch (err) {
@@ -133,11 +137,15 @@ const purchaseControllerExport = {
                 return httpError(next, new Error(responseMessage.PROMOCODE.INVALID), req, 400)
             }
 
-            await cart.populate('items.productId', 'title slug thumbnail price type category industry')
+            // First populate without category/industry to get basic product data
+            await cart.populate('items.productId', 'title slug thumbnail price type')
 
             const productIds = cart.items.map((item) => item.productId._id)
-            const categories = [...new Set(cart.items.map((item) => item.productId.category))]
-            const industries = [...new Set(cart.items.map((item) => item.productId.industry))]
+            
+            // For category/industry checking, fetch them separately to avoid casting errors
+            const products = await Product.find({ _id: { $in: productIds } }).select('category industry').lean()
+            const categories = [...new Set(products.map(p => p.category).filter(Boolean))]
+            const industries = [...new Set(products.map(p => p.industry).filter(Boolean))]
 
             if (!promocode.isApplicableToProducts(productIds)) {
                 return httpError(next, new Error(responseMessage.PROMOCODE.NOT_APPLICABLE_TO_PRODUCTS), req, 400)
@@ -173,7 +181,8 @@ const purchaseControllerExport = {
 
             const cart = await Cart.getOrCreateCart(authenticatedUser.id)
             await cart.removePromocode()
-            await cart.populate('items.productId', 'title slug thumbnail price type category')
+            // Safe population without category/industry fields
+            await cart.populate('items.productId', 'title slug thumbnail price type')
 
             httpResponse(req, res, 200, responseMessage.PROMOCODE.REMOVED, cart)
         } catch (err) {
@@ -186,7 +195,8 @@ const purchaseControllerExport = {
             const { authenticatedUser } = req
 
             const cart = await Cart.getOrCreateCart(authenticatedUser.id)
-            await cart.populate('items.productId', 'title price type category')
+            // Safe population without category field
+            await cart.populate('items.productId', 'title price type')
 
             if (cart.items.length === 0) {
                 return httpError(next, new Error(responseMessage.CART.EMPTY_CART), req, 400)
@@ -312,7 +322,8 @@ const purchaseControllerExport = {
     
             // Get cart data before creating purchase
             const cart = await Cart.getOrCreateCart(authenticatedUser.id);
-            await cart.populate('items.productId', 'title slug thumbnail price type category status sellerId');
+            // Safe population without category field to avoid casting errors
+            await cart.populate('items.productId', 'title slug thumbnail price type status sellerId');
     
             if (!cart.items || cart.items.length === 0) {
                 return httpError(next, new Error(responseMessage.CART.EMPTY_CART), req, 400);

@@ -1,13 +1,9 @@
 import Product from '../../model/product.model.js'
+import mongoose from 'mongoose'
 
 export default {
     async getFeaturedProductsAlgorithm(options = {}) {
-        const {
-            limit = 12,
-            excludeIds = [],
-            category = null,
-            minRating = 3.5
-        } = options
+        const { limit = 12, excludeIds = [], category = null, minRating = 3.5 } = options
 
         const matchStage = {
             status: 'published',
@@ -29,7 +25,7 @@ export default {
             },
             {
                 $lookup: {
-                    from: 'industries', 
+                    from: 'industries',
                     localField: 'industry',
                     foreignField: '_id',
                     as: 'industry',
@@ -40,11 +36,11 @@ export default {
                 $lookup: {
                     from: 'sellerprofiles',
                     localField: 'sellerId',
-                    foreignField: '_id', 
+                    foreignField: '_id',
                     as: 'sellerId',
                     pipeline: [{ $project: { fullName: 1, avatar: 1 } }]
                 }
-            },            
+            },
             {
                 $addFields: {
                     category: { $arrayElemAt: ['$category', 0] },
@@ -85,17 +81,14 @@ export default {
                             {
                                 $multiply: [
                                     {
-                                        $divide: [
-                                            { $subtract: [new Date(), '$createdAt'] },
-                                            1000 * 60 * 60 * 24
-                                        ]
+                                        $divide: [{ $subtract: [new Date(), '$createdAt'] }, 1000 * 60 * 60 * 24]
                                     },
                                     -0.5
                                 ]
                             }
                         ]
                     },
-                    
+
                     diversityBoost: {
                         $switch: {
                             branches: [
@@ -108,7 +101,7 @@ export default {
                     }
                 }
             },
-            
+
             {
                 $addFields: {
                     finalScore: {
@@ -116,18 +109,18 @@ export default {
                     }
                 }
             },
-            
-            { 
-                $sort: { 
+
+            {
+                $sort: {
                     finalScore: -1,
                     sales: -1,
                     averageRating: -1,
-                    createdAt: -1 
-                } 
+                    createdAt: -1
+                }
             },
-            
+
             { $limit: limit * 2 },
-            
+
             {
                 $group: {
                     _id: '$type',
@@ -135,7 +128,7 @@ export default {
                     count: { $sum: 1 }
                 }
             },
-            
+
             {
                 $project: {
                     products: {
@@ -143,7 +136,7 @@ export default {
                     }
                 }
             },
-            
+
             { $unwind: '$products' },
             { $replaceRoot: { newRoot: '$products' } },
             { $limit: limit }
@@ -153,88 +146,184 @@ export default {
     },
 
     async getTrendingProducts(options = {}) {
-        const {
-            limit = 8,
-            days = 7
-        } = options
+        const { limit = 8, days = 7 } = options
 
         const dateThreshold = new Date()
         dateThreshold.setDate(dateThreshold.getDate() - days)
 
-        return await Product.find({
+        // First get products without population to avoid casting errors
+        const productsRaw = await Product.find({
             status: 'published',
             updatedAt: { $gte: dateThreshold }
         })
-        .sort({
-            sales: -1,
-            views: -1,
-            upvotes: -1,
-            createdAt: -1
-        })
-        .limit(limit)
-        .populate('sellerId', 'fullName avatar')
-        .populate({
-            path: 'category',
-            select: 'name icon'
-        })
-        .populate({
-            path: 'industry',
-            select: 'name icon'
-        })
+            .sort({
+                sales: -1,
+                views: -1,
+                upvotes: -1,
+                createdAt: -1
+            })
+            .limit(limit)
+            .populate('sellerId', 'fullName avatar')
+            .lean()
+
+        // Then manually populate category and industry safely
+        const products = await Promise.all(
+            productsRaw.map(async (product) => {
+                const populatedProduct = { ...product }
+
+                // Safely populate category
+                if (product.category && mongoose.Types.ObjectId.isValid(product.category)) {
+                    try {
+                        const Category = (await import('../../model/category.model.js')).default
+                        const category = await Category.findById(product.category).select('name icon').lean()
+                        populatedProduct.category = category
+                    } catch (error) {
+                        populatedProduct.category = null
+                    }
+                } else if (typeof product.category === 'string') {
+                    populatedProduct.category = { name: product.category.replace(/[_-]/g, ' '), icon: 'Package' }
+                } else {
+                    populatedProduct.category = null
+                }
+
+                // Safely populate industry
+                if (product.industry && mongoose.Types.ObjectId.isValid(product.industry)) {
+                    try {
+                        const Industry = (await import('../../model/industry.model.js')).default
+                        const industry = await Industry.findById(product.industry).select('name icon').lean()
+                        populatedProduct.industry = industry
+                    } catch (error) {
+                        populatedProduct.industry = null
+                    }
+                } else if (typeof product.industry === 'string') {
+                    populatedProduct.industry = { name: product.industry.replace(/[_-]/g, ' '), icon: 'Briefcase' }
+                } else {
+                    populatedProduct.industry = null
+                }
+
+                return populatedProduct
+            })
+        )
+
+        return products
     },
 
     async getHighRatedProducts(options = {}) {
-        const {
-            limit = 6,
-            minReviews = 3
-        } = options
+        const { limit = 6, minReviews = 3 } = options
 
-        return await Product.find({
+        // First get products without population to avoid casting errors
+        const productsRaw = await Product.find({
             status: 'published',
             totalReviews: { $gte: minReviews },
             averageRating: { $gte: 4.0 }
         })
-        .sort({
-            averageRating: -1,
-            totalReviews: -1,
-            sales: -1
-        })
-        .limit(limit)
-        .populate('sellerId', 'fullName avatar')
-        .populate({
-            path: 'category',
-            select: 'name icon'
-        })
-        .populate({
-            path: 'industry',
-            select: 'name icon'
-        })
+            .sort({
+                averageRating: -1,
+                totalReviews: -1,
+                sales: -1
+            })
+            .limit(limit)
+            .populate('sellerId', 'fullName avatar')
+            .lean()
+
+        // Then manually populate category and industry safely
+        const products = await Promise.all(
+            productsRaw.map(async (product) => {
+                const populatedProduct = { ...product }
+
+                // Safely populate category
+                if (product.category && mongoose.Types.ObjectId.isValid(product.category)) {
+                    try {
+                        const Category = (await import('../../model/category.model.js')).default
+                        const category = await Category.findById(product.category).select('name icon').lean()
+                        populatedProduct.category = category
+                    } catch (error) {
+                        populatedProduct.category = null
+                    }
+                } else if (typeof product.category === 'string') {
+                    populatedProduct.category = { name: product.category.replace(/[_-]/g, ' '), icon: 'Package' }
+                } else {
+                    populatedProduct.category = null
+                }
+
+                // Safely populate industry
+                if (product.industry && mongoose.Types.ObjectId.isValid(product.industry)) {
+                    try {
+                        const Industry = (await import('../../model/industry.model.js')).default
+                        const industry = await Industry.findById(product.industry).select('name icon').lean()
+                        populatedProduct.industry = industry
+                    } catch (error) {
+                        populatedProduct.industry = null
+                    }
+                } else if (typeof product.industry === 'string') {
+                    populatedProduct.industry = { name: product.industry.replace(/[_-]/g, ' '), icon: 'Briefcase' }
+                } else {
+                    populatedProduct.industry = null
+                }
+
+                return populatedProduct
+            })
+        )
+
+        return products
     },
 
     async getRecentlyAddedProducts(options = {}) {
-        const {
-            limit = 6,
-            days = 30
-        } = options
+        const { limit = 6, days = 30 } = options
 
         const dateThreshold = new Date()
         dateThreshold.setDate(dateThreshold.getDate() - days)
 
-        return await Product.find({
+        // First get products without population to avoid casting errors
+        const productsRaw = await Product.find({
             status: 'published',
             isVerified: true,
             createdAt: { $gte: dateThreshold }
         })
-        .sort({ createdAt: -1 })
-        .limit(limit)
-        .populate('sellerId', 'fullName avatar')
-        .populate({
-            path: 'category',
-            select: 'name icon'
-        })
-        .populate({
-            path: 'industry',
-            select: 'name icon'
-        })
+            .sort({ createdAt: -1 })
+            .limit(limit)
+            .populate('sellerId', 'fullName avatar')
+            .lean()
+
+        // Then manually populate category and industry safely
+        const products = await Promise.all(
+            productsRaw.map(async (product) => {
+                const populatedProduct = { ...product }
+
+                // Safely populate category
+                if (product.category && mongoose.Types.ObjectId.isValid(product.category)) {
+                    try {
+                        const Category = (await import('../../model/category.model.js')).default
+                        const category = await Category.findById(product.category).select('name icon').lean()
+                        populatedProduct.category = category
+                    } catch (error) {
+                        populatedProduct.category = null
+                    }
+                } else if (typeof product.category === 'string') {
+                    populatedProduct.category = { name: product.category.replace(/[_-]/g, ' '), icon: 'Package' }
+                } else {
+                    populatedProduct.category = null
+                }
+
+                // Safely populate industry
+                if (product.industry && mongoose.Types.ObjectId.isValid(product.industry)) {
+                    try {
+                        const Industry = (await import('../../model/industry.model.js')).default
+                        const industry = await Industry.findById(product.industry).select('name icon').lean()
+                        populatedProduct.industry = industry
+                    } catch (error) {
+                        populatedProduct.industry = null
+                    }
+                } else if (typeof product.industry === 'string') {
+                    populatedProduct.industry = { name: product.industry.replace(/[_-]/g, ' '), icon: 'Briefcase' }
+                } else {
+                    populatedProduct.industry = null
+                }
+
+                return populatedProduct
+            })
+        )
+
+        return products
     }
 }

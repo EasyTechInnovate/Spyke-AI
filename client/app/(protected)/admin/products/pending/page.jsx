@@ -44,7 +44,8 @@ import toast from '@/lib/utils/toast'
 import Link from 'next/link'
 import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 import AdminProductModal from '@/components/product/AdminProductModal'
-import InlineNotification from '@/components/shared/notifications/InlineNotification'
+import { useNotificationProvider } from '@/components/shared/notifications/NotificationProvider'
+
 const BRAND = '#00FF89'
 const AMBER = '#FFC050'
 function formatDate(date) {
@@ -132,12 +133,24 @@ export default function PendingProductsPage() {
         { value: 'price', label: 'Price' },
         { value: 'sellerId.fullName', label: 'Seller Name' }
     ]
-    const [notification, setNotification] = useState(null)
+    const { showSuccess, showError, showInfo } = useNotificationProvider()
+    
+    // Replace showMessage function with toast notifications
     const showMessage = (message, type = 'info') => {
-        setNotification({ message, type })
-        setTimeout(() => setNotification(null), 5000)
+        switch (type) {
+            case 'success':
+                showSuccess('Success', message)
+                break
+            case 'error':
+                showError('Error', message)
+                break
+            case 'info':
+            default:
+                showInfo('Info', message)
+                break
+        }
     }
-    const clearNotification = () => setNotification(null)
+
     useEffect(() => {
         fetchPendingProducts()
     }, [activeStatusFilter, sortBy, sortOrder])
@@ -233,15 +246,37 @@ export default function PendingProductsPage() {
             }, 120)
         }
     }
+    // Helper functions for safe data extraction - backward compatible
+    const safeGetCategoryName = (category) => {
+        if (!category) return ''
+        if (typeof category === 'string') return category
+        if (typeof category === 'object') {
+            // Handle new object format: {_id, name, icon}
+            return category.name || category.label || category.title || ''
+        }
+        return String(category) // Fallback for any other type
+    }
+
+    const safeGetTypeName = (type) => {
+        if (!type) return ''
+        if (typeof type === 'string') return type
+        if (typeof type === 'object') {
+            // Handle new object format: {_id, name, icon}
+            return type.name || type.label || type.title || ''
+        }
+        return String(type) // Fallback for any other type
+    }
+
     const filteredProducts = products.filter((product) => {
         if (!debouncedQuery) return true
         const q = debouncedQuery
+
         return (
             (product.title || '').toLowerCase().includes(q) ||
             (product.shortDescription || '').toLowerCase().includes(q) ||
             (product.sellerId?.fullName || '').toLowerCase().includes(q) ||
-            (product.category || '').toLowerCase().includes(q) ||
-            (product.type || '').toLowerCase().includes(q)
+            safeGetCategoryName(product.category).toLowerCase().includes(q) ||
+            safeGetTypeName(product.type).toLowerCase().includes(q)
         )
     })
     const handleProductAction = async (productId, action, notes = '') => {
@@ -334,8 +369,8 @@ export default function PendingProductsPage() {
             ...productsData.map((product) => [
                 product.title || '',
                 product.sellerId?.fullName || '',
-                product.category || '',
-                product.type || '',
+                safeGetCategoryName(product.category),
+                safeGetTypeName(product.type),
                 product.price || 0,
                 product.status || '',
                 product.isVerified ? 'Yes' : 'No',
@@ -357,13 +392,6 @@ export default function PendingProductsPage() {
     }
     return (
         <div className="space-y-4 sm:space-y-6">
-            {notification && (
-                <InlineNotification
-                    type={notification.type}
-                    message={notification.message}
-                    onDismiss={clearNotification}
-                />
-            )}
             <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-gray-800 bg-[#141414]">
                 <div
                     className="absolute inset-0 pointer-events-none"
@@ -614,7 +642,7 @@ export default function PendingProductsPage() {
                     <EmptyState query={debouncedQuery} />
                 ) : (
                     <div className="space-y-3 sm:space-y-4">
-                        {filteredProducts.map((product) => (
+                        {filteredProducts?.map((product) => (
                             <ProductCard
                                 key={product._id}
                                 product={product}
@@ -729,6 +757,10 @@ function ProductCard({ product, onVerify, onTest, onApprove, onViewDetails, onSe
     }
     const status = getProductStatus()
     const cfg = statusConfig[status] || statusConfig.pending_review
+
+    // Safely extract the icon component
+    const IconComponent = cfg?.icon || Clock
+
     const getPrimaryAction = () => {
         if (!product.isVerified) {
             return { label: 'Verify', icon: Shield, onClick: onVerify, color: 'bg-green-500 hover:bg-green-600' }
@@ -742,6 +774,10 @@ function ProductCard({ product, onVerify, onTest, onApprove, onViewDetails, onSe
         return { label: 'Review', icon: Eye, onClick: onViewDetails, color: 'bg-[#00FF89] hover:bg-[#00FF89]/90' }
     }
     const primaryAction = getPrimaryAction()
+
+    // Safely extract the primary action icon component
+    const PrimaryActionIcon = primaryAction?.icon || Eye
+
     return (
         <div className="rounded-xl border border-gray-800 bg-[#171717] overflow-hidden">
             <div className="p-3 sm:p-4 lg:p-5">
@@ -772,14 +808,17 @@ function ProductCard({ product, onVerify, onTest, onApprove, onViewDetails, onSe
                                             onClick={onViewDetails}>
                                             {product.title}
                                         </h3>
-                                        <div className={`px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-medium border ${urgency.color} border-current/30 flex-shrink-0`}>
+                                        <div
+                                            className={`px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-medium border ${urgency.color} border-current/30 flex-shrink-0`}>
                                             {urgency.text}
                                         </div>
                                     </div>
                                     <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 mt-1 text-xs text-gray-400">
                                         <span className="flex items-center gap-1">
                                             <User className="w-3 h-3 flex-shrink-0" />
-                                            <span className="truncate max-w-[120px] sm:max-w-none">{product.sellerId?.fullName || 'Unknown Seller'}</span>
+                                            <span className="truncate max-w-[120px] sm:max-w-none">
+                                                {product.sellerId?.fullName || 'Unknown Seller'}
+                                            </span>
                                         </span>
                                         <span className="flex items-center gap-1">
                                             <DollarSign className="w-3 h-3 text-[#FFC050] flex-shrink-0" />
@@ -792,8 +831,9 @@ function ProductCard({ product, onVerify, onTest, onApprove, onViewDetails, onSe
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
-                                    <span className={`inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${cfg.chip} flex-shrink-0`}>
-                                        <cfg.icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                                    <span
+                                        className={`inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${cfg.chip} flex-shrink-0`}>
+                                        <IconComponent className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                                         <span className="hidden xs:inline">{cfg.label}</span>
                                         <span className="xs:hidden">{cfg.label.split(' ')[0]}</span>
                                     </span>
@@ -804,12 +844,18 @@ function ProductCard({ product, onVerify, onTest, onApprove, onViewDetails, onSe
                             </div>
                         </div>
                     </div>
-                    {(product.category || product.type) && (
+                    {(product?.category || product?.type) && (
                         <div className="flex items-center gap-2 flex-wrap -mt-2">
-                            {product.category && (
-                                <span className="px-2 py-0.5 text-[10px] rounded bg-[#0d1f19] text-[#00FF89]">{product.category}</span>
+                            {product?.category && (
+                                <span className="px-2 py-0.5 text-[10px] rounded bg-[#0d1f19] text-[#00FF89]">
+                                    {typeof product.category === 'object' ? product.category.name : product.category}
+                                </span>
                             )}
-                            {product.type && <span className="px-2 py-0.5 text-[10px] rounded bg-[#352a14] text-[#FFC050]">{product.type}</span>}
+                            {product.type && (
+                                <span className="px-2 py-0.5 text-[10px] rounded bg-[#352a14] text-[#FFC050]">
+                                    {typeof product.type === 'object' ? product.type.name : product.type}
+                                </span>
+                            )}
                         </div>
                     )}
                     <div className="flex items-center gap-2 flex-wrap">
@@ -831,7 +877,7 @@ function ProductCard({ product, onVerify, onTest, onApprove, onViewDetails, onSe
                                     onClick={primaryAction.onClick}
                                     className={`flex-1 sm:flex-none px-3 py-2 rounded-lg font-medium text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 ${primaryAction.color} text-white`}>
                                     <div className="flex items-center justify-center gap-1.5">
-                                        <primaryAction.icon className="w-3.5 h-3.5" />
+                                        <PrimaryActionIcon className="w-3.5 h-3.5" />
                                         <span>{primaryAction.label}</span>
                                     </div>
                                 </button>
@@ -969,3 +1015,4 @@ function LegendBannerAlways({ statusConfig }) {
         </div>
     )
 }
+

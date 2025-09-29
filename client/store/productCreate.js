@@ -182,6 +182,28 @@ export const useProductCreateStore = create(
                         if (field === 'toolsConfiguration' && value.trim()) {
                             delete state.errors.toolsConfiguration
                         }
+
+                        // Clear toolsUsed error when tools are selected
+                        if (field === 'toolsUsed' && Array.isArray(value) && value.length > 0) {
+                            delete state.errors.toolsUsed
+                        }
+
+                        // Clear other validation errors
+                        if (field === 'type' && value) {
+                            delete state.errors.type
+                        }
+
+                        if (field === 'category' && value) {
+                            delete state.errors.category
+                        }
+
+                        if (field === 'industry' && value) {
+                            delete state.errors.industry
+                        }
+
+                        if (field === 'setupTimeEstimate' && value) {
+                            delete state.errors.setupTimeEstimate
+                        }
                     }),
 
                 // New action to mark fields as touched (for blur events)

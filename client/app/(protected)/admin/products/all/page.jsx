@@ -246,10 +246,12 @@ export default function AdminAllProductsPage() {
                                     ) : (
                                         <button
                                             onClick={() => handleFeatureToggle(product, true)}
-                                            disabled={product.status !== 'PUBLISHED'}
-                                            title={product.status !== 'PUBLISHED' ? 'Only published products can be featured' : undefined}
+                                            disabled={product.status?.toLowerCase() !== 'published'}
+                                            title={
+                                                product.status?.toLowerCase() !== 'published' ? 'Only published products can be featured' : undefined
+                                            }
                                             className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm ${
-                                                product.status !== 'PUBLISHED'
+                                                product.status?.toLowerCase() !== 'published'
                                                     ? 'bg-gray-800 text-gray-500 cursor-not-allowed opacity-60'
                                                     : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                                             }`}>
@@ -304,7 +306,7 @@ export default function AdminAllProductsPage() {
                         Refresh
                     </button>
                 </div>
-                <p className="text-gray-400 mb-4">Algorithmic suggestions based on sales, rating, reviews, engagement and freshness</p>
+                <p className="text-gray-400 mb-4"> Suggestions based on sales, rating, reviews, engagement and freshness</p>
                 {loadingSuggestions ? (
                     <div className="flex items-center justify-center py-8">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary"></div>
@@ -336,10 +338,12 @@ export default function AdminAllProductsPage() {
                                     <div className="mt-3 flex items-center gap-2">
                                         <button
                                             onClick={() => handleFeatureToggle(product, true)}
-                                            disabled={product.status !== 'PUBLISHED'}
-                                            title={product.status !== 'PUBLISHED' ? 'Only published products can be featured' : undefined}
+                                            disabled={product.status?.toLowerCase() !== 'published'}
+                                            title={
+                                                product.status?.toLowerCase() !== 'published' ? 'Only published products can be featured' : undefined
+                                            }
                                             className={`flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm ${
-                                                product.status !== 'PUBLISHED'
+                                                product.status?.toLowerCase() !== 'published'
                                                     ? 'bg-yellow-500/10 text-yellow-700/70 cursor-not-allowed opacity-60'
                                                     : 'bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30'
                                             }`}>

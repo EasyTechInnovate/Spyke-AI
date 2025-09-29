@@ -36,10 +36,13 @@ export default {
                 return httpError(next, new Error(responseMessage.SELLER.PROFILE_NOT_ACTIVE), req, 403)
             }
 
-            const slug = productData.title
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-+|-+$/g, '') + '-' + uuidv4().slice(0, 8)
+            const slug =
+                productData.title
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/^-+|-+$/g, '') +
+                '-' +
+                uuidv4().slice(0, 8)
 
             productData.sellerId = sellerProfile._id
             productData.slug = slug
@@ -260,7 +263,7 @@ export default {
                     select: 'name icon'
                 })
                 .populate({
-                    path: 'industry', 
+                    path: 'industry',
                     select: 'name icon'
                 })
                 .populate('reviews.userId', 'name avatar')
@@ -272,11 +275,11 @@ export default {
 
             let hasPurchased = false
             let isOwner = false
-            
+
             if (authenticatedUser) {
                 const sellerProfile = await sellerProfileModel.findOne({ userId: authenticatedUser.id })
                 isOwner = sellerProfile && product.sellerId.toString() === sellerProfile._id.toString()
-                
+
                 if (!isOwner) {
                     hasPurchased = await Purchase.hasPurchased(authenticatedUser.id, product._id)
                 }
@@ -284,22 +287,22 @@ export default {
 
             // Filter content based on purchase status
             const responseProduct = { ...product }
-            
+
             if (!hasPurchased && !isOwner && !authenticatedUser?.roles?.includes(EUserRole.ADMIN)) {
                 // Hide premium content for non-purchasers
                 delete responseProduct.premiumContent
-                
+
                 // Filter out premium FAQs
                 if (responseProduct.faqs) {
-                    responseProduct.faqs = responseProduct.faqs.filter(faq => !faq.isPremium)
+                    responseProduct.faqs = responseProduct.faqs.filter((faq) => !faq.isPremium)
                 }
-                
+
                 // Hide detailed reviews (keep only basic ones)
                 if (responseProduct.reviews) {
                     responseProduct.reviews = responseProduct.reviews.slice(0, 3) // Show only first 3 reviews
                 }
             }
-            
+
             // Add purchase status to response
             responseProduct.userAccess = {
                 hasPurchased,
@@ -432,7 +435,7 @@ export default {
                 return httpError(next, new Error(responseMessage.PRODUCT.CANNOT_REVIEW_OWN_PRODUCT), req, 400)
             }
 
-            const existingReview = product.reviews.find(review => review.userId.toString() === authenticatedUser.id)
+            const existingReview = product.reviews.find((review) => review.userId.toString() === authenticatedUser.id)
             if (existingReview) {
                 return httpError(next, new Error(responseMessage.PRODUCT.ALREADY_REVIEWED), req, 400)
             }
@@ -510,31 +513,59 @@ export default {
                 return httpError(next, new Error(responseMessage.PRODUCT.NOT_FOUND), req, 404)
             }
 
-            const relatedProducts = await Product.find({
+            // First get related products without population to avoid casting errors
+            const relatedProductsRaw = await Product.find({
                 _id: { $ne: id },
                 status: EProductStatusNew.PUBLISHED,
-                $or: [
-                    { category: product.category },
-                    { industry: product.industry },
-                    { type: product.type }
-                ]
+                $or: [{ category: product.category }, { industry: product.industry }, { type: product.type }]
             })
                 .populate({
                     path: 'sellerId',
                     model: 'SellerProfile',
                     select: 'fullName avatar stats.averageRating verification.status'
                 })
-                .populate({
-                    path: 'category',
-                    select: 'name icon'
-                })
-                .populate({
-                    path: 'industry',
-                    select: 'name icon'
-                })
                 .limit(parseInt(limit))
                 .select('-reviews -faqs -versions -howItWorks -premiumContent')
                 .lean()
+
+            // Then manually populate category and industry safely
+            const relatedProducts = await Promise.all(
+                relatedProductsRaw.map(async (product) => {
+                    const populatedProduct = { ...product }
+
+                    // Safely populate category
+                    if (product.category && mongoose.Types.ObjectId.isValid(product.category)) {
+                        try {
+                            const category = await Category.findById(product.category).select('name icon').lean()
+                            populatedProduct.category = category
+                        } catch (error) {
+                            console.warn(`Failed to populate category ${product.category}:`, error.message)
+                            populatedProduct.category = null
+                        }
+                    } else if (typeof product.category === 'string') {
+                        populatedProduct.category = { name: product.category.replace(/[_-]/g, ' '), icon: 'Package' }
+                    } else {
+                        populatedProduct.category = null
+                    }
+
+                    // Safely populate industry
+                    if (product.industry && mongoose.Types.ObjectId.isValid(product.industry)) {
+                        try {
+                            const industry = await Industry.findById(product.industry).select('name icon').lean()
+                            populatedProduct.industry = industry
+                        } catch (error) {
+                            console.warn(`Failed to populate industry ${product.industry}:`, error.message)
+                            populatedProduct.industry = null
+                        }
+                    } else if (typeof product.industry === 'string') {
+                        populatedProduct.industry = { name: product.industry.replace(/[_-]/g, ' '), icon: 'Briefcase' }
+                    } else {
+                        populatedProduct.industry = null
+                    }
+
+                    return populatedProduct
+                })
+            )
 
             httpResponse(req, res, 200, responseMessage.SUCCESS, relatedProducts)
         } catch (err) {
@@ -544,42 +575,24 @@ export default {
 
     getAllProductsAdmin: async (req, res, next) => {
         try {
-            const {
-                page = 1,
-                limit = 20,
-                status,
-                sellerId,
-                sortBy = 'createdAt',
-                sortOrder = 'desc'
-            } = req.query
+            const { page = 1, limit = 20, status, sellerId, sortBy = 'createdAt', sortOrder = 'desc' } = req.query
 
             const query = {}
             if (status) query.status = status
             if (sellerId) query.sellerId = sellerId
-
-            // Ensure referenced fields are valid ObjectIds to prevent populate casting errors
-            if (!query.category) query.category = { $type: 'objectId' }
-            if (!query.industry) query.industry = { $type: 'objectId' }
 
             const sort = {}
             sort[sortBy] = sortOrder === 'desc' ? -1 : 1
 
             const skip = (parseInt(page) - 1) * parseInt(limit)
 
-            const [products, totalCount] = await Promise.all([
+            // First get products without population to avoid casting errors
+            const [productsRaw, totalCount] = await Promise.all([
                 Product.find(query)
                     .populate({
                         path: 'sellerId',
                         model: 'SellerProfile',
                         select: 'fullName email avatar userId'
-                    })
-                    .populate({
-                        path: 'category',
-                        select: 'name icon'
-                    })
-                    .populate({
-                        path: 'industry',
-                        select: 'name icon'
                     })
                     .sort(sort)
                     .skip(skip)
@@ -587,6 +600,60 @@ export default {
                     .lean(),
                 Product.countDocuments(query)
             ])
+
+            const products = await Promise.all(
+                productsRaw.map(async (product) => {
+                    const populatedProduct = { ...product }
+
+                    if (product.category && mongoose.Types.ObjectId.isValid(product.category)) {
+                        try {
+                            const category = await Category.findById(product.category).select('name icon').lean()
+                            populatedProduct.category = category
+                        } catch (error) {
+                            console.warn(`Failed to populate category ${product.category}:`, error.message)
+                            populatedProduct.category = null
+                        }
+                    } else if (typeof product.category === 'string') {
+                        try {
+                            const category = await Category.findOne({
+                                name: new RegExp(`^${product.category.replace(/[_-]/g, ' ')}$`, 'i')
+                            })
+                                .select('name icon')
+                                .lean()
+                            populatedProduct.category = category || { name: product.category.replace(/[_-]/g, ' '), icon: 'Package' }
+                        } catch (error) {
+                            populatedProduct.category = { name: product.category.replace(/[_-]/g, ' '), icon: 'Package' }
+                        }
+                    } else {
+                        populatedProduct.category = null
+                    }
+
+                    if (product.industry && mongoose.Types.ObjectId.isValid(product.industry)) {
+                        try {
+                            const industry = await Industry.findById(product.industry).select('name icon').lean()
+                            populatedProduct.industry = industry
+                        } catch (error) {
+                            console.warn(`Failed to populate industry ${product.industry}:`, error.message)
+                            populatedProduct.industry = null
+                        }
+                    } else if (typeof product.industry === 'string') {
+                        try {
+                            const industry = await Industry.findOne({
+                                name: new RegExp(`^${product.industry.replace(/[_-]/g, ' ')}$`, 'i')
+                            })
+                                .select('name icon')
+                                .lean()
+                            populatedProduct.industry = industry || { name: product.industry.replace(/[_-]/g, ' '), icon: 'Briefcase' }
+                        } catch (error) {
+                            populatedProduct.industry = { name: product.industry.replace(/[_-]/g, ' '), icon: 'Briefcase' }
+                        }
+                    } else {
+                        populatedProduct.industry = null
+                    }
+
+                    return populatedProduct
+                })
+            )
 
             const totalPages = Math.ceil(totalCount / parseInt(limit))
 
@@ -614,11 +681,7 @@ export default {
             const { id } = req.params
             const { isVerified, isTested } = req.body
 
-            const product = await Product.findByIdAndUpdate(
-                id,
-                { isVerified, isTested },
-                { new: true }
-            )
+            const product = await Product.findByIdAndUpdate(id, { isVerified, isTested }, { new: true })
 
             if (!product) {
                 return httpError(next, new Error(responseMessage.PRODUCT.NOT_FOUND), req, 404)
@@ -751,64 +814,65 @@ export default {
 
             // First, get products without population to avoid casting errors
             const [productsRaw, totalCount] = await Promise.all([
-                Product.find(query)
-                    .sort(sort)
-                    .skip(skip)
-                    .limit(parseInt(limit))
-                    .select('-reviews')
-                    .lean(),
+                Product.find(query).sort(sort).skip(skip).limit(parseInt(limit)).select('-reviews').lean(),
                 Product.countDocuments(query)
             ])
 
-            const products = await Promise.all(productsRaw.map(async (product) => {
-                const populatedProduct = { ...product }
-                if (product.category && mongoose.Types.ObjectId.isValid(product.category)) {
-                    try {
-                        const category = await Category.findById(product.category).select('name icon').lean()
-                        populatedProduct.category = category
-                    } catch (error) {
-                        console.warn(`Failed to populate category ${product.category}:`, error.message)
-                        populatedProduct.category = null
-                    }
-                } else {
-                    if (typeof product.category === 'string') {
+            const products = await Promise.all(
+                productsRaw.map(async (product) => {
+                    const populatedProduct = { ...product }
+                    if (product.category && mongoose.Types.ObjectId.isValid(product.category)) {
                         try {
-                            const category = await Category.findOne({ 
-                                name: new RegExp(`^${product.category.replace(/[_-]/g, ' ')}$`, 'i') 
-                            }).select('name icon').lean()
-                            populatedProduct.category = category || { name: product.category.replace(/[_-]/g, ' '), icon: 'Package' }
+                            const category = await Category.findById(product.category).select('name icon').lean()
+                            populatedProduct.category = category
                         } catch (error) {
-                            populatedProduct.category = { name: product.category.replace(/[_-]/g, ' '), icon: 'Package' }
+                            console.warn(`Failed to populate category ${product.category}:`, error.message)
+                            populatedProduct.category = null
                         }
                     } else {
-                        populatedProduct.category = null
+                        if (typeof product.category === 'string') {
+                            try {
+                                const category = await Category.findOne({
+                                    name: new RegExp(`^${product.category.replace(/[_-]/g, ' ')}$`, 'i')
+                                })
+                                    .select('name icon')
+                                    .lean()
+                                populatedProduct.category = category || { name: product.category.replace(/[_-]/g, ' '), icon: 'Package' }
+                            } catch (error) {
+                                populatedProduct.category = { name: product.category.replace(/[_-]/g, ' '), icon: 'Package' }
+                            }
+                        } else {
+                            populatedProduct.category = null
+                        }
                     }
-                }
 
-                if (product.industry && mongoose.Types.ObjectId.isValid(product.industry)) {
-                    try {
-                        const industry = await Industry.findById(product.industry).select('name icon').lean()
-                        populatedProduct.industry = industry
-                    } catch (error) {
-                        console.warn(`Failed to populate industry ${product.industry}:`, error.message)
-                        populatedProduct.industry = null
-                    }
-                } else {
-                    if (typeof product.industry === 'string') {
+                    if (product.industry && mongoose.Types.ObjectId.isValid(product.industry)) {
                         try {
-                            const industry = await Industry.findOne({ 
-                                name: new RegExp(`^${product.industry.replace(/[_-]/g, ' ')}$`, 'i') 
-                            }).select('name icon').lean()
-                            populatedProduct.industry = industry || { name: product.industry.replace(/[_-]/g, ' '), icon: 'Briefcase' }
+                            const industry = await Industry.findById(product.industry).select('name icon').lean()
+                            populatedProduct.industry = industry
                         } catch (error) {
-                            populatedProduct.industry = { name: product.industry.replace(/[_-]/g, ' '), icon: 'Briefcase' }
+                            console.warn(`Failed to populate industry ${product.industry}:`, error.message)
+                            populatedProduct.industry = null
                         }
                     } else {
-                        populatedProduct.industry = null
+                        if (typeof product.industry === 'string') {
+                            try {
+                                const industry = await Industry.findOne({
+                                    name: new RegExp(`^${product.industry.replace(/[_-]/g, ' ')}$`, 'i')
+                                })
+                                    .select('name icon')
+                                    .lean()
+                                populatedProduct.industry = industry || { name: product.industry.replace(/[_-]/g, ' '), icon: 'Briefcase' }
+                            } catch (error) {
+                                populatedProduct.industry = { name: product.industry.replace(/[_-]/g, ' '), icon: 'Briefcase' }
+                            }
+                        } else {
+                            populatedProduct.industry = null
+                        }
                     }
-                }
-                return populatedProduct
-            }))
+                    return populatedProduct
+                })
+            )
 
             const totalPages = Math.ceil(totalCount / parseInt(limit))
 
@@ -840,9 +904,9 @@ export default {
                 return httpError(next, new Error(responseMessage.SELLER.PROFILE_NOT_ACTIVE), req, 404)
             }
 
-            const product = await Product.findOne({ 
-                _id: id, 
-                sellerId: sellerProfile._id 
+            const product = await Product.findOne({
+                _id: id,
+                sellerId: sellerProfile._id
             })
                 .populate({
                     path: 'sellerId',
@@ -884,9 +948,9 @@ export default {
                 return httpError(next, new Error(responseMessage.SELLER.PROFILE_NOT_ACTIVE), req, 404)
             }
 
-            const product = await Product.findOne({ 
-                _id: id, 
-                sellerId: sellerProfile._id 
+            const product = await Product.findOne({
+                _id: id,
+                sellerId: sellerProfile._id
             })
 
             if (!product) {
@@ -958,8 +1022,8 @@ export default {
 
             // Validate required fields for submission
             const requiredFields = ['title', 'shortDescription', 'fullDescription', 'thumbnail', 'type', 'category', 'industry', 'price', 'setupTime']
-            const missingFields = requiredFields.filter(field => !product[field] && product[field] !== 0)
-            
+            const missingFields = requiredFields.filter((field) => !product[field] && product[field] !== 0)
+
             if (missingFields.length > 0) {
                 return httpError(next, new Error(`Missing required fields: ${missingFields.join(', ')}`), req, 422)
             }
@@ -1057,12 +1121,7 @@ export default {
 
     getProductDiscovery: async (req, res, next) => {
         try {
-            const [
-                featured,
-                trending,
-                highRated,
-                recentlyAdded
-            ] = await Promise.all([
+            const [featured, trending, highRated, recentlyAdded] = await Promise.all([
                 productQuicker.getFeaturedProductsAlgorithm({ limit: 8 }),
                 productQuicker.getTrendingProducts({ limit: 6 }),
                 productQuicker.getHighRatedProducts({ limit: 6 }),

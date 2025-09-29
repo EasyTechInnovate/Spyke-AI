@@ -81,7 +81,7 @@ export default function IndustryDropdown({
                 )}
             </button>
             {isOpen && !loading && (
-                <div className="absolute z-50 w-full mt-1 bg-black/95 border border-gray-600 rounded-lg shadow-2xl max-h-60 overflow-y-auto backdrop-blur-sm">
+                <div className="absolute z-[999] w-full mt-1 bg-gray-900/95 border border-gray-600 rounded-lg shadow-2xl max-h-60 overflow-y-auto backdrop-blur-md">
                     {industries.length === 0 ? (
                         <div className="px-4 py-6 text-center text-gray-400">No industries available</div>
                     ) : (
@@ -92,8 +92,8 @@ export default function IndustryDropdown({
                                 onClick={() => handleSelect(industry.id)}
                                 className={`
                                     w-full px-4 py-3 text-left hover:bg-[#00FF89]/20 transition-colors
-                                    flex items-center gap-3
-                                    ${value === industry.id ? 'bg-[#00FF89]/20 text-[#00FF89] font-medium' : 'text-gray-200'}
+                                    flex items-center gap-3 border-b border-gray-700/50 last:border-b-0
+                                    ${value === industry.id ? 'bg-[#00FF89]/20 text-[#00FF89] font-medium' : 'text-gray-200 hover:text-white'}
                                 `}>
                                 <Building2 className="w-4 h-4 text-[#00FF89]" />
                                 <div>
@@ -109,7 +109,7 @@ export default function IndustryDropdown({
             )}
             {error && <div className="mt-1 text-sm text-red-400">{error}</div>}
             {required && <span className="absolute -top-1 -right-1 text-red-400 text-xs">*</span>}
-            {isOpen && <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />}
+            {isOpen && <div className="fixed inset-0 z-[998]" onClick={() => setIsOpen(false)} />}
         </div>
     )
 }

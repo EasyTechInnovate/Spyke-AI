@@ -7,7 +7,7 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { useCart } from '@/hooks/useCart'
 import { productsAPI } from '@/lib/api'
-import { DSStack, DSHeading, DSText, DSButton, DSBadge, DSLoadingState } from '@/lib/design-system'
+
 const BackgroundEffectsLight = dynamic(() => import('./hero/BackgroundEffectsLight'), {
     ssr: false,
     loading: () => null
@@ -51,14 +51,14 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                 const list = Array.isArray(res?.data)
                     ? res.data
                     : Array.isArray(res?.data?.items)
-                    ? res.data.items
-                    : Array.isArray(res?.items)
-                    ? res.items
-                    : Array.isArray(res?.products)
-                    ? res.products
-                    : Array.isArray(res)
-                    ? res
-                    : []
+                      ? res.data.items
+                      : Array.isArray(res?.items)
+                        ? res.items
+                        : Array.isArray(res?.products)
+                          ? res.products
+                          : Array.isArray(res)
+                            ? res
+                            : []
                 const items = list.map((p) => ({ ...p, isFeatured: true }))
                 setFeaturedProducts(items)
             } catch (err) {
@@ -84,96 +84,112 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                         viewport={{ once: true }}
                         transition={{ duration: 0.5 }}
                         className="text-center mb-12 sm:mb-16">
-                        <DSBadge
-                            variant="primary"
-                            icon={Sparkles}
-                            className="mb-4 sm:mb-6">
-                            Featured Products
-                        </DSBadge>
-                        <DSHeading
-                            level={2}
-                            variant="hero"
-                            className="mb-3 sm:mb-4">
-                            <span style={{ color: 'white' }}>Handpicked AI Solutions</span>
-                        </DSHeading>
-                        <DSText
-                            variant="subhero"
-                            style={{ color: '#9ca3af' }}>
-                            Discover admin‑featured AI tools curated by our team for quality and performance
-                        </DSText>
+                        <div className="flex flex-col items-center gap-6">
+                            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#00FF89]/10 text-[#00FF89] border border-[#00FF89]/20 text-sm font-medium mb-4 sm:mb-6">
+                                <Sparkles className="w-4 h-4" />
+                                Featured Products
+                            </span>
+                            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight tracking-tight font-[var(--font-league-spartan)] mb-3 sm:mb-4">
+                                <span style={{ color: 'white' }}>Handpicked AI Solutions</span>
+                            </h2>
+                            <p
+                                className="text-lg sm:text-xl font-medium leading-relaxed font-[var(--font-league-spartan)]"
+                                style={{ color: '#9ca3af' }}>
+                                Discover admin‑featured AI tools curated by our team for quality and performance
+                            </p>
+                        </div>
                     </motion.div>
                     <div className="mb-8 sm:mb-12">
                         {loading ? (
-                            <DSLoadingState
-                                icon={Loader2}
-                                message="Loading featured products..."
-                                className="h-48 sm:h-64"
-                            />
+                            <div className="flex flex-col items-center justify-center h-48 sm:h-64">
+                                <Loader2 className="w-8 h-8 text-[#00FF89] animate-spin mb-4" />
+                                <p className="text-gray-400 font-medium">Loading featured products...</p>
+                            </div>
                         ) : error ? (
                             <div className="text-center py-8 sm:py-12">
-                                <DSStack
-                                    gap="medium"
-                                    direction="column"
-                                    align="center">
+                                <div className="flex flex-col items-center gap-6">
                                     <div className="w-12 h-12 sm:w-16 sm:h-16 bg-red-500/10 rounded-xl flex items-center justify-center border border-red-500/20">
                                         <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-red-400" />
                                     </div>
-                                    <DSHeading
-                                        level={3}
-                                        className="text-white mb-2">
-                                        Unable to Load Featured Products
-                                    </DSHeading>
-                                    <DSText
-                                        style={{ color: '#9ca3af' }}
-                                        className="mb-4">
+                                    <h3 className="text-xl font-bold text-white mb-2">Unable to Load Featured Products</h3>
+                                    <p className="text-gray-400 mb-4">
                                         We're having trouble loading our featured products. Please try again or browse all products.
-                                    </DSText>
+                                    </p>
                                     <div className="flex flex-col sm:flex-row gap-3">
-                                        <DSButton
-                                            variant="primary"
-                                            size="medium"
+                                        <button
+                                            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#00FF89] text-black font-semibold rounded-xl hover:bg-[#00FF89]/90 transition-all duration-200"
                                             onClick={() => window.location.reload()}>
                                             Try Again
-                                        </DSButton>
+                                        </button>
                                         <Link href="/explore">
-                                            <DSButton
-                                                variant="secondary"
-                                                size="medium">
+                                            <button className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white bg-transparent hover:border-white/40 hover:bg-white/5 rounded-xl transition-all duration-200">
                                                 Browse All Products
                                                 <ArrowRight className="w-4 h-4" />
-                                            </DSButton>
+                                            </button>
                                         </Link>
                                     </div>
-                                </DSStack>
+                                </div>
                             </div>
                         ) : featuredProducts.length === 0 ? (
-                            <div className="text-center py-8 sm:py-12">
-                                <DSStack
-                                    gap="medium"
-                                    direction="column"
-                                    align="center">
-                                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-800/50 rounded-xl flex items-center justify-center border border-gray-700/50">
-                                        <Package className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
-                                    </div>
-                                    <DSHeading
-                                        level={3}
-                                        className="text-white mb-2">
-                                        No Featured Products Available
-                                    </DSHeading>
-                                    <DSText
-                                        style={{ color: '#9ca3af' }}
-                                        className="mb-4">
-                                        We're working on curating amazing products for you. Check out our full catalog in the meantime.
-                                    </DSText>
-                                    <Link href="/explore">
-                                        <DSButton
-                                            variant="primary"
-                                            size="medium">
-                                            Explore All Products
-                                            <ArrowRight className="w-4 h-4" />
-                                        </DSButton>
-                                    </Link>
-                                </DSStack>
+                            <div className="text-center py-16 sm:py-24">
+                                <div className="flex flex-col items-center gap-8 max-w-md mx-auto">
+                                    {/* Animated Icon Container */}
+                                    <motion.div
+                                        initial={{ scale: 0.8, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        transition={{ duration: 0.5, delay: 0.2 }}
+                                        className="relative">
+                                        <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-[#00FF89]/20 to-[#00FF89]/5 rounded-3xl flex items-center justify-center border border-[#00FF89]/20 backdrop-blur-sm">
+                                            <Package className="w-10 h-10 sm:w-12 sm:h-12 text-[#00FF89]" />
+                                        </div>
+                                        {/* Floating particles */}
+                                        <div className="absolute -top-2 -right-2 w-3 h-3 bg-[#00FF89] rounded-full animate-ping opacity-75"></div>
+                                        <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-[#00FF89]/60 rounded-full animate-pulse"></div>
+                                    </motion.div>
+
+                                    {/* Title and Description */}
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.5, delay: 0.4 }}
+                                        className="space-y-4">
+                                        <h3 className="text-2xl sm:text-3xl font-bold text-white font-[var(--font-league-spartan)] tracking-tight">
+                                            No Featured Products Available
+                                        </h3>
+                                        <p className="text-base sm:text-lg text-gray-400 font-[var(--font-league-spartan)] leading-relaxed">
+                                            We're working on curating amazing products for you. Check out our full catalog in the meantime.
+                                        </p>
+                                    </motion.div>
+
+                                    {/* Action Button */}
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.5, delay: 0.6 }}>
+                                        <Link href="/explore">
+                                            <button className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-[#00FF89] to-[#00e67a] text-black font-bold rounded-2xl hover:from-[#00e67a] hover:to-[#00FF89] transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-[#00FF89]/25 font-[var(--font-league-spartan)] text-lg">
+                                                Explore All Products
+                                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                                            </button>
+                                        </Link>
+                                    </motion.div>
+
+                                    {/* Additional Info */}
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ duration: 0.5, delay: 0.8 }}
+                                        className="flex items-center gap-6 pt-6 border-t border-gray-800/50">
+                                        <div className="flex items-center gap-2 text-sm text-gray-500 font-[var(--font-league-spartan)]">
+                                            <Sparkles className="w-4 h-4 text-[#00FF89]" />
+                                            <span>AI-Powered Tools</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-sm text-gray-500 font-[var(--font-league-spartan)]">
+                                            <CheckCircle className="w-4 h-4 text-[#00FF89]" />
+                                            <span>Verified Quality</span>
+                                        </div>
+                                    </motion.div>
+                                </div>
                             </div>
                         ) : featuredProducts.length === 1 ? (
                             <div className="flex justify-center">
@@ -211,13 +227,10 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                             transition={{ duration: 0.5, delay: 0.2 }}
                             className="text-center">
                             <Link href="/explore">
-                                <DSButton
-                                    variant="primary"
-                                    size="large"
-                                    className="group">
+                                <button className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#00FF89] text-black font-semibold rounded-xl hover:bg-[#00FF89]/90 transition-all duration-200 text-lg">
                                     <span>View All Products</span>
                                     <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
-                                </DSButton>
+                                </button>
                             </Link>
                         </motion.div>
                     )}
@@ -441,3 +454,4 @@ function ProductCard({ product, onClick }) {
     )
 }
 export default FeaturedProducts
+

@@ -26,7 +26,7 @@ const STEP_COMPONENTS = {
 }
 export default function ProductCreatePage() {
     const router = useRouter()
-    const [mode, setMode] = useState('form') 
+    const [mode, setMode] = useState('form')
     const [showReview, setShowReview] = useState(false)
     const [notification, setNotification] = useState(null)
     const [showResetConfirm, setShowResetConfirm] = useState(false)
@@ -46,34 +46,37 @@ export default function ProductCreatePage() {
     const toApiPayload = useProductCreateStore((state) => state.toApiPayload)
     const setSubmitting = useProductCreateStore((state) => state.setSubmitting)
     const { showSuccess, showError, showInfo } = useNotifications()
-    const handleStepClick = useCallback((targetStep) => {
-        if (targetStep <= currentStep) {
-            setStep(targetStep)
-            return
-        }
-        let canNavigate = true
-        let blockingStep = null
-        for (let step = 1; step < targetStep; step++) {
-            if (!validateStep(step)) {
-                canNavigate = false
-                blockingStep = step
-                break
+    const handleStepClick = useCallback(
+        (targetStep) => {
+            if (targetStep <= currentStep) {
+                setStep(targetStep)
+                return
             }
-        }
-        if (canNavigate) {
-            setStep(targetStep)
-        } else {
-            const stepNames = {
-                1: 'Basic Information',
-                2: 'Product Details',
-                3: 'Technical Setup',
-                4: 'Premium Content',
-                5: 'Media & Pricing',
-                6: 'Final Details'
+            let canNavigate = true
+            let blockingStep = null
+            for (let step = 1; step < targetStep; step++) {
+                if (!validateStep(step)) {
+                    canNavigate = false
+                    blockingStep = step
+                    break
+                }
             }
-            showError(`Please complete Step ${blockingStep}: ${stepNames[blockingStep]} before proceeding to Step ${targetStep}`)
-        }
-    }, [currentStep, validateStep, setStep, showError])
+            if (canNavigate) {
+                setStep(targetStep)
+            } else {
+                const stepNames = {
+                    1: 'Basic Information',
+                    2: 'Product Details',
+                    3: 'Technical Setup',
+                    4: 'Premium Content',
+                    5: 'Media & Pricing',
+                    6: 'Final Details'
+                }
+                showError(`Please complete Step ${blockingStep}: ${stepNames[blockingStep]} before proceeding to Step ${targetStep}`)
+            }
+        },
+        [currentStep, validateStep, setStep, showError]
+    )
     useEffect(() => {
         requestAnimationFrame(() => {
             document.documentElement.scrollTo({ top: 0, behavior: 'smooth' })
@@ -203,12 +206,13 @@ export default function ProductCreatePage() {
                                             className="flex items-center">
                                             <button
                                                 onClick={() => handleStepClick(step)}
-                                                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 flex items-center justify-center text-sm font-semibold transition-all duration-300 hover:scale-105 ${step === currentStep
-                                                    ? 'border-[#00FF89] bg-[#00FF89] text-black shadow-lg shadow-[#00FF89]/30'
-                                                    : step < currentStep
-                                                        ? 'border-[#00FF89] bg-[#00FF89]/20 text-[#00FF89] hover:bg-[#00FF89]/30'
-                                                        : 'border-gray-600 bg-gray-800/50 text-gray-400 hover:border-gray-500 hover:bg-gray-700/70'
-                                                    }`}>
+                                                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 flex items-center justify-center text-sm font-semibold transition-all duration-300 hover:scale-105 ${
+                                                    step === currentStep
+                                                        ? 'border-[#00FF89] bg-[#00FF89] text-black shadow-lg shadow-[#00FF89]/30'
+                                                        : step < currentStep
+                                                          ? 'border-[#00FF89] bg-[#00FF89]/20 text-[#00FF89] hover:bg-[#00FF89]/30'
+                                                          : 'border-gray-600 bg-gray-800/50 text-gray-400 hover:border-gray-500 hover:bg-gray-700/70'
+                                                }`}>
                                                 {step < currentStep ? (
                                                     <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
                                                 ) : (
@@ -217,8 +221,9 @@ export default function ProductCreatePage() {
                                             </button>
                                             {index < 5 && (
                                                 <div
-                                                    className={`w-3 sm:w-4 h-0.5 mx-1 sm:mx-1.5 transition-all duration-300 ${step < currentStep ? 'bg-[#00FF89]' : 'bg-gray-600'
-                                                        }`}
+                                                    className={`w-3 sm:w-4 h-0.5 mx-1 sm:mx-1.5 transition-all duration-300 ${
+                                                        step < currentStep ? 'bg-[#00FF89]' : 'bg-gray-600'
+                                                    }`}
                                                 />
                                             )}
                                         </div>
@@ -254,20 +259,22 @@ export default function ProductCreatePage() {
                             <div className="flex items-center bg-gray-800/70 rounded-xl p-1 border border-gray-700">
                                 <button
                                     onClick={() => setMode('form')}
-                                    className={`px-3 py-2 text-sm font-semibold rounded-lg transition-all duration-200 flex items-center space-x-2 ${mode === 'form'
-                                        ? 'bg-[#00FF89] text-black shadow-lg shadow-[#00FF89]/20'
-                                        : 'text-gray-300 hover:text-white hover:bg-gray-700/70'
-                                        }`}>
+                                    className={`px-3 py-2 text-sm font-semibold rounded-lg transition-all duration-200 flex items-center space-x-2 ${
+                                        mode === 'form'
+                                            ? 'bg-[#00FF89] text-black shadow-lg shadow-[#00FF89]/20'
+                                            : 'text-gray-300 hover:text-white hover:bg-gray-700/70'
+                                    }`}>
                                     <Edit3 className="w-4 h-4" />
                                     <span className="hidden sm:inline">Form Mode</span>
                                     <span className="sm:hidden">Form</span>
                                 </button>
                                 <button
                                     onClick={() => setMode('preview')}
-                                    className={`px-3 py-2 text-sm font-semibold rounded-lg transition-all duration-200 flex items-center space-x-2 ${mode === 'preview'
-                                        ? 'bg-[#00FF89] text-black shadow-lg shadow-[#00FF89]/20'
-                                        : 'text-gray-300 hover:text-white hover:bg-gray-700/70'
-                                        }`}>
+                                    className={`px-3 py-2 text-sm font-semibold rounded-lg transition-all duration-200 flex items-center space-x-2 ${
+                                        mode === 'preview'
+                                            ? 'bg-[#00FF89] text-black shadow-lg shadow-[#00FF89]/20'
+                                            : 'text-gray-300 hover:text-white hover:bg-gray-700/70'
+                                    }`}>
                                     <Eye className="w-4 h-4" />
                                     <span className="hidden sm:inline">Live Preview</span>
                                     <span className="sm:hidden">Preview</span>
@@ -290,8 +297,8 @@ export default function ProductCreatePage() {
                                     {lastSaved
                                         ? `Saved ${new Date(lastSaved).toLocaleTimeString()}`
                                         : isDirty
-                                            ? 'Unsaved changes'
-                                            : 'All changes saved'}
+                                          ? 'Unsaved changes'
+                                          : 'All changes saved'}
                                 </div>
                             </div>
                         </div>
@@ -299,9 +306,9 @@ export default function ProductCreatePage() {
                 </div>
             </div>
             <div className="pt-6">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex gap-6">
-                        <div className="flex-1 max-w-4xl">
+                <div className="px-4 sm:px-6 lg:px-8">
+                    <div className="flex gap-6 max-w-none">
+                        <div className="flex-1 min-w-0 max-w-4xl">
                             <AnimatePresence mode="wait">
                                 {showReview ? (
                                     <ReviewSubmit
@@ -347,10 +354,11 @@ export default function ProductCreatePage() {
                                                     onClick={handleNext}
                                                     whileHover={{ scale: 1.02 }}
                                                     whileTap={{ scale: 0.98 }}
-                                                    className={`flex items-center space-x-3 px-6 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${hasStepErrors
-                                                        ? 'bg-red-600 hover:bg-red-700 text-white'
-                                                        : 'bg-[#00FF89] hover:bg-[#00FF89]/90 text-black shadow-lg shadow-[#00FF89]/20'
-                                                        }`}>
+                                                    className={`flex items-center space-x-3 px-6 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                                                        hasStepErrors
+                                                            ? 'bg-red-600 hover:bg-red-700 text-white'
+                                                            : 'bg-[#00FF89] hover:bg-[#00FF89]/90 text-black shadow-lg shadow-[#00FF89]/20'
+                                                    }`}>
                                                     <span>{currentStep === 6 ? 'Review & Submit' : 'Continue'}</span>
                                                     <ArrowRight className="w-4 h-4" />
                                                 </motion.button>
@@ -370,7 +378,7 @@ export default function ProductCreatePage() {
                             </AnimatePresence>
                         </div>
                         <div className="hidden lg:block w-80 flex-shrink-0">
-                            <div className="sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto pr-2">
+                            <div className="sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto">
                                 <HelperRail currentStep={currentStep} />
                             </div>
                         </div>

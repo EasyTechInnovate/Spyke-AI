@@ -199,15 +199,15 @@ export default function CustomSelect({
                         exit={{ opacity: 0, y: -10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
                         className={cn(
-                            'absolute top-full left-0 right-0 mt-2 rounded-lg shadow-2xl overflow-hidden backdrop-blur-sm',
-                            'z-[99999]',
+                            'absolute top-full left-0 right-0 mt-2 rounded-lg shadow-2xl overflow-hidden backdrop-blur-md',
+                            'z-[9999]',
                             currentTheme.dropdown,
                             maxHeight
                         )}
                         style={{
                             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05)',
                             position: 'absolute',
-                            zIndex: 99999
+                            zIndex: 9999
                         }}>
                         {searchable && (
                             <div className="p-3 border-b sticky top-0" style={{ backgroundColor: currentTheme.dropdown, borderColor: currentTheme.footerBg }}>

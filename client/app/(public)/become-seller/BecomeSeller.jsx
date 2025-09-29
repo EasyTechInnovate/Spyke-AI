@@ -55,9 +55,10 @@ export default function BecomeSellerPage() {
     const handleLogoutAndRedirect = async () => {
         try {
             await logoutService.logout()
+            window.location.href = '/signin'
         } catch (error) {
             console.error('Logout failed:', error)
-            router.push('/signin')
+            window.location.href = '/signin'
         }
     }
 
