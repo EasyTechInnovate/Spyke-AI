@@ -65,21 +65,26 @@ const AnimatedCounter = ({ value, duration = 2000 }) => {
     }, [isInView, value, duration])
     return <span ref={ref}>{count}</span>
 }
-const StatCard = ({ icon: Icon, label, value, color = 'text-[#00FF89]', delay = 0 }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay, duration: 0.5 }}
-        className="flex items-center gap-3 p-3 rounded-xl bg-white/5 dark:bg-white/5 backdrop-blur-sm border border-white/10 dark:border-gray-700/50 hover:border-[#00FF89]/30 transition-all duration-300">
-        <Icon className={`w-5 h-5 ${color}`} />
-        <div>
-            <div className={`text-lg font-bold ${color}`}>
-                <AnimatedCounter value={value} />
+const StatCard = ({ icon: Icon, singular, plural, value, color = 'text-[#00FF89]', delay = 0 }) => {
+    const label = value === 1 ? singular : plural
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay, duration: 0.5 }}
+            className="flex items-center gap-2.5 p-3 rounded-xl bg-white/5 dark:bg-white/5 backdrop-blur-sm border border-white/10 dark:border-gray-700/50 hover:border-[#00FF89]/30 transition-all duration-300">
+            <div className="w-8 h-8 rounded-lg bg-black/20 flex items-center justify-center flex-shrink-0">
+                <Icon className={`w-4 h-4 ${color}`} />
             </div>
-            <div className="text-xs text-[#6b7280] dark:text-gray-400 font-medium">{label}</div>
-        </div>
-    </motion.div>
-)
+            <div className="flex items-center leading-none whitespace-nowrap">
+                <span className={`text-base font-semibold ${color}`}>
+                    <AnimatedCounter value={value} />
+                </span>
+                <span className="text-[13px] text-[#cbd5e1] dark:text-gray-300 font-medium tracking-tight">{label}</span>
+            </div>
+        </motion.div>
+    )
+}
 const FeatureBadge = ({ icon: Icon, text, variant = 'default' }) => {
     const variants = {
         default: 'bg-[#00FF89]/10 border-[#00FF89]/30 text-[#00FF89]',
@@ -119,11 +124,12 @@ export default function ProductHero({
 }) {
     const [currentImageIndex, setCurrentImageIndex] = useState(selectedImage || 0)
     const [isImageFullscreen, setIsImageFullscreen] = useState(false)
-    const [showSellerDetails, setShowSellerDetails] = useState(false)
     const [copiedText, setCopiedText] = useState('')
     const heroRef = useRef(null)
     const isInView = useInView(heroRef, { once: true })
+
     if (!product) return null
+
     const mediaItems = []
     if (product.thumbnail) {
         mediaItems.push({
@@ -141,10 +147,14 @@ export default function ProductHero({
             })
         })
     }
+
     const activeMedia = mediaItems[currentImageIndex] || mediaItems[0]
     const calculatedDiscount =
         product.originalPrice && product.price ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0
     const calculatedSavings = product.originalPrice && product.price ? product.originalPrice - product.price : 0
+
+    const formatCurrency = (amount) => `$${(Number(amount) || 0).toFixed(2)}`
+
     const nextImage = () => {
         if (mediaItems.length > 1) {
             setCurrentImageIndex((prev) => (prev + 1) % mediaItems.length)
@@ -163,6 +173,7 @@ export default function ProductHero({
             return () => clearInterval(interval)
         }
     }, [mediaItems.length])
+
     const copyToClipboard = async (text, label) => {
         try {
             await navigator.clipboard.writeText(text)
@@ -172,10 +183,19 @@ export default function ProductHero({
             console.error('Failed to copy:', err)
         }
     }
+
     const getSetupTimeDisplay = (setupTime) => {
         if (!setupTime) return 'Quick Setup'
         return setupTime.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
     }
+
+    const getSellerProfileUrl = () => {
+        const s = product?.sellerId
+        if (!s) return null
+        const id = s._id || s.id
+        return id ? `/profile/${id}` : null
+    }
+
     return (
         <div
             ref={heroRef}
@@ -287,26 +307,30 @@ export default function ProductHero({
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             <StatCard
                                 icon={Eye}
-                                label="Views"
+                                singular="View"
+                                plural="Views"
                                 value={product.views || 0}
                                 delay={0.2}
                             />
                             <StatCard
                                 icon={TrendingUp}
-                                label="Sales"
+                                singular="Sale"
+                                plural="Sales"
                                 value={product.sales || 0}
                                 delay={0.3}
                             />
                             <StatCard
                                 icon={Heart}
-                                label="Favorites"
+                                singular="Favorite"
+                                plural="Favorites"
                                 value={product.favorites || 0}
                                 color="text-red-400"
                                 delay={0.4}
                             />
                             <StatCard
                                 icon={ThumbsUp}
-                                label="Upvotes"
+                                singular="Upvote"
+                                plural="Upvotes"
                                 value={product.upvotes || 0}
                                 color="text-blue-400"
                                 delay={0.5}
@@ -436,7 +460,7 @@ export default function ProductHero({
                                                 ? 'bg-red-500/10 border-red-500/30 text-red-400'
                                                 : 'bg-white/5 border-gray-700 text-gray-300 hover:bg-red-500/5 hover:border-red-500/20'
                                         }`}>
-                                        <Heart className={`w-4 h-4 ${liked ? 'fill-current' : ''}`} />
+                                        <Heart className={`${liked ? 'fill-current' : ''} w-4 h-4`} />
                                         <span className="font-medium">{product.favorites || 0}</span>
                                     </button>
                                     <button
@@ -472,14 +496,16 @@ export default function ProductHero({
                             )}
                             <div className="flex items-baseline gap-3 mb-4">
                                 <div className="flex items-center gap-2">
-                                    <DollarSign className="w-6 h-6 text-[#00FF89]" />
-                                    <span className="text-3xl lg:text-4xl font-bold text-[#00FF89]">{product.price || 0}</span>
+                                    <div className="w-7 h-7 rounded-md bg-black/20 flex items-center justify-center flex-shrink-0">
+                                        <DollarSign className="w-4 h-4 text-[#00FF89]" />
+                                    </div>
+                                    <span className="text-3xl lg:text-4xl font-bold text-[#00FF89] leading-none">{product.price || 0}</span>
                                 </div>
                                 {product.originalPrice && product.originalPrice > product.price && (
                                     <div className="space-y-1">
-                                        <div className="text-lg text-gray-400 line-through">${product.originalPrice}</div>
+                                        <div className="text-lg text-gray-400 line-through">{formatCurrency(product.originalPrice)}</div>
                                         <div className="px-2 py-1 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 text-xs font-medium rounded-full">
-                                            Save ${calculatedSavings}
+                                            Save {formatCurrency(calculatedSavings)}
                                         </div>
                                     </div>
                                 )}
@@ -567,14 +593,28 @@ export default function ProductHero({
                                                     </div>
                                                 )}
                                             </div>
-                                            <button
-                                                onClick={() => setShowSellerDetails(!showSellerDetails)}
-                                                className="px-3 py-1.5 bg-white/10 hover:bg-[#00FF89]/20 border border-gray-600 hover:border-[#00FF89]/50 text-white rounded-lg text-xs font-medium transition-all">
-                                                <div className="flex items-center gap-1">
-                                                    View
-                                                    <ArrowUpRight className="w-3 h-3" />
-                                                </div>
-                                            </button>
+                                            {getSellerProfileUrl() ? (
+                                                <Link
+                                                    href={getSellerProfileUrl()}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="px-3 py-1.5 bg-white/10 hover:bg-[#00FF89]/20 border border-gray-600 hover:border-[#00FF89]/50 text-white rounded-lg text-xs font-medium transition-all inline-flex items-center">
+                                                    <div className="flex items-center gap-1">
+                                                        View
+                                                        <ArrowUpRight className="w-3 h-3" />
+                                                    </div>
+                                                </Link>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    disabled
+                                                    className="px-3 py-1.5 bg-white/10 border border-gray-600 text-white rounded-lg text-xs font-medium opacity-50 cursor-not-allowed">
+                                                    <div className="flex items-center gap-1">
+                                                        View
+                                                        <ArrowUpRight className="w-3 h-3" />
+                                                    </div>
+                                                </button>
+                                            )}
                                         </div>
                                         {product.sellerId.bio && (
                                             <p className="text-gray-300 text-sm leading-relaxed line-clamp-2">{product.sellerId.bio}</p>
@@ -653,3 +693,4 @@ export default function ProductHero({
         </div>
     )
 }
+

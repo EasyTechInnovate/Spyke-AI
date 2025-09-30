@@ -110,7 +110,7 @@ export default {
             const { limit = 12, minRating = 3.5, minReviews = 3 } = req.query
 
             const now = new Date()
-            const pins = await FeaturedProduct.aggregate([
+            const pinnedProducts = await FeaturedProduct.aggregate([
                 {
                     $match: {
                         isPinned: true,
@@ -127,16 +127,29 @@ export default {
                         as: 'product'
                     }
                 },
-                { $unwind: '$product' }
+                { $unwind: '$product' },
+                // Flatten to product document
+                { $replaceRoot: { newRoot: '$product' } },
+                // Populate seller profile minimal fields
+                {
+                    $lookup: {
+                        from: 'sellerprofiles',
+                        localField: 'sellerId',
+                        foreignField: '_id',
+                        as: 'sellerId',
+                        pipeline: [
+                            { $project: { fullName: 1, avatar: 1, verification: 1, isVerified: 1 } }
+                        ]
+                    }
+                },
+                { $addFields: { sellerId: { $arrayElemAt: ['$sellerId', 0] } } }
             ])
 
-            const pinnedProducts = pins.map((p) => p.product).filter((p) => p && p.status === 'published')
-
-            let results = [...pinnedProducts]
+            let results = pinnedProducts.filter((p) => p && p.status === 'published')
 
             const remaining = parseInt(limit) - results.length
             if (remaining > 0) {
-                const excludeIds = pins.map((p) => p.productId)
+                const excludeIds = pinnedProducts.map((p) => p._id)
                 const algResults = await productQuicker.getFeaturedProductsAlgorithm({
                     limit: remaining * 2,
                     excludeIds,

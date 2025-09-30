@@ -89,11 +89,11 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                                 <Sparkles className="w-4 h-4" />
                                 Featured Products
                             </span>
-                            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight tracking-tight font-[var(--font-league-spartan)] mb-3 sm:mb-4">
+                            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight tracking-tight mb-3 sm:mb-4">
                                 <span style={{ color: 'white' }}>Handpicked AI Solutions</span>
                             </h2>
                             <p
-                                className="text-lg sm:text-xl font-medium leading-relaxed font-[var(--font-league-spartan)]"
+                                className="text-lg sm:text-xl font-medium leading-relaxed"
                                 style={{ color: '#9ca3af' }}>
                                 Discover admin‑featured AI tools curated by our team for quality and performance
                             </p>
@@ -153,10 +153,8 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.5, delay: 0.4 }}
                                         className="space-y-4">
-                                        <h3 className="text-2xl sm:text-3xl font-bold text-white font-[var(--font-league-spartan)] tracking-tight">
-                                            No Featured Products Available
-                                        </h3>
-                                        <p className="text-base sm:text-lg text-gray-400 font-[var(--font-league-spartan)] leading-relaxed">
+                                        <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">No Featured Products Available</h3>
+                                        <p className="text-base sm:text-lg text-gray-400 leading-relaxed">
                                             We're working on curating amazing products for you. Check out our full catalog in the meantime.
                                         </p>
                                     </motion.div>
@@ -167,7 +165,7 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.5, delay: 0.6 }}>
                                         <Link href="/explore">
-                                            <button className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-[#00FF89] to-[#00e67a] text-black font-bold rounded-2xl hover:from-[#00e67a] hover:to-[#00FF89] transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-[#00FF89]/25 font-[var(--font-league-spartan)] text-lg">
+                                            <button className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-[#00FF89] to-[#00e67a] text-black font-bold rounded-2xl hover:from-[#00e67a] hover:to-[#00FF89] transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-[#00FF89]/25 text-lg">
                                                 Explore All Products
                                                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
                                             </button>
@@ -180,11 +178,11 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                                         animate={{ opacity: 1 }}
                                         transition={{ duration: 0.5, delay: 0.8 }}
                                         className="flex items-center gap-6 pt-6 border-t border-gray-800/50">
-                                        <div className="flex items-center gap-2 text-sm text-gray-500 font-[var(--font-league-spartan)]">
+                                        <div className="flex items-center gap-2 text-sm text-gray-500">
                                             <Sparkles className="w-4 h-4 text-[#00FF89]" />
                                             <span>AI-Powered Tools</span>
                                         </div>
-                                        <div className="flex items-center gap-2 text-sm text-gray-500 font-[var(--font-league-spartan)]">
+                                        <div className="flex items-center gap-2 text-sm text-gray-500">
                                             <CheckCircle className="w-4 h-4 text-[#00FF89]" />
                                             <span>Verified Quality</span>
                                         </div>
@@ -271,9 +269,12 @@ function ProductCard({ product, onClick }) {
         averageRating: productAverageRating,
         totalReviews: productTotalReviews
     } = product || {}
-    const sellerInfo = seller?.name || seller?.fullName ? seller : sellerId || {}
-    const sellerDisplayName = sellerInfo.name || sellerInfo.fullName || ''
-    const sellerVerified = sellerInfo.verified || sellerInfo.verification?.status === 'approved'
+
+    // Determine seller profile: prefer populated sellerId object, fallback to seller
+    const sellerProfile = sellerId && typeof sellerId === 'object' ? sellerId : seller && typeof seller === 'object' ? seller : null
+    const sellerDisplayName = sellerProfile?.fullName || sellerProfile?.name || ''
+    const sellerVerified = !!(sellerProfile?.verification?.status === 'approved' || sellerProfile?.isVerified || sellerProfile?.verified)
+
     const productRating =
         typeof productAverageRating === 'number' && productAverageRating > 0 ? productAverageRating : legacyRating > 0 ? legacyRating : 0
     const description = (shortDescription || product?.description || fullDescription || 'No description available').trim()
@@ -323,8 +324,8 @@ function ProductCard({ product, onClick }) {
             )}
         </div>
     )
-    const displayTags = tags.slice(0, 2)
-    const extraTagCount = tags.length > 2 ? tags.length - 2 : 0
+    const displayTags = tags.slice(0, 3) // Show up to 3 tags instead of 2
+    const extraTagCount = tags.length > 3 ? tags.length - 3 : 0 // Adjust for 3 tags
     const handleImageLoad = () => {
         setIsImageLoading(false)
         setImageError(false)
@@ -413,23 +414,23 @@ function ProductCard({ product, onClick }) {
                                 <Star className="w-3.5 h-3.5 text-yellow-400" />
                                 {productRating.toFixed(1)}
                             </span>
-                            {productRating === 0 && isNewProduct && (
-                                <span className="text-[11px] font-medium text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-md">New</span>
-                            )}
+                            {/* Removed redundant "New" tag from here since it already appears in image overlay */}
                         </div>
                     </div>
                     <p className="text-[15px] md:text-[15px] text-gray-300 line-clamp-3 leading-relaxed mb-4">{description}</p>
                     {displayTags.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mb-4">
+                        <div className="flex items-center gap-2 mb-4 overflow-hidden">
                             {displayTags.map((tag, i) => (
                                 <span
                                     key={i}
-                                    className="px-2 py-0.5 rounded-full border border-[#272727] text-[10px] uppercase tracking-wide text-gray-400">
+                                    className="px-3 py-1 rounded-full bg-gradient-to-r from-[#00FF89]/10 to-[#00FF89]/5 border border-[#00FF89]/20 text-[12px] font-medium tracking-wide text-[#00FF89] whitespace-nowrap flex-shrink-0">
                                     {tag}
                                 </span>
                             ))}
                             {extraTagCount > 0 && (
-                                <span className="px-2 py-0.5 rounded-full border border-[#272727] text-[10px] text-gray-500">+{extraTagCount}</span>
+                                <span className="px-2 py-1 rounded-full bg-gray-800/50 border border-gray-700/50 text-[11px] font-medium text-gray-400 whitespace-nowrap flex-shrink-0">
+                                    +{extraTagCount}
+                                </span>
                             )}
                         </div>
                     )}

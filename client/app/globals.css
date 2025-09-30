@@ -562,7 +562,7 @@ h6 {
 /* Form Styles */
 input,
 textarea,
-select {
+select:not(.unstyled-select) {
   background-color: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: white;
@@ -577,11 +577,22 @@ select option, select optgroup {
 
 input:focus,
 textarea:focus,
-select:focus {
+select:not(.unstyled-select):focus {
   outline: none;
   border-color: var(--brand-primary);
   box-shadow: 0 0 0 3px rgba(0, 255, 137, 0.1);
   background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Utility to remove all native select styles when desired */
+.unstyled-select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* Button Base Styles */

@@ -12,25 +12,39 @@ import ContactWidget from '@/components/features/seller/profile/ContactWidget'
 import { useEnhancedSellerProfile } from '@/hooks/useEnhancedSellerProfile'
 import { Star, Users, Sparkles, Award, Zap, Target, TrendingUp, Clock, Shield, Globe, MapPin, Calendar, Eye, Heart } from 'lucide-react'
 import { formatLocation } from '@/lib/utils/seller'
+
 export default function PublicSellerProfile() {
     const params = useParams()
     const sellerId = params.sellerId
     const [activeTab, setActiveTab] = useState('products')
     const [isContactWidgetOpen, setIsContactWidgetOpen] = useState(false)
+
     const { seller, products, reviews, similarSellers, loading, error, productFilters, updateProductFilters } = useEnhancedSellerProfile(sellerId)
+
     console.log('PublicSellerProfile render', { sellerId, activeTab, isContactWidgetOpen, loading, error, seller })
+
     const handleTabChange = (tab) => {
         setActiveTab(tab)
     }
+
     const handleProductClick = (productId) => {
         window.location.href = `/products/${productId}`
     }
-    
+
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#121212]">
+            <div className="min-h-screen bg-black text-white relative">
+                {/* Ambient background to match ProductHero */}
+                <div className="pointer-events-none absolute inset-0">
+                    <div className="absolute inset-0 bg-black" />
+                    <motion.div
+                        animate={{ rotate: [0, 360], scale: [1, 1.1, 1] }}
+                        transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+                        className="absolute top-1/4 right-1/4 w-96 h-96 bg-[#00FF89]/5 rounded-full blur-3xl"
+                    />
+                </div>
                 <Container>
-                    <div className="pt-24 pb-16">
+                    <div className="pt-24 pb-16 relative z-10">
                         <div className="flex flex-col items-center justify-center py-20">
                             <LoadingSpinner message="Loading seller profile..." />
                             <motion.div
@@ -38,7 +52,7 @@ export default function PublicSellerProfile() {
                                 animate={{ opacity: 1 }}
                                 transition={{ delay: 1 }}
                                 className="mt-8 text-center">
-                                <p className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Preparing an amazing experience...</p>
+                                <p className="text-gray-400 [font-family:var(--font-kumbh-sans)]">Preparing an amazing experience...</p>
                             </motion.div>
                         </div>
                     </div>
@@ -46,31 +60,41 @@ export default function PublicSellerProfile() {
             </div>
         )
     }
+
     if (error || !seller) {
         return (
-            <div className="min-h-screen bg-[#121212]">
+            <div className="min-h-screen bg-black text-white relative">
+                {/* Ambient background to match ProductHero */}
+                <div className="pointer-events-none absolute inset-0">
+                    <div className="absolute inset-0 bg-black" />
+                    <motion.div
+                        animate={{ rotate: [0, 360], scale: [1, 1.1, 1] }}
+                        transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+                        className="absolute top-1/4 right-1/4 w-96 h-96 bg-[#00FF89]/5 rounded-full blur-3xl"
+                    />
+                </div>
                 <Container>
-                    <div className="pt-24 pb-16">
+                    <div className="pt-24 pb-16 relative z-10">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="text-center py-20">
-                            <div className="w-24 h-24 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/30">
+                            <div className="w-24 h-24 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/30">
                                 <Sparkles className="w-12 h-12 text-red-400" />
                             </div>
-                            <h1 className="text-3xl text-[#FFFFFF] mb-4 font-[var(--font-league-spartan)]">Seller Not Found</h1>
-                            <p className="text-[#9ca3af] mb-8 max-w-md mx-auto font-[var(--font-kumbh-sans)]">
+                            <h1 className="text-3xl text-white mb-4 [font-family:var(--font-league-spartan)]">Seller Not Found</h1>
+                            <p className="text-gray-400 mb-8 max-w-md mx-auto [font-family:var(--font-kumbh-sans)]">
                                 The seller profile you're looking for doesn't exist or has been removed from our marketplace.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                 <a
                                     href="/explore"
-                                    className="inline-flex items-center px-6 py-3 bg-[#00FF89] text-[#121212] rounded-lg hover:shadow-lg hover:shadow-[#00FF89]/25 transition-all font-[var(--font-kumbh-sans)]">
+                                    className="inline-flex items-center px-6 py-3 bg-[#00FF89] text-black rounded-lg hover:shadow-lg hover:shadow-[#00FF89]/25 transition-all [font-family:var(--font-kumbh-sans)]">
                                     Explore Other Sellers
                                 </a>
                                 <a
                                     href="/"
-                                    className="inline-flex items-center px-6 py-3 bg-[#1f1f1f] text-[#FFFFFF] border border-[#6b7280]/20 rounded-lg hover:bg-[#2a2a2a] hover:border-[#00FF89]/30 transition-all font-[var(--font-kumbh-sans)]">
+                                    className="inline-flex items-center px-6 py-3 bg:white/5 text-white border border-gray-700/50 rounded-lg hover:bg-[#00FF89]/10 hover:border-[#00FF89]/30 transition-all [font-family:var(--font-kumbh-sans)]">
                                     Go Home
                                 </a>
                             </div>
@@ -80,17 +104,27 @@ export default function PublicSellerProfile() {
             </div>
         )
     }
+
     return (
-        <div className="min-h-screen bg-[#121212] text-[#FFFFFF]">
-            <main className=" pb-16">
+        <div className="relative min-h-screen bg-black text-white">
+            {/* Ambient background to match ProductHero */}
+            <div className="pointer-events-none absolute inset-0">
+                <div className="absolute inset-0 bg-black" />
+                <motion.div
+                    animate={{ rotate: [0, 360], scale: [1, 1.1, 1] }}
+                    transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+                    className="absolute top-1/4 right-1/4 w-96 h-96 bg-[#00FF89]/5 rounded-full blur-3xl"
+                />
+            </div>
+
+            <main className="relative z-10 pb-16">
                 <div className="w-full">
-                    <SellerHero
-                        seller={seller}
-                    />
+                    <SellerHero seller={seller} />
                 </div>
                 <Container>
                     <div className="max-w-7xl mx-auto">
-                        <div className="sticky top-16 z-10 bg-[#121212]/95 backdrop-blur-sm border-b border-[#6b7280]/20 mb-8">
+                        {/* Sticky tabs */}
+                        <div className="sticky top-16 z-10 bg-black/70 backdrop-blur-sm border-b border-gray-700/50 mb-8">
                             <nav className="flex items-center justify-between py-6">
                                 <div className="overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
                                     <div className="flex gap-4 min-w-max">
@@ -118,6 +152,7 @@ export default function PublicSellerProfile() {
                                 </div>
                             </nav>
                         </div>
+
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={activeTab}
@@ -134,6 +169,7 @@ export default function PublicSellerProfile() {
                                         onProductClick={handleProductClick}
                                     />
                                 )}
+
                                 {activeTab === 'about' && (
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                         <div className="lg:col-span-2 space-y-8">
@@ -143,12 +179,12 @@ export default function PublicSellerProfile() {
                                                     initial={{ opacity: 0, y: 20 }}
                                                     animate={{ opacity: 1, y: 0 }}
                                                     transition={{ delay: 0.1 }}
-                                                    className="bg-[#1f1f1f] rounded-2xl p-6 border border-[#6b7280]/20">
-                                                    <h3 className="text-[#FFFFFF] mb-6 text-xl font-[var(--font-league-spartan)] flex items-center gap-2">
+                                                    className="bg-gray-900/50 rounded-2xl p-6 border border-gray-700/50 backdrop-blur-sm">
+                                                    <h3 className="text-white mb-6 text-xl [font-family:var(--font-league-spartan)] flex items-center gap-2">
                                                         <Users className="w-5 h-5 text-[#00FF89]" />
                                                         About {seller.fullName}
                                                     </h3>
-                                                    <p className="text-[#e5e7eb] leading-relaxed font-[var(--font-kumbh-sans)] text-base">
+                                                    <p className="text-gray-300 leading-relaxed [font-family:var(--font-kumbh-sans)] text-base">
                                                         {seller.bio}
                                                     </p>
                                                 </motion.div>
@@ -159,9 +195,9 @@ export default function PublicSellerProfile() {
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: 0.1 }}
-                                                className="bg-[#1f1f1f] rounded-2xl p-6 border border-[#6b7280]/20">
-                                                <h3 className="text-[#FFFFFF] mb-6 text-xl font-[var(--font-league-spartan)] flex items-center gap-2">
-                                                    <Award className="w-5 h-5 text-[#FFC050]" />
+                                                className="bg-gray-900/50 rounded-2xl p-6 border border-gray-700/50 backdrop-blur-sm">
+                                                <h3 className="text-white mb-6 text-xl [font-family:var(--font-league-spartan)] flex items-center gap-2">
+                                                    <Award className="w-5 h-5 text-yellow-400" />
                                                     Achievements & Badges
                                                 </h3>
                                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -197,15 +233,15 @@ export default function PublicSellerProfile() {
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: 0.2 }}
-                                                className="bg-[#1f1f1f] rounded-2xl p-6 border border-[#6b7280]/20">
-                                                <h3 className="text-[#FFFFFF] mb-6 text-xl font-[var(--font-league-spartan)] flex items-center gap-2">
+                                                className="bg-gray-900/50 rounded-2xl p-6 border border-gray-700/50 backdrop-blur-sm">
+                                                <h3 className="text-white mb-6 text-xl [font-family:var(--font-league-spartan)] flex items-center gap-2">
                                                     <Zap className="w-5 h-5 text-[#00FF89]" />
                                                     Skills & Expertise
                                                 </h3>
                                                 <div className="space-y-6">
                                                     {(seller?.niches?.length > 0 || seller?.specialties?.length > 0) && (
                                                         <div>
-                                                            <h4 className="text-[#9ca3af] text-sm font-medium mb-3 uppercase tracking-wider">Specializations</h4>
+                                                            <h4 className="text-gray-400 text-sm font-medium mb-3 uppercase tracking-wider">Specializations</h4>
                                                             <div className="flex flex-wrap gap-2">
                                                                 {(seller?.niches || seller?.specialties || []).map((niche, index) => (
                                                                     <motion.span
@@ -213,7 +249,7 @@ export default function PublicSellerProfile() {
                                                                         initial={{ opacity: 0, scale: 0.8 }}
                                                                         animate={{ opacity: 1, scale: 1 }}
                                                                         transition={{ delay: index * 0.1 }}
-                                                                        className="px-4 py-2 bg-[#00FF89]/10 text-[#00FF89] rounded-xl text-sm font-medium border border-[#00FF89]/20 hover:bg-[#00FF89]/20 transition-all">
+                                                                        className="px-4 py-2 bg-[#00FF89]/10 text-[#00FF89] rounded-xl text-sm font-medium border border-[#00FF89]/30 hover:bg-[#00FF89]/20 transition-all">
                                                                         {niche}
                                                                     </motion.span>
                                                                 ))}
@@ -222,7 +258,7 @@ export default function PublicSellerProfile() {
                                                     )}
                                                     {seller?.toolsSpecialization?.length > 0 && (
                                                         <div>
-                                                            <h4 className="text-[#9ca3af] text-sm font-medium mb-3 uppercase tracking-wider">Tools & Technologies</h4>
+                                                            <h4 className="text-gray-400 text-sm font-medium mb-3 uppercase tracking-wider">Tools & Technologies</h4>
                                                             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                                                 {seller.toolsSpecialization.map((tool, index) => (
                                                                     <motion.div
@@ -230,9 +266,9 @@ export default function PublicSellerProfile() {
                                                                         initial={{ opacity: 0, x: -20 }}
                                                                         animate={{ opacity: 1, x: 0 }}
                                                                         transition={{ delay: index * 0.1 }}
-                                                                        className="flex items-center gap-2 px-3 py-2 bg-[#121212] rounded-lg border border-[#6b7280]/20 hover:border-[#FFC050]/30 transition-all">
-                                                                        <Globe className="w-4 h-4 text-[#FFC050]" />
-                                                                        <span className="text-[#FFFFFF] text-sm font-medium">{tool}</span>
+                                                                        className="flex items-center gap-2 px-3 py-2 bg-black/40 rounded-lg border border-gray-700/50 hover:border-yellow-400/30 transition-all">
+                                                                        <Globe className="w-4 h-4 text-yellow-400" />
+                                                                        <span className="text-white text-sm font-medium">{tool}</span>
                                                                     </motion.div>
                                                                 ))}
                                                             </div>
@@ -247,28 +283,28 @@ export default function PublicSellerProfile() {
                                                     initial={{ opacity: 0, y: 20 }}
                                                     animate={{ opacity: 1, y: 0 }}
                                                     transition={{ delay: 0.3 }}
-                                                    className="bg-[#1f1f1f] rounded-2xl p-6 border border-[#6b7280]/20">
-                                                    <h3 className="text-[#FFFFFF] mb-6 text-xl font-[var(--font-league-spartan)] flex items-center gap-2">
-                                                        <Sparkles className="w-5 h-5 text-[#9333ea]" />
+                                                    className="bg-gray-900/50 rounded-2xl p-6 border border-gray-700/50 backdrop-blur-sm">
+                                                    <h3 className="text-white mb-6 text-xl [font-family:var(--font-league-spartan)] flex items-center gap-2">
+                                                        <Sparkles className="w-5 h-5 text-purple-400" />
                                                         Services Offered
                                                     </h3>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                        <div className="flex items-center gap-3 p-4 bg-[#121212] rounded-lg border border-[#6b7280]/20">
-                                                            <div className="w-10 h-10 bg-[#9333ea]/20 rounded-lg flex items-center justify-center">
-                                                                <Zap className="w-5 h-5 text-[#9333ea]" />
+                                                        <div className="flex items-center gap-3 p-4 bg-black/40 rounded-lg border border-gray-700/50">
+                                                            <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                                                                <Zap className="w-5 h-5 text-purple-400" />
                                                             </div>
                                                             <div>
-                                                                <h4 className="text-[#FFFFFF] font-medium font-[var(--font-league-spartan)]">Custom Automation</h4>
-                                                                <p className="text-[#9ca3af] text-sm font-[var(--font-kumbh-sans)]">Tailored solutions for your needs</p>
+                                                                <h4 className="text-white font-medium [font-family:var(--font-league-spartan)]">Custom Automation</h4>
+                                                                <p className="text-gray-400 text-sm [font-family:var(--font-kumbh-sans)]">Tailored solutions for your needs</p>
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-center gap-3 p-4 bg-[#121212] rounded-lg border border-[#6b7280]/20">
+                                                        <div className="flex items-center gap-3 p-4 bg-black/40 rounded-lg border border-gray-700/50">
                                                             <div className="w-10 h-10 bg-[#00FF89]/20 rounded-lg flex items-center justify-center">
                                                                 <Target className="w-5 h-5 text-[#00FF89]" />
                                                             </div>
                                                             <div>
-                                                                <h4 className="text-[#FFFFFF] font-medium font-[var(--font-league-spartan)]">Consultation</h4>
-                                                                <p className="text-[#9ca3af] text-sm font-[var(--font-kumbh-sans)]">Expert guidance and advice</p>
+                                                                <h4 className="text-white font-medium [font-family:var(--font-league-spartan)]">Consultation</h4>
+                                                                <p className="text-gray-400 text-sm [font-family:var(--font-kumbh-sans)]">Expert guidance and advice</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -281,46 +317,44 @@ export default function PublicSellerProfile() {
                                         {/* Right Sidebar */}
                                         <div className="space-y-6">
                                             {/* Quick Stats */}
-                                            <div className="bg-[#1f1f1f] rounded-2xl p-6 border border-[#6b7280]/20">
-                                                <h3 className="text-[#FFFFFF] mb-4 text-lg font-[var(--font-league-spartan)]">
-                                                    Performance Stats
-                                                </h3>
+                                            <div className="bg-gray-900/50 rounded-2xl p-6 border border-gray-700/50 backdrop-blur-sm">
+                                                <h3 className="text-white mb-4 text-lg [font-family:var(--font-league-spartan)]">Performance Stats</h3>
                                                 <div className="space-y-4">
                                                     <div className="flex justify-between items-center">
-                                                        <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Products</span>
-                                                        <span className="text-[#FFFFFF] font-[var(--font-league-spartan)]">
+                                                        <span className="text-gray-400 [font-family:var(--font-kumbh-sans)]">Products</span>
+                                                        <span className="text-white [font-family:var(--font-league-spartan)]">
                                                             {seller?.stats?.totalProducts || seller?.metrics?.totalProducts || 0}
                                                         </span>
                                                     </div>
                                                     <div className="flex justify-between items-center">
-                                                        <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Total Sales</span>
-                                                        <span className="text-[#FFFFFF] font-[var(--font-league-spartan)]">
+                                                        <span className="text-gray-400 [font-family:var(--font-kumbh-sans)]">Total Sales</span>
+                                                        <span className="text-white [font-family:var(--font-league-spartan)]">
                                                             {seller?.stats?.totalSales || seller?.metrics?.totalSales || 0}
                                                         </span>
                                                     </div>
                                                     <div className="flex justify-between items-center">
-                                                        <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Rating</span>
-                                                        <span className="text-[#FFFFFF] flex items-center gap-1 font-[var(--font-league-spartan)]">
-                                                            <Star className="w-3 h-3 fill-[#FFC050] text-[#FFC050]" />
+                                                        <span className="text-gray-400 [font-family:var(--font-kumbh-sans)]">Rating</span>
+                                                        <span className="text-white flex items-center gap-1 [font-family:var(--font-league-spartan)]">
+                                                            <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
                                                             {seller?.stats?.averageRating || seller?.metrics?.avgRating ? 
                                                                 (seller?.stats?.averageRating || seller?.metrics?.avgRating).toFixed(1) : 'N/A'}
                                                         </span>
                                                     </div>
                                                     <div className="flex justify-between items-center">
-                                                        <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Reviews</span>
-                                                        <span className="text-[#FFFFFF] font-[var(--font-league-spartan)]">
+                                                        <span className="text-gray-400 [font-family:var(--font-kumbh-sans)]">Reviews</span>
+                                                        <span className="text-white [font-family:var(--font-league-spartan)]">
                                                             {seller?.stats?.totalReviews || seller?.metrics?.totalReviews || 0}
                                                         </span>
                                                     </div>
                                                     <div className="flex justify-between items-center">
-                                                        <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Profile Views</span>
-                                                        <span className="text-[#FFFFFF] font-[var(--font-league-spartan)]">
+                                                        <span className="text-gray-400 [font-family:var(--font-kumbh-sans)]">Profile Views</span>
+                                                        <span className="text-white [font-family:var(--font-league-spartan)]">
                                                             {seller?.stats?.profileViews || seller?.metrics?.profileViews || 0}
                                                         </span>
                                                     </div>
                                                     <div className="flex justify-between items-center">
-                                                        <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Response Rate</span>
-                                                        <span className="text-[#00FF89] font-[var(--font-league-spartan)]">
+                                                        <span className="text-gray-400 [font-family:var(--font-kumbh-sans)]">Response Rate</span>
+                                                        <span className="text-[#00FF89] [font-family:var(--font-league-spartan)]">
                                                             {seller?.responseRate || 'N/A'}
                                                         </span>
                                                     </div>
@@ -332,91 +366,87 @@ export default function PublicSellerProfile() {
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: 0.3 }}
-                                                className="bg-[#1f1f1f] rounded-2xl p-6 border border-[#6b7280]/20">
-                                                <h3 className="text-[#FFFFFF] mb-4 text-lg font-[var(--font-league-spartan)]">
-                                                    Location & Availability
-                                                </h3>
+                                                className="bg-gray-900/50 rounded-2xl p-6 border border-gray-700/50 backdrop-blur-sm">
+                                                <h3 className="text-white mb-4 text-lg [font-family:var(--font-league-spartan)]">Location & Availability</h3>
                                                 <div className="space-y-4">
                                                     {(seller?.location?.country || seller?.locationText) && (
                                                         <div className="flex items-center gap-3">
                                                             <MapPin className="w-4 h-4 text-[#00FF89]" />
                                                             <div>
-                                                                <span className="text-[#FFFFFF] font-[var(--font-kumbh-sans)]">
+                                                                <span className="text-white [font-family:var(--font-kumbh-sans)]">
                                                                     {seller?.location?.country || seller?.locationText}
                                                                 </span>
                                                                 {seller?.location?.timezone && (
-                                                                    <p className="text-xs text-[#9ca3af]">{seller.location.timezone}</p>
+                                                                    <p className="text-xs text-gray-400">{seller.location.timezone}</p>
                                                                 )}
                                                             </div>
                                                         </div>
                                                     )}
                                                     <div className="flex items-center gap-3">
-                                                        <Clock className="w-4 h-4 text-[#FFC050]" />
+                                                        <Clock className="w-4 h-4 text-yellow-400" />
                                                         <div>
-                                                            <span className="text-[#FFFFFF] font-[var(--font-kumbh-sans)]">
+                                                            <span className="text-white [font-family:var(--font-kumbh-sans)]">
                                                                 Responds in {seller?.avgResponseTime || seller?.responseTime || '< 24h'}
                                                             </span>
-                                                            <p className="text-xs text-[#9ca3af]">Average response time</p>
+                                                            <p className="text-xs text-gray-400">Average response time</p>
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-3">
-                                                        <div className={`w-3 h-3 rounded-full ${seller?.isOnline ? 'bg-[#00FF89]' : 'bg-[#6b7280]'}`} />
-                                                        <span className={`font-[var(--font-kumbh-sans)] ${seller?.isOnline ? 'text-[#00FF89]' : 'text-[#9ca3af]'}`}>
+                                                        <div className={`w-3 h-3 rounded-full ${seller?.isOnline ? 'bg-[#00FF89]' : 'bg-gray-600'}`} />
+                                                        <span className={`[font-family:var(--font-kumbh-sans)] ${seller?.isOnline ? 'text-[#00FF89]' : 'text-gray-400'}`}>
                                                             {seller?.isOnline ? 'Online now' : 'Offline'}
                                                         </span>
                                                     </div>
                                                 </div>
                                             </motion.div>
-                                            
+
                                             {/* Trust & Credibility */}
                                             <motion.div
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: 0.4 }}
-                                                className="bg-[#1f1f1f] rounded-2xl p-6 border border-[#6b7280]/20">
-                                                <h3 className="text-[#FFFFFF] mb-4 text-lg font-[var(--font-league-spartan)]">
-                                                    Trust & Credibility
-                                                </h3>
+                                                className="bg-gray-900/50 rounded-2xl p-6 border border-gray-700/50 backdrop-blur-sm">
+                                                <h3 className="text-white mb-4 text-lg [font-family:var(--font-league-spartan)]">Trust & Credibility</h3>
                                                 <div className="space-y-4">
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Member Since</span>
-                                                        <span className="text-[#FFFFFF] font-[var(--font-league-spartan)]">
+                                                        <span className="text-gray-400 [font-family:var(--font-kumbh-sans)]">Member Since</span>
+                                                        <span className="text-white [font-family:var(--font-league-spartan)]">
                                                             {seller?.memberSince ? new Date(seller.memberSince).getFullYear() : 
                                                              seller?.joinedDate || 
                                                              (seller?.createdAt ? new Date(seller.createdAt).getFullYear() : 'N/A')}
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Trust Score</span>
+                                                        <span className="text-gray-400 [font-family:var(--font-kumbh-sans)]">Trust Score</span>
                                                         <div className="flex items-center gap-2">
-                                                            <div className="w-16 h-2 bg-[#6b7280]/30 rounded-full overflow-hidden">
+                                                            <div className="w-16 h-2 bg-gray-700/50 rounded-full overflow-hidden">
                                                                 <div 
-                                                                    className="h-full bg-gradient-to-r from-[#00FF89] to-[#FFC050] rounded-full transition-all"
+                                                                    className="h-full bg-gradient-to-r from-[#00FF89] to-yellow-400 rounded-full transition-all"
                                                                     style={{ width: `${Math.min((seller?.trustScore || 0) * 5, 100)}%` }}
                                                                 />
                                                             </div>
-                                                            <span className="text-[#FFFFFF] font-[var(--font-league-spartan)] text-sm">
+                                                            <span className="text-white [font-family:var(--font-league-spartan)] text-sm">
                                                                 {seller?.trustScore || 0}/20
                                                             </span>
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Seller Level</span>
+                                                        <span className="text-gray-400 [font-family:var(--font-kumbh-sans)]">Seller Level</span>
                                                         <div className="flex items-center gap-2">
                                                             <div className={`w-3 h-3 rounded-full ${
                                                                 seller?.sellerLevel?.level === 'Gold' ? 'bg-yellow-500' :
                                                                 seller?.sellerLevel?.level === 'Silver' ? 'bg-gray-400' :
                                                                 seller?.sellerLevel?.level === 'Bronze' ? 'bg-orange-400' :
-                                                                'bg-[#6b7280]'
+                                                                'bg-gray-600'
                                                             }`} />
-                                                            <span className="text-[#FFFFFF] font-[var(--font-league-spartan)] text-sm">
+                                                            <span className="text-white [font-family:var(--font-league-spartan)] text-sm">
                                                                 {seller?.sellerLevel?.level || 'New Seller'}
                                                             </span>
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">Languages</span>
-                                                        <span className="text-[#FFFFFF] font-[var(--font-league-spartan)] text-sm">
+                                                        <span className="text-gray-400 [font-family:var(--font-kumbh-sans)]">Languages</span>
+                                                        <span className="text-white [font-family:var(--font-league-spartan)] text-sm">
                                                             {seller?.languages?.length > 0 ? seller.languages.slice(0, 2).join(', ') : 'English'}
                                                         </span>
                                                     </div>
@@ -425,6 +455,7 @@ export default function PublicSellerProfile() {
                                         </div>
                                     </div>
                                 )}
+
                                 {activeTab === 'reviews' && (
                                     <SellerReviews
                                         reviews={reviews}
@@ -434,13 +465,14 @@ export default function PublicSellerProfile() {
                                 )}
                             </motion.div>
                         </AnimatePresence>
+
                         {similarSellers.length > 0 && (
                             <motion.section
                                 initial={{ opacity: 0, y: 40 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.5 }}
-                                className="mt-16 pt-8 border-t border-[#6b7280]/20">
-                                <h2 className="text-2xl text-[#FFFFFF] mb-6 font-[var(--font-league-spartan)]">Similar Sellers</h2>
+                                className="mt-16 pt-8 border-t border-gray-700/50">
+                                <h2 className="text-2xl text-white mb-6 [font-family:var(--font-league-spartan)]">Similar Sellers</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                     {similarSellers.map((similarSeller) => (
                                         <SimilarSellerCard
@@ -462,6 +494,7 @@ export default function PublicSellerProfile() {
                     </div>
                 </Container>
             </main>
+
             <ContactWidget
                 seller={seller}
                 isOpen={isContactWidgetOpen}
@@ -471,20 +504,21 @@ export default function PublicSellerProfile() {
         </div>
     )
 }
+
 function TabButton({ label, count, isActive, onClick, icon }) {
     return (
         <button
             onClick={onClick}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-[var(--font-kumbh-sans)] ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all [font-family:var(--font-kumbh-sans)] border ${
                 isActive
-                    ? 'bg-[#00FF89] text-[#121212] font-semibold'
-                    : 'text-[#9ca3af] hover:text-[#FFFFFF] hover:bg-[#1f1f1f]'
+                    ? 'bg-[#00FF89]/10 border-[#00FF89]/30 text-[#00FF89] font-semibold'
+                    : 'bg-white/5 border-gray-700 text-gray-300 hover:bg-[#00FF89]/5 hover:border-[#00FF89]/20'
             }`}>
             {icon}
             <span>{label}</span>
             {count !== undefined && (
                 <span className={`px-2 py-1 text-xs rounded-full ${
-                    isActive ? 'bg-[#121212]/20' : 'bg-[#6b7280]/20'
+                    isActive ? 'bg-black/20 text-[#00FF89]' : 'bg-white/10 text-gray-300'
                 }`}>
                     {count}
                 </span>
@@ -492,51 +526,54 @@ function TabButton({ label, count, isActive, onClick, icon }) {
         </button>
     )
 }
+
 function SimilarSellerCard({ seller, onClick }) {
     return (
         <motion.div
             whileHover={{ y: -4, scale: 1.02 }}
-            className="bg-[#1f1f1f] border border-[#6b7280]/20 rounded-2xl p-6 cursor-pointer hover:border-[#00FF89]/30 transition-all group"
+            className="bg-white/5 border border-gray-700/50 rounded-2xl p-6 cursor-pointer hover:border-[#00FF89]/30 transition-all group"
             onClick={onClick}>
             <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#00FF89] to-[#FFC050] rounded-full flex items-center justify-center text-[#121212] font-[var(--font-league-spartan)]">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#00FF89] to-yellow-400 rounded-full flex items-center justify-center text-black [font-family:var(--font-league-spartan)]">
                     {seller.fullName?.charAt(0)?.toUpperCase() || 'S'}
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="text-[#FFFFFF] truncate font-[var(--font-league-spartan)]">{seller.fullName}</h3>
-                    <p className="text-sm text-[#9ca3af] font-[var(--font-kumbh-sans)]">{formatLocation(seller.location)}</p>
+                    <h3 className="text-white truncate [font-family:var(--font-league-spartan)]">{seller.fullName}</h3>
+                    <p className="text-sm text-gray-400 [font-family:var(--font-kumbh-sans)]">{formatLocation(seller.location)}</p>
                 </div>
             </div>
             <div className="flex items-center justify-between text-sm">
-                <span className="text-[#9ca3af] font-[var(--font-kumbh-sans)]">{seller.stats?.totalProducts || 0} products</span>
-                <div className="flex items-center gap-1 text-[#FFC050]">
+                <span className="text-gray-400 [font-family:var(--font-kumbh-sans)]">{seller.stats?.totalProducts || 0} products</span>
+                <div className="flex items-center gap-1 text-yellow-400">
                     <Star className="w-3 h-3 fill-current" />
-                    <span className="font-[var(--font-kumbh-sans)]">{seller.stats?.averageRating ? seller.stats.averageRating.toFixed(1) : 'N/A'}</span>
+                    <span className="[font-family:var(--font-kumbh-sans)]">{seller.stats?.averageRating ? seller.stats.averageRating.toFixed(1) : 'N/A'}</span>
                 </div>
             </div>
         </motion.div>
     )
 }
+
 function AchievementBadge({ icon: Icon, title, earned, color = 'gray' }) {
     const colorClasses = {
-        emerald: earned ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-gray-800 text-gray-500 border-gray-700',
-        blue: earned ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' : 'bg-gray-800 text-gray-500 border-gray-700',
-        purple: earned ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' : 'bg-gray-800 text-gray-500 border-gray-700',
-        amber: earned ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-gray-800 text-gray-500 border-gray-700',
-        gray: 'bg-gray-800 text-gray-500 border-gray-700'
+        emerald: earned ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-white/5 text-gray-400 border-gray-700/50',
+        blue: earned ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' : 'bg-white/5 text-gray-400 border-gray-700/50',
+        purple: earned ? 'bg-purple-500/10 text-purple-400 border-purple-500/30' : 'bg-white/5 text-gray-400 border-gray-700/50',
+        amber: earned ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-white/5 text-gray-400 border-gray-700/50',
+        gray: 'bg-white/5 text-gray-400 border-gray-700/50'
     }
+
     return (
         <motion.div
             whileHover={{ scale: earned ? 1.05 : 1 }}
             className={`relative flex flex-col items-center text-center p-4 rounded-xl border transition-all ${
                 colorClasses[color]
-            } ${earned ? 'hover:shadow-lg cursor-pointer' : 'opacity-60'}`}>
+            } ${earned ? 'hover:shadow-lg hover:shadow-[#00FF89]/20 cursor-pointer' : 'opacity-70'}`}>
             <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
-                earned ? 'bg-current/20' : 'bg-gray-700'
+                earned ? 'bg-current/10' : 'bg-black/30'
             }`}>
                 <Icon className="w-6 h-6" />
             </div>
-            <h4 className="text-sm font-medium font-[var(--font-kumbh-sans)] leading-tight">
+            <h4 className="text-sm font-medium [font-family:var(--font-kumbh-sans)] leading-tight">
                 {title}
             </h4>
             {earned && (
@@ -545,7 +582,7 @@ function AchievementBadge({ icon: Icon, title, earned, color = 'gray' }) {
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.2 }}
                     className="absolute -top-2 -right-2 w-5 h-5 bg-[#00FF89] rounded-full flex items-center justify-center">
-                    <svg className="w-3 h-3 text-[#121212]" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-3 h-3 text-black" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                 </motion.div>

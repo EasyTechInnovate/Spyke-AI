@@ -54,6 +54,13 @@ const sellerSchemas = {
             .max(10, 'You can add maximum 10 portfolio links')
             .optional(),
         
+        revenueShareAgreement: z.object({
+            accepted: z.boolean()
+                .refine((val) => val === true, {
+                    message: 'You must accept the revenue share agreement to proceed'
+                })
+        }),
+        
         payoutInfo: z.object({
             method: z.enum(Object.values(EPayoutMethod), {
                 errorMap: () => ({ message: 'Please select a valid payout method' })

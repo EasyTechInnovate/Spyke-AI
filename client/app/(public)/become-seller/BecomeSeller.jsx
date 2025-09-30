@@ -226,7 +226,7 @@ export default function BecomeSellerPage() {
                             error={errors.sellerBanner}
                             helperText={formFields.sellerBanner.helperText}
                             placeholder="Upload banner image or enter URL"
-                            maxSize={10}
+                            maxSize={5}
                             acceptedFormats={['.jpg', '.jpeg', '.png', '.webp']}
                         />
                     </>
@@ -453,40 +453,43 @@ export default function BecomeSellerPage() {
                             onClick={() => setShowValidationError(false)}
                         />
                     )}
-                    <MultiStepForm
-                        steps={formSteps}
-                        formData={formData}
-                        onSubmit={handleFormSubmit}
-                        errors={errors}
-                        loading={loading}
-                        submitError={submitError}
-                        validateStep={validateStep}
-                        submitButtonText="Create Seller Profile"
-                        submitButtonIcon={<Check className="w-5 h-5" />}
-                        compactStepIndicator={false}
-                        imageUploading={imageUploading}>
-                        {renderStepContent}
-                    </MultiStepForm>
-                    <div className="text-center py-20">
-                        <div className="max-w-2xl mx-auto">
-                            <h2 className="text-4xl font-kumbh-sans font-bold text-white mb-6">🎉 Seller Profile Created Successfully!</h2>
-                            <p className="text-xl text-gray-300 mb-8">Your seller profile has been submitted for review.</p>
-                            <div className="bg-brand-primary/10 p-6 rounded-2xl border border-brand-primary/30 mb-6">
-                                <h3 className="text-lg font-semibold text-brand-primary mb-2">Next Steps:</h3>
-                                <p className="text-gray-200">
-                                    Please <span className="font-bold text-brand-primary underline decoration-2">relogin</span> and visit your seller
-                                    profile to start selling!
-                                </p>
+                    {!isSuccess ? (
+                        <MultiStepForm
+                            steps={formSteps}
+                            formData={formData}
+                            onSubmit={handleFormSubmit}
+                            errors={errors}
+                            loading={loading}
+                            submitError={submitError}
+                            validateStep={validateStep}
+                            submitButtonText="Create Seller Profile"
+                            submitButtonIcon={<Check className="w-5 h-5" />}
+                            compactStepIndicator={false}
+                            imageUploading={imageUploading}>
+                            {renderStepContent}
+                        </MultiStepForm>
+                    ) : (
+                        <div className="text-center py-20">
+                            <div className="max-w-2xl mx-auto">
+                                <h2 className="text-4xl font-kumbh-sans font-bold text-white mb-6">🎉 Seller Profile Created Successfully!</h2>
+                                <p className="text-xl text-gray-300 mb-8">Your seller profile has been submitted for review.</p>
+                                <div className="bg-brand-primary/10 p-6 rounded-2xl border border-brand-primary/30 mb-6">
+                                    <h3 className="text-lg font-semibold text-brand-primary mb-2">Next Steps:</h3>
+                                    <p className="text-gray-200">
+                                        Please <span className="font-bold text-brand-primary underline decoration-2">relogin</span> and visit your
+                                        seller profile to start selling!
+                                    </p>
+                                </div>
+                                <SellerModeVisualGuide />
+                                <button
+                                    type="button"
+                                    onClick={handleLogoutAndRedirect}
+                                    className="bg-brand-primary hover:bg-brand-primary/90 text-black font-semibold py-3 px-8 rounded-xl transition-all duration-200 transform hover:scale-105">
+                                    🚀 Ready to Start Selling? Sign In Again!
+                                </button>
                             </div>
-                            <SellerModeVisualGuide />
-                            <button
-                                type="button"
-                                onClick={handleLogoutAndRedirect}
-                                className="bg-brand-primary hover:bg-brand-primary/90 text-black font-semibold py-3 px-8 rounded-xl transition-all duration-200 transform hover:scale-105">
-                                🚀 Ready to Start Selling? Sign In Again!
-                            </button>
                         </div>
-                    </div>
+                    )}
                 </Container>
             </section>
         </>
