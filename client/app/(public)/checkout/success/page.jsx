@@ -40,10 +40,8 @@ function LoadingUI() {
     )
 }
 function formatText(str) {
-  if (!str) return "";
-  return str
-    .replace(/_/g, " ") 
-    .replace(/\b\w/g, char => char.toUpperCase());
+    if (!str) return ''
+    return str.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
 }
 function CheckoutSuccessContent() {
     const [loading, setLoading] = useState(true)
@@ -99,6 +97,8 @@ function CheckoutSuccessContent() {
     }, [])
     useEffect(() => {
         let aborted = false
+        const confirmationAttempted = useRef(false)
+
         const load = async () => {
             if (!sessionId) {
                 if (mountedRef.current) {
@@ -107,12 +107,23 @@ function CheckoutSuccessContent() {
                 }
                 return
             }
+
+            // Prevent multiple confirmation attempts
+            if (confirmationAttempted.current) {
+                console.log('Confirmation already attempted, skipping...')
+                return
+            }
+            confirmationAttempted.current = true
+
             try {
                 const raw = await paymentAPI.confirmCheckoutSession(sessionId)
                 if (!raw) throw new Error('Empty response from backend')
-                if (raw.hasSuccess === false) {
+
+                // Handle both success and "already exists" cases as success
+                if (raw.success === false && !raw.message?.includes('already') && !raw.message?.includes('existing')) {
                     throw new Error(raw.message || 'Backend reported failure')
                 }
+
                 const data = raw.data || raw || {}
                 const id = data._id ?? data.purchaseId ?? data.id
                 const items = Array.isArray(data.items) ? data.items : data.items ? [data.items] : []
@@ -134,44 +145,66 @@ function CheckoutSuccessContent() {
                     purchaseDate: data.purchaseDate ?? data.purchase_date ?? data.createdAt,
                     paymentMethod
                 }
+
                 if (mountedRef.current && !aborted) {
                     setOrderDetails(normalized)
                     setLoading(false)
-                    
-                    setTimeout(() => {
-                        if (mountedRef.current && !aborted) {
-                            setPaymentConfirmed(true)
-                            setOrderDetails(prev => ({
-                                ...prev,
-                                paymentStatus: 'completed',
-                                orderStatus: 'completed'
-                            }))
-                            
-                            if (!confettiFiredRef.current) {
-                                triggerEnhancedConfetti()
-                                confettiFiredRef.current = true
-                            }
-                            
-                            setTimeout(async () => {
-                                try {
-                                    await cartAPI?.clearCart?.()
-                                    await clearCart?.()
-                                    await reloadCart?.()
-                                } catch (e) {
-                                    console.error('Failed to clear cart:', e)
+
+                    setTimeout(
+                        () => {
+                            if (mountedRef.current && !aborted) {
+                                setPaymentConfirmed(true)
+                                setOrderDetails((prev) => ({
+                                    ...prev,
+                                    paymentStatus: 'completed',
+                                    orderStatus: 'completed'
+                                }))
+
+                                if (!confettiFiredRef.current) {
+                                    triggerEnhancedConfetti()
+                                    confettiFiredRef.current = true
                                 }
-                            }, 500)
-                        }
-                    }, 2000 + Math.random() * 1000)
+
+                                setTimeout(async () => {
+                                    try {
+                                        await cartAPI?.clearCart?.()
+                                        await clearCart?.()
+                                        await reloadCart?.()
+                                    } catch (e) {
+                                        console.error('Failed to clear cart:', e)
+                                    }
+                                }, 500)
+                            }
+                        },
+                        2000 + Math.random() * 1000
+                    )
                 }
             } catch (err) {
                 const msg = err?.message ?? String(err)
+                console.error('Payment confirmation error:', err)
+
                 if (mountedRef.current && !aborted) {
-                    setError(msg.includes('No matching document') ? 'Order not yet available. Check purchases page in a moment.' : msg)
+                    // Handle specific error cases more gracefully
+                    if (msg.includes('already') || msg.includes('existing') || msg.includes('duplicate')) {
+                        // Treat as success - order already exists
+                        setOrderDetails({
+                            orderId: 'Already processed',
+                            paymentStatus: 'completed',
+                            orderStatus: 'completed',
+                            paymentMethod: 'Stripe Checkout',
+                            items: []
+                        })
+                        setPaymentConfirmed(true)
+                    } else if (msg.includes('No matching document') || msg.includes('not yet available')) {
+                        setError('Order is being processed. Please check your purchases page in a moment.')
+                    } else {
+                        setError(msg.length > 100 ? 'Payment confirmation failed. Please contact support if your payment was charged.' : msg)
+                    }
                     setLoading(false)
                 }
             }
         }
+
         load()
         return () => {
             aborted = true
@@ -181,10 +214,9 @@ function CheckoutSuccessContent() {
         return <LoadingUI />
     }
     const hasOrder = !!(orderDetails && orderDetails.orderId)
-    const isFinalSuccess =
-        hasOrder && paymentConfirmed
+    const isFinalSuccess = hasOrder && paymentConfirmed
     return (
-      <div className="min-h-screen bg-black relative overflow-hidden">
+        <div className="min-h-screen bg-black relative overflow-hidden">
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-20 left-10 w-72 h-72 bg-green-500/5 rounded-full blur-3xl animate-pulse"></div>
                 <div className="absolute bottom-20 right-10 w-96 h-96 bg-green-400/3 rounded-full blur-3xl animate-pulse delay-1000"></div>
@@ -297,7 +329,11 @@ function CheckoutSuccessContent() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {[
                                                 { label: 'Order ID', value: `#${String(orderDetails?.orderId)}`, mono: true },
-                                                { label: 'Payment Status', value: formatText(orderDetails?.paymentStatus || 'Completed'), status: true },
+                                                {
+                                                    label: 'Payment Status',
+                                                    value: formatText(orderDetails?.paymentStatus || 'Completed'),
+                                                    status: true
+                                                },
                                                 { label: 'Payment Method', value: formatText(orderDetails?.paymentMethod || 'N/A'), mono: true },
                                                 { label: 'Total Amount', value: `$${safeCents(orderDetails?.total)}`, amount: true }
                                             ].map((item, idx) => (
