@@ -71,7 +71,11 @@ const purchaseSchema = new mongoose.Schema(
         },
         
         paymentMethod: String,
-        paymentReference: String,
+        paymentReference: {
+            type: String,
+            sparse: true,
+            unique: true // Add unique constraint to prevent duplicates
+        },
         transactionId: String,
         
         purchaseDate: {

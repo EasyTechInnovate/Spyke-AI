@@ -746,9 +746,16 @@ const purchaseControllerExport = {
             const event = await stripeService.constructWebhookEvent(req.body, signature)
 
             switch (event.type) {
-                case 'payment_intent.succeeded':
-                    await handlePaymentSucceeded(event.data.object)
+                // ONLY handle checkout.session.completed to prevent duplicates
+                case 'checkout.session.completed': {
+                    const session = event.data.object
+                    if (session.payment_intent && session.payment_status === 'paid') {
+                        const paymentIntent = await stripeService.retrievePaymentIntent(session.payment_intent)
+                        await handlePaymentSucceeded(paymentIntent, session.id)
+                    }
                     break
+                }
+                // Keep failure handlers
                 case 'payment_intent.payment_failed':
                     await handlePaymentFailed(event.data.object)
                     break
@@ -756,39 +763,15 @@ const purchaseControllerExport = {
                 case 'payment_intent.cancelled':
                     await handlePaymentCanceled(event.data.object)
                     break
-                case 'payment_intent.created':
-                    break
-                case 'payment_intent.requires_action':
-                    break
-                case 'checkout.session.async_payment_succeeded': {
-                    const session = event.data.object
-                    if (session.payment_intent) {
-                        const paymentIntent = await stripeService.retrievePaymentIntent(session.payment_intent)
-                        await handlePaymentSucceeded(paymentIntent, session.id)
-                    }
-                    break
-                }
-                case 'checkout.session.completed': {
-                    const session = event.data.object
-                    if (session.payment_intent) {
-                        const paymentIntent = await stripeService.retrievePaymentIntent(session.payment_intent)
-                        await handlePaymentSucceeded(paymentIntent, session.id)
-                    }
-                    break
-                }
-                case 'charge.succeeded':
-                    if (event.data.object.payment_intent) {
-                        const paymentIntent = await stripeService.retrievePaymentIntent(event.data.object.payment_intent)
-                        await handlePaymentSucceeded(paymentIntent)
-                    }
-                    break
                 case 'charge.failed':
                     if (event.data.object.payment_intent) {
                         const paymentIntent = await stripeService.retrievePaymentIntent(event.data.object.payment_intent)
                         await handlePaymentFailed(paymentIntent)
                     }
                     break
+                // Log other events but don't process them
                 default:
+                    console.log(`Received unhandled webhook event: ${event.type}`)
                     break
             }
 
