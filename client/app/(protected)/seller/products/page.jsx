@@ -927,6 +927,7 @@ function EmptyState({ query }) {
 function ProductCard({ product, onSelect, isSelected, onDelete, onPublish, onSubmitForReview }) {
     const status = product.status || 'draft'
     const cfg = statusConfig[status] || statusConfig.draft
+    const canEdit = status === 'draft' || status === 'published'
     const getVerificationStatusText = (product) => {
         if (product.isVerified && product.isTested) {
             return { text: 'Fully Approved', color: 'text-green-400', icon: Star }
@@ -939,8 +940,10 @@ function ProductCard({ product, onSelect, isSelected, onDelete, onPublish, onSub
         }
         return { text: 'Under Review', color: 'text-yellow-400', icon: Clock }
     }
+    
     const verificationStatus = getVerificationStatusText(product)
     const StatusIcon = verificationStatus.icon
+    
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1002,11 +1005,20 @@ function ProductCard({ product, onSelect, isSelected, onDelete, onPublish, onSub
                     )}
                 </div>
                 <div className="flex gap-2">
-                    <Link
-                        href={`/seller/products/${product.slug || product._id}/edit`}
-                        className="flex-1 px-3 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors text-center text-sm font-medium">
-                        Edit
-                    </Link>
+                    {canEdit ? (
+                        <Link
+                            href={`/seller/products/${product.slug || product._id}/edit`}
+                            className="flex-1 px-3 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors text-center text-sm font-medium">
+                            Edit
+                        </Link>
+                    ) : (
+                        <button
+                            disabled
+                            title={`Cannot edit product while it's ${status.replace('_', ' ')}`}
+                            className="flex-1 px-3 py-2 bg-gray-600 text-gray-400 rounded-lg text-sm font-medium cursor-not-allowed">
+                            Edit
+                        </button>
+                    )}
                     {product.isVerified && product.isTested ? (
                         <button
                             onClick={onPublish}
