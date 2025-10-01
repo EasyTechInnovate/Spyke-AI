@@ -1,11 +1,22 @@
 import { z } from 'zod'
 import { EProductType, EProductCategory, EProductIndustry, EProductPriceCategory, EProductSetupTime, EProductStatusNew } from '../constant/application.js'
 
+// Helper function to create flexible ObjectId or name validation
+const createFlexibleIdSchema = (fieldName) => z.string()
+  .refine((val) => {
+    // Allow valid ObjectIds
+    if (/^[0-9a-fA-F]{24}$/.test(val)) return true
+    // Allow non-empty strings (names)
+    if (typeof val === 'string' && val.trim().length > 0) return true
+    return false
+  }, `${fieldName} must be a valid ObjectId or name`)
+
+
 const toolSchema = z.object({
   name: z.string().min(1, 'Tool name is required'),
-  logo: z.string().url().optional().or(z.literal('')),
-  model: z.string().optional().or(z.literal('')),
-  link: z.string().url().optional().or(z.literal('')).or(z.undefined())
+  logo: z.string().optional().default(''),
+  model: z.string().optional().default(''),
+  link: z.string().optional().default('')
 })
 
 const versionSchema = z.object({
@@ -98,19 +109,26 @@ export const createProductSchema = z.object({
   thumbnail: z.string()
     .url('Thumbnail must be a valid URL'),
   
-  images: z.array(z.string().url()).optional(),
+  images: z.array(z.string().url()).optional().default([]),
   
-  previewVideo: z.string().url().optional().or(z.literal(null)),
+  // Fixed previewVideo validation
+  previewVideo: z.string()
+    .optional()
+    .nullable()
+    .refine((val) => {
+      if (!val || val === null || val === '') return true
+      return z.string().url().safeParse(val).success
+    }, 'Preview video must be a valid URL or empty'),
   
   type: z.enum(Object.values(EProductType), {
     errorMap: () => ({ message: 'Type must be one of: prompt, automation, agent, bundle' })
   }),
   
-  category: z.string()
-    .regex(/^[0-9a-fA-F]{24}$/, 'Category must be a valid MongoDB ObjectId'),
+  // Flexible category validation - accepts ObjectId or name
+  category: createFlexibleIdSchema('Category'),
   
-  industry: z.string()
-    .regex(/^[0-9a-fA-F]{24}$/, 'Industry must be a valid MongoDB ObjectId'),
+  // Flexible industry validation - accepts ObjectId or name  
+  industry: createFlexibleIdSchema('Industry'),
   
   price: z.number()
     .min(0, 'Price must be non-negative'),
@@ -120,19 +138,23 @@ export const createProductSchema = z.object({
     .optional(),
   
   targetAudience: z.string().optional(),
-  benefits: z.array(z.string()).optional(),
-  useCaseExamples: z.array(z.string()).optional(),
+  benefits: z.array(z.string()).optional().default([]),
+  useCaseExamples: z.array(z.string()).optional().default([]),
   howItWorks: z.array(z.string()).min(1, 'At least one step is required for how it works'),
-  outcome: z.array(z.string()).optional(),
+  outcome: z.array(z.string()).optional().default([]),
   
-  toolsUsed: z.array(toolSchema).optional(),
+  // Improved toolsUsed validation
+  toolsUsed: z.array(toolSchema)
+    .optional()
+    .default([])
+    .refine((tools) => Array.isArray(tools), 'Tools used must be an array'),
+    
   setupTime: z.enum(Object.values(EProductSetupTime), {
     errorMap: () => ({ message: 'Invalid setup time' })
   }),
-  // deliveryMethod field removed - no longer required
   
   tags: z.array(z.string()).min(1, 'At least one tag is required').max(10, 'Maximum 10 tags allowed'),
-  searchKeywords: z.array(z.string()).optional(),
+  searchKeywords: z.array(z.string()).optional().default([]),
   
   performanceMetrics: z.string().optional(),
   usageInformation: z.string().optional(),
@@ -168,23 +190,29 @@ export const updateProductSchema = z.object({
   
   images: z.array(z.string().url()).optional(),
   
-  previewVideo: z.string().url().optional().or(z.literal(null)),
+  // Fixed previewVideo validation for updates
+  previewVideo: z.string()
+    .optional()
+    .nullable()
+    .refine((val) => {
+      if (!val || val === null || val === '') return true
+      return z.string().url().safeParse(val).success
+    }, 'Preview video must be a valid URL or empty'),
   
   type: z.enum(Object.values(EProductType)).optional(),
   
-  category: z.string()
-    .regex(/^[0-9a-fA-F]{24}$/, 'Category must be a valid MongoDB ObjectId')
-    .optional(),
-  
-  industry: z.string()
-    .regex(/^[0-9a-fA-F]{24}$/, 'Industry must be a valid MongoDB ObjectId')
-    .optional(),
+  // Flexible validation for updates - accepts ObjectId or name
+  category: createFlexibleIdSchema('Category').optional(),
+  industry: createFlexibleIdSchema('Industry').optional(),
   
   price: z.number().min(0, 'Price must be non-negative').optional(),
   
   originalPrice: z.number().min(0, 'Original price must be non-negative').optional(),
   
-  toolsUsed: z.array(toolSchema).optional(),
+  // Improved toolsUsed validation for updates
+  toolsUsed: z.array(toolSchema)
+    .optional()
+    .refine((tools) => !tools || Array.isArray(tools), 'Tools used must be an array'),
   
   setupTime: z.enum(Object.values(EProductSetupTime)).optional(),
   

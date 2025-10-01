@@ -36,6 +36,30 @@ export default {
                 return httpError(next, new Error(responseMessage.SELLER.PROFILE_NOT_ACTIVE), req, 403)
             }
 
+            // Convert category name to ObjectId if needed
+            if (productData.category && !mongoose.Types.ObjectId.isValid(productData.category)) {
+                const category = await Category.findOne({
+                    name: new RegExp(`^${productData.category.replace(/[_-]/g, ' ')}$`, 'i')
+                })
+                if (category) {
+                    productData.category = category._id
+                } else {
+                    return httpError(next, new Error(`Category "${productData.category}" not found`), req, 400)
+                }
+            }
+
+            // Convert industry name to ObjectId if needed
+            if (productData.industry && !mongoose.Types.ObjectId.isValid(productData.industry)) {
+                const industry = await Industry.findOne({
+                    name: new RegExp(`^${productData.industry.replace(/[_-]/g, ' ')}$`, 'i')
+                })
+                if (industry) {
+                    productData.industry = industry._id
+                } else {
+                    return httpError(next, new Error(`Industry "${productData.industry}" not found`), req, 400)
+                }
+            }
+
             const slug =
                 productData.title
                     .toLowerCase()
@@ -325,7 +349,13 @@ export default {
             const { id } = req.params
             const updateData = req.body
 
-            const product = await Product.findById(id)
+            let product
+            if (mongoose.Types.ObjectId.isValid(id)) {
+                product = await Product.findById(id)
+            } else {
+                product = await Product.findOne({ slug: id })
+            }
+
             if (!product) {
                 return httpError(next, new Error(responseMessage.PRODUCT.NOT_FOUND), req, 404)
             }
@@ -334,6 +364,30 @@ export default {
             if (!sellerProfile || product.sellerId.toString() !== sellerProfile._id.toString()) {
                 if (!authenticatedUser.roles.includes(EUserRole.ADMIN)) {
                     return httpError(next, new Error(responseMessage.PRODUCT.UNAUTHORIZED_ACCESS), req, 403)
+                }
+            }
+
+            // Convert category name to ObjectId if needed
+            if (updateData.category && !mongoose.Types.ObjectId.isValid(updateData.category)) {
+                const category = await Category.findOne({
+                    name: new RegExp(`^${updateData.category.replace(/[_-]/g, ' ')}$`, 'i')
+                })
+                if (category) {
+                    updateData.category = category._id
+                } else {
+                    return httpError(next, new Error(`Category "${updateData.category}" not found`), req, 400)
+                }
+            }
+
+            // Convert industry name to ObjectId if needed
+            if (updateData.industry && !mongoose.Types.ObjectId.isValid(updateData.industry)) {
+                const industry = await Industry.findOne({
+                    name: new RegExp(`^${updateData.industry.replace(/[_-]/g, ' ')}$`, 'i')
+                })
+                if (industry) {
+                    updateData.industry = industry._id
+                } else {
+                    return httpError(next, new Error(`Industry "${updateData.industry}" not found`), req, 400)
                 }
             }
 
@@ -349,7 +403,7 @@ export default {
                 }
             }
 
-            const updatedProduct = await Product.findByIdAndUpdate(id, updateData, { new: true })
+            const updatedProduct = await Product.findByIdAndUpdate(product._id, updateData, { new: true })
                 .populate({
                     path: 'sellerId',
                     model: 'SellerProfile',
@@ -387,7 +441,15 @@ export default {
             const { authenticatedUser } = req
             const { id } = req.params
 
-            const product = await Product.findById(id)
+            // Find product by either ObjectId or slug
+            let product
+            if (mongoose.Types.ObjectId.isValid(id)) {
+                product = await Product.findById(id)
+            } else {
+                // Try to find by slug
+                product = await Product.findOne({ slug: id })
+            }
+
             if (!product) {
                 return httpError(next, new Error(responseMessage.PRODUCT.NOT_FOUND), req, 404)
             }
@@ -399,7 +461,8 @@ export default {
                 }
             }
 
-            await Product.findByIdAndDelete(id)
+            // Use the actual product._id for deletion
+            await Product.findByIdAndDelete(product._id)
 
             if (sellerProfile && sellerProfile.stats.totalProducts > 0) {
                 sellerProfile.updateStats('totalProducts', -1)
@@ -425,7 +488,14 @@ export default {
             const { id } = req.params
             const { rating, comment } = req.body
 
-            const product = await Product.findById(id)
+            // Find product by either ObjectId or slug
+            let product
+            if (mongoose.Types.ObjectId.isValid(id)) {
+                product = await Product.findById(id)
+            } else {
+                product = await Product.findOne({ slug: id })
+            }
+
             if (!product) {
                 return httpError(next, new Error(responseMessage.PRODUCT.NOT_FOUND), req, 404)
             }
@@ -465,13 +535,20 @@ export default {
             const { id } = req.params
             const { isFavorited } = req.body
 
-            const product = await Product.findById(id)
+            // Find product by either ObjectId or slug
+            let product
+            if (mongoose.Types.ObjectId.isValid(id)) {
+                product = await Product.findById(id)
+            } else {
+                product = await Product.findOne({ slug: id })
+            }
+
             if (!product) {
                 return httpError(next, new Error(responseMessage.PRODUCT.NOT_FOUND), req, 404)
             }
 
             const updateOperation = isFavorited ? { $inc: { favorites: 1 } } : { $inc: { favorites: -1 } }
-            await Product.findByIdAndUpdate(id, updateOperation)
+            await Product.findByIdAndUpdate(product._id, updateOperation)
 
             const message = isFavorited ? responseMessage.PRODUCT.FAVORITE_ADDED : responseMessage.PRODUCT.FAVORITE_REMOVED
 
@@ -487,13 +564,20 @@ export default {
             const { id } = req.params
             const { isUpvoted } = req.body
 
-            const product = await Product.findById(id)
+            // Find product by either ObjectId or slug
+            let product
+            if (mongoose.Types.ObjectId.isValid(id)) {
+                product = await Product.findById(id)
+            } else {
+                product = await Product.findOne({ slug: id })
+            }
+
             if (!product) {
                 return httpError(next, new Error(responseMessage.PRODUCT.NOT_FOUND), req, 404)
             }
 
             const updateOperation = isUpvoted ? { $inc: { upvotes: 1 } } : { $inc: { upvotes: -1 } }
-            await Product.findByIdAndUpdate(id, updateOperation)
+            await Product.findByIdAndUpdate(product._id, updateOperation)
 
             const message = isUpvoted ? responseMessage.PRODUCT.UPVOTE_ADDED : responseMessage.PRODUCT.UPVOTE_REMOVED
 
@@ -508,14 +592,21 @@ export default {
             const { id } = req.params
             const { limit = 6 } = req.query
 
-            const product = await Product.findById(id)
+            // Find product by either ObjectId or slug
+            let product
+            if (mongoose.Types.ObjectId.isValid(id)) {
+                product = await Product.findById(id)
+            } else {
+                product = await Product.findOne({ slug: id })
+            }
+
             if (!product) {
                 return httpError(next, new Error(responseMessage.PRODUCT.NOT_FOUND), req, 404)
             }
 
             // First get related products without population to avoid casting errors
             const relatedProductsRaw = await Product.find({
-                _id: { $ne: id },
+                _id: { $ne: product._id }, // Use actual product._id for exclusion
                 status: EProductStatusNew.PUBLISHED,
                 $or: [{ category: product.category }, { industry: product.industry }, { type: product.type }]
             })

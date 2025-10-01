@@ -63,17 +63,48 @@ export default function Notification({
     onClose,
     onClick 
 }) {
-    const config = notificationConfig[type]
+    // Edge case: handle invalid type
+    const safeType = notificationConfig[type] ? type : 'info'
+    const config = notificationConfig[safeType]
     const IconComponent = config.icon
-    const displayTitle = title || titleMap[type]
+    const displayTitle = title || titleMap[safeType]
+    
+    // Edge case: handle empty or undefined message
+    const safeMessage = message || 'No message provided'
+
     useEffect(() => {
-        if (duration > 0 && onClose) {
+        // Edge case: handle duration 0 or negative values
+        if (duration > 0 && onClose && id) {
             const timer = setTimeout(() => {
                 onClose(id)
             }, duration)
             return () => clearTimeout(timer)
         }
+        
+        // Edge case: auto-cleanup notifications without duration after 30 seconds
+        if (duration <= 0 && onClose && id) {
+            const fallbackTimer = setTimeout(() => {
+                onClose(id)
+            }, 30000) // 30 seconds fallback
+            return () => clearTimeout(fallbackTimer)
+        }
     }, [duration, onClose, id])
+
+    // Edge case: handle missing onClose function
+    const handleClose = (e) => {
+        e?.stopPropagation()
+        if (onClose && id) {
+            onClose(id)
+        }
+    }
+
+    // Edge case: handle missing onClick function
+    const handleClick = () => {
+        if (onClick && id) {
+            onClick(id)
+        }
+    }
+
     return (
         <motion.div
             initial={{ opacity: 0, x: 400, scale: 0.95 }}
@@ -82,7 +113,7 @@ export default function Notification({
             transition={{ type: 'spring', damping: 25, stiffness: 400 }}
             className="max-w-sm w-full cursor-pointer"
             style={{ fontFamily: 'var(--font-league-spartan)' }}
-            onClick={() => onClick?.(id)}>
+            onClick={handleClick}>
             <div className={`
                 relative overflow-hidden rounded-2xl border backdrop-blur-xl shadow-2xl
                 transform transition-all duration-300 hover:scale-[1.02]
@@ -101,15 +132,12 @@ export default function Notification({
                             <div className={`text-base font-semibold ${config.titleColor}`}>
                                 {displayTitle}
                             </div>
-                            <p className={`text-sm leading-relaxed mt-1 ${config.messageColor}`}>
-                                {message}
+                            <p className={`text-sm leading-relaxed mt-1 break-words ${config.messageColor}`}>
+                                {safeMessage}
                             </p>
                         </div>
                         <button
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                onClose?.(id)
-                            }}
+                            onClick={handleClose}
                             className={`flex-shrink-0 p-1 rounded-lg transition-colors ${config.closeBtnColor}`}>
                             <X className="w-4 h-4" />
                         </button>
