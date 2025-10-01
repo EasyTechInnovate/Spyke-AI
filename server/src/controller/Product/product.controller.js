@@ -275,8 +275,7 @@ export default {
         try {
             const { slug } = req.params
             const { authenticatedUser } = req
-
-            const product = await Product.findOne({ slug, status: EProductStatusNew.PUBLISHED })
+            let product = await Product.findOne({ slug })
                 .populate({
                     path: 'sellerId',
                     model: 'SellerProfile',
@@ -300,12 +299,56 @@ export default {
             let hasPurchased = false
             let isOwner = false
 
+            // Check ownership and purchase status
             if (authenticatedUser) {
                 const sellerProfile = await sellerProfileModel.findOne({ userId: authenticatedUser.id })
                 isOwner = sellerProfile && product.sellerId.toString() === sellerProfile._id.toString()
 
                 if (!isOwner) {
                     hasPurchased = await Purchase.hasPurchased(authenticatedUser.id, product._id)
+                }
+            }
+
+            if (product.status !== EProductStatusNew.PUBLISHED) {
+                if (!isOwner && !authenticatedUser?.roles?.includes(EUserRole.ADMIN)) {
+                    return res.status(200).json({
+                        success: false,
+                        statusCode: 403,
+                        message: 'This product can only be edited when it is in draft or published status.',
+                        data: {
+                            productId: product._id,
+                            title: product.title,
+                            status: product.status,
+                            canEdit: false,
+                            reason: product.status === 'pending_review' 
+                                ? 'Product is currently under admin review and cannot be edited.'
+                                : product.status === 'archived'
+                                ? 'Archived products cannot be edited. Please contact support.'
+                                : `Products with status '${product.status}' cannot be edited.`
+                        }
+                    })
+                }
+
+                if (isOwner) {
+                    const editableStatuses = [EProductStatusNew.DRAFT, EProductStatusNew.PUBLISHED]
+                    if (!editableStatuses.includes(product.status)) {
+                        return res.status(200).json({
+                            success: false,
+                            statusCode: 422,
+                            message: 'Product cannot be edited in its current status.',
+                            data: {
+                                productId: product._id,
+                                title: product.title,
+                                status: product.status,
+                                canEdit: false,
+                                reason: product.status === 'pending_review' 
+                                    ? 'Product is currently under admin review. Please wait for the review to complete before making changes.'
+                                    : product.status === 'archived'
+                                    ? 'Archived products cannot be edited. Please contact support to restore this product.'
+                                    : `Products with status '${product.status}' cannot be edited at this time.`
+                            }
+                        })
+                    }
                 }
             }
 

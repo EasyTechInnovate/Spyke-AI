@@ -215,13 +215,13 @@ export default function ProductHero({
                     className="absolute top-1/4 right-1/4 w-96 h-96 bg-[#00FF89]/5 rounded-full blur-3xl"
                 />
             </div>
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 items-start">
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start">
                     <motion.div
                         initial={{ opacity: 0, x: -50 }}
                         animate={isInView ? { opacity: 1, x: 0 } : {}}
                         transition={{ duration: 0.8 }}
-                        className="relative space-y-4">
+                        className="relative space-y-6">
                         <div className="relative group">
                             <div
                                 className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-gray-900/80 border border-gray-700/50 cursor-pointer"
@@ -284,7 +284,7 @@ export default function ProductHero({
                                 )}
                             </div>
                             {mediaItems.length > 1 && (
-                                <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
+                                <div className="flex gap-3 mt-4 overflow-x-auto pb-2">
                                     {mediaItems.map((media, index) => (
                                         <button
                                             key={index}
@@ -304,7 +304,7 @@ export default function ProductHero({
                                 </div>
                             )}
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                             <StatCard
                                 icon={Eye}
                                 singular="View"
@@ -341,9 +341,9 @@ export default function ProductHero({
                         initial={{ opacity: 0, x: 50 }}
                         animate={isInView ? { opacity: 1, x: 0 } : {}}
                         transition={{ duration: 0.8, delay: 0.2 }}
-                        className="space-y-6">
-                        <div className="space-y-4">
-                            <div className="flex flex-wrap items-center gap-2">
+                        className="space-y-8">
+                        <div className="space-y-6">
+                            <div className="flex flex-wrap items-center gap-3">
                                 {product.category?.name && (
                                     <motion.div
                                         initial={{ opacity: 0, scale: 0.9 }}
@@ -393,7 +393,7 @@ export default function ProductHero({
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.9 }}
-                                className="flex flex-wrap items-center gap-2">
+                                className="flex flex-wrap items-center gap-3">
                                 {product.isVerified && (
                                     <FeatureBadge
                                         icon={BadgeCheck}
@@ -424,7 +424,7 @@ export default function ProductHero({
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 1 }}
-                                className="flex flex-wrap items-center gap-4">
+                                className="flex flex-wrap items-center gap-6">
                                 <button
                                     onClick={onNavigateToReviews}
                                     className="flex items-center gap-2 hover:opacity-80 transition-opacity group">
@@ -485,7 +485,7 @@ export default function ProductHero({
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 1.1 }}
-                            className="relative overflow-hidden rounded-2xl p-6 bg-gray-900/50 border border-gray-700/50">
+                            className="relative overflow-hidden rounded-2xl p-8 bg-gray-900/50 border border-gray-700/50">
                             {calculatedDiscount > 0 && (
                                 <div className="absolute top-4 right-4">
                                     <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-500 text-black rounded-full">
@@ -510,7 +510,7 @@ export default function ProductHero({
                                     </div>
                                 )}
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                                 <div className="flex items-center gap-2">
                                     <CheckCircle className="w-4 h-4 text-[#00FF89] flex-shrink-0" />
                                     <span className="text-gray-300 text-sm">Instant Access</span>
@@ -530,7 +530,7 @@ export default function ProductHero({
                                     </div>
                                 )}
                             </div>
-                            <div className="space-y-3">
+                            <div className="space-y-4">
                                 {hasPurchased ? (
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}
@@ -577,7 +577,7 @@ export default function ProductHero({
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 1.3 }}
-                                className="relative overflow-hidden rounded-xl p-4 bg-gray-900/30 border border-gray-700/50">
+                                className="relative overflow-hidden rounded-xl p-6 bg-gray-900/30 border border-gray-700/50">
                                 <div className="flex items-start gap-3">
                                     <div className="w-12 h-12 rounded-xl overflow-hidden bg-[#00FF89]/20 flex-shrink-0 flex items-center justify-center">
                                         <User className="w-6 h-6 text-[#00FF89]" />
@@ -644,7 +644,7 @@ export default function ProductHero({
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 1.4 }}
-                                className="space-y-2">
+                                className="space-y-4">
                                 <h4 className="text-sm font-medium text-gray-400 flex items-center gap-2">
                                     <Tag className="w-4 h-4" />
                                     Tags

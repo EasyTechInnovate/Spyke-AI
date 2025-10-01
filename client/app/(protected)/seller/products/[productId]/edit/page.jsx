@@ -8,7 +8,6 @@ import { toolAPI, categoryAPI, industryAPI } from '@/lib/api/toolsNiche'
 import Notification from '@/components/shared/Notification'
 import ImageUpload from '@/components/shared/forms/ImageUpload'
 import { PRODUCT_TYPES, SETUP_TIMES } from '@/components/features/products/form/constants'
-
 const ToolButton = ({ tool, selected, onToggle }) => (
     <button
         type="button"
@@ -20,11 +19,9 @@ const ToolButton = ({ tool, selected, onToggle }) => (
         <span className="text-xs font-medium leading-tight">{tool.name}</span>
     </button>
 )
-
 export default function EditProductPage() {
     const { productId } = useParams()
     const router = useRouter()
-
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [deleting, setDeleting] = useState(false)
@@ -35,56 +32,40 @@ export default function EditProductPage() {
     const [categories, setCategories] = useState([])
     const [industries, setIndustries] = useState([])
     const [toolsLoading, setToolsLoading] = useState(true)
-
     const showMessage = (message, type = 'info') => {
-        // Edge case: handle duplicate notifications
         if (notification && notification.message === message && notification.type === type) {
-            return // Don't show duplicate notification
+            return
         }
-
         const id = Date.now().toString()
         setNotification({ id, message, type })
-
-        // Auto-redirect after successful save
         if (type === 'success' && message.includes('updated successfully')) {
             setTimeout(() => {
-                // Edge case: check if component is still mounted
                 if (document.querySelector('[data-product-edit]')) {
                     router.push('/seller/products')
                 }
             }, 2000)
         }
     }
-
     const clearNotification = () => setNotification(null)
-
-    // Edge case: Add network retry logic for failed API calls
     const retryApiCall = async (apiCall, retries = 3) => {
         for (let i = 0; i < retries; i++) {
             try {
                 return await apiCall()
             } catch (error) {
                 if (i === retries - 1) throw error
-                // Exponential backoff
                 await new Promise((resolve) => setTimeout(resolve, Math.pow(2, i) * 1000))
             }
         }
     }
-
-    // Check if form has changes (excluding price)
     const isDirty = useMemo(() => {
         if (!originalData || !formData) return false
-
         const compareData = (original, current) => {
             const { price: origPrice, ...origRest } = original
             const { price: currPrice, ...currRest } = current
             return JSON.stringify(origRest) !== JSON.stringify(currRest)
         }
-
         return compareData(originalData, formData)
     }, [originalData, formData])
-
-    // Prepare payload for API (exclude price from updates)
     const preparePayload = (data) => {
         const payload = {
             title: data.title,
@@ -119,18 +100,12 @@ export default function EditProductPage() {
             expectedSupport: data.expectedSupport || '',
             faqs: (data.faqs || []).filter((f) => f.question && f.answer)
         }
-
-        // Don't include price in update payload
         return payload
     }
-
-    // Map API response to form structure - handle nested objects
     const mapApiToForm = (p) => ({
         title: p.title || '',
         type: p.type || '',
-        // Handle nested category object
         category: typeof p.category === 'object' ? p.category?.name || '' : p.category || '',
-        // Handle nested industry object
         industry: typeof p.industry === 'object' ? p.industry?.name || '' : p.industry || '',
         shortDescription: p.shortDescription || '',
         fullDescription: p.fullDescription || p.description || '',
@@ -158,18 +133,29 @@ export default function EditProductPage() {
         faqs: p.faqs?.length ? p.faqs : [{ question: '', answer: '' }],
         status: p.status || 'draft'
     })
-
-    // Fetch product data with retry logic
     const fetchProduct = useCallback(async () => {
         try {
             setLoading(true)
             const res = await retryApiCall(() => productsAPI.getProductBySlug(productId))
 
+            // Handle the new API response format
+            if (res.data && !res.data.success && res.data.statusCode) {
+                // Product exists but cannot be edited
+                const errorData = res.data.data || {}
+                showMessage(res.data.message || 'Cannot edit this product', 'error')
+                setTimeout(() => {
+                    const shouldRedirect = confirm(`${errorData.reason || res.data.message}\n\nWould you like to go back to your products list?`)
+                    if (shouldRedirect) {
+                        router.push('/seller/products')
+                    }
+                }, 1500)
+                return
+            }
+
             if (!res.data) throw new Error('Product not found')
 
             const populated = mapApiToForm(res.data)
 
-            // Edge case: validate data integrity
             if (!populated.title || !populated.type) {
                 throw new Error('Product data is corrupted')
             }
@@ -178,24 +164,35 @@ export default function EditProductPage() {
             setFormData(populated)
         } catch (e) {
             console.error(e)
-            showMessage(e.message || 'Failed to load product', 'error')
-            // Edge case: don't redirect immediately, give user option to retry
-            setTimeout(() => {
-                if (confirm('Failed to load product. Would you like to go back to products list?')) {
+
+            if (e.response?.status === 404) {
+                showMessage('Product not found', 'error')
+                setTimeout(() => {
+                    if (confirm('Product not found. Would you like to go back to products list?')) {
+                        router.push('/seller/products')
+                    }
+                }, 2000)
+            } else if (e.response?.status === 403) {
+                showMessage('You do not have permission to edit this product', 'error')
+                setTimeout(() => {
                     router.push('/seller/products')
-                }
-            }, 2000)
+                }, 2000)
+            } else {
+                showMessage(e.message || 'Failed to load product', 'error')
+                setTimeout(() => {
+                    if (confirm('Failed to load product. Would you like to go back to products list?')) {
+                        router.push('/seller/products')
+                    }
+                }, 2000)
+            }
         } finally {
             setLoading(false)
         }
     }, [productId, router])
-
-    // Fetch tools from API
     const fetchTools = useCallback(async () => {
         try {
             const response = await toolAPI.getTools({ isActive: 'true' })
             const toolsData = response?.data?.tools || response?.tools || response?.data || []
-
             const formattedTools = Array.isArray(toolsData)
                 ? toolsData.map((tool) => ({
                       _id: tool._id,
@@ -204,7 +201,6 @@ export default function EditProductPage() {
                       icon: tool.icon || 'Wrench'
                   }))
                 : []
-
             setTools(formattedTools)
         } catch (error) {
             console.error('Error fetching tools:', error)
@@ -212,13 +208,10 @@ export default function EditProductPage() {
             setTools([])
         }
     }, [])
-
-    // Fetch categories from API
     const fetchCategories = useCallback(async () => {
         try {
             const response = await categoryAPI.getCategories({ isActive: 'true' })
             const categoriesData = response?.data?.categories || response?.categories || response?.data || []
-
             const formattedCategories = Array.isArray(categoriesData)
                 ? categoriesData.map((category) => ({
                       _id: category._id,
@@ -227,7 +220,6 @@ export default function EditProductPage() {
                       icon: category.icon
                   }))
                 : []
-
             setCategories(formattedCategories)
         } catch (error) {
             console.error('Error fetching categories:', error)
@@ -235,13 +227,10 @@ export default function EditProductPage() {
             setCategories([])
         }
     }, [])
-
-    // Fetch industries from API
     const fetchIndustries = useCallback(async () => {
         try {
             const response = await industryAPI.getIndustries({ isActive: 'true' })
             const industriesData = response?.data?.industries || response?.industries || response?.data || []
-
             const formattedIndustries = Array.isArray(industriesData)
                 ? industriesData.map((industry) => ({
                       _id: industry._id,
@@ -250,7 +239,6 @@ export default function EditProductPage() {
                       icon: industry.icon
                   }))
                 : []
-
             setIndustries(formattedIndustries)
         } catch (error) {
             console.error('Error fetching industries:', error)
@@ -258,8 +246,6 @@ export default function EditProductPage() {
             setIndustries([])
         }
     }, [])
-
-    // Fetch all data
     const fetchAllData = useCallback(async () => {
         try {
             setToolsLoading(true)
@@ -270,14 +256,11 @@ export default function EditProductPage() {
             setToolsLoading(false)
         }
     }, [fetchProduct, fetchTools, fetchCategories, fetchIndustries])
-
     useEffect(() => {
         if (productId) {
             fetchAllData()
         }
     }, [productId, fetchAllData])
-
-    // Warn about unsaved changes
     useEffect(() => {
         const handler = (e) => {
             if (isDirty) {
@@ -288,27 +271,18 @@ export default function EditProductPage() {
         window.addEventListener('beforeunload', handler)
         return () => window.removeEventListener('beforeunload', handler)
     }, [isDirty])
-
-    // Edge case: Add auto-save functionality
     useEffect(() => {
         if (!isDirty || !formData || saving) return
-
         const autoSaveTimer = setTimeout(() => {
-            // Only auto-save if user hasn't interacted for 30 seconds
             const lastInteraction = Date.now() - 30000
-            if (document.querySelector(':focus')) return // Don't auto-save while user is typing
-
+            if (document.querySelector(':focus')) return
             handleSave().catch(console.error)
         }, 30000)
-
         return () => clearTimeout(autoSaveTimer)
     }, [isDirty, formData, saving])
-
-    // Edge case: Handle page visibility changes
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'hidden' && isDirty) {
-                // Save draft when user switches tabs
                 navigator.sendBeacon(
                     '/api/products/auto-save',
                     JSON.stringify({
@@ -318,12 +292,9 @@ export default function EditProductPage() {
                 )
             }
         }
-
         document.addEventListener('visibilitychange', handleVisibilityChange)
         return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
     }, [isDirty, formData, productId])
-
-    // Edge case: Handle errors in loading states
     if (loading || !formData || toolsLoading) {
         return (
             <div
@@ -332,7 +303,6 @@ export default function EditProductPage() {
                 <div className="flex flex-col items-center gap-4 text-gray-400">
                     <Loader2 className="w-8 h-8 animate-spin" />
                     <p>{loading ? 'Loading product...' : toolsLoading ? 'Loading tools...' : 'Initializing...'}</p>
-                    {/* Edge case: Add cancel/retry options for long loading */}
                     <div className="flex gap-2 mt-4">
                         <button
                             onClick={() => router.push('/seller/products')}
@@ -349,54 +319,42 @@ export default function EditProductPage() {
             </div>
         )
     }
-
-    // Form handlers
     const handleInputChange = (field, value) => {
-        // Edge case: prevent setting null/undefined values
         const safeValue = value ?? ''
-
-        // Edge case: validate field changes
         if (field === 'title' && typeof safeValue === 'string' && safeValue.length > 100) {
             showMessage('Title cannot exceed 100 characters', 'warning')
             return
         }
-
         if (field === 'shortDescription' && typeof safeValue === 'string' && safeValue.length > 200) {
             showMessage('Short description cannot exceed 200 characters', 'warning')
             return
         }
-
         setFormData((prev) => ({ ...prev, [field]: safeValue }))
     }
-
     const handleArrayFieldChange = (field, index, value) => {
         setFormData((prev) => ({
             ...prev,
             [field]: prev[field].map((item, i) => (i === index ? value : item))
         }))
     }
-
     const addArrayFieldItem = (field, defaultValue = '') => {
         setFormData((prev) => ({
             ...prev,
             [field]: [...prev[field], defaultValue]
         }))
     }
-
     const removeArrayFieldItem = (field, index) => {
         setFormData((prev) => ({
             ...prev,
             [field]: prev[field].filter((_, i) => i !== index)
         }))
     }
-
     const handleFaqChange = (index, field, value) => {
         setFormData((prev) => ({
             ...prev,
             faqs: prev.faqs.map((faq, i) => (i === index ? { ...faq, [field]: value } : faq))
         }))
     }
-
     const toggleTool = (tool) => {
         const exists = formData.toolsUsed.some((t) => t.name === tool.name)
         handleInputChange(
@@ -414,44 +372,29 @@ export default function EditProductPage() {
                   ]
         )
     }
-
-    // Actions
     const handleSave = async () => {
         try {
             if (!formData) return
-
-            // Edge case: validate required fields before save
             if (!formData.title?.trim()) {
                 showMessage('Product title is required', 'error')
                 return
             }
-
             if (!formData.shortDescription?.trim()) {
                 showMessage('Short description is required', 'error')
                 return
             }
-
-            // Edge case: prevent concurrent saves
             if (saving) return
-
             setSaving(true)
             const payload = preparePayload(formData)
-
-            // Edge case: validate payload size (prevent too large requests)
             const payloadSize = JSON.stringify(payload).length
             if (payloadSize > 1024 * 1024) {
-                // 1MB limit
                 throw new Error('Product data is too large. Please reduce image count or description length.')
             }
-
             await retryApiCall(() => productsAPI.updateProduct(productId, payload))
-
             showMessage('Product updated successfully', 'success')
-            setOriginalData({ ...formData }) // Update original data to reflect saved state
+            setOriginalData({ ...formData })
         } catch (e) {
             console.error(e)
-
-            // Edge case: handle specific error types
             if (e.message?.includes('Network Error')) {
                 showMessage('Network error. Please check your connection and try again.', 'error')
             } else if (e.message?.includes('413')) {
@@ -465,45 +408,32 @@ export default function EditProductPage() {
             setSaving(false)
         }
     }
-
     const handleSaveAndExit = async () => {
         await handleSave()
         router.push('/seller/products')
     }
-
     const handleRevert = () => {
         if (!originalData) return
         if (isDirty && !confirm('Discard unsaved changes?')) return
         setFormData({ ...originalData })
         showMessage('Changes reverted', 'info')
     }
-
-    // Enhanced delete with confirmation and cleanup
     const handleDelete = async () => {
-        // Edge case: double confirmation for delete
         if (!confirm('This will permanently delete the product. This action cannot be undone. Continue?')) return
-
         if (!confirm('Are you absolutely sure? Type DELETE in the next prompt to confirm.')) return
-
         const confirmText = prompt('Type "DELETE" to confirm deletion:')
         if (confirmText !== 'DELETE') {
             showMessage('Delete cancelled', 'info')
             return
         }
-
         try {
-            if (deleting) return // Prevent double deletion
-
+            if (deleting) return
             setDeleting(true)
             await retryApiCall(() => productsAPI.deleteProduct(productId))
-
             showMessage('Product deleted successfully', 'success')
-
-            // Edge case: clear local storage/cache if any
             if (typeof window !== 'undefined') {
                 localStorage.removeItem(`product-${productId}`)
             }
-
             router.push('/seller/products')
         } catch (e) {
             console.error(e)
@@ -512,7 +442,6 @@ export default function EditProductPage() {
             setDeleting(false)
         }
     }
-
     if (loading || !formData || toolsLoading) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
@@ -523,12 +452,10 @@ export default function EditProductPage() {
             </div>
         )
     }
-
     return (
         <div
             className="min-h-screen bg-black"
             data-product-edit="true">
-            {/* Notification */}
             {notification && (
                 <div className="fixed top-4 right-4 z-50">
                     <Notification
@@ -540,8 +467,6 @@ export default function EditProductPage() {
                     />
                 </div>
             )}
-
-            {/* Header */}
             <div className="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
@@ -591,11 +516,8 @@ export default function EditProductPage() {
                     </div>
                 </div>
             </div>
-
-            {/* Main Content */}
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 space-y-8">
-                    {/* Basic Information */}
                     <section>
                         <h2 className="text-2xl font-semibold text-white mb-6">Basic Information</h2>
                         <div className="space-y-6">
@@ -608,7 +530,6 @@ export default function EditProductPage() {
                                     placeholder="e.g., AI Lead Generation System"
                                 />
                             </div>
-
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Product Type *</label>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -628,7 +549,6 @@ export default function EditProductPage() {
                                     ))}
                                 </div>
                             </div>
-
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-300 mb-2">Category *</label>
@@ -663,7 +583,6 @@ export default function EditProductPage() {
                                     </select>
                                 </div>
                             </div>
-
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Short Description * (Max 200)</label>
                                 <textarea
@@ -676,7 +595,6 @@ export default function EditProductPage() {
                                 />
                                 <p className="text-xs text-gray-500 mt-1">{formData.shortDescription.length}/200</p>
                             </div>
-
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Full Description *</label>
                                 <textarea
@@ -689,8 +607,6 @@ export default function EditProductPage() {
                             </div>
                         </div>
                     </section>
-
-                    {/* Tools Used */}
                     <section>
                         <h2 className="text-2xl font-semibold text-white mb-6">Tools Used</h2>
                         <div className="space-y-6">
@@ -717,8 +633,6 @@ export default function EditProductPage() {
                                         <p className="text-xs mt-1">Tools will appear here when they are added by an admin</p>
                                     </div>
                                 )}
-
-                                {/* Selected Tools Details */}
                                 {formData.toolsUsed.length > 0 && (
                                     <div className="mt-6 space-y-4">
                                         <h4 className="text-sm font-medium text-gray-300">Tool Details (Optional)</h4>
@@ -766,7 +680,6 @@ export default function EditProductPage() {
                                     </div>
                                 )}
                             </div>
-
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Setup Time *</label>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -787,8 +700,6 @@ export default function EditProductPage() {
                             </div>
                         </div>
                     </section>
-
-                    {/* Pricing - Read Only */}
                     <section>
                         <h2 className="text-2xl font-semibold text-white mb-6">Pricing (Read Only)</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -821,8 +732,6 @@ export default function EditProductPage() {
                             )}
                         </div>
                     </section>
-
-                    {/* Media */}
                     <section>
                         <h2 className="text-2xl font-semibold text-white mb-6">Media</h2>
                         <div className="space-y-6">
@@ -837,8 +746,6 @@ export default function EditProductPage() {
                                     helperText="Recommended: 1200x800px JPG/PNG"
                                 />
                             </div>
-
-                            {/* Additional Images */}
                             <div>
                                 <div className="flex items-center justify-between mb-4">
                                     <label className="block text-sm font-medium text-gray-300">Additional Images</label>
@@ -850,7 +757,6 @@ export default function EditProductPage() {
                                         Add Image
                                     </button>
                                 </div>
-
                                 {formData.images.length > 0 ? (
                                     <div className="space-y-4">
                                         {formData.images.map((img, i) => (
@@ -886,7 +792,6 @@ export default function EditProductPage() {
                                     </div>
                                 )}
                             </div>
-
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Preview Video (Optional)</label>
                                 <input
@@ -898,11 +803,7 @@ export default function EditProductPage() {
                             </div>
                         </div>
                     </section>
-
-                    {/* Additional sections can be added here following the same pattern */}
                 </div>
-
-                {/* Action Buttons */}
                 <div className="flex items-center justify-between mt-8">
                     <Link
                         href="/seller/products"
@@ -910,7 +811,6 @@ export default function EditProductPage() {
                         <ArrowLeft className="w-4 h-4" />
                         Back to Products
                     </Link>
-
                     <div className="flex items-center gap-3">
                         <button
                             onClick={handleSave}
@@ -925,4 +825,3 @@ export default function EditProductPage() {
         </div>
     )
 }
-
