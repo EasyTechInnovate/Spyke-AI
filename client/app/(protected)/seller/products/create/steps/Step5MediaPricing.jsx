@@ -149,7 +149,7 @@ export default function Step5MediaPricing() {
     const { showSuccess, showError } = useNotifications()
     const thumbnailUpload = useImageUpload({
         category: 'product-thumbnails',
-        maxSize: 10,
+        maxSize: 5,
         onSuccess: (url) => {
             setField('thumbnailImage', url)
             showSuccess('Thumbnail uploaded successfully')
@@ -160,7 +160,7 @@ export default function Step5MediaPricing() {
     })
     const additionalUpload = useImageUpload({
         category: 'product-images',
-        maxSize: 10,
+        maxSize: 5,
         onSuccess: (url) => {
             addFile('additionalImages', url)
             showSuccess('Image uploaded successfully')
@@ -216,9 +216,9 @@ export default function Step5MediaPricing() {
                     showError('Please select an image file')
                     return 'Please select an image file'
                 }
-                if (file.size > 10 * 1024 * 1024) {
-                    showError('Image size must be less than 10MB')
-                    return 'Image size must be less than 10MB'
+                if (file.size > 5 * 1024 * 1024) {
+                    showError('Image size must be less than 5MB')
+                    return 'Image size must be less than 5MB'
                 }
                 setUploadingThumbnail(true)
                 try {
@@ -232,9 +232,9 @@ export default function Step5MediaPricing() {
                     showError('Please select an image file')
                     return 'Please select an image file'
                 }
-                if (file.size > 10 * 1024 * 1024) {
-                    showError('Image size must be less than 10MB')
-                    return 'Image size must be less than 10MB'
+                if (file.size > 5 * 1024 * 1024) {
+                    showError('Image size must be less than 5MB')
+                    return 'Image size must be less than 5MB'
                 }
                 if (additionalImages.length >= VALIDATION_LIMITS.ADDITIONAL_IMAGES_MAX) {
                     showError(`Maximum ${VALIDATION_LIMITS.ADDITIONAL_IMAGES_MAX} images allowed`)
@@ -390,7 +390,7 @@ export default function Step5MediaPricing() {
                         examples={FIELD_HELP.thumbnailImage.examples}
                     />
                 </div>
-                <p className="text-base text-gray-400 mb-4">Upload a high-quality image that represents your product (max 10MB)</p>
+                <p className="text-base text-gray-400 mb-4">Upload a high-quality image that represents your product (max 5MB)</p>
                 {thumbnailImage ? (
                     <div className="relative group">
                         <img
@@ -437,7 +437,7 @@ export default function Step5MediaPricing() {
                                         />
                                     </label>
                                 </p>
-                                <p className="text-base text-gray-500">Supports JPG, PNG, WebP (max 10MB)</p>
+                                <p className="text-base text-gray-500">Supports JPG, PNG, WebP (max 5MB)</p>
                             </>
                         )}
                     </div>

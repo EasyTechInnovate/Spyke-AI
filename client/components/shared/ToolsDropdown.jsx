@@ -1,12 +1,13 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { ChevronDown, Package, Loader2 } from 'lucide-react'
-import { categoryAPI } from '@/lib/api/toolsNiche'
+import { ChevronDown, Wrench, Loader2 } from 'lucide-react'
+import { toolAPI } from '@/lib/api/toolsNiche'
 import { useNotifications } from '@/hooks/useNotifications'
-export default function CategoryDropdown({
+
+export default function ToolsDropdown({
     value,
     onChange,
-    placeholder = 'Select Category',
+    placeholder = 'Select Tools & Platforms',
     className = '',
     disabled = false,
     showAllOption = true,
@@ -14,54 +15,63 @@ export default function CategoryDropdown({
     error = null,
     onDataLoaded = () => {}
 }) {
-    const [categories, setCategories] = useState([])
+    const [tools, setTools] = useState([])
     const [loading, setLoading] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
     const { addNotification } = useNotifications()
     const fetchedRef = useRef(false)
+
     useEffect(() => {
         if (fetchedRef.current) return
         fetchedRef.current = true
-        const fetchCategories = async () => {
+        
+        const fetchTools = async () => {
             try {
                 setLoading(true)
-                const response = await categoryAPI.getCategories()
-                let categoriesData = response?.data?.categories || response?.categories || response?.data || []
-                if (!Array.isArray(categoriesData)) {
-                    categoriesData = []
+                const response = await toolAPI.getTools({ isActive: 'true' })
+                let toolsData = response?.data?.tools || response?.tools || response?.data || []
+                
+                if (!Array.isArray(toolsData)) {
+                    toolsData = []
                 }
-                const formattedCategories = categoriesData
-                    .map((cat) => ({
-                        id: cat._id || cat.id,
-                        name: cat.name || cat.title,
-                        icon: cat.icon || 'Package',
-                        productCount: cat.productCount || 0,
-                        isActive: cat.isActive !== false
+                
+                const formattedTools = toolsData
+                    .map((tool) => ({
+                        id: tool._id || tool.id,
+                        name: tool.name || tool.title,
+                        icon: tool.icon || 'Wrench',
+                        productCount: tool.productCount || 0,
+                        isActive: tool.isActive !== false
                     }))
-                    .filter((cat) => cat.isActive)
-                setCategories(formattedCategories)
+                    .filter((tool) => tool.isActive)
+                
+                setTools(formattedTools)
                 try {
-                    onDataLoaded(formattedCategories)
+                    onDataLoaded(formattedTools)
                 } catch (e) {
                     console.error('Error in onDataLoaded:', e)
                 }
             } catch (error) {
-                console.error('Error fetching categories:', error)
+                console.error('Error fetching tools:', error)
                 addNotification({
                     type: 'error',
-                    message: 'Failed to load categories'
+                    message: 'Failed to load tools'
                 })
             } finally {
                 setLoading(false)
             }
         }
-        fetchCategories()
+        
+        fetchTools()
     }, [])
-    const handleSelect = (categoryId) => {
-        onChange(categoryId)
+
+    const handleSelect = (toolId) => {
+        onChange(toolId)
         setIsOpen(false)
     }
-    const selectedCategory = categories.find((cat) => cat.id === value)
+
+    const selectedTool = tools.find((tool) => tool.id === value)
+
     return (
         <div className={`relative ${className}`}>
             <button
@@ -76,9 +86,9 @@ export default function CategoryDropdown({
                     ${isOpen ? 'border-[#00FF89] ring-2 ring-[#00FF89]/30' : ''}
                 `}>
                 <div className="flex items-center gap-3">
-                    <Package className="w-4 h-4 text-[#00FF89]" />
-                    <span className={selectedCategory ? 'text-[#00FF89] font-medium' : 'text-gray-300'}>
-                        {loading ? 'Loading...' : selectedCategory?.name || placeholder}
+                    <Wrench className="w-4 h-4 text-[#00FF89]" />
+                    <span className={selectedTool ? 'text-[#00FF89] font-medium' : 'text-gray-300'}>
+                        {loading ? 'Loading...' : selectedTool?.name || placeholder}
                     </span>
                 </div>
                 {loading ? (
@@ -89,21 +99,21 @@ export default function CategoryDropdown({
             </button>
             {isOpen && !loading && (
                 <div className="absolute z-[9999] w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-2xl max-h-60 overflow-y-auto">
-                    {categories.length === 0 ? (
-                        <div className="px-4 py-6 text-center text-gray-400">No categories available</div>
+                    {tools.length === 0 ? (
+                        <div className="px-4 py-6 text-center text-gray-400">No tools available</div>
                     ) : (
-                        categories.map((category) => (
+                        tools.map((tool) => (
                             <button
-                                key={category.id}
+                                key={tool.id}
                                 type="button"
-                                onClick={() => handleSelect(category.id)}
+                                onClick={() => handleSelect(tool.id)}
                                 className={`
                                     w-full px-4 py-3 text-left hover:bg-[#00FF89]/20 transition-colors
                                     flex items-center gap-3 border-b border-gray-700/50 last:border-b-0
-                                    ${value === category.id ? 'bg-[#00FF89]/20 text-[#00FF89] font-medium' : 'text-gray-200 hover:text-white'}
+                                    ${value === tool.id ? 'bg-[#00FF89]/20 text-[#00FF89] font-medium' : 'text-gray-200 hover:text-white'}
                                 `}>
-                                <Package className="w-4 h-4 text-[#00FF89]" />
-                                <div className="font-medium">{category.name}</div>
+                                <Wrench className="w-4 h-4 text-[#00FF89]" />
+                                <div className="font-medium">{tool.name}</div>
                             </button>
                         ))
                     )}

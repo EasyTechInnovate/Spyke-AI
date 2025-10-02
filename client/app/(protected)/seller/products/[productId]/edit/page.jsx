@@ -98,7 +98,21 @@ export default function EditProductPage() {
             frequencyOfUse: data.frequencyOfUse || 'ongoing',
             hasAffiliateTools: !!data.hasAffiliateTools,
             expectedSupport: data.expectedSupport || '',
-            faqs: (data.faqs || []).filter((f) => f.question && f.answer)
+            faqs: (data.faqs || []).filter((f) => f.question && f.answer),
+            premiumContent: {
+                promptText: data.premiumContent.promptText,
+                promptInstructions: data.premiumContent.promptInstructions,
+                automationInstructions: data.premiumContent.automationInstructions,
+                automationFiles: data.premiumContent.automationFiles,
+                agentConfiguration: data.premiumContent.agentConfiguration,
+                agentFiles: data.premiumContent.agentFiles,
+                detailedHowItWorks: data.premiumContent.detailedHowItWorks.filter(Boolean),
+                configurationExamples: data.premiumContent.configurationExamples,
+                resultExamples: data.premiumContent.resultExamples,
+                videoTutorials: data.premiumContent.videoTutorials,
+                supportDocuments: data.premiumContent.supportDocuments,
+                bonusContent: data.premiumContent.bonusContent
+            }
         }
         return payload
     }
@@ -131,7 +145,22 @@ export default function EditProductPage() {
         hasAffiliateTools: !!p.hasAffiliateTools,
         expectedSupport: p.expectedSupport || '',
         faqs: p.faqs?.length ? p.faqs : [{ question: '', answer: '' }],
-        status: p.status || 'draft'
+        status: p.status || 'draft',
+        // Premium Content fields
+        premiumContent: {
+            promptText: p.premiumContent?.promptText || '',
+            promptInstructions: p.premiumContent?.promptInstructions || '',
+            automationInstructions: p.premiumContent?.automationInstructions || '',
+            automationFiles: p.premiumContent?.automationFiles || [],
+            agentConfiguration: p.premiumContent?.agentConfiguration || '',
+            agentFiles: p.premiumContent?.agentFiles || [],
+            detailedHowItWorks: p.premiumContent?.detailedHowItWorks || [''],
+            configurationExamples: p.premiumContent?.configurationExamples || [],
+            resultExamples: p.premiumContent?.resultExamples || [],
+            videoTutorials: p.premiumContent?.videoTutorials || [],
+            supportDocuments: p.premiumContent?.supportDocuments || [],
+            bonusContent: p.premiumContent?.bonusContent || []
+        }
     })
     const fetchProduct = useCallback(async () => {
         try {
@@ -800,6 +829,213 @@ export default function EditProductPage() {
                                     placeholder="YouTube/Vimeo URL"
                                     className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-brand-primary"
                                 />
+                            </div>
+                        </div>
+                    </section>
+                    <section>
+                        <h2 className="text-2xl font-semibold text-white mb-6">Premium Content</h2>
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Prompt Text</label>
+                                <textarea
+                                    value={formData.premiumContent.promptText}
+                                    onChange={(e) => setFormData(prev => ({
+                                        ...prev,
+                                        premiumContent: {
+                                            ...prev.premiumContent,
+                                            promptText: e.target.value
+                                        }
+                                    }))}
+                                    rows={4}
+                                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white resize-none focus:outline-none focus:border-brand-primary"
+                                    placeholder="Enter the main prompt text for your automation..."
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Prompt Instructions</label>
+                                <textarea
+                                    value={formData.premiumContent.promptInstructions}
+                                    onChange={(e) => setFormData(prev => ({
+                                        ...prev,
+                                        premiumContent: {
+                                            ...prev.premiumContent,
+                                            promptInstructions: e.target.value
+                                        }
+                                    }))}
+                                    rows={4}
+                                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white resize-none focus:outline-none focus:border-brand-primary"
+                                    placeholder="Detailed instructions on how to use the prompt..."
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Automation Instructions</label>
+                                <textarea
+                                    value={formData.premiumContent.automationInstructions}
+                                    onChange={(e) => setFormData(prev => ({
+                                        ...prev,
+                                        premiumContent: {
+                                            ...prev.premiumContent,
+                                            automationInstructions: e.target.value
+                                        }
+                                    }))}
+                                    rows={4}
+                                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white resize-none focus:outline-none focus:border-brand-primary"
+                                    placeholder="Step-by-step automation setup instructions..."
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Agent Configuration</label>
+                                <textarea
+                                    value={formData.premiumContent.agentConfiguration}
+                                    onChange={(e) => setFormData(prev => ({
+                                        ...prev,
+                                        premiumContent: {
+                                            ...prev.premiumContent,
+                                            agentConfiguration: e.target.value
+                                        }
+                                    }))}
+                                    rows={4}
+                                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white resize-none focus:outline-none focus:border-brand-primary"
+                                    placeholder="Agent configuration settings and parameters..."
+                                />
+                            </div>
+                            
+                            <div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <label className="block text-sm font-medium text-gray-300">Detailed How It Works</label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData(prev => ({
+                                            ...prev,
+                                            premiumContent: {
+                                                ...prev.premiumContent,
+                                                detailedHowItWorks: [...prev.premiumContent.detailedHowItWorks, '']
+                                            }
+                                        }))}
+                                        className="inline-flex items-center gap-2 px-3 py-1.5 text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-colors">
+                                        <Plus className="w-4 h-4" />
+                                        Add Step
+                                    </button>
+                                </div>
+                                <div className="space-y-3">
+                                    {formData.premiumContent.detailedHowItWorks.map((step, i) => (
+                                        <div key={i} className="flex gap-3">
+                                            <input
+                                                value={step}
+                                                onChange={(e) => setFormData(prev => ({
+                                                    ...prev,
+                                                    premiumContent: {
+                                                        ...prev.premiumContent,
+                                                        detailedHowItWorks: prev.premiumContent.detailedHowItWorks.map((s, idx) => 
+                                                            idx === i ? e.target.value : s
+                                                        )
+                                                    }
+                                                }))}
+                                                placeholder={`Step ${i + 1}...`}
+                                                className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-brand-primary"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData(prev => ({
+                                                    ...prev,
+                                                    premiumContent: {
+                                                        ...prev.premiumContent,
+                                                        detailedHowItWorks: prev.premiumContent.detailedHowItWorks.filter((_, idx) => idx !== i)
+                                                    }
+                                                }))}
+                                                className="p-3 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <label className="block text-sm font-medium text-gray-300">Video Tutorials</label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData(prev => ({
+                                            ...prev,
+                                            premiumContent: {
+                                                ...prev.premiumContent,
+                                                videoTutorials: [...prev.premiumContent.videoTutorials, { title: '', url: '', duration: '' }]
+                                            }
+                                        }))}
+                                        className="inline-flex items-center gap-2 px-3 py-1.5 text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-colors">
+                                        <Plus className="w-4 h-4" />
+                                        Add Video
+                                    </button>
+                                </div>
+                                <div className="space-y-4">
+                                    {formData.premiumContent.videoTutorials.map((video, i) => (
+                                        <div key={i} className="border border-gray-700 rounded-lg p-4 bg-gray-800/50">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <h4 className="text-sm font-medium text-white">Video {i + 1}</h4>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormData(prev => ({
+                                                        ...prev,
+                                                        premiumContent: {
+                                                            ...prev.premiumContent,
+                                                            videoTutorials: prev.premiumContent.videoTutorials.filter((_, idx) => idx !== i)
+                                                        }
+                                                    }))}
+                                                    className="p-1.5 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                <input
+                                                    value={video.title}
+                                                    onChange={(e) => setFormData(prev => ({
+                                                        ...prev,
+                                                        premiumContent: {
+                                                            ...prev.premiumContent,
+                                                            videoTutorials: prev.premiumContent.videoTutorials.map((v, idx) => 
+                                                                idx === i ? {...v, title: e.target.value} : v
+                                                            )
+                                                        }
+                                                    }))}
+                                                    placeholder="Video title"
+                                                    className="px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-brand-primary"
+                                                />
+                                                <input
+                                                    value={video.url}
+                                                    onChange={(e) => setFormData(prev => ({
+                                                        ...prev,
+                                                        premiumContent: {
+                                                            ...prev.premiumContent,
+                                                            videoTutorials: prev.premiumContent.videoTutorials.map((v, idx) => 
+                                                                idx === i ? {...v, url: e.target.value} : v
+                                                            )
+                                                        }
+                                                    }))}
+                                                    placeholder="Video URL"
+                                                    className="px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-brand-primary"
+                                                />
+                                                <input
+                                                    value={video.duration}
+                                                    onChange={(e) => setFormData(prev => ({
+                                                        ...prev,
+                                                        premiumContent: {
+                                                            ...prev.premiumContent,
+                                                            videoTutorials: prev.premiumContent.videoTutorials.map((v, idx) => 
+                                                                idx === i ? {...v, duration: e.target.value} : v
+                                                            )
+                                                        }
+                                                    }))}
+                                                    placeholder="Duration (e.g. 5:30)"
+                                                    className="px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-brand-primary"
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </section>

@@ -14,6 +14,15 @@ export default {
     uploadFile: async (req, res, next) => {
         try {
             const { body } = req
+            if (req.multerError) {
+                if (req.multerError.code === 'LIMIT_FILE_SIZE') {
+                    return httpError(next, new Error('File size exceeds 5MB limit'), req, 400)
+                }
+                if (req.multerError.code === 'LIMIT_UNEXPECTED_FILE') {
+                    return httpError(next, new Error('Unexpected file field'), req, 400)
+                }
+                return httpError(next, new Error(req.multerError.message), req, 400)
+            }
 
             if (!req.file) {
                 return httpError(next, new Error(responseMessage.customMessage('No file uploaded')), req, 400)
@@ -31,6 +40,9 @@ export default {
 
             return httpResponse(req, res, 200, responseMessage.SUCCESS, uploadedFile.url)
         } catch (err) {
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                return httpError(next, new Error('File size exceeds 5MB limit'), req, 400)
+            }
             return httpError(next, err, req, 500)
         }
     },

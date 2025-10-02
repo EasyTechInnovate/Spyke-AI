@@ -8,6 +8,7 @@ import { calculateDiscountPercentage, formatCurrency, getItemId } from '../utils
 import { CART_CONFIG } from '../constants'
 export default function CartItem({ item, index, onUpdateQuantity, onRemove }) {
     const router = useRouter()
+
     const { isAuthenticated } = useAuth()
     const [isRemoving, setIsRemoving] = useState(false)
     const itemId = getItemId(item)
@@ -176,6 +177,8 @@ function ProductHeader({ item, onNavigate, onRemove }) {
     )
 }
 function ProductMeta({ item }) {
+    const sellerRating = item.seller?.averageRating || 0;
+    
     return (
         <div className="flex flex-wrap items-center gap-4 text-sm">
             <div className="flex items-center gap-2 text-gray-300">
@@ -183,10 +186,12 @@ function ProductMeta({ item }) {
                 <span className="text-white font-medium hover:text-[#00FF89] cursor-pointer transition-colors">
                     {item.seller?.name || 'Unknown Seller'}
                 </span>
-                <div className="flex items-center gap-1">
-                    <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                    <span className="text-xs text-gray-400">4.8</span>
-                </div>
+                {sellerRating > 0 && (
+                    <div className="flex items-center gap-1">
+                        <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                        <span className="text-xs text-gray-400">{sellerRating.toFixed(1)}</span>
+                    </div>
+                )}
             </div>
             <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
             <span className="px-3 py-1 bg-[#00FF89]/15 text-[#00FF89] text-xs rounded-full font-medium border border-[#00FF89]/20">
@@ -198,10 +203,7 @@ function ProductMeta({ item }) {
 function ProductFeatures({ item }) {
     return (
         <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2 text-xs text-gray-400">
-                <Download className="w-4 h-4 text-[#00FF89]" />
-                <span>Instant Download</span>
-            </div>
+            
             <div className="flex items-center gap-2 text-xs text-gray-400">
                 <Shield className="w-4 h-4 text-blue-400" />
                 <span>Secure Purchase</span>

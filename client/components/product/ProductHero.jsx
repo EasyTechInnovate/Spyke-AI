@@ -80,7 +80,7 @@ const StatCard = ({ icon: Icon, singular, plural, value, color = 'text-[#00FF89]
                 <span className={`text-base font-semibold ${color}`}>
                     <AnimatedCounter value={value} />
                 </span>
-                <span className="text-[13px] text-[#cbd5e1] dark:text-gray-300 font-medium tracking-tight">{label}</span>
+                <span className="text-[13px] ml-1 text-[#cbd5e1] dark:text-gray-300 font-medium tracking-tight">{label}</span>
             </div>
         </motion.div>
     )

@@ -64,7 +64,12 @@ export function useCart() {
           originalPrice: item.productId?.originalPrice || item.productId?.price || 0,
           quantity: item.quantity || 1,
           category: item.productId?.category || '',
-          seller: item.productId?.sellerId || item.productId?.seller || { name: 'Unknown Seller' },
+          seller: {
+            name: item.productId?.sellerId?.fullName || 'Unknown Seller',
+            email: item.productId?.sellerId?.email || '',
+            _id: item.productId?.sellerId?._id,
+            averageRating: item.productId?.sellerId?.stats?.averageRating || 0
+          },
           image: item.productId?.thumbnail || '',
           addedAt: item.addedAt,
           productId: item.productId

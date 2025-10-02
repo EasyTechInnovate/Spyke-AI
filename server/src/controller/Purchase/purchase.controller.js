@@ -25,8 +25,16 @@ const purchaseControllerExport = {
 
             const cart = await Cart.getOrCreateCart(authenticatedUser.id)
 
-            // Use safe population without category/industry to avoid casting errors
-            await cart.populate('items.productId', 'title slug thumbnail price type status')
+            // Use safe population including sellerId and populate seller information
+            await cart.populate({
+                path: 'items.productId',
+                select: 'title slug thumbnail price type status sellerId',
+                populate: {
+                    path: 'sellerId',
+                    model: 'SellerProfile',
+                    select: 'fullName email stats.averageRating'
+                }
+            })
 
             const validItems = cart.items.filter((item) => item.productId && item.productId.status === EProductStatusNew.PUBLISHED)
 
@@ -70,8 +78,16 @@ const purchaseControllerExport = {
 
             try {
                 await cart.addItem(productId)
-                // Safe population without category/industry fields
-                await cart.populate('items.productId', 'title slug thumbnail price type')
+                // Safe population including seller information
+                await cart.populate({
+                    path: 'items.productId',
+                    select: 'title slug thumbnail price type sellerId',
+                    populate: {
+                        path: 'sellerId',
+                        model: 'SellerProfile',
+                        select: 'fullName email stats.averageRating'
+                    }
+                })
 
                 httpResponse(req, res, 200, responseMessage.CART.ITEM_ADDED, {
                     cart,
@@ -99,8 +115,16 @@ const purchaseControllerExport = {
 
             const cart = await Cart.getOrCreateCart(authenticatedUser.id)
             await cart.removeItem(productId)
-            // Safe population without category/industry fields
-            await cart.populate('items.productId', 'title slug thumbnail price type')
+            // Safe population including seller information
+            await cart.populate({
+                path: 'items.productId',
+                select: 'title slug thumbnail price type sellerId',
+                populate: {
+                    path: 'sellerId',
+                    model: 'SellerProfile',
+                    select: 'fullName email stats.averageRating'
+                }
+            })
 
             httpResponse(req, res, 200, responseMessage.CART.ITEM_REMOVED, cart)
         } catch (err) {

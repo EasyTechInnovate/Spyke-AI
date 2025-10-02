@@ -157,10 +157,7 @@ export default function CartPage() {
                                                 <Shield className="w-4 h-4 text-[#00FF89]" />
                                                 <span className="text-sm text-gray-300">Secure Checkout</span>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <Zap className="w-4 h-4 text-blue-400" />
-                                                <span className="text-sm text-gray-300">Instant Download</span>
-                                            </div>
+                                            
                                             <div className="flex items-center gap-2">
                                                 <Star className="w-4 h-4 text-yellow-400" />
                                                 <span className="text-sm text-gray-300">Premium Quality</span>

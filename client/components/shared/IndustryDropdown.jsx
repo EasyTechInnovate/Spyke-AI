@@ -81,7 +81,7 @@ export default function IndustryDropdown({
                 )}
             </button>
             {isOpen && !loading && (
-                <div className="absolute z-[999] w-full mt-1 bg-gray-900/95 border border-gray-600 rounded-lg shadow-2xl max-h-60 overflow-y-auto backdrop-blur-md">
+                <div className="absolute z-[9999] w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-2xl max-h-60 overflow-y-auto">
                     {industries.length === 0 ? (
                         <div className="px-4 py-6 text-center text-gray-400">No industries available</div>
                     ) : (
@@ -109,7 +109,7 @@ export default function IndustryDropdown({
             )}
             {error && <div className="mt-1 text-sm text-red-400">{error}</div>}
             {required && <span className="absolute -top-1 -right-1 text-red-400 text-xs">*</span>}
-            {isOpen && <div className="fixed inset-0 z-[998]" onClick={() => setIsOpen(false)} />}
+            {isOpen && <div className="fixed inset-0 z-[9998]" onClick={() => setIsOpen(false)} />}
         </div>
     )
 }
