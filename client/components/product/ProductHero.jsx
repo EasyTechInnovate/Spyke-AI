@@ -130,6 +130,11 @@ export default function ProductHero({
 
     if (!product) return null
 
+    const seller = product?.sellerId || null
+    const sellerAvatar = seller?.avatar || seller?.profileImage || seller?.photoUrl || seller?.image || ''
+    const sellerInitial = (seller?.fullName || seller?.name || 'S').charAt(0).toUpperCase()
+    const [sellerImgFailed, setSellerImgFailed] = useState(false)
+
     const mediaItems = []
     if (product.thumbnail) {
         mediaItems.push({
@@ -579,8 +584,21 @@ export default function ProductHero({
                                 transition={{ delay: 1.3 }}
                                 className="relative overflow-hidden rounded-xl p-6 bg-gray-900/30 border border-gray-700/50">
                                 <div className="flex items-start gap-3">
-                                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-[#00FF89]/20 flex-shrink-0 flex items-center justify-center">
-                                        <User className="w-6 h-6 text-[#00FF89]" />
+                                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-[#00FF89]/20 flex-shrink-0">
+                                        {sellerAvatar && !sellerImgFailed ? (
+                                            <img
+                                                src={sellerAvatar}
+                                                alt={`${seller?.fullName || 'Seller'} avatar`}
+                                                className="w-full h-full object-cover"
+                                                onError={() => setSellerImgFailed(true)}
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center">
+                                                <span className="text-sm font-bold text-black">
+                                                    {sellerInitial}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="flex-1 space-y-2">
                                         <div className="flex items-start justify-between">

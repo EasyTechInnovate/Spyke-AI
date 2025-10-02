@@ -14,8 +14,7 @@ export default function Footer() {
         Marketplace: [
             { name: 'Explore', href: '/explore', prefetch: false },
             { name: 'Categories', href: '/categories', prefetch: false },
-            { name: 'Top Sellers', href: '/sellers', prefetch: false },
-            { name: 'New Arrivals', href: '/new', prefetch: false }
+            { name: 'Top Sellers', href: '/creators', prefetch: false },
         ],
         Resources: [
             { name: 'Blog', href: '/blog', prefetch: false },
@@ -25,7 +24,7 @@ export default function Footer() {
             { name: 'Contact Us', href: '/contactus', prefetch: true },
             { name: 'Terms and Condition', href: '/terms', prefetch: true },
             { name: 'Privacy Policy', href: '/privacy-policy', prefetch: false },
-            { name: 'Seller Aggrement', href: '/seller-agreement', prefetch: false }
+            { name: 'Seller Agreement', href: '/seller-agreement', prefetch: false }
         ]
     }
     const socialLinks = [

@@ -1,5 +1,20 @@
 import apiClient from './client'
 
+// Normalize helpers to keep frontend shape consistent
+const normalizeSeller = (seller) => {
+    if (!seller || typeof seller !== 'object') return seller
+    const avatar = seller.avatar || seller.profileImage || seller.photoUrl || seller.image || null
+    return { ...seller, avatar, profileImage: seller.profileImage || avatar }
+}
+const normalizeProduct = (product) => {
+    if (!product || typeof product !== 'object') return product
+    const normalized = { ...product }
+    if (normalized.sellerId && typeof normalized.sellerId === 'object') {
+        normalized.sellerId = normalizeSeller(normalized.sellerId)
+    }
+    return normalized
+}
+
 class ProductsAPI {
     // Get all products with filters
     async getProducts(params = {}) {
@@ -14,27 +29,46 @@ class ProductsAPI {
         
         const queryString = queryParams.toString()
         const endpoint = queryString ? `v1/products?${queryString}` : 'v1/products'
-        
-        return apiClient.get(endpoint)
+        const res = await apiClient.get(endpoint)
+        if (res?.data?.products) {
+            res.data.products = res.data.products.map(normalizeProduct)
+        }
+        return res
     }
     
     // Get single product by slug
     async getProductBySlug(slug) {
-        return apiClient.get(`v1/products/${slug}`)
+        const res = await apiClient.get(`v1/products/${slug}`)
+        if (res?.data) {
+            res.data = normalizeProduct(res.data)
+        }
+        return res
     }
     
     // Get single product by ID
     async getProductById(id) {
-        return apiClient.get(`v1/products/${id}`)
+        const res = await apiClient.get(`v1/products/${id}`)
+        if (res?.data) {
+            res.data = normalizeProduct(res.data)
+        }
+        return res
     }
     
     async getProduct(productIdOrSlug) {
-        return apiClient.get(`v1/products/${productIdOrSlug}`)
+        const res = await apiClient.get(`v1/products/${productIdOrSlug}`)
+        if (res?.data) {
+            res.data = normalizeProduct(res.data)
+        }
+        return res
     }
     
     // Get related products
     async getRelatedProducts(productId, limit = 6) {
-        return apiClient.get(`v1/products/${productId}/related?limit=${limit}`)
+        const res = await apiClient.get(`v1/products/${productId}/related?limit=${limit}`)
+        if (Array.isArray(res?.data)) {
+            res.data = res.data.map(normalizeProduct)
+        }
+        return res
     }
     
     // Create new product (seller/admin only)
@@ -44,7 +78,11 @@ class ProductsAPI {
     
     // Update product (seller/admin only)
     async updateProduct(productId, productData) {
-        return apiClient.put(`v1/products/${productId}`, productData)
+        const res = await apiClient.put(`v1/products/${productId}`, productData)
+        if (res?.data) {
+            res.data = normalizeProduct(res.data)
+        }
+        return res
     }
     
     // Delete product (seller/admin only)
@@ -84,8 +122,11 @@ class ProductsAPI {
         
         const queryString = queryParams.toString()
         const endpoint = queryString ? `v1/products/seller/my-products?${queryString}` : 'v1/products/seller/my-products'
-        
-        return apiClient.get(endpoint)
+        const res = await apiClient.get(endpoint)
+        if (res?.data?.products) {
+            res.data.products = res.data.products.map(normalizeProduct)
+        }
+        return res
     }
     
     // Admin endpoints
@@ -100,8 +141,11 @@ class ProductsAPI {
         
         const queryString = queryParams.toString()
         const endpoint = queryString ? `v1/products/admin/all?${queryString}` : 'v1/products/admin/all'
-        
-        return apiClient.get(endpoint)
+        const res = await apiClient.get(endpoint)
+        if (res?.data?.products) {
+            res.data.products = res.data.products.map(normalizeProduct)
+        }
+        return res
     }
     
     // Verify product (admin only)
@@ -126,8 +170,6 @@ class ProductsAPI {
         return apiClient.get(endpoint)
     }
 
-    
-
     async getTrendingProducts(params = {}) {
         const queryParams = new URLSearchParams()
         
@@ -139,12 +181,22 @@ class ProductsAPI {
         
         const queryString = queryParams.toString()
         const endpoint = queryString ? `v1/products/trending?${queryString}` : 'v1/products/trending'
-        
-        return apiClient.get(endpoint)
+        const res = await apiClient.get(endpoint)
+        if (Array.isArray(res?.data)) {
+            res.data = res.data.map(normalizeProduct)
+        }
+        return res
     }
 
     async getProductDiscovery() {
-        return apiClient.get('v1/products/discovery')
+        const res = await apiClient.get('v1/products/discovery')
+        if (res?.data) {
+            const d = res.data
+            ;['featured','trending','highRated','recentlyAdded'].forEach((k)=>{
+                if (Array.isArray(d?.[k])) d[k] = d[k].map(normalizeProduct)
+            })
+        }
+        return res
     }
 
     async getAdminFeaturedList(params = {}) {
@@ -184,7 +236,14 @@ class ProductsAPI {
         })
         const qs = queryParams.toString()
         const endpoint = qs ? `v1/products/featured-hybrid?${qs}` : 'v1/products/featured-hybrid'
-        return apiClient.get(endpoint)
+        const res = await apiClient.get(endpoint)
+        if (res?.data) {
+            const d = res.data
+            ;['featured','trending','highRated','recentlyAdded'].forEach((k)=>{
+                if (Array.isArray(d?.[k])) d[k] = d[k].map(normalizeProduct)
+            })
+        }
+        return res
     }
 }
 

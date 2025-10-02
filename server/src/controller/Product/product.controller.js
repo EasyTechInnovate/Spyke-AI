@@ -233,7 +233,7 @@ export default {
                     .populate({
                         path: 'sellerId',
                         model: 'SellerProfile',
-                        select: 'fullName avatar stats.averageRating verification.status'
+                        select: 'fullName profileImage avatar stats.averageRating verification.status'
                     })
                     .populate({
                         path: 'category',
@@ -279,7 +279,7 @@ export default {
                 .populate({
                     path: 'sellerId',
                     model: 'SellerProfile',
-                    select: 'fullName avatar bio stats location socialHandles customAutomationServices'
+                    select: 'fullName profileImage avatar bio stats location socialHandles customAutomationServices'
                 })
                 .populate({
                     path: 'category',
@@ -450,7 +450,7 @@ export default {
                 .populate({
                     path: 'sellerId',
                     model: 'SellerProfile',
-                    select: 'fullName avatar stats.averageRating verification.status'
+                    select: 'fullName profileImage avatar stats.averageRating verification.status'
                 })
                 .populate({
                     path: 'category',
@@ -656,7 +656,7 @@ export default {
                 .populate({
                     path: 'sellerId',
                     model: 'SellerProfile',
-                    select: 'fullName avatar stats.averageRating verification.status'
+                    select: 'fullName profileImage avatar stats.averageRating verification.status'
                 })
                 .limit(parseInt(limit))
                 .select('-reviews -faqs -versions -howItWorks -premiumContent')
@@ -726,7 +726,7 @@ export default {
                     .populate({
                         path: 'sellerId',
                         model: 'SellerProfile',
-                        select: 'fullName email avatar userId'
+                        select: 'fullName email profileImage avatar userId'
                     })
                     .sort(sort)
                     .skip(skip)
@@ -1045,7 +1045,7 @@ export default {
                 .populate({
                     path: 'sellerId',
                     model: 'SellerProfile',
-                    select: 'fullName avatar bio stats location socialHandles'
+                    select: 'fullName profileImage avatar bio stats location socialHandles'
                 })
                 .populate({
                     path: 'category',
