@@ -3,6 +3,9 @@ import { useState, useEffect, useRef } from 'react'
 import { ChevronDown, Package, Loader2 } from 'lucide-react'
 import { categoryAPI } from '@/lib/api/toolsNiche'
 import { useNotifications } from '@/hooks/useNotifications'
+import { createPortal } from 'react-dom'
+import { useDropdownPosition } from '@/hooks/useDropdownPosition'
+
 export default function CategoryDropdown({
     value,
     onChange,
@@ -17,8 +20,13 @@ export default function CategoryDropdown({
     const [categories, setCategories] = useState([])
     const [loading, setLoading] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
+    const [mounted, setMounted] = useState(false)
     const { addNotification } = useNotifications()
     const fetchedRef = useRef(false)
+    const { buttonRef, panelPos } = useDropdownPosition(isOpen, { desiredMax: 240, minHeight: 140, offset: 4 })
+
+    useEffect(() => { setMounted(true) }, [])
+
     useEffect(() => {
         if (fetchedRef.current) return
         fetchedRef.current = true
@@ -57,14 +65,18 @@ export default function CategoryDropdown({
         }
         fetchCategories()
     }, [])
+
     const handleSelect = (categoryId) => {
         onChange(categoryId)
         setIsOpen(false)
     }
+
     const selectedCategory = categories.find((cat) => cat.id === value)
+
     return (
         <div className={`relative ${className}`}>
             <button
+                ref={buttonRef}
                 type="button"
                 onClick={() => !disabled && setIsOpen(!isOpen)}
                 disabled={disabled || loading}
@@ -87,36 +99,42 @@ export default function CategoryDropdown({
                     <ChevronDown className={`w-4 h-4 text-[#00FF89] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                 )}
             </button>
-            {isOpen && !loading && (
-                <div className="absolute z-[9999] w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-2xl max-h-60 overflow-y-auto">
-                    {categories.length === 0 ? (
-                        <div className="px-4 py-6 text-center text-gray-400">No categories available</div>
-                    ) : (
-                        categories.map((category) => (
-                            <button
-                                key={category.id}
-                                type="button"
-                                onClick={() => handleSelect(category.id)}
-                                className={`
-                                    w-full px-4 py-3 text-left hover:bg-[#00FF89]/20 transition-colors
-                                    flex items-center gap-3 border-b border-gray-700/50 last:border-b-0
-                                    ${value === category.id ? 'bg-[#00FF89]/20 text-[#00FF89] font-medium' : 'text-gray-200 hover:text-white'}
-                                `}>
-                                <Package className="w-4 h-4 text-[#00FF89]" />
-                                <div className="font-medium">{category.name}</div>
-                            </button>
-                        ))
-                    )}
-                </div>
+
+            {mounted && isOpen && !loading && createPortal(
+                <>
+                    <div
+                        className="fixed inset-0 z-[9998]"
+                        onClick={() => setIsOpen(false)}
+                    />
+                    <div
+                        className="bg-gray-800 border border-gray-600 rounded-lg shadow-2xl overflow-y-auto"
+                        style={{ position: 'fixed', top: panelPos.top, left: panelPos.left, width: panelPos.width, maxHeight: panelPos.maxHeight, zIndex: 10000 }}
+                    >
+                        {categories.length === 0 ? (
+                            <div className="px-4 py-6 text-center text-gray-400">No categories available</div>
+                        ) : (
+                            categories.map((category) => (
+                                <button
+                                    key={category.id}
+                                    type="button"
+                                    onClick={() => handleSelect(category.id)}
+                                    className={`
+                                        w-full px-4 py-3 text-left hover:bg-[#00FF89]/20 transition-colors
+                                        flex items-center gap-3 border-b border-gray-700/50 last:border-b-0
+                                        ${value === category.id ? 'bg-[#00FF89]/20 text-[#00FF89] font-medium' : 'text-gray-200 hover:text-white'}
+                                    `}>
+                                    <Package className="w-4 h-4 text-[#00FF89]" />
+                                    <div className="font-medium">{category.name}</div>
+                                </button>
+                            ))
+                        )}
+                    </div>
+                </>,
+                document.body
             )}
+
             {error && <div className="mt-1 text-sm text-red-400">{error}</div>}
             {required && <span className="absolute -top-1 -right-1 text-red-400 text-xs">*</span>}
-            {isOpen && (
-                <div
-                    className="fixed inset-0 z-[9998]"
-                    onClick={() => setIsOpen(false)}
-                />
-            )}
         </div>
     )
 }
