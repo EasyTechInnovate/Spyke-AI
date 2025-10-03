@@ -119,33 +119,71 @@ export default function CategoriesGrid({ blogCategories = [] }) {
                     })}
                 </motion.div>
 
-                {/* Info Notice about more categories */}
-                <motion.div
+                
+                {!blogCategories.length && <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.4 }}
-                    className="mt-16 max-w-2xl mx-auto"
-                >
-                    <div className="bg-gray-900/30 backdrop-blur-sm border border-gray-800/50 rounded-xl p-6">
-                        <div className="flex items-start gap-4">
-                            <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center border border-blue-500/20 flex-shrink-0">
-                                <Info className="w-5 h-5 text-blue-400" />
-                            </div>
-                            <div className="flex-1">
-                                <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
-                                    More Categories Coming Soon
-                                    <Plus className="w-4 h-4 text-green-400" />
-                                </h3>
-                                <p className="text-gray-400 text-sm leading-relaxed">
-                                    Our system is continuously expanding and adding new product categories based on market trends and user needs. 
-                                    New categories will automatically appear here as they become available, ensuring you always have access to the latest 
-                                    and most relevant product classifications.
-                                </p>
+                    className="mt-16 max-w-3xl mx-auto">
+                    <div className="relative overflow-hidden rounded-2xl border border-gray-800/60 bg-gradient-to-b from-gray-900/40 to-gray-900/20 p-[1px]">
+                        <div className="pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full bg-green-500/20 blur-3xl" />
+                        <div className="pointer-events-none absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl" />
+                        <div className="rounded-2xl bg-gray-900/60 backdrop-blur-md p-6 md:p-8">
+                            <div className="flex items-start gap-4 md:gap-5">
+                                <div className="relative flex h-12 w-12 items-center justify-center rounded-xl border border-blue-500/30 bg-blue-500/10">
+                                    <div className="absolute inset-0 -z-10 rounded-xl bg-blue-500/20 blur-xl" />
+                                    <Info className="w-5 h-5 text-blue-400" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-xl md:text-2xl font-semibold text-white mb-2 flex items-center gap-2">
+                                        More Categories Coming Soon
+                                        <span className="inline-flex items-center gap-1 rounded-full border border-green-500/30 bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-300">
+                                            <Plus className="w-3.5 h-3.5" />
+                                            Updates
+                                        </span>
+                                    </h3>
+                                    <p className="text-gray-300/90 text-sm leading-relaxed">
+                                        Our system is continuously expanding and adding new product categories based on market trends and user needs.
+                                        New categories will automatically appear here as they become available, ensuring you always have access to the
+                                        latest and most relevant product classifications.
+                                    </p>
+                                    <div className="mt-4 flex flex-wrap gap-2">
+                                        <span className="rounded-full border border-gray-700/50 bg-gray-800/60 px-3 py-1 text-xs text-gray-300">
+                                            Marketing
+                                        </span>
+                                        <span className="rounded-full border border-gray-700/50 bg-gray-800/60 px-3 py-1 text-xs text-gray-300">
+                                            Finance
+                                        </span>
+                                        <span className="rounded-full border border-gray-700/50 bg-gray-800/60 px-3 py-1 text-xs text-gray-300">
+                                            Legal
+                                        </span>
+                                        <span className="rounded-full border border-gray-700/50 bg-gray-800/60 px-3 py-1 text-xs text-gray-300">
+                                            HR
+                                        </span>
+                                        <span className="rounded-full border border-gray-700/50 bg-gray-800/60 px-3 py-1 text-xs text-gray-300">
+                                            Security
+                                        </span>
+                                    </div>
+                                    <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                                        <Link
+                                            href="/explore"
+                                            className="inline-flex items-center justify-center rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-2 text-sm font-medium text-green-300 hover:bg-green-500/20 transition-colors">
+                                            Browse All Products
+                                            <ArrowUpRight className="ml-1.5 h-4 w-4" />
+                                        </Link>
+                                        <Link
+                                            href="/contact"
+                                            className="inline-flex items-center justify-center rounded-lg border border-gray-700 bg-gray-800/60 px-4 py-2 text-sm font-medium text-gray-300 hover:border-gray-600 hover:bg-gray-800 transition-colors">
+                                            Suggest a Category
+                                        </Link>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </motion.div>
+                </motion.div>}
             </Container>
         </div>
     )
 }
+
