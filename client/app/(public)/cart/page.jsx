@@ -11,6 +11,15 @@ import OrderSummary from './components/OrderSummary'
 import EmptyCart from './components/EmptyCart'
 import CartLoading from './components/CartLoading'
 import { calculateSubtotal, calculateTotalSavings, calculatePromoDiscount, calculateTotal, formatCurrency, getItemId } from './utils'
+// Add a normalization helper
+const normalizeProductType = (raw) => {
+    if (!raw) return 'Prompt'
+    const t = String(raw).toLowerCase()
+    if (t.startsWith('prompt')) return 'Prompt'
+    if (t.startsWith('automation')) return 'Automation'
+    if (t.startsWith('agent')) return 'Agent'
+    return raw
+}
 export default function CartPage() {
     const router = useRouter()
     const { cartItems, cartData, loading, updateQuantity: updateCartQuantity, removeFromCart, applyPromocode, removePromocode } = useCart()
@@ -24,6 +33,14 @@ export default function CartPage() {
         const total = calculateTotal(cartData, subtotal, discount)
         return { subtotal, totalSavings, discount, total }
     }, [cartItems, cartData])
+    // Derive type counts for summary card
+    const typeCounts = useMemo(() => {
+        return cartItems.reduce((acc, it) => {
+            const nt = normalizeProductType(it.type || it.category)
+            acc[nt] = (acc[nt] || 0) + 1
+            return acc
+        }, {})
+    }, [cartItems])
     const handleUpdateQuantity = useCallback(
         (itemId, newQuantity) => {
             if (newQuantity < 1) return
@@ -37,26 +54,28 @@ export default function CartPage() {
         },
         [removeFromCart]
     )
-    const handleApplyPromo = useCallback(async (code) => {
-        const codeToApply = code || promoCode?.trim()
-        if (!codeToApply) return
-        setPromoLoading(true)
-        setPromoError('')
-        try {
-            await applyPromocode(codeToApply)
-            setPromoCode('')
-        } catch (error) {
-            setPromoError(error.message || 'Invalid promo code')
-        } finally {
-            setPromoLoading(false)
-        }
-    }, [promoCode, applyPromocode])
+    const handleApplyPromo = useCallback(
+        async (code) => {
+            const codeToApply = code || promoCode?.trim()
+            if (!codeToApply) return
+            setPromoLoading(true)
+            setPromoError('')
+            try {
+                await applyPromocode(codeToApply)
+                setPromoCode('')
+            } catch (error) {
+                setPromoError(error.message || 'Invalid promo code')
+            } finally {
+                setPromoLoading(false)
+            }
+        },
+        [promoCode, applyPromocode]
+    )
     const handleRemovePromo = useCallback(async () => {
         try {
             await removePromocode()
             setPromoError('')
-        } catch (error) {
-        }
+        } catch (error) {}
     }, [removePromocode])
     const handleCheckout = useCallback(async () => {
         router.push('/checkout')
@@ -85,7 +104,7 @@ export default function CartPage() {
                             total={calculations.total}
                             totalSavings={calculations.totalSavings}
                         />
-                        
+
                         <div className="grid lg:grid-cols-3 gap-8">
                             <div className="lg:col-span-2 space-y-6">
                                 {/* Cart Summary Cards */}
@@ -94,8 +113,7 @@ export default function CartPage() {
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.1 }}
-                                        className="bg-gradient-to-r from-[#00FF89]/10 to-[#00FF89]/5 border border-[#00FF89]/20 rounded-xl p-4"
-                                    >
+                                        className="bg-gradient-to-r from-[#00FF89]/10 to-[#00FF89]/5 border border-[#00FF89]/20 rounded-xl p-4">
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 bg-[#00FF89]/20 rounded-lg">
                                                 <ShoppingBag className="w-5 h-5 text-[#00FF89]" />
@@ -111,15 +129,22 @@ export default function CartPage() {
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.2 }}
-                                        className="bg-gradient-to-r from-blue-500/10 to-blue-400/5 border border-blue-400/20 rounded-xl p-4"
-                                    >
+                                        className="bg-gradient-to-r from-blue-500/10 to-blue-400/5 border border-blue-400/20 rounded-xl p-4">
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 bg-blue-400/20 rounded-lg">
                                                 <Package className="w-5 h-5 text-blue-400" />
                                             </div>
                                             <div>
-                                                <p className="text-sm text-gray-400">Digital Products</p>
-                                                <p className="text-lg font-bold text-white">{cartItems.length}</p>
+                                                <p className="text-sm text-gray-400">Types</p>
+                                                <p
+                                                    className="text-xs text-gray-500 max-w-[180px] truncate"
+                                                    title={Object.keys(typeCounts).join(', ')}>
+                                                    {Object.keys(typeCounts).length === 0
+                                                        ? '—'
+                                                        : Object.entries(typeCounts)
+                                                              .map(([k, v]) => `${k}(${v})`)
+                                                              .join(' · ')}
+                                                </p>
                                             </div>
                                         </div>
                                     </motion.div>
@@ -129,8 +154,7 @@ export default function CartPage() {
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: 0.3 }}
-                                            className="bg-gradient-to-r from-yellow-500/10 to-yellow-400/5 border border-yellow-400/20 rounded-xl p-4"
-                                        >
+                                            className="bg-gradient-to-r from-yellow-500/10 to-yellow-400/5 border border-yellow-400/20 rounded-xl p-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="p-2 bg-yellow-400/20 rounded-lg">
                                                     <TrendingUp className="w-5 h-5 text-yellow-400" />
@@ -149,15 +173,14 @@ export default function CartPage() {
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.4 }}
-                                    className="bg-gray-800/30 border border-gray-700/50 rounded-xl p-4 mb-6"
-                                >
+                                    className="bg-gray-800/30 border border-gray-700/50 rounded-xl p-4 mb-6">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-6">
                                             <div className="flex items-center gap-2">
                                                 <Shield className="w-4 h-4 text-[#00FF89]" />
                                                 <span className="text-sm text-gray-300">Secure Checkout</span>
                                             </div>
-                                            
+
                                             <div className="flex items-center gap-2">
                                                 <Star className="w-4 h-4 text-yellow-400" />
                                                 <span className="text-sm text-gray-300">Premium Quality</span>
@@ -184,8 +207,7 @@ export default function CartPage() {
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.6 }}
-                                    className="bg-gradient-to-r from-gray-800/40 to-gray-700/20 border border-gray-600/30 rounded-xl p-6 mt-6"
-                                >
+                                    className="bg-gradient-to-r from-gray-800/40 to-gray-700/20 border border-gray-600/30 rounded-xl p-6 mt-6">
                                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                                         <Sparkles className="w-5 h-5 text-[#00FF89]" />
                                         What's Next?
