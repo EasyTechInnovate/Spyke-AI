@@ -32,6 +32,7 @@ export default function AdminPromocodesPage() {
     const [searchTerm, setSearchTerm] = useState('')
     const [filterStatus, setFilterStatus] = useState('all')
     const [filterType, setFilterType] = useState('all')
+    const [filterCreator, setFilterCreator] = useState('all')
     const [showForm, setShowForm] = useState(false)
     const [showStats, setShowStats] = useState(false)
     const [selectedPromocode, setSelectedPromocode] = useState(null)
@@ -49,7 +50,7 @@ export default function AdminPromocodesPage() {
     // Client-side filtering effect
     useEffect(() => {
         filterPromocodes()
-    }, [searchTerm, filterStatus, filterType, allPromocodes])
+    }, [searchTerm, filterStatus, filterType, filterCreator, allPromocodes])
 
     const fetchPromocodes = async () => {
         try {
@@ -105,6 +106,14 @@ export default function AdminPromocodesPage() {
         // Type filter
         if (filterType !== 'all') {
             filtered = filtered.filter((promocode) => promocode.discountType === filterType)
+        }
+
+        // Creator filter (admin / seller)
+        if (filterCreator !== 'all') {
+            filtered = filtered.filter((p) => {
+                const role = (p.createdByType || p.createdBy?.role || '').toString().toLowerCase()
+                return role === filterCreator
+            })
         }
 
         setPromocodes(filtered)
@@ -280,6 +289,14 @@ export default function AdminPromocodesPage() {
                             <option value="percentage">Percentage</option>
                             <option value="fixed">Fixed Amount</option>
                         </select>
+                        <select
+                            value={filterCreator}
+                            onChange={(e) => setFilterCreator(e.target.value)}
+                            className="px-4 py-2 border rounded-lg mt-2">
+                            <option value="all">All Creators</option>
+                            <option value="admin">Admin</option>
+                            <option value="seller">Seller</option>
+                        </select>
                         <Button
                             onClick={exportPromocodes}
                             variant="outline"
@@ -312,6 +329,12 @@ export default function AdminPromocodesPage() {
                         const usagePercentage = promocode.maxUses ? Math.round((promocode.usageCount / promocode.maxUses) * 100) : 0
                         const isExpiringSoon = promocode.validUntil && new Date(promocode.validUntil) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 
+                        const rawRole = promocode.createdByType || promocode.createdBy?.role || ''
+                        const roleLower = rawRole.toString().toLowerCase()
+                        const isAdminCreator = roleLower === 'admin'
+                        const showCreatorBadge = Boolean(rawRole)
+                        const creatorLabel = isAdminCreator ? 'Admin' : promocode.createdBy?.businessName || 'Seller'
+
                         return (
                             <div
                                 key={promocode._id}
@@ -328,10 +351,15 @@ export default function AdminPromocodesPage() {
                                                 }`}>
                                                 {promocode.status === 'active' || promocode.isActive === true ? 'Active' : 'Inactive'}
                                             </span>
-                                            {promocode.createdBy && (
-                                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-500/10 text-blue-400 text-xs rounded-lg border border-blue-500/20">
+                                            {showCreatorBadge && (
+                                                <span
+                                                    className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg border ${
+                                                        isAdminCreator
+                                                            ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                                                            : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                                    }`}>
                                                     <Users className="w-3 h-3" />
-                                                    {promocode.createdBy.role === 'admin' ? 'Admin' : promocode.createdBy.businessName || 'Seller'}
+                                                    {creatorLabel}
                                                 </span>
                                             )}
                                         </div>
@@ -487,7 +515,7 @@ export default function AdminPromocodesPage() {
                                                 All Products
                                             </span>
                                         )}
-                                    {isExpiringSoon && promocode.isActive === 'active' && (
+                                    {isExpiringSoon && promocode.isActive === true && (
                                         <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-500/10 text-yellow-500 text-xs rounded-lg border border-yellow-500/20">
                                             <Clock className="w-3 h-3" />
                                             Expiring Soon

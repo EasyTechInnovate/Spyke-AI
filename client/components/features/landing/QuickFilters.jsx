@@ -14,6 +14,9 @@ const BackgroundEffectsLight = dynamic(() => import('./hero/BackgroundEffectsLig
     loading: () => null
 })
 
+const slugify = (val = '') =>
+  val.toString().trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+
 export default function QuickFilters() {
     const [hoveredFilter, setHoveredFilter] = useState(null)
     const [categories, setCategories] = useState([])
@@ -36,13 +39,17 @@ export default function QuickFilters() {
                 }
 
                 const formattedCategories = categoriesData
-                    .map((cat) => ({
-                        id: cat._id || cat.id,
-                        name: cat.name || cat.title,
-                        icon: Package, // Default icon for categories
-                        productCount: cat.productCount || 0,
-                        isActive: cat.isActive !== false
-                    }))
+                    .map((cat) => {
+                        const name = cat.name || cat.title || ''
+                        return {
+                            id: cat._id || cat.id,
+                            name,
+                            slug: slugify(name) || (cat._id || cat.id),
+                            icon: Package, // Default icon for categories
+                            productCount: cat.productCount || 0,
+                            isActive: cat.isActive !== false
+                        }
+                    })
                     .filter((cat) => cat.isActive)
 
                 setCategories(formattedCategories)
@@ -120,7 +127,7 @@ export default function QuickFilters() {
                       id: category.id,
                       label: category.name,
                       icon: category.icon,
-                      link: `/explore?category=${category.id}`
+                      link: `/explore?category=${category.id}` // use id for reliability
                   })),
             loading: loadingCategories,
             maxHeight: 'max-h-80'

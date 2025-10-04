@@ -619,7 +619,7 @@ export default function PromocodeForm({ promocode, onClose }) {
                                             }))
                                         }}
                                         className="px-4 py-2 bg-[#00FF89]/10 text-[#00FF89] border border-[#00FF89]/30 rounded-lg hover:bg-[#00FF89]/20 transition-all text-sm font-medium whitespace-nowrap">
-                                        Select Visible
+                                        Select All
                                     </button>
                                     <button
                                         type="button"

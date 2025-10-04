@@ -6,30 +6,22 @@ import Link from 'next/link'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import sellerAPI from '@/lib/api/seller'
-import {
-  DSContainer,
-  DSStack,
-  DSHeading,
-  DSText,
-  DSButton,
-  DSBadge,
-  DSLoadingState
-} from '@/lib/design-system'
+import { DSContainer, DSStack, DSHeading, DSText, DSButton, DSBadge, DSLoadingState } from '@/lib/design-system'
 const BackgroundEffectsLight = dynamic(() => import('./hero/BackgroundEffectsLight'), {
-  ssr: false,
-  loading: () => null
+    ssr: false,
+    loading: () => null
 })
 export default function CreatorSpotlights() {
     const [creators, setCreators] = useState([])
     const [loading, setLoading] = useState(true)
     const RANKING_CONFIG = {
         weights: {
-            sales: 0.7, 
-            views: 0.3 
+            sales: 0.7,
+            views: 0.3
         },
-        showOnlyTopSeller: true 
+        showOnlyTopSeller: true
     }
-    const TOP_N = 8 
+    const TOP_N = 8
     useEffect(() => {
         let mounted = true
         async function loadTopSellers() {
@@ -65,14 +57,14 @@ export default function CreatorSpotlights() {
                         specialties: specialties
                     }
                 })
-                const salesValues = mapped.map(m => m.stats.sales)
-                const viewValues = mapped.map(m => m.stats.profileViews || 0)
+                const salesValues = mapped.map((m) => m.stats.sales)
+                const viewValues = mapped.map((m) => m.stats.profileViews || 0)
                 const maxSales = Math.max(...salesValues, 1)
                 const maxViews = Math.max(...viewValues, 1)
-                const scored = mapped.map(m => {
+                const scored = mapped.map((m) => {
                     const normSales = maxSales > 0 ? m.stats.sales / maxSales : 0
                     const normViews = maxViews > 0 ? (m.stats.profileViews || 0) / maxViews : 0
-                    const score = (normSales * RANKING_CONFIG.weights.sales) + (normViews * RANKING_CONFIG.weights.views)
+                    const score = normSales * RANKING_CONFIG.weights.sales + normViews * RANKING_CONFIG.weights.views
                     return { ...m, score }
                 })
                 scored.sort((a, b) => b.score - a.score)
@@ -100,33 +92,44 @@ export default function CreatorSpotlights() {
                         viewport={{ once: true }}
                         transition={{ duration: 0.5 }}
                         className="text-center mb-12 sm:mb-16">
-                        <DSBadge variant="secondary" icon={Star} className="mb-4 sm:mb-6">
+                        <DSBadge
+                            variant="secondary"
+                            icon={Star}
+                            className="mb-4 sm:mb-6">
                             Creator Spotlights
                         </DSBadge>
-                        <DSHeading level={2} variant="hero" className="mb-3 sm:mb-4">
+                        <DSHeading
+                            level={2}
+                            variant="hero"
+                            className="mb-3 sm:mb-4">
                             <span style={{ color: 'white' }}>Meet Top Sellers This Month</span>
                         </DSHeading>
-                        <DSText variant="subhero" style={{ color: '#9ca3af' }}>
+                        <DSText
+                            variant="subhero"
+                            style={{ color: '#9ca3af' }}>
                             Learn from the best creators building amazing AI tools and automations
                         </DSText>
                     </motion.div>
                     {loading ? (
-                        <DSLoadingState 
+                        <DSLoadingState
                             icon={Loader2}
                             message="Loading top creators..."
                             className="h-48 sm:h-64"
                         />
                     ) : creators.length === 0 ? (
                         <div className="text-center py-12 sm:py-16">
-                            <DSStack gap="medium" direction="column" align="center">
+                            <DSStack
+                                gap="medium"
+                                direction="column"
+                                align="center">
                                 <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-800 rounded-xl flex items-center justify-center">
                                     <UserX className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
                                 </div>
-                                <DSText style={{ color: '#9ca3af' }}>
-                                    No creators available at the moment
-                                </DSText>
+                                <DSText style={{ color: '#9ca3af' }}>No creators available at the moment</DSText>
                                 <Link href="/sellers">
-                                    <DSButton variant="secondary" size="medium">
+                                    <DSButton
+                                        variant="secondary"
+                                        size="medium">
                                         Browse All Creators
                                     </DSButton>
                                 </Link>
@@ -134,14 +137,6 @@ export default function CreatorSpotlights() {
                         </div>
                     ) : creators.length === 1 ? (
                         <div className="flex flex-col items-center gap-6">
-                            <div className="text-center">
-                                <DSBadge variant="primary" size="small" className="mb-2">
-                                    Top Seller (Front-End Ranked)
-                                </DSBadge>
-                                <DSText variant="subtle" style={{ color: '#9ca3af' }}>
-                                    Ranked using weighted sales & profile views (sales {Math.round(RANKING_CONFIG.weights.sales * 100)}% / views {Math.round(RANKING_CONFIG.weights.views * 100)}%)
-                                </DSText>
-                            </div>
                             <div className="w-full max-w-md">
                                 <CreatorCard creator={creators[0]} />
                             </div>
@@ -169,7 +164,10 @@ export default function CreatorSpotlights() {
                             transition={{ duration: 0.5, delay: 0.2 }}
                             className="text-center mt-8 sm:mt-12">
                             <Link href="/creators">
-                                <DSButton variant="primary" size="large" className="group">
+                                <DSButton
+                                    variant="primary"
+                                    size="large"
+                                    className="group">
                                     <span>Browse All Creators</span>
                                     <span className="group-hover:translate-x-1 transition-transform">→</span>
                                 </DSButton>
@@ -191,14 +189,23 @@ function CreatorCard({ creator }) {
                 <div className="relative h-full bg-[#171717] border border-gray-800 rounded-xl overflow-hidden hover:border-[#00FF89]/50 transition-all duration-200 hover:shadow-lg hover:shadow-[#00FF89]/5 flex flex-col">
                     {creator.badge && (
                         <div className="absolute top-3 right-3 z-10">
-                            <DSBadge variant="primary" size="small" className="shadow-sm">
+                            <DSBadge
+                                variant="primary"
+                                size="small"
+                                className="shadow-sm">
                                 {creator.badge}
                             </DSBadge>
                         </div>
                     )}
                     <div className="p-4 flex flex-col h-full">
-                        <DSStack direction="column" gap="small" className="h-full">
-                            <DSStack direction="row" gap="small" align="center">
+                        <DSStack
+                            direction="column"
+                            gap="small"
+                            className="h-full">
+                            <DSStack
+                                direction="row"
+                                gap="small"
+                                align="center">
                                 <div className="relative flex-shrink-0">
                                     <Image
                                         src={creator.avatar}
@@ -214,21 +221,27 @@ function CreatorCard({ creator }) {
                                     <h3 className="text-sm font-semibold text-white group-hover:text-[#00FF89] transition-colors truncate">
                                         {creator?.name}
                                     </h3>
-                                    <p className="text-xs text-gray-400 truncate">
-                                        {creator?.title || 'AI Creator'}
-                                    </p>
+                                    <p className="text-xs text-gray-400 truncate">{creator?.title || 'AI Creator'}</p>
                                 </div>
                             </DSStack>
                             <div className="grid grid-cols-3 gap-2">
                                 <div className="bg-gray-800/50 rounded-lg p-2">
-                                    <DSStack direction="row" gap="xsmall" align="center" className="mb-1">
+                                    <DSStack
+                                        direction="row"
+                                        gap="xsmall"
+                                        align="center"
+                                        className="mb-1">
                                         <TrendingUp className="w-3 h-3 text-[#00FF89]" />
                                         <span className="text-xs text-gray-400">Sales</span>
                                     </DSStack>
                                     <span className="text-xs font-semibold text-white">{creator.stats.sales}</span>
                                 </div>
                                 <div className="bg-gray-800/50 rounded-lg p-2">
-                                    <DSStack direction="row" gap="xsmall" align="center" className="mb-1">
+                                    <DSStack
+                                        direction="row"
+                                        gap="xsmall"
+                                        align="center"
+                                        className="mb-1">
                                         <Star className="w-3 h-3 text-yellow-500" />
                                         <span className="text-xs text-gray-400">Rating</span>
                                     </DSStack>
@@ -237,7 +250,11 @@ function CreatorCard({ creator }) {
                                     </span>
                                 </div>
                                 <div className="bg-gray-800/50 rounded-lg p-2">
-                                    <DSStack direction="row" gap="xsmall" align="center" className="mb-1">
+                                    <DSStack
+                                        direction="row"
+                                        gap="xsmall"
+                                        align="center"
+                                        className="mb-1">
                                         <Award className="w-3 h-3 text-purple-500" />
                                         <span className="text-xs text-gray-400">Products</span>
                                     </DSStack>
@@ -262,9 +279,7 @@ function CreatorCard({ creator }) {
                                 </div>
                             </div>
                             <div className="pt-2 border-t border-gray-800">
-                                <span className="text-sm text-[#00FF89] group-hover:text-[#00FF89]/80 transition-colors">
-                                    View Profile →
-                                </span>
+                                <span className="text-sm text-[#00FF89] group-hover:text-[#00FF89]/80 transition-colors">View Profile →</span>
                             </div>
                         </DSStack>
                     </div>

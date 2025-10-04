@@ -12,6 +12,7 @@ import { productsAPI } from '@/lib/api'
 import { CATEGORIES, PRODUCT_TYPES, INDUSTRIES, SETUP_TIMES, ITEMS_PER_PAGE, DEFAULT_FILTERS, SORT_OPTIONS } from '@/data/explore/constants'
 import { Loader2, AlertTriangle } from 'lucide-react'
 import { useDebounce } from '@/hooks/useDebounce'
+import { categoryAPI } from '@/lib/api/toolsNiche'
 const FilterSidebar = dynamic(() => import('@/components/features/explore/FilterSidebar'), { ssr: false })
 const MobileFilterDrawer = dynamic(() => import('@/components/features/explore/MobileFilterDrawer'), { ssr: false })
 const VirtualizedProductGrid = dynamic(() => import('@/components/features/explore/VirtualizedProductGrid'), { ssr: false })
@@ -69,6 +70,19 @@ function useURLState() {
         }
     }, [searchParams])
 }
+function isLikelyObjectId(val) {
+    return typeof val === 'string' && /^[a-f0-9]{24}$/i.test(val)
+}
+function isLikelySlug(val) {
+    return typeof val === 'string' && /-/.test(val) && !/_/.test(val) && !isLikelyObjectId(val)
+}
+const slugify = (val = '') =>
+    val
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
 function useExploreData(initialURLState) {
     const mounted = useMounted()
     const online = useNetwork()
@@ -78,6 +92,45 @@ function useExploreData(initialURLState) {
     const [error, setError] = useState(null)
     const abortRef = useRef(null)
     const cache = useRef(new Map())
+    const categorySlugMapRef = useRef(null) // slug -> id
+    const categoriesLoadedRef = useRef(false)
+    const resolvingRef = useRef(false)
+    const resolveCategoryIfNeeded = useCallback(async (rawCategory) => {
+        if (!rawCategory || rawCategory === 'all') return 'all'
+        // If it's already an ObjectId or predefined underscore ID, return as-is
+        if (isLikelyObjectId(rawCategory) || rawCategory.includes('_')) return rawCategory
+        // If looks like a slug (hyphen based), attempt to resolve
+        if (isLikelySlug(rawCategory)) {
+            // Build map if not yet built
+            if (!categoriesLoadedRef.current && !resolvingRef.current) {
+                try {
+                    resolvingRef.current = true
+                    const res = await categoryAPI.getCategories()
+                    const list = res?.data?.categories || res?.categories || res?.data || []
+                    categorySlugMapRef.current = {}
+                    list.forEach((c) => {
+                        const name = c.name || c.title || ''
+                        const slug = slugify(name)
+                        const id = c._id || c.id
+                        if (slug && id) {
+                            categorySlugMapRef.current[slug] = id
+                        }
+                    })
+                    categoriesLoadedRef.current = true
+                } catch (e) {
+                    console.warn('Failed to load categories for slug resolution:', e?.message)
+                } finally {
+                    resolvingRef.current = false
+                }
+            }
+            if (categorySlugMapRef.current && categorySlugMapRef.current[rawCategory]) {
+                return categorySlugMapRef.current[rawCategory]
+            }
+            // Fallback: return original slug (backend may also accept slug if implemented later)
+            return rawCategory
+        }
+        return rawCategory
+    }, [])
     const fetchProducts = useCallback(
         async (filters) => {
             if (!online) {
@@ -87,10 +140,12 @@ function useExploreData(initialURLState) {
             setLoading(true)
             setError(null)
             const sortOpt = SORT_OPTIONS.find((o) => o.id === (filters.sort || 'newest')) || SORT_OPTIONS[0]
+            // Resolve category (handles slug -> id mapping)
+            const resolvedCategory = await resolveCategoryIfNeeded(filters.category)
             const params = {
                 page: filters.page,
                 limit: ITEMS_PER_PAGE,
-                ...(filters.category !== 'all' && { category: filters.category }),
+                ...(resolvedCategory !== 'all' && { category: resolvedCategory }),
                 ...(filters.type !== 'all' && { type: filters.type }),
                 ...(filters.industry !== 'all' && { industry: filters.industry }),
                 ...(filters.setupTime !== 'all' && { setupTime: filters.setupTime }),
@@ -139,7 +194,7 @@ function useExploreData(initialURLState) {
                 if (mounted.current) setLoading(false)
             }
         },
-        [online, mounted]
+        [online, mounted, resolveCategoryIfNeeded]
     )
     useEffect(() => {
         fetchProducts(initialURLState)

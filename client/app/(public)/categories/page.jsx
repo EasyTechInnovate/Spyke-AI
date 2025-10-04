@@ -4,6 +4,15 @@ import CategoriesGrid from '@/components/features/explore/CategoriesGrid'
 import { categoryAPI } from '@/lib/api/toolsNiche'
 import productsAPI from '@/lib/api/products'
 
+const isLikelyObjectId = (val) => typeof val === 'string' && /^[a-f0-9]{24}$/i.test(val)
+const slugify = (val = '') =>
+    val
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+
 export default function CategoriesPage() {
     const [productCategories, setProductCategories] = useState([])
     const [loading, setLoading] = useState(true)
@@ -40,11 +49,18 @@ export default function CategoriesPage() {
                                 } catch (error) {
                                     console.error(`Error fetching product count for category ${category.name}:`, error)
                                 }
+
+                                let rawName = category.name || category.title || ''
+                                if (isLikelyObjectId(rawName)) rawName = '' 
+                                const displayName = rawName || 'Unnamed Category'
+                                const derivedSlug = slugify(rawName)
+                                const safeSlug = derivedSlug || (category._id || category.id || '')
+
                                 return {
-                                    _id: category._id || category.id,
-                                    title: category.name || category.title,
-                                    slug: { current: category._id || category.id },
-                                    description: `Discover ${(category.name || category.title)?.toLowerCase?.() || ''} products and solutions`,
+                                    _id: category._id || category.id, 
+                                    title: displayName, 
+                                    slug: { current: safeSlug },
+                                    description: `Discover ${displayName.toLowerCase()} products and solutions`,
                                     color: '#00FF89',
                                     postCount,
                                     iconName: category.icon || 'Package'

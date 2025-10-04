@@ -8,7 +8,6 @@ export const CATEGORIES = [
   { id: 'ecommerce', name: 'E-commerce', icon: Package }
 ]
 
-// Product types from backend (only what backend actually supports)
 export const PRODUCT_TYPES = [
   { id: 'all', name: 'All Types' },
   { id: 'automation', name: 'Automation', icon: Zap },
