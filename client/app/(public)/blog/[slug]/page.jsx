@@ -137,7 +137,6 @@ export default function BlogPostPage({ params }) {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#121212] text-white">
-        <div className="pt-24">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="animate-pulse">
               <div className="bg-white/10 h-8 rounded mb-4 w-1/4"></div>
@@ -151,13 +150,11 @@ export default function BlogPostPage({ params }) {
             </div>
           </div>
         </div>
-      </div>
     )
   }
   if (error || !post) {
     return (
       <div className="min-h-screen bg-[#121212] text-white flex items-center justify-center">
-        <div className="pt-24">
           <div className="text-center">
             <h1 className="text-2xl font-league-spartan font-bold mb-4">Article not found</h1>
             <p className="text-gray-400 mb-6">The article you're looking for doesn't exist or has been moved.</p>
@@ -166,15 +163,13 @@ export default function BlogPostPage({ params }) {
                 Back to Blog
               </Button>
             </Link>
-          </div>
         </div>
       </div>
     )
   }
   return (
     <>
-      <div className="min-h-screen bg-[#121212] text-white pt-24">{/* restored top padding so header and page are distinct */}
-        {/* HERO / BANNER */}
+      <div className="min-h-screen bg-[#121212] text-white">
         <div className="relative w-full h-[50vh] overflow-hidden rounded-none">
           {post.featuredImage ? (
             <Image
@@ -349,34 +344,9 @@ export default function BlogPostPage({ params }) {
                 </div>
               )}
             </article>
-            {/* SIDEBAR */}
-            <aside className="lg:col-span-4 xl:col-span-3 space-y-8 order-first lg:order-none">
-              <div className="lg:sticky lg:top-28 space-y-8">
-                <div className="p-5 bg-[#1f1f1f] rounded-xl border border-white/10">
-                  <h4 className="text-sm font-semibold tracking-wide text-gray-300 mb-3">Share</h4>
-                  <SocialShare post={post} />
-                </div>
-                {post.tags && post.tags.length > 0 && (
-                  <div className="p-5 bg-[#1f1f1f] rounded-xl border border-white/10">
-                    <h4 className="text-sm font-semibold tracking-wide text-gray-300 mb-3">Tags</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {post.tags.map(tag => (
-                        <Link
-                          key={tag._id}
-                          href={`/blog?tag=${tag.slug.current}`}
-                          className="text-xs text-brand-primary bg-brand-primary/10 hover:bg-brand-primary/20 px-2.5 py-1 rounded-full transition-colors"
-                        >
-                          #{tag.title}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </aside>
+            
           </div>
         </div>
-        {/* Newsletter & Related */}
         <div className="max-w-6xl mx-auto px-6 lg:px-10 mt-20 mb-12">
           <NewsletterCTA blogPostSlug={post.slug.current} />
         </div>

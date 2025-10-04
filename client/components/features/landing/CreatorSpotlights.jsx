@@ -22,12 +22,20 @@ const BackgroundEffectsLight = dynamic(() => import('./hero/BackgroundEffectsLig
 export default function CreatorSpotlights() {
     const [creators, setCreators] = useState([])
     const [loading, setLoading] = useState(true)
+    const RANKING_CONFIG = {
+        weights: {
+            sales: 0.7, 
+            views: 0.3 
+        },
+        showOnlyTopSeller: true 
+    }
+    const TOP_N = 8 
     useEffect(() => {
         let mounted = true
         async function loadTopSellers() {
             try {
                 setLoading(true)
-                const res = await sellerAPI.searchSellers('?limit=8')
+                const res = await sellerAPI.searchSellers('?limit=25')
                 const raw = res?.sellers || res?.results || res || []
                 const mapped = (Array.isArray(raw) ? raw : []).map((s) => {
                     const userAvatar = s.userId?.avatar || null
@@ -35,6 +43,8 @@ export default function CreatorSpotlights() {
                     const niches = Array.isArray(s.niches) ? s.niches : []
                     const tools = Array.isArray(s.toolsSpecialization) ? s.toolsSpecialization : []
                     const specialties = Array.from(new Set([...(s.specialties || []), ...niches, ...tools]))
+                    const sales = Number(s.stats?.totalSales ?? s.totalSales ?? 0) || 0
+                    const profileViews = Number(s.stats?.profileViews ?? s.profileViews ?? 0) || 0
                     return {
                         id: s._id || s.id || s.sellerId || s.userId?._id,
                         name: s.fullName || s.name || s.displayName || s.username || s.email || 'Unknown',
@@ -43,18 +53,31 @@ export default function CreatorSpotlights() {
                         title: s.bio || s.title || s.headline || '',
                         badge: s.badge || (s.isFeatured ? 'Featured' : 'Creator'),
                         stats: {
-                            sales: s.stats?.totalSales ?? s.totalSales ?? '—',
+                            sales,
                             rating: s.stats?.averageRating ?? s.rating ?? '—',
                             products: s.stats?.totalProducts ?? s.productCount ?? '—',
                             revenue:
                                 typeof s.stats?.totalEarnings === 'number'
                                     ? `$${s.stats.totalEarnings.toLocaleString()}`
-                                    : (s.stats?.totalEarnings ?? s.totalEarnings ?? '—')
+                                    : (s.stats?.totalEarnings ?? s.totalEarnings ?? '—'),
+                            profileViews
                         },
                         specialties: specialties
                     }
                 })
-                if (mounted) setCreators(mapped)
+                const salesValues = mapped.map(m => m.stats.sales)
+                const viewValues = mapped.map(m => m.stats.profileViews || 0)
+                const maxSales = Math.max(...salesValues, 1)
+                const maxViews = Math.max(...viewValues, 1)
+                const scored = mapped.map(m => {
+                    const normSales = maxSales > 0 ? m.stats.sales / maxSales : 0
+                    const normViews = maxViews > 0 ? (m.stats.profileViews || 0) / maxViews : 0
+                    const score = (normSales * RANKING_CONFIG.weights.sales) + (normViews * RANKING_CONFIG.weights.views)
+                    return { ...m, score }
+                })
+                scored.sort((a, b) => b.score - a.score)
+                const finalList = RANKING_CONFIG.showOnlyTopSeller ? scored.slice(0, 1) : scored.slice(0, TOP_N)
+                if (mounted) setCreators(finalList)
             } catch (err) {
                 console.error('Failed to load top sellers', err)
             } finally {
@@ -110,7 +133,15 @@ export default function CreatorSpotlights() {
                             </DSStack>
                         </div>
                     ) : creators.length === 1 ? (
-                        <div className="flex justify-center">
+                        <div className="flex flex-col items-center gap-6">
+                            <div className="text-center">
+                                <DSBadge variant="primary" size="small" className="mb-2">
+                                    Top Seller (Front-End Ranked)
+                                </DSBadge>
+                                <DSText variant="subtle" style={{ color: '#9ca3af' }}>
+                                    Ranked using weighted sales & profile views (sales {Math.round(RANKING_CONFIG.weights.sales * 100)}% / views {Math.round(RANKING_CONFIG.weights.views * 100)}%)
+                                </DSText>
+                            </div>
                             <div className="w-full max-w-md">
                                 <CreatorCard creator={creators[0]} />
                             </div>
@@ -130,7 +161,7 @@ export default function CreatorSpotlights() {
                             ))}
                         </div>
                     )}
-                    {creators.length > 0 && (
+                    {creators.length > 1 && !RANKING_CONFIG.showOnlyTopSeller && (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
