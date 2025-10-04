@@ -197,7 +197,7 @@ export default function CartPage() {
                                             </div>
                                             <div>
                                                 <h4 className="font-medium text-white mb-1">Instant Access</h4>
-                                                <p className="text-sm text-gray-400">Get immediate download links after payment</p>
+                                                <p className="text-sm text-gray-400">Get immediate access after the payment</p>
                                             </div>
                                         </div>
                                         <div className="flex items-start gap-3">
@@ -205,8 +205,8 @@ export default function CartPage() {
                                                 <Shield className="w-4 h-4 text-blue-400" />
                                             </div>
                                             <div>
-                                                <h4 className="font-medium text-white mb-1">Lifetime Support</h4>
-                                                <p className="text-sm text-gray-400">Get help from our expert team anytime</p>
+                                                <h4 className="font-medium text-white mb-1">Professional Support</h4>
+                                                <p className="text-sm text-gray-400">Get help from our expert team.</p>
                                             </div>
                                         </div>
                                     </div>

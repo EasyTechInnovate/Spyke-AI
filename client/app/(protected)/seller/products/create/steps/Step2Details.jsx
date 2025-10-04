@@ -11,7 +11,7 @@ const FIELD_HELP = {
         examples: ["Small SaaS companies (10-50 employees)", "Marketing managers in e-commerce", "Freelance consultants"]
     },
     keyBenefits: {
-        title: "Key Benefits Tips",
+        title: "Features",
         content: "Focus on specific, measurable outcomes. What problems does your product solve?",
         examples: ["Save 15 hours per week on manual data entry", "Increase lead conversion by 40%", "Reduce customer support tickets by 60%"]
     },

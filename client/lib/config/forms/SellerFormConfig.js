@@ -220,7 +220,7 @@ export const formFields = {
         label: 'Profile Banner',
         type: 'text',
         placeholder: 'https://example.com/banner.jpg',
-        required: false,
+        required: true,
         helperText: 'Recommended size: 1200x300px',
         validation: {
             pattern: /^https?:\/\/.+\..+/, // Removed required: true

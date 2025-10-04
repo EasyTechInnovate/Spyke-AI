@@ -134,9 +134,7 @@ function ProductImage({ item, discountPercentage, onClick }) {
                     -{discountPercentage}% OFF
                 </div>
             )}
-            <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-lg">
-                Digital Product
-            </div>
+
         </div>
     )
 }
@@ -197,6 +195,9 @@ function ProductMeta({ item }) {
             <span className="px-3 py-1 bg-[#00FF89]/15 text-[#00FF89] text-xs rounded-full font-medium border border-[#00FF89]/20">
                 {item.category || 'Digital Product'}
             </span>
+            <span className="px-3 py-1 bg-[#00FF89]/15 text-[#00FF89] text-xs rounded-full font-medium border border-[#00FF89]/20">
+                {item.type || 'Digital Product'}
+            </span>
         </div>
     )
 }
@@ -218,10 +219,6 @@ function ProductFeatures({ item }) {
 function QuantityControls({ quantity, onIncrease, onDecrease, canDecrease }) {
     return (
         <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 px-4 py-2 bg-gray-700/30 rounded-xl border border-gray-600/40">
-                <Package className="w-4 h-4 text-[#00FF89]" />
-                <span className="text-sm font-medium text-gray-300">Digital License</span>
-            </div>
             <div className="flex items-center bg-gray-700/30 rounded-xl border border-gray-600/40 px-1">
                 <span className="px-3 py-2 text-sm font-semibold text-white">Qty: 1</span>
             </div>

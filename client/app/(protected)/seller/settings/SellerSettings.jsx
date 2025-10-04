@@ -10,18 +10,29 @@ const SETTINGS_SECTIONS = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'payment', label: 'Payment & Payouts', icon: CreditCard }
 ]
+const APPROVED_EDITABLE_FIELDS = ['bio','socialHandles','sellerBanner','portfolioLinks','customAutomationServices','websiteUrl','location','niches','toolsSpecialization']
 export default function SellerSettings() {
     const { data: seller, loading, error, mutate } = useSellerProfile()
-    const { updateProfile, updateProfileImage, updateBanner, updatePayoutInfo, loading: apiLoading, uploading, uploadProgress } = useSellerSettings()
+    const {
+        updateProfile,
+        updateProfileImage,
+        updateBanner,
+        updatePayoutInfo,
+        loading: apiLoading,
+        uploading,
+        uploadProgress,
+        uploadFile
+    } = useSellerSettings()
     const { addNotification } = useNotifications()
     const [activeSection, setActiveSection] = useState('profile')
     const [formData, setFormData] = useState({})
     const [notification, setNotification] = useState(null)
+    const isApproved = (seller?.isApproved) || (seller?.verification?.status === 'approved')
     const showNotification = (type, message, title = null) => {
-        setNotification({ 
-            id: Date.now(), 
-            type, 
-            message, 
+        setNotification({
+            id: Date.now(),
+            type,
+            message,
             title: title || (type === 'error' ? 'Update Failed' : 'Success')
         })
     }
@@ -53,21 +64,35 @@ export default function SellerSettings() {
             let result
             switch (section) {
                 case 'profile':
-                    const profileData = {
-                        fullName: dataToSave.fullName,
-                        email: dataToSave.email,
-                        bio: dataToSave.bio,
-                        niches: dataToSave.skills,
-                        languages: dataToSave.languages,
-                        websiteUrl: dataToSave.websiteUrl,
-                        socialHandles: dataToSave.socialLinks
-                    }
-                    if (dataToSave.profileImage && dataToSave.profileImage.trim()) {
-                        profileData.profileImage = dataToSave.profileImage
-                    }
-                    if (dataToSave.bannerImage && dataToSave.bannerImage.trim()) {
-                        profileData.sellerBanner = dataToSave.bannerImage
-                    }
+                    const profileData = (() => {
+                        if (!isApproved) {
+                            const payload = {
+                                fullName: dataToSave.fullName,
+                                email: dataToSave.email,
+                                bio: dataToSave.bio,
+                                niches: dataToSave.skills,
+                                languages: dataToSave.languages,
+                                websiteUrl: dataToSave.websiteUrl,
+                                socialHandles: dataToSave.socialLinks
+                            }
+                            if (dataToSave.profileImage && dataToSave.profileImage.trim()) {
+                                payload.profileImage = dataToSave.profileImage
+                            }
+                            if (dataToSave.bannerImage && dataToSave.bannerImage.trim()) {
+                                payload.sellerBanner = dataToSave.bannerImage
+                            }
+                            return payload
+                        }
+                        const payload = {}
+                        if (APPROVED_EDITABLE_FIELDS.includes('bio')) payload.bio = dataToSave.bio
+                        if (APPROVED_EDITABLE_FIELDS.includes('websiteUrl')) payload.websiteUrl = dataToSave.websiteUrl
+                        if (APPROVED_EDITABLE_FIELDS.includes('niches')) payload.niches = dataToSave.skills
+                        if (APPROVED_EDITABLE_FIELDS.includes('socialHandles')) payload.socialHandles = dataToSave.socialLinks
+                        if (APPROVED_EDITABLE_FIELDS.includes('sellerBanner') && dataToSave.bannerImage && dataToSave.bannerImage.trim()) {
+                            payload.sellerBanner = dataToSave.bannerImage
+                        }
+                        return payload
+                    })()
                     result = await updateProfile(profileData)
                     break
                 case 'payment':
@@ -96,17 +121,18 @@ export default function SellerSettings() {
         }
     }
     const handleFileUpload = async (file, type) => {
-        let result
-        if (type === 'profile') {
-            result = await updateProfileImage(file)
-        } else if (type === 'banner') {
-            result = await updateBanner(file)
-        }
+        // Upload the file only, set local state, and defer PUT to Save
+        const category = type === 'profile' ? 'seller-profile' : 'seller-banners'
+        const result = await uploadFile(file, { category })
         if (result.success) {
-            showNotification('success', `${type === 'profile' ? 'Profile image' : 'Banner'} updated successfully!`)
-            mutate()
+            const url = result.data?.data || result.data?.url || result.data?.fileUrl || result.data
+            setFormData((prev) => ({
+                ...prev,
+                [type === 'profile' ? 'profileImage' : 'bannerImage']: url
+            }))
+            showNotification('success', `${type === 'profile' ? 'Profile image' : 'Banner'} uploaded. Click Save to apply changes.`)
         } else {
-            showNotification('error', result.error || `Failed to update ${type} image`)
+            showNotification('error', result.error || `Failed to upload ${type} image`)
         }
     }
     if (loading) {
@@ -198,6 +224,7 @@ export default function SellerSettings() {
                                         saving={apiLoading}
                                         uploading={uploading}
                                         uploadProgress={uploadProgress}
+                                        isApproved={isApproved}
                                     />
                                 )}
                                 {activeSection === 'payment' && (
@@ -228,10 +255,11 @@ export default function SellerSettings() {
         </div>
     )
 }
-function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, uploading, uploadProgress }) {
+function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, uploading, uploadProgress, isApproved }) {
     const [isEditing, setIsEditing] = useState(false)
     const [originalData, setOriginalData] = useState({})
     const [hasChanges, setHasChanges] = useState(false)
+    const canEditField = (field) => !isApproved || APPROVED_EDITABLE_FIELDS.includes(field)
     useEffect(() => {
         if (formData && Object.keys(formData).length > 0 && Object.keys(originalData).length === 0) {
             setOriginalData({ ...formData })
@@ -244,7 +272,7 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
         }
     }, [formData, originalData, isEditing])
     const checkForChanges = (original, current) => {
-        const fieldsToCompare = ['fullName', 'email', 'bio', 'websiteUrl', 'profileImage', 'bannerImage']
+        const fieldsToCompare = isApproved ? ['bio','websiteUrl','bannerImage'] : ['fullName','email','bio','websiteUrl','profileImage','bannerImage']
         for (const field of fieldsToCompare) {
             const originalValue = original[field] || ''
             const currentValue = current[field] || ''
@@ -252,21 +280,21 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                 return true
             }
         }
-        const originalSkills = JSON.stringify((original.skills || []).sort())
-        const currentSkills = JSON.stringify((current.skills || []).sort())
-        if (originalSkills !== currentSkills) {
-            return true
-        }
-        const originalLanguages = JSON.stringify((original.languages || []).sort())
-        const currentLanguages = JSON.stringify((current.languages || []).sort())
-        if (originalLanguages !== currentLanguages) {
-            return true
+        if (isApproved) {
+            const originalSkills = JSON.stringify((original.skills || []).sort())
+            const currentSkills = JSON.stringify((current.skills || []).sort())
+            if (originalSkills !== currentSkills) return true
+        } else {
+            const originalSkills = JSON.stringify((original.skills || []).sort())
+            const currentSkills = JSON.stringify((current.skills || []).sort())
+            if (originalSkills !== currentSkills) return true
+            const originalLanguages = JSON.stringify((original.languages || []).sort())
+            const currentLanguages = JSON.stringify((current.languages || []).sort())
+            if (originalLanguages !== currentLanguages) return true
         }
         const originalSocial = JSON.stringify(original.socialLinks || {})
         const currentSocial = JSON.stringify(current.socialLinks || {})
-        if (originalSocial !== currentSocial) {
-            return true
-        }
+        if (originalSocial !== currentSocial && canEditField('socialHandles')) return true
         return false
     }
     const handleEdit = () => {
@@ -285,6 +313,19 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
     }
     const handleInputChange = (field, value) => {
         if (isEditing) {
+            const map = {
+                fullName: 'fullName',
+                email: 'email',
+                websiteUrl: 'websiteUrl',
+                bio: 'bio',
+                profileImage: 'profileImage',
+                bannerImage: 'sellerBanner',
+                socialLinks: 'socialHandles',
+                skills: 'niches',
+                languages: 'languages'
+            }
+            const target = map[field] || field
+            if (!canEditField(target)) return
             setFormData((prev) => ({ ...prev, [field]: value }))
         }
     }
@@ -299,11 +340,13 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
             if (file.size > 5 * 1024 * 1024) {
                 return
             }
+            if (type === 'profile' && !canEditField('profileImage')) return
+            if (type === 'banner' && !canEditField('sellerBanner')) return
             await onFileUpload(file, type)
         }
     }
     const handleSkillAdd = (skill) => {
-        if (isEditing && skill && !formData.skills?.includes(skill)) {
+        if (isEditing && skill && canEditField('niches') && !formData.skills?.includes(skill)) {
             setFormData((prev) => ({
                 ...prev,
                 skills: [...(prev.skills || []), skill]
@@ -311,7 +354,7 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
         }
     }
     const handleSkillRemove = (skillToRemove) => {
-        if (isEditing) {
+        if (isEditing && canEditField('niches')) {
             setFormData((prev) => ({
                 ...prev,
                 skills: prev.skills?.filter((skill) => skill !== skillToRemove) || []
@@ -385,7 +428,7 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                             <div className="space-y-2">
                                 <label
                                     className={`flex items-center gap-2 px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-sm text-white transition-colors cursor-pointer ${
-                                        isEditing ? 'hover:bg-[#2a2a2a]' : 'opacity-50 cursor-not-allowed'
+                                        isEditing && canEditField('profileImage') ? 'hover:bg-[#2a2a2a]' : 'opacity-50 cursor-not-allowed'
                                     }`}>
                                     <Camera className="w-4 h-4" />
                                     Upload Photo
@@ -394,7 +437,7 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                                         className="hidden"
                                         accept="image/*"
                                         onChange={(e) => handleFileChange(e, 'profile')}
-                                        disabled={!isEditing || uploading}
+                                        disabled={!isEditing || uploading || !canEditField('profileImage')}
                                     />
                                 </label>
                                 <p className="text-xs text-gray-400">JPG, PNG up to 5MB</p>
@@ -405,7 +448,7 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                         <label className="block text-sm font-medium text-gray-300 mb-3">Profile Banner (Optional)</label>
                         <div
                             className={`w-full h-20 bg-[#0f0f0f] border-2 border-dashed border-gray-700 rounded-lg flex items-center justify-center relative overflow-hidden ${
-                                !isEditing ? 'opacity-50' : ''
+                                !(isEditing && canEditField('sellerBanner')) ? 'opacity-50' : ''
                             }`}>
                             {formData.bannerImage ? (
                                 <img
@@ -416,7 +459,7 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                             ) : (
                                 <label
                                     className={`flex items-center gap-2 text-sm text-gray-400 transition-colors cursor-pointer ${
-                                        isEditing ? 'hover:text-white' : 'cursor-not-allowed'
+                                        isEditing && canEditField('sellerBanner') ? 'hover:text-white' : 'cursor-not-allowed'
                                     }`}>
                                     <Upload className="w-4 h-4" />
                                     Upload Banner
@@ -425,7 +468,7 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                                         className="hidden"
                                         accept="image/*"
                                         onChange={(e) => handleFileChange(e, 'banner')}
-                                        disabled={!isEditing || uploading}
+                                        disabled={!isEditing || uploading || !canEditField('sellerBanner')}
                                     />
                                 </label>
                             )}
@@ -448,9 +491,9 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                             type="text"
                             value={formData.fullName || ''}
                             onChange={(e) => handleInputChange('fullName', e.target.value)}
-                            disabled={!isEditing}
+                            disabled={!isEditing || !canEditField('fullName')}
                             className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
-                                !isEditing ? 'opacity-70 cursor-not-allowed' : ''
+                                (!isEditing || !canEditField('fullName')) ? 'opacity-70 cursor-not-allowed' : ''
                             }`}
                             placeholder={isEditing ? 'Your full legal name' : ''}
                         />
@@ -461,9 +504,9 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                             type="email"
                             value={formData.email || ''}
                             onChange={(e) => handleInputChange('email', e.target.value)}
-                            disabled={!isEditing}
+                            disabled={!isEditing || !canEditField('email')}
                             className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
-                                !isEditing ? 'opacity-70 cursor-not-allowed' : ''
+                                (!isEditing || !canEditField('email')) ? 'opacity-70 cursor-not-allowed' : ''
                             }`}
                             placeholder={isEditing ? 'your@email.com' : ''}
                         />
@@ -474,9 +517,9 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                             type="url"
                             value={formData.websiteUrl || ''}
                             onChange={(e) => handleInputChange('websiteUrl', e.target.value)}
-                            disabled={!isEditing}
+                            disabled={!isEditing || !canEditField('websiteUrl')}
                             className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
-                                !isEditing ? 'opacity-70 cursor-not-allowed' : ''
+                                (!isEditing || !canEditField('websiteUrl')) ? 'opacity-70 cursor-not-allowed' : ''
                             }`}
                             placeholder={isEditing ? 'https://your-website.com' : ''}
                         />
@@ -489,10 +532,10 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                 <textarea
                     value={formData.bio || ''}
                     onChange={(e) => handleInputChange('bio', e.target.value)}
-                    disabled={!isEditing}
+                    disabled={!isEditing || !canEditField('bio')}
                     rows={4}
                     className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent resize-none transition-colors ${
-                        !isEditing ? 'opacity-70 cursor-not-allowed' : ''
+                        (!isEditing || !canEditField('bio')) ? 'opacity-70 cursor-not-allowed' : ''
                     }`}
                     placeholder={isEditing ? 'Tell potential customers about yourself, your experience, and what makes you unique...' : ''}
                 />
@@ -506,7 +549,7 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                     onAdd={handleSkillAdd}
                     onRemove={handleSkillRemove}
                     placeholder="e.g., AI Prompts, Automation, ChatGPT"
-                    isEditing={isEditing}
+                    isEditing={isEditing && canEditField('niches')}
                 />
                 <SkillsSection
                     title="Languages"
@@ -519,13 +562,13 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
                         )
                     }
                     placeholder="e.g., English, Spanish, French"
-                    isEditing={isEditing}
+                    isEditing={isEditing && canEditField('languages')}
                 />
             </div>
             <SocialLinksSection
                 socialLinks={formData.socialLinks || {}}
                 onUpdate={(links) => handleInputChange('socialLinks', links)}
-                isEditing={isEditing}
+                isEditing={isEditing && canEditField('socialHandles')}
             />
         </div>
     )
@@ -656,7 +699,7 @@ function PaymentSettings({ formData, setFormData, onSave, saving }) {
                 swiftCode: seller.payoutInfo.bankDetails?.swiftCode || ''
             }
             setOriginalData(payoutData)
-            setFormData(prev => ({ ...prev, ...payoutData }))
+            setFormData((prev) => ({ ...prev, ...payoutData }))
         } else if (!seller?.payoutInfo && Object.keys(originalData).length === 0) {
             const defaultData = {
                 method: 'paypal',
@@ -670,7 +713,7 @@ function PaymentSettings({ formData, setFormData, onSave, saving }) {
                 swiftCode: ''
             }
             setOriginalData(defaultData)
-            setFormData(prev => ({ ...prev, ...defaultData }))
+            setFormData((prev) => ({ ...prev, ...defaultData }))
         }
     }, [seller])
     useEffect(() => {
@@ -680,8 +723,17 @@ function PaymentSettings({ formData, setFormData, onSave, saving }) {
         }
     }, [formData, originalData, isEditing])
     const checkForPayoutChanges = (original, current) => {
-        const fieldsToCheck = ['method', 'paypalEmail', 'stripeAccountId', 'wiseEmail', 
-                              'accountHolderName', 'accountNumber', 'routingNumber', 'bankName', 'swiftCode']
+        const fieldsToCheck = [
+            'method',
+            'paypalEmail',
+            'stripeAccountId',
+            'wiseEmail',
+            'accountHolderName',
+            'accountNumber',
+            'routingNumber',
+            'bankName',
+            'swiftCode'
+        ]
         for (const field of fieldsToCheck) {
             if ((original[field] || '') !== (current[field] || '')) {
                 return true
@@ -693,7 +745,7 @@ function PaymentSettings({ formData, setFormData, onSave, saving }) {
         setIsEditing(true)
     }
     const handleCancel = () => {
-        setFormData(prev => ({ ...prev, ...originalData }))
+        setFormData((prev) => ({ ...prev, ...originalData }))
         setIsEditing(false)
         setHasChanges(false)
     }
@@ -719,9 +771,9 @@ function PaymentSettings({ formData, setFormData, onSave, saving }) {
             if (!result.success) {
                 throw new Error(result.error)
             }
-            await onSave() 
+            await onSave()
         } catch (error) {
-            throw error 
+            throw error
         }
         setIsEditing(false)
         setOriginalData({ ...formData })
@@ -729,7 +781,7 @@ function PaymentSettings({ formData, setFormData, onSave, saving }) {
     }
     const handleInputChange = (field, value) => {
         if (isEditing) {
-            setFormData(prev => ({ ...prev, [field]: value }))
+            setFormData((prev) => ({ ...prev, [field]: value }))
         }
     }
     const payoutMethods = [
@@ -787,11 +839,12 @@ function PaymentSettings({ formData, setFormData, onSave, saving }) {
                     <div>
                         <h3 className="text-lg font-semibold text-white">Current Payout Method</h3>
                         <p className="text-sm text-gray-400">
-                            {payoutMethods.find(m => m.value === currentMethod)?.label || 'PayPal'} 
-                            {seller?.payoutInfo?.isVerified ? 
-                                <span className="ml-2 text-[#00FF89]">✓ Verified</span> : 
+                            {payoutMethods.find((m) => m.value === currentMethod)?.label || 'PayPal'}
+                            {seller?.payoutInfo?.isVerified ? (
+                                <span className="ml-2 text-[#00FF89]">✓ Verified</span>
+                            ) : (
                                 <span className="ml-2 text-amber-400">⏳ Pending Verification</span>
-                            }
+                            )}
                         </p>
                     </div>
                 </div>
@@ -839,11 +892,9 @@ function PaymentSettings({ formData, setFormData, onSave, saving }) {
                                 className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
                                     !isEditing ? 'opacity-70 cursor-not-allowed' : ''
                                 }`}
-                                placeholder={isEditing ? "your-paypal@email.com" : ""}
+                                placeholder={isEditing ? 'your-paypal@email.com' : ''}
                             />
-                            {!isEditing && !formData.paypalEmail && (
-                                <p className="text-sm text-gray-500 italic mt-1">No PayPal email configured</p>
-                            )}
+                            {!isEditing && !formData.paypalEmail && <p className="text-sm text-gray-500 italic mt-1">No PayPal email configured</p>}
                         </div>
                     )}
                     {currentMethod === 'stripe' && (
@@ -857,7 +908,7 @@ function PaymentSettings({ formData, setFormData, onSave, saving }) {
                                 className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
                                     !isEditing ? 'opacity-70 cursor-not-allowed' : ''
                                 }`}
-                                placeholder={isEditing ? "acct_XXXXXXXXXXXXXX" : ""}
+                                placeholder={isEditing ? 'acct_XXXXXXXXXXXXXX' : ''}
                             />
                             {!isEditing && !formData.stripeAccountId && (
                                 <p className="text-sm text-gray-500 italic mt-1">No Stripe account configured</p>
@@ -875,11 +926,9 @@ function PaymentSettings({ formData, setFormData, onSave, saving }) {
                                 className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
                                     !isEditing ? 'opacity-70 cursor-not-allowed' : ''
                                 }`}
-                                placeholder={isEditing ? "your-wise@email.com" : ""}
+                                placeholder={isEditing ? 'your-wise@email.com' : ''}
                             />
-                            {!isEditing && !formData.wiseEmail && (
-                                <p className="text-sm text-gray-500 italic mt-1">No Wise email configured</p>
-                            )}
+                            {!isEditing && !formData.wiseEmail && <p className="text-sm text-gray-500 italic mt-1">No Wise email configured</p>}
                         </div>
                     )}
                     {currentMethod === 'bank' && (
@@ -895,7 +944,7 @@ function PaymentSettings({ formData, setFormData, onSave, saving }) {
                                         className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
                                             !isEditing ? 'opacity-70 cursor-not-allowed' : ''
                                         }`}
-                                        placeholder={isEditing ? "John Doe" : ""}
+                                        placeholder={isEditing ? 'John Doe' : ''}
                                     />
                                 </div>
                                 <div>
@@ -908,7 +957,7 @@ function PaymentSettings({ formData, setFormData, onSave, saving }) {
                                         className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
                                             !isEditing ? 'opacity-70 cursor-not-allowed' : ''
                                         }`}
-                                        placeholder={isEditing ? "Bank of America" : ""}
+                                        placeholder={isEditing ? 'Bank of America' : ''}
                                     />
                                 </div>
                             </div>
@@ -923,7 +972,7 @@ function PaymentSettings({ formData, setFormData, onSave, saving }) {
                                         className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
                                             !isEditing ? 'opacity-70 cursor-not-allowed' : ''
                                         }`}
-                                        placeholder={isEditing ? "123456789 or IBAN" : ""}
+                                        placeholder={isEditing ? '123456789 or IBAN' : ''}
                                     />
                                 </div>
                                 <div>
@@ -936,7 +985,7 @@ function PaymentSettings({ formData, setFormData, onSave, saving }) {
                                         className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
                                             !isEditing ? 'opacity-70 cursor-not-allowed' : ''
                                         }`}
-                                        placeholder={isEditing ? "021000021" : ""}
+                                        placeholder={isEditing ? '021000021' : ''}
                                     />
                                 </div>
                             </div>
@@ -950,10 +999,10 @@ function PaymentSettings({ formData, setFormData, onSave, saving }) {
                                     className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
                                         !isEditing ? 'opacity-70 cursor-not-allowed' : ''
                                     }`}
-                                    placeholder={isEditing ? "BOFAUS3N" : ""}
+                                    placeholder={isEditing ? 'BOFAUS3N' : ''}
                                 />
                             </div>
-                            {(!isEditing && !formData.accountHolderName && !formData.bankName) && (
+                            {!isEditing && !formData.accountHolderName && !formData.bankName && (
                                 <p className="text-sm text-gray-500 italic">No bank details configured</p>
                             )}
                         </div>

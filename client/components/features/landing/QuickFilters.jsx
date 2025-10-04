@@ -239,7 +239,7 @@ export default function QuickFilters() {
                         <Link
                             href="/explore"
                             className="group inline-flex items-center gap-3 px-8 py-4 bg-brand-primary text-black font-semibold rounded-xl hover:bg-brand-primary/90 transition-all duration-200 hover:shadow-lg hover:shadow-brand-primary/25">
-                            <span>Explore All Tools</span>
+                            <span>Explore Tools</span>
                             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                         </Link>
                     </motion.div>

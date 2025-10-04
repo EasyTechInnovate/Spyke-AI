@@ -8,9 +8,6 @@ export default function ExploreHeader() {
       animate={{ opacity: 1, y: 0 }}
       className="mb-8 sm:mb-12 text-center">
       <DSStack gap="medium" direction="column" align="center">
-        <DSBadge variant="primary" icon={Search} className="mb-2">
-          Discover & Explore
-        </DSBadge>
         <DSHeading level={1} variant="hero">
           <span style={{ color: 'white' }}>Explore AI Products</span>
         </DSHeading>

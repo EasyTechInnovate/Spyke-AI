@@ -52,7 +52,7 @@ const FIELD_HELP = {
     },
     pricing: {
         title: 'Pricing Strategy',
-        content: 'Set competitive prices based on the value you provide. Research similar products in the marketplace.',
+        content: 'Set competitive prices based on the value you provide. Research similar products in the marketplace.Once a price is set, it cannot be changed later.',
         examples: ['Simple automation: $10-50', 'Complex workflow: $50-200', 'Enterprise solution: $200+']
     }
 }
@@ -146,6 +146,7 @@ export default function Step5MediaPricing() {
     const [videoInputType, setVideoInputType] = useState('upload')
     const [videoUrl, setVideoUrl] = useState('')
     const [uploadingVideo, setUploadingVideo] = useState(false)
+    const [videoDragOver, setVideoDragOver] = useState(false)
     const { showSuccess, showError } = useNotifications()
     const thumbnailUpload = useImageUpload({
         category: 'product-thumbnails',
@@ -181,8 +182,8 @@ export default function Step5MediaPricing() {
                 reject('Please select a valid video file')
                 return
             }
-            if (file.size > 100 * 1024 * 1024) {
-                reject('Video file size must be less than 100MB')
+            if (file.size > 10 * 1024 * 1024) {
+                reject('Video file size must be less than 10MB')
                 return
             }
             const video = document.createElement('video')
@@ -324,8 +325,14 @@ export default function Step5MediaPricing() {
             showError('Please select a valid video file')
             return
         }
-        if (file.size > 100 * 1024 * 1024) {
-            showError('Video file size must be less than 100MB')
+        if (file.size > 10 * 1024 * 1024) {
+            showError('Video file size must be less than 10MB')
+            return
+        }
+        try {
+            await validateVideoFile(file)
+        } catch (err) {
+            showError(err)
             return
         }
         setUploadingVideo(true)
@@ -361,6 +368,22 @@ export default function Step5MediaPricing() {
         setVideoMetadata(null)
         showSuccess('Video URL added successfully')
     }
+    const handleVideoDrop = useCallback((e) => {
+        e.preventDefault()
+        setVideoDragOver(false)
+        const files = Array.from(e.dataTransfer.files)
+        if (!files.length) return
+        const file = files[0]
+        handleVideoUpload(file)
+    }, [handleVideoUpload])
+    const handleVideoDragOver = useCallback((e) => {
+        e.preventDefault()
+        setVideoDragOver(true)
+    }, [])
+    const handleVideoDragLeave = useCallback((e) => {
+        e.preventDefault()
+        setVideoDragOver(false)
+    }, [])
     return (
         <div className="space-y-10">
             <div className="flex justify-end">
@@ -544,6 +567,115 @@ export default function Step5MediaPricing() {
                     <span className="text-sm text-gray-400">(Optional)</span>
                 </div>
             </motion.div>
+            <div className="space-y-4">
+                {previewVideo ? (
+                    <div className="relative bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-2 text-gray-300">
+                                <Video className="w-4 h-4" />
+                                <span className="text-sm">Video added</span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={removeVideo}
+                                className="text-red-400 hover:text-red-300 transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="aspect-video w-full overflow-hidden rounded-lg border border-gray-700 bg-black">
+                            {typeof previewVideo === 'string' ? (
+                                <video controls className="w-full h-full" src={previewVideo} />
+                            ) : (
+                                <video controls className="w-full h-full" src={URL.createObjectURL(previewVideo)} />
+                            )}
+                        </div>
+                        {videoMetadata && (
+                            <div className="mt-3 text-xs text-gray-400">
+                                <span>Duration: {videoMetadata.duration ? Math.round(videoMetadata.duration) + 's' : '—'}</span>
+                                {videoMetadata.size && <span className="ml-3">Size: {Math.round(videoMetadata.size / (1024 * 1024))}MB</span>}
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        <div className="inline-flex rounded-lg overflow-hidden border border-gray-700">
+                            <button
+                                type="button"
+                                onClick={() => setVideoInputType('upload')}
+                                className={`px-4 py-2 text-sm ${videoInputType === 'upload' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-300 hover:text-white'}`}>
+                                Upload file
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setVideoInputType('url')}
+                                className={`px-4 py-2 text-sm border-l border-gray-700 ${videoInputType === 'url' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-300 hover:text-white'}`}>
+                                Paste URL
+                            </button>
+                        </div>
+                        {videoInputType === 'upload' ? (
+                            <div
+                                className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
+                                    videoDragOver ? 'border-[#00FF89] bg-[#00FF89]/10' : 'border-gray-600 hover:border-gray-500 hover:bg-gray-800/50'
+                                }`}
+                                onDrop={handleVideoDrop}
+                                onDragOver={handleVideoDragOver}
+                                onDragLeave={handleVideoDragLeave}
+                            >
+                                {uploadingVideo ? (
+                                    <div className="flex flex-col items-center">
+                                        <Loader2 className="w-10 h-10 text-[#00FF89] animate-spin mb-3" />
+                                        <p className="text-gray-400">Uploading video...</p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <Upload className="w-10 h-10 text-gray-400 mx-auto mb-3" />
+                                        <p className="text-gray-400 mb-2">
+                                            Drag and drop your video here, or{' '}
+                                            <label className="text-[#00FF89] hover:text-[#00FF89]/80 cursor-pointer">
+                                                browse
+                                                <input
+                                                    type="file"
+                                                    className="hidden"
+                                                    accept="video/*"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0]
+                                                        if (file) handleVideoUpload(file)
+                                                    }}
+                                                />
+                                            </label>
+                                        </p>
+                                        <p className="text-sm text-gray-500">Supports MP4, WebM (max 10MB, under 3 minutes)</p>
+                                    </>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="flex gap-2">
+                                <input
+                                    type="url"
+                                    value={videoUrl}
+                                    onChange={(e) => setVideoUrl(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault()
+                                            handleVideoUrlSubmit()
+                                        }
+                                    }}
+                                    placeholder="https://example.com/video.mp4 or YouTube/Vimeo link"
+                                    className="w-full px-4 py-3 text-sm bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-[#00FF89]"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleVideoUrlSubmit}
+                                    className="px-4 py-3 bg-[#00FF89] text-black rounded-lg hover:bg-[#00FF89]/90 text-sm font-medium"
+                                >
+                                    Add
+                                </button>
+                            </div>
+                        )}
+                        <p className="text-xs text-gray-500">Tip: Keep it short and focused. Max length 3 minutes.</p>
+                    </div>
+                )}
+            </div>
             <div className="flex items-center my-8">
                 <div className="flex-1 border-t border-gray-700"></div>
                 <div className="px-4 text-sm text-gray-400 flex items-center space-x-2">
@@ -636,7 +768,7 @@ export default function Step5MediaPricing() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
-                className="space-y-6">
+                className="space-y-3">
                 <div className="flex items-center space-x-2">
                     <label className="block text-base font-semibold text-white">Pricing</label>
                     <Tooltip
@@ -644,7 +776,7 @@ export default function Step5MediaPricing() {
                         examples={FIELD_HELP.pricing.examples}
                     />
                 </div>
-                <p className="text-sm text-gray-400">Set your product pricing to attract customers while reflecting its value</p>
+                <p className="text-sm text-gray-400">Set your product pricing to attract customers while reflecting its value. <br/><b>Once a price is set, it cannot be changed later</b></p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
                         <label className="block text-base font-semibold text-white">Current Price *</label>
@@ -652,12 +784,12 @@ export default function Step5MediaPricing() {
                             <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-base">$</span>
                             <input
                                 type="number"
+                                required={true}
                                 value={price || ''}
                                 onChange={(e) => setField('price', parseFloat(e.target.value) || 0)}
                                 onBlur={() => handleFieldBlur('price')}
                                 placeholder="0.00"
                                 min="0"
-                                step="0.01"
                                 className={`w-full pl-10 pr-5 py-4 text-base bg-gray-800 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
                                     showFieldError('price')
                                         ? 'border-red-500 focus:ring-red-500/50'

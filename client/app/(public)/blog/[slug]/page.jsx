@@ -173,195 +173,219 @@ export default function BlogPostPage({ params }) {
   }
   return (
     <>
-      <div className="min-h-screen bg-[#121212] text-white">
-        {/* Remove pt-24 padding to eliminate gap between header and banner */}
-        <div className="relative">
-          {/* Make banner start from very top */}
-          <div className="relative h-[60vh] overflow-hidden">
-            {post.featuredImage ? (
-              <Image
-                src={urlFor(post.featuredImage).width(1200).height(600).url()}
-                alt={post.featuredImage.alt || post.title}
-                fill
-                className="object-cover"
-                priority
-                unoptimized={true}
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-brand-primary/20 to-brand-secondary/20"></div>
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/60 to-transparent"></div>
-            {/* Adjust back button position to account for header */}
-            <div className="absolute top-28 left-6 z-10">
-              <Link href="/blog">
-                <Button variant="ghost" className="bg-black/50 backdrop-blur-sm text-white hover:bg-black/70">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Blog
-                </Button>
-              </Link>
+      <div className="min-h-screen bg-[#121212] text-white pt-24">{/* restored top padding so header and page are distinct */}
+        {/* HERO / BANNER */}
+        <div className="relative w-full h-[50vh] overflow-hidden rounded-none">
+          {post.featuredImage ? (
+            <Image
+              src={urlFor(post.featuredImage).width(1600).height(800).url()}
+              alt={post.featuredImage.alt || post.title}
+              fill
+              className="object-cover"
+              priority
+              unoptimized={true}
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-brand-primary/20 to-brand-secondary/20" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/40 to-transparent" />
+          <div className="absolute top-6 left-6 z-10">
+            <Link href="/blog">
+              <Button variant="ghost" className="bg-black/50 backdrop-blur-sm text-white hover:bg-black/70">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Blog
+              </Button>
+            </Link>
+          </div>
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full px-6">
+            <div className="max-w-5xl mx-auto">
+              {post.category && (
+                <span className={`badge mb-4 inline-block ${getCategoryColor(post.category.color)}`}>
+                  {post.category.title}
+                </span>
+              )}
+              <h1 className="text-4xl lg:text-6xl font-league-spartan font-bold leading-tight drop-shadow-md">
+                {post.title}
+              </h1>
             </div>
           </div>
-          <div className="relative -mt-32 z-10">
-            {/* ...existing content card code... */}
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="bg-[#1f1f1f] rounded-2xl p-8 lg:p-12 shadow-2xl border border-white/10">
-                {post.category && (
-                  <div className="mb-6">
-                    <span className={`badge ${getCategoryColor(post.category.color)}`}>
-                      {post.category.title}
-                    </span>
+        </div>
+        {/* META + CONTENT AREA */}
+        <div className="max-w-6xl mx-auto px-6 lg:px-10 mt-12">
+          {/* Author + Meta Row */}
+            <div className="flex flex-wrap items-center gap-8 pb-8 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                {post.author?.avatar ? (
+                  <Image
+                    src={urlFor(post.author.avatar).width(56).height(56).url()}
+                    alt={post.author.name}
+                    width={56}
+                    height={56}
+                    className="rounded-full"
+                    unoptimized={true}
+                  />
+                ) : (
+                  <div className="w-14 h-14 bg-brand-primary/20 rounded-full flex items-center justify-center">
+                    <User className="w-7 h-7 text-brand-primary" />
                   </div>
                 )}
-                <h1 className="text-4xl lg:text-5xl font-league-spartan font-bold mb-6 leading-tight">
-                  {post.title}
-                </h1>
-                <div className="flex flex-wrap items-center gap-6 mb-8 pb-8 border-b border-white/10">
-                  <div className="flex items-center gap-3">
-                    {post.author?.avatar ? (
+                <div>
+                  <Link
+                    href={`/blog/author/${post.author?.slug.current}`}
+                    className="font-medium hover:text-brand-primary transition-colors"
+                  >
+                    {post.author?.name}
+                  </Link>
+                  <div className="flex items-center gap-2 text-sm text-gray-400">
+                    <Calendar className="w-4 h-4" />
+                    {formatDate(post.publishedAt)}
+                  </div>
+                </div>
+              </div>
+              {post.estimatedReadingTime && (
+                <div className="flex items-center gap-2 text-gray-400">
+                  <Clock className="w-4 h-4" />
+                  <span className="text-sm">{post.estimatedReadingTime} min read</span>
+                </div>
+              )}
+              <div className="ml-auto hidden lg:block">
+                <SocialShare post={post} />
+              </div>
+            </div>
+          {/* Grid Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-10">
+            {/* MAIN ARTICLE */}
+            <article className="lg:col-span-8 xl:col-span-9">
+              {post.tags && post.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-8">
+                  {post.tags.map(tag => (
+                    <Link
+                      key={tag._id}
+                      href={`/blog?tag=${tag.slug.current}`}
+                      className="text-xs md:text-sm text-brand-primary bg-brand-primary/10 hover:bg-brand-primary/20 px-3 py-1 rounded-full transition-colors"
+                    >
+                      #{tag.title}
+                    </Link>
+                  ))}
+                </div>
+              )}
+              <div className="prose prose-invert max-w-none">
+                <PortableText value={post.content} components={portableTextComponents} />
+              </div>
+              <div className="mt-16 p-6 bg-gradient-to-r from-brand-primary/10 to-brand-secondary/10 rounded-xl border border-brand-primary/20">
+                <h3 className="text-xl font-league-spartan font-bold mb-4">Ready to Automate Your Business?</h3>
+                <p className="text-gray-300 mb-6">
+                  Get custom AI automation solutions tailored to your specific needs. Our experts will help you implement the strategies discussed in this article.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button className="bg-brand-primary text-brand-primary-text hover:bg-brand-primary/90">
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Want this Automation? Explore Now
+                  </Button>
+                  <Button variant="outline" className="border-brand-secondary text-brand-secondary hover:bg-brand-secondary/10">
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    See Related AI Products
+                  </Button>
+                </div>
+              </div>
+              {post.author && (
+                <div className="mt-16 p-6 bg-white/5 rounded-xl border border-white/10">
+                  <div className="flex items-start gap-4">
+                    {post.author.avatar ? (
                       <Image
-                        src={urlFor(post.author.avatar).width(48).height(48).url()}
+                        src={urlFor(post.author.avatar).width(80).height(80).url()}
                         alt={post.author.name}
-                        width={48}
-                        height={48}
-                        className="rounded-full"
+                        width={80}
+                        height={80}
+                        className="rounded-full flex-shrink-0"
                         unoptimized={true}
                       />
                     ) : (
-                      <div className="w-12 h-12 bg-brand-primary/20 rounded-full flex items-center justify-center">
-                        <User className="w-6 h-6 text-brand-primary" />
+                      <div className="w-20 h-20 bg-brand-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <User className="w-8 h-8 text-brand-primary" />
                       </div>
                     )}
-                    <div>
-                      <Link 
-                        href={`/blog/author/${post.author?.slug.current}`}
-                        className="font-medium hover:text-brand-primary transition-colors"
-                      >
-                        {post.author?.name}
-                      </Link>
-                      <div className="flex items-center gap-2 text-sm text-gray-400">
-                        <Calendar className="w-4 h-4" />
-                        {formatDate(post.publishedAt)}
-                      </div>
+                    <div className="flex-1">
+                      <h4 className="text-xl font-league-spartan font-bold mb-2">About {post.author.name}</h4>
+                      {post.author.bio && (
+                        <p className="text-gray-300 mb-4">{post.author.bio}</p>
+                      )}
+                      {post.author.socialLinks && (
+                        <div className="flex gap-3">
+                          {post.author.socialLinks.twitter && (
+                            <a
+                              href={post.author.socialLinks.twitter}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-gray-400 hover:text-brand-primary transition-colors"
+                            >
+                              <Twitter className="w-5 h-5" />
+                            </a>
+                          )}
+                          {post.author.socialLinks.linkedin && (
+                            <a
+                              href={post.author.socialLinks.linkedin}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-gray-400 hover:text-brand-primary transition-colors"
+                            >
+                              <Linkedin className="w-5 h-5" />
+                            </a>
+                          )}
+                          {post.author.socialLinks.website && (
+                            <a
+                              href={post.author.socialLinks.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-gray-400 hover:text-brand-primary transition-colors"
+                            >
+                              <ExternalLink className="w-5 h-5" />
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  {post.estimatedReadingTime && (
-                    <div className="flex items-center gap-2 text-gray-400">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-sm">{post.estimatedReadingTime} min read</span>
-                    </div>
-                  )}
+                </div>
+              )}
+            </article>
+            {/* SIDEBAR */}
+            <aside className="lg:col-span-4 xl:col-span-3 space-y-8 order-first lg:order-none">
+              <div className="lg:sticky lg:top-28 space-y-8">
+                <div className="p-5 bg-[#1f1f1f] rounded-xl border border-white/10">
+                  <h4 className="text-sm font-semibold tracking-wide text-gray-300 mb-3">Share</h4>
                   <SocialShare post={post} />
                 </div>
                 {post.tags && post.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-8">
-                    {post.tags.map((tag) => (
-                      <Link 
-                        key={tag._id} 
-                        href={`/blog?tag=${tag.slug.current}`}
-                        className="text-sm text-brand-primary bg-brand-primary/10 hover:bg-brand-primary/20 px-3 py-1 rounded-full transition-colors"
-                      >
-                        #{tag.title}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-                <div className="prose prose-invert max-w-none">
-                  <PortableText 
-                    value={post.content} 
-                    components={portableTextComponents}
-                  />
-                </div>
-                <div className="mt-12 p-6 bg-gradient-to-r from-brand-primary/10 to-brand-secondary/10 rounded-xl border border-brand-primary/20">
-                  <h3 className="text-xl font-league-spartan font-bold mb-4">Ready to Automate Your Business?</h3>
-                  <p className="text-gray-300 mb-6">
-                    Get custom AI automation solutions tailored to your specific needs. Our experts will help you implement the strategies discussed in this article.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <Button className="bg-brand-primary text-brand-primary-text hover:bg-brand-primary/90">
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Want this Automation? Explore Now
-                    </Button>
-                    <Button variant="outline" className="border-brand-secondary text-brand-secondary hover:bg-brand-secondary/10">
-                      <BookOpen className="w-4 h-4 mr-2" />
-                      See Related AI Products
-                    </Button>
-                  </div>
-                </div>
-                {post.author && (
-                  <div className="mt-12 p-6 bg-white/5 rounded-xl border border-white/10">
-                    <div className="flex items-start gap-4">
-                      {post.author.avatar ? (
-                        <Image
-                          src={urlFor(post.author.avatar).width(80).height(80).url()}
-                          alt={post.author.name}
-                          width={80}
-                          height={80}
-                          className="rounded-full flex-shrink-0"
-                          unoptimized={true}
-                        />
-                      ) : (
-                        <div className="w-20 h-20 bg-brand-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
-                          <User className="w-8 h-8 text-brand-primary" />
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <h4 className="text-xl font-league-spartan font-bold mb-2">
-                          About {post.author.name}
-                        </h4>
-                        {post.author.bio && (
-                          <p className="text-gray-300 mb-4">{post.author.bio}</p>
-                        )}
-                        {post.author.socialLinks && (
-                          <div className="flex gap-3">
-                            {post.author.socialLinks.twitter && (
-                              <a 
-                                href={post.author.socialLinks.twitter} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-gray-400 hover:text-brand-primary transition-colors"
-                              >
-                                <Twitter className="w-5 h-5" />
-                              </a>
-                            )}
-                            {post.author.socialLinks.linkedin && (
-                              <a 
-                                href={post.author.socialLinks.linkedin} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-gray-400 hover:text-brand-primary transition-colors"
-                              >
-                                <Linkedin className="w-5 h-5" />
-                              </a>
-                            )}
-                            {post.author.socialLinks.website && (
-                              <a 
-                                href={post.author.socialLinks.website} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-gray-400 hover:text-brand-primary transition-colors"
-                              >
-                                <ExternalLink className="w-5 h-5" />
-                              </a>
-                            )}
-                          </div>
-                        )}
-                      </div>
+                  <div className="p-5 bg-[#1f1f1f] rounded-xl border border-white/10">
+                    <h4 className="text-sm font-semibold tracking-wide text-gray-300 mb-3">Tags</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {post.tags.map(tag => (
+                        <Link
+                          key={tag._id}
+                          href={`/blog?tag=${tag.slug.current}`}
+                          className="text-xs text-brand-primary bg-brand-primary/10 hover:bg-brand-primary/20 px-2.5 py-1 rounded-full transition-colors"
+                        >
+                          #{tag.title}
+                        </Link>
+                      ))}
                     </div>
                   </div>
                 )}
               </div>
-            </div>
+            </aside>
           </div>
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 mb-8">
-            <NewsletterCTA blogPostSlug={post.slug.current} />
-          </div>
-          {post.relatedPosts && post.relatedPosts.length > 0 && (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 mb-16">
-              <RelatedPosts posts={post.relatedPosts} />
-            </div>
-          )}
-          <StickyLeadForm blogPostSlug={post.slug.current} />
         </div>
+        {/* Newsletter & Related */}
+        <div className="max-w-6xl mx-auto px-6 lg:px-10 mt-20 mb-12">
+          <NewsletterCTA blogPostSlug={post.slug.current} />
+        </div>
+        {post.relatedPosts && post.relatedPosts.length > 0 && (
+          <div className="max-w-7xl mx-auto px-6 lg:px-10 mt-4 mb-24">
+            <RelatedPosts posts={post.relatedPosts} />
+          </div>
+        )}
+        <StickyLeadForm blogPostSlug={post.slug.current} />
       </div>
     </>
   )

@@ -1,7 +1,6 @@
 import responseMessage from '../../constant/responseMessage.js'
 import httpError from '../../util/httpError.js'
 import httpResponse from '../../util/httpResponse.js'
-import quicker from '../../util/quicker.js'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc.js'
 import userModel from '../../model/user.model.js'
@@ -9,7 +8,7 @@ import sellerProfileModel from '../../model/seller.profile.model.js'
 import Product from '../../model/product.model.js'
 import Purchase from '../../model/purchase.model.js'
 import { notificationService } from '../../util/notification.js'
-import { EUserRole, ESellerVerificationStatus, ECommissionOfferStatus, EPayoutMethod, EOrderStatus, EPaymentStatus } from '../../constant/application.js'
+import { EUserRole, ESellerVerificationStatus, ECommissionOfferStatus, EOrderStatus, EPaymentStatus } from '../../constant/application.js'
 
 dayjs.extend(utc)
 
@@ -132,15 +131,28 @@ export default {
                 return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('Seller profile')), req, 404)
             }
 
-            if (sellerProfile.verification.status === ESellerVerificationStatus.APPROVED) {
-                return httpError(next, new Error(responseMessage.SELLER.CANNOT_UPDATE_APPROVED_PROFILE), req, 400)
+            const APPROVED_EDITABLE_FIELDS = ['bio','socialHandles','sellerBanner','portfolioLinks','customAutomationServices','websiteUrl','location','niches','toolsSpecialization']
+            const ALWAYS_BLOCKED_FIELDS = ['fullName','verification','commissionOffer','payoutInfo','userId','isActive','stats','revenueShareAgreement','createdAt','updatedAt','_id','suspendedAt','suspendedBy','suspensionReason','activatedAt','activatedBy','activationNote']
+            const isApproved = sellerProfile.verification.status === ESellerVerificationStatus.APPROVED
+            const isObj = v => v && typeof v === 'object' && !Array.isArray(v)
+
+            let applied = 0
+            for (const [key, val] of Object.entries(updateData)) {
+                if (val === undefined) continue
+                if (ALWAYS_BLOCKED_FIELDS.includes(key)) continue
+                if (isApproved && !APPROVED_EDITABLE_FIELDS.includes(key)) continue
+
+                if (isObj(val) && isObj(sellerProfile[key])) {
+                    sellerProfile[key] = { ...sellerProfile[key], ...val }
+                } else {
+                    sellerProfile[key] = val
+                }
+                applied++
             }
 
-            Object.keys(updateData).forEach((key) => {
-                if (updateData[key] !== undefined && key !== 'verification' && key !== 'commissionOffer') {
-                    sellerProfile[key] = updateData[key]
-                }
-            })
+            if (applied === 0) {
+                return httpError(next, new Error('No allowed fields to update'), req, 400)
+            }
 
             const updatedProfile = await sellerProfile.save()
 
@@ -682,12 +694,10 @@ export default {
                 return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('Seller profile')), req, 404)
             }
 
-            // Get time ranges for analytics
             const now = dayjs().utc()
             const last30Days = now.subtract(30, 'days').toDate()
             const last7Days = now.subtract(7, 'days').toDate()
 
-            // Aggregate dashboard data in parallel for performance
             const [
                 recentOrders,
                 topProducts,
@@ -697,7 +707,6 @@ export default {
                 revenueThisMonth,
                 salesThisMonth
             ] = await Promise.all([
-                // Recent orders (last 10)
                 Purchase.aggregate([
                     {
                         $match: {
@@ -743,34 +752,29 @@ export default {
                     { $limit: 10 }
                 ]),
 
-                // Top performing products (by sales)
                 Product.find({ sellerId: sellerProfile._id })
                     .select('title type price sales views averageRating thumbnail')
                     .sort({ sales: -1 })
                     .limit(5)
                     .lean(),
 
-                // Total product views (sum of all product views)
                 Product.aggregate([
                     { $match: { sellerId: sellerProfile._id } },
                     { $group: { _id: null, totalViews: { $sum: '$views' } } }
                 ]).then(result => result[0]?.totalViews || 0),
 
-                // Pending orders count
                 Purchase.countDocuments({
                     'items.sellerId': sellerProfile._id,
                     orderStatus: EOrderStatus.PENDING,
                     paymentStatus: EPaymentStatus.COMPLETED
                 }),
 
-                // Completed orders count
                 Purchase.countDocuments({
                     'items.sellerId': sellerProfile._id,
                     orderStatus: EOrderStatus.COMPLETED,
                     paymentStatus: EPaymentStatus.COMPLETED
                 }),
 
-                // Revenue this month
                 Purchase.aggregate([
                     {
                         $match: {
@@ -784,7 +788,6 @@ export default {
                     { $group: { _id: null, totalRevenue: { $sum: '$items.price' } } }
                 ]).then(result => result[0]?.totalRevenue || 0),
 
-                // Sales count this month
                 Purchase.aggregate([
                     {
                         $match: {
@@ -799,7 +802,6 @@ export default {
                 ]).then(result => result[0]?.totalSales || 0)
             ])
 
-            // Calculate conversion funnel data
             const totalCartAdditions = await Purchase.aggregate([
                 {
                     $match: {
@@ -812,7 +814,6 @@ export default {
                 { $count: 'totalCarts' }
             ]).then(result => result[0]?.totalCarts || 0)
 
-            // Calculate trends (comparing last 30 days vs previous 30 days)
             const previous30Days = now.subtract(60, 'days').toDate()
             const [currentPeriodRevenue, previousPeriodRevenue] = await Promise.all([
                 Purchase.aggregate([
@@ -842,27 +843,22 @@ export default {
                 ]).then(result => result[0]?.revenue || 0)
             ])
 
-            // Calculate revenue growth percentage
             const revenueGrowth = previousPeriodRevenue > 0 
                 ? ((currentPeriodRevenue - previousPeriodRevenue) / previousPeriodRevenue * 100)
                 : currentPeriodRevenue > 0 ? 100 : 0
 
-            // Construct dashboard response matching frontend expectations
             const dashboardData = {
-                // Core stats from seller profile + real-time data
                 totalEarnings: sellerProfile.stats.totalEarnings,
                 totalOrders: sellerProfile.stats.totalSales,
                 totalProducts: sellerProfile.stats.totalProducts,
                 averageRating: sellerProfile.stats.averageRating,
                 
-                // Real-time order status counts
                 pendingOrders: pendingOrdersCount,
                 completedOrders: completedOrdersCount,
                 
-                // Recent activity
                 recentOrders: recentOrders.map(order => ({
                     id: order._id,
-                    orderId: String(order._id).slice(-6), // Last 6 chars for display
+                    orderId: String(order._id).slice(-6),
                     productTitle: order.productTitle,
                     productType: order.productType,
                     price: order.price,
@@ -873,7 +869,6 @@ export default {
                     formattedDate: dayjs(order.orderDate).format('MMM DD, YYYY')
                 })),
 
-                // Top performing products
                 topProducts: topProducts.map(product => ({
                     id: product._id,
                     title: product.title,
@@ -886,7 +881,6 @@ export default {
                     conversionRate: product.views > 0 ? ((product.sales / product.views) * 100).toFixed(1) : 0
                 })),
 
-                // Analytics for funnel chart
                 analytics: {
                     views: totalProductViews,
                     carts: totalCartAdditions,
@@ -894,7 +888,6 @@ export default {
                     conversionRate: totalProductViews > 0 ? ((sellerProfile.stats.totalSales / totalProductViews) * 100).toFixed(2) : 0
                 },
 
-                // Performance metrics
                 performance: {
                     revenueThisMonth: revenueThisMonth,
                     salesThisMonth: salesThisMonth,
@@ -905,7 +898,6 @@ export default {
                         : 0
                 },
 
-                // Summary for quick overview
                 summary: {
                     isApproved: sellerProfile.isApproved,
                     verificationStatus: sellerProfile.verification.status,
@@ -975,25 +967,21 @@ export default {
                 return httpError(next, new Error(responseMessage.SELLER.ALREADY_ACTIVE), req, 400)
             }
 
-            // Check if seller is properly approved before activation
             if (sellerProfile.verification.status !== ESellerVerificationStatus.APPROVED) {
                 return httpError(next, new Error(responseMessage.SELLER.NOT_APPROVED_FOR_ACTIVATION), req, 400)
             }
 
-            // Activate the seller
             sellerProfile.isActive = true
             sellerProfile.activatedAt = dayjs().utc().toDate()
             sellerProfile.activatedBy = authenticatedUser.id
             sellerProfile.activationNote = note
 
-            // Clear suspension fields
             sellerProfile.suspendedAt = null
             sellerProfile.suspendedBy = null
             sellerProfile.suspensionReason = null
 
             await sellerProfile.save()
 
-            // Send notification to seller
             await notificationService.sendToUser(
                 sellerProfile.userId,
                 'Account Activated',

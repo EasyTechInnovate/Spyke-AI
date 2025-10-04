@@ -30,7 +30,7 @@ export const CHECKOUT_FEATURES = [
     },
     {
         icon: 'CheckCircle',
-        text: 'Instant download after purchase',
+        text: 'Instant access after purchase',
         highlight: true
     },
     {

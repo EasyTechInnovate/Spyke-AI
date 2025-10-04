@@ -225,7 +225,7 @@ function ExplorePageContent() {
     const useVirtual = products.length > 50
     return (
         <div className="min-h-screen bg-black text-white">
-            <main className="pt-24 pb-16 max-w-7xl mx-auto px-4">
+            <main className="pt-2 pb-16 max-w-7xl mx-auto px-4">
                 <Suspense
                     fallback={
                         <div className="h-20 flex items-center">

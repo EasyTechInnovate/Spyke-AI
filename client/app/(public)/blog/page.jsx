@@ -427,7 +427,7 @@ export default function BlogListingPage() {
                             </div>
                             <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 rounded-3xl blur-xl"></div>
                         </div>
-                        <h3 className="text-3xl font-league-spartan font-bold mb-4 text-white">
+                        <h3 className="text-3xl font-league-spartan font-bold mb-4 text-black">
                             {filters.search ? `No articles found for "${filters.search}"` : 'No articles found'}
                         </h3>
                         <p className="text-gray-400 mb-8 text-lg max-w-md mx-auto">

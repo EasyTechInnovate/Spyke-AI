@@ -173,8 +173,8 @@ export default function VerifyEmailContent({ email }) {
                                     </button>
                                     <Link
                                         href="/signin"
-                                        className="group relative overflow-hidden px-6 py-4 bg-[#2a2a2a] hover:bg-[#333333] border border-gray-700 hover:border-gray-600 rounded-2xl font-semibold text-lg text-white transition-all duration-300 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98]">
-                                        <span className="relative">Back to Sign In</span>
+                                        className="group relative inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-3 text-black font-semibold bg-[#00FF89] rounded-lg hover:bg-[#00FF89]/90 transition-all duration-200 hover:shadow-lg hover:shadow-[#00FF89]/25 w-full sm:w-auto min-h-[56px] touch-manipulation border border-[#00FF89] hover:scale-[1.02] active:scale-[0.98]">
+                                        <span className="text-base sm:text-base">Back to Sign In</span>
                                     </Link>
                                 </div>
                             </motion.div>
@@ -190,9 +190,9 @@ export default function VerifyEmailContent({ email }) {
                                     </div>
                                     <Link
                                         href="/contactus"
-                                        className="text-gray-400 hover:text-[#00FF89] transition-colors flex items-center gap-2">
-                                        <span>Need help?</span>
-                                        <span className="text-[#00FF89]">Contact Support</span>
+                                        className="group text-gray-400 transition-colors flex items-center gap-2">
+                                        <span className="text-gray-400">Need help?</span>
+                                        <span className="text-gray-400 group-hover:text-[#00FF89] transition-colors">Contact Support</span>
                                     </Link>
                                 </div>
                             </motion.div>

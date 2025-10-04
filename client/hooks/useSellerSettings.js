@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { sellerAPI } from '@/lib/api/seller'
+import apiClient from '@/lib/api/client'
 
 export const useSellerSettings = () => {
     const [loading, setLoading] = useState(false)
@@ -20,36 +21,17 @@ export const useSellerSettings = () => {
     }, [])
 
     // Upload file function - using your existing upload endpoint
-    const uploadFile = useCallback(async (file) => {
+    const uploadFile = useCallback(async (file, options = {}) => {
         setUploading(true)
         setUploadProgress(0)
         try {
             const formData = new FormData()
             formData.append('file', file)
+            if (options.category) formData.append('category', options.category)
 
-            const config = {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-                onUploadProgress: (progressEvent) => {
-                    const percentCompleted = Math.round(
-                        (progressEvent.loaded * 100) / progressEvent.total
-                    )
-                    setUploadProgress(percentCompleted)
-                }
-            }
-
-            // Use your existing upload endpoint
-            const response = await fetch('/api/upload/file', {
-                method: 'POST',
-                body: formData,
-            })
-
-            if (!response.ok) {
-                throw new Error('Upload failed')
-            }
-
-            const result = await response.json()
+            // Use backend upload endpoint via apiClient (consistent with rest of app)
+            const result = await apiClient.upload('v1/upload/file', formData)
+            setUploadProgress(100)
             return { success: true, data: result }
         } catch (error) {
             console.error('File upload error:', error)
@@ -65,7 +47,7 @@ export const useSellerSettings = () => {
 
     // Upload profile image and update profile
     const updateProfileImage = useCallback(async (file) => {
-        const uploadResult = await uploadFile(file)
+        const uploadResult = await uploadFile(file, { category: 'seller-profile' })
         if (!uploadResult.success) {
             return uploadResult
         }
@@ -78,7 +60,7 @@ export const useSellerSettings = () => {
 
     // Upload banner and update profile
     const updateBanner = useCallback(async (file) => {
-        const uploadResult = await uploadFile(file)
+        const uploadResult = await uploadFile(file, { category: 'seller-banners' })
         if (!uploadResult.success) {
             return uploadResult
         }

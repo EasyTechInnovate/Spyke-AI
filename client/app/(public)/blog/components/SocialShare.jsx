@@ -36,7 +36,7 @@ export default function SocialShare({ post }) {
     setShowOptions(false)
   }
   return (
-    <div className="relative">
+    <div className="relative z-[100]">
             {notification && (
                 <InlineNotification
                     type={notification.type}
@@ -55,10 +55,10 @@ export default function SocialShare({ post }) {
       {showOptions && (
         <>
           <div 
-            className="fixed inset-0 z-10"
+            className="fixed inset-0 z-[105]" // Raised overlay z-index above most content
             onClick={() => setShowOptions(false)}
           />
-          <div className="absolute top-full right-0 mt-2 bg-[#1f1f1f] border border-white/10 rounded-lg shadow-2xl p-4 z-20 min-w-[200px]">
+          <div className="absolute top-full right-0 mt-2 bg-[#1f1f1f] border border-white/10 rounded-lg shadow-2xl p-4 z-[110] min-w-[200px]">{/* Raised dropdown panel z-index */}
             <div className="space-y-2">
               <button
                 onClick={() => handleShare('twitter')}

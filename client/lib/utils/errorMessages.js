@@ -2,7 +2,6 @@
 
 import { VALIDATION_LIMITS } from '@/lib/constants/productCreate'
 
-// Enhanced error message mapping with specific guidance
 export const ERROR_MESSAGES = {
     title: {
         required: 'Product title is required. Try: "AI Tool for [Target Audience]"',

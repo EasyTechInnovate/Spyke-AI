@@ -68,21 +68,18 @@ const AnimatedCounter = ({ value, duration = 2000 }) => {
 const StatCard = ({ icon: Icon, singular, plural, value, color = 'text-[#00FF89]', delay = 0 }) => {
     const label = value === 1 ? singular : plural
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay, duration: 0.5 }}
-            className="flex items-center gap-2.5 p-3 rounded-xl bg-white/5 dark:bg-white/5 backdrop-blur-sm border border-white/10 dark:border-gray-700/50 hover:border-[#00FF89]/30 transition-all duration-300">
-            <div className="w-8 h-8 rounded-lg bg-black/20 flex items-center justify-center flex-shrink-0">
-                <Icon className={`w-4 h-4 ${color}`} />
-            </div>
-            <div className="flex items-center leading-none whitespace-nowrap">
-                <span className={`text-base font-semibold ${color}`}>
+        <div
+            role="status"
+            aria-live="polite"
+            className="inline-flex items-center gap-2 sm:gap-2.5 cursor-default select-none">
+            <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+            <div className="flex items-baseline leading-none whitespace-nowrap">
+                <span className={`text-base sm:text-lg font-semibold ${color}`}>
                     <AnimatedCounter value={value} />
                 </span>
-                <span className="text-[13px] ml-1 text-[#cbd5e1] dark:text-gray-300 font-medium tracking-tight">{label}</span>
+                <span className="text-[13px] ml-1 text-gray-400 font-medium tracking-tight">{label}</span>
             </div>
-        </motion.div>
+        </div>
     )
 }
 const FeatureBadge = ({ icon: Icon, text, variant = 'default' }) => {
@@ -201,6 +198,8 @@ export default function ProductHero({
         return id ? `/profile/${id}` : null
     }
 
+    const whatsappUrl = 'https://wa.link/7uwiza'
+
     return (
         <div
             ref={heroRef}
@@ -309,39 +308,77 @@ export default function ProductHero({
                                 </div>
                             )}
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                            <StatCard
-                                icon={Eye}
-                                singular="View"
-                                plural="Views"
-                                value={product.views || 0}
-                                delay={0.2}
-                            />
-                            <StatCard
-                                icon={TrendingUp}
-                                singular="Sale"
-                                plural="Sales"
-                                value={product.sales || 0}
-                                delay={0.3}
-                            />
-                            <StatCard
-                                icon={Heart}
-                                singular="Favorite"
-                                plural="Favorites"
-                                value={product.favorites || 0}
-                                color="text-red-400"
-                                delay={0.4}
-                            />
-                            <StatCard
-                                icon={ThumbsUp}
-                                singular="Upvote"
-                                plural="Upvotes"
-                                value={product.upvotes || 0}
-                                color="text-blue-400"
-                                delay={0.5}
-                            />
+                        <div className="mt-2 pt-3 border-t border-gray-800/60 grid grid-cols-2 sm:grid-cols-4 gap-y-3 text-center">
+                            <div className="px-2">
+                                <div className="text-lg sm:text-xl font-bold text-[#00FF89]">
+                                    <AnimatedCounter value={product.views || 0} />
+                                </div>
+                                <div className="text-xs sm:text-sm text-gray-400">Views</div>
+                            </div>
+                            <div className="px-2">
+                                <div className="text-lg sm:text-xl font-bold text-[#00FF89]">
+                                    <AnimatedCounter value={product.sales || 0} />
+                                </div>
+                                <div className="text-xs sm:text-sm text-gray-400">Sales</div>
+                            </div>
+                            <div className="px-2">
+                                <div className="text-lg sm:text-xl font-bold text-[#00FF89]">
+                                    <AnimatedCounter value={product.favorites || 0} />
+                                </div>
+                                <div className="text-xs sm:text-sm text-gray-400">Favorites</div>
+                            </div>
+                            <div className="px-2">
+                                <div className="text-lg sm:text-xl font-bold text-[#00FF89]">
+                                    <AnimatedCounter value={product.upvotes || 0} />
+                                </div>
+                                <div className="text-xs sm:text-sm text-gray-400">Upvotes</div>
+                            </div>
                         </div>
+                        {/* Small colourful banner just below the stats */}
+
+                        {product.tags && product.tags.length > 0 && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.2 }}
+                                className="mt-3 space-y-3">
+                                <h4 className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                                    <Tag className="w-4 h-4" />
+                                    Tags
+                                </h4>
+                                <div className="flex flex-wrap gap-2">
+                                    {product.tags.slice(0, 6).map((tag, index) => (
+                                        <button
+                                            key={index}
+                                            onClick={() => copyToClipboard(tag, `Tag: ${tag}`)}
+                                            className="px-2 py-1 bg-white/5 hover:bg-[#00FF89]/10 border border-gray-700 hover:border-[#00FF89]/30 text-gray-300 hover:text-[#00FF89] rounded text-xs transition-all duration-300 flex items-center gap-1">
+                                            #{tag}
+                                            {copiedText === `Tag: ${tag}` && <CheckCircle className="w-3 h-3 text-[#00FF89]" />}
+                                        </button>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        )}
+
+                        <motion.a
+                            href={whatsappUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.15 }}
+                            className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-blue-500/10 text-[#00FF89] font-semibold py-2 px-3 shadow-sm hover:shadow border border-white/10 hover:opacity-95">
+                            <svg
+                                className="w-4 h-4"
+                                fill="currentColor"
+                                viewBox="0 0 24 24"
+                                aria-hidden="true">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884" />
+                            </svg>
+                            <span className="text-sm">Still have doubts? Contact us on WhatsApp</span>
+                        </motion.a>
                     </motion.div>
+
                     <motion.div
                         initial={{ opacity: 0, x: 50 }}
                         animate={isInView ? { opacity: 1, x: 0 } : {}}
@@ -584,7 +621,7 @@ export default function ProductHero({
                                 transition={{ delay: 1.3 }}
                                 className="relative overflow-hidden rounded-xl p-6 bg-gray-900/30 border border-gray-700/50">
                                 <div className="flex items-start gap-3">
-                                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-[#00FF89]/20 flex-shrink-0">
+                                    <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-[#00FF89]/20 flex-shrink-0">
                                         {sellerAvatar && !sellerImgFailed ? (
                                             <img
                                                 src={sellerAvatar}
@@ -594,11 +631,10 @@ export default function ProductHero({
                                             />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center">
-                                                <span className="text-sm font-bold text-black">
-                                                    {sellerInitial}
-                                                </span>
+                                                <span className="text-sm font-bold text-black">{sellerInitial}</span>
                                             </div>
                                         )}
+                                        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-1/3 bg-[#00FF89]/40" />
                                     </div>
                                     <div className="flex-1 space-y-2">
                                         <div className="flex items-start justify-between">
@@ -616,28 +652,24 @@ export default function ProductHero({
                                                     href={getSellerProfileUrl()}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="px-3 py-1.5 bg-white/10 hover:bg-[#00FF89]/20 border border-gray-600 hover:border-[#00FF89]/50 text-white rounded-lg text-xs font-medium transition-all inline-flex items-center">
-                                                    <div className="flex items-center gap-1">
-                                                        View
-                                                        <ArrowUpRight className="w-3 h-3" />
-                                                    </div>
+                                                    className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-gray-700/70 hover:border-[#00FF89]/40 text-white text-xs font-semibold transition-colors inline-flex items-center gap-1">
+                                                    View
+                                                    <ArrowUpRight className="w-3 h-3" />
                                                 </Link>
                                             ) : (
                                                 <button
                                                     type="button"
                                                     disabled
-                                                    className="px-3 py-1.5 bg-white/10 border border-gray-600 text-white rounded-lg text-xs font-medium opacity-50 cursor-not-allowed">
-                                                    <div className="flex items-center gap-1">
-                                                        View
-                                                        <ArrowUpRight className="w-3 h-3" />
-                                                    </div>
+                                                    className="px-3 py-1.5 rounded-full bg-white/10 border border-gray-700/70 text-white text-xs font-semibold opacity-50 cursor-not-allowed inline-flex items-center gap-1">
+                                                    View
+                                                    <ArrowUpRight className="w-3 h-3" />
                                                 </button>
                                             )}
                                         </div>
                                         {product.sellerId.bio && (
                                             <p className="text-gray-300 text-sm leading-relaxed line-clamp-2">{product.sellerId.bio}</p>
                                         )}
-                                        <div className="grid grid-cols-3 gap-3 pt-2 border-t border-gray-700/50">
+                                        <div className="grid grid-cols-3 gap-3 pt-2 border-top border-t border-gray-700/50">
                                             <div className="text-center">
                                                 <div className="text-sm font-bold text-[#00FF89]">{product.sellerId.stats?.totalProducts || 0}</div>
                                                 <div className="text-xs text-gray-400">Products</div>
@@ -647,36 +679,14 @@ export default function ProductHero({
                                                 <div className="text-xs text-gray-400">Sales</div>
                                             </div>
                                             <div className="text-center">
-                                                <div className="text-sm font-bold text-[#00FF89]">
-                                                    {product.sellerId.stats?.averageRating || 5.0}★
+                                                <div className="text-sm font-bold text-[#00FF89] flex items-center justify-center gap-1">
+                                                    {product.sellerId.stats?.averageRating || 5.0}
+                                                    <Star className="w-3 h-3 text-[#00FF89] fill-current" />
                                                 </div>
                                                 <div className="text-xs text-gray-400">Rating</div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </motion.div>
-                        )}
-                        {product.tags && product.tags.length > 0 && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 1.4 }}
-                                className="space-y-4">
-                                <h4 className="text-sm font-medium text-gray-400 flex items-center gap-2">
-                                    <Tag className="w-4 h-4" />
-                                    Tags
-                                </h4>
-                                <div className="flex flex-wrap gap-2">
-                                    {product.tags.slice(0, 6).map((tag, index) => (
-                                        <button
-                                            key={index}
-                                            onClick={() => copyToClipboard(tag, `Tag: ${tag}`)}
-                                            className="px-2 py-1 bg-white/5 hover:bg-[#00FF89]/10 border border-gray-700 hover:border-[#00FF89]/30 text-gray-300 hover:text-[#00FF89] rounded text-xs transition-all duration-300 flex items-center gap-1">
-                                            #{tag}
-                                            {copiedText === `Tag: ${tag}` && <CheckCircle className="w-3 h-3 text-[#00FF89]" />}
-                                        </button>
-                                    ))}
                                 </div>
                             </motion.div>
                         )}
