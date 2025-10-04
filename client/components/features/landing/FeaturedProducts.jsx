@@ -1,5 +1,5 @@
 'use client'
-import { useState, memo, useEffect } from 'react'
+import { useState, memo, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight, Star, Eye, CheckCircle, Sparkles, Loader2, Activity, Heart, Package } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -8,10 +8,8 @@ import dynamic from 'next/dynamic'
 import { useCart } from '@/hooks/useCart'
 import { productsAPI } from '@/lib/api'
 
-const BackgroundEffectsLight = dynamic(() => import('./hero/BackgroundEffectsLight'), {
-    ssr: false,
-    loading: () => null
-})
+const BackgroundEffectsLight = dynamic(() => import('./hero/BackgroundEffectsLight'), { ssr: false, loading: () => null })
+
 const getBadgeForProduct = (product) => {
     if (product.sales > 100) return { text: 'Bestseller', variant: 'warning', priority: 1 }
     if (product.averageRating >= 4.8) return { text: 'Top Rated', variant: 'success', priority: 2 }
@@ -21,27 +19,29 @@ const getBadgeForProduct = (product) => {
         return { text: 'New', variant: 'primary', priority: 5 }
     return null
 }
+
 const formatPrice = (price) => {
     if (price === 0) return 'Free'
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD'
-    }).format(price)
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price)
 }
+
 const getTypeDisplay = (type) => {
-    const typeMap = {
-        prompt: 'AI Prompt',
-        automation: 'Automation',
-        agent: 'AI Agent',
-        bundle: 'Bundle'
-    }
+    const typeMap = { prompt: 'AI Prompt', automation: 'Automation', agent: 'AI Agent', bundle: 'Bundle' }
     return typeMap[type] || type
 }
+
 const FeaturedProducts = memo(function FeaturedProducts() {
     const router = useRouter()
     const [featuredProducts, setFeaturedProducts] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
+    const carouselRef = useRef(null)
+    const [atStart, setAtStart] = useState(true)
+    const [atEnd, setAtEnd] = useState(false)
+    const AUTOPLAY_INTERVAL = 4500
+    const autoplayRef = useRef(null)
+    const userPausedRef = useRef(false)
+
     useEffect(() => {
         const fetchFeaturedProducts = async () => {
             try {
@@ -70,9 +70,91 @@ const FeaturedProducts = memo(function FeaturedProducts() {
         }
         fetchFeaturedProducts()
     }, [])
+
+    const updateEdgeState = () => {
+        const el = carouselRef.current
+        if (!el) return
+        const { scrollLeft, scrollWidth, clientWidth } = el
+        setAtStart(scrollLeft <= 4)
+        setAtEnd(scrollLeft + clientWidth >= scrollWidth - 4)
+    }
+
+    useEffect(() => {
+        const el = carouselRef.current
+        if (!el) return
+        updateEdgeState()
+        const handle = () => updateEdgeState()
+        el.addEventListener('scroll', handle, { passive: true })
+        window.addEventListener('resize', handle)
+        return () => {
+            el.removeEventListener('scroll', handle)
+            window.removeEventListener('resize', handle)
+        }
+    }, [featuredProducts])
+
+    const scrollAmount = () => {
+        const el = carouselRef.current
+        if (!el) return 0
+        return Math.min(el.clientWidth * 0.85, 900)
+    }
+    const scrollLeft = () => carouselRef.current?.scrollBy({ left: -scrollAmount(), behavior: 'smooth' })
+    const scrollRight = () => carouselRef.current?.scrollBy({ left: scrollAmount(), behavior: 'smooth' })
+
+    useEffect(() => {
+        const el = carouselRef.current
+        if (!el || featuredProducts.length <= 1) return
+        const clear = () => {
+            if (autoplayRef.current) {
+                clearInterval(autoplayRef.current)
+                autoplayRef.current = null
+            }
+        }
+        const tick = () => {
+            if (!el || userPausedRef.current) return
+            if (atEnd) {
+                el.scrollTo({ left: 0, behavior: 'smooth' })
+            } else {
+                el.scrollBy({ left: scrollAmount(), behavior: 'smooth' })
+            }
+        }
+        const start = () => {
+            clear()
+            autoplayRef.current = setInterval(tick, AUTOPLAY_INTERVAL)
+        }
+        start()
+        const handleMouseEnter = () => {
+            userPausedRef.current = true
+            clear()
+        }
+        const handleMouseLeave = () => {
+            userPausedRef.current = false
+            start()
+        }
+        const handleUserScroll = () => {
+            userPausedRef.current = true
+            clear()
+            setTimeout(() => {
+                userPausedRef.current = false
+                start()
+            }, 5000)
+        }
+        el.addEventListener('mouseenter', handleMouseEnter)
+        el.addEventListener('mouseleave', handleMouseLeave)
+        el.addEventListener('pointerdown', handleUserScroll)
+        el.addEventListener('wheel', handleUserScroll, { passive: true })
+        return () => {
+            clear()
+            el.removeEventListener('mouseenter', handleMouseEnter)
+            el.removeEventListener('mouseleave', handleMouseLeave)
+            el.removeEventListener('pointerdown', handleUserScroll)
+            el.removeEventListener('wheel', handleUserScroll)
+        }
+    }, [featuredProducts, atEnd])
+
     const handleProductClick = (product) => {
         router.push(`/products/${product.slug || product.id || product._id}`)
     }
+
     return (
         <section className="relative overflow-hidden bg-black">
             <BackgroundEffectsLight />
@@ -133,7 +215,6 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                         ) : featuredProducts.length === 0 ? (
                             <div className="text-center py-16 sm:py-24">
                                 <div className="flex flex-col items-center gap-8 max-w-md mx-auto">
-                                    {/* Animated Icon Container */}
                                     <motion.div
                                         initial={{ scale: 0.8, opacity: 0 }}
                                         animate={{ scale: 1, opacity: 1 }}
@@ -142,12 +223,9 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                                         <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-[#00FF89]/20 to-[#00FF89]/5 rounded-3xl flex items-center justify-center border border-[#00FF89]/20 backdrop-blur-sm">
                                             <Package className="w-10 h-10 sm:w-12 sm:h-12 text-[#00FF89]" />
                                         </div>
-                                        {/* Floating particles */}
                                         <div className="absolute -top-2 -right-2 w-3 h-3 bg-[#00FF89] rounded-full animate-ping opacity-75"></div>
                                         <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-[#00FF89]/60 rounded-full animate-pulse"></div>
                                     </motion.div>
-
-                                    {/* Title and Description */}
                                     <motion.div
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
@@ -158,8 +236,6 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                                             We're working on curating amazing products for you. Check out our full catalog in the meantime.
                                         </p>
                                     </motion.div>
-
-                                    {/* Action Button */}
                                     <motion.div
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
@@ -171,8 +247,6 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                                             </button>
                                         </Link>
                                     </motion.div>
-
-                                    {/* Additional Info */}
                                     <motion.div
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
@@ -199,21 +273,45 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                                 </div>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                {featuredProducts.slice(0, 8).map((product, index) => (
-                                    <motion.div
-                                        key={product._id || product.id}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        whileInView={{ opacity: 1, y: 0 }}
-                                        viewport={{ once: true }}
-                                        transition={{ duration: 0.5, delay: index * 0.05 }}
-                                        className="w-full h-full">
-                                        <ProductCard
-                                            product={product}
-                                            onClick={() => handleProductClick(product)}
-                                        />
-                                    </motion.div>
-                                ))}
+                            <div
+                                className="relative"
+                                role="region"
+                                aria-label="Featured products carousel">
+                                <div className="pointer-events-none absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-black to-transparent z-10" />
+                                <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-black to-transparent z-10" />
+                                <button
+                                    aria-label="Scroll left"
+                                    disabled={atStart}
+                                    onClick={scrollLeft}
+                                    className={`hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 h-12 w-12 items-center justify-center rounded-full border border-[#1d1d1d] bg-[#0d0d0d]/80 backdrop-blur hover:border-[#2b2b2b] hover:bg-[#151515] transition ${atStart ? 'opacity-40 cursor-not-allowed' : ''}`}>
+                                    <ArrowRight className="w-5 h-5 rotate-180" />
+                                </button>
+                                <button
+                                    aria-label="Scroll right"
+                                    disabled={atEnd}
+                                    onClick={scrollRight}
+                                    className={`hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-20 h-12 w-12 items-center justify-center rounded-full border border-[#1d1d1d] bg-[#0d0d0d]/80 backdrop-blur hover:border-[#2b2b2b] hover:bg-[#151515] transition ${atEnd ? 'opacity-40 cursor-not-allowed' : ''}`}>
+                                    <ArrowRight className="w-5 h-5" />
+                                </button>
+                                <div
+                                    ref={carouselRef}
+                                    className="flex gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 no-scrollbar"
+                                    style={{ scrollbarWidth: 'none' }}>
+                                    {featuredProducts.slice(0, 8).map((product, index) => (
+                                        <motion.div
+                                            key={product._id || product.id}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            whileInView={{ opacity: 1, y: 0 }}
+                                            viewport={{ once: true }}
+                                            transition={{ duration: 0.5, delay: index * 0.05 }}
+                                            className="snap-start shrink-0 w-[80%] xs:w-[70%] sm:w-[55%] md:w-[46%] lg:w-[32%] xl:w-[24%]">
+                                            <ProductCard
+                                                product={product}
+                                                onClick={() => handleProductClick(product)}
+                                            />
+                                        </motion.div>
+                                    ))}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -237,6 +335,7 @@ const FeaturedProducts = memo(function FeaturedProducts() {
         </section>
     )
 })
+
 function ProductCard({ product, onClick }) {
     const [isImageLoading, setIsImageLoading] = useState(true)
     const [imageError, setImageError] = useState(false)
@@ -269,12 +368,9 @@ function ProductCard({ product, onClick }) {
         averageRating: productAverageRating,
         totalReviews: productTotalReviews
     } = product || {}
-
-    // Determine seller profile: prefer populated sellerId object, fallback to seller
     const sellerProfile = sellerId && typeof sellerId === 'object' ? sellerId : seller && typeof seller === 'object' ? seller : null
     const sellerDisplayName = sellerProfile?.fullName || sellerProfile?.name || ''
     const sellerVerified = !!(sellerProfile?.verification?.status === 'approved' || sellerProfile?.isVerified || sellerProfile?.verified)
-
     const productRating =
         typeof productAverageRating === 'number' && productAverageRating > 0 ? productAverageRating : legacyRating > 0 ? legacyRating : 0
     const description = (shortDescription || product?.description || fullDescription || 'No description available').trim()
@@ -324,8 +420,8 @@ function ProductCard({ product, onClick }) {
             )}
         </div>
     )
-    const displayTags = tags.slice(0, 3) // Show up to 3 tags instead of 2
-    const extraTagCount = tags.length > 3 ? tags.length - 3 : 0 // Adjust for 3 tags
+    const displayTags = tags.slice(0, 3)
+    const extraTagCount = tags.length > 3 ? tags.length - 3 : 0
     const handleImageLoad = () => {
         setIsImageLoading(false)
         setImageError(false)
@@ -346,9 +442,7 @@ function ProductCard({ product, onClick }) {
             <div
                 className="flex flex-col h-full cursor-pointer"
                 onClick={(e) => {
-                    if (e.target.closest('button')) {
-                        return
-                    }
+                    if (e.target.closest('button')) return
                     onClick()
                 }}
                 onKeyDown={(e) => {
@@ -414,7 +508,6 @@ function ProductCard({ product, onClick }) {
                                 <Star className="w-3.5 h-3.5 text-yellow-400" />
                                 {productRating.toFixed(1)}
                             </span>
-                            {/* Removed redundant "New" tag from here since it already appears in image overlay */}
                         </div>
                     </div>
                     <p className="text-[15px] md:text-[15px] text-gray-300 line-clamp-3 leading-relaxed mb-4">{description}</p>
@@ -454,5 +547,6 @@ function ProductCard({ product, onClick }) {
         </motion.div>
     )
 }
+
 export default FeaturedProducts
 

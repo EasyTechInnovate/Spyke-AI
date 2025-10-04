@@ -23,6 +23,7 @@ import {
 import { useProductCreateStore } from '@/store/productCreate'
 import { productsAPI } from '@/lib/api'
 import { useRouter } from 'next/navigation'
+import { CATEGORIES, INDUSTRIES } from '@/lib/constants/productCreate'
 const ERROR_HELP = {
     title: 'Product title is required for listing your product in the marketplace',
     type: 'Select whether your product is an automation, template, or consultation',
@@ -246,6 +247,9 @@ export default function ReviewSubmit({ onBackToStep }) {
     const validateStep = useProductCreateStore((state) => state.validateStep)
     const toApiPayload = useProductCreateStore((state) => state.toApiPayload)
     const reset = useProductCreateStore((state) => state.reset)
+    // Map value ids to human-readable labels
+    const categoryLabel = useMemo(() => CATEGORIES.find((c) => c.value === state.category)?.label || '', [state.category])
+    const industryLabel = useMemo(() => INDUSTRIES.find((i) => i.value === state.industry)?.label || '', [state.industry])
     const handleSubmit = async () => {
         setIsSubmitting(true)
         setSubmitError('')
@@ -380,7 +384,7 @@ export default function ReviewSubmit({ onBackToStep }) {
                         <div>
                             <span className="text-sm text-gray-400">Category & Type</span>
                             <p className="text-white text-base">
-                                {state.category?.replace('_', ' ') || 'Not set'} • {state.type || 'Not set'}
+                                {categoryLabel || 'Not set'} • {state.type || 'Not set'}
                             </p>
                         </div>
                         <div>
@@ -394,7 +398,7 @@ export default function ReviewSubmit({ onBackToStep }) {
                     <div className="space-y-3">
                         <div>
                             <span className="text-sm text-gray-400">Industry Focus</span>
-                            <p className="text-white text-base">{state.industry?.replace('_', ' ') || 'Not set'}</p>
+                            <p className="text-white text-base">{industryLabel || 'Not set'}</p>
                         </div>
                         <div>
                             <span className="text-sm text-gray-400">Support Level</span>
