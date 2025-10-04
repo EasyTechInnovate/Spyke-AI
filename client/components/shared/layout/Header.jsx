@@ -37,7 +37,7 @@ export default function Header() {
     const isSignInPage = pathname === '/signin'
     return (
         <>
-            <div className="sticky top-0 z-[9999] w-full backdrop-blur-xl bg-black/95 border-b border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.3)] supports-[backdrop-filter]:bg-black/80">
+            <div className="sticky top-0 z-[9999] w-full backdrop-blur-xl bg-[#121212] border-b border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.3)] supports-[backdrop-filter]:bg-[#121212]/80">
                 <div className="max-w-[120rem] mx-auto px-4 md:px-8">
                     <div className="flex items-center justify-between h-20 w-full">
                         <div className="shrink-0">

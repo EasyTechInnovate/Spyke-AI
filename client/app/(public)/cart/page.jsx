@@ -168,26 +168,7 @@ export default function CartPage() {
                                     )}
                                 </div>
 
-                                {/* Trust Indicators */}
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.4 }}
-                                    className="bg-gray-800/30 border border-gray-700/50 rounded-xl p-4 mb-6">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-6">
-                                            <div className="flex items-center gap-2">
-                                                <Shield className="w-4 h-4 text-[#00FF89]" />
-                                                <span className="text-sm text-gray-300">Secure Checkout</span>
-                                            </div>
-
-                                            <div className="flex items-center gap-2">
-                                                <Star className="w-4 h-4 text-yellow-400" />
-                                                <span className="text-sm text-gray-300">Premium Quality</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </motion.div>
+                                
 
                                 {/* Cart Items */}
                                 <div className="space-y-4">

@@ -44,7 +44,7 @@ export default function Navigation({ showBecomeSeller }) {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="nav-link px-4 py-3 text-base font-medium text-white/80 hover:text-brand-primary rounded-md transition-all duration-200 hover:bg-white/10 whitespace-nowrap">
-                    Hire
+                    Hire Us
                 </a>
             </motion.div>
             {showBecomeSeller && (

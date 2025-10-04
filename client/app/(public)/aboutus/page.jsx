@@ -67,28 +67,10 @@ export default function AboutUsPage() {
     ]
     const teamMembers = [
         {
-            name: "Alex Chen",
-            role: "Founder & CEO",
-            description: "AI researcher with 10+ years in machine learning and marketplace development",
-            image: "/images/team/alex-chen.jpg"
-        },
-        {
-            name: "Sarah Rodriguez",
-            role: "Head of Product",
-            description: "Former Google PM specializing in AI product strategy and user experience",
-            image: "/images/team/sarah-rodriguez.jpg"
-        },
-        {
-            name: "Dr. Michael Kim",
-            role: "Chief Technology Officer",
-            description: "PhD in Computer Science, expert in AI infrastructure and scalable systems",
-            image: "/images/team/michael-kim.jpg"
-        },
-        {
-            name: "Emma Johnson",
-            role: "Head of Community",
-            description: "Building bridges between AI creators and businesses worldwide",
-            image: "/images/team/emma-johnson.jpg"
+            name: "Srikanishka",
+            role: "Founder",
+            description: "AI Product Leader with 13+ years of experience in building startups.",
+            link: "https://www.linkedin.com/in/srikanishka/"
         }
     ]
     return (
@@ -342,6 +324,9 @@ export default function AboutUsPage() {
                                     </p>
                                     <p className="text-gray-300 text-sm leading-relaxed">
                                         {member.description}
+                                    </p>
+                                    <p className="text-gray-300 text-sm leading-relaxed">
+                                        {member.link}
                                     </p>
                                 </motion.div>
                             ))}

@@ -145,11 +145,7 @@ function ProductHeader({ item, onNavigate, onRemove }) {
                     {item.description && <p className="text-sm text-gray-300 line-clamp-2 leading-relaxed">{item.description}</p>}
                 </div>
                 <div className="flex items-center gap-2">
-                    <button
-                        className="text-gray-400 hover:text-[#00FF89] transition-colors p-2 rounded-lg hover:bg-white/5 group"
-                        aria-label="Save for later">
-                        <Heart className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                    </button>
+                    
                     <button
                         onClick={onRemove}
                         className="text-gray-400 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-white/5 group"

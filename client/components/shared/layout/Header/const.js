@@ -4,7 +4,7 @@ export const NAVIGATION = [
     { name: 'Explore', href: '/explore', prefetch: false, icon: Search },
     { name: 'Sellers', href: '/creators', prefetch: false, icon: UserCheck },
     { name: 'Categories', href: '/categories', prefetch: false, icon: Grid3X3 },
-    { name: 'Hire', href: '/hire', prefetch: false, icon: Users }
+    { name: 'Hire Us', href: '/hire', prefetch: false, icon: Users }
 ]
 
 export const USER_MENU_ITEMS = [

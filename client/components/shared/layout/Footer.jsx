@@ -30,7 +30,7 @@ export default function Footer() {
     const socialLinks = [
         { name: 'Twitter', icon: Twitter, href: 'https://x.com/spykeai' },
         { name: 'LinkedIn', icon: Linkedin, href: 'https://www.linkedin.com/company/spykeai/' },
-        { name: 'Facebook', icon: Facebook, href: 'https://www.facebook.com/Spykeai/' },
+        { name: 'Facebook', icon: Facebook, href: 'https://www.facebook.com/Spykeaitech/' },
         { name: 'YouTube', icon: Youtube, href: 'https://www.youtube.com/@SpykeAITech?sub_confirmation=1' },
         { name: 'Instagram', icon: Instagram, href: 'https://www.instagram.com/spykeai/' }
     ]
