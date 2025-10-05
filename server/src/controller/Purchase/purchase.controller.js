@@ -893,22 +893,15 @@ async function handlePaymentSucceeded(paymentIntent, sessionId = null) {
         const { userId, cartId } = paymentIntent.metadata || {}
         if (!userId) return
 
-        // Enhanced deduplication - check multiple reference points
-        const existingPurchase = await Purchase.findOne({
-            userId,
-            $or: [
-                { paymentReference: paymentIntent.id },
-                ...(sessionId ? [{ paymentReference: sessionId }] : []),
-                {
-                    // Also check recent stripe_checkout purchases to prevent webhook duplicates
-                    paymentMethod: { $in: ['stripe', 'stripe_checkout'] },
-                    createdAt: { $gte: new Date(Date.now() - 10 * 60 * 1000) } // Last 10 minutes
-                }
-            ]
+        const paymentReference = paymentIntent.id
+
+        const existingPurchase = await Purchase.findOne({ 
+            paymentReference,
+            userId 
         })
 
         if (existingPurchase) {
-            console.log('Webhook: Existing purchase found, skipping creation:', existingPurchase._id)
+            console.log('Webhook: Purchase already exists for payment reference:', paymentReference)
             return
         }
 
@@ -935,34 +928,40 @@ async function handlePaymentSucceeded(paymentIntent, sessionId = null) {
             return
         }
 
-        let purchase
-        try {
-            purchase = new Purchase({
-                userId,
-                items: purchaseItems,
-                totalAmount: cart.totalAmount,
-                discountAmount: cart.appliedPromocode?.discountAmount || 0,
-                finalAmount: stripeService.formatAmount(paymentIntent.amount),
-                appliedPromocode: cart.appliedPromocode,
-                paymentMethod: 'stripe',
-                paymentReference: paymentIntent.id,
-                paymentStatus: 'COMPLETED',
-                orderStatus: 'COMPLETED'
-            })
-
-            await purchase.save()
-        } catch (saveError) {
-            // Handle duplicate key errors gracefully
-            if (saveError.code === 11000) {
-                console.log('Webhook: Duplicate purchase detected, likely already processed by frontend')
-                return
+        const purchase = await Purchase.findOneAndUpdate(
+            { 
+                paymentReference,
+                userId 
+            },
+            {
+                $setOnInsert: {
+                    userId,
+                    items: purchaseItems,
+                    totalAmount: cart.totalAmount,
+                    discountAmount: cart.appliedPromocode?.discountAmount || 0,
+                    finalAmount: stripeService.formatAmount(paymentIntent.amount),
+                    appliedPromocode: cart.appliedPromocode,
+                    paymentMethod: 'stripe',
+                    paymentReference,
+                    paymentStatus: 'COMPLETED',
+                    orderStatus: 'COMPLETED',
+                    createdAt: new Date()
+                }
+            },
+            { 
+                upsert: true, 
+                new: true,
+                setDefaultsOnInsert: true
             }
-            throw saveError
+        )
+
+        if (purchase.createdAt < new Date(Date.now() - 1000)) {
+            console.log('Webhook: Purchase was already processed, skipping:', purchase._id)
+            return
         }
 
         await purchase.grantAccess()
 
-        // Update promocode usage if applicable
         if (cart.appliedPromocode && cart.appliedPromocode.code) {
             try {
                 const promocode = await Promocode.findOne({ code: cart.appliedPromocode.code })
@@ -974,7 +973,6 @@ async function handlePaymentSucceeded(paymentIntent, sessionId = null) {
             }
         }
 
-        // Update product sales and notify sellers
         try {
             for (const item of purchaseItems) {
                 await Product.findByIdAndUpdate(item.productId, { $inc: { sales: 1 } })
@@ -988,7 +986,6 @@ async function handlePaymentSucceeded(paymentIntent, sessionId = null) {
             console.warn('Webhook: Product/seller update failed:', updateError.message)
         }
 
-        // Notify buyer
         try {
             await notificationService.sendToUser(
                 userId,
@@ -1000,7 +997,6 @@ async function handlePaymentSucceeded(paymentIntent, sessionId = null) {
             console.warn('Webhook: Notification failed:', notifError.message)
         }
 
-        // Clear cart
         try {
             await cart.clearCart()
         } catch (clearError) {
