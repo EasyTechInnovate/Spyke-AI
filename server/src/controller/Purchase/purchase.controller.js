@@ -273,10 +273,9 @@ const purchaseControllerExport = {
         try {
             const { authenticatedUser } = req
             const { sessionId } = req.body
-
+            
             if (!sessionId) return httpError(next, new Error('Session ID is required'), req, 400)
 
-            // Retrieve checkout session
             let session
             try {
                 session = await stripeService.retrieveCheckoutSession(sessionId)
@@ -291,168 +290,52 @@ const purchaseControllerExport = {
                 return httpError(next, new Error('Session does not belong to user'), req, 403)
             }
 
-            // Prefer payment intent id when available (stable unique reference), fallback to session id
-            let paymentIntentId = null
+            let paymentReference = sessionId
             if (session.payment_intent) {
                 try {
                     const pi = await stripeService.retrievePaymentIntent(session.payment_intent)
                     if (pi && stripeService.isPaymentSuccessful(pi) && pi.metadata?.userId === authenticatedUser.id) {
-                        paymentIntentId = pi.id
+                        paymentReference = pi.id
                     }
                 } catch (e) {
-                    // Ignore error, will fall back to session id
+                    // Ignore error, will use session id
                 }
             }
-            const paymentReference = paymentIntentId || sessionId
 
-            // Return existing purchase if already created (idempotent)
-            const existing = await Purchase.findOne({ paymentReference, userId: authenticatedUser.id }).populate(
-                'items.productId',
-                'title price type thumbnail'
-            )
-            if (existing) {
-                return httpResponse(req, res, 200, responseMessage.PRODUCT.PURCHASE_SUCCESSFUL, {
-                    purchaseId: existing._id,
-                    totalItems: existing.items.length,
-                    totalAmount: existing.totalAmount,
-                    discountAmount: existing.discountAmount,
-                    finalAmount: existing.finalAmount,
-                    status: existing.orderStatus,
-                    paymentStatus: existing.paymentStatus,
-                    purchaseDate: existing.purchaseDate,
-                    paymentMethod: existing.paymentMethod,
-                    appliedPromocode: existing.appliedPromocode,
-                    items: existing.items.map((i) => ({
-                        productId: i.productId?._id || i.productId,
-                        title: i.productId?.title,
-                        price: i.productId?.price || i.price,
-                        type: i.productId?.type,
-                        thumbnail: i.productId?.thumbnail
-                    }))
+            const existing = await Purchase.findOne({ 
+                paymentReference, 
+                userId: authenticatedUser.id 
+            }).populate('items.productId', 'title price type thumbnail')
+
+            if (!existing) {
+                // Purchase not created by webhook yet - return 202 Accepted
+                return httpResponse(req, res, 202, 'Payment confirmed, purchase being processed', {
+                    processing: true,
+                    sessionId,
+                    message: 'Your payment was successful. Your purchase is being processed.'
                 })
             }
 
-            // Build purchase from current cart
-            const cart = await Cart.getOrCreateCart(authenticatedUser.id)
-            await cart.populate('items.productId', 'title price type status sellerId thumbnail')
-
-            if (!cart.items.length) {
-                return httpError(next, new Error(responseMessage.CART.EMPTY_CART), req, 400)
-            }
-
-            const purchaseItems = cart.items
-                .filter((it) => it.productId && it.productId.status === EProductStatusNew.PUBLISHED)
-                .map((it) => ({ productId: it.productId._id, sellerId: it.productId.sellerId, price: it.productId.price }))
-
-            if (!purchaseItems.length) return httpError(next, new Error(responseMessage.CART.NO_VALID_ITEMS), req, 400)
-
-            // Store cart item details BEFORE clearing cart
-            const cartItemsForResponse = cart.items.map((i) => ({
-                productId: i.productId._id,
-                title: i.productId.title,
-                price: i.productId.price,
-                type: i.productId.type,
-                thumbnail: i.productId.thumbnail
-            }))
-
-            let purchase
-            try {
-                purchase = await Purchase.create({
-                    userId: authenticatedUser.id,
-                    items: purchaseItems,
-                    totalAmount: cart.totalAmount,
-                    discountAmount: cart.appliedPromocode?.discountAmount || 0,
-                    finalAmount: cart.finalAmount,
-                    appliedPromocode: cart.appliedPromocode,
-                    paymentMethod: 'stripe_checkout',
-                    paymentReference,
-                    ipAddress: req.ip,
-                    userAgent: req.get('User-Agent')
-                })
-            } catch (e) {
-                if (e.code === 11000) {
-                    const dup = await Purchase.findOne({ paymentReference, userId: authenticatedUser.id }).populate(
-                        'items.productId',
-                        'title price type thumbnail'
-                    )
-                    if (dup) {
-                        return httpResponse(req, res, 200, responseMessage.PRODUCT.PURCHASE_SUCCESSFUL, {
-                            purchaseId: dup._id,
-                            totalItems: dup.items.length,
-                            totalAmount: dup.totalAmount,
-                            discountAmount: dup.discountAmount,
-                            finalAmount: dup.finalAmount,
-                            status: dup.orderStatus,
-                            paymentStatus: dup.paymentStatus,
-                            purchaseDate: dup.purchaseDate,
-                            paymentMethod: dup.paymentMethod,
-                            appliedPromocode: dup.appliedPromocode,
-                            items: dup.items.map((i) => ({
-                                productId: i.productId?._id || i.productId,
-                                title: i.productId?.title,
-                                price: i.productId?.price || i.price,
-                                type: i.productId?.type,
-                                thumbnail: i.productId?.thumbnail
-                            }))
-                        })
-                    }
-                }
-                throw e
-            }
-
-            await purchase.grantAccess()
-
-            // Promo usage
-            if (cart.appliedPromocode?.code) {
-                try {
-                    const promocode = await Promocode.findOne({ code: cart.appliedPromocode.code })
-                    if (promocode) await promocode.recordUsage(authenticatedUser.id, purchase._id, cart.appliedPromocode.discountAmount)
-                } catch (e) {
-                    // Ignore promo update errors
-                }
-            }
-            // Update product sales & notify sellers (best effort)
-            try {
-                for (const it of purchaseItems) {
-                    await Product.findByIdAndUpdate(it.productId, { $inc: { sales: 1 } })
-                    const seller = await sellerProfileModel.findById(it.sellerId)
-                    if (seller) {
-                        seller.updateStats('totalSales', 1)
-                        await seller.save()
-                        await notificationService.sendToUser(seller.userId, 'New Sale!', 'Your product has been purchased.', 'success')
-                    }
-                }
-            } catch (e) {
-                // Ignore seller update errors
-            }
-            // Clear cart (ignore errors)
-            try {
-                await cart.clearCart()
-            } catch (e) {
-                // Ignore cart clear errors
-            }
-            // Notify buyer (ignore errors)
-            try {
-                await notificationService.sendToUser(authenticatedUser.id, 'Purchase Successful!', 'Access granted.', 'success')
-            } catch (e) {
-                // Ignore notification errors
-            }
-
-            const responseData = {
-                purchaseId: purchase._id,
-                totalItems: purchaseItems.length,
-                totalAmount: purchase.totalAmount,
-                discountAmount: purchase.discountAmount,
-                finalAmount: purchase.finalAmount,
-                status: purchase.orderStatus,
-                paymentStatus: purchase.paymentStatus,
-                purchaseDate: purchase.purchaseDate,
-                paymentMethod: purchase.paymentMethod,
-                appliedPromocode: purchase.appliedPromocode,
-                items: cartItemsForResponse
-            }
-
-            return httpResponse(req, res, 200, responseMessage.PRODUCT.PURCHASE_SUCCESSFUL, responseData)
+            // Return existing purchase created by webhook
+            return httpResponse(req, res, 200, responseMessage.PRODUCT.PURCHASE_SUCCESSFUL, {
+                purchaseId: existing._id,
+                totalItems: existing.items.length,
+                totalAmount: existing.totalAmount,
+                discountAmount: existing.discountAmount,
+                finalAmount: existing.finalAmount,
+                status: existing.orderStatus,
+                paymentStatus: existing.paymentStatus,
+                purchaseDate: existing.purchaseDate,
+                paymentMethod: existing.paymentMethod,
+                appliedPromocode: existing.appliedPromocode,
+                items: existing.items.map((i) => ({
+                    productId: i.productId?._id || i.productId,
+                    title: i.productId?.title,
+                    price: i.productId?.price || i.price,
+                    type: i.productId?.type,
+                    thumbnail: i.productId?.thumbnail
+                }))
+            })
         } catch (err) {
             return httpError(next, err, req, 500)
         }

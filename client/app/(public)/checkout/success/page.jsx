@@ -102,9 +102,15 @@ function CheckoutSuccessContent() {
         }
 
         let isMounted = true
+        let pollAttempts = 0
+        const MAX_POLL_ATTEMPTS = 20 // 20 seconds total
 
-        const confirmOrder = async () => {
+        // Poll for purchase created by webhook
+        const pollForPurchase = async () => {
             try {
+                pollAttempts++
+                
+                // Try to get the purchase by session ID
                 const response = await paymentAPI.confirmCheckoutSession(sessionId)
                 
                 if (!isMounted) return
@@ -112,7 +118,12 @@ function CheckoutSuccessContent() {
                 const data = response?.data || response
                 
                 if (!data || !data.purchaseId) {
-                    throw new Error('Invalid order data received')
+                    // Purchase not created yet by webhook, retry
+                    if (pollAttempts < MAX_POLL_ATTEMPTS) {
+                        setTimeout(pollForPurchase, 1000) // Poll every 1 second
+                        return
+                    }
+                    throw new Error('Purchase is being processed. Please check your purchase history.')
                 }
 
                 const order = {
@@ -177,7 +188,8 @@ function CheckoutSuccessContent() {
             }
         }
 
-        confirmOrder()
+        // Start polling after a short delay to give webhook time to process
+        setTimeout(pollForPurchase, 500)
 
         return () => {
             isMounted = false
