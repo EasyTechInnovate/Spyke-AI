@@ -24,13 +24,18 @@ const storage = multer.diskStorage({
 export const upload = multer({ 
     storage,
     limits: {
-        fileSize: 5 * 1024 * 1024,
-        fieldSize: 5 * 1024 * 1024 
+        fileSize: 10 * 1024 * 1024, // Increase to 10MB for videos
+        fieldSize: 10 * 1024 * 1024 
     },
     fileFilter: (req, file, cb) => {
-        const allowedTypes = /jpeg|jpg|png|gif|webp|mp4|avi|mov|wmv|flv|mkv/;
-        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-        const mimetype = allowedTypes.test(file.mimetype);
+        // Allowed file extensions
+        const allowedExtensions = /\.(jpeg|jpg|png|gif|webp|mp4|avi|mov|wmv|flv|mkv|webm)$/i;
+        
+        // Allowed MIME types
+        const allowedMimeTypes = /^(image\/(jpeg|jpg|png|gif|webp)|video\/(mp4|avi|mov|wmv|flv|mkv|webm|quicktime|x-msvideo))$/i;
+        
+        const extname = allowedExtensions.test(file.originalname);
+        const mimetype = allowedMimeTypes.test(file.mimetype);
         
         if (mimetype && extname) {
             return cb(null, true);

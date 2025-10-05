@@ -149,6 +149,15 @@ export default function ProductHero({
             })
         })
     }
+    
+    if (product.previewVideo) {
+        mediaItems.push({
+            type: 'video',
+            src: product.previewVideo,
+            alt: `${product.title} - Preview Video`
+        })
+    }
+    
 
     const activeMedia = mediaItems[currentImageIndex] || mediaItems[0]
     const calculatedDiscount =
@@ -231,39 +240,47 @@ export default function ProductHero({
                                 className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-gray-900/80 border border-gray-700/50 cursor-pointer"
                                 onClick={() => setIsImageFullscreen(true)}>
                                 {activeMedia?.src ? (
-                                    <>
-                                        <img
-                                            src={activeMedia.src}
-                                            alt={activeMedia.alt}
-                                            className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105 cursor-pointer"
-                                            onError={(e) => {
-                                                e.target.src = '/images/placeholder-product.jpg'
-                                            }}
-                                        />
-                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer">
-                                            <div className="absolute inset-0 flex items-center justify-center">
-                                                <div className="px-4 py-2 bg-black/80 backdrop-blur-sm rounded-lg border border-[#00FF89]/50">
-                                                    <div className="flex items-center gap-2 text-[#00FF89]">
-                                                        <Eye className="w-4 h-4" />
-                                                        <span className="text-sm font-medium">Click to enlarge</span>
+                                    activeMedia.type === 'image' ? (
+                                        <>
+                                            <img
+                                                src={activeMedia.src}
+                                                alt={activeMedia.alt}
+                                                className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105 cursor-pointer"
+                                                onError={(e) => {
+                                                    e.target.src = '/images/placeholder-product.jpg'
+                                                }}
+                                            />
+                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer">
+                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                    <div className="px-4 py-2 bg-black/80 backdrop-blur-sm rounded-lg border border-[#00FF89]/50">
+                                                        <div className="flex items-center gap-2 text-[#00FF89]">
+                                                            <Eye className="w-4 h-4" />
+                                                            <span className="text-sm font-medium">Click to enlarge</span>
+                                                        </div>
                                                     </div>
                                                 </div>
+                                                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+                                                    {mediaItems.length > 1 && (
+                                                        <div className="px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-lg">
+                                                            <span className="text-white text-sm">
+                                                                {currentImageIndex + 1} / {mediaItems.length}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-                                                {mediaItems.length > 1 && (
-                                                    <div className="px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-lg">
-                                                        <span className="text-white text-sm">
-                                                            {currentImageIndex + 1} / {mediaItems.length}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </>
+                                        </>
+                                    ) : (
+                                        <video
+                                            src={activeMedia.src}
+                                            controls
+                                            className="w-full h-full object-cover"
+                                        />
+                                    )
                                 ) : (
                                     <div className="w-full h-full flex flex-col items-center justify-center">
                                         <Package className="w-16 h-16 text-gray-500 mb-4" />
-                                        <span className="text-gray-400">No image available</span>
+                                        <span className="text-gray-400">No media available</span>
                                     </div>
                                 )}
                                 {mediaItems.length > 1 && (
@@ -298,11 +315,18 @@ export default function ProductHero({
                                                     ? 'border-[#00FF89] ring-2 ring-[#00FF89]/25'
                                                     : 'border-gray-600 hover:border-[#00FF89]/50'
                                             }`}>
-                                            <img
-                                                src={media.src}
-                                                alt={media.alt}
-                                                className="w-full h-full object-cover"
-                                            />
+                                            {media.type === 'image' ? (
+                                                <img
+                                                    src={media.src}
+                                                    alt={media.alt}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <video
+                                                    src={media.src}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            )}
                                         </button>
                                     ))}
                                 </div>
@@ -706,15 +730,27 @@ export default function ProductHero({
                             className="absolute top-6 right-6 w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center transition-colors">
                             <span className="text-white text-2xl">×</span>
                         </button>
-                        <motion.img
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.8, opacity: 0 }}
-                            src={activeMedia.src}
-                            alt={activeMedia.alt}
-                            className="max-w-full max-h-full object-contain rounded-2xl"
-                            onClick={(e) => e.stopPropagation()}
-                        />
+                        {activeMedia.type === 'image' ? (
+                            <motion.img
+                                initial={{ scale: 0.8, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.8, opacity: 0 }}
+                                src={activeMedia.src}
+                                alt={activeMedia.alt}
+                                className="max-w-full max-h-full object-contain rounded-2xl"
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                        ) : (
+                            <motion.video
+                                initial={{ scale: 0.8, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.8, opacity: 0 }}
+                                src={activeMedia.src}
+                                controls
+                                className="max-w-full max-h-full object-contain rounded-2xl"
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>

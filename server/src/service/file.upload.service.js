@@ -17,21 +17,30 @@ const uploadOnImageKit = async (localFilePath, category) => {
     if (!category) {
       throw new Error("No category/folder name provided");
     }
-    const folderPath = category.trim().toLowerCase();
 
+    // Check if file exists before reading
+    if (!fs.existsSync(localFilePath)) {
+      throw new Error(`File not found at path: ${localFilePath}`);
+    }
+
+    const folderPath = category.trim().toLowerCase();
     const file = fs.readFileSync(localFilePath);
+    const fileName = localFilePath.split("/").pop();
 
     const response = await imageKit.upload({
       file: file,
-      fileName: localFilePath.split("/").pop(),
+      fileName: fileName,
       folder: folderPath,
       useUniqueFileName: true,
     });
-
+    
+    // Clean up the temporary file
     fs.unlinkSync(localFilePath);
     return response;
   } catch (error) {
     console.error("Error uploading to ImageKit:", error.message);
+    
+    // Clean up the temporary file even on error
     if (fs.existsSync(localFilePath)) {
       fs.unlinkSync(localFilePath);
     }

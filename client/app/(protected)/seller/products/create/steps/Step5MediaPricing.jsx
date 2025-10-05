@@ -172,6 +172,20 @@ export default function Step5MediaPricing() {
             setUploadingAdditional(new Set())
         }
     })
+
+    const videoUpload = useImageUpload({
+        category: 'product-videos',
+        maxSize: 10,
+        acceptedFormats: ['.mp4', '.webm', '.avi', '.mov', '.mkv'],
+        onSuccess: (url) => {
+            setField('previewVideo', url)
+            showSuccess('Video uploaded successfully')
+        },
+        onError: (error) => {
+            showError(error)
+        }
+    })
+
     const validateVideoFile = (file) => {
         return new Promise((resolve, reject) => {
             if (!file) {
@@ -337,19 +351,9 @@ export default function Step5MediaPricing() {
         }
         setUploadingVideo(true)
         try {
-            const formData = new FormData()
-            formData.append('video', file)
-            const response = await fetch('/api/upload/video', {
-                method: 'POST',
-                body: formData
-            })
-            if (!response.ok) throw new Error('Upload failed')
-            const data = await response.json()
-            setField('previewVideo', data.url)
-            setVideoMetadata(data.metadata)
-            showSuccess('Video uploaded successfully')
+            await videoUpload.uploadImage(file)
         } catch (error) {
-            showError('Failed to upload video')
+            console.error('Video upload failed:', error)
         } finally {
             setUploadingVideo(false)
         }
@@ -605,12 +609,7 @@ export default function Step5MediaPricing() {
                                 className={`px-4 py-2 text-sm ${videoInputType === 'upload' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-300 hover:text-white'}`}>
                                 Upload file
                             </button>
-                            <button
-                                type="button"
-                                onClick={() => setVideoInputType('url')}
-                                className={`px-4 py-2 text-sm border-l border-gray-700 ${videoInputType === 'url' ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-300 hover:text-white'}`}>
-                                Paste URL
-                            </button>
+                            
                         </div>
                         {videoInputType === 'upload' ? (
                             <div
