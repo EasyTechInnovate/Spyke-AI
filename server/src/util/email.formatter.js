@@ -4,224 +4,117 @@ const baseTemplate = (content, title = 'Spyke AI') => `
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${title}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Kumbh Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            background-color: #f8f9fa;
-            color: #333;
-        }
-        
-        .email-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #00FF89 0%, #FFC050 100%);
-            padding: 30px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            color: #121212;
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-        
-        .header p {
-            color: #121212;
-            font-size: 16px;
-            opacity: 0.8;
-        }
-        
-        .content {
-            padding: 40px 30px;
-        }
-        
-        .content h2 {
-            color: #121212;
-            font-size: 24px;
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
-        
-        .content p {
-            color: #555;
-            margin-bottom: 16px;
-            font-size: 16px;
-        }
-        
-        .button {
-            display: inline-block;
-            background: #00FF89;
-            color: #121212 !important;
-            text-decoration: none;
-            padding: 14px 28px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 16px;
-            margin: 20px 0;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0, 255, 137, 0.2);
-        }
-        
-        .button:hover {
-            transform: translateY(-1px);
-            background: #FFC050;
-            color: #FFFFFF !important;
-            box-shadow: 0 4px 8px rgba(255, 192, 80, 0.3);
-        }
-        
-        .code-box {
-            background-color: rgba(0, 255, 137, 0.05);
-            border: 2px dashed #00FF89;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            margin: 20px 0;
-        }
-        
-        .code {
-            font-family: 'Courier New', monospace;
-            font-size: 24px;
-            font-weight: bold;
-            color: #121212;
-            letter-spacing: 3px;
-        }
-        
-        .divider {
-            height: 1px;
-            background-color: #e9ecef;
-            margin: 30px 0;
-        }
-        
-        .footer {
-            background-color: #121212;
-            color: #FFFFFF;
-            padding: 30px;
-            text-align: center;
-        }
-        
-        .footer p {
-            color: #FFFFFF;
-            opacity: 0.8;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        
-        .footer a {
-            color: #00FF89;
-            text-decoration: none;
-        }
-        
-        .footer a:hover {
-            text-decoration: underline;
-        }
-        
-        .social-links {
-            margin-top: 20px;
-        }
-        
-        .social-links a {
-            display: inline-block;
-            margin: 0 10px;
-            color: #00FF89;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        
-        .warning-box {
-            background-color: rgba(255, 192, 80, 0.1);
-            border: 1px solid #FFC050;
-            border-radius: 6px;
-            padding: 15px;
-            margin: 20px 0;
-        }
-        
-        .warning-box p {
-            color: #121212;
-            margin: 0;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        
-        .success-box {
-            background-color: rgba(0, 255, 137, 0.1);
-            border: 1px solid #00FF89;
-            border-radius: 6px;
-            padding: 15px;
-            margin: 20px 0;
-        }
-        
-        .success-box p {
-            color: #121212;
-            margin: 0;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        
-        @media (max-width: 600px) {
-            .email-container {
-                margin: 0;
-                border-radius: 0;
-            }
-            
-            .header, .content, .footer {
-                padding: 20px;
-            }
-            
-            .header h1 {
-                font-size: 24px;
-            }
-            
-            .content h2 {
-                font-size: 20px;
-            }
-            
-            .button {
-                display: block;
-                text-align: center;
-            }
+        /* --- Base Resets --- */
+        body,table,td,p,div { margin:0; padding:0; }
+        img { border:0; line-height:100%; outline:none; text-decoration:none; }
+        table { border-collapse:collapse; }
+        body { -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; background:#f5f7f8; font-family:'League-spartan', 'Helvetica Neue', Arial, sans-serif; }
+        /* Container border was invisible because header & border used same green */
+        .outer-shell { padding:24px 12px; background:#f5f7f8; }
+        .outer { width:100%; max-width:640px; margin:0 auto; background:#ffffff; border:2px solid #00FF89; box-shadow:0 0 0 1px #00FF89,0 0 12px rgba(0,255,137,0.35); border-radius:14px; overflow:hidden; }
+        .header { background:#00FF89; padding:40px 24px 34px; text-align:center; }
+        .logo-circle { width:72px; height:72px; border-radius:50%; background:#121212; border:2px solid #00FF89; margin:0 auto 18px; }
+        .brand-title { font-size:30px; line-height:1.1; margin:0 0 10px; font-weight:700; color:#121212; }
+        .tagline { font-size:16px; margin:0; color:#121212; opacity:.85; font-weight:500; }
+        .content { padding:42px 38px 46px; font-size:16px; line-height:1.55; color:#333; }
+        .content h2 { font-size:24px; margin:0 0 20px; color:#121212; font-weight:600; }
+        .content p { margin:0 0 16px; }
+        .button { display:inline-block; background:#00FF89; color:#121212 !important; text-decoration:none; padding:15px 32px; border-radius:6px; font-weight:600; font-size:15px; letter-spacing:.4px; box-shadow:0 2px 6px rgba(0,255,137,0.35); }
+        .button:hover { background:#00e676; }
+        .code-box { background:rgba(0,255,137,.08); border:2px dashed #00FF89; padding:18px 20px; border-radius:10px; text-align:center; margin:26px 0; }
+        .code { font-family:monospace; font-size:22px; font-weight:700; letter-spacing:3px; color:#121212; }
+        .divider { height:1px; background:#e6e9ec; margin:34px 0; }
+        .notice, .success-box, .warning-box { background:rgba(0,255,137,.12); border:1px solid #00FF89; border-radius:8px; padding:14px 16px; margin:22px 0; }
+        .notice p { margin:0; font-size:14px; font-weight:500; color:#121212; }
+        .footer { background:#121212; text-align:center; padding:34px 28px; }
+        .footer p { margin:0 0 10px; font-size:13px; color:#FFFFFF; opacity:.85; }
+        .footer a { color:#00FF89; text-decoration:none; font-weight:600; }
+        .footer a:hover { text-decoration:underline; }
+        .social-links { margin-top:14px; font-size:13px; }
+        .social-links a { margin:0 6px; }
+        /* Mobile */
+        @media (max-width:620px) {
+            .content { padding:34px 24px 40px !important; }
+            .brand-title { font-size:26px !important; }
+            .content h2 { font-size:21px !important; }
+            .logo-circle { width:66px !important; height:66px !important; }
         }
     </style>
 </head>
 <body>
-    <div class="email-container">
-        <div class="header">
-            <h1>Spyke AI</h1>
-            <p>Where Ideas Meet Intelligence</p>
-        </div>
-        ${content}
-        <div class="footer">
-            <p>� 2024 Spyke AI. All rights reserved.</p>
-            <p>Premium AI Prompts, Automation Solutions & Digital Tools Marketplace</p>
-            <div class="social-links">
-                <a href="${config.client.url}">Visit Platform</a> |
-                <a href="${config.client.url}/support">Support</a> |
-                <a href="${config.client.url}/privacy">Privacy Policy</a>
-            </div>
-        </div>
-    </div>
+  <div class="outer-shell">
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" class="outer">
+      <tr>
+        <td class="header" style="background:#00FF89;">
+          <!-- Bullet‑proof centered circle & logo (no flex for email client safety) -->
+          <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tr>
+              <td align="center">
+                <div class="logo-circle" style="width:72px;height:72px;border-radius:50%;background:#121212;border:2px solid #00FF89;">
+                  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA+gAAAPoCAYAAABNo9TkAAAACXBIWXMAAB2HAAAdhwGP5fFlAAAEwGlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSfvu78nIGlkPSdXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQnPz4KPHg6eG1wbWV0YSB4bWxuczp4PSdhZG9iZTpuczptZXRhLyc+CjxyZGY6UkRGIHhtbG5zOnJkZj0naHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyc+CgogPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9JycKICB4bWxuczpBdHRyaWI9J2h0dHA6Ly9ucy5hdHRyaWJ1dGlvbi5jb20vYWRzLzEuMC8nPgogIDxBdHRyaWI6QWRzPgogICA8cmRmOlNlcT4KICAgIDxyZGY6bGkgcmRmOnBhcnNlVHlwZT0nUmVzb3VyY2UnPgogICAgIDxBdHRyaWI6Q3JlYXRlZD4yMDI1LTA2LTE2PC9BdHRyaWI6Q3JlYXRlZD4KICAgICA8QXR0cmliOkV4dElkPjliMTU2NDFlLTdjZjAtNGNjNS1hN2QwLTU5ZjhkNDVlYWRmYjwvQXR0cmliOkV4dElkPgogICAgIDxBdHRyaWI6RmJJZD41MjUyNjU5MTQxNzk1ODA8L0F0dHJpYjpGYklkPgogICAgIDxBdHRyaWI6VG91Y2hUeXBlPjI8L0F0dHJpYjpUb3VjaFR5cGU+CiAgICA8L3JkZjpsaT4KICAgPC9yZGY6U2VxPgogIDwvQXR0cmliOkFkcz4KIDwvcmRmOkRlc2NyaXB0aW9uPgoKIDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PScnCiAgeG1sbnM6ZGM9J2h0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvJz4KICA8ZGM6dGl0bGU+CiAgIDxyZGY6QWx0PgogICAgPHJkZjpsaSB4bWw6bGFuZz0neC1kZWZhdWx0Jz5TcHlrZSAtIDI0PC9yZGY6bGk+CiAgIDwvcmRmOkFsdD4KICA8L2RjOnRpdGxlPgogPC9yZGY6RGVzY3JpcHRpb24+CgogPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9JycKICB4bWxuczpwZGY9J2h0dHA6Ly9ucy5hZG9iZS5jb20vcGRmLzEuMy8nPgogIDxwZGY6QXV0aG9yPlN5ZWQgRmFyaGFuIEFsaTwvcGRmOkF1dGhvcj4KIDwvcmRmOkRlc2NyaXB0aW9uPgo8L3JkZjpSREY+CjwveDp4bXBtZXRhPgo8P3hwYWNrZXQgZW5kPSdyJz8+Y8vGfQAAgxtJREFUeJzs1z1rVFEYhdEdQeNHIRwFEQU1pYWxUP9/J8RCErASVGIhgjmdokHUwglMoaTR3M1kLXi553a7fbYCAAAALG5r6QEAAACAQAcAAIAKAh0AAAAKCHQAAAAoINABAACggEAHAACAAgIdAAAACgh0AAAAKCDQAQAAoIBABwAAgAICHQAAAAoIdAAAACgg0AEAAKCAQAcAAIACAh0AAAAKCHQAAAAoINABAACggEAHAACAAgIdAAAACgh0AAAAKCDQAQAAoIBABwAAgAICHQAAAAoIdAAAACgg0AEAAKCAQAcAAIACAh0AAAAKCHQAAAAoINABAACggEAHAACAAgIdugDWmfsooxsM7AAAAABJRU5ErkJggg==" width="40" height="40" alt="Spyke AI" style="display:block;width:40px;height:40px;" />
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding:0;">
+                <h1 class="brand-title" style="font-family:'League-spartan';">Spyke AI</h1>
+                <p class="tagline" style="font-family:'League-spartan';">Where Ideas Meet Intelligence</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td class="content" style="font-family:'league-spartan';">
+          ${content}
+        </td>
+      </tr>
+      <tr>
+        <td class="footer">
+          <p style="font-family:'league-spartan';">&copy; 2024 Spyke AI. All rights reserved.</p>
+          <p style="font-family:'league-spartan';">Premium AI Prompts, Automation Solutions & Digital Tools Marketplace</p>
+          <div class="social-links" style="font-family:'League Spartan',Arial,sans-serif;">
+            <a href="https://www.spykeai.com" target="_blank">Visit Platform</a> |
+            <a href="https://www.spykeai.com/contactus" target="_blank">Support</a> |
+            <a href="https://spykeai.com/privacy-policy" target="_blank">Privacy Policy</a>
+          </div>
+          <!-- Social icon row (icons only, no text) -->
+          <div class="social-links" style="margin-top:14px; font-size:0; line-height:0;">
+            <!--[if mso]><table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center"><tr><![endif]-->
+            <a href="https://x.com/spykeai" target="_blank" aria-label="Twitter" style="display:inline-block; margin:0 6px;">
+              <img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMEZGOEkiIHN0cm9rZS13aWR0aD0iMS41IiB2aWV3Qm94PSIwIDAgMjQgMjQiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJUd2l0dGVyIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHJ4PSI2IiBmaWxsPSIjMTIxMjEyIi8+PHBhdGggZD0iTTkgMTZsMy40LTUuN0g4LjFsNi41LTYuMy0zLjEgNS4xSDExbC0yIDYuOSIgIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==" width="24" height="24" style="display:block; width:24px; height:24px;" alt="Twitter" />
+            </a>
+            <a href="https://www.linkedin.com/company/spykeai/" target="_blank" aria-label="LinkedIn" style="display:inline-block; margin:0 6px;">
+              <img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiB2aWV3Qm94PSIwIDAgMjQgMjQiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJMaW5rZWRJbiIgc3Ryb2tlPSIjMDBGRjhJIiBzdHJva2Utd2lkdGg9IjEuNSI+PHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiByeD0iNiIgZmlsbD0iIzEyMTIxMiIvPjxnIGZpbGw9IiMwMEZGOEkiPjxwYXRoIGQ9Ik04IDEwSDExVjE3SDgiLz48Y2lyY2xlIGN4PSI5LjUiIGN5PSI3LjUiIHI9IjEuNSIvPjxwYXRoIGQ9Ik0xMyAxMEgxNnYxYy4zLS43IDEuMS0xLjUgMi0xLjUgMS40IDAgMi41IDEuMSAyLjUgMi41VjE3VjEzLjVjMC0uNi0uNS0xLTEtMXMtMSAuNC0xIDFWMTdIMTJWMTAiLz48L2c+PC9zdmc+" width="24" height="24" style="display:block; width:24px; height:24px;" alt="LinkedIn" />
+            </a>
+            <a href="https://www.facebook.com/Spykeaitech/" target="_blank" aria-label="Facebook" style="display:inline-block; margin:0 6px;">
+              <img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMEZGOEkiIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkZhY2Vib29rIiBzdHJva2Utd2lkdGg9IjEuNSI+PHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiByeD0iNiIgZmlsbD0iIzEyMTIxMiIvPjxwYXRoIGQ9Ik0xMiAyMHYtNyBoMy4xTDE2IDlIMTJWN2MwLS44LjMtMSAxLjUtMUgxNnYtM0gxMy41QzkuOSAzIDkgNS40IDkgN3YyaC0yVjloMlYyMCIgZmlsbD0iIzAwRkY4SSIgc3Ryb2tlPSJub25lIi8+PC9zdmc+" width="24" height="24" style="display:block; width:24px; height:24px;" alt="Facebook" />
+            </a>
+            <a href="https://www.youtube.com/@SpykeAITech?sub_confirmation=1" target="_blank" aria-label="YouTube" style="display:inline-block; margin:0 6px;">
+              <img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMEZGOEkiIHN0cm9rZS13aWR0aD0iMS41IiB2aWV3Qm94PSIwIDAgMjQgMjQiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJZb3VUdWJlIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHJ4PSI2IiBmaWxsPSIjMTIxMjEyIi8+PHBhdGggZD0iTTkgN2g2YzIuNyAwIDQgMS4zIDQgNHYyYzAgMi43LTEuMyA0LTQgNEg5Yy0yLjcgMC00LTEuMy00LTR2LTJjMC0yLjcgMS4zLTQgNC00eiIgZmlsbD0iIzAwRkY4SSIgc3Ryb2tlPSJub25lIi8+PHBhdGggZD0iTTEwLjUgMTVsNC01LTQgNVoiIGZpbGw9IiMxMjEyMTIiLz48L3N2Zz4=" width="24" height="24" style="display:block; width:24px; height:24px;" alt="YouTube" />
+            </a>
+            <a href="https://www.instagram.com/spykeai/" target="_blank" aria-label="Instagram" style="display:inline-block; margin:0 6px;">
+              <img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMEZGOEkiIHN0cm9rZS13aWR0aD0iMS41IiB2aWV3Qm94PSIwIDAgMjQgMjQiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJJbnN0YWdyYW0iPjxyZWN0IHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgcng9IjYiIGZpbGw9IiMxMjEyMTIiLz48cGF0aCBkPSJNMTIgOWMtMS42IDAtMyAxLjQtMyAzczEuNCAzIDMgMyAzLTEuNCAzLTMtMS40LTMtMy0zeiIgZmlsbD0iIzAwRkY4SSIgc3Ryb2tlPSJub25lIi8+PHBhdGggZD0iTTE1IDkuNWExLjUgMS41IDAgMSAwIDAtMyAxLjUgMS41IDAgMCAwIDAgM3oiIGZpbGw9IiMwMEZGOEkiIHN0cm9rZT0ibm9uZSIvPjwvc3ZnPg==" width="24" height="24" style="display:block; width:24px; height:24px;" alt="Instagram" />
+            </a>
+            <!--[if mso]></tr></table><![endif]-->
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
 </body>
-</html>
-`;
+</html>`;
+
+const styleContent = (html) => {
+  if (!html) return html;
+  return html
+    .replace(/<a([^>]*class=\"button\"[^>]*)>([\s\S]*?)<\/a>/g, (_m, attrs, text) => `<a ${attrs} style="display:inline-block;background:#00FF89;color:#121212!important;font-weight:600;padding:14px 30px;border-radius:4px;font-size:15px;letter-spacing:.4px;box-shadow:0 2px 6px rgba(0,255,137,0.35);text-decoration:none;">${text}</a>`);
+};
 
 export const emailTemplates = {
     registration: (data) => {
@@ -229,7 +122,7 @@ export const emailTemplates = {
         
         const content = `
             <div class="content">
-                <h2>Welcome to Spyke AI! =�</h2>
+                <h2>Welcome to Spyke AI!</h2>
                 <p>Thank you for joining our premium marketplace for AI prompts, automation solutions, and digital tools.</p>
                 <p>To complete your registration and unlock access to our platform, please confirm your email address.</p>
                 
@@ -266,7 +159,7 @@ export const emailTemplates = {
         
         const content = `
             <div class="content">
-                <h2>Account Confirmed Successfully! </h2>
+                <h2>Account Confirmed Successfully!</h2>
                 <p>Congratulations! Your Spyke AI account has been successfully verified.</p>
                 
                 <div class="success-box">
@@ -304,7 +197,7 @@ export const emailTemplates = {
         
         const content = `
             <div class="content">
-                <h2>Password Reset Request =</h2>
+                <h2>Password Reset Request</h2>
                 <p>We received a request to reset the password for your Spyke AI account associated with <strong>${emailAddress}</strong>.</p>
                 
                 <p style="text-align: center;">
@@ -339,7 +232,7 @@ export const emailTemplates = {
         
         const content = `
             <div class="content">
-                <h2>Password Reset Successful </h2>
+                <h2>Password Reset Successful</h2>
                 <p>Your Spyke AI account password has been successfully updated.</p>
                 
                 <div class="success-box">
@@ -378,7 +271,7 @@ export const emailTemplates = {
         
         const content = `
             <div class="content">
-                <h2>New Login to Your Account =</h2>
+                <h2>New Login to Your Account</h2>
                 <p>We noticed a new login to your Spyke AI account. Here are the details:</p>
                 
                 <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">

@@ -173,19 +173,19 @@ export const formFields = {
         label: 'Full Name',
         type: 'text',
         placeholder: 'John Doe',
-        required: true,
+        required: true, // REQUIRED in backend
         validation: {
             minLength: 2,
             maxLength: 100,
             pattern: /^[a-zA-Z\s'-]+$/,
-            message: 'Please enter a valid name'
+            message: 'Full name must be 2-100 characters, letters and spaces only'
         }
     },
     email: {
         label: 'Business Email',
         type: 'email',
         placeholder: 'john@business.com',
-        required: true,
+        required: true, // REQUIRED in backend
         helperText: 'This will be your primary seller contact email',
         validation: {
             pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
@@ -196,9 +196,9 @@ export const formFields = {
         label: 'Website URL',
         type: 'text',
         placeholder: 'https://yourwebsite.com',
-        required: false,
+        required: false, // OPTIONAL in backend
         validation: {
-            pattern: /^https?:\/\/.+\..+/,
+            pattern: /^https?:\/\/.+/,
             message: 'Please enter a valid URL starting with http:// or https://'
         }
     },
@@ -206,7 +206,7 @@ export const formFields = {
         label: 'Bio',
         type: 'textarea',
         placeholder: 'Tell potential buyers about your expertise, experience, and what makes you unique...',
-        required: true,
+        required: true, // REQUIRED in backend
         maxLength: 500,
         minLength: 50,
         rows: 4,
@@ -220,10 +220,10 @@ export const formFields = {
         label: 'Profile Banner',
         type: 'text',
         placeholder: 'https://example.com/banner.jpg',
-        required: true,
-        helperText: 'Recommended size: 1200x300px',
+        required: false, // OPTIONAL in backend
+        helperText: 'Optional - Recommended size: 1200x300px',
         validation: {
-            pattern: /^https?:\/\/.+\..+/, // Removed required: true
+            pattern: /^https?:\/\/.+/,
             message: 'Please enter a valid URL if provided'
         }
     },
@@ -231,14 +231,14 @@ export const formFields = {
         label: 'Niches',
         type: 'tags',
         placeholder: 'Type and press Enter',
-        required: true,
+        required: true, // REQUIRED in backend
         minItems: 1,
-        maxItems: 5, // Fixed: Backend allows max 5, not 10
-        helperText: 'Select your areas of expertise (max 5)',
+        maxItems: 5,
+        helperText: 'Select your areas of expertise (1-5 required)',
         suggestions: popularNiches,
         validation: {
             minItems: 1,
-            maxItems: 5, // Fixed: Align with backend
+            maxItems: 5,
             message: 'Select 1-5 niches'
         }
     },
@@ -246,99 +246,96 @@ export const formFields = {
         label: 'Tools Specialization',
         type: 'tags',
         placeholder: 'Type and press Enter',
-        required: true,
+        required: true, // REQUIRED in backend
         minItems: 1,
-        maxItems: 10, // Fixed: Backend allows max 10, not 15
-        helperText: "Tools you're expert in (max 10)",
+        maxItems: 10,
+        helperText: 'Select tools you specialize in (1-10 required)',
         suggestions: popularTools,
         validation: {
             minItems: 1,
-            maxItems: 10, // Fixed: Align with backend
+            maxItems: 10,
             message: 'Select 1-10 tools'
         }
     },
     customAutomationServices: {
-        label: 'I offer custom automation services',
+        label: 'I offer custom automation services beyond pre-built products',
         type: 'checkbox',
-        helperText: 'Check this if you provide custom solutions beyond pre-built products',
-        required: false // Fixed: Boolean fields shouldn't be "required" in the traditional sense
+        required: true, // REQUIRED in backend (boolean field)
+        helperText: 'Check this if you provide custom automation solutions',
+        validation: {
+            message: 'Please specify if you offer custom automation services'
+        }
     },
     location: {
-        label: 'Location',
         type: 'group',
-        required: true,
         fields: {
             country: {
                 label: 'Country',
                 type: 'select',
-                placeholder: 'Select country',
-                required: true,
+                required: true, // REQUIRED in backend
                 options: countries,
                 validation: {
-                    required: true,
                     message: 'Country is required'
                 }
             },
             timezone: {
                 label: 'Timezone',
-                type: 'select',
-                placeholder: 'Select timezone',
-                required: true,
+                type: 'searchable-select',
+                required: true, // REQUIRED in backend
                 options: timezones,
-                searchable: true,
                 validation: {
-                    required: true,
                     message: 'Timezone is required'
                 }
             }
         }
     },
     socialHandles: {
-        label: 'Social Media',
         type: 'group',
-        required: false,
+        required: false, // All social handles are OPTIONAL in backend
         fields: {
             linkedin: {
-                label: 'LinkedIn',
+                label: 'LinkedIn URL',
                 type: 'url',
-                placeholder: 'https://linkedin.com/in/username',
-                icon: 'linkedin'
+                required: false,
+                placeholder: 'https://linkedin.com/in/yourprofile'
             },
             twitter: {
-                label: 'Twitter',
+                label: 'Twitter/X URL',
                 type: 'url',
-                placeholder: 'https://twitter.com/username',
-                icon: 'twitter'
+                required: false,
+                placeholder: 'https://twitter.com/yourusername'
             },
             instagram: {
-                label: 'Instagram',
+                label: 'Instagram URL',
                 type: 'url',
-                placeholder: 'https://instagram.com/username',
-                icon: 'instagram'
+                required: false,
+                placeholder: 'https://instagram.com/yourusername'
             },
             youtube: {
-                label: 'YouTube',
+                label: 'YouTube URL',
                 type: 'url',
-                placeholder: 'https://youtube.com/c/username',
-                icon: 'youtube'
+                required: false,
+                placeholder: 'https://youtube.com/c/yourchannel'
             }
         }
     },
     portfolioLinks: {
         label: 'Portfolio Links',
-        type: 'list',
+        type: 'tags',
         placeholder: 'https://example.com/portfolio',
-        required: false,
+        required: false, // OPTIONAL in backend
         maxItems: 10,
+        helperText: 'Optional - Add up to 10 portfolio links',
         validation: {
-            pattern: /^https?:\/\/.+\..+/,
-            message: 'Please enter valid URLs'
+            maxItems: 10,
+            itemPattern: /^https?:\/\/.+/,
+            message: 'Maximum 10 valid URLs allowed'
         }
     },
     payoutInfo: {
         label: 'Payout Information',
         type: 'group',
-        required: true,
+        required: true, // Method is REQUIRED in backend
         fields: {
             method: {
                 label: 'Payout Method',
@@ -346,90 +343,92 @@ export const formFields = {
                 required: true,
                 options: [
                     { value: 'paypal', label: 'PayPal' },
+                    { value: 'bank', label: 'Bank Transfer' },
                     { value: 'stripe', label: 'Stripe' },
-                    { value: 'wise', label: 'Wise' },
-                    { value: 'bank', label: 'Bank Transfer' }
-                ]
-            },
-            paypalEmail: {
-                label: 'PayPal Email',
-                type: 'email',
-                placeholder: 'paypal@example.com',
-                required: true,
-                showIf: (formData) => formData.payoutInfo?.method === 'paypal',
+                    { value: 'wise', label: 'Wise (formerly TransferWise)' }
+                ],
                 validation: {
-                    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                    message: 'Please enter a valid PayPal email'
+                    message: 'Please select a payout method'
                 }
             },
-            stripeAccountId: {
-                label: 'Stripe Account ID',
-                type: 'text',
-                placeholder: 'acct_XXXXXXXXXXXXXX',
-                required: true,
-                showIf: (formData) => formData.payoutInfo?.method === 'stripe',
-                validation: {
-                    pattern: /^acct_[A-Za-z0-9]{8,32}$/,
-                    message: 'Enter a valid Stripe account id (e.g. acct_ followed by 8-32 chars)'
-                }
-            },
-            wiseEmail: {
-                label: 'Wise Account Email',
-                type: 'email',
-                placeholder: 'you@domain.com',
-                required: true,
-                showIf: (formData) => formData.payoutInfo?.method === 'wise',
-                validation: {
-                    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                    message: 'Enter a valid email'
-                }
-            },
+            // Bank transfer fields (conditionally required)
             accountHolderName: {
                 label: 'Account Holder Name',
                 type: 'text',
-                required: true,
+                required: true, // Required when method is 'bank'
                 showIf: (formData) => formData.payoutInfo?.method === 'bank',
                 validation: {
-                    minLength: 2,
-                    message: 'Account holder name required'
+                    message: 'Account holder name is required'
+                }
+            },
+            accountNumber: {
+                label: 'Account Number',
+                type: 'text',
+                required: true, // Required when method is 'bank'
+                showIf: (formData) => formData.payoutInfo?.method === 'bank',
+                validation: {
+                    message: 'Account number is required'
+                }
+            },
+            routingNumber: {
+                label: 'Routing Number',
+                type: 'text',
+                required: true, // Required when method is 'bank'
+                showIf: (formData) => formData.payoutInfo?.method === 'bank',
+                validation: {
+                    message: 'Routing number is required'
                 }
             },
             bankName: {
                 label: 'Bank Name',
                 type: 'text',
-                required: true,
-                showIf: (formData) => formData.payoutInfo?.method === 'bank'
-            },
-            accountNumber: {
-                label: 'Account Number / IBAN',
-                type: 'text',
-                required: true,
-                placeholder: 'IBAN or Account Number',
+                required: true, // Required when method is 'bank'
                 showIf: (formData) => formData.payoutInfo?.method === 'bank',
                 validation: {
-                    pattern: /^[0-9A-Za-z-]{4,34}$/,
-                    message: 'Enter a valid account / IBAN'
-                }
-            },
-            routingNumber: {
-                label: 'Routing Number (if applicable)',
-                type: 'text',
-                required: true,
-                showIf: (formData) => formData.payoutInfo?.method === 'bank',
-                validation: {
-                    pattern: /^\d{5,12}$/,
-                    message: 'Enter a valid routing number'
+                    message: 'Bank name is required'
                 }
             },
             swiftCode: {
                 label: 'SWIFT / BIC Code',
                 type: 'text',
-                required: false,
+                required: false, // OPTIONAL in backend
                 placeholder: '8 or 11 characters',
                 showIf: (formData) => formData.payoutInfo?.method === 'bank',
                 validation: {
                     pattern: /^[A-Z0-9]{8}([A-Z0-9]{3})?$/,
                     message: 'Enter a valid SWIFT/BIC code'
+                }
+            },
+            // PayPal field (conditionally required)
+            paypalEmail: {
+                label: 'PayPal Email',
+                type: 'email',
+                required: true, // Required when method is 'paypal'
+                showIf: (formData) => formData.payoutInfo?.method === 'paypal',
+                validation: {
+                    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: 'Enter a valid PayPal email'
+                }
+            },
+            // Stripe field (conditionally required)
+            stripeAccountId: {
+                label: 'Stripe Account ID',
+                type: 'text',
+                required: true, // Required when method is 'stripe'
+                showIf: (formData) => formData.payoutInfo?.method === 'stripe',
+                validation: {
+                    message: 'Stripe account ID is required'
+                }
+            },
+            // Wise field (conditionally required)
+            wiseEmail: {
+                label: 'Wise Email',
+                type: 'email',
+                required: true, // Required when method is 'wise'
+                showIf: (formData) => formData.payoutInfo?.method === 'wise',
+                validation: {
+                    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: 'Enter a valid Wise email'
                 }
             }
         }
@@ -437,7 +436,7 @@ export const formFields = {
     revenueShareAgreement: {
         label: 'Revenue Share Agreement',
         type: 'group',
-        required: true,
+        required: true, // REQUIRED in backend
         fields: {
             accepted: {
                 label: 'I have read and accept the Revenue Share Agreement (required)',
@@ -445,6 +444,7 @@ export const formFields = {
                 required: true,
                 validation: {
                     required: true,
+                    mustBeTrue: true,
                     message: 'You must accept the revenue share agreement to continue'
                 }
             }

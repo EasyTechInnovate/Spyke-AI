@@ -3,8 +3,15 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import toast from '@/lib/utils/toast'
 import sellerAPI from '@/lib/api/seller'
-import { useFormValidation } from './useFormValidation'
 import { formFields, defaultFormValues, formSteps, timezones, countries } from '@/lib/config/forms/SellerFormConfig'
+import { 
+    validateField, 
+    validateStep, 
+    validateAllFields, 
+    validatePayoutFields,
+    debounce,
+    setNestedValue 
+} from '@/lib/utils/validationUtils'
 import confetti from 'canvas-confetti'
 
 export function useSellerForm() {
@@ -21,9 +28,34 @@ export function useSellerForm() {
     const [loading, setLoading] = useState(false)
     const [submitError, setSubmitError] = useState('')
     const [formData, setFormData] = useState(defaultFormValues)
+    const [errors, setErrors] = useState({})
     const [hasStartedForm, setHasStartedForm] = useState(false)
 
-    const { errors, setErrors, validateFields, clearError } = useFormValidation(formFields, formData)
+    // Debounced validation function
+    const debouncedValidation = useCallback(
+        debounce((fieldName, value, currentFormData) => {
+            const error = validateField(fieldName, value, currentFormData)
+            setErrors(prev => {
+                const newErrors = { ...prev }
+                if (error) {
+                    newErrors[fieldName] = error
+                } else {
+                    delete newErrors[fieldName]
+                }
+                return newErrors
+            })
+        }, 300),
+        []
+    )
+
+    // Clear specific error
+    const clearError = useCallback((fieldName) => {
+        setErrors(prev => {
+            const newErrors = { ...prev }
+            delete newErrors[fieldName]
+            return newErrors
+        })
+    }, [])
 
     useEffect(() => {
         if (typeof window === 'undefined') return
@@ -114,128 +146,245 @@ export function useSellerForm() {
         return ''
     }
 
+    // Enhanced input change handler with exact validation
     const handleInputChange = useCallback(
         (e) => {
             const { name, value, type, checked } = e.target
             if (!hasStartedForm) setHasStartedForm(true)
-            if (name.includes('.')) {
-                const [parent, child] = name.split('.')
-                setFormData((prev) => ({
-                    ...prev,
-                    [parent]: {
-                        ...prev[parent],
-                        [child]: type === 'checkbox' ? checked : value
-                    }
-                }))
-                if (errors[`${parent}.${child}`]) clearError(`${parent}.${child}`)
-            } else {
-                const nextValue =
-                    name === 'sellerBanner' ? normalizeImageValue(type === 'checkbox' ? checked : value) : type === 'checkbox' ? checked : value
-                setFormData((prev) => ({ ...prev, [name]: nextValue }))
-                if (errors[name]) clearError(name)
-            }
+            
+            const newValue = type === 'checkbox' ? checked : value
+            
+            setFormData((prev) => {
+                const updated = { ...prev }
+                
+                if (name.includes('.')) {
+                    // Handle nested fields like location.country
+                    setNestedValue(updated, name, newValue)
+                } else {
+                    const finalValue = name === 'sellerBanner' 
+                        ? normalizeImageValue(newValue) 
+                        : newValue
+                    updated[name] = finalValue
+                }
+                
+                // Trigger real-time validation for the field
+                if (type === 'checkbox' || type === 'select-one') {
+                    // Immediate validation for checkboxes and selects
+                    setTimeout(() => {
+                        const error = validateField(name, newValue, updated)
+                        setErrors(prev => {
+                            const newErrors = { ...prev }
+                            if (error) {
+                                newErrors[name] = error
+                            } else {
+                                delete newErrors[name]
+                            }
+                            return newErrors
+                        })
+                    }, 0)
+                } else {
+                    // Debounced validation for text inputs
+                    debouncedValidation(name, newValue, updated)
+                }
+                
+                return updated
+            })
         },
-        [errors, clearError, hasStartedForm]
+        [hasStartedForm, debouncedValidation]
     )
 
     const handleSocialHandleChange = useCallback((platform, value) => {
-        setFormData((prev) => ({ ...prev, socialHandles: { ...prev.socialHandles, [platform]: value } }))
-    }, [])
+        const fieldName = `socialHandles.${platform}`
+        setFormData((prev) => ({ 
+            ...prev, 
+            socialHandles: { ...prev.socialHandles, [platform]: value } 
+        }))
+        
+        // Validate social handle
+        debouncedValidation(fieldName, value, formData)
+    }, [debouncedValidation, formData])
 
     const addTag = useCallback(
         (fieldName, value) => {
-            if (!value.trim() || formData[fieldName].includes(value.trim())) return
-            const field = formFields[fieldName]
-            if (field.maxItems && formData[fieldName].length >= field.maxItems) {
-                toast.validation.maxItems(fieldName, field.maxItems)
-                return
-            }
-            setFormData((prev) => ({ ...prev, [fieldName]: [...prev[fieldName], value.trim()] }))
+            if (!value.trim()) return
+            
+            setFormData((prev) => {
+                const currentTags = prev[fieldName] || []
+                if (currentTags.includes(value.trim())) return prev
+                
+                const newTags = [...currentTags, value.trim()]
+                
+                // Validate immediately
+                setTimeout(() => {
+                    const error = validateField(fieldName, newTags, { ...prev, [fieldName]: newTags })
+                    setErrors(prevErrors => {
+                        const newErrors = { ...prevErrors }
+                        if (error) {
+                            newErrors[fieldName] = error
+                        } else {
+                            delete newErrors[fieldName]
+                        }
+                        return newErrors
+                    })
+                }, 0)
+                
+                return {
+                    ...prev,
+                    [fieldName]: newTags
+                }
+            })
         },
-        [formData]
+        []
     )
 
     const removeTag = useCallback((fieldName, value) => {
-        setFormData((prev) => ({ ...prev, [fieldName]: prev[fieldName].filter((v) => v !== value) }))
+        setFormData((prev) => {
+            const newTags = (prev[fieldName] || []).filter(tag => tag !== value)
+            
+            // Validate immediately
+            setTimeout(() => {
+                const error = validateField(fieldName, newTags, { ...prev, [fieldName]: newTags })
+                setErrors(prevErrors => {
+                    const newErrors = { ...prevErrors }
+                    if (error) {
+                        newErrors[fieldName] = error
+                    } else {
+                        delete newErrors[fieldName]
+                    }
+                    return newErrors
+                })
+            }, 0)
+            
+            return {
+                ...prev,
+                [fieldName]: newTags
+            }
+        })
     }, [])
 
     const addPortfolioLink = useCallback(
         (link) => {
-            const field = formFields.portfolioLinks
-            if (!link.trim() || formData.portfolioLinks.includes(link.trim())) return
-            if (field.maxItems && formData.portfolioLinks.length >= field.maxItems) {
-                toast.validation.maxItems('portfolio links', field.maxItems)
-                return
+            if (!link.trim()) return
+            
+            setFormData((prev) => {
+                const currentLinks = prev.portfolioLinks || []
+                if (currentLinks.includes(link.trim())) return prev
+                
+                const newLinks = [...currentLinks, link.trim()]
+                
+                // Validate immediately with exact backend rules
+                setTimeout(() => {
+                    const error = validateField('portfolioLinks', newLinks, { ...prev, portfolioLinks: newLinks })
+                    setErrors(prevErrors => {
+                        const newErrors = { ...prevErrors }
+                        if (error) {
+                            newErrors.portfolioLinks = error
+                        } else {
+                            delete newErrors.portfolioLinks
+                        }
+                        return newErrors
+                    })
+                }, 0)
+                
+                return {
+                    ...prev,
+                    portfolioLinks: newLinks
+                }
+            })
+        },
+        []
+    )
+
+    const removePortfolioLink = useCallback((link) => {
+        setFormData((prev) => {
+            const newLinks = (prev.portfolioLinks || []).filter(l => l !== link)
+            
+            // Clear errors if no links remain
+            if (newLinks.length === 0) {
+                setErrors(prevErrors => {
+                    const newErrors = { ...prevErrors }
+                    delete newErrors.portfolioLinks
+                    return newErrors
+                })
             }
-            if (field.validation && !field.validation.pattern.test(link.trim())) {
-                toast.validation.invalid('URL format')
-                return
+            
+            return {
+                ...prev,
+                portfolioLinks: newLinks
             }
-            setFormData((prev) => ({ ...prev, portfolioLinks: [...prev.portfolioLinks, link.trim()] }))
+        })
+    }, [])
+
+    // Enhanced step validation matching backend exactly
+    const validateStepEnhanced = useCallback(
+        (step) => {
+            const stepErrors = validateStep(step, formData)
+            
+            setErrors(prev => ({
+                ...prev,
+                ...stepErrors
+            }))
+            
+            return Object.keys(stepErrors).length === 0
         },
         [formData]
     )
 
-    const removePortfolioLink = useCallback((link) => {
-        setFormData((prev) => ({ ...prev, portfolioLinks: prev.portfolioLinks.filter((l) => l !== link) }))
-    }, [])
-
-    const validateStep = useCallback(
-        (step) => {
-            const stepConfig = formSteps.find((s) => s.id === step)
-            if (!stepConfig) return true
-            const stepErrors = validateFields(stepConfig.fields)
-            if (step === 3 && !formData.revenueShareAgreement?.accepted) {
-                stepErrors['revenueShareAgreement.accepted'] = 'You must accept the revenue share agreement'
-            }
-            // Don't show notification here - let the form handle it
-            return Object.keys(stepErrors).length === 0
-        },
-        [validateFields, formData.revenueShareAgreement]
-    )
-
+    // Enhanced form submission with complete backend matching validation
     const handleSubmit = useCallback(
         async (data) => {
             setLoading(true)
             setSubmitError('')
 
-            const payoutMethod = data.payoutInfo?.method
-
-            const payoutInfo = (() => {
-                if (payoutMethod === 'bank')
-                    return {
-                        method: 'bank',
-                        bankDetails: {
-                            accountHolderName: data.payoutInfo.accountHolderName?.trim(),
-                            accountNumber: data.payoutInfo.accountNumber?.trim(),
-                            routingNumber: data.payoutInfo.routingNumber?.trim(),
-                            bankName: data.payoutInfo.bankName?.trim(),
-                            swiftCode: data.payoutInfo.swiftCode?.trim() || null
-                        }
-                    }
-                if (payoutMethod === 'paypal') return { method: 'paypal', paypalEmail: data.payoutInfo.paypalEmail?.trim() }
-                if (payoutMethod === 'stripe') return { method: 'stripe', stripeAccountId: data.payoutInfo.stripeAccountId?.trim() }
-                if (payoutMethod === 'wise') return { method: 'wise', wiseEmail: data.payoutInfo.wiseEmail?.trim() }
-                return { method: payoutMethod }
-            })()
-
-            const payload = {
-                fullName: data.fullName.trim(),
-                email: data.email.trim(),
-                websiteUrl: data.websiteUrl?.trim() || null,
-                bio: data.bio.trim(),
-                niches: data.niches,
-                toolsSpecialization: data.toolsSpecialization,
-                location: { country: data.location.country, timezone: data.location.timezone },
-                sellerBanner: normalizeImageValue(data.sellerBanner)?.trim() || null,
-                socialHandles: data.socialHandles,
-                customAutomationServices: !!data.customAutomationServices,
-                portfolioLinks: data.portfolioLinks?.length ? data.portfolioLinks : [],
-                payoutInfo,
-                revenueShareAgreement: { accepted: !!data.revenueShareAgreement?.accepted }
-            }
-
             try {
+                // Final validation matching backend exactly
+                const allErrors = validateAllFields(formData)
+                
+                if (Object.keys(allErrors).length > 0) {
+                    setErrors(allErrors)
+                    setLoading(false)
+                    return
+                }
+
+                // Clear all errors
+                setErrors({})
+
+                const payoutMethod = data.payoutInfo?.method
+
+                const payoutInfo = (() => {
+                    if (payoutMethod === 'bank')
+                        return {
+                            method: 'bank',
+                            bankDetails: {
+                                accountHolderName: data.payoutInfo.accountHolderName?.trim(),
+                                accountNumber: data.payoutInfo.accountNumber?.trim(),
+                                routingNumber: data.payoutInfo.routingNumber?.trim(),
+                                bankName: data.payoutInfo.bankName?.trim(),
+                                swiftCode: data.payoutInfo.swiftCode?.trim() || null
+                            }
+                        }
+                    if (payoutMethod === 'paypal') return { method: 'paypal', paypalEmail: data.payoutInfo.paypalEmail?.trim() }
+                    if (payoutMethod === 'stripe') return { method: 'stripe', stripeAccountId: data.payoutInfo.stripeAccountId?.trim() }
+                    if (payoutMethod === 'wise') return { method: 'wise', wiseEmail: data.payoutInfo.wiseEmail?.trim() }
+                    return { method: payoutMethod }
+                })()
+
+                const payload = {
+                    fullName: data.fullName.trim(),
+                    email: data.email.trim(),
+                    websiteUrl: data.websiteUrl?.trim() || null,
+                    bio: data.bio.trim(),
+                    niches: data.niches,
+                    toolsSpecialization: data.toolsSpecialization,
+                    location: { country: data.location.country, timezone: data.location.timezone },
+                    sellerBanner: normalizeImageValue(data.sellerBanner)?.trim() || null,
+                    socialHandles: data.socialHandles,
+                    customAutomationServices: !!data.customAutomationServices,
+                    portfolioLinks: data.portfolioLinks?.length ? data.portfolioLinks : [],
+                    payoutInfo,
+                    revenueShareAgreement: { accepted: !!data.revenueShareAgreement?.accepted }
+                }
+
                 const response = await sellerAPI.createProfile(payload)
                 const body = response?.data ?? response
                 const profileData = body?.data ?? body
@@ -252,13 +401,10 @@ export function useSellerForm() {
                         localStorage.setItem('user', JSON.stringify(currentUser))
                     }
                     
-                    // Set success state to hide form and show confetti
                     setIsSuccess(true)
                     
-                    // Fire confetti only after successful API response and localStorage update
                     setTimeout(() => {
                         triggerSellerConfetti()
-                        // Removed the showMessage call - no notification on success
                     }, 100)
                 } else {
                     throw new Error('Profile creation failed')
@@ -273,7 +419,7 @@ export function useSellerForm() {
                 setLoading(false)
             }
         },
-        [triggerSellerConfetti]
+        [formData, triggerSellerConfetti]
     )
 
     return {
@@ -294,8 +440,9 @@ export function useSellerForm() {
         removeTag,
         addPortfolioLink,
         removePortfolioLink,
-        validateStep,
-        handleSubmit
+        validateStep: validateStepEnhanced,
+        handleSubmit,
+        clearError
     }
 }
 
