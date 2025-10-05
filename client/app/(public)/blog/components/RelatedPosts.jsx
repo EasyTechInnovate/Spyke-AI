@@ -7,6 +7,7 @@ export default function RelatedPosts({ posts }) {
   if (!posts || posts.length === 0) {
     return null
   }
+  
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
