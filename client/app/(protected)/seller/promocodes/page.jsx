@@ -25,10 +25,9 @@ import Notification from '@/components/shared/Notification'
 export default function PromocodesPage() {
     const [notifications, setNotifications] = useState([])
     const [sellerProfile, setSellerProfile] = useState(null)
-    const [promocodes, setPromocodes] = useState([])
+    const [allPromocodes, setAllPromocodes] = useState([]) 
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
-    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
     const [filterStatus, setFilterStatus] = useState('all')
     const [showForm, setShowForm] = useState(false)
     const [showStats, setShowStats] = useState(false)
@@ -36,9 +35,7 @@ export default function PromocodesPage() {
     const [copiedCode, setCopiedCode] = useState(null)
     const [pagination, setPagination] = useState({
         page: 1,
-        limit: 12,
-        total: 0,
-        totalPages: 0
+        limit: 12
     })
     const addNotification = (notification) => {
         const id = Date.now() + Math.random()
@@ -74,36 +71,36 @@ export default function PromocodesPage() {
         }
         fetchSellerProfile()
     }, [])
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedSearchTerm(searchTerm)
-        }, 500)
-
-        return () => clearTimeout(timer)
-    }, [searchTerm])
+    const filteredPromocodes = allPromocodes.filter((promocode) => {
+        if (filterStatus === 'active' && !promocode.isActive) return false
+        if (filterStatus === 'inactive' && promocode.isActive) return false
+        if (searchTerm) {
+            const searchLower = searchTerm.toLowerCase()
+            return (
+                promocode.code.toLowerCase().includes(searchLower) ||
+                (promocode.description && promocode.description.toLowerCase().includes(searchLower))
+            )
+        }
+        return true
+    })
+    const totalFilteredPromocodes = filteredPromocodes.length
+    const totalPages = Math.ceil(totalFilteredPromocodes / pagination.limit)
+    const startIndex = (pagination.page - 1) * pagination.limit
+    const endIndex = startIndex + pagination.limit
+    const paginatedPromocodes = filteredPromocodes.slice(startIndex, endIndex)
     useEffect(() => {
         fetchPromocodes()
-    }, [pagination.page, filterStatus, debouncedSearchTerm])
+    }, []) 
     useEffect(() => {
-        if (pagination.page !== 1) {
-            setPagination((prev) => ({ ...prev, page: 1 }))
-        }
-    }, [debouncedSearchTerm, filterStatus])
+        setPagination((prev) => ({ ...prev, page: 1 }))
+    }, [searchTerm, filterStatus])
     const fetchPromocodes = async () => {
         try {
             setLoading(true)
             const response = await promocodeAPI.getPromocodes({
-                page: pagination.page,
-                limit: pagination.limit,
-                status: filterStatus !== 'all' ? filterStatus : undefined,
-                search: debouncedSearchTerm || undefined
+                limit: 1000 
             })
-            setPromocodes(response.promocodes || [])
-            setPagination({
-                ...pagination,
-                total: response.total || 0,
-                totalPages: response.totalPages || 0
-            })
+            setAllPromocodes(response.promocodes || [])
         } catch (error) {
             showMessage('Failed to fetch promocodes', 'error')
             console.error('Error fetching promocodes:', error)
@@ -113,14 +110,12 @@ export default function PromocodesPage() {
     }
     const handleSearch = (e) => {
         e.preventDefault()
-        setDebouncedSearchTerm(searchTerm)
     }
     const handleCreateEdit = (promocode = null) => {
         if (promocode && !promocode.isActive) {
             showMessage('Please activate the promocode first to edit it', 'warning')
             return
         }
-
         setSelectedPromocode(promocode)
         setShowForm(true)
     }
@@ -159,16 +154,16 @@ export default function PromocodesPage() {
         setShowForm(false)
         setSelectedPromocode(null)
         if (refreshData) {
-            fetchPromocodes()
+            fetchPromocodes() 
         }
     }
     const handleStatsClose = () => {
         setShowStats(false)
         setSelectedPromocode(null)
     }
-    const activeCount = promocodes.filter((p) => p.isActive).length
-    const totalUses = promocodes.reduce((sum, p) => sum + (p.currentUsageCount || 0), 0)
-    const totalDiscount = promocodes.reduce((sum, p) => {
+    const activeCount = filteredPromocodes.filter((p) => p.isActive).length
+    const totalUses = filteredPromocodes.reduce((sum, p) => sum + (p.currentUsageCount || 0), 0)
+    const totalDiscount = filteredPromocodes.reduce((sum, p) => {
         if (p.usageHistory && p.usageHistory.length > 0) {
             return sum + p.usageHistory.reduce((histSum, usage) => histSum + (usage.discountAmount || 0), 0)
         }
@@ -203,7 +198,7 @@ export default function PromocodesPage() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-500 mb-1">Total Codes</p>
-                                    <p className="text-2xl font-bold text-white">{promocodes.length}</p>
+                                    <p className="text-2xl font-bold text-white">{allPromocodes.length}</p>
                                 </div>
                                 <div className="p-2 bg-[#00FF89]/10 rounded-xl">
                                     <Tag className="w-5 h-5 text-[#00FF89]" />
@@ -214,7 +209,7 @@ export default function PromocodesPage() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-500 mb-1">Active</p>
-                                    <p className="text-2xl font-bold text-[#00FF89]">{activeCount}</p>
+                                    <p className="text-2xl font-bold text-[#00FF89]">{allPromocodes.filter((p) => p.isActive).length}</p>
                                 </div>
                                 <div className="p-2 bg-[#00FF89]/10 rounded-xl">
                                     <CheckCircle className="w-5 h-5 text-[#00FF89]" />
@@ -225,7 +220,9 @@ export default function PromocodesPage() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-500 mb-1">Total Uses</p>
-                                    <p className="text-2xl font-bold text-white">{totalUses}</p>
+                                    <p className="text-2xl font-bold text-white">
+                                        {allPromocodes.reduce((sum, p) => sum + (p.currentUsageCount || 0), 0)}
+                                    </p>
                                 </div>
                                 <div className="p-2 bg-[#FFC050]/10 rounded-xl">
                                     <BarChart3 className="w-5 h-5 text-[#FFC050]" />
@@ -236,7 +233,17 @@ export default function PromocodesPage() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-500 mb-1">Total Saved</p>
-                                    <p className="text-2xl font-bold text-[#00FF89]">${totalDiscount.toFixed(2)}</p>
+                                    <p className="text-2xl font-bold text-[#00FF89]">
+                                        $
+                                        {allPromocodes
+                                            .reduce((sum, p) => {
+                                                if (p.usageHistory && p.usageHistory.length > 0) {
+                                                    return sum + p.usageHistory.reduce((histSum, usage) => histSum + (usage.discountAmount || 0), 0)
+                                                }
+                                                return sum
+                                            }, 0)
+                                            .toFixed(2)}
+                                    </p>
                                 </div>
                                 <div className="p-2 bg-[#00FF89]/10 rounded-xl">
                                     <DollarSign className="w-5 h-5 text-[#00FF89]" />
@@ -290,7 +297,7 @@ export default function PromocodesPage() {
                         <LoadingSpinner />
                         <p className="text-gray-500 mt-4">Loading promocodes...</p>
                     </div>
-                ) : promocodes.length === 0 ? (
+                ) : allPromocodes.length === 0 ? (
                     <div className="text-center py-20">
                         <div className="p-6 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border border-gray-800/50 rounded-3xl max-w-md mx-auto">
                             <div className="p-4 bg-[#00FF89]/10 rounded-2xl w-fit mx-auto mb-4">
@@ -306,10 +313,30 @@ export default function PromocodesPage() {
                             </button>
                         </div>
                     </div>
+                ) : filteredPromocodes.length === 0 ? (
+                    <div className="text-center py-20">
+                        <div className="p-6 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border border-gray-800/50 rounded-3xl max-w-md mx-auto">
+                            <div className="p-4 bg-[#FFC050]/10 rounded-2xl w-fit mx-auto mb-4">
+                                <Search className="w-12 h-12 text-[#FFC050]" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-2">No matches found</h3>
+                            <p className="text-gray-400 mb-6">
+                                {searchTerm ? `No promocodes match "${searchTerm}"` : 'No promocodes match the selected filter'}
+                            </p>
+                            <button
+                                onClick={() => {
+                                    setSearchTerm('')
+                                    setFilterStatus('all')
+                                }}
+                                className="px-6 py-3 bg-[#2a2a2a] border border-gray-700 text-white rounded-xl hover:bg-[#00FF89]/10 hover:border-[#00FF89] transition-all">
+                                Clear Filters
+                            </button>
+                        </div>
+                    </div>
                 ) : (
                     <>
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                            {promocodes.map((promocode) => {
+                            {paginatedPromocodes.map((promocode) => {
                                 const usagePercentage = promocode.usageLimit
                                     ? Math.round((promocode.currentUsageCount / promocode.usageLimit) * 100)
                                     : 0
@@ -409,7 +436,6 @@ export default function PromocodesPage() {
                                                                       const expiryDate = new Date(promocode.validUntil)
                                                                       const diffTime = expiryDate - now
                                                                       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-
                                                                       if (diffDays < 0) {
                                                                           return 'Expired'
                                                                       } else if (diffDays === 0) {
@@ -519,7 +545,7 @@ export default function PromocodesPage() {
                                 )
                             })}
                         </div>
-                        {pagination.totalPages > 1 && (
+                        {totalPages > 1 && (
                             <div className="mt-8 flex justify-center items-center gap-4">
                                 <button
                                     disabled={pagination.page === 1}
@@ -528,14 +554,14 @@ export default function PromocodesPage() {
                                     Previous
                                 </button>
                                 <div className="flex items-center gap-2">
-                                    {[...Array(Math.min(5, pagination.totalPages))].map((_, i) => {
+                                    {[...Array(Math.min(5, totalPages))].map((_, i) => {
                                         let pageNum
-                                        if (pagination.totalPages <= 5) {
+                                        if (totalPages <= 5) {
                                             pageNum = i + 1
                                         } else if (pagination.page <= 3) {
                                             pageNum = i + 1
-                                        } else if (pagination.page >= pagination.totalPages - 2) {
-                                            pageNum = pagination.totalPages - 4 + i
+                                        } else if (pagination.page >= totalPages - 2) {
+                                            pageNum = totalPages - 4 + i
                                         } else {
                                             pageNum = pagination.page - 2 + i
                                         }
@@ -554,7 +580,7 @@ export default function PromocodesPage() {
                                     })}
                                 </div>
                                 <button
-                                    disabled={pagination.page === pagination.totalPages}
+                                    disabled={pagination.page === totalPages}
                                     onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}
                                     className="px-4 py-2 bg-[#2a2a2a] border border-gray-700 rounded-lg text-white hover:bg-[#00FF89]/10 hover:border-[#00FF89] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                                     Next
@@ -579,4 +605,3 @@ export default function PromocodesPage() {
         </div>
     )
 }
-
