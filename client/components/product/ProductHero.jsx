@@ -645,7 +645,7 @@ export default function ProductHero({
                                 transition={{ delay: 1.3 }}
                                 className="relative overflow-hidden rounded-xl p-6 bg-gray-900/30 border border-gray-700/50">
                                 <div className="flex items-start gap-3">
-                                    <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-[#00FF89]/20 flex-shrink-0">
+                                    <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-gradient-to-br from-[#00FF89]/20 to-blue-500/20 flex-shrink-0">
                                         {sellerAvatar && !sellerImgFailed ? (
                                             <img
                                                 src={sellerAvatar}
@@ -654,11 +654,10 @@ export default function ProductHero({
                                                 onError={() => setSellerImgFailed(true)}
                                             />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center">
-                                                <span className="text-sm font-bold text-black">{sellerInitial}</span>
+                                            <div className="w-full h-full bg-gradient-to-br from-[#00FF89] to-blue-500 flex items-center justify-center">
+                                                <span className="text-lg font-bold text-black">{sellerInitial}</span>
                                             </div>
                                         )}
-                                        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-1/3 bg-[#00FF89]/40" />
                                     </div>
                                     <div className="flex-1 space-y-2">
                                         <div className="flex items-start justify-between">
