@@ -47,7 +47,6 @@ function CheckoutSuccessContent() {
     const [loading, setLoading] = useState(true)
     const [orderDetails, setOrderDetails] = useState(null)
     const [error, setError] = useState(null)
-    const [paymentConfirmed, setPaymentConfirmed] = useState(false)
     const mountedRef = useRef(true)
     const confettiFiredRef = useRef(false)
     const confirmationAttempted = useRef(false)
@@ -130,17 +129,17 @@ function CheckoutSuccessContent() {
                 const total = data.finalAmount ?? data.final_amount ?? data.totalAmount ?? data.total_amount ?? 0
                 const subtotal = data.totalAmount ?? data.total_amount ?? data.subtotal ?? 0
                 const discount = data.discountAmount ?? data.discount_amount ?? 0
-                const paymentStatus = 'processing'
                 const orderStatus = data.orderStatus ?? data.status
                 const paymentMethod = formatText(data.paymentMethod)
+                
                 const normalized = {
                     orderId: id,
                     items,
                     total,
                     subtotal,
                     discount,
-                    paymentStatus,
-                    orderStatus,
+                    paymentStatus: 'completed',
+                    orderStatus: 'completed',
                     appliedPromocode: data.appliedPromocode ?? data.applied_promocode ?? null,
                     purchaseDate: data.purchaseDate ?? data.purchase_date ?? data.createdAt,
                     paymentMethod
@@ -150,35 +149,22 @@ function CheckoutSuccessContent() {
                     setOrderDetails(normalized)
                     setLoading(false)
 
-                    // Show processing for exactly 5 seconds before showing completed
-                    setTimeout(
-                        () => {
-                            if (mountedRef.current && !aborted) {
-                                setPaymentConfirmed(true)
-                                setOrderDetails((prev) => ({
-                                    ...prev,
-                                    paymentStatus: 'completed',
-                                    orderStatus: 'completed'
-                                }))
+                    // Trigger confetti immediately
+                    if (!confettiFiredRef.current) {
+                        triggerEnhancedConfetti()
+                        confettiFiredRef.current = true
+                    }
 
-                                if (!confettiFiredRef.current) {
-                                    triggerEnhancedConfetti()
-                                    confettiFiredRef.current = true
-                                }
-
-                                setTimeout(async () => {
-                                    try {
-                                        await cartAPI?.clearCart?.()
-                                        await clearCart?.()
-                                        await reloadCart?.()
-                                    } catch (e) {
-                                        console.error('Failed to clear cart:', e)
-                                    }
-                                }, 500)
-                            }
-                        },
-                        5000 // Exactly 5 seconds (5,000 milliseconds)
-                    )
+                    // Clear cart after a brief delay for better UX
+                    setTimeout(async () => {
+                        try {
+                            await cartAPI?.clearCart?.()
+                            await clearCart?.()
+                            await reloadCart?.()
+                        } catch (e) {
+                            console.error('Failed to clear cart:', e)
+                        }
+                    }, 500)
                 }
             } catch (err) {
                 const msg = err?.message ?? String(err)
@@ -195,7 +181,11 @@ function CheckoutSuccessContent() {
                             paymentMethod: 'Stripe Checkout',
                             items: []
                         })
-                        setPaymentConfirmed(true)
+                        
+                        if (!confettiFiredRef.current) {
+                            triggerEnhancedConfetti()
+                            confettiFiredRef.current = true
+                        }
                     } else if (msg.includes('No matching document') || msg.includes('not yet available')) {
                         setError('Order is being processed. Please check your purchases page in a moment.')
                     } else {
@@ -215,7 +205,6 @@ function CheckoutSuccessContent() {
         return <LoadingUI />
     }
     const hasOrder = !!(orderDetails && orderDetails.orderId)
-    const isFinalSuccess = hasOrder && paymentConfirmed
     return (
         <div className="min-h-screen bg-black relative overflow-hidden">
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -247,67 +236,53 @@ function CheckoutSuccessContent() {
             <Container className="relative z-10 py-12">
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-12">
-                        <AnimatePresence>
-                            {isFinalSuccess ? (
-                                <motion.div
-                                    initial={{ scale: 0, rotate: -180 }}
-                                    animate={{ scale: 1, rotate: 0 }}
-                                    transition={{
-                                        type: 'spring',
-                                        stiffness: 200,
-                                        damping: 10,
-                                        duration: 0.8
-                                    }}
-                                    className="relative mx-auto mb-8">
-                                    <div className="w-24 h-24 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center mx-auto relative shadow-2xl shadow-green-500/50">
-                                        <CheckCircle className="h-12 w-12 text-white" />
-                                        <div className="absolute inset-0 rounded-full bg-green-400/20 animate-ping"></div>
-                                        <div className="absolute inset-0 rounded-full border-2 border-green-300/30 animate-pulse"></div>
-                                        {[...Array(6)].map((_, i) => (
-                                            <motion.div
-                                                key={i}
-                                                className="absolute"
-                                                style={{
-                                                    top: `${20 + Math.cos((i * Math.PI) / 3) * 40}%`,
-                                                    left: `${20 + Math.sin((i * Math.PI) / 3) * 40}%`
-                                                }}
-                                                animate={{
-                                                    y: [-5, -15, -5],
-                                                    rotate: [0, 180, 360],
-                                                    scale: [0.8, 1.2, 0.8]
-                                                }}
-                                                transition={{
-                                                    duration: 2,
-                                                    delay: i * 0.2,
-                                                    repeat: Infinity
-                                                }}>
-                                                <Sparkles className="h-4 w-4 text-green-300" />
-                                            </motion.div>
-                                        ))}
-                                    </div>
-                                </motion.div>
-                            ) : (
-                                <motion.div
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    transition={{ duration: 0.5 }}
-                                    className="w-24 h-24 border-4 border-green-500/30 border-t-green-400 rounded-full flex items-center justify-center mx-auto mb-8 animate-spin">
-                                    <div className="w-16 h-16 border-4 border-transparent border-r-green-300 rounded-full animate-spin"></div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                        <motion.div
+                            initial={{ scale: 0, rotate: -180 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{
+                                type: 'spring',
+                                stiffness: 200,
+                                damping: 10,
+                                duration: 0.8
+                            }}
+                            className="relative mx-auto mb-8">
+                            <div className="w-24 h-24 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center mx-auto relative shadow-2xl shadow-green-500/50">
+                                <CheckCircle className="h-12 w-12 text-white" />
+                                <div className="absolute inset-0 rounded-full bg-green-400/20 animate-ping"></div>
+                                <div className="absolute inset-0 rounded-full border-2 border-green-300/30 animate-pulse"></div>
+                                {[...Array(6)].map((_, i) => (
+                                    <motion.div
+                                        key={i}
+                                        className="absolute"
+                                        style={{
+                                            top: `${20 + Math.cos((i * Math.PI) / 3) * 40}%`,
+                                            left: `${20 + Math.sin((i * Math.PI) / 3) * 40}%`
+                                        }}
+                                        animate={{
+                                            y: [-5, -15, -5],
+                                            rotate: [0, 180, 360],
+                                            scale: [0.8, 1.2, 0.8]
+                                        }}
+                                        transition={{
+                                            duration: 2,
+                                            delay: i * 0.2,
+                                            repeat: Infinity
+                                        }}>
+                                        <Sparkles className="h-4 w-4 text-green-300" />
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </motion.div>
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6, delay: 0.2 }}
                             className="space-y-4">
                             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white to-green-300 bg-clip-text text-transparent mb-4">
-                                {isFinalSuccess ? 'Payment Confirmed!' : 'Processing Payment...'}
+                                Payment Confirmed!
                             </h1>
                             <p className="text-gray-300 text-lg max-w-md mx-auto">
-                                {isFinalSuccess
-                                    ? 'Your magical journey begins now. All systems are ready!'
-                                    : 'Weaving the final touches of your digital experience...'}
+                                Your magical journey begins now. All systems are ready!
                             </p>
                         </motion.div>
                     </div>
