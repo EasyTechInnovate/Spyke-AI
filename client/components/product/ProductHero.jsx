@@ -8,36 +8,20 @@ import {
     ShoppingCart,
     Download,
     ThumbsUp,
-    Play,
-    Pause,
     Star,
-    User,
     Shield,
     Zap,
-    Clock,
-    MessageSquare,
     ChevronLeft,
     ChevronRight,
     Eye,
-    TrendingUp,
-    ExternalLink,
     MapPin,
-    Award,
-    Calendar,
     Package,
-    Globe,
-    Users,
     CheckCircle,
     Sparkles,
     Tag,
-    Target,
     Building,
-    Verified,
     BadgeCheck,
-    Copy,
     ArrowUpRight,
-    ChevronDown,
-    Info,
     DollarSign,
     Percent,
     Timer
@@ -122,7 +106,10 @@ export default function ProductHero({
     const [currentImageIndex, setCurrentImageIndex] = useState(selectedImage || 0)
     const [isImageFullscreen, setIsImageFullscreen] = useState(false)
     const [copiedText, setCopiedText] = useState('')
+    const [isVideoPlaying, setIsVideoPlaying] = useState(false)
+    const [autoCarouselPaused, setAutoCarouselPaused] = useState(false)
     const heroRef = useRef(null)
+    const videoRef = useRef(null)
     const isInView = useInView(heroRef, { once: true })
 
     if (!product) return null
@@ -177,13 +164,13 @@ export default function ProductHero({
         }
     }
     useEffect(() => {
-        if (mediaItems.length > 1) {
+        if (mediaItems.length > 1 && !autoCarouselPaused && !isVideoPlaying) {
             const interval = setInterval(() => {
                 nextImage()
             }, 4000)
             return () => clearInterval(interval)
         }
-    }, [mediaItems.length])
+    }, [mediaItems.length, autoCarouselPaused, isVideoPlaying])
 
     const copyToClipboard = async (text, label) => {
         try {
@@ -208,6 +195,21 @@ export default function ProductHero({
     }
 
     const whatsappUrl = 'https://wa.link/7uwiza'
+
+    const handleVideoPlay = () => {
+        setIsVideoPlaying(true)
+        setAutoCarouselPaused(true)
+    }
+
+    const handleVideoPause = () => {
+        setIsVideoPlaying(false)
+        setAutoCarouselPaused(false)
+    }
+
+    const handleVideoEnded = () => {
+        setIsVideoPlaying(false)
+        setAutoCarouselPaused(false)
+    }
 
     return (
         <div
@@ -272,9 +274,14 @@ export default function ProductHero({
                                         </>
                                     ) : (
                                         <video
+                                            ref={videoRef}
                                             src={activeMedia.src}
                                             controls
                                             className="w-full h-full object-cover"
+                                            onPlay={handleVideoPlay}
+                                            onPause={handleVideoPause}
+                                            onEnded={handleVideoEnded}
+                                            onClick={(e) => e.stopPropagation()}
                                         />
                                     )
                                 ) : (
