@@ -50,12 +50,13 @@ function CheckoutSuccessContent() {
     const [paymentConfirmed, setPaymentConfirmed] = useState(false)
     const mountedRef = useRef(true)
     const confettiFiredRef = useRef(false)
+    const confirmationAttempted = useRef(false)
     const searchParams = useSearchParams()
     const router = useRouter()
     const { clearCart, reload: reloadCart } = useCart()
     const safeCents = useCallback((val) => {
         const n = Number(val ?? 0)
-        return Number.isFinite(n) ? (n / 100).toFixed(2) : '0.00'
+        return Number.isFinite(n) ? n.toFixed(2) : '0.00'
     }, [])
     const triggerEnhancedConfetti = useCallback(() => {
         const colors = ['#00FF89', '#00D672', '#00B85C', '#ffffff']
@@ -97,7 +98,6 @@ function CheckoutSuccessContent() {
     }, [])
     useEffect(() => {
         let aborted = false
-        const confirmationAttempted = useRef(false)
 
         const load = async () => {
             if (!sessionId) {
@@ -150,6 +150,7 @@ function CheckoutSuccessContent() {
                     setOrderDetails(normalized)
                     setLoading(false)
 
+                    // Show processing for exactly 5 seconds before showing completed
                     setTimeout(
                         () => {
                             if (mountedRef.current && !aborted) {
@@ -176,7 +177,7 @@ function CheckoutSuccessContent() {
                                 }, 500)
                             }
                         },
-                        2000 + Math.random() * 1000
+                        5000 // Exactly 5 seconds (5,000 milliseconds)
                     )
                 }
             } catch (err) {
