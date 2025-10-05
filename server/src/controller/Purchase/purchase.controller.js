@@ -216,48 +216,7 @@ const purchaseControllerExport = {
         }
     },
 
-    createPaymentIntent: async (req, res, next) => {
-        try {
-            const { authenticatedUser } = req
-
-            const cart = await Cart.getOrCreateCart(authenticatedUser.id)
-            // Safe population without category field
-            await cart.populate('items.productId', 'title price type')
-
-            if (cart.items.length === 0) {
-                return httpError(next, new Error(responseMessage.CART.EMPTY_CART), req, 400)
-            }
-
-            await cart.calculateTotals()
-
-            if (cart.finalAmount <= 0) {
-                return httpError(next, new Error('No payment required for free items'), req, 400)
-            }
-
-            const paymentIntentData = await stripeService.createPaymentIntent(cart.finalAmount, {
-                userId: authenticatedUser.id,
-                cartId: cart._id.toString(),
-                userEmail: authenticatedUser.emailAddress || authenticatedUser.email,
-                itemCount: cart.items.length,
-                totalAmount: cart.totalAmount,
-                discountAmount: cart.appliedPromocode?.discountAmount || 0,
-                promocodeCode: cart.appliedPromocode?.code || null
-            })
-
-            httpResponse(req, res, 200, responseMessage.SUCCESS, {
-                ...paymentIntentData,
-                cartSummary: {
-                    totalAmount: cart.totalAmount,
-                    discountAmount: cart.appliedPromocode?.discountAmount || 0,
-                    finalAmount: cart.finalAmount,
-                    itemCount: cart.items.length,
-                    appliedPromocode: cart.appliedPromocode
-                }
-            })
-        } catch (err) {
-            httpError(next, err, req, 500)
-        }
-    },
+    // REMOVED: createPaymentIntent - Not needed for Stripe Checkout flow
 
     createCheckoutSession: async (req, res, next) => {
         try {
@@ -314,7 +273,7 @@ const purchaseControllerExport = {
         try {
             const { authenticatedUser } = req
             const { sessionId } = req.body
-            
+
             if (!sessionId) return httpError(next, new Error('Session ID is required'), req, 400)
 
             // Retrieve checkout session
@@ -347,7 +306,10 @@ const purchaseControllerExport = {
             const paymentReference = paymentIntentId || sessionId
 
             // Return existing purchase if already created (idempotent)
-            const existing = await Purchase.findOne({ paymentReference, userId: authenticatedUser.id }).populate('items.productId', 'title price type thumbnail')
+            const existing = await Purchase.findOne({ paymentReference, userId: authenticatedUser.id }).populate(
+                'items.productId',
+                'title price type thumbnail'
+            )
             if (existing) {
                 return httpResponse(req, res, 200, responseMessage.PRODUCT.PURCHASE_SUCCESSFUL, {
                     purchaseId: existing._id,
@@ -360,7 +322,7 @@ const purchaseControllerExport = {
                     purchaseDate: existing.purchaseDate,
                     paymentMethod: existing.paymentMethod,
                     appliedPromocode: existing.appliedPromocode,
-                    items: existing.items.map(i => ({
+                    items: existing.items.map((i) => ({
                         productId: i.productId?._id || i.productId,
                         title: i.productId?.title,
                         price: i.productId?.price || i.price,
@@ -373,19 +335,19 @@ const purchaseControllerExport = {
             // Build purchase from current cart
             const cart = await Cart.getOrCreateCart(authenticatedUser.id)
             await cart.populate('items.productId', 'title price type status sellerId thumbnail')
-            
+
             if (!cart.items.length) {
                 return httpError(next, new Error(responseMessage.CART.EMPTY_CART), req, 400)
             }
 
             const purchaseItems = cart.items
-                .filter(it => it.productId && it.productId.status === EProductStatusNew.PUBLISHED)
-                .map(it => ({ productId: it.productId._id, sellerId: it.productId.sellerId, price: it.productId.price }))
-            
+                .filter((it) => it.productId && it.productId.status === EProductStatusNew.PUBLISHED)
+                .map((it) => ({ productId: it.productId._id, sellerId: it.productId.sellerId, price: it.productId.price }))
+
             if (!purchaseItems.length) return httpError(next, new Error(responseMessage.CART.NO_VALID_ITEMS), req, 400)
 
             // Store cart item details BEFORE clearing cart
-            const cartItemsForResponse = cart.items.map(i => ({
+            const cartItemsForResponse = cart.items.map((i) => ({
                 productId: i.productId._id,
                 title: i.productId.title,
                 price: i.productId.price,
@@ -409,7 +371,10 @@ const purchaseControllerExport = {
                 })
             } catch (e) {
                 if (e.code === 11000) {
-                    const dup = await Purchase.findOne({ paymentReference, userId: authenticatedUser.id }).populate('items.productId', 'title price type thumbnail')
+                    const dup = await Purchase.findOne({ paymentReference, userId: authenticatedUser.id }).populate(
+                        'items.productId',
+                        'title price type thumbnail'
+                    )
                     if (dup) {
                         return httpResponse(req, res, 200, responseMessage.PRODUCT.PURCHASE_SUCCESSFUL, {
                             purchaseId: dup._id,
@@ -422,7 +387,7 @@ const purchaseControllerExport = {
                             purchaseDate: dup.purchaseDate,
                             paymentMethod: dup.paymentMethod,
                             appliedPromocode: dup.appliedPromocode,
-                            items: dup.items.map(i => ({
+                            items: dup.items.map((i) => ({
                                 productId: i.productId?._id || i.productId,
                                 title: i.productId?.title,
                                 price: i.productId?.price || i.price,
@@ -461,13 +426,13 @@ const purchaseControllerExport = {
                 // Ignore seller update errors
             }
             // Clear cart (ignore errors)
-            try { 
+            try {
                 await cart.clearCart()
             } catch (e) {
                 // Ignore cart clear errors
             }
             // Notify buyer (ignore errors)
-            try { 
+            try {
                 await notificationService.sendToUser(authenticatedUser.id, 'Purchase Successful!', 'Access granted.', 'success')
             } catch (e) {
                 // Ignore notification errors
@@ -486,7 +451,7 @@ const purchaseControllerExport = {
                 appliedPromocode: purchase.appliedPromocode,
                 items: cartItemsForResponse
             }
-            
+
             return httpResponse(req, res, 200, responseMessage.PRODUCT.PURCHASE_SUCCESSFUL, responseData)
         } catch (err) {
             return httpError(next, err, req, 500)
@@ -506,7 +471,10 @@ const purchaseControllerExport = {
             }
 
             // Duplicate prevention for manual / non-stripe flows
-            const productIds = cart.items.map(i => i.productId && i.productId._id?.toString()).filter(Boolean).sort()
+            const productIds = cart.items
+                .map((i) => i.productId && i.productId._id?.toString())
+                .filter(Boolean)
+                .sort()
             const recentSimilarPurchase = await Purchase.findOne({
                 userId: authenticatedUser.id,
                 paymentMethod: paymentMethod || 'manual',
@@ -547,9 +515,10 @@ const purchaseControllerExport = {
             }
 
             // Safer dynamic reference to avoid identical hard-coded paymentReference duplicates
-            const safeReference = paymentReference && paymentReference !== 'manual-payment'
-                ? paymentReference
-                : `manual-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+            const safeReference =
+                paymentReference && paymentReference !== 'manual-payment'
+                    ? paymentReference
+                    : `manual-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
             const purchase = new Purchase({
                 userId: authenticatedUser.id,
@@ -891,20 +860,15 @@ const purchaseControllerExport = {
 async function handlePaymentSucceeded(paymentIntent, sessionId = null) {
     try {
         const { userId, cartId } = paymentIntent.metadata || {}
-        if (!userId) return
-
-        const paymentReference = paymentIntent.id
-
-        const existingPurchase = await Purchase.findOne({ 
-            paymentReference,
-            userId 
-        })
-
-        if (existingPurchase) {
-            console.log('Webhook: Purchase already exists for payment reference:', paymentReference)
+        if (!userId) {
+            console.log('Webhook: No userId in metadata')
             return
         }
 
+        const paymentReference = paymentIntent.id
+
+        // Use atomic findOneAndUpdate with upsert to prevent race conditions
+        // This ensures only ONE purchase is created even if multiple webhooks fire simultaneously
         const cart = await Cart.findById(cartId)
         if (!cart) {
             console.log('Webhook: Cart not found for cartId:', cartId)
@@ -923,15 +887,18 @@ async function handlePaymentSucceeded(paymentIntent, sessionId = null) {
                 })
             }
         }
+
         if (purchaseItems.length === 0) {
             console.log('Webhook: No valid purchase items found')
             return
         }
 
+        // ATOMIC OPERATION: Create purchase only if it doesn't exist
+        // The unique index on paymentReference ensures no duplicates
         const purchase = await Purchase.findOneAndUpdate(
-            { 
+            {
                 paymentReference,
-                userId 
+                userId
             },
             {
                 $setOnInsert: {
@@ -948,8 +915,8 @@ async function handlePaymentSucceeded(paymentIntent, sessionId = null) {
                     createdAt: new Date()
                 }
             },
-            { 
-                upsert: true, 
+            {
+                upsert: true,
                 new: true,
                 setDefaultsOnInsert: true
             }

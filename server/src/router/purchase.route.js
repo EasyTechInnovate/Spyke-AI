@@ -107,13 +107,6 @@ router.post(
 )
 
 router.post(
-  '/payment-intent',
-  authenticate,
-  rateLimiter,
-  purchaseController.createPaymentIntent
-)
-
-router.post(
   '/stripe/webhook',
   purchaseController.handleStripeWebhook
 )
