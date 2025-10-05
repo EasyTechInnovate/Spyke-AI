@@ -42,7 +42,7 @@ import {
     Percent,
     Timer
 } from 'lucide-react'
-const AnimatedCounter = ({ value, duration = 2000 }) => {
+const AnimatedCounter = ({ value, duration = 20000 }) => {
     const [count, setCount] = useState(0)
     const ref = useRef(null)
     const isInView = useInView(ref)
