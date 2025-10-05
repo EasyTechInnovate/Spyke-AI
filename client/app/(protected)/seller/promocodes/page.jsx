@@ -28,6 +28,7 @@ export default function PromocodesPage() {
     const [promocodes, setPromocodes] = useState([])
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
     const [filterStatus, setFilterStatus] = useState('all')
     const [showForm, setShowForm] = useState(false)
     const [showStats, setShowStats] = useState(false)
@@ -74,8 +75,20 @@ export default function PromocodesPage() {
         fetchSellerProfile()
     }, [])
     useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm)
+        }, 500)
+
+        return () => clearTimeout(timer)
+    }, [searchTerm])
+    useEffect(() => {
         fetchPromocodes()
-    }, [pagination.page, filterStatus])
+    }, [pagination.page, filterStatus, debouncedSearchTerm])
+    useEffect(() => {
+        if (pagination.page !== 1) {
+            setPagination((prev) => ({ ...prev, page: 1 }))
+        }
+    }, [debouncedSearchTerm, filterStatus])
     const fetchPromocodes = async () => {
         try {
             setLoading(true)
@@ -83,7 +96,7 @@ export default function PromocodesPage() {
                 page: pagination.page,
                 limit: pagination.limit,
                 status: filterStatus !== 'all' ? filterStatus : undefined,
-                search: searchTerm || undefined
+                search: debouncedSearchTerm || undefined
             })
             setPromocodes(response.promocodes || [])
             setPagination({
@@ -100,8 +113,7 @@ export default function PromocodesPage() {
     }
     const handleSearch = (e) => {
         e.preventDefault()
-        setPagination({ ...pagination, page: 1 })
-        fetchPromocodes()
+        setDebouncedSearchTerm(searchTerm)
     }
     const handleCreateEdit = (promocode = null) => {
         if (promocode && !promocode.isActive) {
@@ -391,22 +403,24 @@ export default function PromocodesPage() {
                                                     <p className="text-xs text-gray-500">Expires</p>
                                                     <div className="flex items-center justify-center gap-1">
                                                         <p className="font-bold text-white">
-                                                            {promocode.validUntil ? (() => {
-                                                                const now = new Date()
-                                                                const expiryDate = new Date(promocode.validUntil)
-                                                                const diffTime = expiryDate - now
-                                                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-                                                                
-                                                                if (diffDays < 0) {
-                                                                    return 'Expired'
-                                                                } else if (diffDays === 0) {
-                                                                    return 'Today'
-                                                                } else if (diffDays === 1) {
-                                                                    return '1 day'
-                                                                } else {
-                                                                    return `${diffDays} days`
-                                                                }
-                                                            })() : 'Never'}
+                                                            {promocode.validUntil
+                                                                ? (() => {
+                                                                      const now = new Date()
+                                                                      const expiryDate = new Date(promocode.validUntil)
+                                                                      const diffTime = expiryDate - now
+                                                                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+                                                                      if (diffDays < 0) {
+                                                                          return 'Expired'
+                                                                      } else if (diffDays === 0) {
+                                                                          return 'Today'
+                                                                      } else if (diffDays === 1) {
+                                                                          return '1 day'
+                                                                      } else {
+                                                                          return `${diffDays} days`
+                                                                      }
+                                                                  })()
+                                                                : 'Never'}
                                                         </p>
                                                         {promocode.validUntil && (
                                                             <div className="relative group">
@@ -565,3 +579,4 @@ export default function PromocodesPage() {
         </div>
     )
 }
+

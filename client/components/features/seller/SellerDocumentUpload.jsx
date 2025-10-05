@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Upload, FileText, CheckCircle, AlertCircle, X, Loader2, Shield, Building, Receipt, Clock, Eye, DollarSign, Mail, Bell } from 'lucide-react'
 import sellerAPI from '@/lib/api/seller'
 import apiClient from '@/lib/api/client'
@@ -272,11 +272,66 @@ const DocumentUploadModal = ({ isOpen, onClose, onSuccess }) => {
         if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
         return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
     }
+
+    useEffect(() => {
+        if (!isOpen) return
+
+        const body = document.body
+        const originalOverflow = body.style.overflow
+        const originalPaddingRight = body.style.paddingRight
+
+        // Prevent body scroll and handle scrollbar compensation
+        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+        body.style.overflow = 'hidden'
+        if (scrollbarWidth > 0) {
+            body.style.paddingRight = `${scrollbarWidth}px`
+        }
+
+        // Force reflow to ensure proper positioning
+        requestAnimationFrame(() => {
+            const modalElement = document.querySelector('[data-modal="document-upload"]')
+            if (modalElement) {
+                modalElement.style.transform = 'translateZ(0)'
+                modalElement.style.backfaceVisibility = 'hidden'
+                modalElement.scrollTop = 0
+            }
+        })
+
+        return () => {
+            body.style.overflow = originalOverflow
+            body.style.paddingRight = originalPaddingRight
+        }
+    }, [isOpen])
+
     return (
         <>
             {isOpen && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-[#1a1a1a] border border-gray-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+                <div 
+                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50"
+                    data-modal="document-upload"
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '1rem',
+                        minHeight: '100vh',
+                        minWidth: '100vw',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0
+                    }}
+                >
+                    <div 
+                        className="bg-[#1a1a1a] border border-gray-800 rounded-2xl w-full max-w-2xl overflow-hidden flex flex-col"
+                        style={{
+                            maxHeight: '90vh',
+                            transform: 'translate3d(0, 0, 0)',
+                            backfaceVisibility: 'hidden',
+                            willChange: 'transform',
+                            position: 'relative'
+                        }}
+                    >
                         <div className="p-6 border-b border-gray-800">
                             <div className="flex items-center justify-between">
                                 <div>

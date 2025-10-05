@@ -29,7 +29,8 @@ import {
     Edit3,
     Upload,
     Camera,
-    Activity
+    Activity,
+    RefreshCw
 } from 'lucide-react'
 import sellerAPI from '@/lib/api/seller'
 import { leagueSpartan } from '@/lib/fonts'
@@ -48,6 +49,7 @@ export default function SellerProfile() {
     const [showUpload, setShowUpload] = useState(false)
     const [notification, setNotification] = useState(null)
     const [processingCommission, setProcessingCommission] = useState(false)
+
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
         setTimeout(() => setNotification(null), 5000)
