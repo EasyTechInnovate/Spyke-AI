@@ -503,13 +503,6 @@ function PaymentMethodStep({ paymentMethod, setPaymentMethod, onPaymentMethodCha
             icon: Wallet,
             comingSoon: true
         },
-        {
-            id: 'crypto',
-            name: 'Cryptocurrency',
-            description: 'Pay with Bitcoin, Ethereum, etc.',
-            icon: Bitcoin,
-            comingSoon: true
-        }
     ]
 
     // Set default payment method to stripe if no method is selected or if manual was selected
