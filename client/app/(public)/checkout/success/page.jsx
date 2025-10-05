@@ -1,13 +1,14 @@
 'use client'
-import { Suspense, useEffect, useState, useRef, useCallback } from 'react'
+import { Suspense, useEffect, useState, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle, Package, Mail, ArrowRight, Loader2, Sparkles, Star, Download } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { CheckCircle, Package, ArrowRight, Loader2, Sparkles, Star, Download } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
 import Link from 'next/link'
-import { cartAPI, paymentAPI } from '@/lib/api'
+import { paymentAPI } from '@/lib/api'
 import { useCart } from '@/hooks/useCart'
 import confetti from 'canvas-confetti'
+
 function LoadingUI() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
@@ -39,25 +40,21 @@ function LoadingUI() {
         </div>
     )
 }
-function formatText(str) {
-    if (!str) return ''
-    return str.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
-}
+
 function CheckoutSuccessContent() {
-    const [loading, setLoading] = useState(true)
-    const [orderDetails, setOrderDetails] = useState(null)
-    const [error, setError] = useState(null)
-    const mountedRef = useRef(true)
-    const confettiFiredRef = useRef(false)
-    const confirmationAttempted = useRef(false)
     const searchParams = useSearchParams()
     const router = useRouter()
     const { clearCart, reload: reloadCart } = useCart()
-    const safeCents = useCallback((val) => {
-        const n = Number(val ?? 0)
-        return Number.isFinite(n) ? n.toFixed(2) : '0.00'
-    }, [])
-    const triggerEnhancedConfetti = useCallback(() => {
+    const sessionId = searchParams.get('session_id')
+
+    const [state, setState] = useState({
+        loading: true,
+        error: null,
+        order: null,
+        confettiTriggered: false
+    })
+
+    const triggerConfetti = useCallback(() => {
         const colors = ['#00FF89', '#00D672', '#00B85C', '#ffffff']
         confetti({
             particleCount: 100,
@@ -67,403 +64,330 @@ function CheckoutSuccessContent() {
             gravity: 0.8,
             scalar: 1.2
         })
-        setTimeout(() => {
-            confetti({
-                particleCount: 80,
-                spread: 60,
-                origin: { x: 0.3, y: 0.4 },
-                colors,
-                shapes: ['star'],
-                gravity: 0.6
-            })
-        }, 200)
-        setTimeout(() => {
-            confetti({
-                particleCount: 80,
-                spread: 60,
-                origin: { x: 0.7, y: 0.4 },
-                colors,
-                shapes: ['star'],
-                gravity: 0.6
-            })
-        }, 400)
+        setTimeout(() => confetti({
+            particleCount: 80,
+            spread: 60,
+            origin: { x: 0.3, y: 0.4 },
+            colors,
+            shapes: ['star'],
+            gravity: 0.6
+        }), 200)
+        setTimeout(() => confetti({
+            particleCount: 80,
+            spread: 60,
+            origin: { x: 0.7, y: 0.4 },
+            colors,
+            shapes: ['star'],
+            gravity: 0.6
+        }), 400)
     }, [])
-    const sessionId = searchParams.get('session_id')
+
     useEffect(() => {
-        mountedRef.current = true
-        return () => {
-            mountedRef.current = false
+        if (!sessionId) {
+            setState(prev => ({ ...prev, loading: false, error: 'No payment session found' }))
+            return
         }
-    }, [])
-    useEffect(() => {
-        let aborted = false
 
-        const load = async () => {
-            if (!sessionId) {
-                if (mountedRef.current) {
-                    setError('No payment session found.')
-                    setLoading(false)
-                }
-                return
-            }
-
-            // Prevent multiple confirmation attempts
-            if (confirmationAttempted.current) {
-                console.log('Confirmation already attempted, skipping...')
-                return
-            }
-            confirmationAttempted.current = true
-
+        // Prevent duplicate processing
+        const storageKey = `order_confirmed_${sessionId}`
+        const alreadyProcessed = sessionStorage.getItem(storageKey)
+        
+        if (alreadyProcessed) {
             try {
-                const raw = await paymentAPI.confirmCheckoutSession(sessionId)
-                if (!raw) throw new Error('Empty response from backend')
+                const cachedOrder = JSON.parse(alreadyProcessed)
+                setState({ loading: false, error: null, order: cachedOrder, confettiTriggered: true })
+                triggerConfetti()
+                return
+            } catch {}
+        }
 
-                // Handle both success and "already exists" cases as success
-                if (raw.success === false && !raw.message?.includes('already') && !raw.message?.includes('existing')) {
-                    throw new Error(raw.message || 'Backend reported failure')
-                }
+        let isMounted = true
 
-                const data = raw.data || raw || {}
-                const id = data._id ?? data.purchaseId ?? data.id
-                const items = Array.isArray(data.items) ? data.items : data.items ? [data.items] : []
-                const total = data.finalAmount ?? data.final_amount ?? data.totalAmount ?? data.total_amount ?? 0
-                const subtotal = data.totalAmount ?? data.total_amount ?? data.subtotal ?? 0
-                const discount = data.discountAmount ?? data.discount_amount ?? 0
-                const orderStatus = data.orderStatus ?? data.status
-                const paymentMethod = formatText(data.paymentMethod)
+        const confirmOrder = async () => {
+            try {
+                const response = await paymentAPI.confirmCheckoutSession(sessionId)
                 
-                const normalized = {
-                    orderId: id,
-                    items,
-                    total,
-                    subtotal,
-                    discount,
-                    paymentStatus: 'completed',
-                    orderStatus: 'completed',
-                    appliedPromocode: data.appliedPromocode ?? data.applied_promocode ?? null,
-                    purchaseDate: data.purchaseDate ?? data.purchase_date ?? data.createdAt,
-                    paymentMethod
+                if (!isMounted) return
+
+                const data = response?.data || response
+                
+                if (!data || !data.purchaseId) {
+                    throw new Error('Invalid order data received')
                 }
 
-                if (mountedRef.current && !aborted) {
-                    setOrderDetails(normalized)
-                    setLoading(false)
-
-                    // Trigger confetti immediately
-                    if (!confettiFiredRef.current) {
-                        triggerEnhancedConfetti()
-                        confettiFiredRef.current = true
-                    }
-
-                    // Clear cart after a brief delay for better UX
-                    setTimeout(async () => {
-                        try {
-                            await cartAPI?.clearCart?.()
-                            await clearCart?.()
-                            await reloadCart?.()
-                        } catch (e) {
-                            console.error('Failed to clear cart:', e)
-                        }
-                    }, 500)
+                const order = {
+                    id: data.purchaseId || data._id,
+                    items: Array.isArray(data.items) ? data.items : [],
+                    total: data.finalAmount ?? data.totalAmount ?? 0,
+                    subtotal: data.totalAmount ?? data.finalAmount ?? 0,
+                    discount: data.discountAmount ?? 0,
+                    status: 'completed',
+                    method: data.paymentMethod?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || 'Stripe Checkout',
+                    date: data.purchaseDate || new Date().toISOString()
                 }
-            } catch (err) {
-                const msg = err?.message ?? String(err)
-                console.error('Payment confirmation error:', err)
 
-                if (mountedRef.current && !aborted) {
-                    // Handle specific error cases more gracefully
-                    if (msg.includes('already') || msg.includes('existing') || msg.includes('duplicate')) {
-                        // Treat as success - order already exists
-                        setOrderDetails({
-                            orderId: 'Already processed',
-                            paymentStatus: 'completed',
-                            orderStatus: 'completed',
-                            paymentMethod: 'Stripe Checkout',
-                            items: []
-                        })
-                        
-                        if (!confettiFiredRef.current) {
-                            triggerEnhancedConfetti()
-                            confettiFiredRef.current = true
-                        }
-                    } else if (msg.includes('No matching document') || msg.includes('not yet available')) {
-                        setError('Order is being processed. Please check your purchases page in a moment.')
-                    } else {
-                        setError(msg.length > 100 ? 'Payment confirmation failed. Please contact support if your payment was charged.' : msg)
+                // Cache successful order
+                sessionStorage.setItem(storageKey, JSON.stringify(order))
+
+                setState({ loading: false, error: null, order, confettiTriggered: false })
+
+                // Trigger confetti
+                setTimeout(() => {
+                    if (isMounted) {
+                        triggerConfetti()
+                        setState(prev => ({ ...prev, confettiTriggered: true }))
                     }
-                    setLoading(false)
+                }, 100)
+
+                // Clear cart in background
+                setTimeout(async () => {
+                    try {
+                        await clearCart?.()
+                        await reloadCart?.()
+                    } catch (e) {
+                        console.error('Cart clear failed:', e)
+                    }
+                }, 500)
+
+            } catch (error) {
+                if (!isMounted) return
+                
+                const message = error?.message || 'Failed to confirm order'
+                
+                if (/already|existing|duplicate/i.test(message)) {
+                    setState({
+                        loading: false,
+                        error: null,
+                        order: {
+                            id: 'processed',
+                            items: [],
+                            total: 0,
+                            subtotal: 0,
+                            discount: 0,
+                            status: 'completed',
+                            method: 'Stripe Checkout',
+                            date: new Date().toISOString()
+                        },
+                        confettiTriggered: false
+                    })
+                    setTimeout(() => triggerConfetti(), 100)
+                } else {
+                    setState(prev => ({ ...prev, loading: false, error: message }))
                 }
             }
         }
 
-        load()
+        confirmOrder()
+
         return () => {
-            aborted = true
+            isMounted = false
         }
-    }, [sessionId, clearCart, reloadCart, triggerEnhancedConfetti])
-    if (loading) {
-        return <LoadingUI />
+    }, [sessionId, clearCart, reloadCart, triggerConfetti])
+
+    if (state.loading) return <LoadingUI />
+
+    if (state.error) {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center p-4">
+                <Container>
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="max-w-md mx-auto text-center">
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/20 rounded-2xl p-8">
+                            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Loader2 className="h-8 w-8 text-red-400 animate-spin" />
+                            </div>
+                            <h2 className="text-xl font-semibold text-white mb-4">Processing Your Order</h2>
+                            <p className="text-gray-300 mb-6">{state.error}</p>
+                            <Link
+                                href="/purchases"
+                                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:from-green-400 hover:to-green-500 transition-all duration-300">
+                                Check Purchase History
+                            </Link>
+                        </div>
+                    </motion.div>
+                </Container>
+            </div>
+        )
     }
-    const hasOrder = !!(orderDetails && orderDetails.orderId)
+
+    const { order } = state
+    const formatCurrency = (val) => Number(val ?? 0).toFixed(2)
+
     return (
         <div className="min-h-screen bg-black relative overflow-hidden">
+            {/* Background Effects */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-20 left-10 w-72 h-72 bg-green-500/5 rounded-full blur-3xl animate-pulse"></div>
-                <div className="absolute bottom-20 right-10 w-96 h-96 bg-green-400/3 rounded-full blur-3xl animate-pulse delay-1000"></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px]  from-green-500/2 to-transparent rounded-full blur-3xl"></div>
+                <div className="absolute bottom-20 right-10 w-96 h-96 bg-green-400/3 rounded-full blur-3xl animate-pulse"></div>
             </div>
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {[...Array(20)].map((_, i) => (
-                    <motion.div
-                        key={i}
-                        className="absolute w-1 h-1 bg-green-400/30 rounded-full"
-                        initial={{
-                            x: Math.random() * window.innerWidth,
-                            y: Math.random() * window.innerHeight
-                        }}
-                        animate={{
-                            y: [null, -100],
-                            opacity: [0, 1, 0]
-                        }}
-                        transition={{
-                            duration: Math.random() * 3 + 2,
-                            repeat: Infinity,
-                            delay: Math.random() * 2
-                        }}
-                    />
-                ))}
-            </div>
+
             <Container className="relative z-10 py-12">
                 <div className="max-w-6xl mx-auto">
+                    {/* Success Header */}
                     <div className="text-center mb-12">
                         <motion.div
                             initial={{ scale: 0, rotate: -180 }}
                             animate={{ scale: 1, rotate: 0 }}
-                            transition={{
-                                type: 'spring',
-                                stiffness: 200,
-                                damping: 10,
-                                duration: 0.8
-                            }}
-                            className="relative mx-auto mb-8">
-                            <div className="w-24 h-24 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center mx-auto relative shadow-2xl shadow-green-500/50">
+                            transition={{ type: 'spring', stiffness: 200, damping: 10 }}
+                            className="relative mx-auto mb-8 w-24 h-24">
+                            <div className="w-24 h-24 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center shadow-2xl shadow-green-500/50">
                                 <CheckCircle className="h-12 w-12 text-white" />
                                 <div className="absolute inset-0 rounded-full bg-green-400/20 animate-ping"></div>
-                                <div className="absolute inset-0 rounded-full border-2 border-green-300/30 animate-pulse"></div>
-                                {[...Array(6)].map((_, i) => (
-                                    <motion.div
-                                        key={i}
-                                        className="absolute"
-                                        style={{
-                                            top: `${20 + Math.cos((i * Math.PI) / 3) * 40}%`,
-                                            left: `${20 + Math.sin((i * Math.PI) / 3) * 40}%`
-                                        }}
-                                        animate={{
-                                            y: [-5, -15, -5],
-                                            rotate: [0, 180, 360],
-                                            scale: [0.8, 1.2, 0.8]
-                                        }}
-                                        transition={{
-                                            duration: 2,
-                                            delay: i * 0.2,
-                                            repeat: Infinity
-                                        }}>
-                                        <Sparkles className="h-4 w-4 text-green-300" />
-                                    </motion.div>
-                                ))}
                             </div>
+                            {[...Array(6)].map((_, i) => (
+                                <motion.div
+                                    key={i}
+                                    className="absolute top-1/2 left-1/2"
+                                    initial={{ opacity: 0, scale: 0 }}
+                                    animate={{ 
+                                        opacity: [0, 1, 0],
+                                        scale: [0, 1, 0],
+                                        x: Math.cos(i * 60 * Math.PI / 180) * 50,
+                                        y: Math.sin(i * 60 * Math.PI / 180) * 50
+                                    }}
+                                    transition={{ duration: 2, delay: i * 0.1, repeat: Infinity }}>
+                                    <Sparkles className="h-4 w-4 text-green-300" />
+                                </motion.div>
+                            ))}
                         </motion.div>
+
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0.2 }}
-                            className="space-y-4">
+                            transition={{ delay: 0.2 }}>
                             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white to-green-300 bg-clip-text text-transparent mb-4">
-                                Payment Confirmed!
+                                Payment Successful!
                             </h1>
-                            <p className="text-gray-300 text-lg max-w-md mx-auto">
-                                Your magical journey begins now. All systems are ready!
-                            </p>
+                            <p className="text-gray-300 text-lg">Your order has been confirmed and is ready to access</p>
                         </motion.div>
                     </div>
-                    {hasOrder && (
-                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                            <div className="xl:col-span-2 space-y-8">
-                                <motion.div
-                                    initial={{ opacity: 0, y: 30 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.6, delay: 0.3 }}
-                                    className="group relative">
-                                    <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-                                    <div className="relative bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-8 hover:border-green-500/30 transition-all duration-500">
-                                        <div className="flex items-center mb-6">
-                                            <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center mr-4">
-                                                <Package className="h-5 w-5 text-white" />
-                                            </div>
-                                            <h2 className="text-2xl font-bold text-white">Order Confirmed</h2>
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            {[
-                                                { label: 'Order ID', value: `#${String(orderDetails?.orderId)}`, mono: true },
-                                                {
-                                                    label: 'Payment Status',
-                                                    value: formatText(orderDetails?.paymentStatus || 'Completed'),
-                                                    status: true
-                                                },
-                                                { label: 'Payment Method', value: formatText(orderDetails?.paymentMethod || 'N/A'), mono: true },
-                                                { label: 'Total Amount', value: `$${safeCents(orderDetails?.total)}`, amount: true }
-                                            ].map((item, idx) => (
-                                                <motion.div
-                                                    key={idx}
-                                                    initial={{ opacity: 0, x: -20 }}
-                                                    animate={{ opacity: 1, x: 0 }}
-                                                    transition={{ duration: 0.4, delay: 0.4 + idx * 0.1 }}
-                                                    className="group/item">
-                                                    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/5 hover:border-green-500/20 hover:bg-white/10 transition-all duration-300">
-                                                        <h3 className="text-sm font-medium text-gray-400 mb-2">{item.label}</h3>
-                                                        <p
-                                                            className={`text-white text-lg font-semibold ${item.mono ? 'font-mono text-base' : ''} ${item.amount ? 'text-green-400 text-xl' : ''} ${item.status ? 'flex items-center' : ''}`}>
-                                                            {item.status && (
-                                                                <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-                                                            )}
-                                                            {item.value}
-                                                        </p>
-                                                    </div>
-                                                </motion.div>
-                                            ))}
-                                        </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        {/* Order Details */}
+                        <div className="lg:col-span-2 space-y-6">
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 }}
+                                className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                                <div className="flex items-center mb-4">
+                                    <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center mr-3">
+                                        <Package className="h-5 w-5 text-white" />
                                     </div>
-                                </motion.div>
-                                <motion.div
-                                    initial={{ opacity: 0, y: 30 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.6, delay: 0.5 }}
-                                    className="group relative">
-                                    <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 to-transparent rounded-2xl blur-xl"></div>
-                                    <div className="relative bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-8 hover:border-green-500/30 transition-all duration-500">
-                                        <div className="flex items-center mb-6">
-                                            <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center mr-4">
-                                                <Download className="h-5 w-5 text-white" />
-                                            </div>
-                                            <h2 className="text-2xl font-bold text-white">Your Digital Assets</h2>
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {orderDetails.items?.map((item, idx) => {
-                                                const title =
-                                                    item.title ||
-                                                    item.productTitle ||
-                                                    (item.productId && String(item.productId).slice(0, 8)) ||
-                                                    'Digital Asset'
-                                                const price = item.price ?? item.amount ?? 0
-                                                const type = item.type || 'Premium Content'
-                                                return (
-                                                    <motion.div
-                                                        key={idx}
-                                                        initial={{ opacity: 0, scale: 0.9, rotateY: -10 }}
-                                                        animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-                                                        transition={{ duration: 0.5, delay: 0.6 + idx * 0.1 }}
-                                                        className="group/item relative">
-                                                        <div className="absolute inset-0 bg-gradient-to-br from-green-400/10 to-transparent rounded-xl blur-sm group-hover/item:blur-md transition-all duration-300"></div>
-                                                        <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-green-500/30 hover:bg-white/10 transition-all duration-300 cursor-pointer">
-                                                            <div className="flex items-start justify-between">
-                                                                <div className="flex-1">
-                                                                    <div className="flex items-center mb-2">
-                                                                        <Star className="h-4 w-4 text-green-400 mr-2" />
-                                                                        <h3 className="text-white font-bold text-lg">{title}</h3>
-                                                                    </div>
-                                                                    <p className="text-gray-300 text-sm mb-4">{type}</p>
-                                                                </div>
-                                                                <div className="text-right ml-4">
-                                                                    <p className="text-green-400 font-bold text-xl">${safeCents(price)}</p>
-                                                                    <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center mt-2">
-                                                                        <Download className="h-4 w-4 text-green-400" />
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </motion.div>
-                                                )
-                                            })}
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            </div>
-                            <div className="space-y-8">
-                                <motion.div
-                                    initial={{ opacity: 0, x: 30 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.6, delay: 0.7 }}
-                                    className="group relative">
-                                    <div className="absolute inset-0 bg-gradient-to-b from-green-500/10 to-transparent rounded-2xl blur-xl"></div>
-                                    <div className="relative bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:border-green-500/30 transition-all duration-500">
-                                        <h2 className="text-xl font-bold text-white mb-6 flex items-center">
-                                            <div className="w-2 h-2 bg-green-400 rounded-full mr-3 animate-pulse"></div>
-                                            Order Summary
-                                        </h2>
-                                        <div className="space-y-4">
-                                            <div className="flex justify-between text-gray-300 border-b border-white/10 pb-3">
-                                                <span>Subtotal</span>
-                                                <span className="font-mono">${safeCents(orderDetails?.subtotal)}</span>
-                                            </div>
-                                            {(orderDetails?.discount || 0) > 0 && (
-                                                <div className="flex justify-between text-green-400 border-b border-white/10 pb-3">
-                                                    <span>Discount Applied</span>
-                                                    <span className="font-mono">-${safeCents(orderDetails?.discount)}</span>
-                                                </div>
-                                            )}
-                                            <div className="flex justify-between text-white font-bold text-xl pt-3">
-                                                <span>Total</span>
-                                                <span className="text-green-400 font-mono">${safeCents(orderDetails?.total)}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                                <motion.div
-                                    initial={{ opacity: 0, x: 30 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.6, delay: 0.8 }}
-                                    className="space-y-4">
-                                    <Link
-                                        href="/purchases"
-                                        className="group relative w-full inline-flex items-center justify-center px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:from-green-400 hover:to-green-500 transition-all duration-300 shadow-lg shadow-green-500/25 hover:shadow-green-500/40 hover:shadow-xl overflow-hidden">
-                                        <div className="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-                                        <span className="relative z-10">Access My Downloads</span>
-                                    </Link>
-                                    <Link
-                                        href="/explore"
-                                        className="group w-full inline-flex items-center justify-center px-6 py-4 bg-white/10 backdrop-blur-sm text-white rounded-xl font-semibold hover:bg-white/20 transition-all duration-300 border border-white/20 hover:border-green-500/50">
-                                        <span>Explore More</span>
-                                        <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                                    </Link>
-                                </motion.div>
-                            </div>
-                        </div>
-                    )}
-                    {!hasOrder && error && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.5 }}
-                            className="text-center max-w-md mx-auto">
-                            <div className="bg-white/5 backdrop-blur-xl border border-white/20 rounded-2xl p-8">
-                                <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <Loader2 className="h-8 w-8 text-white animate-spin" />
+                                    <h2 className="text-xl font-bold text-white">Order Details</h2>
                                 </div>
-                                <h2 className="text-xl font-semibold text-white mb-4">Processing Your Order</h2>
-                                <p className="text-gray-300 mb-6">{error}</p>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-white/5 rounded-lg p-4">
+                                        <p className="text-sm text-gray-400 mb-1">Order ID</p>
+                                        <p className="text-white font-mono text-sm">#{order.id}</p>
+                                    </div>
+                                    <div className="bg-white/5 rounded-lg p-4">
+                                        <p className="text-sm text-gray-400 mb-1">Status</p>
+                                        <p className="text-green-400 font-semibold flex items-center">
+                                            <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
+                                            Completed
+                                        </p>
+                                    </div>
+                                    <div className="bg-white/5 rounded-lg p-4">
+                                        <p className="text-sm text-gray-400 mb-1">Payment Method</p>
+                                        <p className="text-white font-semibold">{order.method}</p>
+                                    </div>
+                                    <div className="bg-white/5 rounded-lg p-4">
+                                        <p className="text-sm text-gray-400 mb-1">Total Amount</p>
+                                        <p className="text-green-400 font-bold text-lg">${formatCurrency(order.total)}</p>
+                                    </div>
+                                </div>
+                            </motion.div>
+
+                            {/* Items */}
+                            {order.items?.length > 0 && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.4 }}
+                                    className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                                    <div className="flex items-center mb-4">
+                                        <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center mr-3">
+                                            <Download className="h-5 w-5 text-white" />
+                                        </div>
+                                        <h2 className="text-xl font-bold text-white">Your Items</h2>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {order.items.map((item, idx) => (
+                                            <motion.div
+                                                key={idx}
+                                                initial={{ opacity: 0, x: -20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: 0.5 + idx * 0.1 }}
+                                                className="bg-white/5 rounded-lg p-4 flex items-center justify-between hover:bg-white/10 transition-all">
+                                                <div className="flex items-center space-x-3">
+                                                    <Star className="h-5 w-5 text-green-400" />
+                                                    <div>
+                                                        <h3 className="text-white font-semibold">{item.title || 'Digital Product'}</h3>
+                                                        <p className="text-sm text-gray-400">{item.type || 'Premium Content'}</p>
+                                                    </div>
+                                                </div>
+                                                <p className="text-green-400 font-bold">${formatCurrency(item.price)}</p>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </div>
+
+                        {/* Summary & Actions */}
+                        <div className="space-y-6">
+                            <motion.div
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.5 }}
+                                className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                                <h2 className="text-lg font-bold text-white mb-4">Summary</h2>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between text-gray-300">
+                                        <span>Subtotal</span>
+                                        <span className="font-mono">${formatCurrency(order.subtotal)}</span>
+                                    </div>
+                                    {order.discount > 0 && (
+                                        <div className="flex justify-between text-green-400">
+                                            <span>Discount</span>
+                                            <span className="font-mono">-${formatCurrency(order.discount)}</span>
+                                        </div>
+                                    )}
+                                    <div className="border-t border-white/10 pt-3 flex justify-between text-white font-bold text-xl">
+                                        <span>Total</span>
+                                        <span className="text-green-400 font-mono">${formatCurrency(order.total)}</span>
+                                    </div>
+                                </div>
+                            </motion.div>
+
+                            <motion.div
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.6 }}
+                                className="space-y-3">
                                 <Link
-                                    href="/account/purchases"
-                                    className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:from-green-400 hover:to-green-500 transition-all duration-300">
-                                    Check Purchase History
+                                    href="/purchases"
+                                    className="w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:from-green-400 hover:to-green-500 transition-all shadow-lg shadow-green-500/25">
+                                    Access My Products
                                 </Link>
-                            </div>
-                        </motion.div>
-                    )}
+                                <Link
+                                    href="/explore"
+                                    className="w-full flex items-center justify-center px-6 py-4 bg-white/10 text-white rounded-xl font-semibold hover:bg-white/20 transition-all border border-white/20">
+                                    <span>Continue Shopping</span>
+                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                </Link>
+                            </motion.div>
+                        </div>
+                    </div>
                 </div>
             </Container>
         </div>
     )
 }
+
 export default function CheckoutSuccessPage() {
     return (
         <Suspense fallback={<LoadingUI />}>

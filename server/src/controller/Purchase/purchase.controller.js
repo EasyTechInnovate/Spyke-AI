@@ -314,114 +314,87 @@ const purchaseControllerExport = {
         try {
             const { authenticatedUser } = req
             const { sessionId } = req.body
+            
+            if (!sessionId) return httpError(next, new Error('Session ID is required'), req, 400)
 
-            if (!sessionId) {
-                return httpError(next, new Error('Session ID is required'), req, 400)
-            }
-
-            const existingPurchaseBySession = await Purchase.findOne({
-                $or: [
-                    { paymentReference: sessionId },
-                    {
-                        userId: authenticatedUser.id,
-                        paymentMethod: 'stripe_checkout',
-                        createdAt: { $gte: new Date(Date.now() - 10 * 60 * 1000) } // Last 10 minutes
-                    }
-                ]
-            })
-
-            if (existingPurchaseBySession) {
-                console.log('Existing purchase found, returning existing order:', existingPurchaseBySession._id)
-                return httpResponse(req, res, 200, responseMessage.PRODUCT.PURCHASE_SUCCESSFUL, {
-                    purchaseId: existingPurchaseBySession._id,
-                    totalItems: existingPurchaseBySession.items.length,
-                    totalAmount: existingPurchaseBySession.totalAmount,
-                    discountAmount: existingPurchaseBySession.discountAmount,
-                    finalAmount: existingPurchaseBySession.finalAmount,
-                    status: existingPurchaseBySession.orderStatus,
-                    paymentStatus: existingPurchaseBySession.paymentStatus,
-                    purchaseDate: existingPurchaseBySession.purchaseDate,
-                    paymentMethod: existingPurchaseBySession.paymentMethod,
-                    appliedPromocode: existingPurchaseBySession.appliedPromocode
-                })
-            }
-
+            // Retrieve checkout session
             let session
             try {
                 session = await stripeService.retrieveCheckoutSession(sessionId)
-                if (!session) {
-                    return httpError(next, new Error('Invalid checkout session'), req, 400)
-                }
-            } catch (stripeError) {
-                console.error('Stripe session retrieval failed:', stripeError.message)
-                return httpError(next, new Error('Failed to retrieve payment session'), req, 400)
+            } catch (err) {
+                return httpError(next, new Error('Unable to retrieve checkout session'), req, 400)
             }
-
+            if (!session) return httpError(next, new Error('Invalid checkout session'), req, 400)
             if (!stripeService.isCheckoutSessionSuccessful(session)) {
-                return httpError(
-                    next,
-                    new Error(`Payment not completed. Status: ${session.status}, Payment Status: ${session.payment_status}`),
-                    req,
-                    400
-                )
+                return httpError(next, new Error('Checkout session not completed'), req, 400)
+            }
+            if (session.metadata?.userId !== authenticatedUser.id) {
+                return httpError(next, new Error('Session does not belong to user'), req, 403)
             }
 
-            if (session.metadata.userId !== authenticatedUser.id) {
-                return httpError(next, new Error('Unauthorized checkout session'), req, 403)
-            }
-
+            // Prefer payment intent id when available (stable unique reference), fallback to session id
             let paymentIntentId = null
-            try {
-                if (session.payment_intent) {
+            if (session.payment_intent) {
+                try {
                     const pi = await stripeService.retrievePaymentIntent(session.payment_intent)
                     if (pi && stripeService.isPaymentSuccessful(pi) && pi.metadata?.userId === authenticatedUser.id) {
                         paymentIntentId = pi.id
-
-                        // Check for existing purchase with payment intent ID
-                        const existingByPI = await Purchase.findOne({
-                            paymentReference: paymentIntentId,
-                            userId: authenticatedUser.id
-                        })
-
-                        if (existingByPI) {
-                            console.log('Existing purchase found by payment intent:', existingByPI._id)
-                            return httpResponse(req, res, 200, responseMessage.PRODUCT.PURCHASE_SUCCESSFUL, existingByPI)
-                        }
                     }
+                } catch (e) {
+                    // Ignore error, will fall back to session id
                 }
-            } catch (piError) {
-                console.warn('Payment intent retrieval failed, continuing with session ID:', piError.message)
             }
+            const paymentReference = paymentIntentId || sessionId
 
-            const idempotencyKey = paymentIntentId || sessionId
-
-            // Get cart data before creating purchase
-            const cart = await Cart.getOrCreateCart(authenticatedUser.id)
-            // Safe population without category field to avoid casting errors
-            await cart.populate('items.productId', 'title slug thumbnail price type status sellerId')
-
-            if (!cart.items || cart.items.length === 0) {
-                return httpError(next, new Error(responseMessage.CART.EMPTY_CART), req, 400)
-            }
-
-            // Prepare purchase items
-            const purchaseItems = []
-            for (const item of cart.items) {
-                if (item.productId?.status !== EProductStatusNew.PUBLISHED) continue
-                purchaseItems.push({
-                    productId: item.productId._id,
-                    sellerId: item.productId.sellerId,
-                    price: item.productId.price
+            // Return existing purchase if already created (idempotent)
+            const existing = await Purchase.findOne({ paymentReference, userId: authenticatedUser.id }).populate('items.productId', 'title price type thumbnail')
+            if (existing) {
+                return httpResponse(req, res, 200, responseMessage.PRODUCT.PURCHASE_SUCCESSFUL, {
+                    purchaseId: existing._id,
+                    totalItems: existing.items.length,
+                    totalAmount: existing.totalAmount,
+                    discountAmount: existing.discountAmount,
+                    finalAmount: existing.finalAmount,
+                    status: existing.orderStatus,
+                    paymentStatus: existing.paymentStatus,
+                    purchaseDate: existing.purchaseDate,
+                    paymentMethod: existing.paymentMethod,
+                    appliedPromocode: existing.appliedPromocode,
+                    items: existing.items.map(i => ({
+                        productId: i.productId?._id || i.productId,
+                        title: i.productId?.title,
+                        price: i.productId?.price || i.price,
+                        type: i.productId?.type,
+                        thumbnail: i.productId?.thumbnail
+                    }))
                 })
             }
 
-            if (purchaseItems.length === 0) {
-                return httpError(next, new Error(responseMessage.CART.NO_VALID_ITEMS), req, 400)
+            // Build purchase from current cart
+            const cart = await Cart.getOrCreateCart(authenticatedUser.id)
+            await cart.populate('items.productId', 'title price type status sellerId thumbnail')
+            
+            if (!cart.items.length) {
+                return httpError(next, new Error(responseMessage.CART.EMPTY_CART), req, 400)
             }
+
+            const purchaseItems = cart.items
+                .filter(it => it.productId && it.productId.status === EProductStatusNew.PUBLISHED)
+                .map(it => ({ productId: it.productId._id, sellerId: it.productId.sellerId, price: it.productId.price }))
+            
+            if (!purchaseItems.length) return httpError(next, new Error(responseMessage.CART.NO_VALID_ITEMS), req, 400)
+
+            // Store cart item details BEFORE clearing cart
+            const cartItemsForResponse = cart.items.map(i => ({
+                productId: i.productId._id,
+                title: i.productId.title,
+                price: i.productId.price,
+                type: i.productId.type,
+                thumbnail: i.productId.thumbnail
+            }))
 
             let purchase
             try {
-                // Create purchase record with enhanced error handling
                 purchase = await Purchase.create({
                     userId: authenticatedUser.id,
                     items: purchaseItems,
@@ -430,54 +403,76 @@ const purchaseControllerExport = {
                     finalAmount: cart.finalAmount,
                     appliedPromocode: cart.appliedPromocode,
                     paymentMethod: 'stripe_checkout',
-                    paymentReference: idempotencyKey,
+                    paymentReference,
                     ipAddress: req.ip,
                     userAgent: req.get('User-Agent')
                 })
-            } catch (createError) {
-                // Handle duplicate key errors (E11000)
-                if (createError.code === 11000 && createError.keyPattern?.paymentReference) {
-                    console.log('Duplicate paymentReference detected, finding existing purchase')
-                    const existingPurchase = await Purchase.findOne({ paymentReference: idempotencyKey })
-                    if (existingPurchase) {
-                        return httpResponse(req, res, 200, responseMessage.PRODUCT.PURCHASE_SUCCESSFUL, existingPurchase)
+            } catch (e) {
+                if (e.code === 11000) {
+                    const dup = await Purchase.findOne({ paymentReference, userId: authenticatedUser.id }).populate('items.productId', 'title price type thumbnail')
+                    if (dup) {
+                        return httpResponse(req, res, 200, responseMessage.PRODUCT.PURCHASE_SUCCESSFUL, {
+                            purchaseId: dup._id,
+                            totalItems: dup.items.length,
+                            totalAmount: dup.totalAmount,
+                            discountAmount: dup.discountAmount,
+                            finalAmount: dup.finalAmount,
+                            status: dup.orderStatus,
+                            paymentStatus: dup.paymentStatus,
+                            purchaseDate: dup.purchaseDate,
+                            paymentMethod: dup.paymentMethod,
+                            appliedPromocode: dup.appliedPromocode,
+                            items: dup.items.map(i => ({
+                                productId: i.productId?._id || i.productId,
+                                title: i.productId?.title,
+                                price: i.productId?.price || i.price,
+                                type: i.productId?.type,
+                                thumbnail: i.productId?.thumbnail
+                            }))
+                        })
                     }
                 }
-                throw createError
+                throw e
             }
 
-            // Grant access after record creation
             await purchase.grantAccess()
 
-            // Update promocode usage if applicable
+            // Promo usage
             if (cart.appliedPromocode?.code) {
                 try {
                     const promocode = await Promocode.findOne({ code: cart.appliedPromocode.code })
-                    if (promocode) {
-                        await promocode.recordUsage(authenticatedUser.id, purchase._id, cart.appliedPromocode.discountAmount)
-                    }
-                } catch (promoError) {
-                    console.warn('Promocode update failed:', promoError.message)
+                    if (promocode) await promocode.recordUsage(authenticatedUser.id, purchase._id, cart.appliedPromocode.discountAmount)
+                } catch (e) {
+                    // Ignore promo update errors
                 }
             }
-
-            // Update product sales and notify sellers
+            // Update product sales & notify sellers (best effort)
             try {
-                for (const item of purchaseItems) {
-                    await Product.findByIdAndUpdate(item.productId, { $inc: { sales: 1 } })
-
-                    const seller = await sellerProfileModel.findById(item.sellerId)
+                for (const it of purchaseItems) {
+                    await Product.findByIdAndUpdate(it.productId, { $inc: { sales: 1 } })
+                    const seller = await sellerProfileModel.findById(it.sellerId)
                     if (seller) {
                         seller.updateStats('totalSales', 1)
                         await seller.save()
                         await notificationService.sendToUser(seller.userId, 'New Sale!', 'Your product has been purchased.', 'success')
                     }
                 }
-            } catch (updateError) {
-                console.warn('Product/seller update failed:', updateError.message)
+            } catch (e) {
+                // Ignore seller update errors
+            }
+            // Clear cart (ignore errors)
+            try { 
+                await cart.clearCart()
+            } catch (e) {
+                // Ignore cart clear errors
+            }
+            // Notify buyer (ignore errors)
+            try { 
+                await notificationService.sendToUser(authenticatedUser.id, 'Purchase Successful!', 'Access granted.', 'success')
+            } catch (e) {
+                // Ignore notification errors
             }
 
-            // Prepare response before clearing cart
             const responseData = {
                 purchaseId: purchase._id,
                 totalItems: purchaseItems.length,
@@ -487,40 +482,13 @@ const purchaseControllerExport = {
                 status: purchase.orderStatus,
                 paymentStatus: purchase.paymentStatus,
                 purchaseDate: purchase.purchaseDate,
-                paymentMethod: 'stripe_checkout',
+                paymentMethod: purchase.paymentMethod,
                 appliedPromocode: purchase.appliedPromocode,
-                items: cart.items.map((item) => ({
-                    productId: item.productId._id,
-                    title: item.productId.title,
-                    thumbnail: item.productId.thumbnail,
-                    price: item.productId.price,
-                    type: item.productId.type,
-                    quantity: item?.quantity
-                }))
+                items: cartItemsForResponse
             }
-
-            // Clear cart after preparing response
-            try {
-                await cart.clearCart()
-            } catch (clearError) {
-                console.warn('Cart clear failed:', clearError.message)
-            }
-
-            // Notify buyer
-            try {
-                await notificationService.sendToUser(
-                    authenticatedUser.id,
-                    'Purchase Successful!',
-                    'Thank you for your purchase. You now have access to your products.',
-                    'success'
-                )
-            } catch (notifError) {
-                console.warn('Notification failed:', notifError.message)
-            }
-
+            
             return httpResponse(req, res, 200, responseMessage.PRODUCT.PURCHASE_SUCCESSFUL, responseData)
         } catch (err) {
-            console.error('confirmCheckoutSession error:', err)
             return httpError(next, err, req, 500)
         }
     },
@@ -535,6 +503,29 @@ const purchaseControllerExport = {
 
             if (cart.items.length === 0) {
                 return httpError(next, new Error(responseMessage.CART.EMPTY_CART), req, 400)
+            }
+
+            // Duplicate prevention for manual / non-stripe flows
+            const productIds = cart.items.map(i => i.productId && i.productId._id?.toString()).filter(Boolean).sort()
+            const recentSimilarPurchase = await Purchase.findOne({
+                userId: authenticatedUser.id,
+                paymentMethod: paymentMethod || 'manual',
+                finalAmount: cart.finalAmount,
+                createdAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) }, // last 5 minutes
+                'items.productId': { $all: productIds }
+            })
+
+            if (recentSimilarPurchase) {
+                return httpResponse(req, res, 200, 'Duplicate purchase prevented - returning existing order', {
+                    purchaseId: recentSimilarPurchase._id,
+                    totalItems: recentSimilarPurchase.items.length,
+                    totalAmount: recentSimilarPurchase.totalAmount,
+                    discountAmount: recentSimilarPurchase.discountAmount,
+                    finalAmount: recentSimilarPurchase.finalAmount,
+                    status: recentSimilarPurchase.orderStatus,
+                    paymentStatus: recentSimilarPurchase.paymentStatus,
+                    purchaseDate: recentSimilarPurchase.purchaseDate
+                })
             }
 
             const purchaseItems = []
@@ -555,6 +546,11 @@ const purchaseControllerExport = {
                 return httpError(next, new Error(responseMessage.CART.NO_VALID_ITEMS), req, 400)
             }
 
+            // Safer dynamic reference to avoid identical hard-coded paymentReference duplicates
+            const safeReference = paymentReference && paymentReference !== 'manual-payment'
+                ? paymentReference
+                : `manual-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+
             const purchase = new Purchase({
                 userId: authenticatedUser.id,
                 items: purchaseItems,
@@ -563,7 +559,7 @@ const purchaseControllerExport = {
                 finalAmount: cart.finalAmount,
                 appliedPromocode: cart.appliedPromocode,
                 paymentMethod: paymentMethod || 'manual',
-                paymentReference: paymentReference || 'manual-payment',
+                paymentReference: safeReference,
                 ipAddress: req.ip,
                 userAgent: req.get('User-Agent')
             })
@@ -571,7 +567,26 @@ const purchaseControllerExport = {
             if (cart.finalAmount === 0) {
                 await purchase.grantAccess()
             } else {
-                await purchase.save()
+                try {
+                    await purchase.save()
+                } catch (e) {
+                    if (e.code === 11000 && e.keyPattern?.paymentReference) {
+                        const existing = await Purchase.findOne({ paymentReference: safeReference })
+                        if (existing) {
+                            return httpResponse(req, res, 200, 'Duplicate prevented - existing purchase returned', {
+                                purchaseId: existing._id,
+                                totalItems: existing.items.length,
+                                totalAmount: existing.totalAmount,
+                                discountAmount: existing.discountAmount,
+                                finalAmount: existing.finalAmount,
+                                status: existing.orderStatus,
+                                paymentStatus: existing.paymentStatus,
+                                purchaseDate: existing.purchaseDate
+                            })
+                        }
+                    }
+                    throw e
+                }
             }
 
             if (cart.appliedPromocode && cart.appliedPromocode.code) {
