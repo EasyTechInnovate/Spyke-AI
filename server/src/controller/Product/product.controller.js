@@ -409,8 +409,11 @@ export default {
                     return httpError(next, new Error(responseMessage.PRODUCT.UNAUTHORIZED_ACCESS), req, 403)
                 }
             }
+            const hasAnyPurchases = await Purchase.hasAnyPurchases(product._id)
+            if (hasAnyPurchases && !authenticatedUser.roles.includes(EUserRole.ADMIN)) {
+                return httpError(next, new Error(responseMessage.PRODUCT.CANNOT_UPDATE_PURCHASED_PRODUCT), req, 422)
+            }
 
-            // Convert category name to ObjectId if needed
             if (updateData.category && !mongoose.Types.ObjectId.isValid(updateData.category)) {
                 const category = await Category.findOne({
                     name: new RegExp(`^${updateData.category.replace(/[_-]/g, ' ')}$`, 'i')
@@ -422,7 +425,6 @@ export default {
                 }
             }
 
-            // Convert industry name to ObjectId if needed
             if (updateData.industry && !mongoose.Types.ObjectId.isValid(updateData.industry)) {
                 const industry = await Industry.findOne({
                     name: new RegExp(`^${updateData.industry.replace(/[_-]/g, ' ')}$`, 'i')

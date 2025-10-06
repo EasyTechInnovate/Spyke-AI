@@ -175,6 +175,20 @@ purchaseSchema.statics.hasPurchased = async function (userId, productId) {
     return !!purchase
 }
 
+purchaseSchema.statics.hasAnyPurchases = async function (productId) {
+    const purchase = await this.findOne({
+        items: {
+            $elemMatch: {
+                productId,
+                accessGranted: true
+            }
+        },
+        paymentStatus: EPaymentStatus.COMPLETED
+    })
+
+    return !!purchase
+}
+
 purchaseSchema.statics.getUserPurchases = async function (userId, options = {}) {
     let userObjectId = userId
     if (typeof userId === 'string') {

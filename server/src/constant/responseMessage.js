@@ -140,6 +140,7 @@ export default {
         PRODUCT_NOT_PUBLISHED: 'Product is not published',
         PRODUCT_ARCHIVED: 'Product is archived and cannot be accessed',
         SIMILAR_PRODUCTS_FOUND: (count) => `Found ${count} similar products`,
+        CANNOT_UPDATE_PURCHASED_PRODUCT: 'Cannot update product that has been purchased by users. Contact admin if changes are necessary.',
         
         // Purchase related messages
         PURCHASE_SUCCESSFUL: 'Product purchased successfully',
