@@ -233,11 +233,42 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
         const pendingRate = totals.totalCount > 0 ? ((pendingPayouts / totals.totalCount) * 100).toFixed(1) : 0
         const avgProcessingTime = processingTimes?.avgProcessingTime || 0
         const avgPayoutAmount = totals.totalCount > 0 ? (totals.totalAmount / totals.totalCount).toFixed(2) : 0
-        const trends = {
-            payoutVolume: Math.random() > 0.5 ? Math.random() * 20 - 10 : 0,
-            completionRate: Math.random() > 0.5 ? Math.random() * 15 - 7.5 : 0,
-            processingTime: Math.random() > 0.5 ? Math.random() * 10 - 5 : 0
+
+        // Calculate real trends based on actual data comparison
+        const calculateTrends = () => {
+            if (trendsData.length < 2) {
+                return {
+                    payoutVolume: 0,
+                    completionRate: 0,
+                    processingTime: 0
+                }
+            }
+
+            // Get current period data (last half) vs previous period (first half)
+            const midPoint = Math.floor(trendsData.length / 2)
+            const previousPeriod = trendsData.slice(0, midPoint)
+            const currentPeriod = trendsData.slice(midPoint)
+
+            // Calculate volume trend
+            const prevVolume = previousPeriod.reduce((sum, day) => sum + day.payouts, 0)
+            const currVolume = currentPeriod.reduce((sum, day) => sum + day.payouts, 0)
+            const volumeTrend = prevVolume > 0 ? ((currVolume - prevVolume) / prevVolume) * 100 : 0
+
+            // Calculate completion rate trend (simplified - would need actual status history)
+            const completionTrend = 0 // Real implementation would compare historical completion rates
+
+            // Calculate processing time trend (simplified - would need historical processing times)
+            const processingTimeTrend = 0 // Real implementation would compare historical processing times
+
+            return {
+                payoutVolume: parseFloat(volumeTrend.toFixed(1)),
+                completionRate: completionTrend,
+                processingTime: processingTimeTrend
+            }
         }
+
+        const trends = calculateTrends()
+
         return {
             totals,
             statusData,

@@ -26,20 +26,13 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 export default function RevenueChart({ recentOrders = [], className = '' }) {
     const [selectedPeriod, setSelectedPeriod] = useState('7d')
+
     const generateChartData = () => {
-        if (!recentOrders || recentOrders.length === 0) {
-            return Array.from({ length: 7 }, (_, i) => {
-                const date = new Date()
-                date.setDate(date.getDate() - (6 - i))
-                return {
-                    date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                    revenue: 0,
-                    sales: 0
-                }
-            })
-        }
-        const dailyData = {}
+        // Always create baseline data structure first
         const days = selectedPeriod === '7d' ? 7 : selectedPeriod === '30d' ? 30 : 90
+        const dailyData = {}
+
+        // Initialize all days with zero values
         for (let i = days - 1; i >= 0; i--) {
             const date = new Date()
             date.setDate(date.getDate() - i)
@@ -51,24 +44,49 @@ export default function RevenueChart({ recentOrders = [], className = '' }) {
                 sales: 0
             }
         }
-        recentOrders.forEach((order) => {
-            const orderDate = new Date(order.orderDate).toISOString().split('T')[0]
-            if (dailyData[orderDate]) {
-                dailyData[orderDate].revenue += order.price
-                dailyData[orderDate].sales += 1
-            }
-        })
+
+        // Only process orders if they exist and are valid
+        if (recentOrders && Array.isArray(recentOrders) && recentOrders.length > 0) {
+            recentOrders.forEach((order) => {
+                try {
+                    // Handle multiple possible date field names with validation
+                    const orderDateString = order.orderDate || order.createdAt || order.date
+                    if (!orderDateString) return // Skip orders without dates
+
+                    const orderDate = new Date(orderDateString)
+                    // Validate the date is actually valid
+                    if (isNaN(orderDate.getTime())) return
+
+                    const dateKey = orderDate.toISOString().split('T')[0]
+                    if (dailyData[dateKey]) {
+                        // Handle multiple possible price field names with validation
+                        const price = parseFloat(order.price || order.totalAmount || order.finalAmount || 0)
+                        if (!isNaN(price) && price >= 0) {
+                            dailyData[dateKey].revenue += price
+                            dailyData[dateKey].sales += 1
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Error processing order for chart:', error, order)
+                    // Continue processing other orders
+                }
+            })
+        }
+
         return Object.values(dailyData)
     }
+
     const chartData = generateChartData()
+
     const periods = [
         { value: '7d', label: '7 Days' },
         { value: '30d', label: '30 Days' },
         { value: '90d', label: '90 Days' }
     ]
-    const totalRevenue = chartData.reduce((sum, item) => sum + item.revenue, 0)
-    const totalSales = chartData.reduce((sum, item) => sum + item.sales, 0)
-    const averageDaily = totalRevenue / chartData.length
+    const totalRevenue = chartData.reduce((sum, item) => sum + (item.revenue || 0), 0)
+    const totalSales = chartData.reduce((sum, item) => sum + (item.sales || 0), 0)
+    const averageDaily = chartData.length > 0 ? totalRevenue / chartData.length : 0
+
     return (
         <div className={`bg-[#1f1f1f] border border-gray-800 rounded-2xl ${className}`}>
             <div className="p-6 border-b border-gray-800">
@@ -181,13 +199,13 @@ export default function RevenueChart({ recentOrders = [], className = '' }) {
                                 strokeWidth={2}
                                 name="Revenue"
                             />
-                            <Line
+                            <Area
                                 type="monotone"
                                 dataKey="sales"
                                 stroke="#3B82F6"
+                                fillOpacity={1}
+                                fill="url(#salesGradient)"
                                 strokeWidth={2}
-                                dot={{ fill: '#3B82F6', r: 4 }}
-                                activeDot={{ r: 6, fill: '#3B82F6' }}
                                 name="Sales"
                             />
                         </AreaChart>

@@ -8,6 +8,7 @@ import { toolAPI, categoryAPI, industryAPI } from '@/lib/api/toolsNiche'
 import Notification from '@/components/shared/Notification'
 import ImageUpload from '@/components/shared/forms/ImageUpload'
 import { PRODUCT_TYPES, SETUP_TIMES } from '@/components/features/products/form/constants'
+
 const ToolButton = ({ tool, selected, onToggle }) => (
     <button
         type="button"
@@ -19,6 +20,7 @@ const ToolButton = ({ tool, selected, onToggle }) => (
         <span className="text-xs font-medium leading-tight">{tool.name}</span>
     </button>
 )
+
 export default function EditProductPage() {
     const { productId } = useParams()
     const router = useRouter()
@@ -32,6 +34,7 @@ export default function EditProductPage() {
     const [categories, setCategories] = useState([])
     const [industries, setIndustries] = useState([])
     const [toolsLoading, setToolsLoading] = useState(true)
+
     const showMessage = (message, type = 'info') => {
         if (notification && notification.message === message && notification.type === type) {
             return
@@ -41,12 +44,14 @@ export default function EditProductPage() {
         if (type === 'success' && message.includes('updated successfully')) {
             setTimeout(() => {
                 if (document.querySelector('[data-product-edit]')) {
-                    router.push('/seller/products')
+                    router.push('/admin/products')
                 }
             }, 2000)
         }
     }
+
     const clearNotification = () => setNotification(null)
+
     const retryApiCall = async (apiCall, retries = 3) => {
         for (let i = 0; i < retries; i++) {
             try {
@@ -57,6 +62,7 @@ export default function EditProductPage() {
             }
         }
     }
+
     const isDirty = useMemo(() => {
         if (!originalData || !formData) return false
         const compareData = (original, current) => {
@@ -66,6 +72,7 @@ export default function EditProductPage() {
         }
         return compareData(originalData, formData)
     }, [originalData, formData])
+
     const preparePayload = (data) => {
         const payload = {
             title: data.title,
@@ -116,6 +123,7 @@ export default function EditProductPage() {
         }
         return payload
     }
+
     const mapApiToForm = (p) => ({
         title: p.title || '',
         type: p.type || '',
@@ -162,20 +170,19 @@ export default function EditProductPage() {
             bonusContent: p.premiumContent?.bonusContent || []
         }
     })
+
     const fetchProduct = useCallback(async () => {
         try {
             setLoading(true)
             const res = await retryApiCall(() => productsAPI.getProductBySlug(productId))
 
-            // Handle the new API response format
             if (res.data && !res.data.success && res.data.statusCode) {
-                // Product exists but cannot be edited
                 const errorData = res.data.data || {}
                 showMessage(res.data.message || 'Cannot edit this product', 'error')
                 setTimeout(() => {
-                    const shouldRedirect = confirm(`${errorData.reason || res.data.message}\n\nWould you like to go back to your products list?`)
+                    const shouldRedirect = confirm(`${errorData.reason || res.data.message}\n\nWould you like to go back to the products list?`)
                     if (shouldRedirect) {
-                        router.push('/seller/products')
+                        router.push('/admin/products')
                     }
                 }, 1500)
                 return
@@ -198,19 +205,19 @@ export default function EditProductPage() {
                 showMessage('Product not found', 'error')
                 setTimeout(() => {
                     if (confirm('Product not found. Would you like to go back to products list?')) {
-                        router.push('/seller/products')
+                        router.push('/admin/products')
                     }
                 }, 2000)
             } else if (e.response?.status === 403) {
                 showMessage('You do not have permission to edit this product', 'error')
                 setTimeout(() => {
-                    router.push('/seller/products')
+                    router.push('/admin/products')
                 }, 2000)
             } else {
                 showMessage(e.message || 'Failed to load product', 'error')
                 setTimeout(() => {
                     if (confirm('Failed to load product. Would you like to go back to products list?')) {
-                        router.push('/seller/products')
+                        router.push('/admin/products')
                     }
                 }, 2000)
             }
@@ -218,6 +225,7 @@ export default function EditProductPage() {
             setLoading(false)
         }
     }, [productId, router])
+
     const fetchTools = useCallback(async () => {
         try {
             const response = await toolAPI.getTools({ isActive: 'true' })
@@ -237,6 +245,7 @@ export default function EditProductPage() {
             setTools([])
         }
     }, [])
+
     const fetchCategories = useCallback(async () => {
         try {
             const response = await categoryAPI.getCategories({ isActive: 'true' })
@@ -256,6 +265,7 @@ export default function EditProductPage() {
             setCategories([])
         }
     }, [])
+
     const fetchIndustries = useCallback(async () => {
         try {
             const response = await industryAPI.getIndustries({ isActive: 'true' })
@@ -275,6 +285,7 @@ export default function EditProductPage() {
             setIndustries([])
         }
     }, [])
+
     const fetchAllData = useCallback(async () => {
         try {
             setToolsLoading(true)
@@ -285,11 +296,13 @@ export default function EditProductPage() {
             setToolsLoading(false)
         }
     }, [fetchProduct, fetchTools, fetchCategories, fetchIndustries])
+
     useEffect(() => {
         if (productId) {
             fetchAllData()
         }
     }, [productId, fetchAllData])
+
     useEffect(() => {
         const handler = (e) => {
             if (isDirty) {
@@ -300,6 +313,7 @@ export default function EditProductPage() {
         window.addEventListener('beforeunload', handler)
         return () => window.removeEventListener('beforeunload', handler)
     }, [isDirty])
+
     useEffect(() => {
         if (!isDirty || !formData || saving) return
         const autoSaveTimer = setTimeout(() => {
@@ -309,6 +323,7 @@ export default function EditProductPage() {
         }, 30000)
         return () => clearTimeout(autoSaveTimer)
     }, [isDirty, formData, saving])
+
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'hidden' && isDirty) {
@@ -324,6 +339,7 @@ export default function EditProductPage() {
         document.addEventListener('visibilitychange', handleVisibilityChange)
         return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
     }, [isDirty, formData, productId])
+
     if (loading || !formData || toolsLoading) {
         return (
             <div
@@ -334,7 +350,7 @@ export default function EditProductPage() {
                     <p>{loading ? 'Loading product...' : toolsLoading ? 'Loading tools...' : 'Initializing...'}</p>
                     <div className="flex gap-2 mt-4">
                         <button
-                            onClick={() => router.push('/seller/products')}
+                            onClick={() => router.push('/admin/products')}
                             className="px-4 py-2 text-gray-400 hover:text-white transition-colors">
                             Cancel
                         </button>
@@ -348,6 +364,7 @@ export default function EditProductPage() {
             </div>
         )
     }
+
     const handleInputChange = (field, value) => {
         const safeValue = value ?? ''
         if (field === 'title' && typeof safeValue === 'string' && safeValue.length > 100) {
@@ -360,47 +377,7 @@ export default function EditProductPage() {
         }
         setFormData((prev) => ({ ...prev, [field]: safeValue }))
     }
-    const handleArrayFieldChange = (field, index, value) => {
-        setFormData((prev) => ({
-            ...prev,
-            [field]: prev[field].map((item, i) => (i === index ? value : item))
-        }))
-    }
-    const addArrayFieldItem = (field, defaultValue = '') => {
-        setFormData((prev) => ({
-            ...prev,
-            [field]: [...prev[field], defaultValue]
-        }))
-    }
-    const removeArrayFieldItem = (field, index) => {
-        setFormData((prev) => ({
-            ...prev,
-            [field]: prev[field].filter((_, i) => i !== index)
-        }))
-    }
-    const handleFaqChange = (index, field, value) => {
-        setFormData((prev) => ({
-            ...prev,
-            faqs: prev.faqs.map((faq, i) => (i === index ? { ...faq, [field]: value } : faq))
-        }))
-    }
-    const toggleTool = (tool) => {
-        const exists = formData.toolsUsed.some((t) => t.name === tool.name)
-        handleInputChange(
-            'toolsUsed',
-            exists
-                ? formData.toolsUsed.filter((t) => t.name !== tool.name)
-                : [
-                      ...formData.toolsUsed,
-                      {
-                          name: tool.name,
-                          logo: '',
-                          model: '',
-                          link: ''
-                      }
-                  ]
-        )
-    }
+
     const handlePremiumContentChange = (field, value) => {
         setFormData((prev) => ({
             ...prev,
@@ -416,9 +393,7 @@ export default function EditProductPage() {
             ...prev,
             premiumContent: {
                 ...prev.premiumContent,
-                [field]: prev.premiumContent[field].map((item, i) => 
-                    i === index ? newValue : item
-                )
+                [field]: prev.premiumContent[field].map((item, i) => (i === index ? newValue : item))
             }
         }))
     }
@@ -441,6 +416,52 @@ export default function EditProductPage() {
                 [field]: prev.premiumContent[field].filter((_, i) => i !== index)
             }
         }))
+    }
+
+    const handleArrayFieldChange = (field, index, value) => {
+        setFormData((prev) => ({
+            ...prev,
+            [field]: prev[field].map((item, i) => (i === index ? value : item))
+        }))
+    }
+
+    const addArrayFieldItem = (field, defaultValue = '') => {
+        setFormData((prev) => ({
+            ...prev,
+            [field]: [...prev[field], defaultValue]
+        }))
+    }
+
+    const removeArrayFieldItem = (field, index) => {
+        setFormData((prev) => ({
+            ...prev,
+            [field]: prev[field].filter((_, i) => i !== index)
+        }))
+    }
+
+    const handleFaqChange = (index, field, value) => {
+        setFormData((prev) => ({
+            ...prev,
+            faqs: prev.faqs.map((faq, i) => (i === index ? { ...faq, [field]: value } : faq))
+        }))
+    }
+
+    const toggleTool = (tool) => {
+        const exists = formData.toolsUsed.some((t) => t.name === tool.name)
+        handleInputChange(
+            'toolsUsed',
+            exists
+                ? formData.toolsUsed.filter((t) => t.name !== tool.name)
+                : [
+                      ...formData.toolsUsed,
+                      {
+                          name: tool.name,
+                          logo: '',
+                          model: '',
+                          link: ''
+                      }
+                  ]
+        )
     }
 
     const handleSave = async () => {
@@ -479,16 +500,19 @@ export default function EditProductPage() {
             setSaving(false)
         }
     }
+
     const handleSaveAndExit = async () => {
         await handleSave()
-        router.push('/seller/products')
+        router.push('/admin/products')
     }
+
     const handleRevert = () => {
         if (!originalData) return
         if (isDirty && !confirm('Discard unsaved changes?')) return
         setFormData({ ...originalData })
         showMessage('Changes reverted', 'info')
     }
+
     const handleDelete = async () => {
         if (!confirm('This will permanently delete the product. This action cannot be undone. Continue?')) return
         if (!confirm('Are you absolutely sure? Type DELETE in the next prompt to confirm.')) return
@@ -505,7 +529,7 @@ export default function EditProductPage() {
             if (typeof window !== 'undefined') {
                 localStorage.removeItem(`product-${productId}`)
             }
-            router.push('/seller/products')
+            router.push('/admin/products')
         } catch (e) {
             console.error(e)
             showMessage('Failed to delete product. Please try again.', 'error')
@@ -513,16 +537,7 @@ export default function EditProductPage() {
             setDeleting(false)
         }
     }
-    if (loading || !formData || toolsLoading) {
-        return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="flex flex-col items-center gap-4 text-gray-400">
-                    <Loader2 className="w-8 h-8 animate-spin" />
-                    <p>Loading product...</p>
-                </div>
-            </div>
-        )
-    }
+
     return (
         <div
             className="min-h-screen bg-black"
@@ -543,7 +558,7 @@ export default function EditProductPage() {
                     <div className="flex items-center justify-between h-16">
                         <div className="flex items-center gap-4">
                             <Link
-                                href="/seller/products"
+                                href="/admin/products"
                                 className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
                                 <ArrowLeft className="w-5 h-5 text-gray-400" />
                             </Link>
@@ -887,9 +902,9 @@ export default function EditProductPage() {
                                     placeholder="Enter the main prompt text for your automation..."
                                 />
                             </div>
-                            
+
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Prompt Instructions</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Prompt Example</label>
                                 <textarea
                                     value={formData.premiumContent.promptInstructions}
                                     onChange={(e) => handlePremiumContentChange('promptInstructions', e.target.value)}
@@ -898,7 +913,7 @@ export default function EditProductPage() {
                                     placeholder="Detailed instructions on how to use the prompt..."
                                 />
                             </div>
-                            
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Automation Instructions</label>
                                 <textarea
@@ -909,7 +924,7 @@ export default function EditProductPage() {
                                     placeholder="Step-by-step automation setup instructions..."
                                 />
                             </div>
-                            
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Agent Configuration</label>
                                 <textarea
@@ -920,7 +935,7 @@ export default function EditProductPage() {
                                     placeholder="Agent configuration settings and parameters..."
                                 />
                             </div>
-                            
+
                             <div>
                                 <div className="flex items-center justify-between mb-4">
                                     <label className="block text-sm font-medium text-gray-300">Detailed How It Works</label>
@@ -934,7 +949,9 @@ export default function EditProductPage() {
                                 </div>
                                 <div className="space-y-3">
                                     {formData.premiumContent.detailedHowItWorks.map((step, i) => (
-                                        <div key={i} className="flex gap-3">
+                                        <div
+                                            key={i}
+                                            className="flex gap-3">
                                             <input
                                                 value={step}
                                                 onChange={(e) => handlePremiumContentArrayChange('detailedHowItWorks', i, e.target.value)}
@@ -951,7 +968,7 @@ export default function EditProductPage() {
                                     ))}
                                 </div>
                             </div>
-                            
+
                             <div>
                                 <div className="flex items-center justify-between mb-4">
                                     <label className="block text-sm font-medium text-gray-300">Video Tutorials</label>
@@ -965,7 +982,9 @@ export default function EditProductPage() {
                                 </div>
                                 <div className="space-y-4">
                                     {formData.premiumContent.videoTutorials.map((video, i) => (
-                                        <div key={i} className="border border-gray-700 rounded-lg p-4 bg-gray-800/50">
+                                        <div
+                                            key={i}
+                                            className="border border-gray-700 rounded-lg p-4 bg-gray-800/50">
                                             <div className="flex items-center justify-between mb-3">
                                                 <h4 className="text-sm font-medium text-white">Video {i + 1}</h4>
                                                 <button
@@ -978,19 +997,25 @@ export default function EditProductPage() {
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                                 <input
                                                     value={video.title}
-                                                    onChange={(e) => handlePremiumContentArrayChange('videoTutorials', i, { ...video, title: e.target.value })}
+                                                    onChange={(e) =>
+                                                        handlePremiumContentArrayChange('videoTutorials', i, { ...video, title: e.target.value })
+                                                    }
                                                     placeholder="Video title"
                                                     className="px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-brand-primary"
                                                 />
                                                 <input
                                                     value={video.url}
-                                                    onChange={(e) => handlePremiumContentArrayChange('videoTutorials', i, { ...video, url: e.target.value })}
+                                                    onChange={(e) =>
+                                                        handlePremiumContentArrayChange('videoTutorials', i, { ...video, url: e.target.value })
+                                                    }
                                                     placeholder="Video URL"
                                                     className="px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-brand-primary"
                                                 />
                                                 <input
                                                     value={video.duration}
-                                                    onChange={(e) => handlePremiumContentArrayChange('videoTutorials', i, { ...video, duration: e.target.value })}
+                                                    onChange={(e) =>
+                                                        handlePremiumContentArrayChange('videoTutorials', i, { ...video, duration: e.target.value })
+                                                    }
                                                     placeholder="Duration (e.g. 5:30)"
                                                     className="px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-brand-primary"
                                                 />
@@ -1004,7 +1029,7 @@ export default function EditProductPage() {
                 </div>
                 <div className="flex items-center justify-between mt-8">
                     <Link
-                        href="/seller/products"
+                        href="/admin/products"
                         className="inline-flex items-center gap-2 px-6 py-3 text-gray-400 hover:text-white transition-colors">
                         <ArrowLeft className="w-4 h-4" />
                         Back to Products

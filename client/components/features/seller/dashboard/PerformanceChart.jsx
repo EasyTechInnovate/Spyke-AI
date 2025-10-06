@@ -177,42 +177,114 @@ export default function PerformanceChart({ topProducts = [], allProducts = [], c
     const [selectedProduct, setSelectedProduct] = useState(null)
     const [viewMode, setViewMode] = useState('single')
     const [dateRange, setDateRange] = useState('7d')
+
+    // Combine and validate products
+    const availableProducts = [...(topProducts || []), ...(allProducts || [])].filter(product => 
+        product && product.id && product.title
+    )
+    
+    // Remove duplicates by ID
+    const uniqueProducts = Array.from(
+        new Map(availableProducts.map(product => [product.id, product])).values()
+    )
+
     useEffect(() => {
-        if (!selectedProduct && topProducts.length > 0) {
-            setSelectedProduct(topProducts[0])
+        // Only set selected product if we have valid products and no current selection
+        if (!selectedProduct && uniqueProducts.length > 0) {
+            setSelectedProduct(uniqueProducts[0])
         }
-    }, [topProducts, selectedProduct])
+        // Reset selected product if it's no longer available
+        else if (selectedProduct && !uniqueProducts.find(p => p.id === selectedProduct.id)) {
+            setSelectedProduct(uniqueProducts.length > 0 ? uniqueProducts[0] : null)
+        }
+    }, [uniqueProducts, selectedProduct])
+
     const generateProductTimeData = (product, days = 7) => {
-        if (!product) return []
+        if (!product || !product.id) return []
+        
         const ranges = { '7d': 7, '14d': 14, '30d': 30, '90d': 90 }
         const dayCount = ranges[days] || 7
-        const totalViews = product.views || 0
-        const totalSales = product.sales || 0
-        const productPrice = product.price || 0
-        return Array.from({ length: dayCount }, (_, i) => {
-            const date = new Date()
-            date.setDate(date.getDate() - (dayCount - 1 - i))
-            const viewsWeight = Math.random() * 0.8 + 0.6 
-            const salesWeight = Math.random() * 0.9 + 0.7 
-            const dailyViews = Math.max(1, Math.floor((totalViews / dayCount) * viewsWeight))
-            const dailySales = Math.max(0, Math.floor((totalSales / dayCount) * salesWeight))
-            const conversionRate = dailyViews > 0 ? Math.min(100, (dailySales / dailyViews) * 100) : 0
-            const dailyRevenue = dailySales * productPrice
-            return {
-                date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                fullDate: date.toLocaleDateString(),
-                views: dailyViews,
-                sales: dailySales,
-                conversions: parseFloat(conversionRate.toFixed(1)),
-                revenue: dailyRevenue
-            }
-        })
+        
+        // Use actual product data only - no synthetic generation
+        const totalViews = parseInt(product.views || product.viewCount || 0, 10)
+        const totalSales = parseInt(product.sales || product.salesCount || product.totalSales || 0, 10)
+        const productPrice = parseFloat(product.price || 0)
+        
+        // If no real data exists, return zero data for all days
+        if (totalViews === 0 && totalSales === 0) {
+            return Array.from({ length: dayCount }, (_, i) => {
+                const date = new Date()
+                date.setDate(date.getDate() - (dayCount - 1 - i))
+                return {
+                    date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                    fullDate: date.toLocaleDateString(),
+                    views: 0,
+                    sales: 0,
+                    conversions: 0,
+                    revenue: 0
+                }
+            })
+        }
+
+        // For products with real data, check if we have historical daily data
+        // If product has dailyAnalytics array, use that; otherwise show current totals on most recent day
+        if (product.dailyAnalytics && Array.isArray(product.dailyAnalytics) && product.dailyAnalytics.length > 0) {
+            // Use actual daily analytics data
+            const analyticsMap = new Map()
+            product.dailyAnalytics.forEach(day => {
+                const dateKey = new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                analyticsMap.set(dateKey, {
+                    views: parseInt(day.views || 0, 10),
+                    sales: parseInt(day.sales || 0, 10),
+                    conversions: parseFloat(day.conversionRate || 0),
+                    revenue: parseFloat(day.revenue || 0)
+                })
+            })
+
+            return Array.from({ length: dayCount }, (_, i) => {
+                const date = new Date()
+                date.setDate(date.getDate() - (dayCount - 1 - i))
+                const dateKey = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                const dayData = analyticsMap.get(dateKey) || { views: 0, sales: 0, conversions: 0, revenue: 0 }
+                
+                return {
+                    date: dateKey,
+                    fullDate: date.toLocaleDateString(),
+                    views: dayData.views,
+                    sales: dayData.sales,
+                    conversions: dayData.conversions,
+                    revenue: dayData.revenue
+                }
+            })
+        } else {
+            // If no daily data available, show totals only on the most recent day, zeros for others
+            return Array.from({ length: dayCount }, (_, i) => {
+                const date = new Date()
+                date.setDate(date.getDate() - (dayCount - 1 - i))
+                const isLastDay = i === dayCount - 1
+                
+                // Calculate conversion rate safely
+                const conversionRate = totalViews > 0 ? parseFloat(((totalSales / totalViews) * 100).toFixed(1)) : 0
+                const totalRevenue = totalSales * productPrice
+
+                return {
+                    date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                    fullDate: date.toLocaleDateString(),
+                    views: isLastDay ? totalViews : 0,
+                    sales: isLastDay ? totalSales : 0,
+                    conversions: isLastDay ? conversionRate : 0,
+                    revenue: isLastDay ? totalRevenue : 0
+                }
+            })
+        }
     }
+
     const metrics = [
         { key: 'views', label: 'Views', color: '#00FF89', icon: Eye },
         { key: 'sales', label: 'Sales', color: '#3B82F6', icon: ShoppingCart },
         { key: 'conversions', label: 'Conversion %', color: '#8B5CF6', icon: MousePointer }
     ]
+
     const toggleMetric = (metricKey) => {
         setSelectedMetrics((prev) => {
             if (prev.includes(metricKey)) {
@@ -222,37 +294,81 @@ export default function PerformanceChart({ topProducts = [], allProducts = [], c
             }
         })
     }
+
     const chartData = selectedProduct ? generateProductTimeData(selectedProduct, dateRange) : []
+
     const calculateStats = () => {
+        // Handle no product or no data cases
         if (!selectedProduct || !chartData.length) {
-            return { primary: '151', secondary: '$2093', product: 'AI-Powered' }
+            return { primary: '0', secondary: '$0', product: 'No Product Selected' }
         }
-        const totalViews = chartData.reduce((sum, item) => sum + item.views, 0)
-        const totalSales = chartData.reduce((sum, item) => sum + item.sales, 0)
-        const totalRevenue = chartData.reduce((sum, item) => sum + item.revenue, 0)
-        const avgConversion = chartData.length > 0 ? (chartData.reduce((sum, item) => sum + item.conversions, 0) / chartData.length).toFixed(1) : 0
-        const primaryMetric = selectedMetrics[0]
+        
+        // Safely calculate totals
+        const totalViews = chartData.reduce((sum, item) => sum + (item.views || 0), 0)
+        const totalSales = chartData.reduce((sum, item) => sum + (item.sales || 0), 0)
+        const totalRevenue = chartData.reduce((sum, item) => sum + (item.revenue || 0), 0)
+        const avgConversion = chartData.length > 0 ? 
+            (chartData.reduce((sum, item) => sum + (item.conversions || 0), 0) / chartData.length).toFixed(1) : '0'
+
+        const primaryMetric = selectedMetrics[0] || 'views'
         let primaryValue
+
         switch (primaryMetric) {
             case 'views':
-                primaryValue = totalViews
+                primaryValue = totalViews.toLocaleString()
                 break
             case 'sales':
-                primaryValue = totalSales
+                primaryValue = totalSales.toLocaleString()
                 break
             case 'conversions':
                 primaryValue = `${avgConversion}%`
                 break
             default:
-                primaryValue = totalViews
+                primaryValue = totalViews.toLocaleString()
         }
+
         return {
             primary: primaryValue,
             secondary: `$${totalRevenue.toFixed(0)}`,
-            product: selectedProduct.title
+            product: selectedProduct.title || 'Unknown Product'
         }
     }
+
     const stats = calculateStats()
+
+    // Handle no products case
+    if (uniqueProducts.length === 0) {
+        return (
+            <div className={`bg-[#1f1f1f] border border-gray-800 rounded-2xl ${className}`}>
+                <div className="p-6 border-b border-gray-800">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 bg-blue-500/20 rounded-xl border border-blue-500/30">
+                            <BarChart3 className="w-5 h-5 text-blue-400" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-semibold text-white">Product Performance</h3>
+                            <p className="text-sm text-gray-400">Analyze individual product trends</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="p-6">
+                    <div className="h-80 flex items-center justify-center">
+                        <div className="text-center">
+                            <Package className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                            <h3 className="text-xl font-semibold text-white mb-2">No Products Available</h3>
+                            <p className="text-gray-400 text-sm mb-6 max-w-md">
+                                Create your first product to start tracking performance analytics and insights.
+                            </p>
+                            <button className="px-6 py-3 bg-[#00FF89] text-black rounded-xl font-semibold hover:bg-[#00FF89]/90 transition-colors">
+                                Create Your First Product
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className={`bg-[#1f1f1f] border border-gray-800 rounded-2xl ${className}`}>
             <div className="p-6 border-b border-gray-800">
@@ -292,10 +408,10 @@ export default function PerformanceChart({ topProducts = [], allProducts = [], c
                             Single Product
                         </button>
                     </div>
-                    {viewMode === 'single' && (
+                    {viewMode === 'single' && uniqueProducts.length > 0 && (
                         <div className="flex-1 max-w-sm">
                             <ProductSelector
-                                products={topProducts.length > 0 ? topProducts : allProducts}
+                                products={uniqueProducts}
                                 selectedProduct={selectedProduct}
                                 onSelect={setSelectedProduct}
                             />
@@ -346,7 +462,7 @@ export default function PerformanceChart({ topProducts = [], allProducts = [], c
                 </div>
             </div>
             <div className="p-6">
-                {chartData.length > 0 ? (
+                {chartData.length > 0 && selectedProduct ? (
                     <div className="h-80">
                         <ResponsiveContainer
                             width="100%"
@@ -374,6 +490,8 @@ export default function PerformanceChart({ topProducts = [], allProducts = [], c
                                 <Tooltip content={<CustomTooltip />} />
                                 {selectedMetrics.map((metricKey) => {
                                     const metric = metrics.find((m) => m.key === metricKey)
+                                    if (!metric) return null
+                                    
                                     return (
                                         <Line
                                             key={metricKey}
@@ -400,7 +518,7 @@ export default function PerformanceChart({ topProducts = [], allProducts = [], c
                             <BarChart3 className="w-12 h-12 text-gray-600 mx-auto mb-4" />
                             <h3 className="text-white font-medium mb-2">No Data Available</h3>
                             <p className="text-gray-400 text-sm">
-                                {!selectedProduct ? 'Select a product to view detailed analytics' : 'No data available for the selected period'}
+                                {!selectedProduct ? 'Select a product to view detailed analytics' : 'No performance data available for the selected period'}
                             </p>
                         </div>
                     </div>

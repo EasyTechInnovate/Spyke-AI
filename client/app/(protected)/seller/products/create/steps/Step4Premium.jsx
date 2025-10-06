@@ -10,8 +10,8 @@ const FIELD_HELP = {
         examples: ["Act as a [role] and help me [specific task]", "Analyze the following data and provide insights on [specific area]"]
     },
     promptInstructions: {
-        title: "Prompt Instructions",
-        content: "Explain how to use the prompt effectively, including context and best practices.",
+        title: "Prompt Examples",
+        content: "Explain how to use the diffent prompt effectively, including context and best practices. Try giving varaible in []",
         examples: ["Replace [variables] with your specific information", "Use this prompt after gathering customer data"]
     },
     automationInstructions: {
@@ -199,7 +199,7 @@ export default function Step4Premium() {
                 className="space-y-3">
                 <div className="flex items-center space-x-2">
                     <label htmlFor="promptInstructions" className="block text-lg font-semibold text-white">
-                        Prompt Instructions
+                        Prompt Examples
                         <span className="text-gray-400 text-base ml-2">(Optional)</span>
                     </label>
                     <Tooltip content={FIELD_HELP.promptInstructions} examples={FIELD_HELP.promptInstructions.examples} />

@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useMemo, useState, useCallback } from 'react'
-import { Search, Star, StarOff, Package, RefreshCw } from 'lucide-react'
+import { Search, Star, StarOff, Package, RefreshCw, Edit } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { productsAPI } from '@/lib/api'
 import Notification from '@/components/shared/Notification'
@@ -259,6 +259,12 @@ export default function AdminAllProductsPage() {
                                             Feature
                                         </button>
                                     )}
+                                    <Link
+                                        href={`/admin/products/${product.slug}/edit`}
+                                        className="inline-flex items-center justify-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                                        <Edit className="w-4 h-4" />
+                                        Edit
+                                    </Link>
                                 </div>
                             </div>
                         </motion.div>

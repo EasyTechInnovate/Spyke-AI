@@ -27,9 +27,7 @@ import {
     DollarSign} from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { productsAPI, sellerAPI } from '@/lib/api'
-import toast from '@/lib/utils/toast'
 import { useSellerProfile } from '@/hooks/useSellerProfile'
 import ConfirmationModal from '@/components/shared/ui/ConfirmationModal'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
@@ -76,7 +74,6 @@ const statusConfig = {
     }
 }
 export default function SellerProductsPage() {
-    const router = useRouter()
     const { data: sellerProfile, loading: profileLoading } = useSellerProfile()
     const [notification, setNotification] = useState(null)
     const showMessage = (message, type = 'info') => {
@@ -942,7 +939,6 @@ function EmptyState({ query }) {
 function ProductCard({ product, onSelect, isSelected, onDelete, onPublish, onSubmitForReview }) {
     const status = product.status || 'draft'
     const cfg = statusConfig[status] || statusConfig.draft
-    const canEdit = status === 'draft' || status === 'published'
     const getVerificationStatusText = (product) => {
         if (product.isVerified && product.isTested) {
             return { text: 'Fully Approved', color: 'text-green-400', icon: Star }
@@ -957,7 +953,6 @@ function ProductCard({ product, onSelect, isSelected, onDelete, onPublish, onSub
     }
     
     const verificationStatus = getVerificationStatusText(product)
-    const StatusIcon = verificationStatus.icon
     
     return (
         <motion.div
@@ -1016,20 +1011,7 @@ function ProductCard({ product, onSelect, isSelected, onDelete, onPublish, onSub
                     )}
                 </div>
                 <div className="flex gap-2">
-                    {canEdit ? (
-                        <Link
-                            href={`/seller/products/${product.slug || product._id}/edit`}
-                            className="flex-1 px-3 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors text-center text-sm font-medium">
-                            Edit
-                        </Link>
-                    ) : (
-                        <button
-                            disabled
-                            title={`Cannot edit product while it's ${status.replace('_', ' ')}`}
-                            className="flex-1 px-3 py-2 bg-gray-600 text-gray-400 rounded-lg text-sm font-medium cursor-not-allowed">
-                            Edit
-                        </button>
-                    )}
+                    
                     {product.isVerified && product.isTested ? (
                         <button
                             onClick={onPublish}

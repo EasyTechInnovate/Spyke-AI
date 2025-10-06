@@ -28,9 +28,7 @@ import VerificationBadge from '@/components/features/seller/shared/VerificationB
 import CurrencySelector from '@/components/features/seller/dashboard/CurrencySelector'
 const RevenueChart = lazy(() => import('@/components/features/seller/dashboard/RevenueChart'))
 const PerformanceChart = lazy(() => import('@/components/features/seller/dashboard/PerformanceChart'))
-const LoadingSkeleton = ({ className = "h-4 bg-gray-700 rounded animate-pulse" }) => (
-    <div className={className} />
-)
+const LoadingSkeleton = ({ className = 'h-4 bg-gray-700 rounded animate-pulse' }) => <div className={className} />
 const MetricCardSkeleton = () => (
     <div className="bg-[#1a1a1a] border border-gray-800 rounded-xl p-6 animate-pulse">
         <div className="flex items-start justify-between mb-4">
@@ -52,16 +50,20 @@ const ProductCardSkeleton = () => (
             </div>
         </div>
         <div className="grid grid-cols-3 gap-6">
-            {Array(3).fill(0).map((_, i) => (
-                <div key={i} className="text-center">
-                    <LoadingSkeleton className="w-12 h-8 mb-1 mx-auto" />
-                    <LoadingSkeleton className="w-16 h-4 mx-auto" />
-                </div>
-            ))}
+            {Array(3)
+                .fill(0)
+                .map((_, i) => (
+                    <div
+                        key={i}
+                        className="text-center">
+                        <LoadingSkeleton className="w-12 h-8 mb-1 mx-auto" />
+                        <LoadingSkeleton className="w-16 h-4 mx-auto" />
+                    </div>
+                ))}
         </div>
     </div>
 )
-const ChartSkeleton = ({ height = "h-80" }) => (
+const ChartSkeleton = ({ height = 'h-80' }) => (
     <div className={`${height} bg-[#1a1a1a] border border-gray-800 rounded-xl flex items-center justify-center`}>
         <div className="text-center">
             <div className="w-8 h-8 border-2 border-gray-600 border-t-[#00FF89] rounded-full animate-spin mx-auto mb-4" />
@@ -69,16 +71,7 @@ const ChartSkeleton = ({ height = "h-80" }) => (
         </div>
     </div>
 )
-const MetricCard = ({ 
-    icon: Icon, 
-    value, 
-    label, 
-    trend, 
-    color = 'emerald', 
-    subtitle, 
-    isLoading = false,
-    onClick 
-}) => {
+const MetricCard = ({ icon: Icon, value, label, trend, color = 'emerald', subtitle, isLoading = false, onClick }) => {
     const colorMap = {
         emerald: 'text-[#00FF89] border-[#00FF89]/30',
         blue: 'text-blue-400 border-blue-400/30',
@@ -90,23 +83,19 @@ const MetricCard = ({
     const trendValue = parseFloat(trend)
     const isPositive = trendValue > 0
     return (
-        <div 
+        <div
             className={`bg-[#1a1a1a] border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-all duration-200 ${onClick ? 'cursor-pointer hover:scale-[1.02]' : ''}`}
-            onClick={onClick}
-        >
+            onClick={onClick}>
             <div className="flex items-start justify-between mb-4">
                 <div className={`p-3 rounded-xl bg-black/50 border ${colorMap[color]}`}>
                     <Icon className={`w-6 h-6 ${colorMap[color].split(' ')[0]}`} />
                 </div>
                 {trend && (
                     <div className="flex items-center gap-1 text-xs">
-                        {isPositive ? (
-                            <TrendingUp className="w-3 h-3 text-[#00FF89]" />
-                        ) : (
-                            <TrendingDown className="w-3 h-3 text-red-400" />
-                        )}
+                        {isPositive ? <TrendingUp className="w-3 h-3 text-[#00FF89]" /> : <TrendingDown className="w-3 h-3 text-red-400" />}
                         <span className={isPositive ? 'text-[#00FF89]' : 'text-red-400'}>
-                            {isPositive ? '+' : ''}{trend}%
+                            {isPositive ? '+' : ''}
+                            {trend}%
                         </span>
                     </div>
                 )}
@@ -114,9 +103,7 @@ const MetricCard = ({
             <div>
                 <p className="text-2xl font-bold text-white mb-1">{value}</p>
                 <p className="text-sm text-gray-300">{label}</p>
-                {subtitle && (
-                    <p className="text-xs text-gray-400 mt-1">{subtitle}</p>
-                )}
+                {subtitle && <p className="text-xs text-gray-400 mt-1">{subtitle}</p>}
             </div>
         </div>
     )
@@ -136,16 +123,12 @@ const ProductCard = ({ product, index, isLoading = false }) => {
                     #{index + 1}
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-white text-lg group-hover:text-[#00FF89] transition-colors line-clamp-1">
-                        {product.title}
-                    </h3>
+                    <h3 className="font-semibold text-white text-lg group-hover:text-[#00FF89] transition-colors line-clamp-1">{product.title}</h3>
                     <div className="flex items-center gap-3 mt-2">
                         <span className={`px-3 py-1 rounded-md text-sm font-medium border ${typeColors[product.type] || typeColors.prompt}`}>
                             {product.type}
                         </span>
-                        <span className="text-sm text-gray-300">
-                            {formatCurrency(product.price)}
-                        </span>
+                        <span className="text-sm text-gray-300">{formatCurrency(product.price)}</span>
                     </div>
                 </div>
             </div>
@@ -190,12 +173,8 @@ const OrderCard = ({ order }) => {
                     <p className="text-xs text-gray-400">{order.productType}</p>
                 </div>
                 <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-300">
-                        {order.buyerName || order.buyerEmail?.split('@')[0] || 'Anonymous'}
-                    </span>
-                    <span className="text-sm font-bold text-[#00FF89]">
-                        {formatCurrency(order.price)}
-                    </span>
+                    <span className="text-sm text-gray-300">{order.buyerName || order.buyerEmail?.split('@')[0] || 'Anonymous'}</span>
+                    <span className="text-sm font-bold text-[#00FF89]">{formatCurrency(order.price)}</span>
                 </div>
             </div>
         </div>
@@ -210,9 +189,14 @@ const OrdersSection = ({ orders, isLoading = false }) => {
                     <LoadingSkeleton className="w-64 h-4" />
                 </div>
                 <div className="p-6 space-y-4">
-                    {Array(3).fill(0).map((_, i) => (
-                        <LoadingSkeleton key={i} className="h-16 bg-gray-800 rounded" />
-                    ))}
+                    {Array(3)
+                        .fill(0)
+                        .map((_, i) => (
+                            <LoadingSkeleton
+                                key={i}
+                                className="h-16 bg-gray-800 rounded"
+                            />
+                        ))}
                 </div>
             </div>
         )
@@ -241,8 +225,7 @@ const OrdersSection = ({ orders, isLoading = false }) => {
                     </p>
                     <Link
                         href="/seller/products/create"
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-[#00FF89] text-black rounded-xl font-semibold hover:bg-[#00FF89]/90 transition-colors"
-                    >
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-[#00FF89] text-black rounded-xl font-semibold hover:bg-[#00FF89]/90 transition-colors">
                         <Plus className="w-5 h-5" />
                         Create Your First Product
                     </Link>
@@ -265,8 +248,7 @@ const OrdersSection = ({ orders, isLoading = false }) => {
                     </div>
                     <Link
                         href="/seller/orders"
-                        className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] border border-gray-700 rounded-lg text-sm text-gray-300 hover:border-gray-600 hover:text-white transition-all"
-                    >
+                        className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] border border-gray-700 rounded-lg text-sm text-gray-300 hover:border-gray-600 hover:text-white transition-all">
                         View All
                         <ExternalLink className="w-4 h-4" />
                     </Link>
@@ -274,7 +256,10 @@ const OrdersSection = ({ orders, isLoading = false }) => {
             </div>
             <div className="p-4 space-y-4">
                 {orders.map((order) => (
-                    <OrderCard key={order.id} order={order} />
+                    <OrderCard
+                        key={order.id}
+                        order={order}
+                    />
                 ))}
             </div>
         </div>
@@ -335,12 +320,13 @@ const SetupProgress = ({ sellerProfile, isApproved }) => (
                     completed: isApproved
                 }
             ].map((item) => (
-                <div key={item.step} className="flex items-center gap-4 p-6 rounded-xl bg-[#1a1a1a] border border-gray-800 text-left">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                        item.completed 
-                            ? 'bg-[#00FF89]/20 text-[#00FF89] border border-[#00FF89]/30' 
-                            : 'bg-gray-700 text-gray-400'
-                    }`}>
+                <div
+                    key={item.step}
+                    className="flex items-center gap-4 p-6 rounded-xl bg-[#1a1a1a] border border-gray-800 text-left">
+                    <div
+                        className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                            item.completed ? 'bg-[#00FF89]/20 text-[#00FF89] border border-[#00FF89]/30' : 'bg-gray-700 text-gray-400'
+                        }`}>
                         {item.completed ? <CheckCircle className="w-6 h-6" /> : item.step}
                     </div>
                     <div className="flex-1">
@@ -361,14 +347,12 @@ const SetupProgress = ({ sellerProfile, isApproved }) => (
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
                 href="/seller/profile"
-                className="w-full sm:w-auto px-8 py-4 bg-[#00FF89] text-black rounded-xl font-semibold hover:bg-[#00FF89]/90 transition-colors"
-            >
+                className="w-full sm:w-auto px-8 py-4 bg-[#00FF89] text-black rounded-xl font-semibold hover:bg-[#00FF89]/90 transition-colors">
                 Complete Setup
             </Link>
             <Link
                 href="/explore"
-                className="w-full sm:w-auto px-8 py-4 border border-gray-700 text-gray-300 rounded-xl font-semibold hover:bg-gray-800/50 transition-colors"
-            >
+                className="w-full sm:w-auto px-8 py-4 border border-gray-700 text-gray-300 rounded-xl font-semibold hover:bg-gray-800/50 transition-colors">
                 Explore Platform
             </Link>
         </div>
@@ -398,10 +382,7 @@ export default function SellerDashboard() {
                 setLoading(true)
             }
             setError(null)
-            const [profile, dashboard] = await Promise.all([
-                sellerAPI.getProfile(),
-                sellerAPI.getDashboard()
-            ])
+            const [profile, dashboard] = await Promise.all([sellerAPI.getProfile(), sellerAPI.getDashboard()])
             const processedData = {
                 ...dashboard,
                 chartData: {
@@ -422,6 +403,7 @@ export default function SellerDashboard() {
         }
     }
     const generateRevenueData = (orders) => {
+        // Always create baseline data structure first
         const last30Days = Array.from({ length: 30 }, (_, i) => {
             const date = new Date()
             date.setDate(date.getDate() - (29 - i))
@@ -431,26 +413,51 @@ export default function SellerDashboard() {
                 orders: 0
             }
         })
-        orders.forEach(order => {
+
+        // Only process orders if they exist and are valid
+        if (!orders || !Array.isArray(orders) || orders.length === 0) {
+            return last30Days
+        }
+
+        orders.forEach((order) => {
             try {
-                const orderDateString = order.orderDate || order.createdAt || order.date
-                if (!orderDateString) return
+                // Handle multiple possible date field names with validation
+                const orderDateString = order.orderDate || order.createdAt || order.date || order.timestamp
+                if (!orderDateString) {
+                    console.warn('Order missing date field:', order.id || 'unknown')
+                    return
+                }
+
                 const orderDate = new Date(orderDateString)
-                if (isNaN(orderDate.getTime())) return
+                // Validate the date is actually valid
+                if (isNaN(orderDate.getTime())) {
+                    console.warn('Invalid order date:', orderDateString, 'for order:', order.id || 'unknown')
+                    return
+                }
+
                 const orderDateFormatted = orderDate.toISOString().split('T')[0]
-                const dayData = last30Days.find(day => day.date === orderDateFormatted)
+                const dayData = last30Days.find((day) => day.date === orderDateFormatted)
+
                 if (dayData) {
-                    dayData.revenue += parseFloat(order.price || order.totalAmount || 0)
-                    dayData.orders += 1
+                    // Handle multiple possible price field names with validation
+                    const price = parseFloat(order.price || order.totalAmount || order.finalAmount || order.amount || 0)
+                    if (!isNaN(price) && price >= 0) {
+                        dayData.revenue += price
+                        dayData.orders += 1
+                    } else {
+                        console.warn('Invalid price for order:', order.id || 'unknown', 'price:', price)
+                    }
                 }
             } catch (error) {
-                console.warn('Error processing order date:', error)
+                console.warn('Error processing order for revenue data:', error, order)
+                // Continue processing other orders
             }
         })
+
         return last30Days
     }
     const generatePerformanceData = (products) => {
-        return products.map(product => {
+        return products.map((product) => {
             try {
                 const views = parseInt(product.views) || 0
                 const sales = parseInt(product.sales) || 0
@@ -478,8 +485,7 @@ export default function SellerDashboard() {
         const symbols = { USD: '$', EUR: '€', GBP: '£', INR: '₹' }
         return `${symbols[selectedCurrency] || '$'}${Number(amount || 0).toLocaleString()}`
     }
-    const isApproved = sellerProfile?.verification?.status === 'approved' && 
-                      sellerProfile?.commissionOffer?.status === 'accepted'
+    const isApproved = sellerProfile?.verification?.status === 'approved' && sellerProfile?.commissionOffer?.status === 'accepted'
     if (loading) {
         return (
             <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
@@ -502,8 +508,7 @@ export default function SellerDashboard() {
                     <p className="text-gray-400 mb-6">{error}</p>
                     <button
                         onClick={() => loadDashboardData()}
-                        className="px-6 py-3 bg-[#00FF89] text-black rounded-xl font-semibold hover:bg-[#00FF89]/90 transition-colors"
-                    >
+                        className="px-6 py-3 bg-[#00FF89] text-black rounded-xl font-semibold hover:bg-[#00FF89]/90 transition-colors">
                         Try Again
                     </button>
                 </div>
@@ -520,10 +525,18 @@ export default function SellerDashboard() {
                                 <button
                                     onClick={() => setSidebarOpen?.(true)}
                                     className="lg:hidden p-2 text-white/60 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200 flex-shrink-0"
-                                    aria-label="Open navigation menu"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                    aria-label="Open navigation menu">
+                                    <svg
+                                        className="w-5 h-5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M4 6h16M4 12h16M4 18h16"
+                                        />
                                     </svg>
                                 </button>
                                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white truncate">
@@ -544,8 +557,7 @@ export default function SellerDashboard() {
                                     <button
                                         onClick={() => loadDashboardData(true)}
                                         disabled={refreshing}
-                                        className="flex items-center gap-2 px-3 lg:px-4 py-2 bg-[#1a1a1a] border border-gray-700 rounded-lg text-sm text-gray-300 hover:border-gray-600 hover:text-white transition-all disabled:opacity-50"
-                                    >
+                                        className="flex items-center gap-2 px-3 lg:px-4 py-2 bg-[#1a1a1a] border border-gray-700 rounded-lg text-sm text-gray-300 hover:border-gray-600 hover:text-white transition-all disabled:opacity-50">
                                         <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
                                         <span className="hidden sm:inline">Refresh</span>
                                     </button>
@@ -558,11 +570,8 @@ export default function SellerDashboard() {
                             <Link
                                 href={isApproved ? '/seller/products/create' : '/seller/profile'}
                                 className={`flex items-center gap-2 px-3 lg:px-4 py-2 rounded-lg font-medium transition-all text-sm lg:text-base ${
-                                    isApproved
-                                        ? 'bg-[#00FF89] text-black hover:bg-[#00FF89]/90'
-                                        : 'bg-blue-600 text-white hover:bg-blue-700'
-                                }`}
-                            >
+                                    isApproved ? 'bg-[#00FF89] text-black hover:bg-[#00FF89]/90' : 'bg-blue-600 text-white hover:bg-blue-700'
+                                }`}>
                                 <Plus className="w-4 h-4" />
                                 <span className="hidden sm:inline">{isApproved ? 'Add Product' : 'Complete Setup'}</span>
                                 <span className="sm:hidden">{isApproved ? 'Add' : 'Setup'}</span>
@@ -572,21 +581,18 @@ export default function SellerDashboard() {
                 </div>
             </header>
             <div className="space-y-4 mb-8">
-                {sellerProfile?.verification?.status === 'commission_offered' && 
-                 sellerProfile?.commissionOffer?.status !== 'accepted' && (
+                {sellerProfile?.verification?.status === 'commission_offered' && sellerProfile?.commissionOffer?.status !== 'accepted' && (
                     <Alert
                         type="success"
                         title="Commission Offer Available"
                         action={
                             <Link
                                 href="/seller/profile"
-                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#00FF89] text-black rounded-xl font-semibold hover:bg-[#00FF89]/90 transition-colors"
-                            >
+                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#00FF89] text-black rounded-xl font-semibold hover:bg-[#00FF89]/90 transition-colors">
                                 Review Offer ({sellerProfile?.commissionOffer?.rate}%)
                                 <ArrowUpRight className="w-4 h-4" />
                             </Link>
-                        }
-                    >
+                        }>
                         <p>We've offered you a {sellerProfile?.commissionOffer?.rate}% commission rate. Accept to start selling!</p>
                     </Alert>
                 )}
@@ -597,13 +603,11 @@ export default function SellerDashboard() {
                         action={
                             <Link
                                 href="/seller/orders?status=pending"
-                                className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition-colors"
-                            >
+                                className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition-colors">
                                 Process {dashboardData.pendingOrders} Orders
                                 <ArrowUpRight className="w-4 h-4" />
                             </Link>
-                        }
-                    >
+                        }>
                         <p>
                             You have {dashboardData.pendingOrders} {dashboardData.pendingOrders === 1 ? 'order' : 'orders'} waiting for fulfillment.
                         </p>
@@ -692,8 +696,7 @@ export default function SellerDashboard() {
                             {dashboardData?.topProducts?.length > 3 && (
                                 <Link
                                     href="/seller/products"
-                                    className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] border border-gray-700 rounded-lg text-sm text-gray-300 hover:border-gray-600 hover:text-white transition-all"
-                                >
+                                    className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] border border-gray-700 rounded-lg text-sm text-gray-300 hover:border-gray-600 hover:text-white transition-all">
                                     View All Products
                                     <ExternalLink className="w-4 h-4" />
                                 </Link>
@@ -746,7 +749,10 @@ export default function SellerDashboard() {
                     </section>
                 </>
             ) : (
-                <SetupProgress sellerProfile={sellerProfile} isApproved={isApproved} />
+                <SetupProgress
+                    sellerProfile={sellerProfile}
+                    isApproved={isApproved}
+                />
             )}
             {showDocumentUpload && (
                 <DocumentUploadModal
