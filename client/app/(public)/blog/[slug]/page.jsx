@@ -22,7 +22,6 @@ import { Button } from '@/components/shared/ui/button'
 import { urlFor } from '@/sanity/lib/image'
 import { PortableText } from '@portabletext/react'
 import StickyLeadForm from '../components/StickyLeadForm'
-import NewsletterCTA from '../components/NewsletterCTA'
 import RelatedPosts from '../components/RelatedPosts'
 import SocialShare from '../components/SocialShare'
 const portableTextComponents = {
@@ -281,15 +280,13 @@ export default function BlogPostPage({ params }) {
                                         </a>
                                     </Button>
                                     <Button
+                                        asChild
                                         variant="outline"
                                         className="border-brand-secondary text-brand-secondary hover:bg-brand-secondary/10">
-                                        <a
-                                            href="/blog"
-                                            target="_blank"
-                                            rel="noopener noreferrer">
+                                        <Link href="/explore">
                                             <BookOpen className="w-4 h-4 mr-2" />
                                             See Related AI Products
-                                        </a>
+                                        </Link>
                                     </Button>
                                 </div>
                             </div>
@@ -350,9 +347,6 @@ export default function BlogPostPage({ params }) {
                             )}
                         </article>
                     </div>
-                </div>
-                <div className="max-w-6xl mx-auto px-6 lg:px-10 mt-20 mb-12">
-                    <NewsletterCTA blogPostSlug={post.slug.current} />
                 </div>
                 {post.relatedPosts && post.relatedPosts.length > 0 && (
                     <div className="max-w-7xl mx-auto px-6 lg:px-10 mt-4 mb-24">

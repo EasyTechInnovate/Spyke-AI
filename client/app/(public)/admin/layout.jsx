@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import { usePathname } from 'next/navigation'
 import { AdminProvider } from '@/providers/AdminProvider'
 import AdminSidebar from '@/components/admin/AdminSidebar'
-import { useAdminNavigation } from '@/components/admin/hooks/useAdminNavigation'
+import { useAdminNavigation, MobileSidebarProvider } from '@/components/admin/hooks/useAdminNavigation'
 const MobileHeader = ({ onOpenSidebar }) => (
   <div className="lg:hidden bg-[#1a1a1a] border-b border-white/10 px-4 py-3 flex items-center justify-between">
     <button
@@ -20,15 +20,17 @@ const MobileHeader = ({ onOpenSidebar }) => (
     <div className="w-10 h-10" /> 
   </div>
 )
-const AdminLayoutInner = ({ children }) => {
+
+const AdminLayoutContent = ({ children }) => {
   const pathname = usePathname()
-  const { openSidebar } = useAdminNavigation(pathname)
+  const navigation = useAdminNavigation(pathname)
+  
   return (
     <div className="min-h-screen bg-[#121212]">
       <div className="flex h-screen overflow-hidden">
         <AdminSidebar currentPath={pathname} />
         <div className="flex-1 flex flex-col min-w-0 w-full lg:pl-[var(--admin-sidebar-width,256px)] lg:transition-all lg:duration-300 lg:ease-out">
-          <MobileHeader onOpenSidebar={openSidebar} />
+          <MobileHeader onOpenSidebar={navigation.openSidebar} />
           <main className="flex-1 overflow-y-auto bg-[#121212]">
             <div className="p-4 lg:p-6 max-w-full">
               {children}
@@ -39,12 +41,15 @@ const AdminLayoutInner = ({ children }) => {
     </div>
   )
 }
+
 export default function AdminLayout({ children }) {
   return (
     <AdminProvider>
-      <AdminLayoutInner>
-        {children}
-      </AdminLayoutInner>
+      <MobileSidebarProvider>
+        <AdminLayoutContent>
+          {children}
+        </AdminLayoutContent>
+      </MobileSidebarProvider>
     </AdminProvider>
   )
 }

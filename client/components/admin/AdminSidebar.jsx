@@ -111,6 +111,7 @@ const AdminSidebar = ({ currentPath }) => {
     createNavigationItems(counts), 
     [counts]
   )
+  
   const handleLogout = useCallback(async () => {
     try {
       await logoutService.logout()
@@ -118,6 +119,7 @@ const AdminSidebar = ({ currentPath }) => {
       console.error('Logout failed:', error)
     }
   }, [])
+  
   return (
     <>
       <div

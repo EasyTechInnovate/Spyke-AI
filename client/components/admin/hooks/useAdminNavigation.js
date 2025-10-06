@@ -1,8 +1,50 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 
+// Create a context for mobile sidebar state
+const MobileSidebarContext = createContext(null)
 
+export function MobileSidebarProvider({ children }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  const closeSidebar = useCallback(() => {
+    setSidebarOpen(false)
+  }, [])
+
+  const openSidebar = useCallback(() => {
+    setSidebarOpen(true)
+  }, [])
+
+  const toggleSidebar = useCallback(() => {
+    setSidebarOpen((prev) => !prev)
+  }, [])
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && sidebarOpen) {
+        closeSidebar()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [sidebarOpen, closeSidebar])
+
+  const value = {
+    sidebarOpen,
+    setSidebarOpen,
+    closeSidebar,
+    openSidebar,
+    toggleSidebar
+  }
+
+  return (
+    <MobileSidebarContext.Provider value={value}>
+      {children}
+    </MobileSidebarContext.Provider>
+  )
+}
 
 export function usePersistedState(key, initialValue) {
   const [state, setState] = useState(initialValue)
@@ -83,38 +125,11 @@ export function useSidebarState() {
 }
 
 export function useMobileSidebar() {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-
-  const closeSidebar = useCallback(() => {
-    setSidebarOpen(false)
-  }, [])
-
-  const openSidebar = useCallback(() => {
-    setSidebarOpen(true)
-  }, [])
-
-  const toggleSidebar = useCallback(() => {
-    setSidebarOpen((prev) => !prev)
-  }, [])
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && sidebarOpen) {
-        closeSidebar()
-      }
-    }
-
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [sidebarOpen, closeSidebar])
-
-  return {
-    sidebarOpen,
-    setSidebarOpen,
-    closeSidebar,
-    openSidebar,
-    toggleSidebar
+  const context = useContext(MobileSidebarContext)
+  if (!context) {
+    throw new Error('useMobileSidebar must be used within MobileSidebarProvider')
   }
+  return context
 }
 
 export function useAdminNavigation(currentPath) {

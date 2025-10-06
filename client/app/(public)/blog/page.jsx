@@ -807,45 +807,7 @@ export default function BlogListingPage() {
                     </>
                 )}
             </div>
-            <div className="relative overflow-hidden bg-gradient-to-r from-[#0a0a0a] via-[#111111] to-[#0a0a0a] border-t border-white/10 mb-16">
-                <div className="absolute inset-0 opacity-5">
-                    <div
-                        className="absolute inset-0"
-                        style={{
-                            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-                        }}></div>
-                </div>
-                <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-                    <div className="space-y-6 mb-12">
-                        <div className="inline-flex items-center gap-2 bg-brand-primary/10 border border-brand-primary/20 text-brand-primary px-4 py-2 rounded-full text-sm font-medium">
-                            <Zap className="w-4 h-4" />
-                            Newsletter
-                        </div>
-                        <h2 className="text-4xl font-league-spartan font-bold text-white">Get Weekly AI Ideas</h2>
-                        <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
-                            Join thousands of entrepreneurs getting actionable AI insights, automation strategies, and exclusive case studies
-                            delivered weekly.
-                        </p>
-                    </div>
-                    <div className="max-w-md mx-auto mb-8">
-                        <WeeklyIdeasForm />
-                    </div>
-                    <div className="flex flex-wrap justify-center gap-8 text-sm text-gray-400">
-                        <div className="flex items-center gap-3">
-                            <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-green-500 rounded-full"></div>
-                            <span>Weekly insights</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full"></div>
-                            <span>No spam, ever</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div className="w-3 h-3 bg-gradient-to-r from-purple-400 to-purple-500 rounded-full"></div>
-                            <span>Unsubscribe anytime</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
         </div>
     )
 }
