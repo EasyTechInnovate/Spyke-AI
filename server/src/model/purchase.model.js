@@ -251,7 +251,8 @@ purchaseSchema.statics.getUserPurchases = async function (userId, options = {}) 
                     type: '$product.type',
                     category: '$product.category',
                     categoryName: { $ifNull: [{ $arrayElemAt: ['$categoryDoc.name', 0] }, '$product.category'] },
-                    industry: '$product.industry'
+                    industry: '$product.industry',
+                    premiumContent: '$product.premiumContent'
                 },
                 seller: {
                     _id: '$seller._id',
@@ -278,7 +279,7 @@ purchaseSchema.statics.getUserPurchases = async function (userId, options = {}) 
                 .sort({ purchaseDate: -1 })
                 .skip(skip)
                 .limit(limit)
-                .populate('items.productId', 'title slug thumbnail price type category industry')
+                .populate('items.productId', 'title slug thumbnail price type category industry premiumContent')
                 .populate('items.sellerId', 'fullName avatar')
                 .lean()
             const flattened = []
@@ -298,7 +299,8 @@ purchaseSchema.statics.getUserPurchases = async function (userId, options = {}) 
                                   price: it.price,
                                   type: it.productId.type,
                                   category: it.productId.category,
-                                  industry: it.productId.industry
+                                  industry: it.productId.industry,
+                                  premiumContent: it.productId.premiumContent
                               }
                             : null,
                         seller: it.sellerId
