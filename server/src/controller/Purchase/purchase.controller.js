@@ -7,7 +7,7 @@ import Product from '../../model/product.model.js'
 import sellerProfileModel from '../../model/seller.profile.model.js'
 import Promocode from '../../model/promocode.model.js'
 import { notificationService } from '../../util/notification.js'
-import { EProductStatusNew, EUserRole } from '../../constant/application.js'
+import { EProductStatusNew, EUserRole, EOrderStatus, EPaymentStatus } from '../../constant/application.js'
 import stripeService from '../../service/stripe.service.js'
 
 const purchaseControllerExport = {
@@ -451,8 +451,8 @@ const purchaseControllerExport = {
                     appliedPromocode: cart.appliedPromocode,
                     paymentMethod: 'stripe_checkout',
                     paymentReference: paymentReference,
-                    paymentStatus: 'COMPLETED',
-                    orderStatus: 'COMPLETED'
+                    paymentStatus: EPaymentStatus.COMPLETED,
+                    orderStatus: EOrderStatus.COMPLETED
                 })
 
                 await purchase.save()
@@ -1116,8 +1116,8 @@ async function handlePaymentSucceeded(paymentIntent, sessionId = null) {
                 appliedPromocode: cart.appliedPromocode,
                 paymentMethod: 'stripe',
                 paymentReference: paymentIntent.id,
-                paymentStatus: 'COMPLETED',
-                orderStatus: 'COMPLETED'
+                paymentStatus: EPaymentStatus.COMPLETED,
+                orderStatus: EOrderStatus.COMPLETED
             })
 
             await purchase.save()
