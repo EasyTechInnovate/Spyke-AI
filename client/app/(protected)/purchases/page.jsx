@@ -1,7 +1,28 @@
 'use client'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Package, Search, Calendar, CreditCard, ChevronRight, FileText, Zap, Bot, Layers, Loader2, List, Grid as GridIcon } from 'lucide-react'
+import {
+    Package,
+    Search,
+    Calendar,
+    CreditCard,
+    ChevronRight,
+    FileText,
+    Zap,
+    Bot,
+    Layers,
+    Loader2,
+    List,
+    Grid as GridIcon,
+    Lock,
+    Crown,
+    Eye,
+    Download,
+    ExternalLink,
+    X,
+    Copy,
+    Check
+} from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
 import { useAuth } from '@/hooks/useAuth'
 import { purchaseAPI } from '@/lib/api'
@@ -42,6 +63,8 @@ export default function PurchasesPage() {
     const [sort, setSort] = useState('recent')
     const [selected, setSelected] = useState(new Set())
     const [showMobileFilters, setShowMobileFilters] = useState(false)
+    const [selectedPurchase, setSelectedPurchase] = useState(null)
+    const [showPremiumModal, setShowPremiumModal] = useState(false)
 
     // Ensure auth before loading purchases
     useEffect(() => {
@@ -127,6 +150,17 @@ export default function PurchasesPage() {
     }
     return (
         <div className="min-h-screen bg-[#121212]">
+            {/* Premium Content Modal */}
+            {showPremiumModal && selectedPurchase && (
+                <PremiumContentModal
+                    purchase={selectedPurchase}
+                    onClose={() => {
+                        setShowPremiumModal(false)
+                        setSelectedPurchase(null)
+                    }}
+                />
+            )}
+
             <main className="pt-24 pb-16">
                 <Container>
                     <div className="mb-8">
@@ -217,6 +251,10 @@ export default function PurchasesPage() {
                                 purchases={filteredPurchases}
                                 selected={selected}
                                 onToggle={toggleSelect}
+                                onViewPremium={(purchase) => {
+                                    setSelectedPurchase(purchase)
+                                    setShowPremiumModal(true)
+                                }}
                             />
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -226,6 +264,10 @@ export default function PurchasesPage() {
                                         purchase={purchase}
                                         selected={selected.has(purchase.purchaseId)}
                                         onToggle={() => toggleSelect(purchase.purchaseId)}
+                                        onViewPremium={() => {
+                                            setSelectedPurchase(purchase)
+                                            setShowPremiumModal(true)
+                                        }}
                                     />
                                 ))}
                             </div>
@@ -252,8 +294,10 @@ export default function PurchasesPage() {
         </div>
     )
 }
-function PurchaseCard({ purchase, selected = false, onToggle }) {
+function PurchaseCard({ purchase, selected = false, onToggle, onViewPremium }) {
     const { product, purchaseDate } = purchase
+    const router = useRouter()
+    
     if (!product) {
         return (
             <motion.div className="bg-[#1f1f1f] border border-gray-800 rounded-2xl p-4">
@@ -261,8 +305,27 @@ function PurchaseCard({ purchase, selected = false, onToggle }) {
             </motion.div>
         )
     }
+    
     const Icon = typeIcons[product.type] || Package
     const colorClass = typeColors[product.type] || 'text-gray-400 bg-gray-400/10 border-gray-400/20'
+    
+    // Check if premium content is available
+    const hasPremiumContent = product.premiumContent && (
+        product.premiumContent.promptText || 
+        product.premiumContent.promptInstructions || 
+        product.premiumContent.automationInstructions ||
+        product.premiumContent.agentConfiguration ||
+        (product.premiumContent.detailedHowItWorks && product.premiumContent.detailedHowItWorks.length > 0) ||
+        (product.premiumContent.automationFiles && product.premiumContent.automationFiles.length > 0) ||
+        (product.premiumContent.agentFiles && product.premiumContent.agentFiles.length > 0)
+    )
+
+    const handleAccessProduct = () => {
+        // Store purchase data in sessionStorage to pass to the next page
+        sessionStorage.setItem('currentPurchase', JSON.stringify(purchase))
+        router.push(`/purchased/${product.slug || product._id}`)
+    }
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -293,6 +356,16 @@ function PurchaseCard({ purchase, selected = false, onToggle }) {
                     </div>
                 </div>
 
+                {/* Premium Badge */}
+                {hasPremiumContent && (
+                    <div className="absolute top-4 right-4 px-2 py-1 rounded-lg bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 backdrop-blur-sm">
+                        <div className="flex items-center gap-1">
+                            <Crown className="w-3 h-3 text-yellow-400" />
+                            <span className="text-xs font-medium text-yellow-400">Premium</span>
+                        </div>
+                    </div>
+                )}
+
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
             <div className="p-6">
@@ -302,7 +375,7 @@ function PurchaseCard({ purchase, selected = false, onToggle }) {
                     {product.title}
                 </h3>
                 <div className="flex items-center gap-4 text-sm text-gray-400 mb-4">
-                    <span className="capitalize">{product.category?.replace('_', ' ')}</span>
+                    <span className="capitalize">{product.categoryName || product.category?.replace('_', ' ')}</span>
                     <span>•</span>
                     <span className="capitalize">{product.industry?.replace('_', ' ')}</span>
                 </div>
@@ -316,17 +389,48 @@ function PurchaseCard({ purchase, selected = false, onToggle }) {
                         <span className="text-[#00FF89] font-semibold">${product.price}</span>
                     </div>
                 </div>
+
+                {/* Premium Content Preview */}
+                {hasPremiumContent && (
+                    <div className="mb-4 p-3 bg-gradient-to-r from-yellow-500/5 to-orange-500/5 border border-yellow-500/20 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-medium text-yellow-400 flex items-center gap-1">
+                                <Crown className="w-3 h-3" />
+                                Premium Content Available
+                            </span>
+                        </div>
+                        <div className="text-xs text-gray-400 space-y-1">
+                            {product.premiumContent.promptText && <div>• Full Prompt Template</div>}
+                            {product.premiumContent.promptInstructions && <div>• Detailed Instructions</div>}
+                            {product.premiumContent.automationInstructions && <div>• Automation Setup</div>}
+                            {product.premiumContent.agentConfiguration && <div>• Agent Configuration</div>}
+                            {product.premiumContent.detailedHowItWorks?.length > 0 && <div>• Step-by-step Guide</div>}
+                            {product.premiumContent.automationFiles?.length > 0 && <div>• Automation Files</div>}
+                            {product.premiumContent.agentFiles?.length > 0 && <div>• Agent Files</div>}
+                        </div>
+                    </div>
+                )}
+
                 <div className="flex gap-3">
-                    <Link
-                        href={`/purchased/${product.slug || product._id || 'unknown'}`}
-                        className="flex-1 px-4 py-3 bg-[#00FF89] hover:bg-[#00FF89]/90 text-[#121212] font-semibold rounded-xl transition-all text-center">
-                        Access Product
-                    </Link>
-                    <Link
-                        href={`/purchased/${product.slug || product._id || 'unknown'}`}
+                    {hasPremiumContent ? (
+                        <button
+                            onClick={handleAccessProduct}
+                            className="flex-1 px-4 py-3 bg-gradient-to-r from-[#00FF89] to-green-500 hover:from-[#00FF89]/90 hover:to-green-500/90 text-[#121212] font-semibold rounded-xl transition-all text-center flex items-center justify-center gap-2">
+                            <Crown className="w-4 h-4" />
+                            Access Premium
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleAccessProduct}
+                            className="flex-1 px-4 py-3 bg-[#00FF89] hover:bg-[#00FF89]/90 text-[#121212] font-semibold rounded-xl transition-all text-center">
+                            Access Product
+                        </button>
+                    )}
+                    <button
+                        onClick={handleAccessProduct}
                         className="flex items-center justify-center px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-all">
                         <ChevronRight className="w-4 h-4" />
-                    </Link>
+                    </button>
                 </div>
                 <div className="mt-4 pt-4 border-t border-gray-800 flex items-center justify-between text-xs">
                     <Link
@@ -421,7 +525,7 @@ function StatsBar({ purchases = [], stats = { totalSpent: 0, counts: {} } }) {
         </div>
     )
 }
-function OrdersTable({ purchases = [], selected = new Set(), onToggle = () => {} }) {
+function OrdersTable({ purchases = [], selected = new Set(), onToggle = () => {}, onViewPremium = () => {} }) {
     return (
         <div className="bg-[#1f1f1f] border border-gray-800 rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
@@ -433,13 +537,22 @@ function OrdersTable({ purchases = [], selected = new Set(), onToggle = () => {}
                             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Type</th>
                             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Date</th>
                             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Price</th>
-                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Content</th>
                             <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-800">
                         {purchases.map((purchase) => {
                             const Icon = typeIcons[purchase.product?.type] || Package
+                            const hasPremiumContent =
+                                purchase.product?.premiumContent &&
+                                (purchase.product.premiumContent.promptText ||
+                                    purchase.product.premiumContent.promptInstructions ||
+                                    purchase.product.premiumContent.automationInstructions ||
+                                    purchase.product.premiumContent.agentConfiguration ||
+                                    (purchase.product.premiumContent.detailedHowItWorks &&
+                                        purchase.product.premiumContent.detailedHowItWorks.length > 0))
+
                             return (
                                 <tr
                                     key={purchase.purchaseId}
@@ -466,7 +579,9 @@ function OrdersTable({ purchases = [], selected = new Set(), onToggle = () => {}
                                             </div>
                                             <div>
                                                 <div className="text-white font-medium">{purchase.product?.title}</div>
-                                                <div className="text-gray-400 text-sm capitalize">{purchase.product?.category}</div>
+                                                <div className="text-gray-400 text-sm capitalize">
+                                                    {purchase.product?.categoryName || purchase.product?.category}
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
@@ -479,12 +594,27 @@ function OrdersTable({ purchases = [], selected = new Set(), onToggle = () => {}
                                     <td className="px-6 py-4 text-sm text-gray-300">{new Date(purchase.purchaseDate).toLocaleDateString()}</td>
                                     <td className="px-6 py-4 text-sm font-semibold text-[#00FF89]">${purchase.product?.price}</td>
                                     <td className="px-6 py-4">
-                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#00FF89]/10 text-[#00FF89] border border-[#00FF89]/20">
-                                            Accessible
-                                        </span>
+                                        {hasPremiumContent ? (
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-yellow-500/10 to-orange-500/10 text-yellow-400 border border-yellow-500/20">
+                                                <Crown className="w-3 h-3" />
+                                                Premium
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#00FF89]/10 text-[#00FF89] border border-[#00FF89]/20">
+                                                Standard
+                                            </span>
+                                        )}
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2">
+                                            {hasPremiumContent && (
+                                                <button
+                                                    onClick={() => onViewPremium(purchase)}
+                                                    className="px-3 py-1 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 hover:from-yellow-500/30 hover:to-orange-500/30 text-yellow-400 border border-yellow-500/30 rounded-lg text-sm transition-all flex items-center gap-1">
+                                                    <Crown className="w-3 h-3" />
+                                                    Premium
+                                                </button>
+                                            )}
                                             <Link
                                                 href={`/purchased/${purchase.product?.slug || purchase.product?._id}`}
                                                 className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-all">
@@ -501,6 +631,260 @@ function OrdersTable({ purchases = [], selected = new Set(), onToggle = () => {}
         </div>
     )
 }
+
+// Premium Content Modal Component
+function PremiumContentModal({ purchase, onClose }) {
+    const [copiedItem, setCopiedItem] = useState(null)
+    const [activeTab, setActiveTab] = useState('prompt')
+
+    const copyToClipboard = async (text, item) => {
+        try {
+            await navigator.clipboard.writeText(text)
+            setCopiedItem(item)
+            setTimeout(() => setCopiedItem(null), 2000)
+        } catch (err) {
+            console.error('Failed to copy:', err)
+        }
+    }
+
+    const premiumContent = purchase.product?.premiumContent || {}
+    const availableTabs = []
+
+    if (premiumContent.promptText) availableTabs.push({ id: 'prompt', label: 'Prompt Template', icon: FileText })
+    if (premiumContent.promptInstructions) availableTabs.push({ id: 'instructions', label: 'Instructions', icon: FileText })
+    if (premiumContent.automationInstructions) availableTabs.push({ id: 'automation', label: 'Automation', icon: Zap })
+    if (premiumContent.agentConfiguration) availableTabs.push({ id: 'agent', label: 'Agent Config', icon: Bot })
+    if (premiumContent.detailedHowItWorks?.length > 0) availableTabs.push({ id: 'howto', label: 'How to Use', icon: FileText })
+
+    if (availableTabs.length > 0 && !availableTabs.find((tab) => tab.id === activeTab)) {
+        setActiveTab(availableTabs[0].id)
+    }
+
+    return (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-[#1a1a1a] border border-gray-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-gray-800">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 flex items-center justify-center">
+                            <Crown className="w-5 h-5 text-yellow-400" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-white">{purchase.product?.title}</h2>
+                            <p className="text-sm text-gray-400">Premium Content Access</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                {/* Tabs */}
+                {availableTabs.length > 0 && (
+                    <div className="flex border-b border-gray-800 overflow-x-auto">
+                        {availableTabs.map((tab) => {
+                            const IconComponent = tab.icon
+                            return (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex items-center gap-2 px-6 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-all ${
+                                        activeTab === tab.id
+                                            ? 'text-[#00FF89] border-[#00FF89] bg-[#00FF89]/5'
+                                            : 'text-gray-400 border-transparent hover:text-white hover:bg-gray-800/50'
+                                    }`}>
+                                    <IconComponent className="w-4 h-4" />
+                                    {tab.label}
+                                </button>
+                            )
+                        })}
+                    </div>
+                )}
+
+                {/* Content */}
+                <div className="p-6 max-h-[60vh] overflow-y-auto">
+                    {activeTab === 'prompt' && premiumContent.promptText && (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-semibold text-white">Prompt Template</h3>
+                                <button
+                                    onClick={() => copyToClipboard(premiumContent.promptText, 'prompt')}
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-all">
+                                    {copiedItem === 'prompt' ? (
+                                        <>
+                                            <Check className="w-4 h-4" />
+                                            Copied
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Copy className="w-4 h-4" />
+                                            Copy
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                            <div className="bg-black/40 rounded-xl p-4 border border-gray-800">
+                                <pre className="text-gray-300 text-sm whitespace-pre-wrap font-mono leading-relaxed">{premiumContent.promptText}</pre>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'instructions' && premiumContent.promptInstructions && (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-semibold text-white">Instructions</h3>
+                                <button
+                                    onClick={() => copyToClipboard(premiumContent.promptInstructions, 'instructions')}
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-all">
+                                    {copiedItem === 'instructions' ? (
+                                        <>
+                                            <Check className="w-4 h-4" />
+                                            Copied
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Copy className="w-4 h-4" />
+                                            Copy
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                            <div className="bg-black/40 rounded-xl p-4 border border-gray-800">
+                                <div className="text-gray-300 text-sm leading-relaxed">{premiumContent.promptInstructions}</div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'automation' && premiumContent.automationInstructions && (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-semibold text-white">Automation Setup</h3>
+                                <button
+                                    onClick={() => copyToClipboard(premiumContent.automationInstructions, 'automation')}
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-all">
+                                    {copiedItem === 'automation' ? (
+                                        <>
+                                            <Check className="w-4 h-4" />
+                                            Copied
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Copy className="w-4 h-4" />
+                                            Copy
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                            <div className="bg-black/40 rounded-xl p-4 border border-gray-800">
+                                <div className="text-gray-300 text-sm leading-relaxed">{premiumContent.automationInstructions}</div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'agent' && premiumContent.agentConfiguration && (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-semibold text-white">Agent Configuration</h3>
+                                <button
+                                    onClick={() => copyToClipboard(premiumContent.agentConfiguration, 'agent')}
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-all">
+                                    {copiedItem === 'agent' ? (
+                                        <>
+                                            <Check className="w-4 h-4" />
+                                            Copied
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Copy className="w-4 h-4" />
+                                            Copy
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                            <div className="bg-black/40 rounded-xl p-4 border border-gray-800">
+                                <pre className="text-gray-300 text-sm whitespace-pre-wrap font-mono leading-relaxed">
+                                    {premiumContent.agentConfiguration}
+                                </pre>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'howto' && premiumContent.detailedHowItWorks?.length > 0 && (
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-semibold text-white">How to Use</h3>
+                            <div className="space-y-3">
+                                {premiumContent.detailedHowItWorks.map((step, index) => (
+                                    <div
+                                        key={index}
+                                        className="flex gap-4 p-4 bg-black/40 rounded-xl border border-gray-800">
+                                        <div className="w-8 h-8 rounded-lg bg-[#00FF89] flex items-center justify-center text-black font-bold text-sm flex-shrink-0">
+                                            {index + 1}
+                                        </div>
+                                        <div className="text-gray-300 text-sm leading-relaxed">{step}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Files Section */}
+                    {(premiumContent.automationFiles?.length > 0 || premiumContent.agentFiles?.length > 0) && (
+                        <div className="mt-8 space-y-4">
+                            <h3 className="text-lg font-semibold text-white">Available Files</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {premiumContent.automationFiles?.map((file, index) => (
+                                    <div
+                                        key={index}
+                                        className="flex items-center gap-3 p-3 bg-black/40 rounded-lg border border-gray-800">
+                                        <Download className="w-5 h-5 text-[#00FF89]" />
+                                        <div className="flex-1">
+                                            <div className="text-white text-sm font-medium">{file.name || `Automation File ${index + 1}`}</div>
+                                            <div className="text-gray-400 text-xs">Automation</div>
+                                        </div>
+                                        <button className="p-1.5 text-gray-400 hover:text-[#00FF89] transition-colors">
+                                            <ExternalLink className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                                {premiumContent.agentFiles?.map((file, index) => (
+                                    <div
+                                        key={index}
+                                        className="flex items-center gap-3 p-3 bg-black/40 rounded-lg border border-gray-800">
+                                        <Download className="w-5 h-5 text-[#00FF89]" />
+                                        <div className="flex-1">
+                                            <div className="text-white text-sm font-medium">{file.name || `Agent File ${index + 1}`}</div>
+                                            <div className="text-gray-400 text-xs">Agent</div>
+                                        </div>
+                                        <button className="p-1.5 text-gray-400 hover:text-[#00FF89] transition-colors">
+                                            <ExternalLink className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-between p-6 border-t border-gray-800">
+                    <div className="text-sm text-gray-400">Purchased on {new Date(purchase.purchaseDate).toLocaleDateString()}</div>
+                    <Link
+                        href={`/purchased/${purchase.product?.slug || purchase.product?._id}`}
+                        className="px-4 py-2 bg-[#00FF89] hover:bg-[#00FF89]/90 text-black rounded-lg font-medium transition-all">
+                        View Full Product
+                    </Link>
+                </div>
+            </motion.div>
+        </div>
+    )
+}
+
 function LoadingState() {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

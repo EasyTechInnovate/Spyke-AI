@@ -12,11 +12,9 @@ import { cn } from '@/lib/utils/cn'
 export default function SettingsNavigation({ activeSection, onSectionChange }) {
   const sections = [
     { id: 'profile', label: 'Profile', icon: User, enabled: true },
-    { id: 'payment', label: 'Payment Methods', icon: CreditCard, enabled: false, comingSoon: true },
-    { id: 'orders', label: 'Order History', icon: ShoppingBag, enabled: false, comingSoon: true },
     { id: 'security', label: 'Security', icon: Shield, enabled: true },
+    { id: 'orders', label: 'Order History', icon: ShoppingBag, enabled: true }, // Now enabled and linked to purchases
     { id: 'communication', label: 'Communication', icon: Bell, enabled: false, comingSoon: true },
-    { id: 'sessions', label: 'Active Sessions', icon: LogOut, enabled: false, comingSoon: true }
   ]
   return (
     <motion.div

@@ -1,186 +1,163 @@
 'use client'
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
     ArrowLeft,
     FileText,
     CheckCircle,
     User,
-    Clock,
     Package,
-    Settings,
-    Wrench,
-    Shield,
-    MapPin,
-    TrendingUp,
-    PlayCircle,
-    BookOpen,
-    Target,
-    Code,
-    MessageSquare,
-    ChevronRight,
-    ChevronDown,
-    ChevronLeft,
-    Sparkles,
-    Building,
-    Tag,
-    BadgeCheck,
-    Star,
-    Eye,
-    Video,
-    FileCode,
-    FolderOpen,
     Crown,
     Copy,
     Check,
-    ExternalLink
+    Zap,
+    Bot,
+    Code,
+    Calendar,
+    CreditCard,
+    ExternalLink,
+    Download
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import { productsAPI, purchaseAPI } from '@/lib/api'
-import Notification from '@/components/shared/Notification'
+import { purchaseAPI } from '@/lib/api'
 
 export default function PurchasedProductPage() {
-    const [notifications, setNotifications] = useState([])
-    const [product, setProduct] = useState(null)
-    const [purchaseDetails, setPurchaseDetails] = useState(null)
+    const [purchase, setPurchase] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
-    const [expandedSection, setExpandedSection] = useState(null)
-    const [selectedImage, setSelectedImage] = useState(0)
-    const [copiedPrompt, setCopiedPrompt] = useState(false)
+    const [activeTab, setActiveTab] = useState('prompt')
+    const [copiedItem, setCopiedItem] = useState(null)
+    const [notification, setNotification] = useState(null)
+    
     const params = useParams()
     const router = useRouter()
-    const productSlug = params.productId
+    const productId = params.productId
     const { isAuthenticated, loading: authLoading } = useAuth()
 
-    const formatLabel = useCallback((val) => {
-        if (!val) return ''
-        if (typeof val === 'string') return val.replace(/_/g, ' ')
-        if (Array.isArray(val)) {
-            return val
-                .map((v) => (typeof v === 'string' ? v : v?.name || ''))
-                .filter(Boolean)
-                .join(', ')
-                .replace(/_/g, ' ')
-        }
-        if (typeof val === 'object') {
-            const name = val.name ?? ''
-            return String(name).replace(/_/g, ' ')
-        }
-        return String(val)
-    }, [])
-
-    const addNotification = useCallback((message, type = 'info') => {
-        const id = Date.now() + Math.random()
-        const newNotification = { id, message, type }
-        setNotifications((prev) => [...prev, newNotification])
-    }, [])
-
-    const removeNotification = useCallback((id) => {
-        setNotifications((prev) => prev.filter((notification) => notification.id !== id))
-    }, [])
+    const showNotification = (message, type = 'success') => {
+        setNotification({ message, type })
+        setTimeout(() => setNotification(null), 3000)
+    }
 
     useEffect(() => {
-        const fetchData = async () => {
-            if (authLoading) {
-                return
-            }
+        const loadPurchaseData = () => {
+            if (authLoading) return
             if (!isAuthenticated) {
                 router.push('/signin')
                 return
             }
+
             try {
                 setLoading(true)
                 setError(null)
-                let productResponse
-                try {
-                    productResponse = await productsAPI.getProductBySlug(productSlug)
-                } catch (slugError) {
-                    try {
-                        productResponse = await productsAPI.getProductById(productSlug)
-                    } catch (idError) {
-                        setError('Product not found')
+                
+                // First try to get purchase data from sessionStorage
+                const storedPurchase = sessionStorage.getItem('currentPurchase')
+                
+                if (storedPurchase) {
+                    const purchaseData = JSON.parse(storedPurchase)
+                    
+                    if (purchaseData.product?._id === productId || 
+                        purchaseData.product?.slug === productId || 
+                        purchaseData.purchaseId === productId) {
+                        setPurchase(purchaseData)
+                        setLoading(false)
+                        // Clear the stored data after use
+                        sessionStorage.removeItem('currentPurchase')
                         return
                     }
                 }
-                if (!productResponse?.data) {
-                    setError('Product not found')
-                    return
-                }
-                setProduct(productResponse.data)
-                const purchasesResponse = await purchaseAPI.getUserPurchases()
-                const userPurchase = purchasesResponse.purchases?.find(
-                    (p) => p.product?._id === productResponse.data._id || p.product?.slug === productSlug
-                )
-                if (!userPurchase) {
-                    router.push(`/products/${productResponse.data.slug || productResponse.data._id}`)
-                    return
-                }
-                setPurchaseDetails(userPurchase)
+                
+                // Fallback: fetch from API if no stored data or ID mismatch
+                fetchPurchaseFromAPI()
+                
             } catch (err) {
-                console.error('Error fetching data:', err)
-                if (err.status === 404) {
-                    setError('Product not found')
-                } else if (err.status === 403) {
-                    addNotification('You do not have access to this product', 'error')
-                    router.push('/purchases')
-                } else {
-                    setError(err.message || 'Failed to load product')
+                console.error('Error loading purchase data:', err)
+                setError('Failed to load purchase details')
+                setLoading(false)
+            }
+        }
+
+        const fetchPurchaseFromAPI = async () => {
+            try {
+                const response = await purchaseAPI.getUserPurchases()
+                const purchases = response.purchases || []
+                
+                const foundPurchase = purchases.find(p => 
+                    p.product?._id === productId || 
+                    p.product?.slug === productId ||
+                    p.purchaseId === productId
+                )
+                
+                if (!foundPurchase) {
+                    setError('Purchase not found or you do not have access to this product')
+                    return
                 }
+                
+                setPurchase(foundPurchase)
+            } catch (err) {
+                console.error('Error fetching purchase:', err)
+                setError('Failed to load purchase details')
             } finally {
                 setLoading(false)
             }
         }
-        fetchData()
-    }, [productSlug, isAuthenticated, router, addNotification, authLoading])
 
-    const nextImage = () => {
-        if (product.images && product.images.length > 0) {
-            setSelectedImage((prev) => (prev + 1) % product.images.length)
-        }
-    }
+        loadPurchaseData()
+    }, [productId, isAuthenticated, authLoading, router])
 
-    const prevImage = () => {
-        if (product.images && product.images.length > 0) {
-            setSelectedImage((prev) => (prev - 1 + product.images.length) % product.images.length)
-        }
-    }
-
-    const copyToClipboard = async (text) => {
+    const copyToClipboard = async (text, itemName) => {
         try {
             await navigator.clipboard.writeText(text)
-            setCopiedPrompt(true)
-            setTimeout(() => setCopiedPrompt(false), 2000)
-            addNotification('Copied to clipboard!', 'success')
+            setCopiedItem(itemName)
+            showNotification(`${itemName} copied to clipboard!`)
+            setTimeout(() => setCopiedItem(null), 2000)
         } catch (err) {
-            console.error('Failed to copy:', err)
-            addNotification('Failed to copy', 'error')
+            showNotification('Failed to copy to clipboard', 'error')
         }
     }
 
-    // Check if product has premium content
-    const isPremiumContent = product?.type === 'premium' || product?.premiumFeatures?.length > 0
+    // Check if premium content exists
+    const hasPremiumContent =
+        purchase?.product?.premiumContent &&
+        (purchase.product.premiumContent.promptText ||
+            purchase.product.premiumContent.promptInstructions ||
+            purchase.product.premiumContent.automationInstructions ||
+            purchase.product.premiumContent.agentConfiguration ||
+            (purchase.product.premiumContent.detailedHowItWorks && purchase.product.premiumContent.detailedHowItWorks.length > 0))
+
+    const premiumContent = purchase?.product?.premiumContent || {}
+
+    // Build available tabs
+    const availableTabs = []
+    if (premiumContent.promptText) availableTabs.push({ id: 'prompt', label: 'Prompt Template', icon: FileText })
+    if (premiumContent.promptInstructions) availableTabs.push({ id: 'instructions', label: 'Instructions', icon: FileText })
+    if (premiumContent.automationInstructions) availableTabs.push({ id: 'automation', label: 'Automation', icon: Zap })
+    if (premiumContent.agentConfiguration) availableTabs.push({ id: 'agent', label: 'Agent Config', icon: Bot })
+    if (premiumContent.detailedHowItWorks?.length > 0) availableTabs.push({ id: 'howto', label: 'How to Use', icon: Code })
+
+    // Set default active tab
+    useEffect(() => {
+        if (availableTabs.length > 0 && !availableTabs.find((tab) => tab.id === activeTab)) {
+            setActiveTab(availableTabs[0].id)
+        }
+    }, [availableTabs, activeTab])
 
     if (loading) {
         return (
             <div className="min-h-screen bg-black">
-                <div className="fixed inset-0 bg-black"></div>
-                <div className="relative z-10">
-                    <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-                        <div className="pt-24 pb-16">
-                            <div className="animate-pulse space-y-8">
-                                <div className="h-8 bg-gray-800/50 rounded-xl w-1/4"></div>
-                                <div className="grid lg:grid-cols-3 gap-8">
-                                    <div className="lg:col-span-2 space-y-6">
-                                        <div className="h-96 bg-gray-800/50 rounded-2xl"></div>
-                                        <div className="h-32 bg-gray-800/50 rounded-2xl"></div>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <div className="h-64 bg-gray-800/50 rounded-2xl"></div>
-                                        <div className="h-48 bg-gray-800/50 rounded-2xl"></div>
-                                    </div>
-                                </div>
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl pt-24">
+                    <div className="animate-pulse space-y-8">
+                        <div className="h-8 bg-gray-800 rounded w-1/4"></div>
+                        <div className="h-64 bg-gray-800 rounded-2xl"></div>
+                        <div className="grid lg:grid-cols-3 gap-6">
+                            <div className="lg:col-span-2 space-y-6">
+                                <div className="h-48 bg-gray-800 rounded-2xl"></div>
+                                <div className="h-32 bg-gray-800 rounded-2xl"></div>
+                            </div>
+                            <div className="space-y-4">
+                                <div className="h-32 bg-gray-800 rounded-2xl"></div>
                             </div>
                         </div>
                     </div>
@@ -189,65 +166,53 @@ export default function PurchasedProductPage() {
         )
     }
 
-    if (error || !product) {
+    if (error || !purchase) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="fixed inset-0 bg-black"></div>
-                <div className="relative z-10 text-center max-w-md mx-auto px-4">
-                    <div className="w-20 h-20 bg-gray-800/50 rounded-2xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm border border-gray-700/50">
+                <div className="text-center max-w-md mx-auto px-4">
+                    <div className="w-20 h-20 bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-6">
                         <Package className="w-10 h-10 text-gray-400" />
                     </div>
-                    <h1 className="text-3xl font-bold text-white mb-4">{error || 'Product not found'}</h1>
-                    <p className="text-gray-400 mb-8 leading-relaxed">
-                        The purchased product you're looking for doesn't exist or you don't have access to it.
-                    </p>
+                    <h1 className="text-3xl font-bold text-white mb-4">{error || 'Purchase not found'}</h1>
+                    <p className="text-gray-400 mb-8">The product you're looking for doesn't exist or you don't have access to it.</p>
                     <button
-                        onClick={() => router.push('/library')}
-                        className="flex items-center justify-center gap-2 px-6 py-3 bg-[#00FF89] hover:bg-[#00ee7d] rounded-xl text-black font-semibold transition-all mx-auto">
+                        onClick={() => router.push('/purchases')}
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-[#00FF89] hover:bg-[#00FF89]/90 rounded-xl text-black font-semibold transition-all mx-auto">
                         <ArrowLeft className="w-4 h-4" />
-                        Back to Library
+                        Back to Purchases
                     </button>
                 </div>
             </div>
         )
     }
 
+    const product = purchase.product
+
     return (
         <div className="min-h-screen bg-black">
-            {/* Simple Background */}
-            <div className="fixed inset-0 bg-black"></div>
+            {/* Notification */}
+            {notification && (
+                <div
+                    className={`fixed top-6 right-6 z-50 px-4 py-2 rounded-lg text-white ${
+                        notification.type === 'error' ? 'bg-red-500' : 'bg-green-500'
+                    }`}>
+                    {notification.message}
+                </div>
+            )}
 
-            {/* Notifications */}
-            <div className="fixed top-25 right-6 z-[70] space-y-3">
-                <AnimatePresence>
-                    {notifications.map((notification) => (
-                        <Notification
-                            key={notification.id}
-                            id={notification.id}
-                            type={notification.type}
-                            message={notification.message}
-                            duration={4000}
-                            onClose={removeNotification}
-                        />
-                    ))}
-                </AnimatePresence>
-            </div>
-
-            <div className="sticky top-0 z-50 bg-black/95 backdrop-blur-xl border-b border-gray-800">
+            {/* Header */}
+            <div className="sticky top-0 z-40 bg-black/95 backdrop-blur-xl border-b border-gray-800">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
                     <div className="flex items-center justify-between py-4">
                         <button
-                            onClick={() => router.push('/library')}
-                            className="group flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white transition-colors rounded-lg">
-                            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-200" />
-                            <span className="text-sm font-medium">Back to Library</span>
+                            onClick={() => router.push('/purchases')}
+                            className="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white transition-colors rounded-lg">
+                            <ArrowLeft className="w-4 h-4" />
+                            <span className="text-sm font-medium">Back to Purchases</span>
                         </button>
                         <div className="flex items-center gap-3">
                             <span className="text-sm text-gray-400">
-                                by{' '}
-                                <span className="text-[#00FF89] font-medium">
-                                    @{product?.sellerId?.username || product?.sellerId?.fullName || 'creator'}
-                                </span>
+                                by <span className="text-[#00FF89] font-medium">{purchase.seller?.fullName}</span>
                             </span>
                             <div className="flex items-center gap-2 px-3 py-1.5 bg-[#00FF89]/10 border border-[#00FF89]/30 rounded-full">
                                 <CheckCircle className="w-3.5 h-3.5 text-[#00FF89]" />
@@ -258,416 +223,412 @@ export default function PurchasedProductPage() {
                 </div>
             </div>
 
-            <main className="relative z-10 pb-20">
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl pt-8">
-                    {/* Product Template Section - Prominently displayed at top */}
+            <main className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl pt-8 pb-20">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-8">
+                    
+                    {/* Product Info Card */}
+                    <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/60 border border-gray-700/50 rounded-2xl p-6 mb-8">
+                        <div className="flex flex-col lg:flex-row gap-6">
+                            {/* Thumbnail - Made smaller and positioned on the left */}
+                            {product.thumbnail && (
+                                <div className="flex-shrink-0">
+                                    <img
+                                        src={product.thumbnail}
+                                        alt={product.title}
+                                        className="w-32 h-32 lg:w-40 lg:h-40 object-cover rounded-xl border border-gray-600/50 shadow-lg"
+                                    />
+                                </div>
+                            )}
+                            
+                            {/* Product Details */}
+                            <div className="flex-1 min-w-0">
+                                {/* Tags */}
+                                <div className="flex flex-wrap items-center gap-2 mb-4">
+                                    {hasPremiumContent && (
+                                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-full text-yellow-400 text-xs font-bold">
+                                            <Crown className="w-3.5 h-3.5" />
+                                            PREMIUM
+                                        </span>
+                                    )}
+                                    <span className="inline-flex items-center px-3 py-1.5 bg-[#00FF89]/15 border border-[#00FF89]/30 rounded-full text-[#00FF89] text-xs font-semibold">
+                                        {product.categoryName}
+                                    </span>
+                                    <span className="inline-flex items-center px-3 py-1.5 bg-blue-500/15 border border-blue-500/30 rounded-full text-blue-400 text-xs font-semibold capitalize">
+                                        {product.type}
+                                    </span>
+                                </div>
+
+                                {/* Title and Price */}
+                                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+                                    <div className="flex-1">
+                                        <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2 leading-tight">{product.title}</h1>
+                                        <p className="text-gray-400 text-sm lg:text-base">
+                                            Created by <span className="text-[#00FF89] font-semibold">{purchase.seller?.fullName}</span>
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-3xl font-bold text-[#00FF89] mb-1">${product.price}</div>
+                                        <div className="text-xs text-gray-400">Purchased</div>
+                                    </div>
+                                </div>
+
+                                {/* Quick Stats */}
+                                <div className="flex flex-wrap gap-4 pt-4 border-t border-gray-700/50">
+                                    <div className="flex items-center gap-2">
+                                        <Calendar className="w-4 h-4 text-gray-400" />
+                                        <span className="text-sm text-gray-300">
+                                            {new Date(purchase.purchaseDate).toLocaleDateString('en-US', {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                year: 'numeric'
+                                            })}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Package className="w-4 h-4 text-gray-400" />
+                                        <span className="text-sm text-gray-300 font-mono">#{purchase.purchaseId.slice(-8)}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle className="w-4 h-4 text-green-500" />
+                                        <span className="text-sm text-green-400">Access Granted</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* Premium Content Section - Enhanced */}
+                {hasPremiumContent && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
                         className="mb-8">
-                        {/* Title and badges */}
-                        <div className="mb-6">
-                            <div className="flex flex-wrap items-center gap-2 mb-4">
-                                {isPremiumContent && (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-md text-yellow-400 text-xs font-semibold">
-                                        <Crown className="w-3 h-3" />
-                                        Premium
-                                    </span>
-                                )}
-                                {product.category?.name && (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#00FF89]/10 border border-[#00FF89]/30 rounded-md text-[#00FF89] text-xs font-medium">
-                                        {product.category.name}
-                                    </span>
-                                )}
-                                {product.isVerified && (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/10 border border-blue-500/30 rounded-md text-blue-400 text-xs font-medium">
-                                        <BadgeCheck className="w-3 h-3" />
-                                        Verified
-                                    </span>
-                                )}
+                        
+                        {/* Premium Content Header */}
+                        <div className="bg-gradient-to-br from-yellow-500/10 via-orange-500/5 to-yellow-600/10 border border-yellow-500/20 rounded-2xl overflow-hidden">
+                            <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-b border-yellow-500/20 px-6 py-4">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-yellow-400/20 to-orange-500/20 border border-yellow-400/30 flex items-center justify-center backdrop-blur-sm">
+                                        <Crown className="w-7 h-7 text-yellow-400" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-white mb-1">Premium Content</h2>
+                                        <p className="text-yellow-200/80 text-sm">Exclusive resources included with your purchase</p>
+                                    </div>
+                                </div>
                             </div>
-                            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">{product.title}</h1>
-                            <p className="text-lg text-gray-400 leading-relaxed">{product.shortDescription || product.fullDescription}</p>
+
+                            {/* Enhanced Tabs */}
+                            {availableTabs.length > 0 && (
+                                <div className="p-6">
+                                    <div className="bg-black/20 rounded-xl p-1 mb-6">
+                                        <div className="flex overflow-x-auto">
+                                            {availableTabs.map((tab) => {
+                                                const IconComponent = tab.icon
+                                                return (
+                                                    <button
+                                                        key={tab.id}
+                                                        onClick={() => setActiveTab(tab.id)}
+                                                        className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap rounded-lg transition-all ${
+                                                            activeTab === tab.id
+                                                                ? 'bg-[#00FF89] text-black shadow-lg'
+                                                                : 'text-yellow-100 hover:text-white hover:bg-white/5'
+                                                        }`}>
+                                                        <IconComponent className="w-4 h-4" />
+                                                        {tab.label}
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* Enhanced Content Display */}
+                                    <div className="space-y-6">
+                                        {/* ...existing content display code... */}
+                                        {activeTab === 'prompt' && premiumContent.promptText && (
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                                                        <FileText className="w-5 h-5 text-[#00FF89]" />
+                                                        Prompt Template
+                                                    </h3>
+                                                    <button
+                                                        onClick={() => copyToClipboard(premiumContent.promptText, 'Prompt Template')}
+                                                        className="flex items-center gap-2 px-5 py-2.5 bg-[#00FF89] hover:bg-[#00FF89]/90 text-black rounded-lg text-sm transition-all font-semibold shadow-lg">
+                                                        {copiedItem === 'Prompt Template' ? (
+                                                            <>
+                                                                <Check className="w-4 h-4" />
+                                                                Copied!
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Copy className="w-4 h-4" />
+                                                                Copy Template
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                                <div className="bg-black/60 rounded-xl p-6 border border-gray-600/30 shadow-inner">
+                                                    <pre className="text-gray-200 text-sm whitespace-pre-wrap font-mono leading-relaxed overflow-x-auto">
+                                                        {premiumContent.promptText}
+                                                    </pre>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {activeTab === 'instructions' && premiumContent.promptInstructions && (
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                                                        <FileText className="w-5 h-5 text-[#00FF89]" />
+                                                        Instructions
+                                                    </h3>
+                                                    <button
+                                                        onClick={() => copyToClipboard(premiumContent.promptInstructions, 'Instructions')}
+                                                        className="flex items-center gap-2 px-5 py-2.5 bg-[#00FF89] hover:bg-[#00FF89]/90 text-black rounded-lg text-sm transition-all font-semibold shadow-lg">
+                                                        {copiedItem === 'Instructions' ? (
+                                                            <>
+                                                                <Check className="w-4 h-4" />
+                                                                Copied!
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Copy className="w-4 h-4" />
+                                                                Copy Instructions
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                                <div className="bg-black/60 rounded-xl p-6 border border-gray-600/30 shadow-inner">
+                                                    <div className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap">
+                                                        {premiumContent.promptInstructions}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {activeTab === 'automation' && premiumContent.automationInstructions && (
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                                                        <Zap className="w-5 h-5 text-[#00FF89]" />
+                                                        Automation Setup
+                                                    </h3>
+                                                    <button
+                                                        onClick={() => copyToClipboard(premiumContent.automationInstructions, 'Automation Setup')}
+                                                        className="flex items-center gap-2 px-5 py-2.5 bg-[#00FF89] hover:bg-[#00FF89]/90 text-black rounded-lg text-sm transition-all font-semibold shadow-lg">
+                                                        {copiedItem === 'Automation Setup' ? (
+                                                            <>
+                                                                <Check className="w-4 h-4" />
+                                                                Copied!
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Copy className="w-4 h-4" />
+                                                                Copy Setup
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                                <div className="bg-black/60 rounded-xl p-6 border border-gray-600/30 shadow-inner">
+                                                    <div className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap">
+                                                        {premiumContent.automationInstructions}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {activeTab === 'agent' && premiumContent.agentConfiguration && (
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                                                        <Bot className="w-5 h-5 text-[#00FF89]" />
+                                                        Agent Configuration
+                                                    </h3>
+                                                    <button
+                                                        onClick={() => copyToClipboard(premiumContent.agentConfiguration, 'Agent Configuration')}
+                                                        className="flex items-center gap-2 px-5 py-2.5 bg-[#00FF89] hover:bg-[#00FF89]/90 text-black rounded-lg text-sm transition-all font-semibold shadow-lg">
+                                                        {copiedItem === 'Agent Configuration' ? (
+                                                            <>
+                                                                <Check className="w-4 h-4" />
+                                                                Copied!
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Copy className="w-4 h-4" />
+                                                                Copy Config
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                                <div className="bg-black/60 rounded-xl p-6 border border-gray-600/30 shadow-inner">
+                                                    <pre className="text-gray-200 text-sm whitespace-pre-wrap font-mono leading-relaxed overflow-x-auto">
+                                                        {premiumContent.agentConfiguration}
+                                                    </pre>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {activeTab === 'howto' && premiumContent.detailedHowItWorks?.length > 0 && (
+                                            <div className="space-y-4">
+                                                <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                                                    <Code className="w-5 h-5 text-[#00FF89]" />
+                                                    Step-by-Step Guide
+                                                </h3>
+                                                <div className="space-y-4">
+                                                    {premiumContent.detailedHowItWorks.map((step, index) => (
+                                                        <div
+                                                            key={index}
+                                                            className="flex gap-4 p-5 bg-black/40 rounded-xl border border-gray-600/30 shadow-sm hover:bg-black/50 transition-colors">
+                                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00FF89] to-green-400 flex items-center justify-center text-black font-bold text-sm flex-shrink-0 shadow-lg">
+                                                                {index + 1}
+                                                            </div>
+                                                            <div className="text-gray-200 text-sm leading-relaxed">{step}</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* Purchase Details - Improved Layout */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="grid lg:grid-cols-3 gap-6">
+                    
+                    <div className="lg:col-span-2">
+                        <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/60 border border-gray-700/50 rounded-2xl p-6 shadow-xl">
+                            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                                <Package className="w-5 h-5 text-[#00FF89]" />
+                                Purchase Details
+                            </h3>
+                            <div className="grid sm:grid-cols-2 gap-6">
+                                <div className="space-y-4">
+                                    <div className="flex items-start gap-4 p-4 bg-black/30 rounded-xl border border-gray-700/30">
+                                        <Calendar className="w-5 h-5 text-[#00FF89] mt-1 flex-shrink-0" />
+                                        <div>
+                                            <div className="text-sm text-gray-400 mb-1">Purchase Date</div>
+                                            <div className="text-white font-semibold">
+                                                {new Date(purchase.purchaseDate).toLocaleDateString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric'
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-4 p-4 bg-black/30 rounded-xl border border-gray-700/30">
+                                        <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
+                                        <div>
+                                            <div className="text-sm text-gray-400 mb-1">Access Granted</div>
+                                            <div className="text-green-400 font-semibold">
+                                                {new Date(purchase.accessGrantedAt).toLocaleDateString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="flex items-start gap-4 p-4 bg-black/30 rounded-xl border border-gray-700/30">
+                                        <CreditCard className="w-5 h-5 text-[#00FF89] mt-1 flex-shrink-0" />
+                                        <div>
+                                            <div className="text-sm text-gray-400 mb-1">Amount Paid</div>
+                                            <div className="text-white font-bold text-2xl">${product.price}</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-4 p-4 bg-black/30 rounded-xl border border-gray-700/30">
+                                        <Package className="w-5 h-5 text-[#00FF89] mt-1 flex-shrink-0" />
+                                        <div>
+                                            <div className="text-sm text-gray-400 mb-1">Purchase ID</div>
+                                            <div className="text-white font-mono text-sm">#{purchase.purchaseId.slice(-8)}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-6">
+                        {/* Enhanced Seller Info */}
+                        <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/60 border border-gray-700/50 rounded-2xl p-6 shadow-xl">
+                            <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                <User className="w-5 h-5 text-[#00FF89]" />
+                                Creator
+                            </h4>
+                            <div className="flex items-center gap-4">
+                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#00FF89] to-blue-500 flex items-center justify-center shadow-lg">
+                                    <User className="w-7 h-7 text-black" />
+                                </div>
+                                <div>
+                                    <div className="text-white font-bold text-lg">{purchase.seller.fullName}</div>
+                                    <div className="text-gray-400 text-sm">Product Creator</div>
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Product Content/Template Box - Similar to Promptbase */}
-                        {(product.fullDescription || product.documentation) && (
-                            <div className="relative overflow-hidden rounded-2xl bg-gray-900/60 border border-gray-800 p-6 mb-6">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h2 className="text-base font-semibold text-white flex items-center gap-2">
-                                        <FileText className="w-4 h-4 text-[#00FF89]" />
-                                        Product Details
-                                    </h2>
-                                    <button
-                                        onClick={() => copyToClipboard(product.fullDescription || product.documentation)}
-                                        className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-gray-700 hover:border-[#00FF89]/50 rounded-lg text-sm text-gray-300 hover:text-[#00FF89] transition-all">
-                                        {copiedPrompt ? (
-                                            <>
-                                                <Check className="w-4 h-4" />
-                                                <span>Copied</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Copy className="w-4 h-4" />
-                                                <span>Copy details</span>
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                                <div className="bg-black/40 rounded-xl p-5 border border-gray-800/50 overflow-hidden">
-                                    <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                                        {product.fullDescription ||
-                                            product.documentation ||
-                                            'Full product details and instructions will be available here.'}
-                                    </p>
+                        {/* Enhanced Files Section */}
+                        {(premiumContent.automationFiles?.length > 0 || premiumContent.agentFiles?.length > 0) && (
+                            <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/60 border border-gray-700/50 rounded-2xl p-6 shadow-xl">
+                                <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                    <Download className="w-5 h-5 text-[#00FF89]" />
+                                    Available Files
+                                </h4>
+                                <div className="space-y-3">
+                                    {premiumContent.automationFiles?.map((file, index) => (
+                                        <div
+                                            key={index}
+                                            className="flex items-center gap-3 p-3 bg-black/40 rounded-lg">
+                                            <Download className="w-4 h-4 text-[#00FF89]" />
+                                            <div className="flex-1">
+                                                <div className="text-white text-sm font-medium">{file.name || `Automation File ${index + 1}`}</div>
+                                                <div className="text-gray-400 text-xs">Automation</div>
+                                            </div>
+                                            <button className="p-1 text-gray-400 hover:text-[#00FF89] transition-colors">
+                                                <ExternalLink className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {premiumContent.agentFiles?.map((file, index) => (
+                                        <div
+                                            key={index}
+                                            className="flex items-center gap-3 p-3 bg-black/40 rounded-lg">
+                                            <Download className="w-4 h-4 text-[#00FF89]" />
+                                            <div className="flex-1">
+                                                <div className="text-white text-sm font-medium">{file.name || `Agent File ${index + 1}`}</div>
+                                                <div className="text-gray-400 text-xs">Agent</div>
+                                            </div>
+                                            <button className="p-1 text-gray-400 hover:text-[#00FF89] transition-colors">
+                                                <ExternalLink className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         )}
-
-                        {/* High Quality Preview Grid - Similar to Promptbase */}
-                        <div className="mb-6">
-                            <h3 className="text-lg font-semibold text-white mb-4">Product Preview</h3>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                                {product.images && product.images.length > 0 ? (
-                                    product.images.map((image, index) => (
-                                        <motion.div
-                                            key={index}
-                                            whileHover={{ scale: 1.02 }}
-                                            onClick={() => setSelectedImage(index)}
-                                            className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${
-                                                selectedImage === index
-                                                    ? 'border-[#00FF89] ring-2 ring-[#00FF89]/25'
-                                                    : 'border-gray-700/50 hover:border-[#00FF89]/50'
-                                            }`}>
-                                            <img
-                                                src={image}
-                                                alt={`${product.title} preview ${index + 1}`}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        </motion.div>
-                                    ))
-                                ) : product.thumbnail ? (
-                                    <motion.div
-                                        whileHover={{ scale: 1.02 }}
-                                        className="relative aspect-square rounded-xl overflow-hidden border-2 border-[#00FF89] ring-2 ring-[#00FF89]/25">
-                                        <img
-                                            src={product.thumbnail}
-                                            alt={product.title}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    </motion.div>
-                                ) : (
-                                    <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-900/50 border-2 border-gray-700/50 flex items-center justify-center">
-                                        <Package className="w-12 h-12 text-gray-600" />
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Access Information Card */}
-                        <div className="grid sm:grid-cols-2 gap-4">
-                            <div className="rounded-xl bg-gray-900/60 border border-gray-800 p-5">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-12 h-12 rounded-lg bg-[#00FF89]/10 flex items-center justify-center">
-                                        <CheckCircle className="w-6 h-6 text-[#00FF89]" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-base font-semibold text-white">Full Access</h3>
-                                        <p className="text-sm text-gray-400">Lifetime license included</p>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="flex items-center gap-2 text-sm text-gray-300">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-[#00FF89]"></div>
-                                        All files
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm text-gray-300">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-[#00FF89]"></div>
-                                        Free updates
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm text-gray-300">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-[#00FF89]"></div>
-                                        24/7 support
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm text-gray-300">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-[#00FF89]"></div>
-                                        Commercial use
-                                    </div>
-                                </div>
-                            </div>
-
-                            {purchaseDetails && (
-                                <div className="rounded-xl bg-gray-900/60 border border-gray-800 p-5">
-                                    <h3 className="text-base font-semibold text-white mb-4">Purchase Info</h3>
-                                    <div className="space-y-3">
-                                        <div className="flex justify-between items-center text-sm">
-                                            <span className="text-gray-400">Price paid</span>
-                                            <span className="text-[#00FF89] font-bold text-lg">${product.price}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center text-sm">
-                                            <span className="text-gray-400">Date</span>
-                                            <span className="text-white font-medium">
-                                                {new Date(purchaseDetails.purchaseDate).toLocaleDateString('en-US', {
-                                                    month: 'short',
-                                                    day: 'numeric',
-                                                    year: 'numeric'
-                                                })}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between items-center text-sm">
-                                            <span className="text-gray-400">Order ID</span>
-                                            <span className="text-white font-mono text-xs">#{purchaseDetails.purchaseId?.slice(-8) || 'N/A'}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center text-sm">
-                                            <span className="text-gray-400">Status</span>
-                                            <span className="flex items-center gap-1.5 text-green-400 font-medium">
-                                                <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                                                Active
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </motion.div>
-
-                    {/* Additional Sections - Cleaner layout */}
-                    <div className="grid lg:grid-cols-3 gap-6">
-                        {/* Main Content */}
-                        <div className="lg:col-span-2 space-y-6">
-                            {/* What's Included */}
-                            {(isPremiumContent || product.benefits || product.fileTypes) && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.1 }}
-                                    className="bg-gray-900/60 border border-gray-800 rounded-2xl p-6">
-                                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                                        {isPremiumContent ? (
-                                            <Crown className="w-5 h-5 text-yellow-400" />
-                                        ) : (
-                                            <Package className="w-5 h-5 text-[#00FF89]" />
-                                        )}
-                                        {isPremiumContent ? 'Premium Content Included' : "What's Included"}
-                                    </h3>
-
-                                    <div className="grid gap-3">
-                                        {product.fileTypes && product.fileTypes.length > 0 && (
-                                            <div className="flex items-start gap-3 p-3 bg-black/20 rounded-lg">
-                                                <FileCode className="w-5 h-5 text-[#00FF89] mt-0.5 flex-shrink-0" />
-                                                <div>
-                                                    <div className="text-white font-medium text-sm mb-1">Source Files</div>
-                                                    <div className="text-gray-400 text-xs">{product.fileTypes.join(', ')}</div>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {product.documentation && (
-                                            <div className="flex items-start gap-3 p-3 bg-black/20 rounded-lg">
-                                                <BookOpen className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
-                                                <div>
-                                                    <div className="text-white font-medium text-sm mb-1">Documentation</div>
-                                                    <div className="text-gray-400 text-xs">Complete guides and instructions</div>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {product.benefits &&
-                                            product.benefits.slice(0, 4).map((benefit, index) => (
-                                                <div
-                                                    key={index}
-                                                    className="flex items-start gap-3 p-3 bg-black/20 rounded-lg">
-                                                    <CheckCircle className="w-5 h-5 text-[#00FF89] mt-0.5 flex-shrink-0" />
-                                                    <div className="text-gray-300 text-sm">{benefit}</div>
-                                                </div>
-                                            ))}
-                                    </div>
-                                </motion.div>
-                            )}
-
-                            {/* Implementation Steps */}
-                            {product.howItWorks && product.howItWorks.length > 0 && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.2 }}
-                                    className="bg-gray-900/60 border border-gray-800 rounded-2xl p-6">
-                                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                                        <Code className="w-5 h-5 text-[#00FF89]" />
-                                        How to Use
-                                    </h3>
-                                    <div className="space-y-3">
-                                        {product.howItWorks.map((step, index) => (
-                                            <div
-                                                key={index}
-                                                className="flex gap-3">
-                                                <div className="w-7 h-7 rounded-lg bg-[#00FF89] flex items-center justify-center text-black font-bold text-sm flex-shrink-0">
-                                                    {index + 1}
-                                                </div>
-                                                <p className="text-gray-300 text-sm leading-relaxed pt-1">{step}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </motion.div>
-                            )}
-
-                            {/* Technical Details */}
-                            {product.toolsUsed && product.toolsUsed.length > 0 && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.3 }}
-                                    className="bg-gray-900/60 border border-gray-800 rounded-2xl p-6">
-                                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                                        <Settings className="w-5 h-5 text-[#00FF89]" />
-                                        Tools Used
-                                    </h3>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                        {product.toolsUsed.map((tool, index) => (
-                                            <div
-                                                key={index}
-                                                className="flex items-center gap-2 p-3 bg-black/20 rounded-lg">
-                                                {tool.logo && (
-                                                    <img
-                                                        src={tool.logo}
-                                                        alt={tool.name}
-                                                        className="w-6 h-6 object-contain"
-                                                    />
-                                                )}
-                                                <span className="text-white text-sm font-medium truncate">{tool.name}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </div>
-
-                        {/* Sidebar */}
-                        <div className="space-y-6">
-                            {/* Creator Card */}
-                            {product.sellerId && (
-                                <motion.div
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.1 }}
-                                    className="bg-gray-900/60 border border-gray-800 rounded-2xl p-5">
-                                    <div className="flex items-start gap-3 mb-4">
-                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#00FF89] to-blue-500 flex items-center justify-center flex-shrink-0">
-                                            <User className="w-6 h-6 text-black" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="text-white font-semibold truncate">{product.sellerId.fullName || 'Creator'}</div>
-                                            <div className="text-gray-400 text-sm">Product Creator</div>
-                                        </div>
-                                    </div>
-                                    {product.sellerId.bio && <p className="text-gray-300 text-sm leading-relaxed mb-4">{product.sellerId.bio}</p>}
-                                    {product.sellerId.stats && (
-                                        <div className="grid grid-cols-3 gap-3 pt-4 border-t border-gray-800">
-                                            <div className="text-center">
-                                                <div className="text-base font-bold text-[#00FF89]">{product.sellerId.stats.totalProducts || 0}</div>
-                                                <div className="text-xs text-gray-400">Products</div>
-                                            </div>
-                                            <div className="text-center">
-                                                <div className="text-base font-bold text-[#00FF89]">{product.sellerId.stats.totalSales || 0}</div>
-                                                <div className="text-xs text-gray-400">Sales</div>
-                                            </div>
-                                            <div className="text-center">
-                                                <div className="flex items-center justify-center gap-1">
-                                                    <span className="text-base font-bold text-yellow-400">
-                                                        {product.sellerId.stats.averageRating || 5.0}
-                                                    </span>
-                                                    <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                                                </div>
-                                                <div className="text-xs text-gray-400">Rating</div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </motion.div>
-                            )}
-
-                            {/* Support Card */}
-                            <motion.div
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.2 }}
-                                className="bg-[#00FF89]/5 border border-[#00FF89]/30 rounded-2xl p-5">
-                                <h4 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
-                                    <MessageSquare className="w-4 h-4 text-[#00FF89]" />
-                                    Need Help?
-                                </h4>
-                                <p className="text-gray-300 text-sm mb-4 leading-relaxed">Questions? We're here to help you succeed.</p>
-                                <a
-                                    href="https://wa.link/7uwiza"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#00FF89] hover:bg-[#00FF89]/90 text-black rounded-lg font-semibold text-sm transition-all">
-                                    <svg
-                                        className="w-4 h-4"
-                                        fill="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884" />
-                                    </svg>
-                                    WhatsApp Support
-                                </a>
-                            </motion.div>
-
-                            {/* Tags */}
-                            {product.tags && product.tags.length > 0 && (
-                                <motion.div
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.3 }}
-                                    className="bg-gray-900/60 border border-gray-800 rounded-2xl p-5">
-                                    <h4 className="text-sm font-semibold text-gray-400 mb-3">Tags</h4>
-                                    <div className="flex flex-wrap gap-2">
-                                        {product.tags.map((tag, index) => (
-                                            <span
-                                                key={index}
-                                                className="px-2.5 py-1 bg-black/30 border border-gray-700/50 text-gray-300 rounded-md text-xs">
-                                                #{tag}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </div>
                     </div>
-                </div>
+                </motion.div>
             </main>
         </div>
-    )
-}
-
-function ExpandableSection({ id, title, icon: Icon, expanded, onToggle, children }) {
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-gray-900/60 border border-gray-800 rounded-2xl overflow-hidden">
-            <button
-                onClick={() => onToggle(expanded ? null : id)}
-                className="w-full p-5 flex items-center justify-between text-left hover:bg-black/20 transition-colors group">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-black/20 group-hover:bg-[#00FF89]/10 rounded-xl flex items-center justify-center transition-colors">
-                        <Icon className="w-5 h-5 text-[#00FF89]" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-white">{title}</h3>
-                </div>
-                <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`} />
-            </button>
-            <AnimatePresence>
-                {expanded && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="border-t border-gray-800">
-                        <div className="p-6">{children}</div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </motion.div>
     )
 }
 

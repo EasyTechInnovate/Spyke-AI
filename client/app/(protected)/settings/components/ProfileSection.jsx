@@ -7,6 +7,7 @@ import { authAPI } from '@/lib/api/auth'
 import { useImageUpload } from '@/hooks/useImageUpload'
 import { getUserLocation } from '@/lib/utils/getUserLocation'
 import geocodingService from '@/lib/utils/geocoding'
+
 export default function ProfileSection({ onSuccess, onError }) {
     const { user, updateProfile, checkAuthStatus } = useAuth()
     const [loading, setLoading] = useState(false)
@@ -18,30 +19,66 @@ export default function ProfileSection({ onSuccess, onError }) {
     const [isEditMode, setIsEditMode] = useState(false)
     const [locationName, setLocationName] = useState('')
     const [loadingLocationName, setLoadingLocationName] = useState(false)
-    const [profileData, setProfileData] = useState({
-        name: user?.name || '',
-        email: user?.emailAddress || user?.email || '',
-        phoneNumber: user?.phoneNumber || user?.phone || '',
-        avatar: user?.avatar || user?.profilePhoto || '',
+    const [avatarJustUploaded, setAvatarJustUploaded] = useState(false)
+
+    // Phone number utility functions (defined first)
+    const formatPhoneNumber = (phone) => {
+        if (!phone) return null
+
+        if (typeof phone === 'object') {
+            return phone.internationalNumber || phone.nationalNumber || phone.number || phone.phoneNumber || phone.phone || 'Invalid format'
+        }
+
+        if (typeof phone === 'string') {
+            return phone.trim()
+        }
+
+        return phone.toString()
+    }
+
+    const getPhoneNumberForEditing = (phone) => {
+        if (!phone) return ''
+
+        if (typeof phone === 'object') {
+            if (phone.internationalNumber) {
+                return phone.internationalNumber.replace(/\s+/g, '').replace(/[^\d+]/g, '')
+            }
+            const phoneValue = phone.nationalNumber || phone.number || phone.phoneNumber || phone.phone || ''
+            return phoneValue
+                .toString()
+                .replace(/\s+/g, '')
+                .replace(/[^\d+]/g, '')
+        }
+
+        if (typeof phone === 'string') {
+            return phone.replace(/\s+/g, '').replace(/[^\d+]/g, '')
+        }
+
+        return phone.toString()
+    }
+
+    // Profile data initialization (now can use the phone functions)
+    const initializeProfileData = (userData) => ({
+        name: userData?.name || '',
+        email: userData?.emailAddress || userData?.email || '',
+        phoneNumber: getPhoneNumberForEditing(userData?.phoneNumber || userData?.phone) || '',
+        avatar: userData?.avatar || userData?.profilePhoto || '',
         userLocation: {
-            lat: user?.userLocation?.lat || '',
-            long: user?.userLocation?.long || '',
-            address: user?.userLocation?.address || ''
+            lat: userData?.userLocation?.lat || '',
+            long: userData?.userLocation?.long || '',
+            address: userData?.userLocation?.address || ''
         }
     })
+
+    const [profileData, setProfileData] = useState(() => initializeProfileData(user))
+
     useEffect(() => {
-        setProfileData({
-            name: user?.name || '',
-            email: user?.emailAddress || user?.email || '',
-            phoneNumber: getPhoneNumberForEditing(user?.phoneNumber || user?.phone) || '',
-            avatar: user?.avatar || user?.profilePhoto || '',
-            userLocation: {
-                lat: user?.userLocation?.lat || '',
-                long: user?.userLocation?.long || '',
-                address: user?.userLocation?.address || ''
-            }
-        })
+        if (user) {
+            setProfileData(initializeProfileData(user))
+            setAvatarJustUploaded(false)
+        }
     }, [user])
+
     const validateField = (field, value) => {
         const errors = { ...validationErrors }
         switch (field) {
@@ -62,6 +99,7 @@ export default function ProfileSection({ onSuccess, onError }) {
         }
         setValidationErrors(errors)
     }
+
     const {
         uploading: avatarUploading,
         progress: avatarProgress,
@@ -73,33 +111,28 @@ export default function ProfileSection({ onSuccess, onError }) {
         acceptedFormats: ['.jpg', '.jpeg', '.png', '.webp'],
         onSuccess: (url) => {
             setProfileData((prev) => ({ ...prev, avatar: url }))
+            setAvatarJustUploaded(true)
             onSuccess('Avatar uploaded successfully!')
         },
         onError: (error) => {
+            setAvatarJustUploaded(false)
             onError(`Avatar upload failed: ${error}`)
         }
     })
-    const formatPhoneNumber = (phone) => {
-        if (!phone) return null
-        if (typeof phone === 'object') {
-            return phone.internationalNumber || phone.nationalNumber || phone.number || phone.phoneNumber || phone.phone || JSON.stringify(phone) 
-        }
-        return phone.toString()
-    }
-    const getPhoneNumberForEditing = (phone) => {
-        if (!phone) return ''
-        if (typeof phone === 'object') {
-            return phone.internationalNumber || phone.nationalNumber || phone.number || phone.phoneNumber || phone.phone || ''
-        }
-        return phone.toString()
-    }
+
     const getCurrentValues = () => {
         const getLocationDisplay = () => {
             if (user?.userLocation?.lat && user?.userLocation?.long) {
+                // Show loader while loading location name
+                if (loadingLocationName) {
+                    return 'Loading location...'
+                }
+                // Show location name or coordinates as fallback
                 return locationName || `${user.userLocation.lat.toFixed(4)}, ${user.userLocation.long.toFixed(4)}`
             }
             return 'Not set'
         }
+
         return {
             name: user?.name || 'Not set',
             email: user?.emailAddress || user?.email || 'Not set',
@@ -107,6 +140,7 @@ export default function ProfileSection({ onSuccess, onError }) {
             location: getLocationDisplay()
         }
     }
+
     useEffect(() => {
         const loadLocationName = async () => {
             if (user?.userLocation?.lat && user?.userLocation?.long && !locationName && !loadingLocationName) {
@@ -127,27 +161,21 @@ export default function ProfileSection({ onSuccess, onError }) {
         }
         loadLocationName()
     }, [user, locationName, loadingLocationName])
+
     const currentValues = getCurrentValues()
+
     const handleEditToggle = () => {
         if (isEditMode) {
-            setProfileData({
-                name: user?.name || '',
-                email: user?.emailAddress || user?.email || '',
-                phoneNumber: user?.phoneNumber || user?.phone || '',
-                avatar: user?.avatar || user?.profilePhoto || '',
-                userLocation: {
-                    lat: user?.userLocation?.lat || '',
-                    long: user?.userLocation?.long || '',
-                    address: user?.userLocation?.address || ''
-                }
-            })
+            setProfileData(initializeProfileData(user))
             setValidationErrors({})
             setCitySearch('')
             setCitySearchResults([])
             setShowCitySearch(false)
+            setAvatarJustUploaded(false)
         }
         setIsEditMode(!isEditMode)
     }
+
     const handleGetCurrentLocation = async () => {
         setLocationLoading(true)
         try {
@@ -173,6 +201,7 @@ export default function ProfileSection({ onSuccess, onError }) {
             setLocationLoading(false)
         }
     }
+
     const reverseGeocode = async (lat, lng) => {
         try {
             return await geocodingService.getLocationName(lat, lng)
@@ -181,6 +210,7 @@ export default function ProfileSection({ onSuccess, onError }) {
             return null
         }
     }
+
     const searchCities = async (query) => {
         if (!query || query.length < 3) {
             setCitySearchResults([])
@@ -194,12 +224,14 @@ export default function ProfileSection({ onSuccess, onError }) {
             setCitySearchResults([])
         }
     }
+
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             searchCities(citySearch)
         }, 300)
         return () => clearTimeout(timeoutId)
     }, [citySearch])
+
     const handleCitySelect = (city) => {
         setProfileData((prev) => ({
             ...prev,
@@ -214,6 +246,7 @@ export default function ProfileSection({ onSuccess, onError }) {
         setShowCitySearch(false)
         onSuccess(`Location set to: ${city.address}`)
     }
+
     const handleClearLocation = () => {
         setProfileData((prev) => ({
             ...prev,
@@ -225,56 +258,107 @@ export default function ProfileSection({ onSuccess, onError }) {
         }))
         onSuccess('Location cleared')
     }
+
     const handleProfileUpdate = async (e) => {
         e.preventDefault()
+
+        if (Object.keys(validationErrors).length > 0) {
+            onError('Please fix validation errors before saving')
+            return
+        }
+
         setLoading(true)
         try {
             const updateData = {}
-            if (profileData.name && profileData.name.trim()) {
+
+            if (profileData.name && profileData.name.trim() && profileData.name.trim() !== user?.name) {
                 updateData.name = profileData.name.trim()
             }
+
             if (profileData.phoneNumber && profileData.phoneNumber.trim()) {
-                updateData.phoneNumber = profileData.phoneNumber.trim()
-            }
-            if (profileData.avatar && profileData.avatar.trim()) {
-                updateData.avatar = profileData.avatar.trim()
-            }
-            if (profileData.userLocation.lat && profileData.userLocation.long) {
-                updateData.userLocation = {
-                    lat: parseFloat(profileData.userLocation.lat),
-                    long: parseFloat(profileData.userLocation.long),
-                    address: profileData.userLocation.address
+                const cleanPhone = profileData.phoneNumber.replace(/\s+/g, '').replace(/[^\d+]/g, '')
+                const currentPhone = getPhoneNumberForEditing(user?.phoneNumber || user?.phone)
+
+                if (cleanPhone !== currentPhone) {
+                    updateData.phoneNumber = cleanPhone.startsWith('+') ? cleanPhone.slice(1) : cleanPhone
                 }
             }
+
+            if (profileData.avatar && profileData.avatar.trim() && profileData.avatar.trim() !== (user?.avatar || user?.profilePhoto)) {
+                updateData.avatar = profileData.avatar.trim()
+            }
+
+            if (profileData.userLocation.lat && profileData.userLocation.long) {
+                const lat = parseFloat(profileData.userLocation.lat)
+                const lng = parseFloat(profileData.userLocation.long)
+
+                const currentLat = user?.userLocation?.lat
+                const currentLng = user?.userLocation?.long
+
+                if (lat !== currentLat || lng !== currentLng) {
+                    updateData.userLocation = {
+                        lat: lat,
+                        long: lng,
+                        address: profileData.userLocation.address || ''
+                    }
+                }
+            }
+
+            if (Object.keys(updateData).length === 0) {
+                setIsEditMode(false)
+                onSuccess('No changes to save')
+                return
+            }
+
             const response = await authAPI.updateProfile(updateData)
-            if (updateProfile) {
+
+            if (checkAuthStatus) {
+                await checkAuthStatus()
+            }
+
+            if (updateProfile && response) {
                 updateProfile(response)
             }
-            if (checkAuthStatus) {
-                checkAuthStatus()
-            }
-            setIsEditMode(false) 
+
+            setIsEditMode(false)
+            setAvatarJustUploaded(false)
             onSuccess('Profile updated successfully!')
         } catch (error) {
             console.error('Profile update failed:', error)
-            const message = error?.response?.data?.message || error?.data?.message || error?.message || 'Failed to update profile'
+
+            let message = 'Failed to update profile'
+
+            if (error?.response?.data?.message) {
+                message = error.response.data.message
+            } else if (error?.data?.message) {
+                message = error.data.message
+            } else if (error?.message) {
+                message = error.message
+            } else if (typeof error === 'string') {
+                message = error
+            }
+
             onError(message)
         } finally {
             setLoading(false)
         }
     }
+
     const handleAvatarFileSelect = async (e) => {
         const file = e.target.files[0]
         if (!file) return
+        setAvatarJustUploaded(false)
         try {
             await uploadImage(file)
-        } catch (error) {
-        }
+        } catch (error) {}
         e.target.value = ''
     }
+
     const removeAvatar = () => {
         setProfileData((prev) => ({ ...prev, avatar: '' }))
+        setAvatarJustUploaded(false)
     }
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -433,7 +517,7 @@ export default function ProfileSection({ onSuccess, onError }) {
                                             <p className="text-sm text-red-400">{uploadError}</p>
                                         </div>
                                     )}
-                                    {profileData.avatar && !avatarUploading && (
+                                    {profileData.avatar && !avatarUploading && avatarJustUploaded && (
                                         <div className="flex items-center justify-between p-3 bg-[#00FF89]/10 border border-[#00FF89]/20 rounded-lg">
                                             <div className="flex items-center gap-2">
                                                 <Camera className="w-4 h-4 text-[#00FF89]" />
@@ -586,7 +670,7 @@ export default function ProfileSection({ onSuccess, onError }) {
                     <div className="flex justify-end">
                         <button
                             type="submit"
-                            disabled={loading || avatarUploading}
+                            disabled={loading || avatarUploading || Object.keys(validationErrors).length > 0}
                             className="px-6 py-3 bg-[#00FF89] text-black rounded-xl font-semibold hover:bg-[#00FF89]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                             {loading ? (
                                 <>
@@ -606,3 +690,4 @@ export default function ProfileSection({ onSuccess, onError }) {
         </motion.div>
     )
 }
+

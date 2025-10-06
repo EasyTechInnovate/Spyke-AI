@@ -457,10 +457,7 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
                         <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
                         Refresh
                     </button>
-                    <button className="px-4 py-2 bg-[#00FF89] hover:bg-[#00E67A] text-black font-medium rounded-lg transition-colors flex items-center gap-2">
-                        <Download className="w-4 h-4" />
-                        Export
-                    </button>
+                    
                 </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

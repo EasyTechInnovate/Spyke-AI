@@ -41,10 +41,10 @@ export default function ExploreControls({
                         aria-label="Search products"
                     />
                 </div>
-                <div className="flex gap-2 items-stretch">
+                <div className="flex gap-2 items-stretch overflow-x-auto">
                     <button
                         onClick={onToggleMobileFilters}
-                        className="lg:hidden flex items-center gap-2 px-4 py-2 bg-gray-900 border border-gray-800 rounded-xl hover:bg-gray-800 transition-colors"
+                        className="lg:hidden flex items-center gap-2 px-4 py-2 bg-gray-900 border border-gray-800 rounded-xl hover:bg-gray-800 transition-colors whitespace-nowrap"
                         aria-label="Open filters">
                         <Filter className="w-4 h-4" />
                         Filters
@@ -52,12 +52,12 @@ export default function ExploreControls({
                     </button>
                     <button
                         onClick={onToggleFilters}
-                        className="hidden lg:flex items-center gap-2 px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl hover:bg-gray-800 transition-colors h-12"
+                        className="hidden lg:flex items-center gap-2 px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl hover:bg-gray-800 transition-colors h-12 whitespace-nowrap"
                         aria-label="Toggle filters panel">
                         <SlidersHorizontal className="w-4 h-4" />
                         {showFilters ? 'Hide' : 'Show'} Filters
                     </button>
-                    <div className="relative flex items-center bg-gray-900 rounded-xl h-12 px-3 focus-within:ring-2 focus-within:ring-brand-primary/40 transition-colors">
+                    <div className="relative flex items-center bg-gray-900 rounded-xl h-12 px-3 focus-within:ring-2 focus-within:ring-brand-primary/40 transition-colors min-w-0 flex-shrink-0">
                         <label
                             htmlFor="sort"
                             className="sr-only">
@@ -67,7 +67,7 @@ export default function ExploreControls({
                             id="sort"
                             value={sortId || ''}
                             onChange={(e) => onSortChange?.(e.target.value)}
-                            className="unstyled-select bg-transparent appearance-none border-none outline-none ring-0 focus:outline-none focus:ring-0 text-sm text-gray-300 hover:text-white pr-8">
+                            className="unstyled-select bg-transparent appearance-none border-none outline-none ring-0 focus:outline-none focus:ring-0 text-sm text-gray-300 hover:text-white pr-8 min-w-0">
                             {sortOptions.map((opt) => (
                                 <option
                                     key={opt.id}
@@ -79,7 +79,7 @@ export default function ExploreControls({
                         </select>
                         <ChevronDown className="pointer-events-none absolute right-3 text-gray-400 w-4 h-4" />
                     </div>
-                    <div className="flex items-center gap-1 bg-gray-900 border border-gray-800 rounded-xl p-1 h-12">
+                    <div className="hidden sm:flex items-center gap-1 bg-gray-900 border border-gray-800 rounded-xl p-1 h-12 flex-shrink-0">
                         <button
                             onClick={() => onViewModeChange('grid')}
                             aria-label="Grid view"

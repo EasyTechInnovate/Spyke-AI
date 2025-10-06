@@ -196,7 +196,7 @@ export const formFields = {
         label: 'Website URL',
         type: 'text',
         placeholder: 'https://yourwebsite.com',
-        required: false, // OPTIONAL in backend
+        required: true, // Changed from false - now REQUIRED in backend
         validation: {
             pattern: /^https?:\/\/.+/,
             message: 'Please enter a valid URL starting with http:// or https://'

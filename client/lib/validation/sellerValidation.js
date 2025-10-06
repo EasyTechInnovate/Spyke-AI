@@ -104,11 +104,11 @@ export const SELLER_VALIDATION_RULES = {
         }
     },
 
-    // OPTIONAL FIELDS
     websiteUrl: {
-        required: false,
+        required: true,
         isUrl: true,
         message: {
+            required: 'Website URL is required',
             pattern: 'Please provide a valid URL'
         }
     },
