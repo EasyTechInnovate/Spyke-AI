@@ -4,13 +4,9 @@ import { useState, useEffect, useCallback } from 'react'
 
 
 
-// Custom hook for persisted state with localStorage
 export function usePersistedState(key, initialValue) {
-  // Always start with initialValue to match server rendering
   const [state, setState] = useState(initialValue)
   const [isHydrated, setIsHydrated] = useState(false)
-
-  // Hydrate from localStorage after component mounts
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -25,7 +21,6 @@ export function usePersistedState(key, initialValue) {
     }
   }, [key])
 
-  // Persist to localStorage when state changes (but only after hydration)
   useEffect(() => {
     if (isHydrated && typeof window !== 'undefined') {
       try {
@@ -39,7 +34,6 @@ export function usePersistedState(key, initialValue) {
   return [state, setState]
 }
 
-// Custom hook for managing sidebar state
 export function useSidebarState() {
   const [expandedMenus, setExpandedMenus] = usePersistedState('admin_expanded_menus_v2', [])
   const [isCollapsed, setIsCollapsed] = usePersistedState('admin_sidebar_collapsed', false)
@@ -56,7 +50,6 @@ export function useSidebarState() {
     setIsCollapsed((prev) => !prev)
   }, [setIsCollapsed])
 
-  // Update CSS variable for layout - move to useLayoutEffect to prevent render loops
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const updateCSSVariable = () => {
@@ -66,12 +59,10 @@ export function useSidebarState() {
         )
       }
       
-      // Use requestAnimationFrame to defer DOM manipulation
       requestAnimationFrame(updateCSSVariable)
     }
   }, [isCollapsed])
 
-  // Initialize CSS variable on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const currentValue = getComputedStyle(document.documentElement)
@@ -86,12 +77,11 @@ export function useSidebarState() {
     expandedMenus,
     isCollapsed,
     toggleMenu,
-    toggleCollapse, // Renamed from toggleSidebar to avoid conflict
+    toggleCollapse,
     setIsCollapsed
   }
 }
 
-// Custom hook for mobile sidebar management
 export function useMobileSidebar() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -107,7 +97,6 @@ export function useMobileSidebar() {
     setSidebarOpen((prev) => !prev)
   }, [])
 
-  // Close sidebar on escape key
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && sidebarOpen) {
@@ -128,13 +117,11 @@ export function useMobileSidebar() {
   }
 }
 
-// Custom hook for admin navigation logic
 export function useAdminNavigation(currentPath) {
   const sidebarState = useSidebarState()
   const mobileSidebar = useMobileSidebar()
 
   const handleItemClick = useCallback(() => {
-    // Close mobile sidebar when navigating
     mobileSidebar.closeSidebar()
   }, [mobileSidebar])
 

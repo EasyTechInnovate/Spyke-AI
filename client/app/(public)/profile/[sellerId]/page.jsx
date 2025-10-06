@@ -62,6 +62,10 @@ export default function PublicSellerProfile() {
     }
 
     if (error || !seller) {
+        const status = error?.response?.status || error?.statusCode
+        const apiMessage = error?.response?.data?.message || error?.message || (!seller ? 'Seller not found' : 'Unknown error')
+        const isForbidden = status === 403
+        const title = isForbidden ? 'Profile Unavailable' : 'Seller profile is not active or approved'
         return (
             <div className="min-h-screen bg-black text-white relative">
                 {/* Ambient background to match ProductHero */}
@@ -79,13 +83,18 @@ export default function PublicSellerProfile() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="text-center py-20">
-                            <div className="w-24 h-24 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/30">
-                                <Sparkles className="w-12 h-12 text-red-400" />
+                            <div className={`w-24 h-24 ${isForbidden ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-red-500/10 border-red-500/30'} rounded-full flex items-center justify-center mx-auto mb-6 border`}>
+                                <Sparkles className={`w-12 h-12 ${isForbidden ? 'text-yellow-400' : 'text-red-400'}`} />
                             </div>
-                            <h1 className="text-3xl text-white mb-4 [font-family:var(--font-league-spartan)]">Seller Not Found</h1>
-                            <p className="text-gray-400 mb-8 max-w-md mx-auto [font-family:var(--font-kumbh-sans)]">
-                                The seller profile you're looking for doesn't exist or has been removed from our marketplace.
+                            <h1 className="text-3xl text-white mb-4 [font-family:var(--font-league-spartan)]">{title}</h1>
+                            <p className="text-gray-300 mb-6 max-w-md mx-auto [font-family:var(--font-kumbh-sans)]">
+                                {apiMessage}
                             </p>
+                            {isForbidden && (
+                                <p className="text-gray-500 text-sm mb-8 max-w-md mx-auto [font-family:var(--font-kumbh-sans)]">
+                                    This seller's profile is currently inactive or pending approval. Please check back later or explore other sellers.
+                                </p>
+                            )}
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                 <a
                                     href="/explore"

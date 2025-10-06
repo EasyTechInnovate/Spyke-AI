@@ -114,9 +114,9 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
                 className="bg-[#101010] border border-[#1d1d1d] rounded-2xl overflow-hidden hover:border-[#2a2a2a] transition-all group">
                 <Link
                     href={productUrl}
-                    className="block">
-                    <div className="flex p-7 gap-7">
-                        <div className="relative w-36 h-36 flex-shrink-0 rounded-xl overflow-hidden bg-[#1c1c1c]">
+                    className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00FF89]/60 rounded-2xl">
+                    <div className="flex flex-col md:flex-row p-4 md:p-7 gap-4 md:gap-7 w-full">
+                        <div className="relative w-full md:w-36 h-48 md:h-36 flex-shrink-0 rounded-xl overflow-hidden bg-[#1c1c1c]">
                             {!imageError ? (
                                 <img
                                     src={productImage}
@@ -129,25 +129,18 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center">
                                     <Eye className="w-7 h-7 text-gray-600" />
-                                    <div className="absolute bottom-1 right-1 text-[8px] text-gray-500 bg-black/50 px-1 rounded">
-                                        ERR
-                                    </div>
+                                    <div className="absolute bottom-1 right-1 text-[8px] text-gray-500 bg-black/50 px-1 rounded">ERR</div>
                                 </div>
                             )}
                             {isImageLoading && <div className="absolute inset-0 bg-gray-700/30 animate-pulse" />}
                             <div className="absolute top-2 left-2 flex flex-col gap-1">
                                 {isFeatured && (
-                                    <span className="px-3.5 py-1 rounded-full bg-black/55 backdrop-blur text-[14px] font-semibold tracking-wide text-[#00FF89] border border-[#00FF89]/30">
+                                    <span className="px-2.5 md:px-3.5 py-1 rounded-full bg-black/55 backdrop-blur text-[11px] md:text-[14px] font-semibold tracking-wide text-[#00FF89] border border-[#00FF89]/30">
                                         Featured
                                     </span>
                                 )}
-                                {isNewProduct && (
-                                    <span className="px-3.5 py-1 rounded-full bg-black/55 backdrop-blur text-[14px] font-semibold tracking-wide text-blue-400 border border-blue-400/30">
-                                        New
-                                    </span>
-                                )}
                                 {discountPercentage > 0 && (
-                                    <span className="px-3.5 py-1 rounded-full bg-black/55 backdrop-blur text-[14px] font-semibold tracking-wide text-red-400 border border-red-400/30">
+                                    <span className="px-2.5 md:px-3.5 py-1 rounded-full bg-black/55 backdrop-blur text-[11px] md:text-[14px] font-semibold tracking-wide text-red-400 border border-red-400/30">
                                         -{discountPercentage}%
                                     </span>
                                 )}
@@ -160,42 +153,44 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
                         </div>
                         <div className="flex-1 min-w-0 flex flex-col">
                             <div className="mb-2">
-                                <h3 className="text-[18px] md:text-[17px] font-semibold text-white leading-snug line-clamp-2 group-hover:text-[#00FF89] transition-colors">
+                                <h3 className="text-[16px] md:text-[18px] font-semibold text-white leading-snug line-clamp-2 group-hover:text-[#00FF89] transition-colors">
                                     {title}
                                 </h3>
-                                <div className="mt-1 flex items-center gap-1.5 text-[12px] text-gray-300">
-                                    <span className="inline-flex items-center gap-1 bg-[#1a1a1a] border border-[#272727] px-2 py-0.5 rounded-md text-[11.5px] font-medium">
+                                <div className="mt-1 flex items-center gap-1.5 text-[11px] md:text-[12px] text-gray-300">
+                                    <span className="inline-flex items-center gap-1 bg-[#1a1a1a] border border-[#272727] px-2 py-0.5 rounded-md text-[11px] font-medium">
                                         <Star className="w-3.5 h-3.5 text-yellow-400" />
                                         {productRating.toFixed(1)}
                                     </span>
                                     {productRating === 0 && isNewProduct && (
-                                        <span className="text-[11px] font-medium text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-md">New</span>
+                                        <span className="text-[10px] md:text-[11px] font-medium text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-md">New</span>
                                     )}
                                 </div>
                             </div>
-                            <p className="text-[15px] md:text-[14.5px] text-gray-300 line-clamp-3 mb-4 leading-relaxed">{description}</p>
+                            <p className="text-[13px] md:text-[14.5px] text-gray-300 line-clamp-3 md:line-clamp-3 mb-3 md:mb-4 leading-relaxed">
+                                {description}
+                            </p>
                             {displayTags.length > 0 && (
-                                <div className="flex flex-wrap gap-1.5 mb-4">
+                                <div className="flex flex-wrap gap-1.5 mb-3 md:mb-4">
                                     {displayTags.map((tag, i) => (
                                         <span
                                             key={i}
-                                            className="px-2 py-0.5 rounded-full border border-[#272727] text-[10px] uppercase tracking-wide text-gray-400">
+                                            className="px-2 py-0.5 rounded-full border border-[#272727] text-[9px] md:text-[10px] uppercase tracking-wide text-gray-400">
                                             {tag}
                                         </span>
                                     ))}
                                     {extraTagCount > 0 && (
-                                        <span className="px-2 py-0.5 rounded-full border border-[#272727] text-[10px] text-gray-500">
+                                        <span className="px-2 py-0.5 rounded-full border border-[#272727] text-[9px] md:text-[10px] text-gray-500">
                                             +{extraTagCount}
                                         </span>
                                     )}
                                 </div>
                             )}
-                            <div className="mt-auto flex items-center justify-between">
+                            <div className="mt-auto flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0">
                                 <div>{microMeta}</div>
-                                <div className="text-right ml-4 flex items-center">
+                                <div className="text-left md:text-right md:ml-4 flex items-center">
                                     {actualDiscountPrice && actualOriginalPrice && actualDiscountPrice < actualOriginalPrice ? (
                                         <div className="flex items-center justify-end gap-2 leading-none">
-                                            <span className="text-xl font-bold text-[#00FF89] md:text-lg leading-none">
+                                            <span className="text-lg md:text-xl font-bold text-[#00FF89] leading-none">
                                                 {formatPrice(actualDiscountPrice)}
                                             </span>
                                             <span className="text-xs md:text-xs text-gray-500 line-through leading-none">
@@ -203,7 +198,7 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
                                             </span>
                                         </div>
                                     ) : (
-                                        <span className="text-xl font-bold text-[#00FF89] md:text-lg leading-none">{formatPrice(price)}</span>
+                                        <span className="text-lg md:text-xl font-bold text-[#00FF89] leading-none">{formatPrice(price)}</span>
                                     )}
                                 </div>
                             </div>
@@ -253,11 +248,6 @@ const ProductCardLite = memo(function ProductCardLite({ product, viewMode = 'gri
                         {isFeatured && (
                             <span className="px-2.5 py-1 rounded-full bg-black/55 backdrop-blur text-[11px] font-semibold tracking-wide text-[#00FF89] border border-[#00FF89]/30">
                                 Featured
-                            </span>
-                        )}
-                        {isNewProduct && (
-                            <span className="px-2.5 py-1 rounded-full bg-black/55 backdrop-blur text-[11px] font-semibold tracking-wide text-blue-400 border border-blue-400/30">
-                                New
                             </span>
                         )}
                         {discountPercentage > 0 && (

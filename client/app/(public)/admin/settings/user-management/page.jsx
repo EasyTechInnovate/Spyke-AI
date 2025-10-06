@@ -154,7 +154,7 @@ export default function UserManagementPage() {
     const removeNotification = (id) => {
         setNotifications((prev) => prev.filter((notification) => notification.id !== id))
     }
-    const fetchUsers = useCallback(async (page = 1, filter = 'all', search = '') => {
+    const fetchUsers = useCallback(async (page = 1, filter = 'all') => {
         try {
             setLoading(true)
             const params = {
@@ -162,24 +162,16 @@ export default function UserManagementPage() {
                 limit: usersPerPage,
                 sortBy: 'createdAt',
                 sortOrder: 'desc',
-                role: 'user' 
-            }
-            if (search.trim()) {
-                params.search = search.trim()
+                role: 'user'
             }
             if (filter !== 'all') {
-                if (filter === 'active') {
-                    params.status = 'active'
-                } else if (filter === 'inactive') {
-                    params.status = 'inactive'
-                } else if (filter === 'high-value') {
-                    params.minSpent = 1000 
-                }
+                if (filter === 'active') params.status = 'active'
+                else if (filter === 'inactive') params.status = 'inactive'
+                else if (filter === 'high-value') params.minSpent = 1000
             }
             const response = await apiClient.get('/v1/analytics/admin/users', { params })
             if (response?.data?.users) {
-                let filteredUsers = response.data.users
-                filteredUsers = filteredUsers.filter((user) => {
+                let filteredUsers = response.data.users.filter((user) => {
                     const isPrimarySeller = user.roles?.includes('seller') && !user.roles?.includes('user')
                     return !isPrimarySeller
                 })
@@ -200,22 +192,63 @@ export default function UserManagementPage() {
             setLoading(false)
         }
     }, [])
-    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
-    useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            setDebouncedSearchQuery(searchQuery)
-        }, 500)
-        return () => clearTimeout(timeoutId)
-    }, [searchQuery])
     useEffect(() => {
         setCurrentPage(1)
-        fetchUsers(1, activeFilter, debouncedSearchQuery)
-    }, [fetchUsers, activeFilter, debouncedSearchQuery])
+        fetchUsers(1, activeFilter)
+    }, [fetchUsers, activeFilter])
     useEffect(() => {
         if (currentPage !== 1) {
-            fetchUsers(currentPage, activeFilter, debouncedSearchQuery)
+            fetchUsers(currentPage, activeFilter)
         }
-    }, [currentPage])
+    }, [currentPage, activeFilter, fetchUsers])
+    const displayedUsers = useMemo(() => {
+        // Apply dropdown filter client-side
+        let base = users
+        switch (activeFilter) {
+            case 'active':
+                base = base.filter((u) => u.isActive)
+                break
+            case 'inactive':
+                base = base.filter((u) => !u.isActive && !(u.isSuspended || u.suspension?.isSuspended))
+                break
+            case 'suspended':
+                base = base.filter((u) => u.status === 'suspended' || u.isSuspended || u.suspension?.isSuspended)
+                break
+            case 'high-value':
+                base = base.filter((u) => (u.totalSpent || 0) >= 1000)
+                break
+            default:
+                break
+        }
+        const q = searchQuery.trim().toLowerCase()
+        if (!q) return base
+        return base.filter((u) => {
+            const name = (u.name || '').toLowerCase()
+            const email = (u.emailAddress || u.email || '').toLowerCase()
+            return name.includes(q) || email.includes(q)
+        })
+    }, [users, searchQuery, activeFilter])
+
+    // Highlight helper for matched text
+    const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')
+    const highlightMatch = (text) => {
+        const raw = text || ''
+        const q = searchQuery.trim()
+        if (!q) return raw
+        try {
+            const pattern = new RegExp(`(${escapeRegExp(q)})`, 'ig')
+            const parts = raw.split(pattern)
+            return parts.map((part, i) =>
+                part.toLowerCase() === q.toLowerCase() ? (
+                    <span key={i} className="text-[var(--neon,#00FF89)] font-semibold">{part}</span>
+                ) : (
+                    part
+                )
+            )
+        } catch {
+            return raw
+        }
+    }
     const handleSingleUserAction = async (action, userId) => {
         const user = users.find((u) => u._id === userId)
         if (!user) return
@@ -249,7 +282,7 @@ export default function UserManagementPage() {
                 await adminAPI.users.activate(confirmModal.userId, data.activationNote)
                 showMessage(`User "${confirmModal.userName}" has been activated`, 'success')
             }
-            await fetchUsers(currentPage, activeFilter, debouncedSearchQuery)
+            await fetchUsers(currentPage, activeFilter)
             setConfirmModal({ isOpen: false, type: '', userId: '', userName: '', showReasonInput: false })
         } catch (error) {
             console.error('Failed to perform user action:', error)
@@ -272,6 +305,7 @@ export default function UserManagementPage() {
             } finally {
                 setActionLoading(false)
                 setShowActionDropdown(null)
+                if (action !== 'view-orders') await fetchUsers(currentPage, activeFilter)
             }
         } else {
             setActionLoading(true)
@@ -289,34 +323,11 @@ export default function UserManagementPage() {
             } finally {
                 setActionLoading(false)
                 setShowActionDropdown(null)
+                if (action !== 'view-orders') await fetchUsers(currentPage, activeFilter)
             }
         }
     }
-    const exportUsers = () => {
-        const csvContent = [
-            ['Name', 'Email', 'Status', 'Joined', 'Total Orders', 'Total Spent'].join(','),
-            ...users.map((user) =>
-                [
-                    user.name || 'N/A',
-                    user.emailAddress || user.email || 'N/A',
-                    user.isActive ? 'Active' : 'Inactive',
-                    new Date(user.createdAt).toLocaleDateString(),
-                    user.totalPurchases || 0,
-                    `$${user.totalSpent || 0}`
-                ].join(',')
-            )
-        ].join('\n')
-        const blob = new Blob([csvContent], { type: 'text/csv' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `users-${new Date().toISOString().split('T')[0]}.csv`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
-        showMessage('User data exported successfully', 'success')
-    }
+
     return (
         <div className="min-h-screen bg-[#121212]">
             <div className="border-b border-gray-800 bg-[#1a1a1a]">
@@ -362,12 +373,7 @@ export default function UserManagementPage() {
                             </div>
                         </div>
                         <div className="flex gap-2">
-                            <button
-                                onClick={exportUsers}
-                                className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors">
-                                <Download className="w-4 h-4" />
-                                Export
-                            </button>
+                            
                             <button
                                 onClick={() => fetchUsers(currentPage, activeFilter)}
                                 disabled={loading}
@@ -420,7 +426,7 @@ export default function UserManagementPage() {
                                             </div>
                                         </td>
                                     </tr>
-                                ) : users.length === 0 ? (
+                                ) : displayedUsers.length === 0 ? (
                                     <tr>
                                         <td
                                             colSpan="6"
@@ -429,7 +435,7 @@ export default function UserManagementPage() {
                                         </td>
                                     </tr>
                                 ) : (
-                                    users.map((user) => {
+                                    displayedUsers.map((user) => {
                                         const status = user.isActive ? 'active' : 'inactive'
                                         const StatusIcon = USER_STATUS[status].icon
                                         return (
@@ -442,8 +448,8 @@ export default function UserManagementPage() {
                                                             {(user.name || user.emailAddress || 'U').charAt(0).toUpperCase()}
                                                         </div>
                                                         <div>
-                                                            <div className="text-white font-medium">{user.name || 'Unnamed User'}</div>
-                                                            <div className="text-gray-400 text-sm">{user.emailAddress || user.email}</div>
+                                                            <div className="text-white font-medium">{highlightMatch(user.name || 'Unnamed User')}</div>
+                                                            <div className="text-gray-400 text-sm">{highlightMatch(user.emailAddress || user.email || '')}</div>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -467,14 +473,39 @@ export default function UserManagementPage() {
                                                         {showActionDropdown === user._id && (
                                                             <div className="absolute right-0 top-full mt-1 w-48 bg-[#121212] border border-gray-700 rounded-lg shadow-xl z-10">
                                                                 <button
-                                                                    onClick={() => handleUserAction('send-reset-email', user._id)}
-                                                                    className="w-full flex items-center gap-2 px-4 py-2 text-left text-gray-300 hover:text-white hover:bg-gray-800 transition-colors">
+                                                                    // Disable if account already confirmed
+                                                                    disabled={user?.accountConfirmation?.status === true}
+                                                                    onClick={
+                                                                        user?.accountConfirmation?.status === true
+                                                                            ? undefined
+                                                                            : () => handleUserAction('send-reset-email', user._id)
+                                                                    }
+                                                                    className={`w-full flex items-center gap-2 px-4 py-2 text-left transition-colors ${
+                                                                        user?.accountConfirmation?.status === true
+                                                                            ? 'text-gray-500 cursor-not-allowed opacity-50'
+                                                                            : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                                                                    }`}
+                                                                    title={
+                                                                        user?.accountConfirmation?.status === true
+                                                                            ? 'Account confirmed - reset disabled'
+                                                                            : 'Send password reset email'
+                                                                    }>
                                                                     <Mail className="w-4 h-4" />
                                                                     Send Reset Email
                                                                 </button>
                                                                 <button
-                                                                    onClick={() => handleUserAction('view-orders', user._id)}
-                                                                    className="w-full flex items-center gap-2 px-4 py-2 text-left text-gray-300 hover:text-white hover:bg-gray-800 transition-colors">
+                                                                    disabled={!((user.totalPurchases || 0) > 0)}
+                                                                    onClick={
+                                                                        (user.totalPurchases || 0) > 0
+                                                                            ? () => handleUserAction('view-orders', user._id)
+                                                                            : undefined
+                                                                    }
+                                                                    className={`w-full flex items-center gap-2 px-4 py-2 text-left transition-colors ${
+                                                                        (user.totalPurchases || 0) > 0
+                                                                            ? 'text-gray-300 hover:text-white hover:bg-gray-800'
+                                                                            : 'text-gray-500 cursor-not-allowed opacity-50'
+                                                                    }`}
+                                                                    title={(user.totalPurchases || 0) > 0 ? 'View Orders' : 'No orders to view'}>
                                                                     <ShoppingBag className="w-4 h-4" />
                                                                     View Orders
                                                                 </button>
@@ -507,13 +538,16 @@ export default function UserManagementPage() {
                     <div className="border-t border-gray-800 px-6 py-4">
                         <div className="flex items-center justify-between">
                             <div className="text-gray-400 text-sm">
-                                Showing {(currentPage - 1) * usersPerPage + 1} to {Math.min(currentPage * usersPerPage, totalUsers)} of {totalUsers}{' '}
-                                users
+                                {searchQuery.trim() || activeFilter !== 'all' ? (
+                                    <>Filtered {displayedUsers.length} of {totalUsers} users{activeFilter !== 'all' && !searchQuery.trim() ? ` (filter: ${activeFilter})` : ''}</>
+                                ) : (
+                                    <>Showing {(currentPage - 1) * usersPerPage + 1} to {Math.min(currentPage * usersPerPage, totalUsers)} of {totalUsers} users</>
+                                )}
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                                    disabled={currentPage === 1}
+                                    disabled={currentPage === 1 || !!searchQuery.trim() || activeFilter !== 'all'}
                                     className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                                     Previous
                                 </button>
@@ -522,7 +556,7 @@ export default function UserManagementPage() {
                                 </span>
                                 <button
                                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                                    disabled={currentPage === totalPages}
+                                    disabled={currentPage === totalPages || !!searchQuery.trim() || activeFilter !== 'all'}
                                     className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                                     Next
                                 </button>
@@ -545,3 +579,4 @@ export default function UserManagementPage() {
         </div>
     )
 }
+

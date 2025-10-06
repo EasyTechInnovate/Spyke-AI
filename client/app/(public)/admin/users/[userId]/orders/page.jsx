@@ -77,10 +77,22 @@ function OrderCard({ order }) {
                     </div>
                 </div>
             </div>
-            {order.product?.category && (
-                <div className="mb-4">
+            {order.product?.displayCategory && (
+                <div className="mb-2">
                     <div className="text-gray-400 text-xs mb-1">Category</div>
-                    <div className="text-white text-sm capitalize">{order.product.category}</div>
+                    <div className="text-white text-sm capitalize">{order.product.displayCategory}</div>
+                </div>
+            )}
+            {order.seller?.fullName && (
+                <div className="mb-2">
+                    <div className="text-gray-400 text-xs mb-1">Seller</div>
+                    <div className="text-white text-sm">{order.seller.fullName}</div>
+                </div>
+            )}
+            {order.product?.industry && (
+                <div className="mb-4">
+                    <div className="text-gray-400 text-xs mb-1">Industry</div>
+                    <div className="text-white text-sm">{order.product.industry}</div>
                 </div>
             )}
             <div className="flex items-center justify-between pt-4 border-t border-gray-800">
@@ -157,6 +169,7 @@ export default function AdminUserOrdersPage() {
     const [currentPage, setCurrentPage] = useState(1)
     const [totalPages, setTotalPages] = useState(1)
     const [notifications, setNotifications] = useState([])
+    const [viewMode, setViewMode] = useState('grid') // 'grid' | 'list'
     const showMessage = (message, type = 'info', title = null) => {
         const id = Date.now()
         const notification = { id, type, message, title, duration: 4000 }
@@ -178,7 +191,11 @@ export default function AdminUserOrdersPage() {
             setUser(response?.user || null)
             const ordersData = response?.purchases || []
             console.log('Extracted orders data:', ordersData)
-            setOrders(ordersData)
+            const normalized = ordersData.map(o => ({
+                ...o,
+                product: o.product ? { ...o.product, displayCategory: o.product.categoryName || o.product.category } : o.product
+            }))
+            setOrders(normalized)
             setTotalPages(response?.pagination?.totalPages || 1)
         } catch (error) {
             console.error('Failed to fetch user orders:', error)
@@ -204,7 +221,7 @@ export default function AdminUserOrdersPage() {
     const filteredOrders = orders.filter((order) => {
         if (!searchTerm) return true
         const title = order.product?.title || ''
-        const category = order.product?.category || ''
+        const category = order.product?.displayCategory || ''
         return title.toLowerCase().includes(searchTerm.toLowerCase()) || category.toLowerCase().includes(searchTerm.toLowerCase())
     })
     const orderStats = {
@@ -255,13 +272,19 @@ export default function AdminUserOrdersPage() {
                                 <option value="bundle">Bundles</option>
                             </select>
                         </div>
-                        <button
-                            onClick={() => fetchUserAndOrders(currentPage)}
-                            disabled={loading}
-                            className="flex items-center gap-2 px-4 py-2 bg-[#00FF89] text-black rounded-lg hover:bg-[#00FF89]/90 transition-colors disabled:opacity-50">
-                            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                            Refresh
-                        </button>
+                        <div className="flex items-center gap-3">
+                            <div className="inline-flex bg-[#121212] border border-gray-700 rounded-lg overflow-hidden">
+                                <button onClick={() => setViewMode('grid')} className={`px-3 py-2 text-sm ${viewMode==='grid' ? 'bg-[#00FF89] text-black' : 'text-gray-400 hover:text-white'}`}>Grid</button>
+                                <button onClick={() => setViewMode('list')} className={`px-3 py-2 text-sm ${viewMode==='list' ? 'bg-[#00FF89] text-black' : 'text-gray-400 hover:text-white'}`}>List</button>
+                            </div>
+                            <button
+                                onClick={() => fetchUserAndOrders(currentPage)}
+                                disabled={loading}
+                                className="flex items-center gap-2 px-4 py-2 bg-[#00FF89] text-black rounded-lg hover:bg-[#00FF89]/90 transition-colors disabled:opacity-50">
+                                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                                Refresh
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -304,12 +327,57 @@ export default function AdminUserOrdersPage() {
                         ) : (
                             <>
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    {filteredOrders.map((order) => (
+                                    {viewMode === 'grid' && filteredOrders.map((order) => (
                                         <OrderCard
                                             key={order.purchaseId || order._id}
                                             order={order}
                                         />
                                     ))}
+                                    {viewMode === 'list' && (
+                                        <div className="col-span-1 lg:col-span-2 overflow-x-auto">
+                                            <table className="min-w-full text-sm">
+                                                <thead className="bg-[#121212] border border-gray-800">
+                                                    <tr className="text-gray-400 uppercase text-xs">
+                                                        <th className="px-4 py-3 text-left">Order</th>
+                                                        <th className="px-4 py-3 text-left">Product</th>
+                                                        <th className="px-4 py-3 text-left">Type</th>
+                                                        <th className="px-4 py-3 text-left">Category</th>
+                                                        <th className="px-4 py-3 text-left">Price</th>
+                                                        <th className="px-4 py-3 text-left">Date</th>
+                                                        <th className="px-4 py-3 text-left">Seller</th>
+                                                        <th className="px-4 py-3 text-left">Access</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-800">
+                                                    {filteredOrders.map(order => {
+                                                        const Icon = typeIcons[order.product?.type] || Package
+                                                        return (
+                                                            <tr key={order.purchaseId || order._id} className="hover:bg-[#1f1f1f] transition-colors">
+                                                                <td className="px-4 py-3 text-gray-300">#{String(order.purchaseId || order._id).slice(-6)}</td>
+                                                                <td className="px-4 py-3">
+                                                                    <div className="text-white font-medium line-clamp-1">{order.product?.title || 'Unknown'}</div>
+                                                                    <div className="text-gray-500 text-xs">{order.product?.slug}</div>
+                                                                </td>
+                                                                <td className="px-4 py-3">
+                                                                    <div className="flex items-center gap-1">
+                                                                        <Icon className="w-4 h-4 text-gray-400" />
+                                                                        <span className="capitalize text-gray-300">{order.product?.type}</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-4 py-3 text-gray-300">{order.product?.displayCategory || '-'}</td>
+                                                                <td className="px-4 py-3 font-semibold text-[#00FF89]">${order.product?.price || 0}</td>
+                                                                <td className="px-4 py-3 text-gray-300">{new Date(order.purchaseDate).toLocaleDateString()}</td>
+                                                                <td className="px-4 py-3 text-gray-300">{order.seller?.fullName || '-'}</td>
+                                                                <td className="px-4 py-3">
+                                                                    <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium border border-[#00FF89]/30 bg-[#00FF89]/10 text-[#00FF89]">{order.accessGrantedAt ? 'Granted' : 'Pending'}</span>
+                                                                </td>
+                                                            </tr>
+                                                        )
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
                                 </div>
                                 {totalPages > 1 && (
                                     <div className="flex items-center justify-center gap-2 mt-8">

@@ -33,9 +33,9 @@ const purchaseSchema = new mongoose.Schema(
             ref: 'User',
             required: true
         },
-        
+
         items: [purchaseItemSchema],
-        
+
         orderStatus: {
             type: String,
             enum: Object.values(EOrderStatus),
@@ -46,7 +46,7 @@ const purchaseSchema = new mongoose.Schema(
             enum: Object.values(EPaymentStatus),
             default: EPaymentStatus.PENDING
         },
-        
+
         totalAmount: {
             type: Number,
             required: true
@@ -63,13 +63,13 @@ const purchaseSchema = new mongoose.Schema(
             type: String,
             default: 'USD'
         },
-        
+
         appliedPromocode: {
             code: String,
             discountAmount: Number,
             discountPercentage: Number
         },
-        
+
         paymentMethod: String,
         paymentReference: {
             type: String,
@@ -77,20 +77,20 @@ const purchaseSchema = new mongoose.Schema(
             unique: true // Add unique constraint to prevent duplicates
         },
         transactionId: String,
-        
+
         purchaseDate: {
             type: Date,
             default: Date.now
         },
         completedAt: Date,
         refundedAt: Date,
-        
+
         refundReason: String,
         refundAmount: Number,
-        
+
         ipAddress: String,
         userAgent: String,
-        
+
         createdAt: {
             type: Date,
             default: Date.now
@@ -114,9 +114,9 @@ purchaseSchema.index({ purchaseDate: -1 })
 
 purchaseSchema.pre('save', function (next) {
     this.updatedAt = Date.now()
-    
+
     if (this.paymentStatus === EPaymentStatus.COMPLETED && this.orderStatus !== EOrderStatus.COMPLETED) {
-        this.items.forEach(item => {
+        this.items.forEach((item) => {
             if (!item.accessGranted) {
                 item.accessGranted = true
                 item.accessGrantedAt = new Date()
@@ -125,12 +125,12 @@ purchaseSchema.pre('save', function (next) {
         this.orderStatus = EOrderStatus.COMPLETED
         this.completedAt = new Date()
     }
-    
+
     next()
 })
 
 purchaseSchema.methods.grantAccess = function () {
-    this.items.forEach(item => {
+    this.items.forEach((item) => {
         item.accessGranted = true
         item.accessGrantedAt = new Date()
     })
@@ -141,7 +141,7 @@ purchaseSchema.methods.grantAccess = function () {
 }
 
 purchaseSchema.methods.revokeAccess = function () {
-    this.items.forEach(item => {
+    this.items.forEach((item) => {
         item.accessGranted = false
     })
     this.orderStatus = EOrderStatus.CANCELLED
@@ -154,7 +154,7 @@ purchaseSchema.methods.processRefund = function (amount, reason) {
     this.refundedAt = new Date()
     this.paymentStatus = EPaymentStatus.REFUNDED
     this.orderStatus = EOrderStatus.REFUNDED
-    this.items.forEach(item => {
+    this.items.forEach((item) => {
         item.accessGranted = false
     })
     return this.save()
@@ -176,15 +176,31 @@ purchaseSchema.statics.hasPurchased = async function (userId, productId) {
 }
 
 purchaseSchema.statics.getUserPurchases = async function (userId, options = {}) {
+    let userObjectId = userId
+    if (typeof userId === 'string') {
+        if (mongoose.isValidObjectId(userId)) {
+            userObjectId = new mongoose.Types.ObjectId(userId)
+        } else {
+            return {
+                purchases: [],
+                pagination: {
+                    currentPage: options.page ? parseInt(options.page) : 1,
+                    totalPages: 0,
+                    totalItems: 0,
+                    itemsPerPage: options.limit ? parseInt(options.limit) : 10
+                }
+            }
+        }
+    }
     const { page = 1, limit = 10, type } = options
     const skip = (page - 1) * limit
-    
+
     let matchStage = {
-        userId,
+        userId: userObjectId,
         paymentStatus: EPaymentStatus.COMPLETED,
         'items.accessGranted': true
     }
-    
+
     const pipeline = [
         { $match: matchStage },
         { $unwind: '$items' },
@@ -197,7 +213,15 @@ purchaseSchema.statics.getUserPurchases = async function (userId, options = {}) 
                 as: 'product'
             }
         },
-        { $unwind: '$product' },
+        { $unwind: { path: '$product', preserveNullAndEmptyArrays: true } },
+        {
+            $lookup: {
+                from: 'categories',
+                localField: 'product.category',
+                foreignField: '_id',
+                as: 'categoryDoc'
+            }
+        },
         {
             $lookup: {
                 from: 'sellerprofiles',
@@ -206,13 +230,13 @@ purchaseSchema.statics.getUserPurchases = async function (userId, options = {}) 
                 as: 'seller'
             }
         },
-        { $unwind: '$seller' }
+        { $unwind: { path: '$seller', preserveNullAndEmptyArrays: true } }
     ]
-    
+
     if (type) {
         pipeline.push({ $match: { 'product.type': type } })
     }
-    
+
     pipeline.push(
         {
             $project: {
@@ -226,6 +250,7 @@ purchaseSchema.statics.getUserPurchases = async function (userId, options = {}) 
                     price: '$items.price',
                     type: '$product.type',
                     category: '$product.category',
+                    categoryName: { $ifNull: [{ $arrayElemAt: ['$categoryDoc.name', 0] }, '$product.category'] },
                     industry: '$product.industry'
                 },
                 seller: {
@@ -238,14 +263,68 @@ purchaseSchema.statics.getUserPurchases = async function (userId, options = {}) 
         },
         { $sort: { purchaseDate: -1 } }
     )
-    
+
     const [result, totalCount] = await Promise.all([
         this.aggregate([...pipeline, { $skip: skip }, { $limit: limit }]),
         this.aggregate([...pipeline, { $count: 'total' }])
     ])
-    
-    const total = totalCount[0]?.total || 0
-    
+
+    let total = totalCount[0]?.total || 0
+
+    if (result.length === 0) {
+        const rawCount = await this.countDocuments({ userId: userObjectId, paymentStatus: EPaymentStatus.COMPLETED })
+        if (rawCount > 0) {
+            const docs = await this.find({ userId: userObjectId, paymentStatus: EPaymentStatus.COMPLETED })
+                .sort({ purchaseDate: -1 })
+                .skip(skip)
+                .limit(limit)
+                .populate('items.productId', 'title slug thumbnail price type category industry')
+                .populate('items.sellerId', 'fullName avatar')
+                .lean()
+            const flattened = []
+            for (const d of docs) {
+                for (const it of d.items) {
+                    if (!it.accessGranted) continue
+                    if (type && it.productId?.type !== type) continue
+                    flattened.push({
+                        purchaseId: d._id,
+                        purchaseDate: d.purchaseDate,
+                        product: it.productId
+                            ? {
+                                  _id: it.productId._id,
+                                  title: it.productId.title,
+                                  slug: it.productId.slug,
+                                  thumbnail: it.productId.thumbnail,
+                                  price: it.price,
+                                  type: it.productId.type,
+                                  category: it.productId.category,
+                                  industry: it.productId.industry
+                              }
+                            : null,
+                        seller: it.sellerId
+                            ? {
+                                  _id: it.sellerId._id,
+                                  fullName: it.sellerId.fullName,
+                                  avatar: it.sellerId.avatar
+                              }
+                            : null,
+                        accessGrantedAt: it.accessGrantedAt
+                    })
+                }
+            }
+            total = rawCount // approximate (per purchase docs, not flattened items count)
+            return {
+                purchases: flattened,
+                pagination: {
+                    currentPage: page,
+                    totalPages: Math.ceil(total / limit),
+                    totalItems: total,
+                    itemsPerPage: limit
+                }
+            }
+        }
+    }
+
     return {
         purchases: result,
         pagination: {
@@ -257,12 +336,24 @@ purchaseSchema.statics.getUserPurchases = async function (userId, options = {}) 
     }
 }
 
-
 purchaseSchema.statics.getUserPurchasesByType = async function (userId) {
+    let userObjectId = userId
+    if (typeof userId === 'string') {
+        if (mongoose.isValidObjectId(userId)) {
+            userObjectId = new mongoose.Types.ObjectId(userId)
+        } else {
+            return {
+                prompts: { count: 0, products: [] },
+                automations: { count: 0, products: [] },
+                agents: { count: 0, products: [] },
+                bundles: { count: 0, products: [] }
+            }
+        }
+    }
     const pipeline = [
         {
             $match: {
-                userId,
+                userId: userObjectId,
                 paymentStatus: EPaymentStatus.COMPLETED,
                 'items.accessGranted': true
             }
@@ -277,7 +368,15 @@ purchaseSchema.statics.getUserPurchasesByType = async function (userId) {
                 as: 'product'
             }
         },
-        { $unwind: '$product' },
+        { $unwind: { path: '$product', preserveNullAndEmptyArrays: true } },
+        {
+            $lookup: {
+                from: 'categories',
+                localField: 'product.category',
+                foreignField: '_id',
+                as: 'categoryDoc'
+            }
+        },
         {
             $lookup: {
                 from: 'sellerprofiles',
@@ -286,7 +385,7 @@ purchaseSchema.statics.getUserPurchasesByType = async function (userId) {
                 as: 'seller'
             }
         },
-        { $unwind: '$seller' },
+        { $unwind: { path: '$seller', preserveNullAndEmptyArrays: true } },
         {
             $group: {
                 _id: '$product.type',
@@ -302,6 +401,7 @@ purchaseSchema.statics.getUserPurchasesByType = async function (userId) {
                             thumbnail: '$product.thumbnail',
                             price: '$items.price',
                             category: '$product.category',
+                            categoryName: { $ifNull: [{ $arrayElemAt: ['$categoryDoc.name', 0] }, '$product.category'] },
                             industry: '$product.industry'
                         },
                         seller: {
@@ -327,17 +427,17 @@ purchaseSchema.statics.getUserPurchasesByType = async function (userId) {
             }
         }
     ]
-    
+
     const result = await this.aggregate(pipeline)
-    
+
     const categorized = {
         prompts: { count: 0, products: [] },
         automations: { count: 0, products: [] },
         agents: { count: 0, products: [] },
         bundles: { count: 0, products: [] }
     }
-    
-    result.forEach(item => {
+
+    result.forEach((item) => {
         if (categorized[item.type + 's']) {
             categorized[item.type + 's'] = {
                 count: item.count,
@@ -345,7 +445,7 @@ purchaseSchema.statics.getUserPurchasesByType = async function (userId) {
             }
         }
     })
-    
+
     return categorized
 }
 

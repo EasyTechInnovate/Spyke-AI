@@ -1,8 +1,27 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Tag, DollarSign, Users, TrendingUp, Percent, BarChart3, Activity, Target, Calendar, Clock, CheckCircle, XCircle } from 'lucide-react'
-import { ResponsiveContainer, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip, Area, Bar, Line, PieChart, Pie, Cell, AreaChart, BarChart, LineChart, RadialBarChart, RadialBar, Legend } from 'recharts'
+import { Tag, DollarSign, Users, Percent, BarChart3, Activity, Target, Calendar, Clock, CheckCircle, XCircle } from 'lucide-react'
+import {
+    ResponsiveContainer,
+    ComposedChart,
+    CartesianGrid,
+    XAxis,
+    YAxis,
+    Tooltip,
+    Area,
+    Bar,
+    Line,
+    PieChart,
+    Pie,
+    Cell,
+    AreaChart,
+    BarChart,
+    LineChart,
+    RadialBarChart,
+    RadialBar,
+    Legend
+} from 'recharts'
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -24,10 +43,11 @@ const CustomTooltip = ({ active, payload, label }) => {
         <div className="bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg p-3 shadow-xl">
             <p className="text-white font-medium mb-2">{label}</p>
             {payload.map((entry, index) => (
-                <p key={index} className="text-gray-400">
-                    <span style={{ color: entry.color }}>●</span> {entry.name}: {
-                        entry.name.includes('Revenue') || entry.name.includes('Savings') ? formatCurrency(entry.value) : formatNumber(entry.value)
-                    }
+                <p
+                    key={index}
+                    className="text-gray-400">
+                    <span style={{ color: entry.color }}>●</span> {entry.name}:{' '}
+                    {entry.name.includes('Revenue') || entry.name.includes('Savings') ? formatCurrency(entry.value) : formatNumber(entry.value)}
                 </p>
             ))}
         </div>
@@ -41,7 +61,6 @@ const PromocodeTooltip = ({ active, payload }) => {
             <p className="text-white font-medium">{data.code}</p>
             <p className="text-gray-400">Total Usage: {formatNumber(data.totalUsage)}</p>
             <p className="text-gray-400">Total Savings: {formatCurrency(data.totalSavings)}</p>
-            <p className="text-gray-400">Total Revenue: {formatCurrency(data.totalRevenue)}</p>
             <p className="text-gray-400">
                 Discount: {data.discountType === 'percentage' ? `${data.discountValue}%` : formatCurrency(data.discountValue)}
             </p>
@@ -53,11 +72,16 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
     const generateTimeSeriesData = (promocodes, timeRange) => {
         const getDaysFromTimeRange = (period) => {
             switch (period) {
-                case '7d': return 7
-                case '30d': return 30
-                case '90d': return 90
-                case '1y': return 365
-                default: return 30
+                case '7d':
+                    return 7
+                case '30d':
+                    return 30
+                case '90d':
+                    return 90
+                case '1y':
+                    return 365
+                default:
+                    return 30
             }
         }
         const days = getDaysFromTimeRange(timeRange)
@@ -70,19 +94,17 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
             currentDate.setDate(startDate.getDate() + i)
             const dateString = currentDate.toISOString().split('T')[0]
             const dayName = currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-            const dayData = promocodes.filter(promo => {
+            const dayData = promocodes.filter((promo) => {
                 const promoDate = new Date(promo.createdAt).toISOString().split('T')[0]
                 return promoDate === dateString
             })
             const totalUsage = dayData.reduce((sum, promo) => sum + (promo.totalUsage || 0), 0)
             const totalSavings = dayData.reduce((sum, promo) => sum + (promo.totalSavings || 0), 0)
-            const totalRevenue = dayData.reduce((sum, promo) => sum + (promo.totalRevenue || 0), 0)
-            const activePromocodes = dayData.filter(promo => promo.isActive).length
+            const activePromocodes = dayData.filter((promo) => promo.isActive).length
             trends.push({
                 date: dayName,
                 usage: totalUsage,
                 savings: totalSavings,
-                revenue: totalRevenue,
                 activePromocodes,
                 avgSavingsPerUse: totalUsage > 0 ? totalSavings / totalUsage : 0
             })
@@ -91,11 +113,13 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
     }
     const calculateMetrics = (promocodes) => {
         const total = promocodes.length
-        const active = promocodes.filter(p => p.isActive).length
-        const expired = promocodes.filter(p => new Date(p.validUntil) < new Date()).length
-        const totalUsage = promocodes.reduce((sum, p) => sum + (p.totalUsage || 0), 0)
-        const totalSavings = promocodes.reduce((sum, p) => sum + (p.totalSavings || 0), 0)
-        const totalRevenue = promocodes.reduce((sum, p) => sum + (p.totalRevenue || 0), 0)
+        const active = promocodes.filter((p) => p.isActive).length
+        const expired = promocodes.filter((p) => new Date(p.validUntil) < new Date()).length
+        const totalUsage = promocodes.reduce(
+            (sum, p) => sum + (Number(p.totalUsage) || Number(p.currentUsageCount) || p.usageHistory?.length || 0),
+            0
+        )
+        const totalSavings = promocodes.reduce((sum, p) => sum + (Number(p.totalSavings) || 0), 0)
         const avgSavingsPerUse = totalUsage > 0 ? totalSavings / totalUsage : 0
         return {
             totalPromocodes: total,
@@ -103,9 +127,13 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
             expiredPromocodes: expired,
             totalUsage,
             totalSavings,
-            totalRevenue,
             avgSavingsPerUse,
-            usageRate: total > 0 ? (promocodes.filter(p => p.totalUsage > 0).length / total) * 100 : 0
+            usageRate:
+                total > 0
+                    ? (promocodes.filter((p) => (Number(p.totalUsage) || Number(p.currentUsageCount) || p.usageHistory?.length || 0) > 0).length /
+                          total) *
+                      100
+                    : 0
         }
     }
     const getDiscountTypeDistribution = (promocodes) => {
@@ -122,25 +150,42 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
     }
     const getStatusDistribution = (promocodes) => {
         const now = new Date()
-        const active = promocodes.filter(p => p.isActive && new Date(p.validUntil) > now).length
-        const inactive = promocodes.filter(p => !p.isActive).length
-        const expired = promocodes.filter(p => new Date(p.validUntil) <= now).length
-        return [
-            { name: 'Active', count: active, color: '#00FF89' },
+        let used = 0
+        let unused = 0
+        let inactive = 0
+        let expired = 0
+        promocodes.forEach(p => {
+            const isExpired = new Date(p.validUntil) <= now
+            const hasUsage = (Number(p.totalUsage) || Number(p.currentUsageCount) || (p.usageHistory?.length || 0)) > 0
+            if (isExpired) {
+                expired += 1
+                return
+            }
+            if (!p.isActive) {
+                inactive += 1
+                return
+            }
+            if (hasUsage) used += 1
+            else unused += 1
+        })
+        const slices = [
+            { name: 'Used', count: used, color: '#00FF89' },
+            { name: 'Unused', count: unused, color: '#3B82F6' },
             { name: 'Inactive', count: inactive, color: '#6B7280' },
             { name: 'Expired', count: expired, color: '#EF4444' }
-        ].filter(item => item.count > 0)
+        ]
+        return slices.filter(s => s.count > 0)
     }
     const getTopPerformingPromocodes = (promocodes) => {
         return promocodes
-            .filter(p => p.totalUsage > 0)
-            .sort((a, b) => (b.totalRevenue || 0) - (a.totalRevenue || 0))
+            .filter((p) => p.totalUsage > 0)
+            .sort((a, b) => (b.totalSavings || 0) - (a.totalSavings || 0))
             .slice(0, 10)
     }
     const getUsageEfficiencyData = (promocodes) => {
         return promocodes
-            .filter(p => p.usageLimit && p.totalUsage > 0)
-            .map(p => ({
+            .filter((p) => p.usageLimit && p.totalUsage > 0)
+            .map((p) => ({
                 code: p.code,
                 efficiency: (p.totalUsage / p.usageLimit) * 100,
                 totalUsage: p.totalUsage,
@@ -150,31 +195,53 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
             .slice(0, 8)
     }
     useEffect(() => {
-        if (analyticsData?.promocodes) {
-            const promocodes = analyticsData.promocodes
-            const metrics = calculateMetrics(promocodes)
-            const trends = generateTimeSeriesData(promocodes, timeRange)
-            const topPromocodes = getTopPerformingPromocodes(promocodes)
-            const discountTypeDistribution = getDiscountTypeDistribution(promocodes)
-            const statusDistribution = getStatusDistribution(promocodes)
-            const usageEfficiency = getUsageEfficiencyData(promocodes)
-            setPromocodesData({
-                metrics,
-                trends,
-                topPromocodes,
-                discountTypeDistribution,
-                statusDistribution,
-                usageEfficiency,
-                allPromocodes: promocodes
-            })
+        if (!analyticsData || !Array.isArray(analyticsData.promocodes)) return
+        const source = analyticsData.promocodes
+        const normalizedPromocodes = source.map((p) => {
+            const safeCurrent = Number(p.currentUsageCount) || 0
+            const historyCount = Array.isArray(p.usageHistory) ? p.usageHistory.length : 0
+            const existingTotal = Number(p.totalUsage) || 0
+            const derivedUsage = existingTotal > 0 ? existingTotal : safeCurrent > 0 ? safeCurrent : historyCount
+            const derivedSavings =
+                Number(p.totalSavings) > 0
+                    ? Number(p.totalSavings)
+                    : Array.isArray(p.usageHistory)
+                      ? p.usageHistory.reduce((sum, u) => sum + (Number(u.discountAmount) || 0), 0)
+                      : 0
+            return {
+                ...p,
+                totalUsage: derivedUsage,
+                totalSavings: derivedSavings
+            }
+        })
+        const metrics = calculateMetrics(normalizedPromocodes)
+        if (metrics.totalUsage === 0) {
+            const directTotal = normalizedPromocodes.reduce((s, p) => s + (Number(p.currentUsageCount) || p.usageHistory?.length || 0), 0)
+            if (directTotal > 0) metrics.totalUsage = directTotal
         }
-    }, [analyticsData, timeRange])
+        const trends = generateTimeSeriesData(normalizedPromocodes, timeRange)
+        const topPromocodes = getTopPerformingPromocodes(normalizedPromocodes)
+        const discountTypeDistribution = getDiscountTypeDistribution(normalizedPromocodes)
+        const statusDistribution = getStatusDistribution(normalizedPromocodes)
+        const usageEfficiency = getUsageEfficiencyData(normalizedPromocodes)
+        setPromocodesData({
+            metrics,
+            trends,
+            topPromocodes,
+            discountTypeDistribution,
+            statusDistribution,
+            usageEfficiency,
+            allPromocodes: normalizedPromocodes
+        })
+    }, [timeRange, analyticsData?.promocodes?.length, JSON.stringify(analyticsData?.promocodes)])
     if (loading) {
         return (
             <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {[...Array(4)].map((_, i) => (
-                        <div key={i} className="bg-gray-800 rounded-lg p-6 animate-pulse">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[...Array(3)].map((_, i) => (
+                        <div
+                            key={i}
+                            className="bg-gray-800 rounded-lg p-6 animate-pulse">
                             <div className="h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
                             <div className="h-8 bg-gray-700 rounded w-1/2"></div>
                         </div>
@@ -190,9 +257,11 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
     if (!promocodesData) {
         return (
             <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {[...Array(4)].map((_, i) => (
-                        <div key={i} className="bg-gray-800 rounded-lg p-6 animate-pulse">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[...Array(3)].map((_, i) => (
+                        <div
+                            key={i}
+                            className="bg-gray-800 rounded-lg p-6 animate-pulse">
                             <div className="h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
                             <div className="h-8 bg-gray-700 rounded w-1/2"></div>
                         </div>
@@ -209,7 +278,7 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
     const CHART_COLORS = ['#00FF89', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981', '#F97316', '#6366F1']
     return (
         <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -251,20 +320,6 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
                     <div className="text-2xl font-bold text-white mb-1">{formatCurrency(metrics.totalSavings)}</div>
                     <div className="text-sm text-gray-400">Avg: {formatCurrency(metrics.avgSavingsPerUse)} per use</div>
                 </motion.div>
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="bg-gray-800 rounded-lg p-6">
-                    <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-sm font-medium text-gray-400">Revenue Impact</h3>
-                        <div className="w-8 h-8 bg-[#F59E0B]/20 rounded-lg flex items-center justify-center">
-                            <TrendingUp className="w-4 h-4 text-[#F59E0B]" />
-                        </div>
-                    </div>
-                    <div className="text-2xl font-bold text-white mb-1">{formatCurrency(metrics.totalRevenue)}</div>
-                    <div className="text-sm text-[#00FF89]">From promocode usage</div>
-                </motion.div>
             </div>
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -279,10 +334,6 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
                             <span className="text-gray-400">Usage</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-[#3B82F6] rounded-sm"></div>
-                            <span className="text-gray-400">Revenue</span>
-                        </div>
-                        <div className="flex items-center gap-2">
                             <div className="w-3 h-2 bg-[#8B5CF6] rounded-full"></div>
                             <span className="text-gray-400">Avg Savings</span>
                         </div>
@@ -290,9 +341,15 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
                 </div>
                 <div className="h-80 relative">
                     {trends.length > 0 ? (
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer
+                            width="100%"
+                            height="100%">
                             <ComposedChart data={trends}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+                                <CartesianGrid
+                                    strokeDasharray="3 3"
+                                    stroke="#374151"
+                                    opacity={0.3}
+                                />
                                 <XAxis
                                     dataKey="date"
                                     axisLine={false}
@@ -322,12 +379,6 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
                                     stroke="#00FF89"
                                     fillOpacity={0.15}
                                     name="Usage"
-                                />
-                                <Bar
-                                    yAxisId="right"
-                                    dataKey="revenue"
-                                    fill="#3B82F6"
-                                    name="Revenue"
                                 />
                                 <Line
                                     yAxisId="right"
@@ -365,7 +416,7 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
                                     key={promo._id}
                                     className="flex items-center justify-between py-3 border-b border-gray-700 last:border-b-0">
                                     <div className="flex items-center space-x-3">
-                                        <div className="w-8 h-8 bg-gradient-to-r from-[#00FF89] to-[#3B82F6] rounded-lg flex items-center justify-center text-sm font-bold text-gray-900">
+                                        <div className="w-8 h-8 bg-[#00FF89] rounded-lg flex items-center justify-center text-sm font-bold text-gray-900">
                                             {index + 1}
                                         </div>
                                         <div>
@@ -376,7 +427,7 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-white font-medium">{formatCurrency(promo.totalRevenue)}</div>
+                                        <div className="text-white font-medium">{formatCurrency(promo.totalSavings)}</div>
                                         <div className="text-gray-400 text-xs">
                                             {promo.discountType === 'percentage'
                                                 ? `${promo.discountValue}% off`
@@ -399,10 +450,12 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6 }}
                     className="bg-gray-800 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Status Distribution</h3>
+                    <h3 className="text-lg font-semibold text-white mb-4">Status & Usage Distribution</h3>
                     <div className="h-80 relative">
                         {statusDistribution.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer
+                                width="100%"
+                                height="100%">
                                 <PieChart>
                                     <Pie
                                         data={statusDistribution}
@@ -413,7 +466,10 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
                                         dataKey="count"
                                         label={({ name, count }) => `${name}: ${count}`}>
                                         {statusDistribution.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                            <Cell
+                                                key={`cell-${index}`}
+                                                fill={entry.color}
+                                            />
                                         ))}
                                     </Pie>
                                     <Tooltip content={<CustomTooltip />} />
@@ -441,9 +497,15 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
                     <h3 className="text-lg font-semibold text-white mb-4">Discount Type Distribution</h3>
                     <div className="h-80 relative">
                         {discountTypeDistribution.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer
+                                width="100%"
+                                height="100%">
                                 <BarChart data={discountTypeDistribution}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+                                    <CartesianGrid
+                                        strokeDasharray="3 3"
+                                        stroke="#374151"
+                                        opacity={0.3}
+                                    />
                                     <XAxis
                                         dataKey="name"
                                         axisLine={false}
@@ -482,9 +544,17 @@ export const PromocodesTab = ({ analyticsData, timeRange, loading }) => {
                     <h3 className="text-lg font-semibold text-white mb-4">Usage Efficiency</h3>
                     <div className="h-80 relative">
                         {usageEfficiency.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={usageEfficiency} layout="horizontal">
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+                            <ResponsiveContainer
+                                width="100%"
+                                height="100%">
+                                <BarChart
+                                    data={usageEfficiency}
+                                    layout="horizontal">
+                                    <CartesianGrid
+                                        strokeDasharray="3 3"
+                                        stroke="#374151"
+                                        opacity={0.3}
+                                    />
                                     <XAxis
                                         type="number"
                                         domain={[0, 100]}

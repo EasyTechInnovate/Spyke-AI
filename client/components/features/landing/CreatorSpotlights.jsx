@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Star, TrendingUp, Award, Users, Loader2, UserX } from 'lucide-react'
+import { Star, TrendingUp, Award, Users, Loader2, UserX, Eye } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
@@ -37,6 +37,7 @@ export default function CreatorSpotlights() {
                     const specialties = Array.from(new Set([...(s.specialties || []), ...niches, ...tools]))
                     const sales = Number(s.stats?.totalSales ?? s.totalSales ?? 0) || 0
                     const profileViews = Number(s.stats?.profileViews ?? s.profileViews ?? 0) || 0
+                    console.log('CREATOR:', s)
                     return {
                         id: s._id || s.id || s.sellerId || s.userId?._id,
                         name: s.fullName || s.name || s.displayName || s.username || s.email || 'Unknown',
@@ -186,105 +187,118 @@ function CreatorCard({ creator }) {
                 href={`/profile/${creator?.id || ''}`}
                 className="block h-full"
                 prefetch={false}>
-                <div className="relative h-full bg-[#171717] border border-gray-800 rounded-xl overflow-hidden hover:border-[#00FF89]/50 transition-all duration-200 hover:shadow-lg hover:shadow-[#00FF89]/5 flex flex-col">
-                    {creator.badge && (
-                        <div className="absolute top-3 right-3 z-10">
-                            <DSBadge
-                                variant="primary"
-                                size="small"
-                                className="shadow-sm">
-                                {creator.badge}
-                            </DSBadge>
-                        </div>
-                    )}
-                    <div className="p-4 flex flex-col h-full">
+                <div className="relative h-full bg-[#171717] border border-gray-800 rounded-2xl overflow-hidden hover:border-[#00FF89]/50 transition-all duration-300 hover:shadow-xl hover:shadow-[#00FF89]/10 flex flex-col min-h-[360px]">
+                    {/* Header + Content */}
+                    <div className="p-6 flex flex-col h-full gap-4">
                         <DSStack
-                            direction="column"
-                            gap="small"
-                            className="h-full">
-                            <DSStack
-                                direction="row"
-                                gap="small"
-                                align="center">
-                                <div className="relative flex-shrink-0">
-                                    <Image
-                                        src={creator.avatar}
-                                        alt={creator?.name || 'Creator'}
-                                        width={48}
-                                        height={48}
-                                        className="rounded-full border-2 border-gray-700 group-hover:border-[#00FF89] transition-colors"
-                                        unoptimized={true}
-                                    />
-                                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-[#171717]" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="text-sm font-semibold text-white group-hover:text-[#00FF89] transition-colors truncate">
-                                        {creator?.name}
-                                    </h3>
-                                    <p className="text-xs text-gray-400 truncate">{creator?.title || 'AI Creator'}</p>
-                                </div>
-                            </DSStack>
-                            <div className="grid grid-cols-3 gap-2">
-                                <div className="bg-gray-800/50 rounded-lg p-2">
-                                    <DSStack
-                                        direction="row"
-                                        gap="xsmall"
-                                        align="center"
-                                        className="mb-1">
-                                        <TrendingUp className="w-3 h-3 text-[#00FF89]" />
-                                        <span className="text-xs text-gray-400">Sales</span>
-                                    </DSStack>
-                                    <span className="text-xs font-semibold text-white">{creator.stats.sales}</span>
-                                </div>
-                                <div className="bg-gray-800/50 rounded-lg p-2">
-                                    <DSStack
-                                        direction="row"
-                                        gap="xsmall"
-                                        align="center"
-                                        className="mb-1">
-                                        <Star className="w-3 h-3 text-yellow-500" />
-                                        <span className="text-xs text-gray-400">Rating</span>
-                                    </DSStack>
-                                    <span className="text-xs font-semibold text-white">
-                                        {typeof creator.stats.rating === 'number' ? creator.stats.rating.toFixed(1) : creator.stats.rating}
-                                    </span>
-                                </div>
-                                <div className="bg-gray-800/50 rounded-lg p-2">
-                                    <DSStack
-                                        direction="row"
-                                        gap="xsmall"
-                                        align="center"
-                                        className="mb-1">
-                                        <Award className="w-3 h-3 text-purple-500" />
-                                        <span className="text-xs text-gray-400">Products</span>
-                                    </DSStack>
-                                    <span className="text-xs font-semibold text-white">{creator.stats.products}</span>
-                                </div>
+                            direction="row"
+                            gap="medium"
+                            align="flex-start">
+                            <div className="relative flex-shrink-0">
+                                <Image
+                                    src={creator.avatar}
+                                    alt={creator?.name || 'Creator'}
+                                    width={64}
+                                    height={64}
+                                    className="rounded-full border-2 border-gray-700 group-hover:border-[#00FF89] transition-colors object-cover"
+                                    unoptimized={true}
+                                />
+                                <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-green-500 rounded-full border-2 border-[#171717]" />
                             </div>
-                            <div className="flex-1">
-                                <p className="text-xs text-gray-500 mb-2">Specializes in:</p>
-                                <div className="flex flex-wrap gap-1">
-                                    {(creator.specialties || []).slice(0, 4).map((specialty, idx) => (
-                                        <span
-                                            key={idx}
-                                            className="text-xs px-2 py-1 bg-gray-800 text-gray-400 rounded-full">
-                                            {specialty}
-                                        </span>
-                                    ))}
-                                    {creator.specialties?.length > 4 && (
-                                        <span className="text-xs px-2 py-1 bg-gray-800 text-gray-400 rounded-full">
-                                            +{creator.specialties.length - 4}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="pt-2 border-t border-gray-800">
-                                <span className="text-sm text-[#00FF89] group-hover:text-[#00FF89]/80 transition-colors">View Profile →</span>
+                            <div className="flex-1 min-w-0 relative">
+                                {creator.badge && (
+                                    <div className="absolute top-0 right-0">
+                                        <DSBadge
+                                            variant="primary"
+                                            size="small"
+                                            className="!rounded-full !py-1 !px-3 text-xs tracking-wide whitespace-nowrap shadow-md shadow-black/30">
+                                            {creator.badge}
+                                        </DSBadge>
+                                    </div>
+                                )}
+                                <h3 className="text-lg font-semibold text-white group-hover:text-[#00FF89] transition-colors truncate pr-24">
+                                    {creator?.name}
+                                </h3>
+                                <p className="text-sm text-gray-400 mt-3 leading-snug line-clamp-2">{creator?.title || 'AI Creator'}</p>
                             </div>
                         </DSStack>
+                        {/* Stats */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div className="bg-gray-800/60 rounded-lg p-3 border border-gray-800/40">
+                                <DSStack
+                                    direction="row"
+                                    gap="xsmall"
+                                    align="center"
+                                    className="mb-1.5">
+                                    <TrendingUp className="w-4 h-4 text-[#00FF89]" />
+                                    <span className="text-[11px] uppercase tracking-wide text-gray-400">Sales</span>
+                                </DSStack>
+                                <span className="text-sm font-semibold text-white">{creator.stats.sales}</span>
+                            </div>
+                            <div className="bg-gray-800/60 rounded-lg p-3 border border-gray-800/40">
+                                <DSStack
+                                    direction="row"
+                                    gap="xsmall"
+                                    align="center"
+                                    className="mb-1.5">
+                                    <Star className="w-4 h-4 text-yellow-500" />
+                                    <span className="text-[11px] uppercase tracking-wide text-gray-400">Rating</span>
+                                </DSStack>
+                                <span className="text-sm font-semibold text-white">
+                                    {typeof creator.stats.rating === 'number' ? creator.stats.rating.toFixed(1) : creator.stats.rating}
+                                </span>
+                            </div>
+                            <div className="bg-gray-800/60 rounded-lg p-3 border border-gray-800/40">
+                                <DSStack
+                                    direction="row"
+                                    gap="xsmall"
+                                    align="center"
+                                    className="mb-1.5">
+                                    <Award className="w-4 h-4 text-purple-500" />
+                                    <span className="text-[11px] uppercase tracking-wide text-gray-400">Products</span>
+                                </DSStack>
+                                <span className="text-sm font-semibold text-white">{creator.stats.products}</span>
+                            </div>
+                            <div className="bg-gray-800/60 rounded-lg p-3 border border-gray-800/40">
+                                <DSStack
+                                    direction="row"
+                                    gap="xsmall"
+                                    align="center"
+                                    className="mb-1.5">
+                                    <Eye className="w-4 h-4 text-blue-400" />
+                                    <span className="text-[11px] uppercase tracking-wide text-gray-400">Views</span>
+                                </DSStack>
+                                <span className="text-sm font-semibold text-white">
+                                    {creator.stats.profileViews?.toLocaleString?.() || creator.stats.profileViews || 0}
+                                </span>
+                            </div>
+                        </div>
+                        {/* Specialties */}
+                        <div className="flex-1 w-full">
+                            <p className="text-xs text-gray-500 mb-2 tracking-wide">Specializes in</p>
+                            <div className="flex flex-wrap gap-1.5">
+                                {(creator.specialties || []).slice(0, 6).map((specialty, idx) => (
+                                    <span
+                                        key={idx}
+                                        className="text-[10px] md:text-xs px-2.5 py-1 bg-gray-800/70 border border-gray-700/40 text-gray-300 rounded-full">
+                                        {specialty}
+                                    </span>
+                                ))}
+                                {creator.specialties?.length > 6 && (
+                                    <span className="text-[10px] md:text-xs px-2.5 py-1 bg-gray-800/70 border border-gray-700/40 text-gray-300 rounded-full">
+                                        +{creator.specialties.length - 6}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                        <div className="pt-3 border-t border-gray-800/70 flex items-center justify-between">
+                            <span className="text-sm font-medium text-[#00FF89] group-hover:text-[#00FF89]/80 transition-colors">View Profile →</span>
+                            <Users className="w-4 h-4 text-gray-500 group-hover:text-[#00FF89]/70 transition-colors" />
+                        </div>
                     </div>
                 </div>
             </Link>
         </div>
     )
 }
+

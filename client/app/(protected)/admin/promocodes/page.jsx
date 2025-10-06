@@ -6,7 +6,7 @@ import { Button } from '@/components/shared/ui/button'
 import Input from '@/components/shared/ui/input'
 import Card from '@/components/shared/ui/card'
 import Badge from '@/components/shared/ui/badge'
-import { Plus, Search, Edit, Trash2, BarChart, Copy, Download, Users, Percent, DollarSign, CheckCircle, Tag, Filter, Clock } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, BarChart, Copy, Users, Percent, DollarSign, CheckCircle, Tag, Filter, Clock } from 'lucide-react'
 import PromocodeForm from '@/components/features/promocode/PromocodeForm'
 import PromocodeStats from '@/components/features/promocode/PromocodeStats'
 import LoadingSpinner from '@/components/shared/ui/LoadingSpinner'
@@ -58,16 +58,26 @@ export default function AdminPromocodesPage() {
             const response = await promocodeAPI.getPromocodes({
                 page: pagination.page,
                 limit: pagination.limit
-                // Remove server-side filtering for status and type, handle client-side
-                // status: filterStatus !== 'all' ? filterStatus : undefined,
-                // type: filterType !== 'all' ? filterType : undefined,
-                // search: searchTerm || undefined
             })
-            setAllPromocodes(response.promocodes || [])
+            const raw = response.promocodes || []
+            const normalized = raw.map((p) => {
+                const usageCount = p.currentUsageCount ?? p.usageCount ?? 0
+                const maxUses = p.usageLimit ?? p.maxUses ?? null
+                const minPurchaseAmount = p.minimumOrderAmount ?? p.minPurchaseAmount ?? 0
+                const totalDiscountAmount = p.totalDiscountAmount ?? (Array.isArray(p.usageHistory) ? p.usageHistory.reduce((s, u) => s + (u.discountAmount || 0), 0) : 0)
+                return {
+                    ...p,
+                    usageCount,
+                    maxUses,
+                    minPurchaseAmount,
+                    totalDiscountAmount
+                }
+            })
+            setAllPromocodes(normalized)
             setPagination({
                 ...pagination,
-                total: response.total || 0,
-                totalPages: response.totalPages || 0
+                total: response?.pagination?.totalItems || response.total || normalized.length,
+                totalPages: response?.pagination?.totalPages || response.totalPages || 1
             })
         } catch (error) {
             showMessage('Failed to fetch promocodes', 'error')
@@ -171,28 +181,7 @@ export default function AdminPromocodesPage() {
         setShowStats(false)
         setSelectedPromocode(null)
     }
-    const exportPromocodes = () => {
-        const headers = ['Code', 'Status', 'Type', 'Value', 'Uses', 'Max Uses', 'Created By', 'Created At']
-        const csvData = promocodes.map((p) => [
-            p.code,
-            p.status,
-            p.discountType,
-            p.discountValue,
-            p.usageCount || 0,
-            p.maxUses || 'Unlimited',
-            p.createdBy?.emailAddress || 'Unknown',
-            new Date(p.createdAt).toLocaleDateString()
-        ])
-        const csv = [headers, ...csvData].map((row) => row.join(',')).join('\n')
-        const blob = new Blob([csv], { type: 'text/csv' })
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `promocodes-${new Date().toISOString().split('T')[0]}.csv`
-        a.click()
-        window.URL.revokeObjectURL(url)
-        showMessage('Promocodes exported successfully', 'success')
-    }
+    // Removed exportPromocodes functionality per request
 
     const ToggleSwitch = ({ enabled, onToggle, label }) => (
         <button
@@ -232,28 +221,43 @@ export default function AdminPromocodesPage() {
                 <p className="text-gray-600">Manage all promotional codes across the platform</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <Card variant="subtleDark" hover={false} className="p-4">
+                <Card
+                    variant="subtleDark"
+                    hover={false}
+                    className="p-4">
                     <div className="text-sm text-gray-600 mb-1">Total Promocodes</div>
                     <div className="text-2xl font-bold">{promocodes?.length}</div>
                 </Card>
-                <Card variant="subtleDark" hover={false} className="p-4">
+                <Card
+                    variant="subtleDark"
+                    hover={false}
+                    className="p-4">
                     <div className="text-sm text-gray-600 mb-1">Active Codes</div>
                     <div className="text-2xl font-bold text-green-600">
                         {promocodes.filter((p) => p.status === 'active' || p.isActive === true).length}
                     </div>
                 </Card>
-                <Card variant="subtleDark" hover={false} className="p-4">
+                <Card
+                    variant="subtleDark"
+                    hover={false}
+                    className="p-4">
                     <div className="text-sm text-gray-600 mb-1">Total Uses</div>
-                    <div className="text-2xl font-bold">{promocodes.reduce((sum, p) => sum + (p.usageCount || 0), 0)}</div>
+                    <div className="text-2xl font-bold">{promocodes.reduce((sum, p) => sum + (p.currentUsageCount ?? p.usageCount ?? 0), 0)}</div>
                 </Card>
-                <Card variant="subtleDark" hover={false} className="p-4">
+                <Card
+                    variant="subtleDark"
+                    hover={false}
+                    className="p-4">
                     <div className="text-sm text-gray-600 mb-1">Total Discount Given</div>
                     <div className="text-2xl font-bold text-blue-600">
                         ${promocodes.reduce((sum, p) => sum + (p.totalDiscountAmount || 0), 0).toFixed(2)}
                     </div>
                 </Card>
             </div>
-            <Card variant="translucent" hover={false} className="p-6 mb-6">
+            <Card
+                variant="translucent"
+                hover={false}
+                className="p-6 mb-6">
                 <div className="flex flex-col lg:flex-row gap-4">
                     <form
                         onSubmit={handleSearch}
@@ -297,14 +301,7 @@ export default function AdminPromocodesPage() {
                             <option value="admin">Admin</option>
                             <option value="seller">Seller</option>
                         </select>
-                        <Button
-                            onClick={exportPromocodes}
-                            variant="outline"
-                            className="gap-2 mt-2"
-                            disabled={promocodes.length === 0}>
-                            <Download className="w-4 h-4" />
-                            Export
-                        </Button>
+                        {/* Removed Export button */}
                         <Button
                             onClick={() => handleCreateEdit()}
                             className="gap-2 mt-2 bg-[#00FF89] text-black hover:bg-[#00FF89]/90 focus-visible:ring-[#00FF89]/40">
@@ -319,14 +316,19 @@ export default function AdminPromocodesPage() {
                     <LoadingSpinner />
                 </div>
             ) : promocodes.length === 0 ? (
-                <Card variant="translucent" hover={false} className="p-12 text-center">
+                <Card
+                    variant="translucent"
+                    hover={false}
+                    className="p-12 text-center">
                     <p className="text-gray-500 mb-4">No promocodes found</p>
                     <Button onClick={() => handleCreateEdit()}>Create First Promocode</Button>
                 </Card>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {promocodes.map((promocode) => {
-                        const usagePercentage = promocode.maxUses ? Math.round((promocode.usageCount / promocode.maxUses) * 100) : 0
+                        const usageCountValue = promocode.currentUsageCount ?? promocode.usageCount ?? 0
+                        const maxUsesValue = promocode.usageLimit ?? promocode.maxUses
+                        const usagePercentage = maxUsesValue ? Math.round((usageCountValue / maxUsesValue) * 100) : 0
                         const isExpiringSoon = promocode.validUntil && new Date(promocode.validUntil) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 
                         const rawRole = promocode.createdByType || promocode.createdBy?.role || ''
@@ -421,8 +423,8 @@ export default function AdminPromocodesPage() {
                                     <div className="text-center">
                                         <p className="text-xs text-gray-500">Uses</p>
                                         <p className="font-bold text-white">
-                                            {promocode.usageCount || 0}
-                                            {promocode.maxUses && `/${promocode.maxUses}`}
+                                            {usageCountValue}
+                                            {maxUsesValue && `/${maxUsesValue}`}
                                         </p>
                                     </div>
                                     {promocode.minPurchaseAmount ? (

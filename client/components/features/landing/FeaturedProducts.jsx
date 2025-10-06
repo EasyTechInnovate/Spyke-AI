@@ -479,16 +479,6 @@ function ProductCard({ product, onClick }) {
                                 Featured
                             </span>
                         )}
-                        {isNewProduct && (
-                            <span className="px-3.5 py-1 rounded-full bg-black/55 backdrop-blur text-[14px] font-semibold tracking-wide text-blue-400 border border-blue-400/30">
-                                New
-                            </span>
-                        )}
-                        {discountPercentage > 0 && (
-                            <span className="px-3.5 py-1 rounded-full bg-black/55 backdrop-blur text-[14px] font-semibold tracking-wide text-red-400 border border-red-400/30">
-                                -{discountPercentage}%
-                            </span>
-                        )}
                     </div>
                     <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
@@ -503,11 +493,21 @@ function ProductCard({ product, onClick }) {
                         <h3 className="font-semibold text-[18px] md:text-[18px] leading-snug text-white line-clamp-2 group-hover:text-[#00FF89] transition-colors">
                             {title}
                         </h3>
-                        <div className="mt-1 flex items-center gap-1.5 text-[12px] text-gray-300">
+                        <div className="mt-1 flex items-center gap-1.5 flex-wrap text-[12px] text-gray-300">
                             <span className="inline-flex items-center gap-1 bg-[#1a1a1a] border border-[#272727] px-2 py-0.5 rounded-md text-[11.5px] font-medium">
                                 <Star className="w-3.5 h-3.5 text-yellow-400" />
                                 {productRating.toFixed(1)}
                             </span>
+                            {isNewProduct && (
+                                <span className="inline-flex items-center gap-1 bg-[#1a1a1a] border border-blue-400/30 px-2 py-0.5 rounded-md text-[11.5px] font-medium text-blue-400">
+                                    New
+                                </span>
+                            )}
+                            {discountPercentage > 0 && (
+                                <span className="inline-flex items-center gap-1 bg-[#1a1a1a] border border-red-400/30 px-2 py-0.5 rounded-md text-[11.5px] font-medium text-red-400">
+                                    -{discountPercentage}%
+                                </span>
+                            )}
                         </div>
                     </div>
                     <p className="text-[15px] md:text-[15px] text-gray-300 line-clamp-3 leading-relaxed mb-4">{description}</p>

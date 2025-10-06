@@ -230,11 +230,12 @@ promocodeSchema.methods.calculateDiscount = function (orderAmount) {
     return Math.round(discountAmount * 100) / 100
 }
 
-promocodeSchema.methods.recordUsage = function (userId, purchaseId, discountAmount) {
+promocodeSchema.methods.recordUsage = async function (userId, purchaseId, discountAmount) {
     this.usageHistory.push({
         userId,
         purchaseId,
-        discountAmount
+        discountAmount,
+        usedAt: new Date()
     })
     this.currentUsageCount += 1
     return this.save()

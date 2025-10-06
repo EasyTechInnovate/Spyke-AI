@@ -57,12 +57,6 @@ export const createNavigationItems = (
                 href: '/admin/products/pending',
                 badge: counts?.products?.pending || undefined
             },
-            // {
-            //     id: 'featured-products',
-            //     label: 'Featured',
-            //     href: '/admin/products/featured',
-            //     badge: counts?.products?.featured || undefined
-            // }
         ]
     },
     {
