@@ -314,8 +314,8 @@ export default function PurchasedProductPage() {
                                         )}
                                     </button>
                                 </div>
-                                <div className="bg-black/40 rounded-xl p-5 border border-gray-800/50">
-                                    <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
+                                <div className="bg-black/40 rounded-xl p-5 border border-gray-800/50 overflow-hidden">
+                                    <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
                                         {product.fullDescription ||
                                             product.documentation ||
                                             'Full product details and instructions will be available here.'}

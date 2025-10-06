@@ -311,24 +311,41 @@ const purchaseControllerExport = {
     },
 
     confirmCheckoutSession: async (req, res, next) => {
+        const logPrefix = '[ConfirmCheckout]'
         try {
             const { authenticatedUser } = req
             const { sessionId } = req.body
             
-            if (!sessionId) return httpError(next, new Error('Session ID is required'), req, 400)
+            console.log(`${logPrefix} Request initiated - User: ${authenticatedUser.id}, Session: ${sessionId}, Timestamp: ${new Date().toISOString()}`)
+            
+            if (!sessionId) {
+                console.error(`${logPrefix} Missing session ID - User: ${authenticatedUser.id}`)
+                return httpError(next, new Error('Session ID is required'), req, 400)
+            }
 
             // Retrieve checkout session
             let session
             try {
+                console.log(`${logPrefix} Retrieving Stripe session...`)
                 session = await stripeService.retrieveCheckoutSession(sessionId)
+                console.log(`${logPrefix} Stripe session retrieved - Status: ${session.status}, Payment Status: ${session.payment_status}, Payment Intent: ${session.payment_intent}`)
             } catch (err) {
+                console.error(`${logPrefix} Failed to retrieve Stripe session - Error: ${err.message}`)
                 return httpError(next, new Error('Unable to retrieve checkout session'), req, 400)
             }
-            if (!session) return httpError(next, new Error('Invalid checkout session'), req, 400)
+            
+            if (!session) {
+                console.error(`${logPrefix} Invalid session returned from Stripe`)
+                return httpError(next, new Error('Invalid checkout session'), req, 400)
+            }
+            
             if (!stripeService.isCheckoutSessionSuccessful(session)) {
+                console.warn(`${logPrefix} Session not successful - Status: ${session.status}, Payment Status: ${session.payment_status}`)
                 return httpError(next, new Error('Checkout session not completed'), req, 400)
             }
+            
             if (session.metadata?.userId !== authenticatedUser.id) {
+                console.error(`${logPrefix} Session user mismatch - Session User: ${session.metadata?.userId}, Authenticated User: ${authenticatedUser.id}`)
                 return httpError(next, new Error('Session does not belong to user'), req, 403)
             }
 
@@ -336,19 +353,32 @@ const purchaseControllerExport = {
             let paymentIntentId = null
             if (session.payment_intent) {
                 try {
+                    console.log(`${logPrefix} Retrieving payment intent: ${session.payment_intent}`)
                     const pi = await stripeService.retrievePaymentIntent(session.payment_intent)
                     if (pi && stripeService.isPaymentSuccessful(pi) && pi.metadata?.userId === authenticatedUser.id) {
                         paymentIntentId = pi.id
+                        console.log(`${logPrefix} Payment intent verified - ID: ${paymentIntentId}, Status: ${pi.status}`)
+                    } else {
+                        console.warn(`${logPrefix} Payment intent validation failed - PI exists: ${!!pi}, Success: ${pi ? stripeService.isPaymentSuccessful(pi) : false}, User match: ${pi?.metadata?.userId === authenticatedUser.id}`)
                     }
                 } catch (e) {
-                    // Ignore error, will fall back to session id
+                    console.warn(`${logPrefix} Error retrieving payment intent, falling back to session ID - Error: ${e.message}`)
                 }
             }
             const paymentReference = paymentIntentId || sessionId
+            console.log(`${logPrefix} Using payment reference: ${paymentReference}`)
 
-            // Return existing purchase if already created (idempotent)
-            const existing = await Purchase.findOne({ paymentReference, userId: authenticatedUser.id }).populate('items.productId', 'title price type thumbnail')
+            // Check if purchase already exists
+            console.log(`${logPrefix} Checking for existing purchase...`)
+            const existing = await Purchase.findOne({ 
+                paymentReference, 
+                userId: authenticatedUser.id 
+            }).populate('items.productId', 'title price type thumbnail')
+            
             if (existing) {
+                console.log(`${logPrefix} 🔁 EXISTING PURCHASE FOUND - Purchase ID: ${existing._id}, Created: ${existing.createdAt}, Payment Ref: ${existing.paymentReference}`)
+                console.log(`${logPrefix} Returning existing purchase with ${existing.items.length} items, Total: $${existing.finalAmount}`)
+                
                 return httpResponse(req, res, 200, responseMessage.PRODUCT.PURCHASE_SUCCESSFUL, {
                     purchaseId: existing._id,
                     totalItems: existing.items.length,
@@ -370,11 +400,16 @@ const purchaseControllerExport = {
                 })
             }
 
-            // Build purchase from current cart
+            console.log(`${logPrefix} No existing purchase found, verifying cart...`)
+            
+            // Verify cart is valid and return pending status (webhook will create the actual purchase)
             const cart = await Cart.getOrCreateCart(authenticatedUser.id)
             await cart.populate('items.productId', 'title price type status sellerId thumbnail')
             
+            console.log(`${logPrefix} Cart loaded - Cart ID: ${cart._id}, Items: ${cart.items.length}`)
+            
             if (!cart.items.length) {
+                console.error(`${logPrefix} Empty cart - User: ${authenticatedUser.id}`)
                 return httpError(next, new Error(responseMessage.CART.EMPTY_CART), req, 400)
             }
 
@@ -382,9 +417,14 @@ const purchaseControllerExport = {
                 .filter(it => it.productId && it.productId.status === EProductStatusNew.PUBLISHED)
                 .map(it => ({ productId: it.productId._id, sellerId: it.productId.sellerId, price: it.productId.price }))
             
-            if (!purchaseItems.length) return httpError(next, new Error(responseMessage.CART.NO_VALID_ITEMS), req, 400)
+            console.log(`${logPrefix} Valid items in cart: ${purchaseItems.length}/${cart.items.length}`)
+            
+            if (!purchaseItems.length) {
+                console.error(`${logPrefix} No valid items in cart - All items filtered out`)
+                return httpError(next, new Error(responseMessage.CART.NO_VALID_ITEMS), req, 400)
+            }
 
-            // Store cart item details BEFORE clearing cart
+            // Return pending status - webhook will create the actual purchase
             const cartItemsForResponse = cart.items.map(i => ({
                 productId: i.productId._id,
                 title: i.productId.title,
@@ -393,129 +433,60 @@ const purchaseControllerExport = {
                 thumbnail: i.productId.thumbnail
             }))
 
-            let purchase
-            try {
-                purchase = await Purchase.create({
-                    userId: authenticatedUser.id,
-                    items: purchaseItems,
-                    totalAmount: cart.totalAmount,
-                    discountAmount: cart.appliedPromocode?.discountAmount || 0,
-                    finalAmount: cart.finalAmount,
-                    appliedPromocode: cart.appliedPromocode,
-                    paymentMethod: 'stripe_checkout',
-                    paymentReference,
-                    ipAddress: req.ip,
-                    userAgent: req.get('User-Agent')
-                })
-            } catch (e) {
-                if (e.code === 11000) {
-                    const dup = await Purchase.findOne({ paymentReference, userId: authenticatedUser.id }).populate('items.productId', 'title price type thumbnail')
-                    if (dup) {
-                        return httpResponse(req, res, 200, responseMessage.PRODUCT.PURCHASE_SUCCESSFUL, {
-                            purchaseId: dup._id,
-                            totalItems: dup.items.length,
-                            totalAmount: dup.totalAmount,
-                            discountAmount: dup.discountAmount,
-                            finalAmount: dup.finalAmount,
-                            status: dup.orderStatus,
-                            paymentStatus: dup.paymentStatus,
-                            purchaseDate: dup.purchaseDate,
-                            paymentMethod: dup.paymentMethod,
-                            appliedPromocode: dup.appliedPromocode,
-                            items: dup.items.map(i => ({
-                                productId: i.productId?._id || i.productId,
-                                title: i.productId?.title,
-                                price: i.productId?.price || i.price,
-                                type: i.productId?.type,
-                                thumbnail: i.productId?.thumbnail
-                            }))
-                        })
-                    }
-                }
-                throw e
-            }
-
-            await purchase.grantAccess()
-
-            // Promo usage
-            if (cart.appliedPromocode?.code) {
-                try {
-                    const promocode = await Promocode.findOne({ code: cart.appliedPromocode.code })
-                    if (promocode) await promocode.recordUsage(authenticatedUser.id, purchase._id, cart.appliedPromocode.discountAmount)
-                } catch (e) {
-                    // Ignore promo update errors
-                }
-            }
-            // Update product sales & notify sellers (best effort)
-            try {
-                for (const it of purchaseItems) {
-                    await Product.findByIdAndUpdate(it.productId, { $inc: { sales: 1 } })
-                    const seller = await sellerProfileModel.findById(it.sellerId)
-                    if (seller) {
-                        seller.updateStats('totalSales', 1)
-                        await seller.save()
-                        await notificationService.sendToUser(seller.userId, 'New Sale!', 'Your product has been purchased.', 'success')
-                    }
-                }
-            } catch (e) {
-                // Ignore seller update errors
-            }
-            // Clear cart (ignore errors)
-            try { 
-                await cart.clearCart()
-            } catch (e) {
-                // Ignore cart clear errors
-            }
-            // Notify buyer (ignore errors)
-            try { 
-                await notificationService.sendToUser(authenticatedUser.id, 'Purchase Successful!', 'Access granted.', 'success')
-            } catch (e) {
-                // Ignore notification errors
-            }
-
             const responseData = {
-                purchaseId: purchase._id,
+                status: 'processing',
+                message: 'Payment confirmed, order is being processed',
+                paymentReference,
                 totalItems: purchaseItems.length,
-                totalAmount: purchase.totalAmount,
-                discountAmount: purchase.discountAmount,
-                finalAmount: purchase.finalAmount,
-                status: purchase.orderStatus,
-                paymentStatus: purchase.paymentStatus,
-                purchaseDate: purchase.purchaseDate,
-                paymentMethod: purchase.paymentMethod,
-                appliedPromocode: purchase.appliedPromocode,
-                items: cartItemsForResponse
+                totalAmount: cart.totalAmount,
+                discountAmount: cart.appliedPromocode?.discountAmount || 0,
+                finalAmount: cart.finalAmount,
+                paymentMethod: 'stripe_checkout',
+                appliedPromocode: cart.appliedPromocode,
+                items: cartItemsForResponse,
+                note: 'Your purchase will be available in a moment'
             }
+            
+            console.log(`${logPrefix} ⏳ Returning processing status - Total: $${responseData.finalAmount}, Items: ${responseData.totalItems}, Webhook will create purchase`)
             
             return httpResponse(req, res, 200, responseMessage.PRODUCT.PURCHASE_SUCCESSFUL, responseData)
         } catch (err) {
+            console.error(`${logPrefix} ❌ Error in confirmCheckoutSession - User: ${req.authenticatedUser?.id}, Error: ${err.message}, Stack: ${err.stack}`)
             return httpError(next, err, req, 500)
         }
     },
 
     createPurchase: async (req, res, next) => {
+        const logPrefix = '[CreatePurchase]'
         try {
             const { authenticatedUser } = req
             const { paymentMethod, paymentReference } = req.body
 
+            console.log(`${logPrefix} Request initiated - User: ${authenticatedUser.id}, Method: ${paymentMethod}, Ref: ${paymentReference}, Timestamp: ${new Date().toISOString()}`)
+
             const cart = await Cart.getOrCreateCart(authenticatedUser.id)
             await cart.populate('items.productId')
 
+            console.log(`${logPrefix} Cart loaded - Cart ID: ${cart._id}, Items: ${cart.items.length}, Total: $${cart.finalAmount}`)
+
             if (cart.items.length === 0) {
+                console.error(`${logPrefix} Empty cart - User: ${authenticatedUser.id}`)
                 return httpError(next, new Error(responseMessage.CART.EMPTY_CART), req, 400)
             }
 
             // Duplicate prevention for manual / non-stripe flows
+            console.log(`${logPrefix} Checking for duplicate purchase...`)
             const productIds = cart.items.map(i => i.productId && i.productId._id?.toString()).filter(Boolean).sort()
             const recentSimilarPurchase = await Purchase.findOne({
                 userId: authenticatedUser.id,
                 paymentMethod: paymentMethod || 'manual',
                 finalAmount: cart.finalAmount,
-                createdAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) }, // last 5 minutes
+                createdAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) },
                 'items.productId': { $all: productIds }
             })
 
             if (recentSimilarPurchase) {
+                console.log(`${logPrefix} 🔁 DUPLICATE DETECTED - Returning existing purchase ID: ${recentSimilarPurchase._id}, Created: ${recentSimilarPurchase.createdAt}`)
                 return httpResponse(req, res, 200, 'Duplicate purchase prevented - returning existing order', {
                     purchaseId: recentSimilarPurchase._id,
                     totalItems: recentSimilarPurchase.items.length,
@@ -528,9 +499,11 @@ const purchaseControllerExport = {
                 })
             }
 
+            console.log(`${logPrefix} No duplicate found, processing cart items...`)
             const purchaseItems = []
             for (const item of cart.items) {
                 if (!item.productId || item.productId.status !== EProductStatusNew.PUBLISHED) {
+                    console.warn(`${logPrefix} Skipping invalid item - Product ID: ${item.productId?._id}, Status: ${item.productId?.status}`)
                     continue
                 }
 
@@ -542,7 +515,10 @@ const purchaseControllerExport = {
                 })
             }
 
+            console.log(`${logPrefix} Valid purchase items: ${purchaseItems.length}/${cart.items.length}`)
+
             if (purchaseItems.length === 0) {
+                console.error(`${logPrefix} No valid items after filtering`)
                 return httpError(next, new Error(responseMessage.CART.NO_VALID_ITEMS), req, 400)
             }
 
@@ -550,6 +526,8 @@ const purchaseControllerExport = {
             const safeReference = paymentReference && paymentReference !== 'manual-payment'
                 ? paymentReference
                 : `manual-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+
+            console.log(`${logPrefix} Creating purchase - Payment Ref: ${safeReference}, Is Free: ${cart.finalAmount === 0}`)
 
             const purchase = new Purchase({
                 userId: authenticatedUser.id,
@@ -565,14 +543,18 @@ const purchaseControllerExport = {
             })
 
             if (cart.finalAmount === 0) {
+                console.log(`${logPrefix} Free purchase - Granting immediate access`)
                 await purchase.grantAccess()
             } else {
                 try {
                     await purchase.save()
+                    console.log(`${logPrefix} ✅ Purchase saved successfully - Purchase ID: ${purchase._id}`)
                 } catch (e) {
                     if (e.code === 11000 && e.keyPattern?.paymentReference) {
+                        console.log(`${logPrefix} 🔁 DUPLICATE KEY ERROR - Finding existing purchase with ref: ${safeReference}`)
                         const existing = await Purchase.findOne({ paymentReference: safeReference })
                         if (existing) {
+                            console.log(`${logPrefix} Returning existing purchase from duplicate key error - ID: ${existing._id}`)
                             return httpResponse(req, res, 200, 'Duplicate prevented - existing purchase returned', {
                                 purchaseId: existing._id,
                                 totalItems: existing.items.length,
@@ -585,17 +567,22 @@ const purchaseControllerExport = {
                             })
                         }
                     }
+                    console.error(`${logPrefix} ❌ Error saving purchase - Code: ${e.code}, Message: ${e.message}`)
                     throw e
                 }
             }
 
+            // Update promocode usage
             if (cart.appliedPromocode && cart.appliedPromocode.code) {
+                console.log(`${logPrefix} Recording promocode usage - Code: ${cart.appliedPromocode.code}`)
                 const promocode = await Promocode.findOne({ code: cart.appliedPromocode.code })
                 if (promocode) {
                     await promocode.recordUsage(authenticatedUser.id, purchase._id, cart.appliedPromocode.discountAmount)
                 }
             }
 
+            // Update product sales and notify sellers
+            console.log(`${logPrefix} Updating product sales and notifying sellers...`)
             for (const item of purchaseItems) {
                 await Product.findByIdAndUpdate(item.productId, { $inc: { sales: 1 } })
 
@@ -613,8 +600,10 @@ const purchaseControllerExport = {
                 }
             }
 
+            console.log(`${logPrefix} Clearing cart...`)
             await cart.clearCart()
 
+            console.log(`${logPrefix} Sending buyer notification...`)
             await notificationService.sendToUser(
                 authenticatedUser.id,
                 cart.finalAmount === 0 ? 'Free Products Added!' : 'Purchase Successful!',
@@ -633,6 +622,8 @@ const purchaseControllerExport = {
                 purchaseDate: purchase.purchaseDate
             }
 
+            console.log(`${logPrefix} ✅ Purchase completed successfully - Purchase ID: ${purchase._id}, Total: $${purchase.finalAmount}, Items: ${purchaseItems.length}`)
+
             httpResponse(
                 req,
                 res,
@@ -641,6 +632,7 @@ const purchaseControllerExport = {
                 responseData
             )
         } catch (err) {
+            console.error(`${logPrefix} ❌ Error in createPurchase - User: ${req.authenticatedUser?.id}, Error: ${err.message}, Stack: ${err.stack}`)
             httpError(next, err, req, 500)
         }
     },
@@ -889,37 +881,66 @@ const purchaseControllerExport = {
 }
 
 async function handlePaymentSucceeded(paymentIntent, sessionId = null) {
+    const logPrefix = '[Webhook:PaymentSucceeded]'
+    const timestamp = new Date().toISOString()
+    
     try {
         const { userId, cartId } = paymentIntent.metadata || {}
-        if (!userId) return
+        
+        console.log(`${logPrefix} ========== WEBHOOK PROCESSING START ==========`)
+        console.log(`${logPrefix} Timestamp: ${timestamp}`)
+        console.log(`${logPrefix} Payment Intent ID: ${paymentIntent.id}`)
+        console.log(`${logPrefix} Session ID: ${sessionId || 'N/A'}`)
+        console.log(`${logPrefix} User ID: ${userId || 'MISSING'}`)
+        console.log(`${logPrefix} Cart ID: ${cartId || 'MISSING'}`)
+        console.log(`${logPrefix} Amount: $${stripeService.formatAmount(paymentIntent.amount)}`)
+        console.log(`${logPrefix} Status: ${paymentIntent.status}`)
+        
+        if (!userId) {
+            console.error(`${logPrefix} ❌ No userId in metadata - Cannot process webhook`)
+            return
+        }
 
-        // Enhanced deduplication - check multiple reference points
+        // Enhanced deduplication check
+        console.log(`${logPrefix} Checking for existing purchase (deduplication)...`)
         const existingPurchase = await Purchase.findOne({
             userId,
             $or: [
                 { paymentReference: paymentIntent.id },
                 ...(sessionId ? [{ paymentReference: sessionId }] : []),
                 {
-                    // Also check recent stripe_checkout purchases to prevent webhook duplicates
                     paymentMethod: { $in: ['stripe', 'stripe_checkout'] },
-                    createdAt: { $gte: new Date(Date.now() - 10 * 60 * 1000) } // Last 10 minutes
+                    createdAt: { $gte: new Date(Date.now() - 15 * 60 * 1000) },
+                    finalAmount: stripeService.formatAmount(paymentIntent.amount)
                 }
             ]
         })
 
         if (existingPurchase) {
-            console.log('Webhook: Existing purchase found, skipping creation:', existingPurchase._id)
+            console.log(`${logPrefix} 🔁 DUPLICATE DETECTED - Purchase already exists`)
+            console.log(`${logPrefix} Existing Purchase ID: ${existingPurchase._id}`)
+            console.log(`${logPrefix} Created: ${existingPurchase.createdAt}`)
+            console.log(`${logPrefix} Payment Reference: ${existingPurchase.paymentReference}`)
+            console.log(`${logPrefix} Skipping duplicate creation`)
+            console.log(`${logPrefix} ========== WEBHOOK PROCESSING END (DUPLICATE) ==========\n`)
             return
         }
 
+        console.log(`${logPrefix} No duplicate found, proceeding with purchase creation...`)
+
+        // Load and validate cart
+        console.log(`${logPrefix} Loading cart: ${cartId}`)
         const cart = await Cart.findById(cartId)
         if (!cart) {
-            console.log('Webhook: Cart not found for cartId:', cartId)
+            console.error(`${logPrefix} ❌ Cart not found - Cart ID: ${cartId}`)
+            console.log(`${logPrefix} ========== WEBHOOK PROCESSING END (CART NOT FOUND) ==========\n`)
             return
         }
 
         await cart.populate('items.productId')
+        console.log(`${logPrefix} Cart loaded - Items: ${cart.items.length}, Total: $${cart.totalAmount}`)
 
+        // Build purchase items
         const purchaseItems = []
         for (const item of cart.items) {
             if (item.productId && item.productId.status === EProductStatusNew.PUBLISHED) {
@@ -928,15 +949,24 @@ async function handlePaymentSucceeded(paymentIntent, sessionId = null) {
                     sellerId: item.productId.sellerId,
                     price: item.productId.price
                 })
+                console.log(`${logPrefix} Added item - Product: ${item.productId._id}, Price: $${item.productId.price}`)
+            } else {
+                console.warn(`${logPrefix} Skipping invalid item - Product: ${item.productId?._id}, Status: ${item.productId?.status}`)
             }
         }
+        
         if (purchaseItems.length === 0) {
-            console.log('Webhook: No valid purchase items found')
+            console.error(`${logPrefix} ❌ No valid purchase items found in cart`)
+            console.log(`${logPrefix} ========== WEBHOOK PROCESSING END (NO VALID ITEMS) ==========\n`)
             return
         }
 
+        console.log(`${logPrefix} Valid items: ${purchaseItems.length}/${cart.items.length}`)
+
+        // Create purchase
         let purchase
         try {
+            console.log(`${logPrefix} Creating purchase document...`)
             purchase = new Purchase({
                 userId,
                 items: purchaseItems,
@@ -951,30 +981,38 @@ async function handlePaymentSucceeded(paymentIntent, sessionId = null) {
             })
 
             await purchase.save()
+            console.log(`${logPrefix} ✅ Purchase created successfully - Purchase ID: ${purchase._id}`)
         } catch (saveError) {
-            // Handle duplicate key errors gracefully
             if (saveError.code === 11000) {
-                console.log('Webhook: Duplicate purchase detected, likely already processed by frontend')
+                console.log(`${logPrefix} 🔁 DUPLICATE KEY ERROR during save - Purchase likely created by frontend`)
+                console.log(`${logPrefix} Error details: ${saveError.message}`)
+                console.log(`${logPrefix} ========== WEBHOOK PROCESSING END (DUPLICATE KEY) ==========\n`)
                 return
             }
+            console.error(`${logPrefix} ❌ Error saving purchase - Code: ${saveError.code}, Message: ${saveError.message}`)
             throw saveError
         }
 
+        // Grant access
+        console.log(`${logPrefix} Granting access to purchased items...`)
         await purchase.grantAccess()
 
-        // Update promocode usage if applicable
+        // Update promocode usage
         if (cart.appliedPromocode && cart.appliedPromocode.code) {
+            console.log(`${logPrefix} Updating promocode usage - Code: ${cart.appliedPromocode.code}`)
             try {
                 const promocode = await Promocode.findOne({ code: cart.appliedPromocode.code })
                 if (promocode) {
                     await promocode.recordUsage(userId, purchase._id, cart.appliedPromocode.discountAmount)
+                    console.log(`${logPrefix} Promocode usage recorded`)
                 }
             } catch (promoError) {
-                console.warn('Webhook: Promocode update failed:', promoError.message)
+                console.warn(`${logPrefix} ⚠️ Promocode update failed: ${promoError.message}`)
             }
         }
 
         // Update product sales and notify sellers
+        console.log(`${logPrefix} Updating ${purchaseItems.length} product(s) and notifying sellers...`)
         try {
             for (const item of purchaseItems) {
                 await Product.findByIdAndUpdate(item.productId, { $inc: { sales: 1 } })
@@ -982,13 +1020,15 @@ async function handlePaymentSucceeded(paymentIntent, sessionId = null) {
                 const seller = await sellerProfileModel.findById(item.sellerId)
                 if (seller) {
                     await notificationService.sendToUser(seller.userId, 'New Sale!', 'Your product has been purchased via Stripe.', 'success')
+                    console.log(`${logPrefix} Notified seller: ${item.sellerId}`)
                 }
             }
         } catch (updateError) {
-            console.warn('Webhook: Product/seller update failed:', updateError.message)
+            console.warn(`${logPrefix} ⚠️ Product/seller update failed: ${updateError.message}`)
         }
 
         // Notify buyer
+        console.log(`${logPrefix} Sending buyer notification...`)
         try {
             await notificationService.sendToUser(
                 userId,
@@ -997,19 +1037,31 @@ async function handlePaymentSucceeded(paymentIntent, sessionId = null) {
                 'success'
             )
         } catch (notifError) {
-            console.warn('Webhook: Notification failed:', notifError.message)
+            console.warn(`${logPrefix} ⚠️ Buyer notification failed: ${notifError.message}`)
         }
 
         // Clear cart
+        console.log(`${logPrefix} Clearing cart...`)
         try {
             await cart.clearCart()
+            console.log(`${logPrefix} Cart cleared successfully`)
         } catch (clearError) {
-            console.warn('Webhook: Cart clear failed:', clearError.message)
+            console.warn(`${logPrefix} ⚠️ Cart clear failed: ${clearError.message}`)
         }
 
-        console.log('Webhook: Purchase created successfully:', purchase._id)
+        console.log(`${logPrefix} ✅ WEBHOOK PROCESSING COMPLETED SUCCESSFULLY`)
+        console.log(`${logPrefix} Purchase ID: ${purchase._id}`)
+        console.log(`${logPrefix} Total Amount: $${purchase.finalAmount}`)
+        console.log(`${logPrefix} Items: ${purchaseItems.length}`)
+        console.log(`${logPrefix} ========== WEBHOOK PROCESSING END (SUCCESS) ==========\n`)
+        
     } catch (error) {
-        console.error('Webhook: handlePaymentSucceeded error:', error)
+        console.error(`${logPrefix} ❌ CRITICAL ERROR in handlePaymentSucceeded`)
+        console.error(`${logPrefix} Error: ${error.message}`)
+        console.error(`${logPrefix} Stack: ${error.stack}`)
+        console.error(`${logPrefix} Payment Intent ID: ${paymentIntent?.id}`)
+        console.error(`${logPrefix} User ID: ${paymentIntent?.metadata?.userId}`)
+        console.log(`${logPrefix} ========== WEBHOOK PROCESSING END (ERROR) ==========\n`)
     }
 }
 
