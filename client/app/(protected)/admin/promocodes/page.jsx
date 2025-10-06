@@ -211,7 +211,7 @@ export default function AdminPromocodesPage() {
     )
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 min-h-screen">
             {/* Notifications */}
             <div className="fixed top-4 right-4 z-50 space-y-2">
                 <AnimatePresence mode="popLayout">
@@ -232,28 +232,28 @@ export default function AdminPromocodesPage() {
                 <p className="text-gray-600">Manage all promotional codes across the platform</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <Card className="p-4">
+                <Card variant="subtleDark" hover={false} className="p-4">
                     <div className="text-sm text-gray-600 mb-1">Total Promocodes</div>
                     <div className="text-2xl font-bold">{promocodes?.length}</div>
                 </Card>
-                <Card className="p-4">
+                <Card variant="subtleDark" hover={false} className="p-4">
                     <div className="text-sm text-gray-600 mb-1">Active Codes</div>
                     <div className="text-2xl font-bold text-green-600">
                         {promocodes.filter((p) => p.status === 'active' || p.isActive === true).length}
                     </div>
                 </Card>
-                <Card className="p-4">
+                <Card variant="subtleDark" hover={false} className="p-4">
                     <div className="text-sm text-gray-600 mb-1">Total Uses</div>
                     <div className="text-2xl font-bold">{promocodes.reduce((sum, p) => sum + (p.usageCount || 0), 0)}</div>
                 </Card>
-                <Card className="p-4">
+                <Card variant="subtleDark" hover={false} className="p-4">
                     <div className="text-sm text-gray-600 mb-1">Total Discount Given</div>
                     <div className="text-2xl font-bold text-blue-600">
                         ${promocodes.reduce((sum, p) => sum + (p.totalDiscountAmount || 0), 0).toFixed(2)}
                     </div>
                 </Card>
             </div>
-            <Card className="p-6 mb-6">
+            <Card variant="translucent" hover={false} className="p-6 mb-6">
                 <div className="flex flex-col lg:flex-row gap-4">
                     <form
                         onSubmit={handleSearch}
@@ -319,7 +319,7 @@ export default function AdminPromocodesPage() {
                     <LoadingSpinner />
                 </div>
             ) : promocodes.length === 0 ? (
-                <Card className="p-12 text-center">
+                <Card variant="translucent" hover={false} className="p-12 text-center">
                     <p className="text-gray-500 mb-4">No promocodes found</p>
                     <Button onClick={() => handleCreateEdit()}>Create First Promocode</Button>
                 </Card>

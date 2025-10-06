@@ -1,13 +1,14 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Search, Edit, Trash2, Grid3X3, Target, X, Loader2, ToggleLeft, ToggleRight, Package, Calendar, ChevronLeft, ChevronRight, Wrench } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, Grid3X3, Target, X, Loader2, ToggleLeft, ToggleRight, ChevronLeft, ChevronRight, Wrench } from 'lucide-react'
 import { Button } from '@/components/shared/ui/button'
 import Input from '@/components/shared/ui/input'
 import Card from '@/components/shared/ui/card'
 import Badge from '@/components/shared/ui/badge'
 import Notification from '@/components/shared/Notification'
 import { categoryAPI, industryAPI, toolAPI } from '@/lib/api/toolsNiche'
+
 
 export default function ToolsNichePage() {
     const [activeTab, setActiveTab] = useState('category')
@@ -27,14 +28,15 @@ export default function ToolsNichePage() {
     const [itemsPerPage, setItemsPerPage] = useState(12)
     const [notifications, setNotifications] = useState([])
 
+    const capitalizeTab = useCallback((tab) => tab.charAt(0).toUpperCase() + tab.slice(1), [])
+
     const addNotification = useCallback((message, type = 'info') => {
         const id = Date.now() + Math.random()
-        const newNotification = { id, message, type }
-        setNotifications((prev) => [...prev, newNotification])
+        setNotifications((prev) => [...prev, { id, message, type }])
     }, [])
 
     const removeNotification = useCallback((id) => {
-        setNotifications((prev) => prev.filter((notification) => notification.id !== id))
+        setNotifications((prev) => prev.filter((n) => n.id !== id))
     }, [])
 
     const fetchData = useCallback(
@@ -42,15 +44,13 @@ export default function ToolsNichePage() {
             try {
                 if (showLoader) setLoading(true)
                 const [categoriesRes, industriesRes, toolsRes] = await Promise.all([
-                    categoryAPI.getCategories(), 
+                    categoryAPI.getCategories(),
                     industryAPI.getIndustries(),
                     toolAPI.getTools()
                 ])
-                
                 const categoriesData = categoriesRes?.data?.categories || categoriesRes?.categories || categoriesRes?.data || []
                 const industriesData = industriesRes?.data?.industries || industriesRes?.industries || industriesRes?.data || []
                 const toolsData = toolsRes?.data?.tools || toolsRes?.tools || toolsRes?.data || []
-                
                 setCategories(Array.isArray(categoriesData) ? categoriesData : [])
                 setIndustries(Array.isArray(industriesData) ? industriesData : [])
                 setTools(Array.isArray(toolsData) ? toolsData : [])
@@ -68,53 +68,52 @@ export default function ToolsNichePage() {
         fetchData()
     }, [fetchData])
 
-    const currentData = activeTab === 'category' ? categories : activeTab === 'industry' ? industries : tools
-
-    const filteredData = currentData.filter(
-        (item) => item.name?.toLowerCase().includes(searchTerm.toLowerCase()) || item.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    const currentData = useMemo(
+        () => (activeTab === 'category' ? categories : activeTab === 'industry' ? industries : tools),
+        [activeTab, categories, industries, tools]
     )
 
-    const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+    const filteredData = useMemo(
+        () =>
+            currentData.filter(
+                (item) =>
+                    item.name?.toLowerCase().includes(searchTerm.toLowerCase()) || item.description?.toLowerCase().includes(searchTerm.toLowerCase())
+            ),
+        [currentData, searchTerm]
+    )
+
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1
     const startIndex = (currentPage - 1) * itemsPerPage
     const endIndex = startIndex + itemsPerPage
     const paginatedData = filteredData.slice(startIndex, endIndex)
 
     useEffect(() => {
         setCurrentPage(1)
-    }, [searchTerm, activeTab])
+    }, [searchTerm, activeTab, itemsPerPage])
 
     const handlePageChange = (page) => {
         if (page >= 1 && page <= totalPages) {
             setCurrentPage(page)
-            document.querySelector('[data-pagination-content]')?.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'start' 
-            })
+            document.querySelector('[data-pagination-content]')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
     }
 
-    const handleItemsPerPageChange = (newItemsPerPage) => {
-        setItemsPerPage(newItemsPerPage)
-        setCurrentPage(1) 
+    const handleItemsPerPageChange = (val) => {
+        setItemsPerPage(val)
+        setCurrentPage(1)
     }
 
     const getPageNumbers = () => {
         const pages = []
         const maxVisiblePages = 5
         if (totalPages <= maxVisiblePages) {
-            for (let i = 1; i <= totalPages; i++) {
-                pages.push(i)
-            }
+            for (let i = 1; i <= totalPages; i++) pages.push(i)
         } else {
             const halfVisible = Math.floor(maxVisiblePages / 2)
             let startPage = Math.max(currentPage - halfVisible, 1)
             let endPage = Math.min(startPage + maxVisiblePages - 1, totalPages)
-            if (endPage - startPage < maxVisiblePages - 1) {
-                startPage = Math.max(endPage - maxVisiblePages + 1, 1)
-            }
-            for (let i = startPage; i <= endPage; i++) {
-                pages.push(i)
-            }
+            if (endPage - startPage < maxVisiblePages - 1) startPage = Math.max(endPage - maxVisiblePages + 1, 1)
+            for (let i = startPage; i <= endPage; i++) pages.push(i)
         }
         return pages
     }
@@ -127,116 +126,79 @@ export default function ToolsNichePage() {
 
     const handleEdit = (item) => {
         setEditingItem(item)
-        setFormData({
-            name: item.name || '',
-            description: item.description || ''
-        })
+        setFormData({ name: item.name || '', description: item.description || '' })
         setShowCreateModal(true)
     }
 
     const handleSubmit = async (e) => {
         e.preventDefault()
-        if (!formData.name.trim()) {
-            addNotification('Name is required', 'error')
-            return
-        }
+        if (!formData.name.trim()) return addNotification('Name is required', 'error')
         try {
             setSubmitting(true)
-            const data = {
-                name: formData.name.trim(),
-                description: formData.description.trim()
-            }
+            const data = { name: formData.name.trim(), description: formData.description.trim() }
             let response
             if (editingItem) {
-                if (activeTab === 'category') {
-                    response = await categoryAPI.updateCategory(editingItem._id, data)
-                } else if (activeTab === 'industry') {
-                    response = await industryAPI.updateIndustry(editingItem._id, data)
-                } else {
-                    response = await toolAPI.updateTool(editingItem._id, data)
-                }
+                if (activeTab === 'category') response = await categoryAPI.updateCategory(editingItem._id, data)
+                else if (activeTab === 'industry') response = await industryAPI.updateIndustry(editingItem._id, data)
+                else response = await toolAPI.updateTool(editingItem._id, data)
             } else {
-                if (activeTab === 'category') {
-                    response = await categoryAPI.createCategory(data)
-                } else if (activeTab === 'industry') {
-                    response = await industryAPI.createIndustry(data)
-                } else {
-                    response = await toolAPI.createTool(data)
-                }
+                if (activeTab === 'category') response = await categoryAPI.createCategory(data)
+                else if (activeTab === 'industry') response = await industryAPI.createIndustry(data)
+                else response = await toolAPI.createTool(data)
             }
             const isSuccess = response?.success !== false && response?.statusCode !== 409 && response?.statusCode !== 400
             if (isSuccess) {
-                const action = editingItem ? 'updated' : 'created'
-                const capitalizedTab = activeTab.charAt(0).toUpperCase() + activeTab.slice(1)
-                addNotification(`${capitalizedTab} ${action} successfully`, 'success')
+                addNotification(`${capitalizeTab(activeTab)} ${editingItem ? 'updated' : 'created'} successfully`, 'success')
                 setShowCreateModal(false)
                 setFormData({ name: '', description: '' })
                 setEditingItem(null)
                 fetchData(false)
             } else {
-                const errorMessage = response?.message || `Failed to ${editingItem ? 'update' : 'create'} ${activeTab}`
-                addNotification(errorMessage, 'error')
+                addNotification(response?.message || `Failed to ${editingItem ? 'update' : 'create'} ${activeTab}`, 'error')
             }
         } catch (error) {
             console.error('API Error:', error)
-            let errorMessage = `Failed to ${editingItem ? 'update' : 'create'} ${activeTab}`
-            if (error?.response?.data?.message) {
-                errorMessage = error.response.data.message
-            } else if (error?.data?.message) {
-                errorMessage = error.data.message
-            } else if (error?.message) {
-                errorMessage = error.message
-            }
-            addNotification(errorMessage, 'error')
+            addNotification(
+                error?.response?.data?.message ||
+                    error?.data?.message ||
+                    error?.message ||
+                    `Failed to ${editingItem ? 'update' : 'create'} ${activeTab}`,
+                'error'
+            )
         } finally {
             setSubmitting(false)
         }
     }
 
     const handleToggleStatus = async (item) => {
-        const newStatus = item.isActive ? false : true
+        const newStatus = !item.isActive
         const operationKey = `toggle-${item._id}`
         try {
-            setOperationLoading((prev) => ({ ...prev, [operationKey]: true }))
+            setOperationLoading((p) => ({ ...p, [operationKey]: true }))
             let response
-            if (activeTab === 'category') {
-                response = await categoryAPI.updateCategory(item._id, { isActive: newStatus })
-            } else if (activeTab === 'industry') {
-                response = await industryAPI.updateIndustry(item._id, { isActive: newStatus })
-            } else {
-                response = await toolAPI.updateTool(item._id, { isActive: newStatus })
-            }
+            if (activeTab === 'category') response = await categoryAPI.updateCategory(item._id, { isActive: newStatus })
+            else if (activeTab === 'industry') response = await industryAPI.updateIndustry(item._id, { isActive: newStatus })
+            else response = await toolAPI.updateTool(item._id, { isActive: newStatus })
             const isSuccess = response?.success === true && response?.statusCode === 200
             if (isSuccess) {
-                const capitalizedTab = activeTab.charAt(0).toUpperCase() + activeTab.slice(1)
-                addNotification(`${capitalizedTab} ${newStatus ? 'activated' : 'deactivated'} successfully`, 'success')
-                if (activeTab === 'category') {
-                    setCategories((prev) => prev.map((cat) => (cat._id === item._id ? { ...cat, isActive: newStatus } : cat)))
-                } else if (activeTab === 'industry') {
-                    setIndustries((prev) => prev.map((industry) => (industry._id === item._id ? { ...industry, isActive: newStatus } : industry)))
-                } else {
-                    setTools((prev) => prev.map((tool) => (tool._id === item._id ? { ...tool, isActive: newStatus } : tool)))
-                }
+                addNotification(`${capitalizeTab(activeTab)} ${newStatus ? 'activated' : 'deactivated'} successfully`, 'success')
+                if (activeTab === 'category') setCategories((prev) => prev.map((c) => (c._id === item._id ? { ...c, isActive: newStatus } : c)))
+                else if (activeTab === 'industry') setIndustries((prev) => prev.map((i) => (i._id === item._id ? { ...i, isActive: newStatus } : i)))
+                else setTools((prev) => prev.map((t) => (t._id === item._id ? { ...t, isActive: newStatus } : t)))
             } else {
-                const errorMessage = response?.message || `Failed to update ${activeTab} status`
-                addNotification(errorMessage, 'error')
+                addNotification(response?.message || `Failed to update ${activeTab} status`, 'error')
             }
         } catch (error) {
             console.error('Toggle Status Error:', error)
-            let errorMessage = `Failed to update ${activeTab} status`
-            if (error?.response?.data?.message) {
-                errorMessage = error.response.data.message
-            } else if (error?.data?.message) {
-                errorMessage = error.data.message
-            } else if (error?.message) {
-                errorMessage = error.message
-            }
-            addNotification(errorMessage, 'error')
+            addNotification(
+                error?.response?.data?.message || error?.data?.message || error?.message || `Failed to update ${activeTab} status`,
+                'error'
+            )
         } finally {
-            setOperationLoading((prev) => {
-                const newState = { ...prev }
-                delete newState[operationKey]
-                return newState
+            setOperationLoading((p) => {
+                const n = { ...p }
+                delete n[operationKey]
+                return n
             })
         }
     }
@@ -250,65 +212,46 @@ export default function ToolsNichePage() {
         if (!itemToDelete) return
         const operationKey = `delete-${itemToDelete._id}`
         try {
-            setOperationLoading((prev) => ({ ...prev, [operationKey]: true }))
+            setOperationLoading((p) => ({ ...p, [operationKey]: true }))
             let response
-            if (activeTab === 'category') {
-                response = await categoryAPI.deleteCategory(itemToDelete._id)
-            } else if (activeTab === 'industry') {
-                response = await industryAPI.deleteIndustry(itemToDelete._id)
-            } else {
-                response = await toolAPI.deleteTool(itemToDelete._id)
-            }
+            if (activeTab === 'category') response = await categoryAPI.deleteCategory(itemToDelete._id)
+            else if (activeTab === 'industry') response = await industryAPI.deleteIndustry(itemToDelete._id)
+            else response = await toolAPI.deleteTool(itemToDelete._id)
             const isSuccess = response?.success !== false && response?.statusCode !== 404
             if (isSuccess) {
-                const capitalizedTab = activeTab.charAt(0).toUpperCase() + activeTab.slice(1)
-                addNotification(`${capitalizedTab} deleted successfully`, 'success')
-                if (activeTab === 'category') {
-                    setCategories((prev) => prev.filter((cat) => cat._id !== itemToDelete._id))
-                } else if (activeTab === 'industry') {
-                    setIndustries((prev) => prev.filter((industry) => industry._id !== itemToDelete._id))
-                } else {
-                    setTools((prev) => prev.filter((tool) => tool._id !== itemToDelete._id))
-                }
+                addNotification(`${capitalizeTab(activeTab)} deleted successfully`, 'success')
+                if (activeTab === 'category') setCategories((prev) => prev.filter((c) => c._id !== itemToDelete._id))
+                else if (activeTab === 'industry') setIndustries((prev) => prev.filter((i) => i._id !== itemToDelete._id))
+                else setTools((prev) => prev.filter((t) => t._id !== itemToDelete._id))
             } else {
-                const errorMessage = response?.message || `Failed to delete ${activeTab}`
-                addNotification(errorMessage, 'error')
+                addNotification(response?.message || `Failed to delete ${activeTab}`, 'error')
             }
         } catch (error) {
             console.error('Delete Error:', error)
-            let errorMessage = `Failed to delete ${activeTab}`
-            if (error?.response?.data?.message) {
-                errorMessage = error.response.data.message
-            } else if (error?.data?.message) {
-                errorMessage = error.data.message
-            } else if (error?.message) {
-                errorMessage = error.message
-            }
-            addNotification(errorMessage, 'error')
+            addNotification(error?.response?.data?.message || error?.data?.message || error?.message || `Failed to delete ${activeTab}`, 'error')
         } finally {
-            setOperationLoading((prev) => {
-                const newState = { ...prev }
-                delete newState[operationKey]
-                return newState
+            setOperationLoading((p) => {
+                const n = { ...p }
+                delete n[operationKey]
+                return n
             })
             setShowDeleteModal(false)
             setItemToDelete(null)
         }
     }
 
-    const handleView = (item) => {
-        addNotification(`Viewing ${item.name} details`, 'info')
-    }
-
-    const tabs = [
-        { id: 'category', label: 'Category', icon: Grid3X3 },
-        { id: 'industry', label: 'Industry', icon: Target },
-        { id: 'tools', label: 'Tools', icon: Wrench }
-    ]
+    const tabs = useMemo(
+        () => [
+            { id: 'category', label: 'Category', icon: Grid3X3 },
+            { id: 'industry', label: 'Industry', icon: Target },
+            { id: 'tools', label: 'Tools', icon: Wrench }
+        ],
+        []
+    )
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center py-16">
+            <div className="flex items-center justify-center py-16 min-h-screen">
                 <div className="text-center">
                     <Loader2 className="w-8 h-8 animate-spin text-[#00FF89] mx-auto mb-4" />
                     <p className="text-gray-400">Loading data...</p>
@@ -318,7 +261,8 @@ export default function ToolsNichePage() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 min-h-screen pb-10">
+            {/* Notifications */}
             <div className="fixed top-4 right-4 z-50 space-y-2">
                 <AnimatePresence>
                     {notifications.map((notification) => (
@@ -331,7 +275,8 @@ export default function ToolsNichePage() {
                 </AnimatePresence>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-1 sm:px-0 pb-3">
                 <div>
                     <h1 className="text-2xl font-bold text-white">Tools & Industry Management</h1>
                     <p className="text-gray-400">Manage categories, industries and tools for your platform</p>
@@ -344,8 +289,9 @@ export default function ToolsNichePage() {
                 </Button>
             </div>
 
-            <div className="border-b border-gray-700">
-                <nav className="flex space-x-8">
+            {/* Tabs */}
+            <div className="border-b-[3px] border-[#121417]">
+                <nav className="flex space-x-8 px-1 sm:px-0">
                     {tabs.map((tab) => {
                         const Icon = tab.icon
                         const isActive = activeTab === tab.id
@@ -353,9 +299,7 @@ export default function ToolsNichePage() {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm ${
-                                    isActive ? 'border-[#00FF89] text-[#00FF89]' : 'border-transparent text-gray-400 hover:text-gray-300'
-                                }`}>
+                                className={`flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm ${isActive ? 'border-[#00FF89] text-[#00FF89]' : 'border-transparent text-gray-400 hover:text-gray-300'}`}>
                                 <Icon className="w-4 h-4" />
                                 {tab.label}
                             </button>
@@ -364,7 +308,8 @@ export default function ToolsNichePage() {
                 </nav>
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+            {/* Search + ItemsPerPage */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 px-1 sm:px-0">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-1">
                     <div className="relative flex-1 max-w-md">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -381,8 +326,7 @@ export default function ToolsNichePage() {
                         <select
                             value={itemsPerPage}
                             onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-                            className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]"
-                        >
+                            className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]">
                             <option value={6}>6</option>
                             <option value={12}>12</option>
                             <option value={24}>24</option>
@@ -393,15 +337,15 @@ export default function ToolsNichePage() {
                 </div>
             </div>
 
-            <div className="mb-6" data-pagination-content>
+            {/* Range / Count */}
+            <div
+                className="mb-6 px-1 sm:px-0"
+                data-pagination-content>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-sm text-gray-400">
                     <div>
-                        Showing {startIndex + 1}-{Math.min(endIndex, filteredData.length)} of {filteredData.length} {activeTab === 'category' ? 'categories' : activeTab === 'industry' ? 'industries' : 'tools'}
-                        {searchTerm && (
-                            <span className="ml-1">
-                                matching "{searchTerm}"
-                            </span>
-                        )}
+                        Showing {startIndex + 1}-{Math.min(endIndex, filteredData.length)} of {filteredData.length}{' '}
+                        {activeTab === 'category' ? 'categories' : activeTab === 'industry' ? 'industries' : 'tools'}
+                        {searchTerm && <span className="ml-1">matching "{searchTerm}"</span>}
                     </div>
                     {totalPages > 1 && (
                         <div className="text-gray-500">
@@ -411,57 +355,85 @@ export default function ToolsNichePage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Card className="p-4">
+            {/* Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 px-1 sm:px-0">
+                <Card
+                    variant="subtleDark"
+                    hover={false}
+                    className="p-4">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-2xl font-bold text-white">{currentData.length}</p>
                             <p className="text-sm text-gray-400">Total</p>
                         </div>
-                        {activeTab === 'category' ? <Grid3X3 className="w-8 h-8 text-gray-400" /> : 
-                         activeTab === 'industry' ? <Target className="w-8 h-8 text-gray-400" /> :
-                         <Wrench className="w-8 h-8 text-gray-400" />}
+                        {activeTab === 'category' ? (
+                            <Grid3X3 className="w-8 h-8 text-gray-500" />
+                        ) : activeTab === 'industry' ? (
+                            <Target className="w-8 h-8 text-gray-500" />
+                        ) : (
+                            <Wrench className="w-8 h-8 text-gray-500" />
+                        )}
                     </div>
                 </Card>
-                <Card className="p-4">
+                <Card
+                    variant="elevated"
+                    hover={false}
+                    className="p-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-2xl font-bold text-[#00FF89]">{currentData.filter((item) => item.isActive).length}</p>
+                            <p className="text-2xl font-bold text-[#00FF89]">{currentData.filter((i) => i.isActive).length}</p>
                             <p className="text-sm text-gray-400">Active</p>
                         </div>
                         <ToggleRight className="w-8 h-8 text-[#00FF89]" />
                     </div>
                 </Card>
-                <Card className="p-4">
+                <Card
+                    variant="subtleDark"
+                    hover={false}
+                    className="p-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-2xl font-bold text-white">{currentData.filter((item) => !item.isActive).length}</p>
+                            <p className="text-2xl font-bold text-white">{currentData.filter((i) => !i.isActive).length}</p>
                             <p className="text-sm text-gray-400">Inactive</p>
                         </div>
-                        <ToggleLeft className="w-8 h-8 text-gray-400" />
+                        <ToggleLeft className="w-8 h-8 text-gray-500" />
                     </div>
                 </Card>
             </div>
 
-            <Card className="p-6">
+            {/* Data Grid */}
+            <Card
+                variant="translucent"
+                hover={false}
+                className="p-6 mx-1 sm:mx-0">
                 {filteredData.length === 0 ? (
                     <div className="text-center py-12">
                         <div className="w-16 h-16 bg-gray-800 rounded-lg flex items-center justify-center mx-auto mb-4">
-                            {activeTab === 'category' ? <Grid3X3 className="w-8 h-8 text-gray-500" /> : 
-                             activeTab === 'industry' ? <Target className="w-8 h-8 text-gray-500" /> :
-                             <Wrench className="w-8 h-8 text-gray-500" />}
+                            {activeTab === 'category' ? (
+                                <Grid3X3 className="w-8 h-8 text-gray-500" />
+                            ) : activeTab === 'industry' ? (
+                                <Target className="w-8 h-8 text-gray-500" />
+                            ) : (
+                                <Wrench className="w-8 h-8 text-gray-500" />
+                            )}
                         </div>
-                        <h4 className="text-lg font-medium text-white mb-2">No {activeTab === 'category' ? 'categories' : activeTab === 'industry' ? 'industries' : 'tools'} found</h4>
+                        <h4 className="text-lg font-medium text-white mb-2">
+                            No {activeTab === 'category' ? 'categories' : activeTab === 'industry' ? 'industries' : 'tools'} found
+                        </h4>
                         <p className="text-gray-400 mb-4">
-                            {searchTerm ? `No ${activeTab === 'category' ? 'categories' : activeTab === 'industry' ? 'industries' : 'tools'} match your search.` : `Create your first ${activeTab} to get started.`}
+                            {searchTerm
+                                ? `No ${activeTab === 'category' ? 'categories' : activeTab === 'industry' ? 'industries' : 'tools'} match your search.`
+                                : `Create your first ${activeTab} to get started.`}
                         </p>
                     </div>
                 ) : (
-                    <div data-pagination-content className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div
+                        data-pagination-content
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {paginatedData.map((item) => (
                             <div
                                 key={item._id}
-                                className="border border-gray-700 rounded-lg p-4 hover:border-gray-600 transition-colors">
+                                className="rounded-xl p-4 bg-[#11171C] border border-white/5 hover:border-[#00FF89]/30 transition-colors shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_2px_6px_-1px_rgba(0,0,0,0.5)]">
                                 <div className="flex items-start justify-between mb-3">
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 bg-gray-800 rounded-lg flex items-center justify-center">
@@ -533,8 +505,9 @@ export default function ToolsNichePage() {
                 )}
             </Card>
 
+            {/* Pagination */}
             {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4">
+                <div className="flex items-center justify-between mt-4 px-1 sm:px-0">
                     <div className="flex items-center gap-2">
                         <Button
                             variant="outline"
@@ -567,7 +540,9 @@ export default function ToolsNichePage() {
                             onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
                             className="bg-gray-800 border border-gray-700 rounded-lg text-white text-sm p-1">
                             {[12, 24, 36, 48].map((count) => (
-                                <option key={count} value={count}>
+                                <option
+                                    key={count}
+                                    value={count}>
                                     {count}
                                 </option>
                             ))}
@@ -576,6 +551,7 @@ export default function ToolsNichePage() {
                 </div>
             )}
 
+            {/* Create/Edit Modal */}
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex items-center justify-center p-4">
                     <motion.div
@@ -584,7 +560,8 @@ export default function ToolsNichePage() {
                         className="bg-[#1f1f1f] border border-gray-800 rounded-xl p-6 w-full max-w-md">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-medium text-white">
-                                {editingItem ? 'Edit' : 'Create'} {activeTab === 'category' ? 'Category' : activeTab === 'industry' ? 'Industry' : 'Tool'}
+                                {editingItem ? 'Edit' : 'Create'}{' '}
+                                {activeTab === 'category' ? 'Category' : activeTab === 'industry' ? 'Industry' : 'Tool'}
                             </h3>
                             <Button
                                 variant="ghost"
@@ -600,7 +577,7 @@ export default function ToolsNichePage() {
                             <Input
                                 label="Name"
                                 value={formData.name}
-                                onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+                                onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
                                 placeholder={`Enter ${activeTab} name`}
                                 className="bg-[#121212] border-gray-700 text-white"
                                 required
@@ -609,7 +586,7 @@ export default function ToolsNichePage() {
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
                                 <textarea
                                     value={formData.description}
-                                    onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                                    onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
                                     placeholder={`Enter ${activeTab} description`}
                                     className="w-full px-3 py-2 bg-[#121212] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00FF89] focus:border-transparent resize-none"
                                     rows={3}
@@ -636,6 +613,7 @@ export default function ToolsNichePage() {
                 </div>
             )}
 
+            {/* Delete Modal */}
             {showDeleteModal && itemToDelete && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex items-center justify-center p-4">
                     <motion.div
@@ -662,7 +640,9 @@ export default function ToolsNichePage() {
                                 </div>
                                 <div>
                                     <p className="text-white font-medium">Delete "{itemToDelete.name}"?</p>
-                                    <p className="text-gray-400 text-sm">{activeTab === 'category' ? 'Category' : activeTab === 'industry' ? 'Industry' : 'Tool'}</p>
+                                    <p className="text-gray-400 text-sm">
+                                        {activeTab === 'category' ? 'Category' : activeTab === 'industry' ? 'Industry' : 'Tool'}
+                                    </p>
                                 </div>
                             </div>
                             <p className="text-gray-300 text-sm">Are you sure you want to delete this {activeTab}? This action cannot be undone.</p>
@@ -692,3 +672,4 @@ export default function ToolsNichePage() {
         </div>
     )
 }
+

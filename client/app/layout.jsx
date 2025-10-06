@@ -157,6 +157,9 @@ export default function RootLayout({ children }) {
             lang="en"
             className={`${fontVariables} scroll-smooth`}>
             <head>
+                <style id="critical-fallback">{`body { background: #0B0B0B; color: #fff; margin: 0; }`}</style>
+                {/* Preload global stylesheet (best-effort; Next may transform path at build) */}
+                <link rel="preload" as="style" href="/globals.css" />
                 <meta charSet="utf-8" />
                 <meta name="p:domain_verify" content="ac2574a26c2baac8234b798c9c6c2724"/>
                 <link
