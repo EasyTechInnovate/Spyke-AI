@@ -1,5 +1,6 @@
 'use client'
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import usePayouts from '@/hooks/usePayouts'
 import {
     RefreshCw,
@@ -561,41 +562,69 @@ function LifecycleTimeline({ approvedAt, processedAt, completedAt, small }) {
 function Tooltip({ content, children }) {
     const [open, setOpen] = React.useState(false)
     const ref = React.useRef(null)
+    const [coords, setCoords] = useState({ top: 0, left: 0 })
+    const idRef = useRef(`tt-${Math.random().toString(36).slice(2)}`)
 
-    React.useEffect(() => {
-        const handleClick = (e) => {
-            if (ref.current && !ref.current.contains(e.target)) {
-                setOpen(false)
-            }
-        }
-        const handleKey = (e) => {
-            if (e.key === 'Escape') setOpen(false)
-        }
-        document.addEventListener('mousedown', handleClick)
-        document.addEventListener('keydown', handleKey)
+    const updatePosition = useCallback(() => {
+        if (!ref.current) return
+        const rect = ref.current.getBoundingClientRect()
+        const gap = 8
+        const top = rect.top + window.scrollY - gap
+        const left = rect.left + window.scrollX + rect.width / 2
+        setCoords({ top, left })
+    }, [])
+
+    useEffect(() => {
+        if (!open) return
+        updatePosition()
+        const handle = () => updatePosition()
+        window.addEventListener('scroll', handle, true)
+        window.addEventListener('resize', handle)
         return () => {
-            document.removeEventListener('mousedown', handleClick)
-            document.removeEventListener('keydown', handleKey)
+            window.removeEventListener('scroll', handle, true)
+            window.removeEventListener('resize', handle)
+        }
+    }, [open, updatePosition])
+
+    useEffect(() => {
+        const onDocClick = (e) => {
+            if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+        }
+        const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
+        document.addEventListener('mousedown', onDocClick)
+        document.addEventListener('keydown', onKey)
+        return () => {
+            document.removeEventListener('mousedown', onDocClick)
+            document.removeEventListener('keydown', onKey)
         }
     }, [])
+
+    const show = () => { setOpen(true); requestAnimationFrame(updatePosition) }
+    const hide = () => setOpen(false)
 
     return (
         <span
             ref={ref}
             className="relative inline-flex"
-            onMouseEnter={() => setOpen(true)}
-            onMouseLeave={() => setOpen(false)}
-            onFocus={() => setOpen(true)}
-            onBlur={() => setOpen(false)}
-            onClick={() => setOpen((o) => !o)}
+            aria-describedby={open ? idRef.current : undefined}
+            onMouseEnter={show}
+            onMouseLeave={hide}
+            onFocus={show}
+            onBlur={hide}
+            onClick={() => setOpen(o => !o)}
         >
             {children}
-            <span
-                role="tooltip"
-                className={`pointer-events-none select-none absolute z-40 -top-2 left-1/2 -translate-x-1/2 -translate-y-full whitespace-pre-wrap max-w-[240px] rounded-md border border-white/15 bg-black/80 px-2 py-1 text-[10px] leading-snug text-white shadow-lg backdrop-blur transition-opacity duration-150 ${open ? 'opacity-100' : 'opacity-0'}`}
-            >
-                {content}
-            </span>
+            {open && typeof document !== 'undefined' && createPortal(
+                <span
+                    id={idRef.current}
+                    role="tooltip"
+                    style={{ top: coords.top, left: coords.left, transform: 'translate(-50%, -100%)' }}
+                    className="fixed z-[9999] whitespace-pre-wrap max-w-[260px] rounded-md border border-white/15 bg-black/90 px-2 py-1.5 text-[11px] leading-snug text-white shadow-xl backdrop-blur-sm pointer-events-none"
+                >
+                    {content}
+                </span>,
+                document.body
+            )}
         </span>
     )
 }
