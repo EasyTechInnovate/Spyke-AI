@@ -16,41 +16,32 @@ export function useEnhancedSellerProfile(sellerId) {
         priceRange: 'all',
         sortBy: 'newest'
     })
+    const [productPage, setProductPage] = useState(1)
+    const [productLimit, setProductLimit] = useState(9) // default page size for public profile
+    const [productPagination, setProductPagination] = useState({
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        itemsPerPage: 9,
+        hasNextPage: false,
+        hasPreviousPage: false
+    })
 
     const loadSellerData = useCallback(async () => {
         try {
             setLoading(true)
             setError(null)
 
-            // Parallel data loading for better performance
-            const [sellerResponse, productsResponse] = await Promise.all([
-                sellerAPI.getPublicProfile(sellerId),
-                productsAPI.getProducts({
-                    sellerId,
-                    status: 'published',
-                    limit: 50
-                })
-            ])
-
-            // minimal debug: don't log raw API objects to avoid noisy, non-serializable output
-
+            // Fetch only seller profile here
+            const sellerResponse = await sellerAPI.getPublicProfile(sellerId)
             const sellerData = sellerResponse?.data || sellerResponse
             if (!sellerData?.id) throw new Error('Seller not found')
-
-            // Derive totalSales: prefer sellerData.stats.totalSales, otherwise sum sales from productsResponse
-            const productsData = productsResponse?.data?.products || productsResponse?.products || []
-            const derivedTotalSales = (() => {
-                const fromStats = sellerData.stats?.totalSales
-                if (typeof fromStats === 'number' && !isNaN(fromStats)) return fromStats
-                const sum = productsData.reduce((acc, p) => acc + (p.sales || 0), 0)
-                return sum
-            })()
 
             const transformedSeller = {
                 ...sellerData,
                 id: sellerData.id,
                 trustScore: calculateTrustScore(sellerData),
-                sellerLevel: getSellerLevel(derivedTotalSales),
+                sellerLevel: getSellerLevel(sellerData.stats?.totalSales || 0),
                 locationText: sellerData.location?.country || (typeof sellerData.location === 'string' ? sellerData.location : ''),
                 locationObj: sellerData.location || null,
                 isOnline: Math.random() > 0.5, // TODO: Implement real online status
@@ -60,7 +51,7 @@ export function useEnhancedSellerProfile(sellerId) {
                 specialties: [...(sellerData.niches || []), ...(sellerData.toolsSpecialization || [])],
                 metrics: {
                     totalProducts: sellerData.stats?.totalProducts || 0,
-                    totalSales: derivedTotalSales || 0,
+                    totalSales: sellerData.stats?.totalSales || 0,
                     avgRating: sellerData.stats?.averageRating || 0,
                     totalReviews: sellerData.stats?.totalReviews || 0,
                     profileViews: sellerData.stats?.profileViews || 0
@@ -68,16 +59,48 @@ export function useEnhancedSellerProfile(sellerId) {
             }
 
             setSeller(transformedSeller)
-            setProducts(productsData)
-
-            // Load similar sellers based on niches
-            loadSimilarSellers(transformedSeller.niches?.[0])
         } catch (error) {
             setError(error.message || 'Failed to load seller profile')
         } finally {
             setLoading(false)
         }
     }, [sellerId])
+
+    const loadProducts = useCallback(async (page = productPage) => {
+        try {
+            setLoading(true)
+            setError(null)
+
+            const productsResponse = await productsAPI.getProducts({
+                sellerId,
+                status: 'published',
+                page,
+                limit: productLimit
+            })
+
+            const data = productsResponse?.data || productsResponse
+            const productsData = Array.isArray(data?.products) ? data.products : []
+            setProducts(productsData)
+
+            if (data?.pagination) {
+                setProductPagination(data.pagination)
+            } else {
+                setProductPagination(prev => ({
+                    ...prev,
+                    currentPage: page,
+                    totalItems: productsData.length,
+                    totalPages: 1,
+                    hasNextPage: false,
+                    hasPreviousPage: false
+                }))
+            }
+        } catch (error) {
+            setError(error.message || 'Failed to load products')
+            setProducts([])
+        } finally {
+            setLoading(false)
+        }
+    }, [sellerId, productPage, productLimit])
 
     const loadSimilarSellers = async (primaryNiche) => {
         try {
@@ -123,6 +146,12 @@ export function useEnhancedSellerProfile(sellerId) {
         }
     }, [sellerId, loadSellerData])
 
+    useEffect(() => {
+        if (sellerId) {
+            loadProducts(productPage)
+        }
+    }, [sellerId, productPage, productLimit, loadProducts])
+
     return {
         seller,
         products: filteredProducts,
@@ -132,7 +161,15 @@ export function useEnhancedSellerProfile(sellerId) {
         error,
         productFilters,
         updateProductFilters,
-        refetch: loadSellerData
+        refetch: () => {
+            loadSellerData()
+            loadProducts(productPage)
+        },
+        // pagination exports
+        pagination: productPagination,
+        productPage,
+        setProductPage,
+        setProductLimit
     }
 }
 
