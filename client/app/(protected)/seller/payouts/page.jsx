@@ -52,6 +52,8 @@ export default function SellerPayoutDashboardPage() {
     const recent = dashboard?.recentPayouts || []
     const canRequest = dashboard?.canRequestPayout
 
+    const formatDate = (d) => (d ? new Date(d).toLocaleDateString() : '—')
+
     return (
         <div className="space-y-10">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -96,12 +98,49 @@ export default function SellerPayoutDashboardPage() {
                 </div>
             )}
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-                <SummaryCard title="Gross" value={`$${formatCurrencyStrict(gross)}`} subtitle="Gross Earnings" accent="amber" loading={loadingDashboard} />
-                <SummaryCard title="Commission" value={`$${formatCurrencyStrict(commissionAmount)}`} subtitle={`${commissionRate}%`} accent="rose" loading={loadingDashboard} />
-                <SummaryCard title="Platform Fee" value={`$${formatCurrencyStrict(platformFeeAmount)}`} subtitle={`${platformFeePct}%`} accent="orange" loading={loadingDashboard} />
-                <SummaryCard title="Processing" value={`$${formatCurrencyStrict(processingFeeAmount)}`} subtitle="Fixed Fee" accent="purple" loading={loadingDashboard} />
-                <SummaryCard title="You Receive" value={`$${formatCurrencyStrict(youReceiveCalculated)}`} subtitle="After All Fees" accent="emerald" loading={loadingDashboard} highlight />
-                <SummaryCard title="Available" value={`$${formatCurrencyStrict(availableForPayout)}`} subtitle="Available Now" accent="indigo" loading={loadingDashboard} />
+                <SummaryCard
+                    title="Gross"
+                    value={`$${formatCurrencyStrict(gross)}`}
+                    subtitle="Gross Earnings"
+                    accent="amber"
+                    loading={loadingDashboard}
+                />
+                <SummaryCard
+                    title="Commission"
+                    value={`$${formatCurrencyStrict(commissionAmount)}`}
+                    subtitle={`${commissionRate}%`}
+                    accent="rose"
+                    loading={loadingDashboard}
+                />
+                <SummaryCard
+                    title="Platform Fee"
+                    value={`$${formatCurrencyStrict(platformFeeAmount)}`}
+                    subtitle={`${platformFeePct}%`}
+                    accent="orange"
+                    loading={loadingDashboard}
+                />
+                <SummaryCard
+                    title="Processing"
+                    value={`$${formatCurrencyStrict(processingFeeAmount)}`}
+                    subtitle="Fixed Fee"
+                    accent="purple"
+                    loading={loadingDashboard}
+                />
+                <SummaryCard
+                    title="You Receive"
+                    value={`$${formatCurrencyStrict(youReceiveCalculated)}`}
+                    subtitle="After All Fees"
+                    accent="emerald"
+                    loading={loadingDashboard}
+                    highlight
+                />
+                <SummaryCard
+                    title="Available"
+                    value={`$${formatCurrencyStrict(availableForPayout)}`}
+                    subtitle="Available Now"
+                    accent="indigo"
+                    loading={loadingDashboard}
+                />
             </div>
             {earnings && (
                 <div className="grid gap-8 lg:grid-cols-5">
@@ -131,27 +170,62 @@ export default function SellerPayoutDashboardPage() {
                                 </li>
                             </ol>
                             <div className="mt-4 space-y-2 text-base text-white/50 leading-relaxed">
-                                <p>Reported Net Earnings from API: <span className="text-white/80 font-mono">${formatCurrencyStrict(reportedNet)}</span></p>
+                                <p>
+                                    Reported Net Earnings from API:{' '}
+                                    <span className="text-white/80 font-mono">${formatCurrencyStrict(reportedNet)}</span>
+                                </p>
                                 {reportedNet !== youReceiveCalculated && (
-                                    <p className="text-amber-300/80">Note: Reported Net differs from final receivable. This usually means Net excludes some platform or processing components shown above.</p>
+                                    <p className="text-amber-300/80">
+                                        Note: Reported Net differs from final receivable. This usually means Net excludes some platform or processing
+                                        components shown above.
+                                    </p>
                                 )}
-                                <p>Available For Payout now: <span className="text-white/80 font-mono">${formatCurrencyStrict(availableForPayout)}</span></p>
+                                <p>
+                                    Available For Payout now:{' '}
+                                    <span className="text-white/80 font-mono">${formatCurrencyStrict(availableForPayout)}</span>
+                                </p>
                             </div>
                         </div>
                         <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-5">
                             <h2 className="text-base font-semibold uppercase tracking-wide text-white/60">Financial Snapshot</h2>
                             <div className="grid sm:grid-cols-2 gap-4 text-base">
-                                <SnapshotLine label="Gross Earnings" value={`$${formatCurrencyStrict(gross)}`} />
-                                <SnapshotLine label="Total Paid Out" value={`$${formatCurrencyStrict(totalPaidOut)}`} />
-                                <SnapshotLine label="Commission Rate" value={`${commissionRate}%`} />
-                                <SnapshotLine label="Platform Fee %" value={`${platformFeePct}%`} />
-                                <SnapshotLine label="Processing Fee" value={`$${formatCurrencyStrict(processingFeeAmount)}`} />
-                                <SnapshotLine label="Reported Net" value={`$${formatCurrencyStrict(reportedNet)}`} />
-                                <SnapshotLine label="You Receive (Calc)" value={`$${formatCurrencyStrict(youReceiveCalculated)}`} highlight />
-                                <SnapshotLine label="Available Now" value={`$${formatCurrencyStrict(availableForPayout)}`} highlight />
+                                <SnapshotLine
+                                    label="Gross Earnings"
+                                    value={`$${formatCurrencyStrict(gross)}`}
+                                />
+                                <SnapshotLine
+                                    label="Total Paid Out"
+                                    value={`$${formatCurrencyStrict(totalPaidOut)}`}
+                                />
+                                <SnapshotLine
+                                    label="Commission Rate"
+                                    value={`${commissionRate}%`}
+                                />
+                                <SnapshotLine
+                                    label="Platform Fee %"
+                                    value={`${platformFeePct}%`}
+                                />
+                                <SnapshotLine
+                                    label="Processing Fee"
+                                    value={`$${formatCurrencyStrict(processingFeeAmount)}`}
+                                />
+                                <SnapshotLine
+                                    label="Reported Net"
+                                    value={`$${formatCurrencyStrict(reportedNet)}`}
+                                />
+                                <SnapshotLine
+                                    label="You Receive (Calc)"
+                                    value={`$${formatCurrencyStrict(youReceiveCalculated)}`}
+                                    highlight
+                                />
+                                <SnapshotLine
+                                    label="Available Now"
+                                    value={`$${formatCurrencyStrict(availableForPayout)}`}
+                                    highlight
+                                />
                             </div>
                         </div>
-                        <SalesIncludedPanel sales={salesIncluded} currency={currency} gross={gross} formatCurrencyStrict={formatCurrencyStrict} />
+                        {/* SalesIncludedPanel removed per request */}
                     </div>
                     <div className="lg:col-span-2 space-y-8">
                         <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4">
@@ -164,7 +238,9 @@ export default function SellerPayoutDashboardPage() {
                                 <Tag tone="purple">Total Sales ${formatCurrencyStrict(earnings.totalSales)}</Tag>
                             </div>
                             {!earnings.isEligible && (
-                                <p className="text-base text-white/50">You need at least ${formatCurrencyStrict(earnings.minimumThreshold)} available before requesting a payout.</p>
+                                <p className="text-base text-white/50">
+                                    You need at least ${formatCurrencyStrict(earnings.minimumThreshold)} available before requesting a payout.
+                                </p>
                             )}
                             <div className="pt-2 text-base text-white/40">Currency: {currency}</div>
                         </div>
@@ -201,42 +277,74 @@ export default function SellerPayoutDashboardPage() {
                                 <h2 className="text-base font-semibold uppercase tracking-wide text-white/60">Recent Payouts</h2>
                             </div>
                             <div className="overflow-x-auto -mx-4 px-4">
-                                <table className="w-full text-base">
+                                <table className="w-full text-[11px] md:text-xs">
                                     <thead>
                                         <tr className="text-white/50 border-b border-white/10">
                                             <th className="py-2 text-left font-medium">Requested</th>
                                             <th className="py-2 text-left font-medium">Amount</th>
                                             <th className="py-2 text-left font-medium">Gross</th>
-                                            <th className="py-2 text-left font-medium">Platform Fee</th>
+                                            <th className="py-2 text-left font-medium">Platform</th>
                                             <th className="py-2 text-left font-medium">Processing</th>
+                                            <th className="py-2 text-left font-medium">Approved</th>
+                                            <th className="py-2 text-left font-medium">Approved By</th>
+                                            <th className="py-2 text-left font-medium">Processed</th>
+                                            <th className="py-2 text-left font-medium">Completed</th>
+                                            <th className="py-2 text-left font-medium">Notes</th>
                                             <th className="py-2 text-left font-medium">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {loadingDashboard && (
                                             <tr>
-                                                <td colSpan={6} className="py-6 text-center text-white/40">Loading…</td>
+                                                <td
+                                                    colSpan={11}
+                                                    className="py-6 text-center text-white/40">
+                                                    Loading…
+                                                </td>
                                             </tr>
                                         )}
-                                        {!loadingDashboard && dashboard?.recentPayouts?.length === 0 && (
+                                        {!loadingDashboard && recent.length === 0 && (
                                             <tr>
-                                                <td colSpan={6} className="py-6 text-center text-white/40">No payout history yet</td>
+                                                <td
+                                                    colSpan={11}
+                                                    className="py-6 text-center text-white/40">
+                                                    No payout history yet
+                                                </td>
                                             </tr>
                                         )}
-                                        {dashboard?.recentPayouts?.map(p => (
-                                            <tr key={p._id} className="border-b border-white/5 last:border-none">
-                                                <td className="py-2 text-white/80">{new Date(p.requestedAt).toLocaleDateString()}</td>
-                                                <td className="py-2 font-mono text-white">${formatCurrencyStrict(p.amount)}</td>
-                                                <td className="py-2 font-mono text-white/80">${formatCurrencyStrict(p.grossAmount)}</td>
-                                                <td className="py-2 font-mono text-red-300">-${formatCurrencyStrict(p.platformFee)}</td>
-                                                <td className="py-2 font-mono text-red-300">-${formatCurrencyStrict(p.processingFee)}</td>
-                                                <td className="py-2"><span className="px-2 py-1 rounded-full bg-white/10 text-white/70 border border-white/15 text-sm capitalize">{p.status}</span></td>
-                                            </tr>
-                                        ))}
+                                        {recent.map((p) => {
+                                            const fullNotes = p.notes || p.failureReason || ''
+                                            const shortNotes = fullNotes.length > 28 ? fullNotes.slice(0, 25) + '…' : fullNotes || '—'
+                                            return (
+                                                <tr
+                                                    key={p._id}
+                                                    className="border-b border-white/5 last:border-none">
+                                                    <td className="py-2 text-white/80">{formatDate(p.requestedAt)}</td>
+                                                    <td className="py-2 font-mono text-white">${formatCurrencyStrict(p.amount)}</td>
+                                                    <td className="py-2 font-mono text-white/80">${formatCurrencyStrict(p.grossAmount)}</td>
+                                                    <td className="py-2 font-mono text-red-300">-${formatCurrencyStrict(p.platformFee)}</td>
+                                                    <td className="py-2 font-mono text-red-300">-${formatCurrencyStrict(p.processingFee)}</td>
+                                                    <td className="py-2 font-mono text-white/70">{formatDate(p.approvedAt)}</td>
+                                                    <td className="py-2 font-mono text-white/50">{p.approvedBy?._id || '—'}</td>
+                                                    <td className="py-2 font-mono text-white/70">{formatDate(p.processedAt)}</td>
+                                                    <td className="py-2 font-mono text-white/70">{formatDate(p.completedAt)}</td>
+                                                    <td
+                                                        className="py-2 font-mono text-white/60 max-w-[140px] truncate"
+                                                        title={fullNotes}>
+                                                        {shortNotes}
+                                                    </td>
+                                                    <td className="py-2">
+                                                        <span className="px-2 py-1 rounded-full bg-white/10 text-white/70 border border-white/15 text-[10px] capitalize">
+                                                            {p.status}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        })}
                                     </tbody>
                                 </table>
                             </div>
-                            <p className="text-sm text-white/40">All monetary figures display exact stored precision. No rounding applied.</p>
+                            <p className="text-[10px] text-white/40">Lifecycle columns show each stage; missing dates indicate not yet reached.</p>
                         </div>
                     </div>
                 </div>
@@ -257,7 +365,8 @@ function SummaryCard({ title, value, subtitle, icon: Icon, accent = 'emerald', l
         purple: 'from-purple-500/20 to-purple-500/5 text-purple-300'
     }
     return (
-        <div className={`relative overflow-hidden rounded-xl border ${highlight ? 'border-emerald-500/40' : 'border-white/10'} bg-gradient-to-br from-white/5 to-white/0 p-4 flex flex-col gap-1`}>
+        <div
+            className={`relative overflow-hidden rounded-xl border ${highlight ? 'border-emerald-500/40' : 'border-white/10'} bg-gradient-to-br from-white/5 to-white/0 p-4 flex flex-col gap-1`}>
             <div className={`absolute inset-0 bg-gradient-to-br ${accentMap[accent]} opacity-10 pointer-events-none`} />
             <div className="flex items-start justify-between">
                 <div className="flex flex-col">
@@ -270,7 +379,8 @@ function SummaryCard({ title, value, subtitle, icon: Icon, accent = 'emerald', l
                     </div>
                 )}
             </div>
-            <div className={`text-lg font-semibold tracking-tight min-h-[1.75rem] flex items-center ${highlight ? 'text-emerald-300' : 'text-white'}`}>
+            <div
+                className={`text-lg font-semibold tracking-tight min-h-[1.75rem] flex items-center ${highlight ? 'text-emerald-300' : 'text-white'}`}>
                 {loading ? <span className="text-white/40">…</span> : value}
             </div>
         </div>
@@ -298,7 +408,8 @@ function FeeLine({ label, value }) {
 
 function SnapshotLine({ label, value, highlight }) {
     return (
-        <div className={`flex items-center justify-between px-3 py-2 rounded-md border ${highlight ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-white/5 border-white/10'}`}>
+        <div
+            className={`flex items-center justify-between px-3 py-2 rounded-md border ${highlight ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-white/5 border-white/10'}`}>
             <span className="text-xs text-white/60">{label}</span>
             <span className={`text-xs font-mono ${highlight ? 'text-emerald-300' : 'text-white/80'}`}>{value}</span>
         </div>
@@ -316,26 +427,5 @@ function Tag({ children, tone = 'gray' }) {
         purple: 'bg-purple-500/15 text-purple-300 border-purple-500/30'
     }
     return <span className={`px-2 py-1 rounded-full border text-[10px] font-medium ${map[tone]}`}>{children}</span>
-}
-
-function SalesIncludedPanel({ sales, currency, gross, formatCurrencyStrict }) {
-    const [open, setOpen] = React.useState(false)
-    if (!sales.length) return null
-    return (
-        <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4">
-            <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-white/60">Sales Included ({sales.length})</h2>
-                <button onClick={() => setOpen(o => !o)} className="text-xs px-3 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white/70 border border-white/15">
-                    {open ? 'Hide IDs' : 'Show IDs'}
-                </button>
-            </div>
-            <p className="text-xs text-white/50">These sales make up the current gross (${formatCurrencyStrict(gross)} {currency}).</p>
-            {open && (
-                <div className="max-h-56 overflow-auto rounded-md bg-black/30 border border-white/10 p-3 text-[10px] leading-relaxed space-y-1 font-mono text-white/70">
-                    {sales.map(id => <div key={id}>{id}</div>)}
-                </div>
-            )}
-        </div>
-    )
 }
 

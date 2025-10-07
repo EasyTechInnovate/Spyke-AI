@@ -27,8 +27,6 @@ import Container from '@/components/shared/layout/Container'
 import { useAuth } from '@/hooks/useAuth'
 import { purchaseAPI } from '@/lib/api'
 import Link from 'next/link'
-import OptimizedImage from '@/components/shared/ui/OptimizedImage'
-import ImagePlaceholder from '@/components/shared/ui/ImagePlaceholder'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
 import { useRouter } from 'next/navigation'
 const typeIcons = {
@@ -297,7 +295,7 @@ export default function PurchasesPage() {
 function PurchaseCard({ purchase, selected = false, onToggle, onViewPremium }) {
     const { product, purchaseDate } = purchase
     const router = useRouter()
-    
+
     if (!product) {
         return (
             <motion.div className="bg-[#1f1f1f] border border-gray-800 rounded-2xl p-4">
@@ -305,20 +303,20 @@ function PurchaseCard({ purchase, selected = false, onToggle, onViewPremium }) {
             </motion.div>
         )
     }
-    
+
     const Icon = typeIcons[product.type] || Package
     const colorClass = typeColors[product.type] || 'text-gray-400 bg-gray-400/10 border-gray-400/20'
-    
+
     // Check if premium content is available
-    const hasPremiumContent = product.premiumContent && (
-        product.premiumContent.promptText || 
-        product.premiumContent.promptInstructions || 
-        product.premiumContent.automationInstructions ||
-        product.premiumContent.agentConfiguration ||
-        (product.premiumContent.detailedHowItWorks && product.premiumContent.detailedHowItWorks.length > 0) ||
-        (product.premiumContent.automationFiles && product.premiumContent.automationFiles.length > 0) ||
-        (product.premiumContent.agentFiles && product.premiumContent.agentFiles.length > 0)
-    )
+    const hasPremiumContent =
+        product.premiumContent &&
+        (product.premiumContent.promptText ||
+            product.premiumContent.promptInstructions ||
+            product.premiumContent.automationInstructions ||
+            product.premiumContent.agentConfiguration ||
+            (product.premiumContent.detailedHowItWorks && product.premiumContent.detailedHowItWorks.length > 0) ||
+            (product.premiumContent.automationFiles && product.premiumContent.automationFiles.length > 0) ||
+            (product.premiumContent.agentFiles && product.premiumContent.agentFiles.length > 0))
 
     const handleAccessProduct = () => {
         // Store purchase data in sessionStorage to pass to the next page
@@ -334,16 +332,12 @@ function PurchaseCard({ purchase, selected = false, onToggle, onViewPremium }) {
             className="bg-[#1f1f1f] border border-gray-800 rounded-2xl overflow-hidden hover:border-[#00FF89]/50 transition-all duration-300 group">
             <div className="h-48 bg-gradient-to-br from-gray-900 to-gray-800 relative overflow-hidden">
                 {product.thumbnail ? (
-                    typeof OptimizedImage === 'function' ? (
-                        <OptimizedImage
-                            src={product.thumbnail}
-                            alt={product.title}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                    ) : (
-                        <ImagePlaceholder className="w-full h-full" />
-                    )
+                    <img
+                        src={product.thumbnail}
+                        alt={product.title}
+                        className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                    />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center">
                         <Icon className="w-16 h-16 text-gray-600" />
@@ -562,17 +556,12 @@ function OrdersTable({ purchases = [], selected = new Set(), onToggle = () => {}
                                         <div className="flex items-center gap-3">
                                             <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden">
                                                 {purchase.product?.thumbnail ? (
-                                                    typeof OptimizedImage === 'function' ? (
-                                                        <OptimizedImage
-                                                            src={purchase.product.thumbnail}
-                                                            alt={purchase.product.title}
-                                                            width={48}
-                                                            height={48}
-                                                            className="object-cover"
-                                                        />
-                                                    ) : (
-                                                        <Package className="w-6 h-6 text-gray-500" />
-                                                    )
+                                                    <img
+                                                        src={purchase.product.thumbnail}
+                                                        alt={purchase.product.title}
+                                                        className="object-cover w-full h-full"
+                                                        loading="lazy"
+                                                    />
                                                 ) : (
                                                     <Package className="w-6 h-6 text-gray-500" />
                                                 )}

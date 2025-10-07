@@ -10,7 +10,7 @@ const SETTINGS_SECTIONS = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'payment', label: 'Payment & Payouts', icon: CreditCard }
 ]
-const APPROVED_EDITABLE_FIELDS = ['bio','socialHandles','sellerBanner','portfolioLinks','customAutomationServices','websiteUrl','location','niches','toolsSpecialization']
+const APPROVED_EDITABLE_FIELDS = ['bio','socialHandles','sellerBanner','profileImage','portfolioLinks','customAutomationServices','websiteUrl','location','niches','toolsSpecialization']
 export default function SellerSettings() {
     const { data: seller, loading, error, mutate } = useSellerProfile()
     const {
@@ -90,6 +90,9 @@ export default function SellerSettings() {
                         if (APPROVED_EDITABLE_FIELDS.includes('socialHandles')) payload.socialHandles = dataToSave.socialLinks
                         if (APPROVED_EDITABLE_FIELDS.includes('sellerBanner') && dataToSave.bannerImage && dataToSave.bannerImage.trim()) {
                             payload.sellerBanner = dataToSave.bannerImage
+                        }
+                        if (APPROVED_EDITABLE_FIELDS.includes('profileImage') && dataToSave.profileImage && dataToSave.profileImage.trim()) {
+                            payload.profileImage = dataToSave.profileImage
                         }
                         return payload
                     })()
@@ -272,7 +275,7 @@ function ProfileSettings({ formData, setFormData, onSave, onFileUpload, saving, 
         }
     }, [formData, originalData, isEditing])
     const checkForChanges = (original, current) => {
-        const fieldsToCompare = isApproved ? ['bio','websiteUrl','bannerImage'] : ['fullName','email','bio','websiteUrl','profileImage','bannerImage']
+        const fieldsToCompare = isApproved ? ['bio','websiteUrl','bannerImage','profileImage'] : ['fullName','email','bio','websiteUrl','profileImage','bannerImage']
         for (const field of fieldsToCompare) {
             const originalValue = original[field] || ''
             const currentValue = current[field] || ''
@@ -689,28 +692,15 @@ function PaymentSettings({ formData, setFormData, onSave, saving }) {
         if (seller?.payoutInfo && Object.keys(originalData).length === 0) {
             const payoutData = {
                 method: seller.payoutInfo.method || 'paypal',
-                paypalEmail: seller.payoutInfo.paypalEmail || '',
                 stripeAccountId: seller.payoutInfo.stripeAccountId || '',
-                wiseEmail: seller.payoutInfo.wiseEmail || '',
-                accountHolderName: seller.payoutInfo.bankDetails?.accountHolderName || '',
-                accountNumber: seller.payoutInfo.bankDetails?.accountNumber || '',
-                routingNumber: seller.payoutInfo.bankDetails?.routingNumber || '',
-                bankName: seller.payoutInfo.bankDetails?.bankName || '',
-                swiftCode: seller.payoutInfo.bankDetails?.swiftCode || ''
             }
+            if (payoutData.method !== 'stripe') payoutData.method = 'stripe'
             setOriginalData(payoutData)
             setFormData((prev) => ({ ...prev, ...payoutData }))
         } else if (!seller?.payoutInfo && Object.keys(originalData).length === 0) {
             const defaultData = {
-                method: 'paypal',
-                paypalEmail: formData.paypalEmail || '',
-                stripeAccountId: '',
-                wiseEmail: '',
-                accountHolderName: '',
-                accountNumber: '',
-                routingNumber: '',
-                bankName: '',
-                swiftCode: ''
+                method: 'stripe',
+                stripeAccountId: formData.stripeAccountId || '',
             }
             setOriginalData(defaultData)
             setFormData((prev) => ({ ...prev, ...defaultData }))
@@ -725,14 +715,7 @@ function PaymentSettings({ formData, setFormData, onSave, saving }) {
     const checkForPayoutChanges = (original, current) => {
         const fieldsToCheck = [
             'method',
-            'paypalEmail',
             'stripeAccountId',
-            'wiseEmail',
-            'accountHolderName',
-            'accountNumber',
-            'routingNumber',
-            'bankName',
-            'swiftCode'
         ]
         for (const field of fieldsToCheck) {
             if ((original[field] || '') !== (current[field] || '')) {
@@ -752,18 +735,7 @@ function PaymentSettings({ formData, setFormData, onSave, saving }) {
     const handleSave = async () => {
         const payoutData = {
             method: formData.method,
-            ...(formData.method === 'paypal' && { paypalEmail: formData.paypalEmail }),
             ...(formData.method === 'stripe' && { stripeAccountId: formData.stripeAccountId }),
-            ...(formData.method === 'wise' && { wiseEmail: formData.wiseEmail }),
-            ...(formData.method === 'bank' && {
-                bankDetails: {
-                    accountHolderName: formData.accountHolderName,
-                    accountNumber: formData.accountNumber,
-                    routingNumber: formData.routingNumber,
-                    bankName: formData.bankName,
-                    swiftCode: formData.swiftCode || undefined
-                }
-            })
         }
         try {
             const { updatePayoutInfo } = useSellerSettings()
@@ -785,12 +757,9 @@ function PaymentSettings({ formData, setFormData, onSave, saving }) {
         }
     }
     const payoutMethods = [
-        { value: 'paypal', label: 'PayPal', icon: '💙', description: 'Fast and secure PayPal transfers' },
         { value: 'stripe', label: 'Stripe', icon: '💳', description: 'Direct bank account via Stripe' },
-        { value: 'wise', label: 'Wise', icon: '🌍', description: 'International transfers with Wise' },
-        { value: 'bank', label: 'Bank Transfer', icon: '🏦', description: 'Traditional bank wire transfer' }
     ]
-    const currentMethod = formData.method || 'paypal'
+    const currentMethod = formData.method || 'stripe'
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -881,22 +850,6 @@ function PaymentSettings({ formData, setFormData, onSave, saving }) {
                     </div>
                 )}
                 <div className="space-y-4">
-                    {currentMethod === 'paypal' && (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">PayPal Email</label>
-                            <input
-                                type="email"
-                                value={formData.paypalEmail || ''}
-                                onChange={(e) => handleInputChange('paypalEmail', e.target.value)}
-                                disabled={!isEditing}
-                                className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
-                                    !isEditing ? 'opacity-70 cursor-not-allowed' : ''
-                                }`}
-                                placeholder={isEditing ? 'your-paypal@email.com' : ''}
-                            />
-                            {!isEditing && !formData.paypalEmail && <p className="text-sm text-gray-500 italic mt-1">No PayPal email configured</p>}
-                        </div>
-                    )}
                     {currentMethod === 'stripe' && (
                         <div>
                             <label className="block text-sm font-medium text-gray-300 mb-2">Stripe Account ID</label>
@@ -912,98 +865,6 @@ function PaymentSettings({ formData, setFormData, onSave, saving }) {
                             />
                             {!isEditing && !formData.stripeAccountId && (
                                 <p className="text-sm text-gray-500 italic mt-1">No Stripe account configured</p>
-                            )}
-                        </div>
-                    )}
-                    {currentMethod === 'wise' && (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Wise Account Email</label>
-                            <input
-                                type="email"
-                                value={formData.wiseEmail || ''}
-                                onChange={(e) => handleInputChange('wiseEmail', e.target.value)}
-                                disabled={!isEditing}
-                                className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
-                                    !isEditing ? 'opacity-70 cursor-not-allowed' : ''
-                                }`}
-                                placeholder={isEditing ? 'your-wise@email.com' : ''}
-                            />
-                            {!isEditing && !formData.wiseEmail && <p className="text-sm text-gray-500 italic mt-1">No Wise email configured</p>}
-                        </div>
-                    )}
-                    {currentMethod === 'bank' && (
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">Account Holder Name</label>
-                                    <input
-                                        type="text"
-                                        value={formData.accountHolderName || ''}
-                                        onChange={(e) => handleInputChange('accountHolderName', e.target.value)}
-                                        disabled={!isEditing}
-                                        className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
-                                            !isEditing ? 'opacity-70 cursor-not-allowed' : ''
-                                        }`}
-                                        placeholder={isEditing ? 'John Doe' : ''}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">Bank Name</label>
-                                    <input
-                                        type="text"
-                                        value={formData.bankName || ''}
-                                        onChange={(e) => handleInputChange('bankName', e.target.value)}
-                                        disabled={!isEditing}
-                                        className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
-                                            !isEditing ? 'opacity-70 cursor-not-allowed' : ''
-                                        }`}
-                                        placeholder={isEditing ? 'Bank of America' : ''}
-                                    />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">Account Number / IBAN</label>
-                                    <input
-                                        type="text"
-                                        value={formData.accountNumber || ''}
-                                        onChange={(e) => handleInputChange('accountNumber', e.target.value)}
-                                        disabled={!isEditing}
-                                        className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
-                                            !isEditing ? 'opacity-70 cursor-not-allowed' : ''
-                                        }`}
-                                        placeholder={isEditing ? '123456789 or IBAN' : ''}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">Routing Number</label>
-                                    <input
-                                        type="text"
-                                        value={formData.routingNumber || ''}
-                                        onChange={(e) => handleInputChange('routingNumber', e.target.value)}
-                                        disabled={!isEditing}
-                                        className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
-                                            !isEditing ? 'opacity-70 cursor-not-allowed' : ''
-                                        }`}
-                                        placeholder={isEditing ? '021000021' : ''}
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">SWIFT/BIC Code (Optional)</label>
-                                <input
-                                    type="text"
-                                    value={formData.swiftCode || ''}
-                                    onChange={(e) => handleInputChange('swiftCode', e.target.value)}
-                                    disabled={!isEditing}
-                                    className={`w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-transparent transition-colors ${
-                                        !isEditing ? 'opacity-70 cursor-not-allowed' : ''
-                                    }`}
-                                    placeholder={isEditing ? 'BOFAUS3N' : ''}
-                                />
-                            </div>
-                            {!isEditing && !formData.accountHolderName && !formData.bankName && (
-                                <p className="text-sm text-gray-500 italic">No bank details configured</p>
                             )}
                         </div>
                     )}
