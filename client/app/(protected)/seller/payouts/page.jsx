@@ -29,6 +29,17 @@ export default function SellerPayoutDashboardPage() {
     const pending = dashboard?.pendingPayouts?.[0]
     const recent = dashboard?.recentPayouts || []
     const canRequest = dashboard?.canRequestPayout
+
+    const gross = earnings?.grossEarnings || 0
+    const commissionRate = earnings?.commissionRate || 0
+    const platformFeePct = earnings?.platformFeePercentage || 0
+    const commissionAmount = gross * (commissionRate / 100)
+    const platformFeeAmount = gross * (platformFeePct / 100)
+    const processingFeeAmount = earnings?.processingFee || 0
+    const sellerReceives = Math.max(0, gross - commissionAmount - platformFeeAmount - processingFeeAmount)
+    const netReported = earnings?.netEarnings ?? sellerReceives
+    const availableForPayout = earnings?.availableForPayout ?? sellerReceives
+
     return (
         <div className="space-y-8">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -151,68 +162,88 @@ export default function SellerPayoutDashboardPage() {
                 <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4">
                     <h2 className="text-sm font-semibold uppercase tracking-wide text-white/60">How Your Payout is Calculated</h2>
                     <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-white mb-3">Example: $100 Sale Breakdown</h3>
+                        <h3 className="text-sm font-medium text-white mb-3">Current Earnings Breakdown</h3>
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between items-center py-1">
-                                <span className="text-white/70">1. Total Sale Amount</span>
-                                <span className="text-white font-mono">$100.00</span>
-                            </div>
-                            <div className="flex justify-between items-center py-1">
-                                <span className="text-white/70">2. Your Commission ({earnings.commissionRate}%)</span>
-                                <span className="text-emerald-400 font-mono">${((100 * earnings.commissionRate) / 100).toFixed(2)}</span>
+                                <span className="text-white/70">1. Gross Earnings</span>
+                                <span className="text-white font-mono">${gross.toFixed(2)}</span>
                             </div>
                             <div className="border-t border-white/10 pt-2">
                                 <div className="flex justify-between items-center py-1">
-                                    <span className="text-red-300">3. Platform Fee ({earnings.platformFeePercentage}%)</span>
-                                    <span className="text-red-300 font-mono">
-                                        -${(((100 * earnings.commissionRate) / 100) * (earnings.platformFeePercentage / 100)).toFixed(2)}
-                                    </span>
+                                    <span className="text-red-300">2. Platform Commission ({commissionRate}%)</span>
+                                    <span className="text-red-300 font-mono">-{commissionAmount.toFixed(2)}</span>
                                 </div>
+                                {platformFeePct > 0 && (
+                                    <div className="flex justify-between items-center py-1">
+                                        <span className="text-red-300">3. Platform Fee ({platformFeePct}%)</span>
+                                        <span className="text-red-300 font-mono">-{platformFeeAmount.toFixed(2)}</span>
+                                    </div>
+                                )}
                                 <div className="flex justify-between items-center py-1">
-                                    <span className="text-red-300">4. Processing Fee</span>
-                                    <span className="text-red-300 font-mono">-${earnings.processingFee.toFixed(2)}</span>
+                                    <span className="text-red-300">{platformFeePct > 0 ? '4.' : '3.'} Processing Fee</span>
+                                    <span className="text-red-300 font-mono">-{processingFeeAmount.toFixed(2)}</span>
                                 </div>
                             </div>
                             <div className="border-t border-white/10 pt-2 mt-2">
                                 <div className="flex justify-between items-center py-1 font-semibold">
-                                    <span className="text-emerald-400">You Receive</span>
-                                    <span className="text-emerald-400 font-mono text-lg">
-                                        $
-                                        {(
-                                            (100 * earnings.commissionRate) / 100 -
-                                            ((100 * earnings.commissionRate) / 100) * (earnings.platformFeePercentage / 100) -
-                                            earnings.processingFee
-                                        ).toFixed(2)}
-                                    </span>
+                                    <span className="text-emerald-400">You Receive (Calculated)</span>
+                                    <span className="text-emerald-400 font-mono text-lg">${sellerReceives.toFixed(2)}</span>
                                 </div>
+                                {netReported !== sellerReceives && (
+                                    <div className="flex justify-between items-center py-1 text-xs text-white/60">
+                                        <span>Reported Net Earnings</span>
+                                        <span className="font-mono">${netReported.toFixed(2)}</span>
+                                    </div>
+                                )}
+                                {availableForPayout !== sellerReceives && (
+                                    <div className="flex justify-between items-center py-1 text-xs text-white/60">
+                                        <span>Available For Payout</span>
+                                        <span className="font-mono">${availableForPayout.toFixed(2)}</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
+                        <p className="mt-3 text-[11px] leading-relaxed text-white/50">
+                            Platform Commission is the percentage retained by the platform from your gross earnings. Additional Platform Fee (if any)
+                            and Processing Fee are deducted after commission. The final amount shown under "You Receive" reflects the real-time
+                            calculated value based on your current totals.
+                        </p>
                     </div>
-
                     <div className="grid gap-3 md:grid-cols-2">
                         <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
                             <div className="flex items-center gap-2 mb-2">
                                 <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                                <span className="text-xs font-medium text-red-300">Platform Fee ({earnings.platformFeePercentage}%)</span>
+                                <span className="text-xs font-medium text-red-300">Platform Commission ({commissionRate}%)</span>
                             </div>
-                            <p className="text-xs text-white/60">Covers hosting, customer support, marketing, and platform maintenance</p>
+                            <p className="text-xs text-white/60">Primary percentage the platform retains from gross earnings.</p>
                         </div>
+                        {platformFeePct > 0 && (
+                            <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+                                    <span className="text-xs font-medium text-orange-300">Platform Fee ({platformFeePct}%)</span>
+                                </div>
+                                <p className="text-xs text-white/60">
+                                    Additional variable fee (in addition to commission) covering extended services.
+                                </p>
+                            </div>
+                        )}
                         <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
                             <div className="flex items-center gap-2 mb-2">
                                 <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
-                                <span className="text-xs font-medium text-orange-300">Processing Fee (${earnings.processingFee})</span>
+                                <span className="text-xs font-medium text-orange-300">Processing Fee (${processingFeeAmount.toFixed(2)})</span>
                             </div>
-                            <p className="text-xs text-white/60">Payment gateway costs and transaction processing</p>
+                            <p className="text-xs text-white/60">Gateway / transaction processing costs (aggregate).</p>
                         </div>
                     </div>
-
                     <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3">
                         <div className="flex items-center gap-2 mb-2">
                             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                            <span className="text-xs font-medium text-emerald-300">What You Get</span>
+                            <span className="text-xs font-medium text-emerald-300">Your Net (Before Holds)</span>
                         </div>
                         <p className="text-xs text-white/60">
-                            Global marketplace • Secure payments • Marketing exposure • Customer support • No upfront costs
+                            Calculated amount you earn after all current deductions are applied. This may differ from Available For Payout if some
+                            funds are still in a hold period.
                         </p>
                     </div>
                 </div>
@@ -342,3 +373,4 @@ function FeeLine({ label, value }) {
         </div>
     )
 }
+

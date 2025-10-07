@@ -19,14 +19,7 @@ import {
     Instagram,
     Linkedin,
     Youtube,
-    Shield,
-    Activity,
-    Zap,
-    TrendingUp,
-    Heart,
-    Info
-} from 'lucide-react'
-import Image from 'next/image'
+    Shield} from 'lucide-react'
 import ContactWidget from '@/components/features/seller/profile/ContactWidget'
 
 export default function PublicSellerProfile() {
@@ -39,7 +32,6 @@ export default function PublicSellerProfile() {
 
     const { seller, products = [], reviews = [], loading, error, pagination, productPage, setProductPage } = useEnhancedSellerProfile(sellerId)
     console.log('Seller Data:', { seller, products, reviews, loading, error })
-    // Safely derive stats only after hook returns; seller may be null during initial render
     const stats = seller?.stats || {}
     const metrics = seller?.metrics || {}
     const totalSales = metrics.totalSales ?? stats.totalSales ?? 0
@@ -118,11 +110,10 @@ export default function PublicSellerProfile() {
         <div className="min-h-screen bg-gradient-to-b from-black via-[#0a0a0a] to-[#111] text-white text-lg sm:text-xl leading-relaxed">
             {/* Banner */}
             <div className="relative h-[360px] sm:h-[420px] overflow-hidden">
-                <Image
+                <img
                     src={seller.sellerBanner || '/images/default-banner-dark.jpg'}
                     alt="Seller banner"
-                    fill
-                    className="object-cover"
+                    className="absolute inset-0 w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/30 to-black/70" />
             </div>
@@ -135,12 +126,11 @@ export default function PublicSellerProfile() {
                     transition={{ duration: 0.6 }}
                     className={`${cardBase} -mt-28 sm:-mt-32 mb-10 flex flex-col sm:flex-row sm:items-center gap-6`}>
                     <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-xl border border-white/10 overflow-hidden shadow-lg shrink-0">
-                        <Image
+                        <img
                             src={seller.avatar}
                             alt={seller.fullName}
-                            width={128}
-                            height={128}
-                            className="object-cover"
+                            className="w-full h-full object-cover"
+                            loading="lazy"
                         />
                         <span
                             className={`absolute bottom-2 right-2 ${seller.isOnline ? 'bg-[#00FF89]' : 'bg-gray-500'} w-4 h-4 rounded-full border-4 border-[#0b0b0b]`}
@@ -447,11 +437,11 @@ export default function PublicSellerProfile() {
                                                     onClick={() => handleProductClick(p._id)}
                                                     className="group bg-[#0f0f0f] border border-[#1a1a1a] rounded-xl p-4 hover:border-[#00FF89]/60 transition cursor-pointer">
                                                     <div className="relative h-40 w-full rounded-lg overflow-hidden mb-3">
-                                                        <Image
+                                                        <img
                                                             src={p.thumbnail}
                                                             alt={p.title}
-                                                            fill
-                                                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                            loading="lazy"
                                                         />
                                                         {discount > 0 && (
                                                             <span className="absolute top-2 left-2 bg-[#00FF89] text-black text-[10px] font-bold px-2 py-1 rounded-md">
@@ -553,11 +543,11 @@ export default function PublicSellerProfile() {
                                                     className="cursor-pointer flex flex-col gap-4 py-4 first:pt-0 last:pb-0">
                                                     <div className="flex gap-4">
                                                         <div className="relative w-28 h-28 rounded-lg overflow-hidden border border-[#1a1a1a] shrink-0">
-                                                            <Image
+                                                            <img
                                                                 src={p.thumbnail}
                                                                 alt={p.title}
-                                                                fill
-                                                                className="object-cover"
+                                                                className="absolute inset-0 w-full h-full object-cover"
+                                                                loading="lazy"
                                                             />
                                                             {discount > 0 && (
                                                                 <span className="absolute top-2 left-2 bg-[#00FF89] text-black text-[10px] font-bold px-2 py-1 rounded-md">
