@@ -158,7 +158,7 @@ export const formSteps = [
         id: 2,
         title: 'Expertise',
         subtitle: "What's your expertise?",
-        fields: ['niches', 'toolsSpecialization', 'customAutomationServices'] // Added 'niches' field
+        fields: ['niches', 'toolsSpecialization', 'customAutomationServices']
     },
     {
         id: 3,
@@ -228,10 +228,10 @@ export const formFields = {
         }
     },
     niches: {
-        label: 'Niches',
+        label: 'Category',
         type: 'tags',
         placeholder: 'Type and press Enter',
-        required: true, // REQUIRED in backend
+        required: true,
         minItems: 1,
         maxItems: 5,
         helperText: 'Select your areas of expertise (1-5 required)',
@@ -343,9 +343,9 @@ export const formFields = {
                 required: true,
                 options: [
                     { value: 'paypal', label: 'PayPal' },
-                    // { value: 'bank', label: 'Bank Transfer' },
+                    { value: 'bank', label: 'Bank Transfer' },
                     { value: 'stripe', label: 'Stripe' },
-                    // { value: 'wise', label: 'Wise (formerly TransferWise)' }
+                    { value: 'wise', label: 'Wise (formerly TransferWise)' }
                 ],
                 validation: {
                     message: 'Please select a payout method'
@@ -399,16 +399,16 @@ export const formFields = {
                     message: 'Enter a valid SWIFT/BIC code'
                 }
             },
-            // paypalEmail: {
-            //     label: 'PayPal Email',
-            //     type: 'email',
-            //     required: true, // Required when method is 'paypal'
-            //     showIf: (formData) => formData.payoutInfo?.method === 'paypal',
-            //     validation: {
-            //         pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-            //         message: 'Enter a valid PayPal email'
-            //     }
-            // },
+            paypalEmail: {
+                label: 'PayPal Email',
+                type: 'email',
+                required: true, // Required when method is 'paypal'
+                showIf: (formData) => formData.payoutInfo?.method === 'paypal',
+                validation: {
+                    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: 'Enter a valid PayPal email'
+                }
+            },
             stripeAccountId: {
                 label: 'Stripe Account ID',
                 type: 'text',
@@ -418,16 +418,16 @@ export const formFields = {
                     message: 'Stripe account ID is required'
                 }
             },
-            // wiseEmail: {
-            //     label: 'Wise Email',
-            //     type: 'email',
-            //     required: true, // Required when method is 'wise'
-            //     showIf: (formData) => formData.payoutInfo?.method === 'wise',
-            //     validation: {
-            //         pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-            //         message: 'Enter a valid Wise email'
-            //     }
-            // }
+            wiseEmail: {
+                label: 'Wise Email',
+                type: 'email',
+                required: true, // Required when method is 'wise'
+                showIf: (formData) => formData.payoutInfo?.method === 'wise',
+                validation: {
+                    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: 'Enter a valid Wise email'
+                }
+            }
         }
     },
     revenueShareAgreement: {

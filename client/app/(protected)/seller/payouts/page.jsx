@@ -1,7 +1,7 @@
 'use client'
 import React, { useCallback, useState } from 'react'
 import usePayouts from '@/hooks/usePayouts'
-import { RefreshCw, Loader2, Award, Wallet, Clock, AlertCircle, CheckCircle2, XCircle } from 'lucide-react'
+import { RefreshCw, Loader2, Wallet, AlertCircle, CheckCircle2, XCircle } from 'lucide-react'
 
 const statusColorMap = {
     pending: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
@@ -272,80 +272,85 @@ export default function SellerPayoutDashboardPage() {
                                 <p className="text-base text-white/50">You will be notified by email for each status update.</p>
                             </div>
                         )}
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-base font-semibold uppercase tracking-wide text-white/60">Recent Payouts</h2>
-                            </div>
-                            <div className="overflow-x-auto -mx-4 px-4">
-                                <table className="w-full text-[11px] md:text-xs">
-                                    <thead>
-                                        <tr className="text-white/50 border-b border-white/10">
-                                            <th className="py-2 text-left font-medium">Requested</th>
-                                            <th className="py-2 text-left font-medium">Amount</th>
-                                            <th className="py-2 text-left font-medium">Gross</th>
-                                            <th className="py-2 text-left font-medium">Platform</th>
-                                            <th className="py-2 text-left font-medium">Processing</th>
-                                            <th className="py-2 text-left font-medium">Approved</th>
-                                            <th className="py-2 text-left font-medium">Approved By</th>
-                                            <th className="py-2 text-left font-medium">Processed</th>
-                                            <th className="py-2 text-left font-medium">Completed</th>
-                                            <th className="py-2 text-left font-medium">Notes</th>
-                                            <th className="py-2 text-left font-medium">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {loadingDashboard && (
-                                            <tr>
-                                                <td
-                                                    colSpan={11}
-                                                    className="py-6 text-center text-white/40">
-                                                    Loading…
-                                                </td>
-                                            </tr>
-                                        )}
-                                        {!loadingDashboard && recent.length === 0 && (
-                                            <tr>
-                                                <td
-                                                    colSpan={11}
-                                                    className="py-6 text-center text-white/40">
-                                                    No payout history yet
-                                                </td>
-                                            </tr>
-                                        )}
-                                        {recent.map((p) => {
-                                            const fullNotes = p.notes || p.failureReason || ''
-                                            const shortNotes = fullNotes.length > 28 ? fullNotes.slice(0, 25) + '…' : fullNotes || '—'
-                                            return (
-                                                <tr
-                                                    key={p._id}
-                                                    className="border-b border-white/5 last:border-none">
-                                                    <td className="py-2 text-white/80">{formatDate(p.requestedAt)}</td>
-                                                    <td className="py-2 font-mono text-white">${formatCurrencyStrict(p.amount)}</td>
-                                                    <td className="py-2 font-mono text-white/80">${formatCurrencyStrict(p.grossAmount)}</td>
-                                                    <td className="py-2 font-mono text-red-300">-${formatCurrencyStrict(p.platformFee)}</td>
-                                                    <td className="py-2 font-mono text-red-300">-${formatCurrencyStrict(p.processingFee)}</td>
-                                                    <td className="py-2 font-mono text-white/70">{formatDate(p.approvedAt)}</td>
-                                                    <td className="py-2 font-mono text-white/50">{p.approvedBy?._id || '—'}</td>
-                                                    <td className="py-2 font-mono text-white/70">{formatDate(p.processedAt)}</td>
-                                                    <td className="py-2 font-mono text-white/70">{formatDate(p.completedAt)}</td>
-                                                    <td
-                                                        className="py-2 font-mono text-white/60 max-w-[140px] truncate"
-                                                        title={fullNotes}>
-                                                        {shortNotes}
-                                                    </td>
-                                                    <td className="py-2">
-                                                        <span className="px-2 py-1 rounded-full bg-white/10 text-white/70 border border-white/15 text-[10px] capitalize">
-                                                            {p.status}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            )
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <p className="text-[10px] text-white/40">Lifecycle columns show each stage; missing dates indicate not yet reached.</p>
+                    </div>
+                </div>
+            )}
+            {/* Full-width Recent Payouts Section */}
+            {earnings && (
+                <div className="mt-10 space-y-4">
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4 w-full">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-base font-semibold uppercase tracking-wide text-white/60">Recent Payouts</h2>
                         </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-[11px] md:text-xs">
+                                <thead>
+                                    <tr className="text-white/50 border-b border-white/10">
+                                        <th className="py-2 text-left font-medium">Requested</th>
+                                        <th className="py-2 text-left font-medium">Amount</th>
+                                        <th className="py-2 text-left font-medium">Gross</th>
+                                        <th className="py-2 text-left font-medium">Platform</th>
+                                        <th className="py-2 text-left font-medium">Processing</th>
+                                        <th className="py-2 text-left font-medium">Approved</th>
+                                        <th className="py-2 text-left font-medium">Approved By</th>
+                                        <th className="py-2 text-left font-medium">Processed</th>
+                                        <th className="py-2 text-left font-medium">Completed</th>
+                                        <th className="py-2 text-left font-medium">Notes</th>
+                                        <th className="py-2 text-left font-medium">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {loadingDashboard && (
+                                        <tr>
+                                            <td
+                                                colSpan={11}
+                                                className="py-6 text-center text-white/40">
+                                                Loading…
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {!loadingDashboard && recent.length === 0 && (
+                                        <tr>
+                                            <td
+                                                colSpan={11}
+                                                className="py-6 text-center text-white/40">
+                                                No payout history yet
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {recent.map((p) => {
+                                        const fullNotes = p.notes || p.failureReason || ''
+                                        const shortNotes = fullNotes.length > 28 ? fullNotes.slice(0, 25) + '…' : fullNotes || '—'
+                                        return (
+                                            <tr
+                                                key={p._id}
+                                                className="border-b border-white/5 last:border-none">
+                                                <td className="py-2 text-white/80">{formatDate(p.requestedAt)}</td>
+                                                <td className="py-2 font-mono text-white">${formatCurrencyStrict(p.amount)}</td>
+                                                <td className="py-2 font-mono text-white/80">${formatCurrencyStrict(p.grossAmount)}</td>
+                                                <td className="py-2 font-mono text-red-300">-${formatCurrencyStrict(p.platformFee)}</td>
+                                                <td className="py-2 font-mono text-red-300">-${formatCurrencyStrict(p.processingFee)}</td>
+                                                <td className="py-2 font-mono text-white/70">{formatDate(p.approvedAt)}</td>
+                                                <td className="py-2 font-mono text-white/50">{p.approvedBy?._id || '—'}</td>
+                                                <td className="py-2 font-mono text-white/70">{formatDate(p.processedAt)}</td>
+                                                <td className="py-2 font-mono text-white/70">{formatDate(p.completedAt)}</td>
+                                                <td
+                                                    className="py-2 font-mono text-white/60 max-w-[140px] truncate"
+                                                    title={fullNotes}>
+                                                    {shortNotes}
+                                                </td>
+                                                <td className="py-2">
+                                                    <span className="px-2 py-1 rounded-full bg-white/10 text-white/70 border border-white/15 text-[10px] capitalize">
+                                                        {p.status}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                        <p className="text-[10px] text-white/40">Lifecycle columns show each stage; missing dates indicate not yet reached.</p>
                     </div>
                 </div>
             )}
