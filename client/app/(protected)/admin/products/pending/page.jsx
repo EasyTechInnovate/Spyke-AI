@@ -5,7 +5,6 @@ import {
     Search,
     Filter,
     CheckCircle,
-    XCircle,
     Eye,
     Shield,
     TestTube,
@@ -15,33 +14,15 @@ import {
     User,
     Calendar,
     DollarSign,
-    MessageSquare,
-    Download,
-    ExternalLink,
     RefreshCw,
-    CheckCheck,
-    MoreVertical,
-    ArrowUpDown,
     Zap,
-    Settings,
     SortAsc,
     SortDesc,
-    ChevronUp,
-    ChevronDown,
     X as CloseIcon,
-    Mail,
-    Globe,
-    MapPin,
-    Star,
-    FileText,
-    Activity,
     ArrowRight,
     Info
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { productsAPI } from '@/lib/api'
-import toast from '@/lib/utils/toast'
-import Link from 'next/link'
 import OptimizedImage from '@/components/shared/ui/OptimizedImage'
 import AdminProductModal from '@/components/product/AdminProductModal'
 import { useNotificationProvider } from '@/components/shared/notifications/NotificationProvider'
@@ -120,13 +101,7 @@ export default function PendingProductsPage() {
         urgent: undefined
     })
     const [actionLoading, setActionLoading] = useState(false)
-    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
-    const [advancedFilters, setAdvancedFilters] = useState({
-        category: '',
-        type: '',
-        priceRange: '',
-        seller: ''
-    })
+    
     const sortOptions = [
         { value: 'createdAt', label: 'Submission Date' },
         { value: 'title', label: 'Product Name' },
@@ -135,7 +110,6 @@ export default function PendingProductsPage() {
     ]
     const { showSuccess, showError, showInfo } = useNotificationProvider()
     
-    // Replace showMessage function with toast notifications
     const showMessage = (message, type = 'info') => {
         switch (type) {
             case 'success':
@@ -610,12 +584,6 @@ export default function PendingProductsPage() {
                         </div>
                     </div>
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                        <button
-                            onClick={() => exportProductsData(filteredProducts)}
-                            className="flex items-center justify-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium">
-                            <Download className="w-4 h-4" />
-                            <span>Export CSV</span>
-                        </button>
                         {filteredProducts.length > 0 && (
                             <div className="flex items-center gap-2">
                                 <input
