@@ -1,7 +1,20 @@
 'use client'
 import React, { useCallback, useState } from 'react'
 import usePayouts from '@/hooks/usePayouts'
-import { RefreshCw, Loader2, Wallet, AlertCircle, CheckCircle2, XCircle } from 'lucide-react'
+import {
+    RefreshCw,
+    Loader2,
+    Wallet,
+    AlertCircle,
+    CheckCircle2,
+    XCircle,
+    Info,
+    ChevronDown,
+    ChevronRight,
+    Clock,
+    CalendarDays,
+    Receipt
+} from 'lucide-react'
 
 const statusColorMap = {
     pending: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
@@ -48,7 +61,6 @@ export default function SellerPayoutDashboardPage() {
     const pending = dashboard?.pendingPayouts?.[0]
     const recent = dashboard?.recentPayouts || []
     const canRequest = dashboard?.canRequestPayout
-
 
     return (
         <div className="space-y-10">
@@ -165,9 +177,7 @@ export default function SellerPayoutDashboardPage() {
                                     <span className="font-mono text-emerald-400 text-xl">${formatCurrencyStrict(youReceiveCalculated)}</span>
                                 </li>
                             </ol>
-
                         </div>
-
                     </div>
                     <div className="lg:col-span-2 space-y-8">
                         <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4">
@@ -232,7 +242,6 @@ export default function SellerPayoutDashboardPage() {
                     </div>
                 </div>
             )}
-            <div className="text-center text-base text-white/30 pt-4 border-t border-white/5">Payout method management UI coming soon.</div>
         </div>
     )
 }
@@ -270,9 +279,6 @@ function SummaryCard({ title, value, subtitle, icon: Icon, accent = 'emerald', l
     )
 }
 
-
-
-
 function Tag({ children, tone = 'gray' }) {
     const map = {
         emerald: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
@@ -286,14 +292,10 @@ function Tag({ children, tone = 'gray' }) {
     return <span className={`px-2 py-1 rounded-full border text-[10px] font-medium ${map[tone]}`}>{children}</span>
 }
 
-import { Info, ChevronDown, ChevronRight, Clock, CalendarDays, Receipt } from 'lucide-react'
-
 function RecentPayouts({ payouts = [], loading, formatCurrencyStrict }) {
     const [open, setOpen] = React.useState(null)
     if (loading) {
-        return (
-            <div className="flex items-center justify-center py-8 text-white/40 text-sm">Loading recent payouts…</div>
-        )
+        return <div className="flex items-center justify-center py-8 text-white/40 text-sm">Loading recent payouts…</div>
     }
     if (!loading && payouts.length === 0) {
         return <div className="py-8 text-center text-white/40 text-sm">No payout history yet</div>
@@ -321,15 +323,23 @@ function RecentPayouts({ payouts = [], loading, formatCurrencyStrict }) {
 
     return (
         <div className="overflow-hidden rounded-lg border border-white/10">
-            <div className="hidden md:grid md:grid-cols-[140px_120px_120px_120px_110px_180px_100px_1fr] text-[11px] uppercase tracking-wide font-medium text-white/40 bg-white/5">
-                <div className="px-3 py-2">Requested</div>
-                <div className="px-3 py-2">Net</div>
-                <div className="px-3 py-2">Gross</div>
-                <div className="px-3 py-2">Fees</div>
-                <div className="px-3 py-2">Method</div>
-                <div className="px-3 py-2">Lifecycle (A / P / C)</div>
-                <div className="px-3 py-2">Status</div>
-                <div className="px-3 py-2">Details</div>
+            <div className="hidden md:grid md:grid-cols-[160px_140px_140px_130px_130px_210px_120px_1fr] text-sm uppercase tracking-wide font-medium text-white/50 bg-white/5">
+                <div className="px-4 py-3">Requested</div>
+                <div className="px-4 py-3">Net</div>
+                <div className="px-4 py-3">Gross</div>
+                <div className="px-4 py-3">Fees</div>
+                <div className="px-4 py-3">Method</div>
+                <div className="px-4 py-3 flex items-center gap-1">
+                    Lifecycle
+                    <button
+                        type="button"
+                        title="Payout lifecycle: Approved → Processed → Completed. Each colored dot fills when the stage is reached."
+                        className="text-white/40 hover:text-white/70 transition">
+                        <Info className="w-4 h-4" />
+                    </button>
+                </div>
+                <div className="px-4 py-3">Status</div>
+                <div className="px-4 py-3">Details</div>
             </div>
             <ul className="divide-y divide-white/5">
                 {payouts.map((p) => {
@@ -337,64 +347,130 @@ function RecentPayouts({ payouts = [], loading, formatCurrencyStrict }) {
                     const isOpen = open === p._id
                     const notes = p.notes || p.failureReason || ''
                     return (
-                        <li key={p._id} className="group">
+                        <li
+                            key={p._id}
+                            className="group">
                             {/* Desktop row */}
-                            <div className="hidden md:grid md:grid-cols-[140px_120px_120px_120px_110px_180px_100px_1fr] items-center text-[11px]">
-                                <div className="px-3 py-3 font-mono text-white/80">{fmtDate(p.requestedAt)}{p.payoutPeriod?.from && p.payoutPeriod?.to && (
-                                    <div className="text-[10px] text-white/40 mt-0.5 font-normal tracking-tight">
-                                        {fmtShort(p.payoutPeriod.from)} – {fmtShort(p.payoutPeriod.to)}
-                                    </div>
-                                )}</div>
-                                <div className="px-3 py-3 font-mono text-emerald-300 font-semibold">${formatCurrencyStrict(p.amount)}</div>
-                                <div className="px-3 py-3 font-mono text-white/70">${formatCurrencyStrict(p.grossAmount)}</div>
-                                <div className="px-3 py-3 font-mono text-rose-300" title={`Platform: $${formatCurrencyStrict(p.platformFee)}\nProcessing: $${formatCurrencyStrict(p.processingFee)}`}>-${formatCurrencyStrict(feesTotal)}</div>
-                                <div className="px-3 py-3 text-white/70 capitalize flex items-center gap-1">
-                                    <Receipt className="w-3.5 h-3.5 text-white/40" /> {p.payoutMethod || '—'}
+                            <div className="hidden md:grid md:grid-cols-[160px_140px_140px_130px_130px_210px_120px_1fr] items-center text-sm">
+                                <div className="px-4 py-4 font-mono text-white/90">
+                                    {fmtDate(p.requestedAt)}
+                                    {p.payoutPeriod?.from && p.payoutPeriod?.to && (
+                                        <div className="text-xs text-white/50 mt-1 font-normal tracking-tight">
+                                            {fmtShort(p.payoutPeriod.from)} – {fmtShort(p.payoutPeriod.to)}
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="px-3 py-3">
-                                    <LifecycleTimeline approvedAt={p.approvedAt} processedAt={p.processedAt} completedAt={p.completedAt} />
+                                <div className="px-4 py-4 font-mono text-emerald-300 font-semibold text-base">${formatCurrencyStrict(p.amount)}</div>
+                                <div className="px-4 py-4 font-mono text-white/80">${formatCurrencyStrict(p.grossAmount)}</div>
+                                <div
+                                    className="px-4 py-4 font-mono text-rose-300"
+                                    title={`Platform: $${formatCurrencyStrict(p.platformFee)}\nProcessing: $${formatCurrencyStrict(p.processingFee)}`}>
+                                    -${formatCurrencyStrict(feesTotal)}
                                 </div>
-                                <div className="px-3 py-3">
-                                    <span className={`px-2 py-1 rounded-full border text-[10px] font-medium capitalize ${statusTone(p.status)}`}>{p.status}</span>
+                                <div className="px-4 py-4 text-white/80 capitalize flex items-center gap-1 text-sm">
+                                    <Receipt className="w-4 h-4 text-white/40" /> {p.payoutMethod || '—'}
                                 </div>
-                                <div className="px-3 py-3 flex items-center gap-2">
-                                    <button onClick={() => setOpen(isOpen ? null : p._id)} className="inline-flex items-center gap-1 text-white/60 hover:text-white/90 transition text-[10px]">
-                                        {isOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />} Details
+                                <div className="px-4 py-4 scale-[1.05] origin-left">
+                                    <LifecycleTimeline
+                                        approvedAt={p.approvedAt}
+                                        processedAt={p.processedAt}
+                                        completedAt={p.completedAt}
+                                    />
+                                </div>
+                                <div className="px-4 py-4">
+                                    <span className={`px-2.5 py-1.5 rounded-full border text-xs font-medium capitalize ${statusTone(p.status)}`}>
+                                        {p.status}
+                                    </span>
+                                </div>
+                                <div className="px-4 py-4 flex items-center gap-2">
+                                    <button
+                                        onClick={() => setOpen(isOpen ? null : p._id)}
+                                        className="inline-flex items-center gap-1.5 text-white/60 hover:text-white/90 transition text-xs font-medium">
+                                        {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />} Details
                                     </button>
                                 </div>
                             </div>
                             {/* Mobile card */}
-                            <div className="md:hidden p-4 flex flex-col gap-3 bg-white/0">
+                            <div className="md:hidden p-5 flex flex-col gap-4 bg-white/0 text-sm">
                                 <div className="flex items-center justify-between">
-                                    <div className="text-xs font-mono text-white/70">{fmtShort(p.requestedAt)} • <span className="text-emerald-300 font-semibold">${formatCurrencyStrict(p.amount)}</span></div>
-                                    <span className={`px-2 py-1 rounded-full border text-[10px] font-medium capitalize ${statusTone(p.status)}`}>{p.status}</span>
+                                    <div className="text-sm font-mono text-white/80">
+                                        {fmtShort(p.requestedAt)} •{' '}
+                                        <span className="text-emerald-300 font-semibold text-base">${formatCurrencyStrict(p.amount)}</span>
+                                    </div>
+                                    <span className={`px-2.5 py-1.5 rounded-full border text-xs font-medium capitalize ${statusTone(p.status)}`}>
+                                        {p.status}
+                                    </span>
                                 </div>
                                 {p.payoutPeriod?.from && p.payoutPeriod?.to && (
-                                    <div className="text-[10px] font-mono text-white/40 -mt-1">
+                                    <div className="text-xs font-mono text-white/50 -mt-2">
                                         {fmtShort(p.payoutPeriod.from)} – {fmtShort(p.payoutPeriod.to)}
                                     </div>
                                 )}
-                                <div className="grid grid-cols-3 gap-2 text-[10px]">
-                                    <MiniStat label="Gross" value={`$${formatCurrencyStrict(p.grossAmount)}`} />
-                                    <MiniStat label="Fees" value={`-$${formatCurrencyStrict(feesTotal)}`} />
-                                    <MiniStat label="Method" value={p.payoutMethod || '—'} />
+                                <div className="grid grid-cols-3 gap-3 text-xs">
+                                    <MiniStat
+                                        label="Gross"
+                                        value={`$${formatCurrencyStrict(p.grossAmount)}`}
+                                    />
+                                    <MiniStat
+                                        label="Fees"
+                                        value={`-$${formatCurrencyStrict(feesTotal)}`}
+                                    />
+                                    <MiniStat
+                                        label="Method"
+                                        value={p.payoutMethod || '—'}
+                                    />
                                 </div>
-                                <div className="pt-1"><LifecycleTimeline small approvedAt={p.approvedAt} processedAt={p.processedAt} completedAt={p.completedAt} /></div>
-                                <button onClick={() => setOpen(isOpen ? null : p._id)} className="self-start inline-flex items-center gap-1 text-[10px] text-white/50 hover:text-white/80">
-                                    {isOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />} Details
+                                <div className="pt-1">
+                                    <LifecycleTimeline
+                                        small
+                                        approvedAt={p.approvedAt}
+                                        processedAt={p.processedAt}
+                                        completedAt={p.completedAt}
+                                    />
+                                </div>
+                                <button
+                                    onClick={() => setOpen(isOpen ? null : p._id)}
+                                    className="self-start inline-flex items-center gap-1.5 text-xs text-white/60 hover:text-white/90 font-medium">
+                                    {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />} Details
                                 </button>
                             </div>
                             {isOpen && (
                                 <div className="px-4 md:px-6 pb-5 text-[11px] leading-relaxed space-y-3 bg-white/2">
                                     <div className="grid sm:grid-cols-4 gap-3">
-                                        <Detail label="Period" value={`${fmtShort(p.payoutPeriod?.from)} – ${fmtShort(p.payoutPeriod?.to)}`} />
-                                        <Detail label="Platform Fee" value={`$${formatCurrencyStrict(p.platformFee)}`} negative />
-                                        <Detail label="Processing Fee" value={`$${formatCurrencyStrict(p.processingFee)}`} negative />
-                                        <Detail label="Transaction ID" value={p.transactionId || '—'} />
-                                        <Detail label="Approved" value={fmtDate(p.approvedAt)} />
-                                        <Detail label="Processed" value={fmtDate(p.processedAt)} />
-                                        <Detail label="Completed" value={fmtDate(p.completedAt)} />
-                                        <Detail label="Sales Included" value={p.salesIncluded?.length || 0} />
+                                        <Detail
+                                            label="Period"
+                                            value={`${fmtShort(p.payoutPeriod?.from)} – ${fmtShort(p.payoutPeriod?.to)}`}
+                                        />
+                                        <Detail
+                                            label="Platform Fee"
+                                            value={`$${formatCurrencyStrict(p.platformFee)}`}
+                                            negative
+                                        />
+                                        <Detail
+                                            label="Processing Fee"
+                                            value={`$${formatCurrencyStrict(p.processingFee)}`}
+                                            negative
+                                        />
+                                        <Detail
+                                            label="Transaction ID"
+                                            value={p.transactionId || '—'}
+                                        />
+                                        <Detail
+                                            label="Approved"
+                                            value={fmtDate(p.approvedAt)}
+                                        />
+                                        <Detail
+                                            label="Processed"
+                                            value={fmtDate(p.processedAt)}
+                                        />
+                                        <Detail
+                                            label="Completed"
+                                            value={fmtDate(p.completedAt)}
+                                        />
+                                        <Detail
+                                            label="Sales Included"
+                                            value={p.salesIncluded?.length || 0}
+                                        />
                                     </div>
                                     {notes && (
                                         <div className="text-white/60 whitespace-pre-wrap border border-white/10 rounded-md p-3 bg-white/5 text-[11px]">
@@ -413,9 +489,9 @@ function RecentPayouts({ payouts = [], loading, formatCurrencyStrict }) {
 
 function MiniStat({ label, value }) {
     return (
-        <div className="flex flex-col bg-white/5 rounded-md px-2 py-1.5 border border-white/10">
-            <span className="text-[9px] uppercase tracking-wide text-white/40">{label}</span>
-            <span className="text-[10px] font-mono text-white/80">{value}</span>
+        <div className="flex flex-col bg-white/5 rounded-md px-3 py-2 border border-white/10">
+            <span className="text-[10px] uppercase tracking-wide text-white/40 font-medium">{label}</span>
+            <span className="text-sm font-mono text-white/80 leading-tight">{value}</span>
         </div>
     )
 }
@@ -431,22 +507,48 @@ function Detail({ label, value, negative }) {
 
 function LifecycleTimeline({ approvedAt, processedAt, completedAt, small }) {
     const steps = [
-        { key: 'approved', date: approvedAt, color: 'blue' },
-        { key: 'processed', date: processedAt, color: 'indigo' },
-        { key: 'completed', date: completedAt, color: 'emerald' }
+        { key: 'Approved', date: approvedAt, color: 'blue' },
+        { key: 'Processed', date: processedAt, color: 'indigo' },
+        { key: 'Completed', date: completedAt, color: 'emerald' }
     ]
-    const dotColor = (c) => ({
-        blue: 'bg-blue-500',
-        indigo: 'bg-indigo-500',
-        emerald: 'bg-emerald-500'
-    })[c]
+    const dotColor = (c) =>
+        ({
+            blue: 'bg-blue-500',
+            indigo: 'bg-indigo-500',
+            emerald: 'bg-emerald-500'
+        })[c]
+
+    // Unified tooltip-only version when small (mobile)
+    if (small) {
+        return (
+            <div className="flex items-center gap-2 text-[10px] text-white/50">
+                {steps.map((s, i) => (
+                    <React.Fragment key={s.key}>
+                        <div
+                            className="flex items-center gap-1.5"
+                            title={`${s.key}${s.date ? ' • ' + new Date(s.date).toLocaleDateString() : ' • Pending'}`}>
+                            <span
+                                className={`w-2 h-2 rounded-full border border-white/15 ${s.date ? dotColor(s.color) : 'bg-white/10'}`}
+                                aria-label={`${s.key} ${s.date ? 'completed on ' + new Date(s.date).toLocaleDateString() : 'pending'}`}></span>
+                        </div>
+                        {i < steps.length - 1 && <span className="h-px flex-1 bg-white/10" />}
+                    </React.Fragment>
+                ))}
+            </div>
+        )
+    }
+
+    // Desktop: dots only with tooltips (no labels below)
     return (
-        <div className={`flex items-center ${small ? 'gap-1.5' : 'gap-3'} text-[9px] text-white/40`}>
+        <div className="flex items-center gap-4 text-xs text-white/60">
             {steps.map((s, i) => (
                 <React.Fragment key={s.key}>
-                    <div className="flex items-center gap-1">
-                        <span className={`w-1.5 h-1.5 rounded-full border border-white/10 ${s.date ? dotColor(s.color) : 'bg-white/10'}`}></span>
-                        {!small && <span className={`${s.date ? 'text-white/70' : 'text-white/30'}`}>{s.key[0].toUpperCase()}</span>}
+                    <div
+                        className="flex items-center gap-2"
+                        title={`${s.key}${s.date ? ' • ' + new Date(s.date).toLocaleDateString() : ' • Pending'}`}>
+                        <span
+                            className={`w-2.5 h-2.5 rounded-full border border-white/15 ${s.date ? dotColor(s.color) : 'bg-white/10'}`}
+                            aria-label={`${s.key} ${s.date ? 'completed on ' + new Date(s.date).toLocaleDateString() : 'pending'}`}></span>
                     </div>
                     {i < steps.length - 1 && <span className="h-px flex-1 bg-white/10" />}
                 </React.Fragment>
