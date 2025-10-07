@@ -45,6 +45,7 @@ import {
     Legend
 } from 'recharts'
 import { adminAPI } from '@/lib/api/admin'
+import { analyticsAPI } from '@/lib/api/analytics'
 import { CHART_COLORS } from '@/lib/constants/analytics'
 const MetricCard = ({ title, value, change, icon: Icon, color = 'emerald', trend, suffix = '', subtitle }) => {
     const isPositive = change >= 0
@@ -78,14 +79,8 @@ const MetricCard = ({ title, value, change, icon: Icon, color = 'emerald', trend
                     </div>
                 </div>
                 {change !== undefined && (
-                    <div className={`flex items-center gap-1 text-sm font-medium ${
-                        isPositive ? 'text-emerald-400' : 'text-rose-400'
-                    }`}>
-                        {isPositive ? (
-                            <ArrowUpRight className="w-4 h-4" />
-                        ) : (
-                            <ArrowDownRight className="w-4 h-4" />
-                        )}
+                    <div className={`flex items-center gap-1 text-sm font-medium ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {isPositive ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
                         {Math.abs(change)}%
                     </div>
                 )}
@@ -168,7 +163,6 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
     const [error, setError] = useState(null)
     const [refreshing, setRefreshing] = useState(false)
 
-    // Helper: derive number of days from timeRange (aligning with SalesTab pattern)
     const getDaysFromTimeRange = useCallback((period) => {
         switch (period) {
             case '7d':
@@ -184,7 +178,6 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
         }
     }, [])
 
-    // Helper: format processing time (days -> friendly)
     const formatProcessingTime = (days) => {
         if (!days || days <= 0) return '0d'
         if (days < 1) {
@@ -197,23 +190,31 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
         return `${days.toFixed(1)}d`
     }
 
-    const fetchAnalytics = useCallback(async (isRefresh = false) => {
-        try {
-            if (isRefresh) setRefreshing(true)
-            else setLoading(true)
-            setError(null)
-            const response = await adminAPI.payouts.analytics({
-                period: timeRange // keep API expectation if it already uses the suffix
-            })
-            setAnalyticsData(response.data || {})
-        } catch (err) {
-            console.error('Error fetching payout analytics:', err)
-            setError(err.message)
-        } finally {
-            setLoading(false)
-            setRefreshing(false)
-        }
-    }, [timeRange])
+    const fetchAnalytics = useCallback(
+        async (isRefresh = false) => {
+            try {
+                if (isRefresh) setRefreshing(true)
+                else setLoading(true)
+                setError(null)
+                // Use analytics endpoint: /v1/analytics/admin/payouts?period=30d
+                const response = await analyticsAPI.admin.getPayouts({ period: timeRange })
+                // Response can be { success, data: { statusBreakdown, ... } }
+                const core = response?.data && response.data.statusBreakdown ? response.data : response
+                console.log('Payout analytics response:', core)
+                if (!core || !core.statusBreakdown) {
+                    console.warn('Payout analytics: unexpected response shape', response)
+                }
+                setAnalyticsData(core || null)
+            } catch (err) {
+                console.error('Error fetching payout analytics (analytics endpoint):', err)
+                setError(err.message)
+            } finally {
+                setLoading(false)
+                setRefreshing(false)
+            }
+        },
+        [timeRange]
+    )
 
     useEffect(() => {
         fetchAnalytics()
@@ -221,13 +222,7 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
 
     const processedData = useMemo(() => {
         if (!analyticsData) return null
-        const {
-            statusBreakdown = [],
-            dailyTrends = [],
-            methodBreakdown = [],
-            processingTimes = {},
-            platformRevenue = {}
-        } = analyticsData
+        const { statusBreakdown = [], dailyTrends = [], methodBreakdown = [], processingTimes = {}, platformRevenue = {} } = analyticsData
 
         // Totals from status breakdown
         const totals = statusBreakdown.reduce(
@@ -250,7 +245,7 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
         const pendingRate = totals.totalCount > 0 ? ((pendingPayouts / totals.totalCount) * 100).toFixed(1) : '0.0'
 
         const avgProcessingTime = processingTimes?.avgProcessingTime || 0
-        const avgPayoutAmount = totals.totalCount > 0 ? (totals.totalAmount / totals.totalCount) : 0
+        const avgPayoutAmount = totals.totalCount > 0 ? totals.totalAmount / totals.totalCount : 0
 
         // Fill in missing dates for trends (align with SalesTab approach)
         const days = getDaysFromTimeRange(timeRange)
@@ -290,7 +285,7 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
             const name = status._id ? status._id.charAt(0).toUpperCase() + status._id.slice(1) : 'Unknown'
             const value = status.count || 0
             const percentage = totals.totalCount > 0 ? ((value / totals.totalCount) * 100).toFixed(1) : '0.0'
-            const avgAmount = value > 0 ? (status.totalAmount / value) : 0
+            const avgAmount = value > 0 ? status.totalAmount / value : 0
             return {
                 name,
                 value,
@@ -318,7 +313,7 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
             const currentPeriod = trendsData.slice(midPoint)
             const prevVolume = previousPeriod.reduce((s, d) => s + d.payouts, 0)
             const currVolume = currentPeriod.reduce((s, d) => s + d.payouts, 0)
-            const volumeTrend = prevVolume > 0 ? (((currVolume - prevVolume) / prevVolume) * 100) : 0
+            const volumeTrend = prevVolume > 0 ? ((currVolume - prevVolume) / prevVolume) * 100 : 0
             // Without historical status history / processing snapshots we keep these 0 for now
             return {
                 payoutVolume: parseFloat(volumeTrend.toFixed(1)),
@@ -471,8 +466,8 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                         <Zap className="w-12 h-12 text-[#00FF89] mx-auto mb-4" />
                         <h3 className="text-xl font-semibold text-white mb-2">Ready to Get Started?</h3>
                         <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
-                            Once you start processing payouts, this dashboard will provide comprehensive insights
-                            into your payout performance, trends, and optimization opportunities.
+                            Once you start processing payouts, this dashboard will provide comprehensive insights into your payout performance,
+                            trends, and optimization opportunities.
                         </p>
                         <div className="flex flex-wrap justify-center gap-4 text-sm">
                             <div className="flex items-center gap-2 text-gray-400">
@@ -571,7 +566,9 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                     icon={PieChartIcon}
                     subtitle="Current payout statuses"
                     height={300}>
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer
+                        width="100%"
+                        height="100%">
                         <RechartsPieChart>
                             <Pie
                                 data={statusData}
@@ -582,7 +579,10 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                                 paddingAngle={2}
                                 dataKey="value">
                                 {statusData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                                    <Cell
+                                        key={`cell-${index}`}
+                                        fill={CHART_COLORS[index % CHART_COLORS.length]}
+                                    />
                                 ))}
                             </Pie>
                             <Tooltip
@@ -592,10 +592,7 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                                     borderRadius: '8px'
                                 }}
                                 labelStyle={{ color: '#F3F4F6' }}
-                                formatter={(value, name) => [
-                                    `${value} payouts (${statusData.find((s) => s.name === name)?.percentage}%)`,
-                                    name
-                                ]}
+                                formatter={(value, name) => [`${value} payouts (${statusData.find((s) => s.name === name)?.percentage}%)`, name]}
                             />
                         </RechartsPieChart>
                     </ResponsiveContainer>
@@ -613,17 +610,20 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                     </div>
                     <div className="space-y-3">
                         {statusData.map((status, index) => (
-                            <div key={index} className="flex items-center justify-between">
-                                <StatusBadge status={status.name.toLowerCase()} count={status.value} />
+                            <div
+                                key={index}
+                                className="flex items-center justify-between">
+                                <StatusBadge
+                                    status={status.name.toLowerCase()}
+                                    count={status.value}
+                                />
                                 <div className="text-right">
                                     <p className="text-white font-medium">${status.amount.toLocaleString()}</p>
                                     <p className="text-xs text-gray-400">Avg: ${status.avgAmount}</p>
                                 </div>
                             </div>
                         ))}
-                        {statusData.length === 0 && (
-                            <p className="text-sm text-gray-500">No status breakdown available.</p>
-                        )}
+                        {statusData.length === 0 && <p className="text-sm text-gray-500">No status breakdown available.</p>}
                     </div>
                 </motion.div>
                 <motion.div
@@ -668,9 +668,14 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                     icon={LineChart}
                     subtitle="Daily payout volume & amounts"
                     height={350}>
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer
+                        width="100%"
+                        height="100%">
                         <ComposedChart data={trendsData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                            <CartesianGrid
+                                strokeDasharray="3 3"
+                                stroke="#374151"
+                            />
                             <XAxis
                                 dataKey="date"
                                 stroke="#9CA3AF"
@@ -679,8 +684,17 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                                 textAnchor="end"
                                 height={60}
                             />
-                            <YAxis yAxisId="left" stroke="#9CA3AF" fontSize={12} />
-                            <YAxis yAxisId="right" orientation="right" stroke="#00FF89" fontSize={12} />
+                            <YAxis
+                                yAxisId="left"
+                                stroke="#9CA3AF"
+                                fontSize={12}
+                            />
+                            <YAxis
+                                yAxisId="right"
+                                orientation="right"
+                                stroke="#00FF89"
+                                fontSize={12}
+                            />
                             <Tooltip
                                 contentStyle={{
                                     backgroundColor: '#1F2937',
@@ -718,10 +732,22 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                     icon={CreditCard}
                     subtitle="Distribution of payout methods"
                     height={350}>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={methodData} layout="horizontal">
-                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                            <XAxis type="number" stroke="#9CA3AF" fontSize={12} allowDecimals={false} />
+                    <ResponsiveContainer
+                        width="100%"
+                        height="100%">
+                        <BarChart
+                            data={methodData}
+                            layout="horizontal">
+                            <CartesianGrid
+                                strokeDasharray="3 3"
+                                stroke="#374151"
+                            />
+                            <XAxis
+                                type="number"
+                                stroke="#9CA3AF"
+                                fontSize={12}
+                                allowDecimals={false}
+                            />
                             <YAxis
                                 dataKey="name"
                                 type="category"
@@ -736,12 +762,13 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                                     borderRadius: '8px'
                                 }}
                                 labelStyle={{ color: '#F3F4F6' }}
-                                formatter={(value, name) => [
-                                    `${value} payouts (${methodData.find((m) => m.name === name)?.percentage}%)`,
-                                    name
-                                ]}
+                                formatter={(value, name) => [`${value} payouts (${methodData.find((m) => m.name === name)?.percentage}%)`, name]}
                             />
-                            <Bar dataKey="value" fill="#00FF89" radius={[0, 4, 4, 0]} />
+                            <Bar
+                                dataKey="value"
+                                fill="#00FF89"
+                                radius={[0, 4, 4, 0]}
+                            />
                         </BarChart>
                     </ResponsiveContainer>
                     {methodData.length === 0 && (
@@ -764,7 +791,9 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                             <span className="text-emerald-400 font-medium">Success Rate</span>
                         </div>
                         <p className="text-white text-lg font-bold">{completionRate}%</p>
-                        <p className="text-gray-400 text-sm">{completedPayouts} of {totals.totalCount} payouts completed</p>
+                        <p className="text-gray-400 text-sm">
+                            {completedPayouts} of {totals.totalCount} payouts completed
+                        </p>
                     </div>
                     <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                         <div className="flex items-center gap-2 mb-2">
