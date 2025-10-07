@@ -146,20 +146,23 @@ export default function EditProductPage() {
         expectedSupport: p.expectedSupport || '',
         faqs: p.faqs?.length ? p.faqs : [{ question: '', answer: '' }],
         status: p.status || 'draft',
-        // Premium Content fields
+        // Fixed Premium Content fields - properly handle arrays
         premiumContent: {
             promptText: p.premiumContent?.promptText || '',
             promptInstructions: p.premiumContent?.promptInstructions || '',
             automationInstructions: p.premiumContent?.automationInstructions || '',
-            automationFiles: p.premiumContent?.automationFiles || [],
+            automationFiles: Array.isArray(p.premiumContent?.automationFiles) ? p.premiumContent.automationFiles : [],
             agentConfiguration: p.premiumContent?.agentConfiguration || '',
-            agentFiles: p.premiumContent?.agentFiles || [],
-            detailedHowItWorks: p.premiumContent?.detailedHowItWorks || [''],
-            configurationExamples: p.premiumContent?.configurationExamples || [],
-            resultExamples: p.premiumContent?.resultExamples || [],
-            videoTutorials: p.premiumContent?.videoTutorials || [],
-            supportDocuments: p.premiumContent?.supportDocuments || [],
-            bonusContent: p.premiumContent?.bonusContent || []
+            agentFiles: Array.isArray(p.premiumContent?.agentFiles) ? p.premiumContent.agentFiles : [],
+            detailedHowItWorks:
+                Array.isArray(p.premiumContent?.detailedHowItWorks) && p.premiumContent.detailedHowItWorks.length > 0
+                    ? p.premiumContent.detailedHowItWorks
+                    : [''],
+            configurationExamples: Array.isArray(p.premiumContent?.configurationExamples) ? p.premiumContent.configurationExamples : [],
+            resultExamples: Array.isArray(p.premiumContent?.resultExamples) ? p.premiumContent.resultExamples : [],
+            videoTutorials: Array.isArray(p.premiumContent?.videoTutorials) ? p.premiumContent.videoTutorials : [],
+            supportDocuments: Array.isArray(p.premiumContent?.supportDocuments) ? p.premiumContent.supportDocuments : [],
+            bonusContent: Array.isArray(p.premiumContent?.bonusContent) ? p.premiumContent.bonusContent : []
         }
     })
     const fetchProduct = useCallback(async () => {
@@ -416,9 +419,7 @@ export default function EditProductPage() {
             ...prev,
             premiumContent: {
                 ...prev.premiumContent,
-                [field]: prev.premiumContent[field].map((item, i) => 
-                    i === index ? newValue : item
-                )
+                [field]: prev.premiumContent[field].map((item, i) => (i === index ? newValue : item))
             }
         }))
     }
@@ -887,7 +888,7 @@ export default function EditProductPage() {
                                     placeholder="Enter the main prompt text for your automation..."
                                 />
                             </div>
-                            
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Prompt Instructions</label>
                                 <textarea
@@ -898,7 +899,7 @@ export default function EditProductPage() {
                                     placeholder="Detailed instructions on how to use the prompt..."
                                 />
                             </div>
-                            
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Automation Instructions</label>
                                 <textarea
@@ -909,7 +910,7 @@ export default function EditProductPage() {
                                     placeholder="Step-by-step automation setup instructions..."
                                 />
                             </div>
-                            
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Agent Configuration</label>
                                 <textarea
@@ -920,7 +921,7 @@ export default function EditProductPage() {
                                     placeholder="Agent configuration settings and parameters..."
                                 />
                             </div>
-                            
+
                             <div>
                                 <div className="flex items-center justify-between mb-4">
                                     <label className="block text-sm font-medium text-gray-300">Detailed How It Works</label>
@@ -934,7 +935,9 @@ export default function EditProductPage() {
                                 </div>
                                 <div className="space-y-3">
                                     {formData.premiumContent.detailedHowItWorks.map((step, i) => (
-                                        <div key={i} className="flex gap-3">
+                                        <div
+                                            key={i}
+                                            className="flex gap-3">
                                             <input
                                                 value={step}
                                                 onChange={(e) => handlePremiumContentArrayChange('detailedHowItWorks', i, e.target.value)}
@@ -951,7 +954,7 @@ export default function EditProductPage() {
                                     ))}
                                 </div>
                             </div>
-                            
+
                             <div>
                                 <div className="flex items-center justify-between mb-4">
                                     <label className="block text-sm font-medium text-gray-300">Video Tutorials</label>
@@ -965,7 +968,9 @@ export default function EditProductPage() {
                                 </div>
                                 <div className="space-y-4">
                                     {formData.premiumContent.videoTutorials.map((video, i) => (
-                                        <div key={i} className="border border-gray-700 rounded-lg p-4 bg-gray-800/50">
+                                        <div
+                                            key={i}
+                                            className="border border-gray-700 rounded-lg p-4 bg-gray-800/50">
                                             <div className="flex items-center justify-between mb-3">
                                                 <h4 className="text-sm font-medium text-white">Video {i + 1}</h4>
                                                 <button
@@ -978,25 +983,146 @@ export default function EditProductPage() {
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                                 <input
                                                     value={video.title}
-                                                    onChange={(e) => handlePremiumContentArrayChange('videoTutorials', i, { ...video, title: e.target.value })}
+                                                    onChange={(e) =>
+                                                        handlePremiumContentArrayChange('videoTutorials', i, { ...video, title: e.target.value })
+                                                    }
                                                     placeholder="Video title"
                                                     className="px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-brand-primary"
                                                 />
                                                 <input
                                                     value={video.url}
-                                                    onChange={(e) => handlePremiumContentArrayChange('videoTutorials', i, { ...video, url: e.target.value })}
+                                                    onChange={(e) =>
+                                                        handlePremiumContentArrayChange('videoTutorials', i, { ...video, url: e.target.value })
+                                                    }
                                                     placeholder="Video URL"
                                                     className="px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-brand-primary"
                                                 />
                                                 <input
                                                     value={video.duration}
-                                                    onChange={(e) => handlePremiumContentArrayChange('videoTutorials', i, { ...video, duration: e.target.value })}
+                                                    onChange={(e) =>
+                                                        handlePremiumContentArrayChange('videoTutorials', i, { ...video, duration: e.target.value })
+                                                    }
                                                     placeholder="Duration (e.g. 5:30)"
                                                     className="px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-brand-primary"
                                                 />
                                             </div>
                                         </div>
                                     ))}
+                                </div>
+                            </div>
+                            <div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <label className="block text-sm font-medium text-gray-300">Automation Files</label>
+                                    <button
+                                        type="button"
+                                        onClick={() => addPremiumContentArrayItem('automationFiles', { name: '', url: '', type: 'json' })}
+                                        className="inline-flex items-center gap-2 px-3 py-1.5 text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-colors">
+                                        <Plus className="w-4 h-4" />
+                                        Add Automation File
+                                    </button>
+                                </div>
+                                <div className="space-y-4">
+                                    {formData.premiumContent.automationFiles.map((file, i) => (
+                                        <div key={i} className="border border-gray-700 rounded-lg p-4 bg-gray-800/50">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <h4 className="text-sm font-medium text-white">Automation File {i + 1}</h4>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removePremiumContentArrayItem('automationFiles', i)}
+                                                    className="p-1.5 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                <input
+                                                    value={file.name || ''}
+                                                    onChange={(e) => handlePremiumContentArrayChange('automationFiles', i, { ...file, name: e.target.value })}
+                                                    placeholder="File name"
+                                                    className="px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-brand-primary"
+                                                />
+                                                <input
+                                                    value={file.url || ''}
+                                                    onChange={(e) => handlePremiumContentArrayChange('automationFiles', i, { ...file, url: e.target.value })}
+                                                    placeholder="File URL"
+                                                    className="px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-brand-primary"
+                                                />
+                                                <select
+                                                    value={file.type || 'json'}
+                                                    onChange={(e) => handlePremiumContentArrayChange('automationFiles', i, { ...file, type: e.target.value })}
+                                                    className="px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-brand-primary">
+                                                    <option value="json">JSON</option>
+                                                    <option value="csv">CSV</option>
+                                                    <option value="xml">XML</option>
+                                                    <option value="txt">TXT</option>
+                                                    <option value="zip">ZIP</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {formData.premiumContent.automationFiles.length === 0 && (
+                                        <div className="text-center py-8 text-gray-400 border-2 border-dashed border-gray-700 rounded-lg">
+                                            <p className="text-sm">No automation files added yet</p>
+                                            <p className="text-xs mt-1">Click "Add Automation File" to include downloadable files for buyers</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <label className="block text-sm font-medium text-gray-300">Agent Files</label>
+                                    <button
+                                        type="button"
+                                        onClick={() => addPremiumContentArrayItem('agentFiles', { name: '', url: '', type: 'py' })}
+                                        className="inline-flex items-center gap-2 px-3 py-1.5 text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-colors">
+                                        <Plus className="w-4 h-4" />
+                                        Add Agent File
+                                    </button>
+                                </div>
+                                <div className="space-y-4">
+                                    {formData.premiumContent.agentFiles.map((file, i) => (
+                                        <div key={i} className="border border-gray-700 rounded-lg p-4 bg-gray-800/50">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <h4 className="text-sm font-medium text-white">Agent File {i + 1}</h4>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removePremiumContentArrayItem('agentFiles', i)}
+                                                    className="p-1.5 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                <input
+                                                    value={file.name || ''}
+                                                    onChange={(e) => handlePremiumContentArrayChange('agentFiles', i, { ...file, name: e.target.value })}
+                                                    placeholder="File name"
+                                                    className="px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-brand-primary"
+                                                />
+                                                <input
+                                                    value={file.url || ''}
+                                                    onChange={(e) => handlePremiumContentArrayChange('agentFiles', i, { ...file, url: e.target.value })}
+                                                    placeholder="File URL"
+                                                    className="px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-brand-primary"
+                                                />
+                                                <select
+                                                    value={file.type || 'py'}
+                                                    onChange={(e) => handlePremiumContentArrayChange('agentFiles', i, { ...file, type: e.target.value })}
+                                                    className="px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-brand-primary">
+                                                    <option value="py">Python</option>
+                                                    <option value="js">JavaScript</option>
+                                                    <option value="json">JSON</option>
+                                                    <option value="txt">TXT</option>
+                                                    <option value="zip">ZIP</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {formData.premiumContent.agentFiles.length === 0 && (
+                                        <div className="text-center py-8 text-gray-400 border-2 border-dashed border-gray-700 rounded-lg">
+                                            <p className="text-sm">No agent files added yet</p>
+                                            <p className="text-xs mt-1">Click "Add Agent File" to include code files for buyers</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -1023,3 +1149,4 @@ export default function EditProductPage() {
         </div>
     )
 }
+

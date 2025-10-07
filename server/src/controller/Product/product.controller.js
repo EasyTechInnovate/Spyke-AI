@@ -409,8 +409,11 @@ export default {
                     return httpError(next, new Error(responseMessage.PRODUCT.UNAUTHORIZED_ACCESS), req, 403)
                 }
             }
+
             const hasAnyPurchases = await Purchase.hasAnyPurchases(product._id)
-            if (hasAnyPurchases && !authenticatedUser.roles.includes(EUserRole.ADMIN)) {
+            const isAdmin = authenticatedUser.roles.includes(EUserRole.ADMIN)
+            
+            if (hasAnyPurchases && !isAdmin) {
                 return httpError(next, new Error(responseMessage.PRODUCT.CANNOT_UPDATE_PURCHASED_PRODUCT), req, 422)
             }
 
