@@ -722,7 +722,6 @@ export default {
 
             const skip = (parseInt(page) - 1) * parseInt(limit)
 
-            // First get products without population to avoid casting errors
             const [productsRaw, totalCount] = await Promise.all([
                 Product.find(query)
                     .populate({
