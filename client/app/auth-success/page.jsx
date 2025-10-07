@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CheckCircle, Loader2, XCircle, Phone } from 'lucide-react'
 import { authAPI } from '@/lib/api/auth'
+import { countryCodes, validatePhone, formatPhone } from '@/lib/utils/utils'
+
 function PhoneNumberCollection({ onComplete, onSkip }) {
     const [phoneData, setPhoneData] = useState({
         countryCode: '+1',
@@ -11,35 +13,20 @@ function PhoneNumberCollection({ onComplete, onSkip }) {
     })
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
-    const countryOptions = [
-        { value: '+1', label: '+1 (US/Canada)' },
-        { value: '+44', label: '+44 (UK)' },
-        { value: '+91', label: '+91 (India)' },
-        { value: '+49', label: '+49 (Germany)' },
-        { value: '+33', label: '+33 (France)' },
-        { value: '+86', label: '+86 (China)' },
-        { value: '+81', label: '+81 (Japan)' },
-        { value: '+61', label: '+61 (Australia)' }
-    ]
-    const formatPhoneNumber = (value, code) => {
-        const cleaned = value.replace(/\D/g, '').slice(0, code === '+1' ? 10 : 15)
-        if (code === '+1' && cleaned.length <= 10) {
-            if (cleaned.length <= 3) return cleaned
-            if (cleaned.length <= 6) return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`
-            return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`
-        }
-        return cleaned
-    }
-    const validatePhone = (phone, code) => {
-        const cleaned = phone.replace(/\D/g, '')
-        return code === '+1' ? cleaned.length === 10 : cleaned.length >= 6 && cleaned.length <= 15
-    }
+    
+    const countryOptions = countryCodes.map(({ code, country, flag }) => ({
+        value: code,
+        label: `${code} (${country})`,
+        flag: flag
+    }))
+
     const handlePhoneChange = (e) => {
         const value = e.target.value
-        const formatted = formatPhoneNumber(value, phoneData.countryCode)
+        const formatted = formatPhone(value, phoneData.countryCode)
         setPhoneData((prev) => ({ ...prev, phoneNumber: formatted }))
         setError('')
     }
+    
     const handleSubmit = async (e) => {
         e.preventDefault()
         if (!validatePhone(phoneData.phoneNumber, phoneData.countryCode)) {
@@ -62,6 +49,7 @@ function PhoneNumberCollection({ onComplete, onSkip }) {
             setLoading(false)
         }
     }
+    
     return (
         <div className="bg-[#1a1a1a]/90 border border-gray-700/50 rounded-2xl p-6 backdrop-blur-sm">
             <div className="flex justify-center mb-6">

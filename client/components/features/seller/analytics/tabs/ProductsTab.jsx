@@ -1,5 +1,5 @@
 "use client"
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Package,
@@ -152,16 +152,17 @@ function ProductPerformanceChart({ products }) {
     </Section>
   );
 }
-function CategoryDistributionChart({ products }) {
+function CategoryDistributionChart({ products, categoryNames }) {
   const cats = useMemo(() => {
     const m = new Map();
     (products ?? []).forEach((p) => {
-      const c = p.category ?? "uncategorized";
+      const raw = p.category ?? "uncategorized";
+      const c = categoryNames[raw] || raw || "uncategorized";
       const prev = m.get(c)?.count ?? 0;
       m.set(c, { count: prev + 1 });
     });
     return Array.from(m.entries());
-  }, [products]);
+  }, [products, categoryNames]);
   if (!cats.length)
     return (
       <Section title="Category Distribution" icon={<PieChart className="h-5 w-5 text-[#00FF89]" />}>
@@ -212,7 +213,7 @@ function CategoryDistributionChart({ products }) {
             <li key={name} className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="h-3 w-3 rounded-full" style={{ backgroundColor: palette[i % palette.length] }} />
-                <span className="capitalize text-gray-300">{String(name).replace("_", " ")}</span>
+                <span className="capitalize text-gray-300" title={name}>{String(name)}</span>
               </div>
               <div className="text-right">
                 <div className="font-semibold text-white">{v.count}</div>
@@ -361,7 +362,7 @@ function PriceAnalysisChart({ products }) {
     </Section>
   );
 }
-function DetailedProductCard({ product, index }) {
+function DetailedProductCard({ product, index, categoryNames }) {
   const badge = (product.status ?? "unknown").toUpperCase();
   const badgeClass =
     product.status === "published"
@@ -371,6 +372,8 @@ function DetailedProductCard({ product, index }) {
       : product.status === "pending"
       ? "bg-blue-900 text-blue-300"
       : "bg-red-900 text-red-300";
+  const rawCat = product.category;
+  const catLabel = rawCat && categoryNames[rawCat] ? categoryNames[rawCat] : (rawCat ? String(rawCat) : null);
   return (
     <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }} className="rounded-2xl border border-gray-700 bg-gray-900/60 p-5 hover:border-gray-600">
       <div className="mb-5 flex items-start gap-4">
@@ -390,8 +393,8 @@ function DetailedProductCard({ product, index }) {
           </div>
           <p className="line-clamp-2 text-sm text-gray-400">{product.shortDescription}</p>
           <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-300">
-            {product.category && (
-              <span className="inline-flex items-center gap-1"><Tag className="h-3.5 w-3.5 text-gray-400" />{String(product.category).replace("_", " ")}</span>
+            {catLabel && (
+              <span className="inline-flex items-center gap-1"><Tag className="h-3.5 w-3.5 text-gray-400" />{catLabel}</span>
             )}
             {product.industry && (
               <span className="inline-flex items-center gap-1"><Globe className="h-3.5 w-3.5 text-gray-400" />{product.industry}</span>
@@ -480,7 +483,7 @@ function Flag({ label, on, onText = "On", offText = "Off" }) {
     </div>
   );
 }
-function ProductsTable({ items }) {
+function ProductsTable({ items, categoryNames }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-700">
       <div className="max-h-[560px] overflow-auto">
@@ -510,7 +513,7 @@ function ProductsTable({ items }) {
                     </div>
                     <div className="min-w-0">
                       <div className="truncate font-medium text-white" title={p.title}>{p.title}</div>
-                      <div className="text-[11px] text-gray-400">{String(p.category ?? "-").replace("_", " ")}</div>
+                      <div className="text-[11px] text-gray-400" title={categoryNames[p.category] || p.category || "-"}>{categoryNames[p.category] || (p.category ? String(p.category) : "-")}</div>
                     </div>
                   </div>
                 </td>
@@ -539,6 +542,40 @@ function ProductsTable({ items }) {
   );
 }
 export default function ProductsTab({ analyticsData, timeRange, loading }) {
+  // Category ID -> name mapping
+  const [categoryNames, setCategoryNames] = useState({});
+  const [catLoading, setCatLoading] = useState(false);
+  useEffect(() => {
+    const products = analyticsData?.products || [];
+    const ids = Array.from(new Set(products.map(p => p.category).filter(Boolean)));
+    if (!ids.length) return;
+    // Heuristic: only fetch if values look like ObjectIds (24 hex chars) or mapping empty
+    const needsFetch = ids.some(id => /^[0-9a-fA-F]{24}$/.test(String(id))) && ids.some(id => !categoryNames[id]);
+    if (!needsFetch) return;
+    let aborted = false;
+    (async () => {
+      try {
+        setCatLoading(true);
+        // Attempt to fetch active categories first
+        const res = await fetch(`/api/category/active`);
+        if (!res.ok) throw new Error('Failed to load categories');
+        const data = await res.json();
+        // Accept array or wrapped
+        const list = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+        const map = {};
+        list.forEach(c => {
+          if (c?._id) map[c._id] = c.name || c.title || c.slug || c._id;
+        });
+        if (!aborted) setCategoryNames(prev => ({ ...map, ...prev }));
+      } catch (e) {
+        // Fallback: do nothing, keep IDs
+        console.warn('Category fetch failed', e);
+      } finally {
+        if (!aborted) setCatLoading(false);
+      }
+    })();
+    return () => { aborted = true; };
+  }, [analyticsData]);
   const [q, setQ] = useState("");
   const [sortBy, setSortBy] = useState("views");
   const [cat, setCat] = useState("");
@@ -554,7 +591,8 @@ export default function ProductsTab({ analyticsData, timeRange, loading }) {
         <p className="max-w-md text-sm text-gray-500">Create your first product to see analytics.</p>
       </div>
     );
-  const categories = Array.from(new Set(products.map((p) => p.category).filter(Boolean)));
+  const rawCategories = Array.from(new Set(products.map((p) => p.category).filter(Boolean)));
+  const categories = rawCategories.map(id => ({ id, label: categoryNames[id] || id })).sort((a,b) => a.label.localeCompare(b.label));
   const statuses = Array.from(new Set(products.map((p) => p.status).filter(Boolean)));
   const filtered = useMemo(() => {
     const text = q.trim().toLowerCase();
@@ -607,9 +645,9 @@ export default function ProductsTab({ analyticsData, timeRange, loading }) {
               <Filter className="h-4 w-4 text-gray-400" />
               <select value={cat} onChange={(e) => setCat(e.target.value)} className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white">
                 <option value="">All Categories</option>
-                {categories.map((c) => (
-                  <option key={c} value={c}>
-                    {String(c).replace("_", " ")}
+                {categories.map(({ id, label }) => (
+                  <option key={id} value={id}>
+                    {label}
                   </option>
                 ))}
               </select>
@@ -653,14 +691,15 @@ export default function ProductsTab({ analyticsData, timeRange, loading }) {
         </div>
         <div className="mt-2 flex flex-wrap gap-2">
           {q && <Chip label={`Search: "${q}"`} onRemove={() => setQ("")} />}
-          {cat && <Chip label={`Category: ${String(cat).replace("_", " ")}`} onRemove={() => setCat("")} />}
+          {cat && <Chip label={`Category: ${categoryNames[cat] || cat}`} onRemove={() => setCat("")} />}
           {status && <Chip label={`Status: ${status}`} onRemove={() => setStatus("")} />}
-          {!q && !cat && !status && <span className="text-xs text-gray-500">No filters applied</span>}
+          {catLoading && <Chip label={`Loading categories...`} />}
+          {!q && !cat && !status && !catLoading && <span className="text-xs text-gray-500">No filters applied</span>}
         </div>
       </div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <ProductPerformanceChart products={products} />
-        <CategoryDistributionChart products={products} />
+        <CategoryDistributionChart products={products} categoryNames={categoryNames} />
       </div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <ProductStatusOverview products={products} />
@@ -670,13 +709,13 @@ export default function ProductsTab({ analyticsData, timeRange, loading }) {
         <Section title="Product Details" icon={<Rows className="h-5 w-5 text-[#00FF89]" />} right={<span className="text-xs text-gray-400">Showing {filtered.length} of {products.length}</span>}>
           <div className="grid grid-cols-1 gap-6">
             {filtered.map((p, i) => (
-              <DetailedProductCard key={p._id ?? i} product={p} index={i} />
+              <DetailedProductCard key={p._id ?? i} product={p} index={i} categoryNames={categoryNames} />
             ))}
           </div>
         </Section>
       ) : (
         <Section title="Product Details (Table)" icon={<Rows className="h-5 w-5 text-[#00FF89]" />} right={<span className="text-xs text-gray-400">Showing {filtered.length} of {products.length}</span>}>
-          <ProductsTable items={filtered} />
+          <ProductsTable items={filtered} categoryNames={categoryNames} />
         </Section>
       )}
     </div>

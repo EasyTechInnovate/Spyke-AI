@@ -243,13 +243,51 @@ export default function ReviewSubmit({ onBackToStep }) {
     const [changedFields, setChangedFields] = useState([])
     const [showSuccessModal, setShowSuccessModal] = useState(false)
     const [createdProductTitle, setCreatedProductTitle] = useState('')
+    const [categoryName, setCategoryName] = useState('')
+    const [industryName, setIndustryName] = useState('')
+
     const state = useProductCreateStore()
     const validateStep = useProductCreateStore((state) => state.validateStep)
     const toApiPayload = useProductCreateStore((state) => state.toApiPayload)
     const reset = useProductCreateStore((state) => state.reset)
-    // Map value ids to human-readable labels
-    const categoryLabel = useMemo(() => CATEGORIES.find((c) => c.value === state.category)?.label || '', [state.category])
-    const industryLabel = useMemo(() => INDUSTRIES.find((i) => i.value === state.industry)?.label || '', [state.industry])
+
+    useEffect(() => {
+        const fetchCategoryName = async () => {
+            if (state.category) {
+                try {
+                    const { categoryAPI } = await import('@/lib/api/toolsNiche')
+                    const response = await categoryAPI.getCategories()
+                    const categories = response?.data?.categories || response?.categories || response?.data || []
+                    const found = categories.find((cat) => cat._id === state.category || cat.id === state.category)
+                    setCategoryName(found?.name || state.category.replace(/[_-]/g, ' '))
+                } catch (error) {
+                    setCategoryName(state.category.replace(/[_-]/g, ' '))
+                }
+            } else {
+                setCategoryName('')
+            }
+        }
+
+        const fetchIndustryName = async () => {
+            if (state.industry) {
+                try {
+                    const { industryAPI } = await import('@/lib/api/toolsNiche')
+                    const response = await industryAPI.getIndustries()
+                    const industries = response?.data?.industries || response?.industries || response?.data || []
+                    const found = industries.find((ind) => ind._id === state.industry || ind.id === state.industry)
+                    setIndustryName(found?.name || state.industry.replace(/[_-]/g, ' '))
+                } catch (error) {
+                    setIndustryName(state.industry.replace(/[_-]/g, ' '))
+                }
+            } else {
+                setIndustryName('')
+            }
+        }
+
+        fetchCategoryName()
+        fetchIndustryName()
+    }, [state.category, state.industry])
+
     const handleSubmit = async () => {
         setIsSubmitting(true)
         setSubmitError('')
@@ -384,7 +422,7 @@ export default function ReviewSubmit({ onBackToStep }) {
                         <div>
                             <span className="text-sm text-gray-400">Category & Type</span>
                             <p className="text-white text-base">
-                                {categoryLabel || 'Not set'} • {state.type || 'Not set'}
+                                {categoryName || 'Not set'} • {state.type || 'Not set'}
                             </p>
                         </div>
                         <div>
@@ -398,7 +436,7 @@ export default function ReviewSubmit({ onBackToStep }) {
                     <div className="space-y-3">
                         <div>
                             <span className="text-sm text-gray-400">Industry Focus</span>
-                            <p className="text-white text-base">{industryLabel || 'Not set'}</p>
+                            <p className="text-white text-base">{industryName || 'Not set'}</p>
                         </div>
                         <div>
                             <span className="text-sm text-gray-400">Support Level</span>
@@ -468,3 +506,4 @@ export default function ReviewSubmit({ onBackToStep }) {
         </div>
     )
 }
+

@@ -20,14 +20,8 @@ export default function SellerPayoutDashboardPage() {
 
     const formatCurrencyStrict = (value) => {
         if (value === null || value === undefined || isNaN(value)) return '—'
-        const str = value.toString()
-        if (str.includes('e')) return str
-        if (str.includes('.')) {
-            const [i, d] = str.split('.')
-            if (d.length === 1) return `${i}.${d}0`
-            return str
-        }
-        return str + '.00'
+        const num = Number(value)
+        return num.toFixed(2)
     }
 
     const handleRequest = useCallback(async () => {
@@ -62,21 +56,21 @@ export default function SellerPayoutDashboardPage() {
         <div className="space-y-10">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">Payouts</h1>
-                    <p className="text-white/50 text-sm">Track earnings and manage payout requests</p>
+                    <h1 className="text-3xl font-bold text-white">Payouts</h1>
+                    <p className="text-white/50 text-base">Track earnings and manage payout requests</p>
                 </div>
                 <div className="flex gap-3">
                     <button
                         onClick={() => loadDashboard()}
                         disabled={loadingDashboard}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm border border-white/10 disabled:opacity-50">
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-base border border-white/10 disabled:opacity-50">
                         {loadingDashboard ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
                         Refresh
                     </button>
                     <button
                         onClick={handleRequest}
                         disabled={!canRequest || loadingRequest || loadingDashboard}
-                        className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                        className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-medium text-base disabled:opacity-50 disabled:cursor-not-allowed">
                         {loadingRequest ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wallet className="w-4 h-4" />}
                         {canRequest ? 'Request Payout' : 'Not Eligible'}
                     </button>
@@ -85,17 +79,17 @@ export default function SellerPayoutDashboardPage() {
             {(error || requestError || requestSuccess) && (
                 <div className="space-y-2">
                     {error && (
-                        <div className="flex items-center gap-2 text-rose-400 text-sm bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-2">
+                        <div className="flex items-center gap-2 text-rose-400 text-base bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-2">
                             <AlertCircle className="w-4 h-4" /> {error}
                         </div>
                     )}
                     {requestError && (
-                        <div className="flex items-center gap-2 text-rose-400 text-sm bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-2">
+                        <div className="flex items-center gap-2 text-rose-400 text-base bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-2">
                             <XCircle className="w-4 h-4" /> {requestError}
                         </div>
                     )}
                     {requestSuccess && (
-                        <div className="flex items-center gap-2 text-emerald-400 text-sm bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-3 py-2">
+                        <div className="flex items-center gap-2 text-emerald-400 text-base bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-3 py-2">
                             <CheckCircle2 className="w-4 h-4" /> {requestSuccess}
                         </div>
                     )}
@@ -105,7 +99,7 @@ export default function SellerPayoutDashboardPage() {
                 <SummaryCard title="Gross" value={`$${formatCurrencyStrict(gross)}`} subtitle="Gross Earnings" accent="amber" loading={loadingDashboard} />
                 <SummaryCard title="Commission" value={`$${formatCurrencyStrict(commissionAmount)}`} subtitle={`${commissionRate}%`} accent="rose" loading={loadingDashboard} />
                 <SummaryCard title="Platform Fee" value={`$${formatCurrencyStrict(platformFeeAmount)}`} subtitle={`${platformFeePct}%`} accent="orange" loading={loadingDashboard} />
-                <SummaryCard title="Processing" value={`$${formatCurrencyStrict(processingFeeAmount)}`} subtitle="Processing Fee" accent="purple" loading={loadingDashboard} />
+                <SummaryCard title="Processing" value={`$${formatCurrencyStrict(processingFeeAmount)}`} subtitle="Fixed Fee" accent="purple" loading={loadingDashboard} />
                 <SummaryCard title="You Receive" value={`$${formatCurrencyStrict(youReceiveCalculated)}`} subtitle="After All Fees" accent="emerald" loading={loadingDashboard} highlight />
                 <SummaryCard title="Available" value={`$${formatCurrencyStrict(availableForPayout)}`} subtitle="Available Now" accent="indigo" loading={loadingDashboard} />
             </div>
@@ -113,30 +107,30 @@ export default function SellerPayoutDashboardPage() {
                 <div className="grid gap-8 lg:grid-cols-5">
                     <div className="lg:col-span-3 space-y-8">
                         <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-                            <h2 className="text-sm font-semibold uppercase tracking-wide text-white/60 mb-4">How Your Payout Is Calculated</h2>
-                            <ol className="space-y-2 text-sm">
+                            <h2 className="text-base font-semibold uppercase tracking-wide text-white/60 mb-4">How Your Payout Is Calculated</h2>
+                            <ol className="space-y-2 text-base">
                                 <li className="flex justify-between items-center py-1 border-b border-white/5">
                                     <span className="text-white/80">1. Gross Earnings</span>
                                     <span className="font-mono text-white">${formatCurrencyStrict(gross)}</span>
                                 </li>
                                 <li className="flex justify-between items-center py-1 border-b border-white/5">
                                     <span className="text-red-300">2. Platform Commission ({commissionRate}%)</span>
-                                    <span className="font-mono text-red-300">-{formatCurrencyStrict(commissionAmount)}</span>
+                                    <span className="font-mono text-red-300">-${formatCurrencyStrict(commissionAmount)}</span>
                                 </li>
                                 <li className="flex justify-between items-center py-1 border-b border-white/5">
                                     <span className="text-red-300">3. Platform Fee ({platformFeePct}%)</span>
-                                    <span className="font-mono text-red-300">-{formatCurrencyStrict(platformFeeAmount)}</span>
+                                    <span className="font-mono text-red-300">-${formatCurrencyStrict(platformFeeAmount)}</span>
                                 </li>
                                 <li className="flex justify-between items-center py-1 border-b border-white/5">
-                                    <span className="text-red-300">4. Processing Fee</span>
-                                    <span className="font-mono text-red-300">-{formatCurrencyStrict(processingFeeAmount)}</span>
+                                    <span className="text-red-300">4. Processing Fee (Fixed)</span>
+                                    <span className="font-mono text-red-300">-${formatCurrencyStrict(processingFeeAmount)}</span>
                                 </li>
                                 <li className="flex justify-between items-center py-2 mt-2">
                                     <span className="text-emerald-400 font-semibold">You Receive (Calculated)</span>
-                                    <span className="font-mono text-emerald-400 text-lg">${formatCurrencyStrict(youReceiveCalculated)}</span>
+                                    <span className="font-mono text-emerald-400 text-xl">${formatCurrencyStrict(youReceiveCalculated)}</span>
                                 </li>
                             </ol>
-                            <div className="mt-4 space-y-2 text-xs text-white/50 leading-relaxed">
+                            <div className="mt-4 space-y-2 text-base text-white/50 leading-relaxed">
                                 <p>Reported Net Earnings from API: <span className="text-white/80 font-mono">${formatCurrencyStrict(reportedNet)}</span></p>
                                 {reportedNet !== youReceiveCalculated && (
                                     <p className="text-amber-300/80">Note: Reported Net differs from final receivable. This usually means Net excludes some platform or processing components shown above.</p>
@@ -145,8 +139,8 @@ export default function SellerPayoutDashboardPage() {
                             </div>
                         </div>
                         <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-5">
-                            <h2 className="text-sm font-semibold uppercase tracking-wide text-white/60">Financial Snapshot</h2>
-                            <div className="grid sm:grid-cols-2 gap-4 text-sm">
+                            <h2 className="text-base font-semibold uppercase tracking-wide text-white/60">Financial Snapshot</h2>
+                            <div className="grid sm:grid-cols-2 gap-4 text-base">
                                 <SnapshotLine label="Gross Earnings" value={`$${formatCurrencyStrict(gross)}`} />
                                 <SnapshotLine label="Total Paid Out" value={`$${formatCurrencyStrict(totalPaidOut)}`} />
                                 <SnapshotLine label="Commission Rate" value={`${commissionRate}%`} />
@@ -161,8 +155,8 @@ export default function SellerPayoutDashboardPage() {
                     </div>
                     <div className="lg:col-span-2 space-y-8">
                         <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4">
-                            <h2 className="text-sm font-semibold uppercase tracking-wide text-white/60">Eligibility & Status</h2>
-                            <div className="flex flex-wrap gap-2 text-xs">
+                            <h2 className="text-base font-semibold uppercase tracking-wide text-white/60">Eligibility & Status</h2>
+                            <div className="flex flex-wrap gap-2 text-sm">
                                 <Tag tone={earnings.isEligible ? 'emerald' : 'rose'}>{earnings.isEligible ? 'Eligible' : 'Not Eligible'}</Tag>
                                 <Tag tone={earnings.isOnHold ? 'amber' : 'gray'}>{earnings.isOnHold ? 'On Hold' : 'No Hold'}</Tag>
                                 <Tag tone="indigo">Threshold ${formatCurrencyStrict(earnings.minimumThreshold)}</Tag>
@@ -170,20 +164,20 @@ export default function SellerPayoutDashboardPage() {
                                 <Tag tone="purple">Total Sales ${formatCurrencyStrict(earnings.totalSales)}</Tag>
                             </div>
                             {!earnings.isEligible && (
-                                <p className="text-xs text-white/50">You need at least ${formatCurrencyStrict(earnings.minimumThreshold)} available before requesting a payout.</p>
+                                <p className="text-base text-white/50">You need at least ${formatCurrencyStrict(earnings.minimumThreshold)} available before requesting a payout.</p>
                             )}
-                            <div className="pt-2 text-[11px] text-white/40">Currency: {currency}</div>
+                            <div className="pt-2 text-base text-white/40">Currency: {currency}</div>
                         </div>
                         {pending && (
                             <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <h2 className="text-sm font-semibold uppercase tracking-wide text-white/60">Pending Request</h2>
+                                    <h2 className="text-base font-semibold uppercase tracking-wide text-white/60">Pending Request</h2>
                                     <span
-                                        className={`px-2 py-1 rounded-full border text-xs font-medium ${statusColorMap[pending.status] || 'bg-white/10 text-white/60 border-white/20'}`}>
+                                        className={`px-2 py-1 rounded-full border text-sm font-medium ${statusColorMap[pending.status] || 'bg-white/10 text-white/60 border-white/20'}`}>
                                         {pending.status}
                                     </span>
                                 </div>
-                                <div className="text-sm text-white/70">
+                                <div className="text-base text-white/70">
                                     <div className="flex justify-between py-1">
                                         <span>Amount</span>
                                         <span>${formatCurrencyStrict(pending.amount)}</span>
@@ -199,15 +193,15 @@ export default function SellerPayoutDashboardPage() {
                                         </div>
                                     )}
                                 </div>
-                                <p className="text-xs text-white/50">You will be notified by email for each status update.</p>
+                                <p className="text-base text-white/50">You will be notified by email for each status update.</p>
                             </div>
                         )}
                         <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4">
                             <div className="flex items-center justify-between">
-                                <h2 className="text-sm font-semibold uppercase tracking-wide text-white/60">Recent Payouts</h2>
+                                <h2 className="text-base font-semibold uppercase tracking-wide text-white/60">Recent Payouts</h2>
                             </div>
                             <div className="overflow-x-auto -mx-4 px-4">
-                                <table className="w-full text-xs">
+                                <table className="w-full text-base">
                                     <thead>
                                         <tr className="text-white/50 border-b border-white/10">
                                             <th className="py-2 text-left font-medium">Requested</th>
@@ -234,20 +228,20 @@ export default function SellerPayoutDashboardPage() {
                                                 <td className="py-2 text-white/80">{new Date(p.requestedAt).toLocaleDateString()}</td>
                                                 <td className="py-2 font-mono text-white">${formatCurrencyStrict(p.amount)}</td>
                                                 <td className="py-2 font-mono text-white/80">${formatCurrencyStrict(p.grossAmount)}</td>
-                                                <td className="py-2 font-mono text-red-300">-{formatCurrencyStrict(p.platformFee)}</td>
-                                                <td className="py-2 font-mono text-red-300">-{formatCurrencyStrict(p.processingFee)}</td>
-                                                <td className="py-2"><span className="px-2 py-1 rounded-full bg-white/10 text-white/70 border border-white/15 text-[10px] capitalize">{p.status}</span></td>
+                                                <td className="py-2 font-mono text-red-300">-${formatCurrencyStrict(p.platformFee)}</td>
+                                                <td className="py-2 font-mono text-red-300">-${formatCurrencyStrict(p.processingFee)}</td>
+                                                <td className="py-2"><span className="px-2 py-1 rounded-full bg-white/10 text-white/70 border border-white/15 text-sm capitalize">{p.status}</span></td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
                             </div>
-                            <p className="text-[10px] text-white/40">All monetary figures display exact stored precision. No rounding applied.</p>
+                            <p className="text-sm text-white/40">All monetary figures display exact stored precision. No rounding applied.</p>
                         </div>
                     </div>
                 </div>
             )}
-            <div className="text-center text-xs text-white/30 pt-4 border-t border-white/5">Payout method management UI coming soon.</div>
+            <div className="text-center text-base text-white/30 pt-4 border-t border-white/5">Payout method management UI coming soon.</div>
         </div>
     )
 }
