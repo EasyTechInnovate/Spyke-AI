@@ -13,7 +13,7 @@ const statusColorMap = {
 }
 
 export default function SellerPayoutDashboardPage() {
-    const { dashboard, loadingDashboard, requestPayout, loadDashboard, error, updatingMethod, loadingRequest } = usePayouts()
+    const { dashboard, loadingDashboard, requestPayout, loadDashboard, error, loadingRequest } = usePayouts()
     const [requestNotes] = useState('')
     const [requestError, setRequestError] = useState(null)
     const [requestSuccess, setRequestSuccess] = useState(null)
@@ -43,16 +43,12 @@ export default function SellerPayoutDashboardPage() {
     const platformFeeAmount = gross * (platformFeePct / 100)
     const processingFeeAmount = earnings?.processingFee ?? 0
     const youReceiveCalculated = gross - commissionAmount - platformFeeAmount - processingFeeAmount
-    const reportedNet = earnings?.netEarnings
     const availableForPayout = earnings?.availableForPayout
-    const totalPaidOut = earnings?.totalPaidOut
-    const salesIncluded = earnings?.salesIncluded || []
     const currency = earnings?.currency || 'USD'
     const pending = dashboard?.pendingPayouts?.[0]
     const recent = dashboard?.recentPayouts || []
     const canRequest = dashboard?.canRequestPayout
 
-    const formatDate = (d) => (d ? new Date(d).toLocaleDateString() : '—')
 
     return (
         <div className="space-y-10">
@@ -169,63 +165,9 @@ export default function SellerPayoutDashboardPage() {
                                     <span className="font-mono text-emerald-400 text-xl">${formatCurrencyStrict(youReceiveCalculated)}</span>
                                 </li>
                             </ol>
-                            <div className="mt-4 space-y-2 text-base text-white/50 leading-relaxed">
-                                <p>
-                                    Reported Net Earnings from API:{' '}
-                                    <span className="text-white/80 font-mono">${formatCurrencyStrict(reportedNet)}</span>
-                                </p>
-                                {reportedNet !== youReceiveCalculated && (
-                                    <p className="text-amber-300/80">
-                                        Note: Reported Net differs from final receivable. This usually means Net excludes some platform or processing
-                                        components shown above.
-                                    </p>
-                                )}
-                                <p>
-                                    Available For Payout now:{' '}
-                                    <span className="text-white/80 font-mono">${formatCurrencyStrict(availableForPayout)}</span>
-                                </p>
-                            </div>
+
                         </div>
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-5">
-                            <h2 className="text-base font-semibold uppercase tracking-wide text-white/60">Financial Snapshot</h2>
-                            <div className="grid sm:grid-cols-2 gap-4 text-base">
-                                <SnapshotLine
-                                    label="Gross Earnings"
-                                    value={`$${formatCurrencyStrict(gross)}`}
-                                />
-                                <SnapshotLine
-                                    label="Total Paid Out"
-                                    value={`$${formatCurrencyStrict(totalPaidOut)}`}
-                                />
-                                <SnapshotLine
-                                    label="Commission Rate"
-                                    value={`${commissionRate}%`}
-                                />
-                                <SnapshotLine
-                                    label="Platform Fee %"
-                                    value={`${platformFeePct}%`}
-                                />
-                                <SnapshotLine
-                                    label="Processing Fee"
-                                    value={`$${formatCurrencyStrict(processingFeeAmount)}`}
-                                />
-                                <SnapshotLine
-                                    label="Reported Net"
-                                    value={`$${formatCurrencyStrict(reportedNet)}`}
-                                />
-                                <SnapshotLine
-                                    label="You Receive (Calc)"
-                                    value={`$${formatCurrencyStrict(youReceiveCalculated)}`}
-                                    highlight
-                                />
-                                <SnapshotLine
-                                    label="Available Now"
-                                    value={`$${formatCurrencyStrict(availableForPayout)}`}
-                                    highlight
-                                />
-                            </div>
-                        </div>
-                        {/* SalesIncludedPanel removed per request */}
+
                     </div>
                     <div className="lg:col-span-2 space-y-8">
                         <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4">
@@ -275,82 +217,18 @@ export default function SellerPayoutDashboardPage() {
                     </div>
                 </div>
             )}
-            {/* Full-width Recent Payouts Section */}
             {earnings && (
                 <div className="mt-10 space-y-4">
                     <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4 w-full">
                         <div className="flex items-center justify-between">
                             <h2 className="text-base font-semibold uppercase tracking-wide text-white/60">Recent Payouts</h2>
                         </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-[11px] md:text-xs">
-                                <thead>
-                                    <tr className="text-white/50 border-b border-white/10">
-                                        <th className="py-2 text-left font-medium">Requested</th>
-                                        <th className="py-2 text-left font-medium">Amount</th>
-                                        <th className="py-2 text-left font-medium">Gross</th>
-                                        <th className="py-2 text-left font-medium">Platform</th>
-                                        <th className="py-2 text-left font-medium">Processing</th>
-                                        <th className="py-2 text-left font-medium">Approved</th>
-                                        <th className="py-2 text-left font-medium">Approved By</th>
-                                        <th className="py-2 text-left font-medium">Processed</th>
-                                        <th className="py-2 text-left font-medium">Completed</th>
-                                        <th className="py-2 text-left font-medium">Notes</th>
-                                        <th className="py-2 text-left font-medium">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {loadingDashboard && (
-                                        <tr>
-                                            <td
-                                                colSpan={11}
-                                                className="py-6 text-center text-white/40">
-                                                Loading…
-                                            </td>
-                                        </tr>
-                                    )}
-                                    {!loadingDashboard && recent.length === 0 && (
-                                        <tr>
-                                            <td
-                                                colSpan={11}
-                                                className="py-6 text-center text-white/40">
-                                                No payout history yet
-                                            </td>
-                                        </tr>
-                                    )}
-                                    {recent.map((p) => {
-                                        const fullNotes = p.notes || p.failureReason || ''
-                                        const shortNotes = fullNotes.length > 28 ? fullNotes.slice(0, 25) + '…' : fullNotes || '—'
-                                        return (
-                                            <tr
-                                                key={p._id}
-                                                className="border-b border-white/5 last:border-none">
-                                                <td className="py-2 text-white/80">{formatDate(p.requestedAt)}</td>
-                                                <td className="py-2 font-mono text-white">${formatCurrencyStrict(p.amount)}</td>
-                                                <td className="py-2 font-mono text-white/80">${formatCurrencyStrict(p.grossAmount)}</td>
-                                                <td className="py-2 font-mono text-red-300">-${formatCurrencyStrict(p.platformFee)}</td>
-                                                <td className="py-2 font-mono text-red-300">-${formatCurrencyStrict(p.processingFee)}</td>
-                                                <td className="py-2 font-mono text-white/70">{formatDate(p.approvedAt)}</td>
-                                                <td className="py-2 font-mono text-white/50">{p.approvedBy?._id || '—'}</td>
-                                                <td className="py-2 font-mono text-white/70">{formatDate(p.processedAt)}</td>
-                                                <td className="py-2 font-mono text-white/70">{formatDate(p.completedAt)}</td>
-                                                <td
-                                                    className="py-2 font-mono text-white/60 max-w-[140px] truncate"
-                                                    title={fullNotes}>
-                                                    {shortNotes}
-                                                </td>
-                                                <td className="py-2">
-                                                    <span className="px-2 py-1 rounded-full bg-white/10 text-white/70 border border-white/15 text-[10px] capitalize">
-                                                        {p.status}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        )
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                        <p className="text-[10px] text-white/40">Lifecycle columns show each stage; missing dates indicate not yet reached.</p>
+                        <RecentPayouts
+                            loading={loadingDashboard}
+                            payouts={recent}
+                            formatCurrencyStrict={formatCurrencyStrict}
+                        />
+                        <p className="text-[10px] text-white/40">Lifecycle shows each stage; missing dates means not reached.</p>
                     </div>
                 </div>
             )}
@@ -392,34 +270,8 @@ function SummaryCard({ title, value, subtitle, icon: Icon, accent = 'emerald', l
     )
 }
 
-function Badge({ label, color }) {
-    const palette = {
-        emerald: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
-        rose: 'bg-rose-500/10 text-rose-400 border-rose-500/30',
-        amber: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
-        gray: 'bg-white/10 text-white/50 border-white/20'
-    }
-    return <span className={`px-2 py-1 rounded-full text-xs font-medium border ${palette[color] || palette.gray}`}>{label}</span>
-}
 
-function FeeLine({ label, value }) {
-    return (
-        <div className="flex items-center justify-between text-white/70 text-xs border-b border-white/5 last:border-none pb-2 last:pb-0">
-            <span>{label}</span>
-            <span className="font-mono text-white/90">{value}</span>
-        </div>
-    )
-}
 
-function SnapshotLine({ label, value, highlight }) {
-    return (
-        <div
-            className={`flex items-center justify-between px-3 py-2 rounded-md border ${highlight ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-white/5 border-white/10'}`}>
-            <span className="text-xs text-white/60">{label}</span>
-            <span className={`text-xs font-mono ${highlight ? 'text-emerald-300' : 'text-white/80'}`}>{value}</span>
-        </div>
-    )
-}
 
 function Tag({ children, tone = 'gray' }) {
     const map = {
@@ -432,5 +284,174 @@ function Tag({ children, tone = 'gray' }) {
         purple: 'bg-purple-500/15 text-purple-300 border-purple-500/30'
     }
     return <span className={`px-2 py-1 rounded-full border text-[10px] font-medium ${map[tone]}`}>{children}</span>
+}
+
+import { Info, ChevronDown, ChevronRight, Clock, CalendarDays, Receipt } from 'lucide-react'
+
+function RecentPayouts({ payouts = [], loading, formatCurrencyStrict }) {
+    const [open, setOpen] = React.useState(null)
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-8 text-white/40 text-sm">Loading recent payouts…</div>
+        )
+    }
+    if (!loading && payouts.length === 0) {
+        return <div className="py-8 text-center text-white/40 text-sm">No payout history yet</div>
+    }
+
+    const statusTone = (status) => {
+        switch (status) {
+            case 'completed':
+                return 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+            case 'processing':
+                return 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30'
+            case 'approved':
+                return 'bg-blue-500/15 text-blue-300 border-blue-500/30'
+            case 'failed':
+                return 'bg-rose-500/15 text-rose-300 border-rose-500/30'
+            case 'pending':
+                return 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+            default:
+                return 'bg-white/10 text-white/60 border-white/20'
+        }
+    }
+
+    const fmtDate = (d) => (d ? new Date(d).toLocaleDateString() : '—')
+    const fmtShort = (d) => (d ? new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '—')
+
+    return (
+        <div className="overflow-hidden rounded-lg border border-white/10">
+            <div className="hidden md:grid md:grid-cols-[140px_120px_120px_120px_110px_180px_100px_1fr] text-[11px] uppercase tracking-wide font-medium text-white/40 bg-white/5">
+                <div className="px-3 py-2">Requested</div>
+                <div className="px-3 py-2">Net</div>
+                <div className="px-3 py-2">Gross</div>
+                <div className="px-3 py-2">Fees</div>
+                <div className="px-3 py-2">Method</div>
+                <div className="px-3 py-2">Lifecycle (A / P / C)</div>
+                <div className="px-3 py-2">Status</div>
+                <div className="px-3 py-2">Details</div>
+            </div>
+            <ul className="divide-y divide-white/5">
+                {payouts.map((p) => {
+                    const feesTotal = (p.platformFee || 0) + (p.processingFee || 0)
+                    const isOpen = open === p._id
+                    const notes = p.notes || p.failureReason || ''
+                    return (
+                        <li key={p._id} className="group">
+                            {/* Desktop row */}
+                            <div className="hidden md:grid md:grid-cols-[140px_120px_120px_120px_110px_180px_100px_1fr] items-center text-[11px]">
+                                <div className="px-3 py-3 font-mono text-white/80">{fmtDate(p.requestedAt)}{p.payoutPeriod?.from && p.payoutPeriod?.to && (
+                                    <div className="text-[10px] text-white/40 mt-0.5 font-normal tracking-tight">
+                                        {fmtShort(p.payoutPeriod.from)} – {fmtShort(p.payoutPeriod.to)}
+                                    </div>
+                                )}</div>
+                                <div className="px-3 py-3 font-mono text-emerald-300 font-semibold">${formatCurrencyStrict(p.amount)}</div>
+                                <div className="px-3 py-3 font-mono text-white/70">${formatCurrencyStrict(p.grossAmount)}</div>
+                                <div className="px-3 py-3 font-mono text-rose-300" title={`Platform: $${formatCurrencyStrict(p.platformFee)}\nProcessing: $${formatCurrencyStrict(p.processingFee)}`}>-${formatCurrencyStrict(feesTotal)}</div>
+                                <div className="px-3 py-3 text-white/70 capitalize flex items-center gap-1">
+                                    <Receipt className="w-3.5 h-3.5 text-white/40" /> {p.payoutMethod || '—'}
+                                </div>
+                                <div className="px-3 py-3">
+                                    <LifecycleTimeline approvedAt={p.approvedAt} processedAt={p.processedAt} completedAt={p.completedAt} />
+                                </div>
+                                <div className="px-3 py-3">
+                                    <span className={`px-2 py-1 rounded-full border text-[10px] font-medium capitalize ${statusTone(p.status)}`}>{p.status}</span>
+                                </div>
+                                <div className="px-3 py-3 flex items-center gap-2">
+                                    <button onClick={() => setOpen(isOpen ? null : p._id)} className="inline-flex items-center gap-1 text-white/60 hover:text-white/90 transition text-[10px]">
+                                        {isOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />} Details
+                                    </button>
+                                </div>
+                            </div>
+                            {/* Mobile card */}
+                            <div className="md:hidden p-4 flex flex-col gap-3 bg-white/0">
+                                <div className="flex items-center justify-between">
+                                    <div className="text-xs font-mono text-white/70">{fmtShort(p.requestedAt)} • <span className="text-emerald-300 font-semibold">${formatCurrencyStrict(p.amount)}</span></div>
+                                    <span className={`px-2 py-1 rounded-full border text-[10px] font-medium capitalize ${statusTone(p.status)}`}>{p.status}</span>
+                                </div>
+                                {p.payoutPeriod?.from && p.payoutPeriod?.to && (
+                                    <div className="text-[10px] font-mono text-white/40 -mt-1">
+                                        {fmtShort(p.payoutPeriod.from)} – {fmtShort(p.payoutPeriod.to)}
+                                    </div>
+                                )}
+                                <div className="grid grid-cols-3 gap-2 text-[10px]">
+                                    <MiniStat label="Gross" value={`$${formatCurrencyStrict(p.grossAmount)}`} />
+                                    <MiniStat label="Fees" value={`-$${formatCurrencyStrict(feesTotal)}`} />
+                                    <MiniStat label="Method" value={p.payoutMethod || '—'} />
+                                </div>
+                                <div className="pt-1"><LifecycleTimeline small approvedAt={p.approvedAt} processedAt={p.processedAt} completedAt={p.completedAt} /></div>
+                                <button onClick={() => setOpen(isOpen ? null : p._id)} className="self-start inline-flex items-center gap-1 text-[10px] text-white/50 hover:text-white/80">
+                                    {isOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />} Details
+                                </button>
+                            </div>
+                            {isOpen && (
+                                <div className="px-4 md:px-6 pb-5 text-[11px] leading-relaxed space-y-3 bg-white/2">
+                                    <div className="grid sm:grid-cols-4 gap-3">
+                                        <Detail label="Period" value={`${fmtShort(p.payoutPeriod?.from)} – ${fmtShort(p.payoutPeriod?.to)}`} />
+                                        <Detail label="Platform Fee" value={`$${formatCurrencyStrict(p.platformFee)}`} negative />
+                                        <Detail label="Processing Fee" value={`$${formatCurrencyStrict(p.processingFee)}`} negative />
+                                        <Detail label="Transaction ID" value={p.transactionId || '—'} />
+                                        <Detail label="Approved" value={fmtDate(p.approvedAt)} />
+                                        <Detail label="Processed" value={fmtDate(p.processedAt)} />
+                                        <Detail label="Completed" value={fmtDate(p.completedAt)} />
+                                        <Detail label="Sales Included" value={p.salesIncluded?.length || 0} />
+                                    </div>
+                                    {notes && (
+                                        <div className="text-white/60 whitespace-pre-wrap border border-white/10 rounded-md p-3 bg-white/5 text-[11px]">
+                                            {notes}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </li>
+                    )
+                })}
+            </ul>
+        </div>
+    )
+}
+
+function MiniStat({ label, value }) {
+    return (
+        <div className="flex flex-col bg-white/5 rounded-md px-2 py-1.5 border border-white/10">
+            <span className="text-[9px] uppercase tracking-wide text-white/40">{label}</span>
+            <span className="text-[10px] font-mono text-white/80">{value}</span>
+        </div>
+    )
+}
+
+function Detail({ label, value, negative }) {
+    return (
+        <div className="flex flex-col gap-0.5">
+            <span className="text-[9px] uppercase tracking-wide text-white/40">{label}</span>
+            <span className={`font-mono ${negative ? 'text-rose-300' : 'text-white/80'}`}>{value}</span>
+        </div>
+    )
+}
+
+function LifecycleTimeline({ approvedAt, processedAt, completedAt, small }) {
+    const steps = [
+        { key: 'approved', date: approvedAt, color: 'blue' },
+        { key: 'processed', date: processedAt, color: 'indigo' },
+        { key: 'completed', date: completedAt, color: 'emerald' }
+    ]
+    const dotColor = (c) => ({
+        blue: 'bg-blue-500',
+        indigo: 'bg-indigo-500',
+        emerald: 'bg-emerald-500'
+    })[c]
+    return (
+        <div className={`flex items-center ${small ? 'gap-1.5' : 'gap-3'} text-[9px] text-white/40`}>
+            {steps.map((s, i) => (
+                <React.Fragment key={s.key}>
+                    <div className="flex items-center gap-1">
+                        <span className={`w-1.5 h-1.5 rounded-full border border-white/10 ${s.date ? dotColor(s.color) : 'bg-white/10'}`}></span>
+                        {!small && <span className={`${s.date ? 'text-white/70' : 'text-white/30'}`}>{s.key[0].toUpperCase()}</span>}
+                    </div>
+                    {i < steps.length - 1 && <span className="h-px flex-1 bg-white/10" />}
+                </React.Fragment>
+            ))}
+        </div>
+    )
 }
 
