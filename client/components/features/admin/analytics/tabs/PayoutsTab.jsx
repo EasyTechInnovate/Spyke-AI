@@ -167,13 +167,43 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
     const [refreshing, setRefreshing] = useState(false)
+
+    // Helper: derive number of days from timeRange (aligning with SalesTab pattern)
+    const getDaysFromTimeRange = useCallback((period) => {
+        switch (period) {
+            case '7d':
+                return 7
+            case '30d':
+                return 30
+            case '90d':
+                return 90
+            case '1y':
+                return 365
+            default:
+                return 30
+        }
+    }, [])
+
+    // Helper: format processing time (days -> friendly)
+    const formatProcessingTime = (days) => {
+        if (!days || days <= 0) return '0d'
+        if (days < 1) {
+            const totalMinutes = Math.round(days * 24 * 60)
+            const hours = Math.floor(totalMinutes / 60)
+            const minutes = totalMinutes % 60
+            if (hours === 0) return `${minutes}m`
+            return `${hours}h ${minutes}m`
+        }
+        return `${days.toFixed(1)}d`
+    }
+
     const fetchAnalytics = useCallback(async (isRefresh = false) => {
         try {
             if (isRefresh) setRefreshing(true)
             else setLoading(true)
             setError(null)
             const response = await adminAPI.payouts.analytics({
-                period: timeRange.replace('d', '')
+                period: timeRange // keep API expectation if it already uses the suffix
             })
             setAnalyticsData(response.data || {})
         } catch (err) {
@@ -184,17 +214,22 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
             setRefreshing(false)
         }
     }, [timeRange])
+
     useEffect(() => {
         fetchAnalytics()
     }, [fetchAnalytics])
+
     const processedData = useMemo(() => {
         if (!analyticsData) return null
         const {
             statusBreakdown = [],
             dailyTrends = [],
             methodBreakdown = [],
-            processingTimes = {}
+            processingTimes = {},
+            platformRevenue = {}
         } = analyticsData
+
+        // Totals from status breakdown
         const totals = statusBreakdown.reduce(
             (acc, status) => {
                 acc.totalCount += status.count || 0
@@ -203,67 +238,92 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
             },
             { totalCount: 0, totalAmount: 0 }
         )
-        const statusData = statusBreakdown.map((status) => ({
-            name: status._id?.charAt(0).toUpperCase() + status._id?.slice(1) || 'Unknown',
-            value: status.count || 0,
-            amount: status.totalAmount || 0,
-            percentage: totals.totalCount > 0 ? (((status.count || 0) / totals.totalCount) * 100).toFixed(1) : 0,
-            avgAmount: status.count > 0 ? (status.totalAmount / status.count).toFixed(2) : 0
-        }))
-        const trendsData = dailyTrends.map((day) => ({
-            date: new Date(day._id?.year, day._id?.month - 1, day._id?.day).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric'
-            }),
-            payouts: day.count || 0,
-            amount: day.totalAmount || 0,
-            fullDate: new Date(day._id?.year, day._id?.month - 1, day._id?.day)
-        })).sort((a, b) => a.fullDate - b.fullDate)
-        const methodData = methodBreakdown.map((method) => ({
-            name: method._id?.charAt(0).toUpperCase() + method._id?.slice(1) || 'Unknown',
-            value: method.count || 0,
-            amount: method.totalAmount || 0,
-            percentage: totals.totalCount > 0 ? (((method.count || 0) / totals.totalCount) * 100).toFixed(1) : 0
-        }))
+
+        // Basic status metrics
         const completedPayouts = statusBreakdown.find((s) => s._id === 'completed')?.count || 0
         const pendingPayouts = statusBreakdown.find((s) => s._id === 'pending')?.count || 0
         const failedPayouts = statusBreakdown.find((s) => s._id === 'failed')?.count || 0
-        const completionRate = totals.totalCount > 0 ? ((completedPayouts / totals.totalCount) * 100).toFixed(1) : 0
-        const failureRate = totals.totalCount > 0 ? ((failedPayouts / totals.totalCount) * 100).toFixed(1) : 0
-        const pendingRate = totals.totalCount > 0 ? ((pendingPayouts / totals.totalCount) * 100).toFixed(1) : 0
+        const processingPayouts = statusBreakdown.find((s) => s._id === 'processing')?.count || 0
+
+        const completionRate = totals.totalCount > 0 ? ((completedPayouts / totals.totalCount) * 100).toFixed(1) : '0.0'
+        const failureRate = totals.totalCount > 0 ? ((failedPayouts / totals.totalCount) * 100).toFixed(1) : '0.0'
+        const pendingRate = totals.totalCount > 0 ? ((pendingPayouts / totals.totalCount) * 100).toFixed(1) : '0.0'
+
         const avgProcessingTime = processingTimes?.avgProcessingTime || 0
-        const avgPayoutAmount = totals.totalCount > 0 ? (totals.totalAmount / totals.totalCount).toFixed(2) : 0
+        const avgPayoutAmount = totals.totalCount > 0 ? (totals.totalAmount / totals.totalCount) : 0
 
-        // Calculate real trends based on actual data comparison
-        const calculateTrends = () => {
-            if (trendsData.length < 2) {
-                return {
-                    payoutVolume: 0,
-                    completionRate: 0,
-                    processingTime: 0
-                }
+        // Fill in missing dates for trends (align with SalesTab approach)
+        const days = getDaysFromTimeRange(timeRange)
+        const endDate = new Date() // today
+        const startDate = new Date()
+        startDate.setDate(endDate.getDate() - (days - 1))
+
+        // Map existing dailyTrends for quick lookup using ISO date key
+        const trendsMap = new Map()
+        dailyTrends.forEach((day) => {
+            if (day._id?.year && day._id?.month && day._id?.day) {
+                const dt = new Date(day._id.year, day._id.month - 1, day._id.day)
+                const iso = dt.toISOString().split('T')[0]
+                trendsMap.set(iso, {
+                    count: day.count || 0,
+                    totalAmount: day.totalAmount || 0
+                })
             }
+        })
 
-            // Get current period data (last half) vs previous period (first half)
+        const trendsData = []
+        for (let i = 0; i < days; i++) {
+            const current = new Date(startDate)
+            current.setDate(startDate.getDate() + i)
+            const iso = current.toISOString().split('T')[0]
+            const base = trendsMap.get(iso) || { count: 0, totalAmount: 0 }
+            trendsData.push({
+                date: current.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                payouts: base.count,
+                amount: base.totalAmount,
+                fullDate: current
+            })
+        }
+
+        // Status data for Pie / summary
+        const statusData = statusBreakdown.map((status) => {
+            const name = status._id ? status._id.charAt(0).toUpperCase() + status._id.slice(1) : 'Unknown'
+            const value = status.count || 0
+            const percentage = totals.totalCount > 0 ? ((value / totals.totalCount) * 100).toFixed(1) : '0.0'
+            const avgAmount = value > 0 ? (status.totalAmount / value) : 0
+            return {
+                name,
+                value,
+                amount: status.totalAmount || 0,
+                percentage,
+                avgAmount: avgAmount.toFixed(2)
+            }
+        })
+
+        // Method data (horizontal bar)
+        const methodData = methodBreakdown.map((method) => ({
+            name: method._id ? method._id.charAt(0).toUpperCase() + method._id.slice(1) : 'Unknown',
+            value: method.count || 0,
+            amount: method.totalAmount || 0,
+            percentage: totals.totalCount > 0 ? (((method.count || 0) / totals.totalCount) * 100).toFixed(1) : '0.0'
+        }))
+
+        // Trend deltas: compare last half vs first half (only if we have enough data)
+        const calculateTrends = () => {
+            if (trendsData.length < 4) {
+                return { payoutVolume: 0, completionRate: 0, processingTime: 0 }
+            }
             const midPoint = Math.floor(trendsData.length / 2)
             const previousPeriod = trendsData.slice(0, midPoint)
             const currentPeriod = trendsData.slice(midPoint)
-
-            // Calculate volume trend
-            const prevVolume = previousPeriod.reduce((sum, day) => sum + day.payouts, 0)
-            const currVolume = currentPeriod.reduce((sum, day) => sum + day.payouts, 0)
-            const volumeTrend = prevVolume > 0 ? ((currVolume - prevVolume) / prevVolume) * 100 : 0
-
-            // Calculate completion rate trend (simplified - would need actual status history)
-            const completionTrend = 0 // Real implementation would compare historical completion rates
-
-            // Calculate processing time trend (simplified - would need historical processing times)
-            const processingTimeTrend = 0 // Real implementation would compare historical processing times
-
+            const prevVolume = previousPeriod.reduce((s, d) => s + d.payouts, 0)
+            const currVolume = currentPeriod.reduce((s, d) => s + d.payouts, 0)
+            const volumeTrend = prevVolume > 0 ? (((currVolume - prevVolume) / prevVolume) * 100) : 0
+            // Without historical status history / processing snapshots we keep these 0 for now
             return {
                 payoutVolume: parseFloat(volumeTrend.toFixed(1)),
-                completionRate: completionTrend,
-                processingTime: processingTimeTrend
+                completionRate: 0,
+                processingTime: 0
             }
         }
 
@@ -272,7 +332,7 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
         return {
             totals,
             statusData,
-            trendsData,
+            trendsData: trendsData.sort((a, b) => a.fullDate - b.fullDate),
             methodData,
             completionRate,
             failureRate,
@@ -280,10 +340,15 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
             avgProcessingTime,
             avgPayoutAmount,
             trends,
+            completedPayouts,
+            pendingPayouts,
+            failedPayouts,
+            processingPayouts,
+            platformRevenue,
             hasData: totals.totalCount > 0
         }
-    }, [analyticsData])
-    const isLoading = loading || parentLoading
+    }, [analyticsData, getDaysFromTimeRange, timeRange])
+
     if (error) {
         return (
             <motion.div
@@ -304,6 +369,7 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
             </motion.div>
         )
     }
+    const isLoading = loading || parentLoading
     if (isLoading) {
         return (
             <div className="space-y-8">
@@ -352,7 +418,12 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
         avgProcessingTime,
         avgPayoutAmount,
         trends,
-        hasData
+        hasData,
+        completedPayouts,
+        pendingPayouts,
+        failedPayouts,
+        processingPayouts,
+        platformRevenue
     } = processedData
     if (!hasData) {
         return (
@@ -447,7 +518,7 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                     </button>
                 </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 <MetricCard
                     title="Total Payouts"
                     value={totals.totalCount}
@@ -455,35 +526,43 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                     icon={DollarSign}
                     color="emerald"
                     trend={`$${totals.totalAmount.toLocaleString()} total value`}
-                    subtitle={`Avg: $${avgPayoutAmount}`}
+                    subtitle={`Avg: $${avgPayoutAmount.toFixed(2)}`}
                 />
                 <MetricCard
-                    title="Completion Rate"
+                    title="Success Rate"
                     value={completionRate}
                     suffix="%"
                     change={trends.completionRate}
                     icon={TrendingUp}
                     color="blue"
-                    trend={`${completedPayouts} successful payouts`}
-                    subtitle={`${failureRate}% failure rate`}
+                    trend={`${completedPayouts} successful`}
+                    subtitle={`${failureRate}% failed`}
                 />
                 <MetricCard
-                    title="Avg Processing Time"
-                    value={avgProcessingTime.toFixed(1)}
-                    suffix=" days"
+                    title="Processing Time"
+                    value={avgProcessingTime < 1 ? (avgProcessingTime * 24).toFixed(2) : avgProcessingTime.toFixed(1)}
+                    suffix={avgProcessingTime < 1 ? ' hrs' : ' d'}
                     change={trends.processingTime}
                     icon={Clock}
                     color="amber"
-                    trend="From request to completion"
+                    trend={formatProcessingTime(avgProcessingTime)}
                     subtitle={`${pendingRate}% pending`}
                 />
                 <MetricCard
-                    title="Total Volume"
-                    value={`$${totals.totalAmount.toLocaleString()}`}
+                    title="Platform Revenue"
+                    value={platformRevenue?.totalRevenue ? platformRevenue.totalRevenue.toFixed(2) : '0.00'}
                     icon={Activity}
                     color="purple"
-                    trend="Total payout volume"
-                    subtitle="Across all methods"
+                    trend={`Fees: $${(platformRevenue?.totalPlatformFees || 0).toFixed(2)} + $${(platformRevenue?.totalProcessingFees || 0).toFixed(2)}`}
+                    subtitle={`Avg Payout $${(platformRevenue?.avgPayoutAmount || avgPayoutAmount).toFixed(2)}`}
+                />
+                <MetricCard
+                    title="In Progress"
+                    value={processingPayouts}
+                    icon={RefreshCw}
+                    color="indigo"
+                    trend={`${pendingPayouts} pending / ${failedPayouts} failed`}
+                    subtitle={`Completed ${completedPayouts}`}
                 />
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -520,6 +599,9 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                             />
                         </RechartsPieChart>
                     </ResponsiveContainer>
+                    {statusData.length === 0 && (
+                        <div className="flex items-center justify-center h-full -mt-24 text-gray-500 text-sm">No status data</div>
+                    )}
                 </ChartCard>
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -539,6 +621,9 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                                 </div>
                             </div>
                         ))}
+                        {statusData.length === 0 && (
+                            <p className="text-sm text-gray-500">No status breakdown available.</p>
+                        )}
                     </div>
                 </motion.div>
                 <motion.div
@@ -556,7 +641,7 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                         </div>
                         <div className="flex justify-between items-center">
                             <span className="text-gray-400">Avg Payout</span>
-                            <span className="text-white font-medium">${avgPayoutAmount}</span>
+                            <span className="text-white font-medium">${avgPayoutAmount.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between items-center">
                             <span className="text-gray-400">Success Rate</span>
@@ -564,7 +649,15 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                         </div>
                         <div className="flex justify-between items-center">
                             <span className="text-gray-400">Processing Time</span>
-                            <span className="text-amber-400 font-medium">{avgProcessingTime.toFixed(1)}d</span>
+                            <span className="text-amber-400 font-medium">{formatProcessingTime(avgProcessingTime)}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-400">Platform Fees</span>
+                            <span className="text-white font-medium">${(platformRevenue?.totalPlatformFees || 0).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-400">Processing Fees</span>
+                            <span className="text-white font-medium">${(platformRevenue?.totalProcessingFees || 0).toFixed(2)}</span>
                         </div>
                     </div>
                 </motion.div>
@@ -573,7 +666,7 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                 <ChartCard
                     title="Payout Trends"
                     icon={LineChart}
-                    subtitle="Daily payout volume and amounts"
+                    subtitle="Daily payout volume & amounts"
                     height={350}>
                     <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart data={trendsData}>
@@ -616,16 +709,19 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                             />
                         </ComposedChart>
                     </ResponsiveContainer>
+                    {!trendsData.some((d) => d.payouts > 0 || d.amount > 0) && (
+                        <div className="absolute inset-0 flex items-center justify-center text-gray-500 text-sm">No payout activity in range</div>
+                    )}
                 </ChartCard>
                 <ChartCard
                     title="Payment Methods"
                     icon={CreditCard}
-                    subtitle="Distribution of payout methods used"
+                    subtitle="Distribution of payout methods"
                     height={350}>
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={methodData} layout="horizontal">
                             <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                            <XAxis type="number" stroke="#9CA3AF" fontSize={12} />
+                            <XAxis type="number" stroke="#9CA3AF" fontSize={12} allowDecimals={false} />
                             <YAxis
                                 dataKey="name"
                                 type="category"
@@ -648,6 +744,9 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                             <Bar dataKey="value" fill="#00FF89" radius={[0, 4, 4, 0]} />
                         </BarChart>
                     </ResponsiveContainer>
+                    {methodData.length === 0 && (
+                        <div className="absolute inset-0 flex items-center justify-center text-gray-500 text-sm">No method data</div>
+                    )}
                 </ChartCard>
             </div>
             <motion.div
@@ -672,16 +771,16 @@ export default function PayoutsTab({ timeRange = '30d', loading: parentLoading }
                             <Clock className="w-4 h-4 text-amber-400" />
                             <span className="text-amber-400 font-medium">Processing Time</span>
                         </div>
-                        <p className="text-white text-lg font-bold">{avgProcessingTime.toFixed(1)} days</p>
-                        <p className="text-gray-400 text-sm">Average time from request to completion</p>
+                        <p className="text-white text-lg font-bold">{formatProcessingTime(avgProcessingTime)}</p>
+                        <p className="text-gray-400 text-sm">Average from request to completion</p>
                     </div>
                     <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                         <div className="flex items-center gap-2 mb-2">
                             <TrendingUp className="w-4 h-4 text-blue-400" />
-                            <span className="text-blue-400 font-medium">Total Volume</span>
+                            <span className="text-blue-400 font-medium">Platform Revenue</span>
                         </div>
-                        <p className="text-white text-lg font-bold">${totals.totalAmount.toLocaleString()}</p>
-                        <p className="text-gray-400 text-sm">Across all payout methods</p>
+                        <p className="text-white text-lg font-bold">${(platformRevenue?.totalRevenue || 0).toFixed(2)}</p>
+                        <p className="text-gray-400 text-sm">Fees on {totals.totalCount} payouts</p>
                     </div>
                 </div>
             </motion.div>
