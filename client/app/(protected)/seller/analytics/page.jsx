@@ -154,32 +154,7 @@ export default function SellerAnalytics() {
             return newErrors
         })
     }, [getCacheKey])
-    const handleExport = useCallback(() => {
-        if (!currentTabData) return
-        const exportData = {
-            tab: activeTab,
-            timeRange,
-            data: currentTabData,
-            exportedAt: new Date().toISOString(),
-            version: '1.0'
-        }
-        try {
-            const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-                type: 'application/json'
-            })
-            const url = URL.createObjectURL(blob)
-            const link = document.createElement('a')
-            link.href = url
-            link.download = `seller-analytics-${activeTab}-${timeRange}-${Date.now()}.json`
-            link.style.display = 'none'
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
-            URL.revokeObjectURL(url)
-        } catch (error) {
-            console.error('Export failed:', error)
-        }
-    }, [activeTab, timeRange, currentTabData])
+
     const tabStatuses = useMemo(() => {
         return SELLER_TAB_OPTIONS.reduce((acc, tab) => {
             const cacheKey = getCacheKey(tab.value, timeRange)
@@ -254,13 +229,7 @@ export default function SellerAnalytics() {
                             <RefreshCw className={`w-4 h-4 ${isCurrentTabLoading ? 'animate-spin' : ''}`} />
                             Refresh
                         </button>
-                        <button 
-                            className="flex items-center gap-2 px-4 py-2 bg-[#00FF89] hover:bg-[#00E67A] text-black font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            onClick={handleExport}
-                            disabled={!currentTabData || isCurrentTabLoading}>
-                            <Download className="w-4 h-4" />
-                            Export
-                        </button>
+                        
                     </div>
                 </div>
                 <div className="mb-8">
