@@ -386,10 +386,10 @@ export default function PurchasedProductPage() {
                                                 <div className="flex items-center justify-between">
                                                     <h3 className="text-xl font-semibold text-white flex items-center gap-2">
                                                         <FileText className="w-5 h-5 text-[#00FF89]" />
-                                                        Instructions
+                                                        Examples
                                                     </h3>
                                                     <button
-                                                        onClick={() => copyToClipboard(premiumContent.promptInstructions, 'Instructions')}
+                                                        onClick={() => copyToClipboard(premiumContent.promptInstructions, 'Example')}
                                                         className="flex items-center gap-2 px-5 py-2.5 bg-[#00FF89] hover:bg-[#00FF89]/90 text-black rounded-lg text-sm transition-all font-semibold shadow-lg">
                                                         {copiedItem === 'Instructions' ? (
                                                             <>

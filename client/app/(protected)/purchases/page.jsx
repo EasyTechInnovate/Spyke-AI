@@ -426,14 +426,7 @@ function PurchaseCard({ purchase, selected = false, onToggle, onViewPremium }) {
                         <ChevronRight className="w-4 h-4" />
                     </button>
                 </div>
-                <div className="mt-4 pt-4 border-t border-gray-800 flex items-center justify-between text-xs">
-                    <Link
-                        href="#"
-                        className="text-gray-400 hover:text-[#00FF89] transition-colors">
-                        View Invoice
-                    </Link>
-                    <span className="text-[#00FF89] font-medium">Accessible</span>
-                </div>
+                
             </div>
         </motion.div>
     )
