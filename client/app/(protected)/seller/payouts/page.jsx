@@ -238,7 +238,6 @@ export default function SellerPayoutDashboardPage() {
                             payouts={recent}
                             formatCurrencyStrict={formatCurrencyStrict}
                         />
-                        <p className="text-[10px] text-white/40">Lifecycle shows each stage; missing dates means not reached.</p>
                     </div>
                 </div>
             )}
@@ -330,13 +329,15 @@ function RecentPayouts({ payouts = [], loading, formatCurrencyStrict }) {
                 <div className="px-4 py-3">Fees</div>
                 <div className="px-4 py-3">Method</div>
                 <div className="px-4 py-3 flex items-center gap-1">
-                    Lifecycle
-                    <button
-                        type="button"
-                        title="Payout lifecycle: Approved → Processed → Completed. Each colored dot fills when the stage is reached."
-                        className="text-white/40 hover:text-white/70 transition">
-                        <Info className="w-4 h-4" />
-                    </button>
+                    Status
+                    <Tooltip content="Payout lifecycle: Approved → Processed → Completed. Each colored dot fills when the stage is reached.">
+                        <button
+                            type="button"
+                            aria-label="Payout lifecycle info"
+                            className="relative text-white/40 hover:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/30 rounded transition">
+                            <Info className="w-4 h-4" />
+                        </button>
+                    </Tooltip>
                 </div>
                 <div className="px-4 py-3">Status</div>
                 <div className="px-4 py-3">Details</div>
@@ -554,6 +555,48 @@ function LifecycleTimeline({ approvedAt, processedAt, completedAt, small }) {
                 </React.Fragment>
             ))}
         </div>
+    )
+}
+
+function Tooltip({ content, children }) {
+    const [open, setOpen] = React.useState(false)
+    const ref = React.useRef(null)
+
+    React.useEffect(() => {
+        const handleClick = (e) => {
+            if (ref.current && !ref.current.contains(e.target)) {
+                setOpen(false)
+            }
+        }
+        const handleKey = (e) => {
+            if (e.key === 'Escape') setOpen(false)
+        }
+        document.addEventListener('mousedown', handleClick)
+        document.addEventListener('keydown', handleKey)
+        return () => {
+            document.removeEventListener('mousedown', handleClick)
+            document.removeEventListener('keydown', handleKey)
+        }
+    }, [])
+
+    return (
+        <span
+            ref={ref}
+            className="relative inline-flex"
+            onMouseEnter={() => setOpen(true)}
+            onMouseLeave={() => setOpen(false)}
+            onFocus={() => setOpen(true)}
+            onBlur={() => setOpen(false)}
+            onClick={() => setOpen((o) => !o)}
+        >
+            {children}
+            <span
+                role="tooltip"
+                className={`pointer-events-none select-none absolute z-40 -top-2 left-1/2 -translate-x-1/2 -translate-y-full whitespace-pre-wrap max-w-[240px] rounded-md border border-white/15 bg-black/80 px-2 py-1 text-[10px] leading-snug text-white shadow-lg backdrop-blur transition-opacity duration-150 ${open ? 'opacity-100' : 'opacity-0'}`}
+            >
+                {content}
+            </span>
+        </span>
     )
 }
 

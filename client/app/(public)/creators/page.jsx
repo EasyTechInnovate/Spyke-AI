@@ -6,7 +6,10 @@ import { ErrorBoundary } from 'react-error-boundary'
 import { sellerAPI } from '@/lib/api'
 import Link from 'next/link'
 import { Search, Users, Star, MapPin, Calendar, Filter, Loader2, ChevronLeft, ChevronRight, Eye, TrendingUp } from 'lucide-react'
+import { categoryAPI, toolAPI } from '@/lib/api/toolsNiche'
+
 const ITEMS_PER_PAGE = 12
+
 function CreatorCardSkeleton() {
     return (
         <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 animate-pulse">
@@ -28,6 +31,7 @@ function CreatorCardSkeleton() {
         </div>
     )
 }
+
 function HeroSection({ creatorsCount }) {
     return (
         <section className="text-center py-8 relative">
@@ -49,11 +53,20 @@ function HeroSection({ creatorsCount }) {
         </section>
     )
 }
-function SearchControls({ searchQuery, filters, sortBy, onSearchChange, onFilterChange, onSortChange, onClearFilters, creatorsCount }) {
-    const niches = ['E-commerce', 'Email Marketing', 'Lead Generation', 'Sales Automation']
-    const tools = ['Zapier', 'Mailchimp']
-    const countries = ['India']
-    const hasActiveFilters = filters.niche || filters.tool || filters.country
+
+function SearchControls({
+    searchQuery,
+    filters,
+    sortBy,
+    onSearchChange,
+    onFilterChange,
+    onSortChange,
+    onClearFilters,
+    creatorsCount,
+    categoriesList = [],
+    toolsList = []
+}) {
+    const hasActiveFilters = filters.category || filters.tool
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -61,14 +74,14 @@ function SearchControls({ searchQuery, filters, sortBy, onSearchChange, onFilter
             transition={{ delay: 0.2 }}
             className="mb-12">
             <div className="relative mb-8">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                     type="text"
                     placeholder="Search creators by name or expertise..."
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-[#00FF89]/50 transition-all"
+                    className="w-full pl-12 pr-4 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-[#00FF89]/50 transition-all z-0"
                 />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
             </div>
             <div className="flex flex-wrap items-center gap-4 mb-6">
                 <div className="flex items-center gap-2 text-gray-400">
@@ -76,52 +89,52 @@ function SearchControls({ searchQuery, filters, sortBy, onSearchChange, onFilter
                     <span className="text-sm font-medium">Filters</span>
                 </div>
                 <select
-                    value={filters.niche}
+                    value={filters.category}
                     onChange={(e) => {
-                        onFilterChange('niche', e.target.value)
+                        onFilterChange('category', e.target.value)
                     }}
-                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50">
-                    <option value="">All Niches</option>
-                    {niches.map((niche) => (
+                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 min-w-[140px]">
+                    <option value="">All Categories</option>
+                    {categoriesList.length === 0 ? (
                         <option
-                            key={niche}
-                            value={niche}
-                            className="bg-gray-800">
-                            {niche}
+                            disabled
+                            value="">
+                            Loading...
                         </option>
-                    ))}
+                    ) : (
+                        categoriesList.map((category) => (
+                            <option
+                                key={category}
+                                value={category}
+                                className="bg-gray-800">
+                                {category}
+                            </option>
+                        ))
+                    )}
                 </select>
                 <select
                     value={filters.tool}
                     onChange={(e) => {
                         onFilterChange('tool', e.target.value)
                     }}
-                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50">
+                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 min-w-[140px]">
                     <option value="">All Tools</option>
-                    {tools.map((tool) => (
+                    {toolsList.length === 0 ? (
                         <option
-                            key={tool}
-                            value={tool}
-                            className="bg-gray-800">
-                            {tool}
+                            disabled
+                            value="">
+                            Loading...
                         </option>
-                    ))}
-                </select>
-                <select
-                    value={filters.country}
-                    onChange={(e) => {
-                        onFilterChange('country', e.target.value)
-                    }}
-                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50">
-                    <option value="">All Countries</option>
-                    {countries.map((country) => (
-                        <option
-                            key={country}
-                            value={country}
-                            className="bg-gray-800">
-                            {country}
-                        </option>
-                    ))}
+                    ) : (
+                        toolsList.map((tool) => (
+                            <option
+                                key={tool}
+                                value={tool}
+                                className="bg-gray-800">
+                                {tool}
+                            </option>
+                        ))
+                    )}
                 </select>
                 <select
                     value={sortBy}
@@ -129,16 +142,6 @@ function SearchControls({ searchQuery, filters, sortBy, onSearchChange, onFilter
                         onSortChange(e.target.value)
                     }}
                     className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50">
-                    <option
-                        value="createdAt-desc"
-                        className="bg-gray-800">
-                        Newest First
-                    </option>
-                    <option
-                        value="stats.averageRating-desc"
-                        className="bg-gray-800">
-                        Highest Rated
-                    </option>
                     <option
                         value="stats.totalProducts-desc"
                         className="bg-gray-800">
@@ -162,19 +165,14 @@ function SearchControls({ searchQuery, filters, sortBy, onSearchChange, onFilter
             </div>
             {hasActiveFilters && (
                 <div className="flex flex-wrap gap-2 mb-4">
-                    {filters.niche && (
+                    {filters.category && (
                         <span className="px-3 py-1 bg-[#00FF89]/20 text-[#00FF89] text-xs font-medium rounded-full border border-[#00FF89]/30">
-                            Niche: {filters.niche}
+                            Category: {filters.category}
                         </span>
                     )}
                     {filters.tool && (
                         <span className="px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-medium rounded-full border border-blue-500/30">
                             Tool: {filters.tool}
-                        </span>
-                    )}
-                    {filters.country && (
-                        <span className="px-3 py-1 bg-purple-500/20 text-purple-400 text-xs font-medium rounded-full border border-purple-500/30">
-                            Country: {filters.country}
                         </span>
                     )}
                 </div>
@@ -183,6 +181,7 @@ function SearchControls({ searchQuery, filters, sortBy, onSearchChange, onFilter
         </motion.div>
     )
 }
+
 function CreatorCard({ creator }) {
     const formatJoinDate = (dateString) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -227,13 +226,11 @@ function CreatorCard({ creator }) {
                                     alt={creator.fullName}
                                     className="w-16 h-16 rounded-full object-cover border-2 border-white/10"
                                     onError={(e) => {
-                                        // Hide the img and show the fallback
                                         e.target.style.display = 'none'
                                         e.target.nextElementSibling.style.display = 'flex'
                                     }}
                                 />
                             ) : null}
-                            {/* Fallback initials */}
                             <div
                                 className={`w-16 h-16 bg-gradient-to-br from-[#00FF89]/20 to-emerald-400/20 rounded-full flex items-center justify-center border-2 border-[#00FF89]/30 ${avatarUrl ? 'hidden' : 'flex'}`}>
                                 <span className="text-[#00FF89] font-bold text-lg">{getInitials(creator.fullName)}</span>
@@ -332,6 +329,7 @@ function CreatorCard({ creator }) {
         </Link>
     )
 }
+
 function CreatorsGrid({ creators, loading }) {
     if (loading) {
         return (
@@ -368,6 +366,7 @@ function CreatorsGrid({ creators, loading }) {
         </div>
     )
 }
+
 function Pagination({ currentPage, totalPages, onPageChange, loading }) {
     if (totalPages <= 1) return null
     const getPageNumbers = () => {
@@ -423,6 +422,7 @@ function Pagination({ currentPage, totalPages, onPageChange, loading }) {
         </motion.div>
     )
 }
+
 function ErrorState({ error, onRetry }) {
     return (
         <motion.div
@@ -442,6 +442,7 @@ function ErrorState({ error, onRetry }) {
         </motion.div>
     )
 }
+
 function CreatorsPageContent() {
     const searchParams = useSearchParams()
     const router = useRouter()
@@ -451,9 +452,8 @@ function CreatorsPageContent() {
     const [searchQuery, setSearchQuery] = useState('')
     const [searchInput, setSearchInput] = useState('')
     const [filters, setFilters] = useState({
-        niche: '',
-        tool: '',
-        country: ''
+        category: '',
+        tool: ''
     })
     const [pagination, setPagination] = useState({
         page: 1,
@@ -461,7 +461,10 @@ function CreatorsPageContent() {
         total: 0,
         totalPages: 0
     })
-    const [sortBy, setSortBy] = useState('createdAt-desc')
+    const [sortBy, setSortBy] = useState('stats.totalProducts-desc')
+    const [categoriesList, setCategoriesList] = useState([])
+    const [toolsList, setToolsList] = useState([])
+
     const fetchCreators = useCallback(async (resetData = false) => {
         try {
             setLoading(true)
@@ -489,6 +492,7 @@ function CreatorsPageContent() {
             setLoading(false)
         }
     }, [])
+
     const filteredAndSortedCreators = useMemo(() => {
         let filtered = [...creators]
         if (searchInput.trim()) {
@@ -501,14 +505,11 @@ function CreatorsPageContent() {
                     creator.toolsSpecialization?.some((tool) => tool.toLowerCase().includes(query))
             )
         }
-        if (filters.niche) {
-            filtered = filtered.filter((creator) => creator.niches?.includes(filters.niche))
+        if (filters.category) {
+            filtered = filtered.filter((creator) => creator.niches?.includes(filters.category))
         }
         if (filters.tool) {
             filtered = filtered.filter((creator) => creator.toolsSpecialization?.includes(filters.tool))
-        }
-        if (filters.country) {
-            filtered = filtered.filter((creator) => creator.location?.country === filters.country)
         }
         if (sortBy) {
             const [sortField, sortOrder] = sortBy.split('-')
@@ -525,15 +526,12 @@ function CreatorsPageContent() {
                     aValue = a[sortField] || ''
                     bValue = b[sortField] || ''
                 }
-                if (sortOrder === 'desc') {
-                    return bValue > aValue ? 1 : -1
-                } else {
-                    return aValue > bValue ? 1 : -1
-                }
+                return sortOrder === 'desc' ? (bValue > aValue ? 1 : -1) : aValue > bValue ? 1 : -1
             })
         }
         return filtered
     }, [creators, searchInput, filters, sortBy])
+
     const paginatedCreators = useMemo(() => {
         const startIndex = (pagination.page - 1) * ITEMS_PER_PAGE
         const endIndex = startIndex + ITEMS_PER_PAGE
@@ -547,33 +545,78 @@ function CreatorsPageContent() {
         }))
         return paginatedData
     }, [filteredAndSortedCreators, pagination.page])
+
     const handleSearchChange = useCallback((searchTerm) => {
         setSearchInput(searchTerm)
         setPagination((prev) => ({ ...prev, page: 1 }))
     }, [])
+
     const handleFilterChange = useCallback((filterType, value) => {
         setFilters((prev) => ({ ...prev, [filterType]: value }))
         setPagination((prev) => ({ ...prev, page: 1 }))
     }, [])
+
     const handleSortChange = useCallback((newSort) => {
         setSortBy(newSort)
         setPagination((prev) => ({ ...prev, page: 1 }))
     }, [])
+
     const handlePageChange = useCallback((page) => {
         setPagination((prev) => ({ ...prev, page }))
         window.scrollTo({ top: 0, behavior: 'smooth' })
     }, [])
+
     const clearFilters = useCallback(() => {
-        setFilters({ niche: '', tool: '', country: '' })
+        setFilters({ category: '', tool: '' })
         setSearchInput('')
         setPagination((prev) => ({ ...prev, page: 1 }))
     }, [])
+
     const handleRetry = useCallback(() => {
         fetchCreators(true)
     }, [fetchCreators])
+
     useEffect(() => {
         fetchCreators()
     }, [fetchCreators])
+
+    useEffect(() => {
+        let cancelled = false
+        ;(async () => {
+            try {
+                const catRes = await categoryAPI.getCategories({ isActive: 'true', limit: 100 })
+                let cats = catRes?.data?.categories || catRes?.categories || catRes?.data || []
+                if (!Array.isArray(cats)) cats = []
+                const names = cats
+                    .filter((c) => c && c.isActive !== false)
+                    .map((c) => c.name || c.title || '')
+                    .filter(Boolean)
+                const uniqueNames = [...new Set(names)].sort((a, b) => a.localeCompare(b))
+                if (!cancelled) setCategoriesList(uniqueNames)
+            } catch (e) {
+                if (!cancelled) setCategoriesList([])
+                console.warn('Failed to load categories:', e?.message)
+            }
+            try {
+                const toolRes = await toolAPI.getTools({ limit: 100 })
+                let toolsData = toolRes?.data?.tools || toolRes?.tools || toolRes?.data || []
+                if (!Array.isArray(toolsData)) toolsData = []
+                const toolNames = toolsData
+                    .filter((t) => t && t.isActive !== false)
+                    .map((t) => t.name || '')
+                    .filter(Boolean)
+                const uniqueTools = [...new Set(toolNames)].sort((a, b) => a.localeCompare(b))
+                if (!cancelled) setToolsList(uniqueTools)
+            } catch (e) {
+                if (!cancelled) setToolsList([])
+                console.warn('Failed to load tools:', e?.message)
+            }
+        })()
+        return () => {
+            cancelled = true
+        }
+    }, [])
+
     return (
         <div className="min-h-screen bg-black text-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-1 pb-16">
@@ -587,6 +630,8 @@ function CreatorsPageContent() {
                     onSortChange={handleSortChange}
                     onClearFilters={clearFilters}
                     creatorsCount={filteredAndSortedCreators.length}
+                    categoriesList={categoriesList}
+                    toolsList={toolsList}
                 />
                 {error ? (
                     <ErrorState
@@ -611,6 +656,7 @@ function CreatorsPageContent() {
         </div>
     )
 }
+
 function LoadingFallback() {
     return (
         <div className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -621,12 +667,20 @@ function LoadingFallback() {
         </div>
     )
 }
+
 export default function CreatorsPage() {
     return (
-        <ErrorBoundary fallback={<ErrorState />}>
+        <ErrorBoundary
+            fallback={
+                <ErrorState
+                    error="Failed to load creators"
+                    onRetry={() => window.location.reload()}
+                />
+            }>
             <Suspense fallback={<LoadingFallback />}>
                 <CreatorsPageContent />
             </Suspense>
         </ErrorBoundary>
     )
 }
+
