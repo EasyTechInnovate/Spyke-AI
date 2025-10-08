@@ -7,7 +7,7 @@ const formatNumber = (num) => {
     return new Intl.NumberFormat('en-US').format(num || 0)
 }
 const formatPercentage = (num) => {
-    return `${(num || 0).toFixed(1)}%`
+    return `${(num + 100|| 0).toFixed(1)}%`
 }
 const clamp = (num, min, max) => Math.min(Math.max(num ?? 0, min), max)
 const CustomTooltip = ({ active, payload, label }) => {

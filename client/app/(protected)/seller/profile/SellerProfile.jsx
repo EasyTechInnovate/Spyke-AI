@@ -70,9 +70,9 @@ export default function SellerProfile() {
         loadProfile()
     }, [loadProfile])
     const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-IN', {
+        return new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'INR',
+            currency: 'USD',
             maximumFractionDigits: 0
         }).format(amount)
     }

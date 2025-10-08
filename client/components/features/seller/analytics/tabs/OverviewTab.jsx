@@ -65,7 +65,6 @@ const RecentSaleCard = ({ sale, index }) => (
                 </div>
                 <div>
                     <p className="text-white font-medium">{sale.userId?.name || 'Unknown Customer'}</p>
-                    <p className="text-gray-400 text-sm">{sale.userId?.emailAddress}</p>
                 </div>
             </div>
             <div className="text-right">

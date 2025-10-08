@@ -42,26 +42,29 @@ export default function StickyLeadForm({ blogPostSlug }) {
       showMessage('Please enter a valid email address', 'error')
       return
     }
+
     setIsSubmitting(true)
     try {
-      const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec'
-      const useGoogleSheets = !GOOGLE_SHEETS_URL.includes('YOUR_DEPLOYMENT_ID')
-      if (useGoogleSheets) {
-        await fetch(GOOGLE_SHEETS_URL, {
+      const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1B_Sx1P0G1tKcH1Wo6z8sdd9ntsbtVKFZm8VUIptauQSgsKoUjHwl0IZrurMqEDzkHw/exec'
+      const useGoogleSheet = true // toggle if you ever want to fall back to /api/leads
+
+      if (useGoogleSheet) {
+        const payload = {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone || '',
+          description: formData.description || '',
+          source: 'sticky_form',
+          blogPost: blogPostSlug || '',
+          timestamp: new Date().toISOString(),
+          userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+          referrer: typeof document !== 'undefined' ? document.referrer : ''
+        }
+        await fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone || '',
-            description: formData.description || '',
-            source: 'blog_chat_form',
-            blogPost: blogPostSlug || '',
-            timestamp: new Date().toISOString(),
-            userAgent: navigator.userAgent,
-            referrer: document.referrer
-          })
+          body: JSON.stringify(payload)
         })
         showMessage("Thank you! We'll be in touch within 24 hours.", 'success')
       } else {
@@ -77,10 +80,12 @@ export default function StickyLeadForm({ blogPostSlug }) {
         if (response.ok) {
           showMessage("Thank you! We'll be in touch soon.", 'success')
         } else {
-          const error = await response.json()
-          showMessage(error.error || 'Something went wrong. Please try again.', 'error')
+          let errorMsg = 'Something went wrong. Please try again.'
+          try { errorMsg = (await response.json()).error || errorMsg } catch {}
+          showMessage(errorMsg, 'error')
         }
       }
+
       setFormData({ name: '', email: '', phone: '', description: '' })
     } catch (error) {
       console.error('Error submitting form:', error)

@@ -49,7 +49,6 @@ const CustomerCard = ({ customer, index, rank }) => (
                 </div>
                 <div>
                     <h3 className="text-white font-semibold">{customer.name || 'Anonymous Customer'}</h3>
-                    <p className="text-gray-400 text-sm">{customer.emailAddress || 'No email'}</p>
                 </div>
             </div>
             {rank && rank <= 3 && (
@@ -405,7 +404,6 @@ export default function CustomersTab({ timeRange = '30d' }) {
                                                             }`} />
                                                         )}
                                                     </div>
-                                                    <p className="text-gray-400 text-sm">{customer.emailAddress || 'No email'}</p>
                                                 </div>
                                             </div>
                                             <div className="text-right">
