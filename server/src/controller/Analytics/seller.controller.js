@@ -185,6 +185,18 @@ export default {
                     }
                 },
                 { $unset: 'salesData' },
+                // Added: category lookup to expose categoryName without breaking existing category id field
+                {
+                    $lookup: {
+                        from: 'categories',
+                        localField: 'category',
+                        foreignField: '_id',
+                        as: 'categoryDoc'
+                    }
+                },
+                { $unwind: { path: '$categoryDoc', preserveNullAndEmptyArrays: true } },
+                { $addFields: { categoryName: '$categoryDoc.name' } },
+                { $unset: 'categoryDoc' },
                 { $sort: sortOptions },
                 { $skip: skip },
                 { $limit: parseInt(limit) }
