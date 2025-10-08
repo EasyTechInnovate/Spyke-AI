@@ -131,7 +131,7 @@ export default {
                 return httpError(next, new Error(responseMessage.ERROR.NOT_FOUND('Seller profile')), req, 404)
             }
 
-            const APPROVED_EDITABLE_FIELDS = ['bio','socialHandles','sellerBanner','portfolioLinks','customAutomationServices','websiteUrl','location','niches','toolsSpecialization']
+            const APPROVED_EDITABLE_FIELDS = ['bio','socialHandles','sellerBanner','profileImage','portfolioLinks','customAutomationServices','websiteUrl','location','niches','toolsSpecialization','languages']
             const ALWAYS_BLOCKED_FIELDS = ['fullName','verification','commissionOffer','payoutInfo','userId','isActive','stats','revenueShareAgreement','createdAt','updatedAt','_id','suspendedAt','suspendedBy','suspensionReason','activatedAt','activatedBy','activationNote']
             const isApproved = sellerProfile.verification.status === ESellerVerificationStatus.APPROVED
             const isObj = v => v && typeof v === 'object' && !Array.isArray(v)
