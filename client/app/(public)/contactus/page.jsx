@@ -143,7 +143,7 @@ export default function ContactUsPage() {
         setIsSubmitting(true)
         setSubmitStatus(null)
         try {
-            const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby7R0o7qelmwnIgtfvNqfdIVuRZ3aPO5xJt2oke4aPjuEBF1SUS5iHt1_78aFKgh6NhRA/exec'
+            const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyGHESNgUxqqBw9h_bQZxrBFbVBj5FppkonvzK6CU5NxJyfqIz7Ppn4cMgB6JoRgV7CPA/exec'
             const response = await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors', 

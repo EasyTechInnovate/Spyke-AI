@@ -420,6 +420,7 @@ export default {
                 socialHandles: sellerProfile.socialHandles,
                 customAutomationServices: sellerProfile.customAutomationServices,
                 portfolioLinks: sellerProfile.portfolioLinks,
+                profileImage: sellerProfile.profileImage,
                 stats: {
                     totalProducts: sellerProfile.stats.totalProducts,
                     averageRating: sellerProfile.stats.averageRating,
@@ -427,7 +428,8 @@ export default {
                     profileViews: sellerProfile.stats.profileViews
                 },
                 memberSince: sellerProfile.userId?.createdAt,
-                avatar: sellerProfile.userId?.avatar
+                // Backward compatibility: keep avatar field but prefer seller profileImage
+                avatar: sellerProfile.profileImage || sellerProfile.userId?.avatar
             }
 
             httpResponse(req, res, 200, responseMessage.SUCCESS, publicData)

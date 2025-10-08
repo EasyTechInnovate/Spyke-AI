@@ -127,8 +127,8 @@ export default function PublicSellerProfile() {
                     className={`${cardBase} -mt-28 sm:-mt-32 mb-10 flex flex-col sm:flex-row sm:items-center gap-6`}>
                     <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-xl border border-white/10 overflow-hidden shadow-lg shrink-0">
                         <img
-                            src={seller.avatar}
-                            alt={seller.fullName}
+                            src={seller?.profileImage}
+                            alt={seller?.fullName}
                             className="w-full h-full object-cover"
                             loading="lazy"
                         />
