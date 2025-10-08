@@ -250,7 +250,7 @@ export default function PayoutSettingsPage() {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                                        Payment Processing Fee (%)
+                                        Payment Processing Fee ($)
                                     </label>
                                     <input
                                         type="number"

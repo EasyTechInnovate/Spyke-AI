@@ -26,7 +26,7 @@ const calculateEarnings = async (sellerId, fromDate = null, toDate = null) => {
             throw new Error('Seller not found')
         }
 
-        const commissionRate = seller.getCurrentCommissionRate()
+        const commissionRate = 100 - seller.getCurrentCommissionRate()
         if (!commissionRate) {
             throw new Error('Seller commission rate not set')
         }
