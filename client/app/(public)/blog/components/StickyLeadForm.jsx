@@ -15,18 +15,9 @@ export default function StickyLeadForm({ blogPostSlug }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    subject: '',
-    message: ''
+    phone: '',
+    needs: ''
   })
-  // Subject options similar to contactus page
-  const subjectOptions = [
-    { value: '', label: 'Select a subject' },
-    { value: 'support', label: 'Support' },
-    { value: 'sales', label: 'Sales' },
-    { value: 'feedback', label: 'Feedback' },
-    { value: 'partnership', label: 'Partnership' },
-    { value: 'other', label: 'Other' }
-  ]
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
@@ -42,24 +33,30 @@ export default function StickyLeadForm({ blogPostSlug }) {
     if (!formData.name.trim()) return showMessage('Please enter your name', 'error')
     if (!formData.email.trim()) return showMessage('Please enter your email', 'error')
     if (!validateEmail(formData.email)) return showMessage('Invalid email format', 'error')
-    if (!formData.subject) return showMessage('Please select a subject', 'error')
-    if (!formData.message.trim()) return showMessage('Please enter your message', 'error')
+    if (!formData.needs.trim()) return showMessage('Please tell us your needs', 'error')
+    if (formData.phone && formData.phone.replace(/\D/g, '').length < 6) return showMessage('Phone looks too short', 'error')
 
     setIsSubmitting(true)
     try {
-      // Match contactus page API call exactly
-      const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyGHESNgUxqqBw9h_bQZxrBFbVBj5FppkonvzK6CU5NxJyfqIz7Ppn4cMgB6JoRgV7CPA/exec'
+      const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1B_Sx1P0G1tKcH1Wo6z8sdd9ntsbtVKFZm8VUIptauQSgsKoUjHwl0IZrurMqEDzkHw/exec'
+      const payload = {
+        Name: formData.name,
+        Email: formData.email,
+        Phone: formData.phone,
+        Needs: formData.needs,
+        BlogSlug: blogPostSlug || ''
+      }
       await fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       })
-      showMessage("Message sent! We'll respond shortly.", 'success')
+      showMessage('Submitted! We will reach out soon.', 'success')
       if (typeof window !== 'undefined' && window.spykeAnalytics) {
-        window.spykeAnalytics.trackEvent('Sticky Contact Submitted', { subject: formData.subject })
+        window.spykeAnalytics.trackEvent('Blog Lead Submitted', { blogPostSlug })
       }
-      setFormData({ name: '', email: '', subject: '', message: '' })
+      setFormData({ name: '', email: '', phone: '', needs: '' })
     } catch (err) {
       console.error('Sticky form error:', err)
       showMessage('Submission failed. Please try again.', 'error')
@@ -82,7 +79,7 @@ export default function StickyLeadForm({ blogPostSlug }) {
         <div className="bg-[#1f1f1f] border border-white/10 rounded-xl shadow-2xl p-6 max-h-[80vh] overflow-y-auto">
           <div className="mb-6">
             <h3 className="font-league-spartan font-bold text-lg text-white">Get Custom Automation</h3>
-            <p className="text-sm text-gray-400">Let's discuss your needs</p>
+            <p className="text-sm text-gray-400">Tell us what you need</p>
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="relative">
@@ -109,30 +106,25 @@ export default function StickyLeadForm({ blogPostSlug }) {
                 onChange={handleInputChange}
               />
             </div>
-            <div>
-              <select
-                name="subject"
-                required
-                value={formData.subject}
+            <div className="relative">
+              <input
+                type="tel"
+                name="phone"
+                placeholder="Phone (optional)"
+                className="w-full pl-4 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all text-white placeholder-gray-400"
+                value={formData.phone}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all text-white"
-              >
-                {subjectOptions.map(opt => (
-                  <option key={opt.value} value={opt.value} className="bg-[#1a1a1a] text-white">
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
             <div className="relative">
               <FileText className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
               <textarea
-                name="message"
-                placeholder="Your Message *"
+                name="needs"
+                placeholder="Describe your needs *"
                 rows={4}
                 required
                 className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all text-white placeholder-gray-400 resize-none"
-                value={formData.message}
+                value={formData.needs}
                 onChange={handleInputChange}
               />
             </div>
@@ -149,15 +141,15 @@ export default function StickyLeadForm({ blogPostSlug }) {
               ) : (
                 <>
                   <Send className="w-4 h-4 mr-2" />
-                  Send Message
+                  Submit
                 </>
               )}
             </Button>
           </form>
           <div className="mt-4 text-xs text-gray-400 text-center space-y-1">
-            <p>✓ Free consultation</p>
+            <p>✓ Fast response</p>
             <p>✓ No spam, ever</p>
-            <p>✓ Response within 24 hours</p>
+            <p>✓ We respect your privacy</p>
           </div>
         </div>
       </div>

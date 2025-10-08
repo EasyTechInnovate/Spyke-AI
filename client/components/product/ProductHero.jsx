@@ -136,7 +136,7 @@ export default function ProductHero({
             })
         })
     }
-    
+
     if (product.previewVideo) {
         mediaItems.push({
             type: 'video',
@@ -144,7 +144,6 @@ export default function ProductHero({
             alt: `${product.title} - Preview Video`
         })
     }
-    
 
     const activeMedia = mediaItems[currentImageIndex] || mediaItems[0]
     const calculatedDiscount =
@@ -164,13 +163,21 @@ export default function ProductHero({
         }
     }
     useEffect(() => {
-        if (mediaItems.length > 1 && !autoCarouselPaused && !isVideoPlaying) {
+        if (mediaItems.length > 1 && !autoCarouselPaused && !isVideoPlaying && activeMedia?.type !== 'video') {
             const interval = setInterval(() => {
                 nextImage()
             }, 4000)
             return () => clearInterval(interval)
         }
-    }, [mediaItems.length, autoCarouselPaused, isVideoPlaying])
+    }, [mediaItems.length, autoCarouselPaused, isVideoPlaying, activeMedia?.type])
+
+    useEffect(() => {
+        if (activeMedia?.type === 'video') {
+            setAutoCarouselPaused(true)
+        } else if (!isVideoPlaying) {
+            setAutoCarouselPaused(false)
+        }
+    }, [activeMedia?.type, isVideoPlaying])
 
     const copyToClipboard = async (text, label) => {
         try {
