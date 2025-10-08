@@ -392,17 +392,6 @@ function DetailedProductCard({ product, index, categoryNames }) {
             <span className={`rounded-full px-3 py-1 text-xs font-medium ${badgeClass}`}>{badge}</span>
           </div>
           <p className="line-clamp-2 text-sm text-gray-400">{product.shortDescription}</p>
-          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-300">
-            {catLabel && (
-              <span className="inline-flex items-center gap-1"><Tag className="h-3.5 w-3.5 text-gray-400" />{catLabel}</span>
-            )}
-            {product.industry && (
-              <span className="inline-flex items-center gap-1"><Globe className="h-3.5 w-3.5 text-gray-400" />{product.industry}</span>
-            )}
-            {product.setupTime && (
-              <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5 text-gray-400" />{product.setupTime}</span>
-            )}
-          </div>
         </div>
       </div>
       <div className="mb-5 flex items-center gap-4">

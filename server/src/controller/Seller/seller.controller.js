@@ -461,7 +461,7 @@ export default {
             const [sellers, totalCount] = await Promise.all([
                 sellerProfileModel
                     .find(query)
-                    .select('fullName bio niches toolsSpecialization location sellerBanner stats customAutomationServices')
+                    .select('fullName bio niches toolsSpecialization location sellerBanner stats customAutomationServices profileImage')
                     .populate('userId', 'avatar createdAt')
                     .sort(sort)
                     .skip(skip)
@@ -470,6 +470,7 @@ export default {
             ])
 
             const responseData = {
+                // Return raw seller docs (they already contain profileImage + userId.avatar)
                 sellers,
                 pagination: {
                     page: parseInt(page),

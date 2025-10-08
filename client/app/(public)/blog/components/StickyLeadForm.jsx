@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { Send, User, Mail, Phone } from 'lucide-react'
+import { Send, User, Mail, FileText } from 'lucide-react'
 import { Button } from '@/components/shared/ui/button'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
 
@@ -15,9 +15,18 @@ export default function StickyLeadForm({ blogPostSlug }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
-    description: ''
+    subject: '',
+    message: ''
   })
+  // Subject options similar to contactus page
+  const subjectOptions = [
+    { value: '', label: 'Select a subject' },
+    { value: 'support', label: 'Support' },
+    { value: 'sales', label: 'Sales' },
+    { value: 'feedback', label: 'Feedback' },
+    { value: 'partnership', label: 'Partnership' },
+    { value: 'other', label: 'Other' }
+  ]
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
@@ -30,66 +39,30 @@ export default function StickyLeadForm({ blogPostSlug }) {
   }
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!formData.name.trim()) {
-      showMessage('Please enter your name', 'error')
-      return
-    }
-    if (!formData.email.trim()) {
-      showMessage('Please enter your email address', 'error')
-      return
-    }
-    if (!validateEmail(formData.email)) {
-      showMessage('Please enter a valid email address', 'error')
-      return
-    }
+    if (!formData.name.trim()) return showMessage('Please enter your name', 'error')
+    if (!formData.email.trim()) return showMessage('Please enter your email', 'error')
+    if (!validateEmail(formData.email)) return showMessage('Invalid email format', 'error')
+    if (!formData.subject) return showMessage('Please select a subject', 'error')
+    if (!formData.message.trim()) return showMessage('Please enter your message', 'error')
 
     setIsSubmitting(true)
     try {
-      const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1B_Sx1P0G1tKcH1Wo6z8sdd9ntsbtVKFZm8VUIptauQSgsKoUjHwl0IZrurMqEDzkHw/exec'
-      const useGoogleSheet = true // toggle if you ever want to fall back to /api/leads
-
-      if (useGoogleSheet) {
-        const payload = {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone || '',
-          description: formData.description || '',
-          source: 'sticky_form',
-          blogPost: blogPostSlug || '',
-          timestamp: new Date().toISOString(),
-          userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
-          referrer: typeof document !== 'undefined' ? document.referrer : ''
-        }
-        await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        })
-        showMessage("Thank you! We'll be in touch within 24 hours.", 'success')
-      } else {
-        const response = await fetch('/api/leads', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...formData,
-            source: 'sticky_form',
-            blogPostSlug
-          })
-        })
-        if (response.ok) {
-          showMessage("Thank you! We'll be in touch soon.", 'success')
-        } else {
-          let errorMsg = 'Something went wrong. Please try again.'
-          try { errorMsg = (await response.json()).error || errorMsg } catch {}
-          showMessage(errorMsg, 'error')
-        }
+      // Match contactus page API call exactly
+      const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyGHESNgUxqqBw9h_bQZxrBFbVBj5FppkonvzK6CU5NxJyfqIz7Ppn4cMgB6JoRgV7CPA/exec'
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+      showMessage("Message sent! We'll respond shortly.", 'success')
+      if (typeof window !== 'undefined' && window.spykeAnalytics) {
+        window.spykeAnalytics.trackEvent('Sticky Contact Submitted', { subject: formData.subject })
       }
-
-      setFormData({ name: '', email: '', phone: '', description: '' })
-    } catch (error) {
-      console.error('Error submitting form:', error)
-      showMessage('Something went wrong. Please try again or contact us directly.', 'error')
+      setFormData({ name: '', email: '', subject: '', message: '' })
+    } catch (err) {
+      console.error('Sticky form error:', err)
+      showMessage('Submission failed. Please try again.', 'error')
     } finally {
       setIsSubmitting(false)
     }
@@ -136,24 +109,30 @@ export default function StickyLeadForm({ blogPostSlug }) {
                 onChange={handleInputChange}
               />
             </div>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="tel"
-                name="phone"
-                placeholder="Phone Number (Optional)"
-                className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all text-white placeholder-gray-400"
-                value={formData.phone}
-                onChange={handleInputChange}
-              />
-            </div>
             <div>
+              <select
+                name="subject"
+                required
+                value={formData.subject}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all text-white"
+              >
+                {subjectOptions.map(opt => (
+                  <option key={opt.value} value={opt.value} className="bg-[#1a1a1a] text-white">
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="relative">
+              <FileText className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
               <textarea
-                name="description"
-                placeholder="Tell us about your automation needs..."
-                rows={3}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all text-white placeholder-gray-400 resize-none"
-                value={formData.description}
+                name="message"
+                placeholder="Your Message *"
+                rows={4}
+                required
+                className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-all text-white placeholder-gray-400 resize-none"
+                value={formData.message}
                 onChange={handleInputChange}
               />
             </div>
@@ -170,7 +149,7 @@ export default function StickyLeadForm({ blogPostSlug }) {
               ) : (
                 <>
                   <Send className="w-4 h-4 mr-2" />
-                  Get Free Consultation
+                  Send Message
                 </>
               )}
             </Button>

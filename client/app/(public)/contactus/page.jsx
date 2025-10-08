@@ -76,7 +76,7 @@ export default function ContactUsPage() {
         {
             icon: MapPin,
             title: "Address",
-            value: "Spyke Technologies, Burjuman ,Dubai, UAE",
+            value: "Spyke Technologies, Block C VL12-029, Sharjah Research, Technology and Innovation Park, Sharjah, UAE",
             href: null
         }
     ]

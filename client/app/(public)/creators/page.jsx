@@ -201,7 +201,7 @@ function CreatorCard({ creator }) {
     }
 
     const getAvatarUrl = (creator) => {
-        return creator.avatar || creator.profileImage || creator.userId?.avatar || creator.user?.avatar || null
+        return creator?.profileImage || null
     }
 
     const avatarUrl = getAvatarUrl(creator)
@@ -219,32 +219,33 @@ function CreatorCard({ creator }) {
                 className="h-full">
                 <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 h-full hover:border-[#00FF89]/30 hover:bg-white/10 transition-all duration-300 group flex flex-col">
                     <div className="flex items-start gap-4 mb-4 flex-shrink-0">
-                        <div className="relative flex-shrink-0">
-                            {avatarUrl ? (
-                                <img
-                                    src={avatarUrl}
-                                    alt={creator.fullName}
-                                    className="w-16 h-16 rounded-full object-cover border-2 border-white/10"
-                                    onError={(e) => {
-                                        e.target.style.display = 'none'
-                                        e.target.nextElementSibling.style.display = 'flex'
-                                    }}
-                                />
-                            ) : null}
-                            <div
-                                className={`w-16 h-16 bg-gradient-to-br from-[#00FF89]/20 to-emerald-400/20 rounded-full flex items-center justify-center border-2 border-[#00FF89]/30 ${avatarUrl ? 'hidden' : 'flex'}`}>
-                                <span className="text-[#00FF89] font-bold text-lg">{getInitials(creator.fullName)}</span>
+                        <div className="relative flex-shrink-0 w-16 h-16">
+                            <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/10 bg-gradient-to-br from-[#00FF89]/20 to-emerald-400/20 flex items-center justify-center">
+                                {avatarUrl ? (
+                                    <img
+                                        src={avatarUrl}
+                                        alt={creator.fullName}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            e.target.style.display = 'none'
+                                            e.target.parentElement?.querySelector('.fallback-text')?.classList.remove('hidden')
+                                        }}
+                                    />
+                                ) : null}
+                                <span className={`fallback-text ${avatarUrl ? 'hidden' : 'block'} text-[#00FF89] font-bold text-lg`}>
+                                    {getInitials(creator.fullName)}
+                                </span>
                             </div>
                             <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#00FF89] rounded-full border-2 border-black" />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-white text-lg leading-tight mb-1 group-hover:text-[#00FF89] transition-colors">
+                            <h3 className="font-semibold text-white text-lg leading-tight mb-1 group-hover:text-[#00FF89] transition-colors truncate">
                                 {creator.fullName}
                             </h3>
                             {creator.location?.country && (
                                 <div className="flex items-center gap-1 text-sm text-gray-400">
                                     <MapPin className="w-3 h-3" />
-                                    <span>{creator.location.country}</span>
+                                    <span className="truncate max-w-[120px]">{creator.location.country}</span>
                                 </div>
                             )}
                         </div>
@@ -255,16 +256,16 @@ function CreatorCard({ creator }) {
                                 <span className="line-clamp-3">{creator.bio}</span>
                             </p>
                         ) : (
-                            <div className="h-16"></div>
+                            <div className="h-16" />
                         )}
                     </div>
                     <div className="mb-4 flex-shrink-0">
                         {creator.niches && creator.niches.length > 0 ? (
-                            <div className="flex flex-wrap gap-1.5 min-h-[36px]">
+                            <div className="flex flex-wrap gap-1.5 min-h-[36px] max-h-[40px] overflow-hidden">
                                 {creator.niches.slice(0, 2).map((niche, index) => (
                                     <span
                                         key={index}
-                                        className="px-2.5 py-1 bg-[#00FF89]/20 text-[#00FF89] text-xs font-medium rounded-full border border-[#00FF89]/30 whitespace-nowrap flex-shrink-0">
+                                        className="px-2.5 py-1.5 bg-[#00FF89]/20 text-[#00FF89] text-sm font-medium rounded-full border border-[#00FF89]/30 whitespace-nowrap max-w-[110px] truncate">
                                         {niche}
                                     </span>
                                 ))}
@@ -275,28 +276,28 @@ function CreatorCard({ creator }) {
                                 )}
                             </div>
                         ) : (
-                            <div className="h-9"></div>
+                            <div className="h-9" />
                         )}
                     </div>
                     <div className="mb-4 flex-shrink-0">
                         {creator.toolsSpecialization && creator.toolsSpecialization.length > 0 ? (
                             <>
                                 <p className="text-xs text-gray-500 mb-2">Tools:</p>
-                                <div className="flex flex-wrap gap-1 min-h-[28px]">
+                                <div className="flex flex-wrap gap-1 min-h-[28px] max-h-[56px] overflow-hidden">
                                     {creator.toolsSpecialization.slice(0, 3).map((tool, index) => (
                                         <span
                                             key={index}
-                                            className="px-2 py-1 bg-white/5 text-gray-300 text-xs rounded-lg border border-white/10">
+                                            className="px-2 py-1 bg-white/5 text-gray-300 text-xs rounded-lg border border-white/10 max-w-[110px] truncate">
                                             {tool}
                                         </span>
                                     ))}
                                 </div>
                             </>
                         ) : (
-                            <div className="h-12"></div>
+                            <div className="h-12" />
                         )}
                     </div>
-                    <div className="flex-1"></div>
+                    <div className="flex-1" />
                     {creator.stats && (
                         <div className="grid grid-cols-2 gap-3 pt-4 border-t border-white/10 mb-4 flex-shrink-0">
                             <div className="text-center">

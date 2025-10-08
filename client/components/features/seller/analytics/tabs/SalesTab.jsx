@@ -380,7 +380,6 @@ const SaleCard = ({ sale, index }) => (
                 </div>
                 <div>
                     <h3 className="text-white font-semibold">{sale.userId?.name || 'Unknown Customer'}</h3>
-                    <p className="text-gray-400 text-sm">{sale.userId?.emailAddress}</p>
                 </div>
             </div>
             <div className="text-right">
@@ -506,7 +505,6 @@ const SalesTable = ({ sales, timeRange, pagination, onPageChange }) => {
             const matchesPayment = filterPaymentMethod === 'all' || sale.paymentMethod === filterPaymentMethod
             const matchesSearch = !searchTerm || 
                 sale.userId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                sale.userId?.emailAddress?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 sale._id?.toLowerCase().includes(searchTerm.toLowerCase())
             return matchesStatus && matchesPayment && matchesSearch
         })
@@ -572,7 +570,7 @@ const SalesTable = ({ sales, timeRange, pagination, onPageChange }) => {
                     <div className="relative">
                         <input
                             type="text"
-                            placeholder="Search customers, emails, or order IDs..."
+                            placeholder="Search customers or order IDs..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full sm:w-64 px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 focus:border-[#00FF89]"
@@ -676,9 +674,7 @@ const SalesTable = ({ sales, timeRange, pagination, onPageChange }) => {
                                             <p className="text-white font-medium text-sm">
                                                 {sale.userId?.name || 'Unknown'}
                                             </p>
-                                            <p className="text-gray-400 text-xs">
-                                                {sale.userId?.emailAddress}
-                                            </p>
+                                            
                                         </div>
                                     </div>
                                 </td>
@@ -936,13 +932,11 @@ export default function SalesTab({ analyticsData, timeRange, loading }) {
                             const customerId = sale.userId?._id
                             const customerName = sale.userId?.name || 'Unknown'
                             const customerAvatar = sale.userId?.avatar
-                            const customerEmail = sale.userId?.emailAddress
                             if (!acc[customerId]) {
                                 acc[customerId] = {
                                     id: customerId,
                                     name: customerName,
                                     avatar: customerAvatar,
-                                    email: customerEmail,
                                     orders: 0,
                                     totalSpent: 0,
                                     avgOrderValue: 0
@@ -987,7 +981,6 @@ export default function SalesTab({ analyticsData, timeRange, loading }) {
                                                 VIP Customer
                                             </span>
                                         </div>
-                                        <p className="text-gray-400 text-sm">{topCustomer.email}</p>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-3 gap-4">

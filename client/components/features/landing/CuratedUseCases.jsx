@@ -115,7 +115,7 @@ export default function CuratedUseCases() {
                           </h3>
                         </div>
                         <div className={`w-10 h-10 rounded-lg ${useCase.color} bg-opacity-20 flex items-center justify-center`}>
-                          <useCase.icon className={`w-5 h-5 ${useCase.color.replace('bg-', 'text-')}`} />
+                          <useCase.icon className={`w-5 h-5 ${useCase.color.replace('bg-', 'text-white')}`} />
                         </div>
                       </div>
                       <p className="text-sm text-gray-400 mb-6 flex-1 font-body">
