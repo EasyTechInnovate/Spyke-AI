@@ -138,14 +138,12 @@ function ProductPerformanceChart({ products }) {
                         {rows.map((r, i) => {
                             const value = r[metric]
                             const heightPct = (value / maxMetric) * 80 + 5 // 5-85%
-                            // Secondary bars for context (views & sales) when primary metric different
-                            const showContext = metric !== 'views' || metric !== 'sales'
                             return (
                                 <div
                                     key={r.id + metric}
                                     className="group flex w-24 flex-col items-center">
                                     <div className="relative flex h-48 w-full items-end">
-                                        <div className="relative w-10 flex-1 rounded-t-md bg-gray-800">
+                                        <div className="relative h-full flex-1 rounded-t-md bg-gray-800">
                                             <motion.div
                                                 initial={{ height: 0 }}
                                                 animate={{ height: `${heightPct}%` }}
@@ -160,9 +158,8 @@ function ProductPerformanceChart({ products }) {
                                                       : value.toLocaleString()}
                                             </div>
                                         </div>
-                                        {/* Context mini bars (views & sales) except when metric is those */}
                                         {metric !== 'views' && (
-                                            <div className="ml-1 flex w-2 flex-col justify-end rounded bg-gray-800">
+                                            <div className="ml-1 flex h-full w-2 flex-col justify-end rounded bg-gray-800">
                                                 <motion.div
                                                     initial={{ height: 0 }}
                                                     animate={{ height: `${(r.views / Math.max(1, maxMetric)) * 80 + 5}%` }}
@@ -173,7 +170,7 @@ function ProductPerformanceChart({ products }) {
                                             </div>
                                         )}
                                         {metric !== 'sales' && (
-                                            <div className="ml-1 flex w-2 flex-col justify-end rounded bg-gray-800">
+                                            <div className="ml-1 flex h-full w-2 flex-col justify-end rounded bg-gray-800">
                                                 <motion.div
                                                     initial={{ height: 0 }}
                                                     animate={{ height: `${(r.sales / Math.max(1, maxMetric)) * 80 + 5}%` }}
@@ -229,7 +226,7 @@ function CategoryDistributionChart({ products, categoryNames }) {
     const cats = useMemo(() => {
         const m = new Map()
         ;(products ?? []).forEach((p) => {
-            const raw = p.category ?? 'uncategorized'
+            const raw = p.categoryName ?? 'uncategorized'
             const c = categoryNames[raw] || raw || 'uncategorized'
             const prev = m.get(c)?.count ?? 0
             m.set(c, { count: prev + 1 })
@@ -521,7 +518,7 @@ function DetailedProductCard({ product, index, categoryNames }) {
                 ? 'bg-blue-900 text-blue-300'
                 : 'bg-red-900 text-red-300'
     const rawCat = product.category
-    const catLabel = rawCat && categoryNames[rawCat] ? categoryNames[rawCat] : rawCat ? String(rawCat) : null
+    const catLabel = product.categoryName || (rawCat && categoryNames[rawCat] ? categoryNames[rawCat] : rawCat ? String(rawCat) : null)
     return (
         <motion.div
             initial={{ opacity: 0, y: 18 }}
@@ -720,9 +717,7 @@ function ProductsTable({ items, categoryNames }) {
                                             </div>
                                             <div
                                                 className="text-[11px] text-gray-400"
-                                                title={categoryNames[p.category] || p.category || '-'}>
-                                                {categoryNames[p.category] || (p.category ? String(p.category) : '-')}
-                                            </div>
+                                                title={p.categoryName || categoryNames[p.category] || p.category || "-"}>{p.categoryName || categoryNames[p.category] || (p.category ? String(p.category) : "-")}</div>
                                         </div>
                                     </div>
                                 </td>
@@ -759,6 +754,7 @@ export default function ProductsTab({ analyticsData, timeRange, loading }) {
     const [catLoading, setCatLoading] = useState(false)
     useEffect(() => {
         const products = analyticsData?.products || []
+        if (products.some(p => p.categoryName)) return; // Skip fetch if API already supplied names
         const ids = Array.from(new Set(products.map((p) => p.category).filter(Boolean)))
         if (!ids.length) return
         // Heuristic: only fetch if values look like ObjectIds (24 hex chars) or mapping empty
@@ -806,7 +802,11 @@ export default function ProductsTab({ analyticsData, timeRange, loading }) {
             </div>
         )
     const rawCategories = Array.from(new Set(products.map((p) => p.category).filter(Boolean)))
-    const categories = rawCategories.map((id) => ({ id, label: categoryNames[id] || id })).sort((a, b) => a.label.localeCompare(b.label))
+    const categories = rawCategories.map(id => {
+        const prodWithName = products.find(p => p.category === id && p.categoryName);
+        const label = prodWithName?.categoryName || categoryNames[id] || id;
+        return { id, label };
+    }).sort((a,b) => a.label.localeCompare(b.label));
     const statuses = Array.from(new Set(products.map((p) => p.status).filter(Boolean)))
     const filtered = useMemo(() => {
         const text = q.trim().toLowerCase()
