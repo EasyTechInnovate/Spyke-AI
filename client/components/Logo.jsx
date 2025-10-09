@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import React from 'react'
 export const LOGO_SIZES = {
     xs: 32,
@@ -26,21 +25,22 @@ export const SpykeLogo = ({
                 className="relative flex-shrink-0 flex items-center justify-center"
                 style={{ width: logoSize, height: logoSize }}>
                 {!imageError ? (
-                    <Image
+                    <img
                         src="/logo.svg"
                         alt="Spyke AI Logo"
                         width={logoSize}
                         height={logoSize}
-                        priority={priority}
-                        quality={100}
                         className="logo-icon object-contain object-center block"
                         style={{
                             imageRendering: '-webkit-optimize-contrast',
                             WebkitFontSmoothing: 'antialiased',
                             backfaceVisibility: 'hidden',
-                            transform: 'translateZ(0)'
+                            transform: 'translateZ(0)',
+                            width: '100%',
+                            height: '100%'
                         }}
                         draggable={false}
+                        loading={priority ? 'eager' : 'lazy'}
                         onError={() => {
                             console.warn('Logo failed to load: /logo.svg')
                             setImageError(true)
@@ -70,20 +70,22 @@ export const SpykeLogoCompact = ({ size = 32, className = '', darkMode = false, 
             role="img"
             aria-label="Spyke AI Logo">
             {!imageError ? (
-                <Image
+                <img
                     src="/logo-icon.svg"
                     alt="Spyke AI"
                     width={size}
                     height={size}
-                    quality={100}
                     className="logo-icon object-contain object-center block"
                     style={{
                         imageRendering: '-webkit-optimize-contrast',
                         WebkitFontSmoothing: 'antialiased',
                         backfaceVisibility: 'hidden',
-                        transform: 'translateZ(0)'
+                        transform: 'translateZ(0)',
+                        width: '100%',
+                        height: '100%'
                     }}
                     draggable={false}
+                    loading="lazy"
                     onError={() => setImageError(true)}
                 />
             ) : (
@@ -107,20 +109,21 @@ export const SpykeLogoWithSkeleton = ({ size = 40, className = '', showText = tr
                 className="relative"
                 style={{ width: size, height: size }}>
                 {isLoading && <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-lg" />}
-                <Image
+                <img
                     src="/logo.svg"
                     alt="Spyke AI Logo"
                     width={size}
                     height={size}
-                    priority={false}
-                    quality={100}
                     className={`logo-icon object-contain object-center block transition-opacity ${isLoading ? 'opacity-0' : 'opacity-100'}`}
                     style={{
                         imageRendering: '-webkit-optimize-contrast',
                         WebkitFontSmoothing: 'antialiased',
                         backfaceVisibility: 'hidden',
-                        transform: 'translateZ(0)'
+                        transform: 'translateZ(0)',
+                        width: '100%',
+                        height: '100%'
                     }}
+                    loading="lazy"
                     onLoad={() => setIsLoading(false)}
                     draggable={false}
                 />

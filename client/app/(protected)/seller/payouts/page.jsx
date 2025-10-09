@@ -508,11 +508,7 @@ function RecentPayouts({ payouts = [], loading, formatCurrencyStrict }) {
                 <div className="px-4 py-3">Gross</div>
                 <div className="px-4 py-3">Fees</div>
                 <div className="px-4 py-3">Method</div>
-                <div className="px-4 py-3 flex items-center gap-1">
-                    Status
-                    
-                </div>
-                <div className="px-4 py-3">Status</div>
+                <div className="px-4 py-3">Status
                 <Tooltip content="Payout lifecycle: Approved → Processed → Completed. Each colored dot fills when the stage is reached.">
                         <button
                             type="button"
@@ -521,6 +517,8 @@ function RecentPayouts({ payouts = [], loading, formatCurrencyStrict }) {
                             <Info className="w-4 h-4" />
                         </button>
                     </Tooltip>
+                </div>
+                
                 <div className="px-4 py-3">Details</div>
             </div>
             <ul className="divide-y divide-white/5">
