@@ -38,25 +38,25 @@ export default function StickyLeadForm({ blogPostSlug }) {
 
     setIsSubmitting(true)
     try {
-      const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbznoQdTTsUHN484cddBjjtCL9KF2YNS-E5kyeMPOdiuOt7SffbL-pYr2Vi9Jdexh2Tapg/exec'
+      const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwGXS9zXj-xCDRiYpIsXb-VwASflTeA__ZLmEPgG4PUbkFA66Br5pFhB6N12dzmiPXuDg/exec'
 
-      // Create form data
-      const formDataPayload = new FormData()
-      formDataPayload.append('Name', formData.name)
-      formDataPayload.append('Email', formData.email)
-      formDataPayload.append('Phone', formData.phone || '')
-      formDataPayload.append('Needs', formData.needs)
-      formDataPayload.append('BlogSlug', blogPostSlug || '')
+      // Create JSON payload matching your Google Apps Script
+      const payload = {
+        Name: formData.name,
+        Email: formData.email,
+        Phone: formData.phone || '',
+        Needs: formData.needs,
+        BlogSlug: blogPostSlug || ''
+      }
 
       const response = await fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
-        body: formDataPayload
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
       })
-
-      // Check if request was successful
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
       showMessage('Submitted! We will reach out soon.', 'success')
       if (typeof window !== 'undefined' && window.spykeAnalytics) {
         window.spykeAnalytics.trackEvent('Blog Lead Submitted', { blogPostSlug })
