@@ -38,7 +38,7 @@ export default function StickyLeadForm({ blogPostSlug }) {
 
     setIsSubmitting(true)
     try {
-      const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1B_Sx1P0G1tKcH1Wo6z8sdd9ntsbtVKFZm8VUIptauQSgsKoUjHwl0IZrurMqEDzkHw/exec'
+      const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbznoQdTTsUHN484cddBjjtCL9KF2YNS-E5kyeMPOdiuOt7SffbL-pYr2Vi9Jdexh2Tapg/exec'
 
       // Create form data
       const formDataPayload = new FormData()
