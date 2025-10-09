@@ -143,11 +143,51 @@ export default function PublicSellerProfile() {
                                 {seller.fullName}
                             </h1>
                         </div>
-                        <p className="text-[#00FF89] font-semibold mt-2 text-base sm:text-lg flex flex-wrap gap-2">
-                            <span>Automation Expert</span>
-                            {seller.niches?.[0] && <span>• {seller.niches[0]}</span>}
-                            {seller.location?.timezone && <span className="text-gray-400">• {seller.location.timezone}</span>}
-                        </p>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                            <p className="text-[#00FF89] font-semibold mt-2 text-base sm:text-lg flex flex-wrap gap-2">
+                                <span>Automation Expert</span>
+                                {seller.niches?.[0] && <span>• {seller.niches[0]}</span>}
+                                {seller.location?.timezone && <span className="text-gray-400">• {seller.location.timezone}</span>}
+                            </p>
+                            <div className="flex gap-4 text-[#00FF89]">
+                                {seller.socialHandles?.linkedin && (
+                                    <a
+                                        href={seller.socialHandles.linkedin}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="hover:scale-110 transition">
+                                        <Linkedin className="w-6 h-6" />
+                                    </a>
+                                )}
+                                {seller.socialHandles?.twitter && (
+                                    <a
+                                        href={seller.socialHandles.twitter}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="hover:scale-110 transition">
+                                        <Twitter className="w-6 h-6" />
+                                    </a>
+                                )}
+                                {seller.socialHandles?.instagram && (
+                                    <a
+                                        href={seller.socialHandles.instagram}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="hover:scale-110 transition">
+                                        <Instagram className="w-6 h-6" />
+                                    </a>
+                                )}
+                                {seller.socialHandles?.youtube && (
+                                    <a
+                                        href={seller.socialHandles.youtube}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="hover:scale-110 transition">
+                                        <Youtube className="w-6 h-6" />
+                                    </a>
+                                )}
+                            </div>
+                        </div>
                         <div className="mt-5 grid grid-cols-3 sm:grid-cols-5 gap-4 max-w-4xl text-center">
                             <Stat
                                 label="Products"
@@ -172,45 +212,8 @@ export default function PublicSellerProfile() {
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-4 items-stretch sm:items-end w-full sm:w-auto">
-                        <div className="flex gap-4 text-[#00FF89]">
-                            {seller.socialHandles?.linkedin && (
-                                <a
-                                    href={seller.socialHandles.linkedin}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="hover:scale-110 transition">
-                                    <Linkedin className="w-6 h-6" />
-                                </a>
-                            )}
-                            {seller.socialHandles?.twitter && (
-                                <a
-                                    href={seller.socialHandles.twitter}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="hover:scale-110 transition">
-                                    <Twitter className="w-6 h-6" />
-                                </a>
-                            )}
-                            {seller.socialHandles?.instagram && (
-                                <a
-                                    href={seller.socialHandles.instagram}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="hover:scale-110 transition">
-                                    <Instagram className="w-6 h-6" />
-                                </a>
-                            )}
-                            {seller.socialHandles?.youtube && (
-                                <a
-                                    href={seller.socialHandles.youtube}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="hover:scale-110 transition">
-                                    <Youtube className="w-6 h-6" />
-                                </a>
-                            )}
-                        </div>
+                    <div className="hidden">
+                        {/* Social icons moved above */}
                     </div>
                 </motion.div>
             </Container>
@@ -591,15 +594,15 @@ export default function PublicSellerProfile() {
                                                                     {p.title}
                                                                 </h3>
                                                                 <div className="flex flex-col items-end gap-0.5">
-                                                                    <span className="text-[#00FF89] font-semibold text-base">${p.price}</span>
+                                                                    <span className="text-[#00FF89] font-semibold text-base">${p.price.toFixed(2)}</span>
                                                                     {discount > 0 && (
                                                                         <span className="text-[11px] text-gray-500 line-through">
-                                                                            ${p.originalPrice}
+                                                                            ${p.originalPrice.toFixed(2)}
                                                                         </span>
                                                                     )}
                                                                     {discount > 0 && (
                                                                         <span className="text-[10px] text-[#00FF89]">
-                                                                            Save ${savings} ({discount}%)
+                                                                            Save ${savings.toFixed(2)} ({discount}%)
                                                                         </span>
                                                                     )}
                                                                 </div>

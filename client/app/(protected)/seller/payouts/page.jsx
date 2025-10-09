@@ -502,24 +502,24 @@ function RecentPayouts({ payouts = [], loading, formatCurrencyStrict }) {
 
     return (
         <div className="overflow-hidden rounded-lg border border-white/10">
-            <div className="hidden md:grid md:grid-cols-[160px_140px_140px_130px_130px_210px_120px_1fr] text-sm uppercase tracking-wide font-medium text-white/50 bg-white/5">
+            <div className="hidden md:grid md:grid-cols-[160px_140px_140px_130px_130px_1fr_80px] text-xs uppercase tracking-wide font-medium text-white/50 bg-white/5">
                 <div className="px-4 py-3">Requested</div>
                 <div className="px-4 py-3">Net</div>
                 <div className="px-4 py-3">Gross</div>
                 <div className="px-4 py-3">Fees</div>
                 <div className="px-4 py-3">Method</div>
-                <div className="px-4 py-3">Status
-                <Tooltip content="Payout lifecycle: Approved → Processed → Completed. Each colored dot fills when the stage is reached.">
+                <div className="px-4 py-3 flex items-center gap-2">
+                    Status
+                    <Tooltip content="Payout lifecycle: Approved → Processed → Completed. Each colored dot fills when the stage is reached.">
                         <button
                             type="button"
                             aria-label="Payout lifecycle info"
-                            className="relative text-white/40 hover:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/30 rounded transition">
-                            <Info className="w-4 h-4" />
+                            className="text-white/40 hover:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/30 rounded transition">
+                            <Info className="w-3.5 h-3.5" />
                         </button>
                     </Tooltip>
                 </div>
-                
-                <div className="px-4 py-3">Details</div>
+                <div className="px-4 py-3 text-center">Details</div>
             </div>
             <ul className="divide-y divide-white/5">
                 {payouts.map((p) => {
@@ -531,7 +531,7 @@ function RecentPayouts({ payouts = [], loading, formatCurrencyStrict }) {
                             key={p._id}
                             className="group">
                             {/* Desktop row */}
-                            <div className="hidden md:grid md:grid-cols-[160px_140px_140px_130px_130px_210px_120px_1fr] items-center text-sm">
+                            <div className="hidden md:grid md:grid-cols-[160px_140px_140px_130px_130px_1fr_80px] items-center text-sm">
                                 <div className="px-4 py-4 font-mono text-white/90">
                                     {fmtDate(p.requestedAt)}
                                     {p.payoutPeriod?.from && p.payoutPeriod?.to && (
@@ -547,26 +547,27 @@ function RecentPayouts({ payouts = [], loading, formatCurrencyStrict }) {
                                     title={`Platform: $${formatCurrencyStrict(p.platformFee)}\nProcessing: $${formatCurrencyStrict(p.processingFee)}`}>
                                     -${formatCurrencyStrict(feesTotal)}
                                 </div>
-                                <div className="px-4 py-4 text-white/80 capitalize flex items-center gap-1 text-sm">
+                                <div className="px-4 py-4 text-white/80 capitalize flex items-center gap-1.5 text-sm">
                                     <Receipt className="w-4 h-4 text-white/40" /> {p.payoutMethod || '—'}
                                 </div>
-                                <div className="px-4 py-4 scale-[1.05] origin-left">
-                                    <LifecycleTimeline
-                                        approvedAt={p.approvedAt}
-                                        processedAt={p.processedAt}
-                                        completedAt={p.completedAt}
-                                    />
-                                </div>
-                                <div className="px-4 py-4">
-                                    <span className={`px-2.5 py-1.5 rounded-full border text-xs font-medium capitalize ${statusTone(p.status)}`}>
+                                <div className="px-4 py-4 flex flex-col gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <LifecycleTimeline
+                                            approvedAt={p.approvedAt}
+                                            processedAt={p.processedAt}
+                                            completedAt={p.completedAt}
+                                        />
+                                    </div>
+                                    <span className={`px-2.5 py-1 rounded-full border text-xs font-medium capitalize w-fit ${statusTone(p.status)}`}>
                                         {p.status}
                                     </span>
                                 </div>
-                                <div className="px-4 py-4 flex items-center gap-2">
+                                <div className="px-4 py-4 flex justify-center">
                                     <button
                                         onClick={() => setOpen(isOpen ? null : p._id)}
-                                        className="inline-flex items-center gap-1.5 text-white/60 hover:text-white/90 transition text-xs font-medium">
-                                        {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />} Details
+                                        className="inline-flex items-center gap-1 px-2.5 py-1.5 text-white/60 hover:text-white hover:bg-white/5 transition text-xs font-medium rounded-md border border-white/10">
+                                        {isOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                                        <span className="hidden lg:inline">Details</span>
                                     </button>
                                 </div>
                             </div>
