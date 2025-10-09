@@ -212,14 +212,14 @@ export default function RootLayout({ children }) {
                         t.src=v;s=b.getElementsByTagName(e)[0];
                         s.parentNode.insertBefore(t,s)}(window, document,'script',
                         'https://connect.facebook.net/en_US/fbevents.js');
-                        fbq('init', 'YOUR_PIXEL_ID');
+                        fbq('init', '1843285299955814');
                         fbq('track', 'PageView');
                         `
                     }}
                 />
                 <noscript>
                     <img height="1" width="1" style={{display:'none'}}
-                         src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1" />
+                         src="https://www.facebook.com/tr?id=1843285299955814&ev=PageView&noscript=1" />
                 </noscript>
                 <script src="https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz"></script>
                 <script src="https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.8.0-min.js.gz"></script>

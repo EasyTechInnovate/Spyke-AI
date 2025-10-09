@@ -39,19 +39,24 @@ export default function StickyLeadForm({ blogPostSlug }) {
     setIsSubmitting(true)
     try {
       const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1B_Sx1P0G1tKcH1Wo6z8sdd9ntsbtVKFZm8VUIptauQSgsKoUjHwl0IZrurMqEDzkHw/exec'
-      const payload = {
-        Name: formData.name,
-        Email: formData.email,
-        Phone: formData.phone,
-        Needs: formData.needs,
-        BlogSlug: blogPostSlug || ''
-      }
-      await fetch(GOOGLE_SCRIPT_URL, {
+
+      // Create form data
+      const formDataPayload = new FormData()
+      formDataPayload.append('Name', formData.name)
+      formDataPayload.append('Email', formData.email)
+      formDataPayload.append('Phone', formData.phone || '')
+      formDataPayload.append('Needs', formData.needs)
+      formDataPayload.append('BlogSlug', blogPostSlug || '')
+
+      const response = await fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: formDataPayload
       })
+
+      // Check if request was successful
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
       showMessage('Submitted! We will reach out soon.', 'success')
       if (typeof window !== 'undefined' && window.spykeAnalytics) {
         window.spykeAnalytics.trackEvent('Blog Lead Submitted', { blogPostSlug })

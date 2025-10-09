@@ -26,7 +26,7 @@ const calculateEarnings = async (sellerId, fromDate = null, toDate = null) => {
             throw new Error('Seller not found')
         }
 
-        const commissionRate = 100 - seller.getCurrentCommissionRate()
+        const commissionRate = seller.getCurrentCommissionRate()
         if (!commissionRate) {
             throw new Error('Seller commission rate not set')
         }
@@ -64,8 +64,9 @@ const calculateEarnings = async (sellerId, fromDate = null, toDate = null) => {
         const salesResult = await Purchase.aggregate(salesPipeline)
         const salesData = salesResult[0] || { totalSales: 0, salesCount: 0, salesIds: [] }
 
-        // Calculate earnings breakdown
-        const grossEarnings = salesData.totalSales * (commissionRate / 100)
+        // Calculate earnings breakdown (commissionRate is admin's cut, seller gets the rest)
+        const sellerShare = 100 - commissionRate
+        const grossEarnings = salesData.totalSales * (sellerShare / 100)
         const platformFee = grossEarnings * (platformSettings.platformFeePercentage / 100)
         const processingFee = platformSettings.paymentProcessingFee || 0
         const netEarnings = Math.max(0, grossEarnings - platformFee - processingFee)
@@ -90,7 +91,7 @@ const calculateEarnings = async (sellerId, fromDate = null, toDate = null) => {
         return {
             totalSales: salesData.totalSales,
             salesCount: salesData.salesCount,
-            commissionRate,
+            commissionRate: sellerShare, // Return seller's share percentage for display
             grossEarnings,
             platformFeePercentage: platformSettings.platformFeePercentage || 10,
             platformFee,

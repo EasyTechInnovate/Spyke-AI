@@ -7,8 +7,10 @@
 # @userPassword = SpykeAI00
 # @userEmailAddress = srikanishkav@gmail.com
 # @userPassword = kanni4b5@Spyke
-@userEmailAddress = anandpandey503@gmail.com
-@userPassword = anand@123ANAND
+# @userEmailAddress = anandpandey503@gmail.com
+# @userPassword = anand@123ANAND
+@userEmailAddress = trawat230@gmail.com
+@userPassword = Haksaimemer@1
 
 @accessToken = YOUR_JWT_TOKEN_HERE
 @token = 463101a5-d205-46a1-957d-b51160773444
