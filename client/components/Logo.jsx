@@ -32,8 +32,14 @@ export const SpykeLogo = ({
                         width={logoSize}
                         height={logoSize}
                         priority={priority}
-                        unoptimized={true}
+                        quality={100}
                         className="logo-icon object-contain object-center block"
+                        style={{
+                            imageRendering: '-webkit-optimize-contrast',
+                            WebkitFontSmoothing: 'antialiased',
+                            backfaceVisibility: 'hidden',
+                            transform: 'translateZ(0)'
+                        }}
                         draggable={false}
                         onError={() => {
                             console.warn('Logo failed to load: /logo.svg')
@@ -69,8 +75,14 @@ export const SpykeLogoCompact = ({ size = 32, className = '', darkMode = false, 
                     alt="Spyke AI"
                     width={size}
                     height={size}
-                    unoptimized={true}
+                    quality={100}
                     className="logo-icon object-contain object-center block"
+                    style={{
+                        imageRendering: '-webkit-optimize-contrast',
+                        WebkitFontSmoothing: 'antialiased',
+                        backfaceVisibility: 'hidden',
+                        transform: 'translateZ(0)'
+                    }}
                     draggable={false}
                     onError={() => setImageError(true)}
                 />
@@ -101,8 +113,14 @@ export const SpykeLogoWithSkeleton = ({ size = 40, className = '', showText = tr
                     width={size}
                     height={size}
                     priority={false}
-                    unoptimized={true}
+                    quality={100}
                     className={`logo-icon object-contain object-center block transition-opacity ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+                    style={{
+                        imageRendering: '-webkit-optimize-contrast',
+                        WebkitFontSmoothing: 'antialiased',
+                        backfaceVisibility: 'hidden',
+                        transform: 'translateZ(0)'
+                    }}
                     onLoad={() => setIsLoading(false)}
                     draggable={false}
                 />

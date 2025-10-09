@@ -122,7 +122,6 @@ export default function SellerPayoutDashboardPage() {
 
             {/* Summary Cards - 3 rows of 3 cards each */}
             <div className="space-y-4">
-                {/* Row 1: Total Sales Flow */}
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <SummaryCard
                         title="Total Sales"
@@ -131,7 +130,7 @@ export default function SellerPayoutDashboardPage() {
                         accent="sky"
                         loading={loadingDashboard}
                         tooltip="Total revenue from all your sales"
-                        isEarning
+                        
                     />
                     <SummaryCard
                         title="Platform Commission"
@@ -149,7 +148,7 @@ export default function SellerPayoutDashboardPage() {
                         accent="amber"
                         loading={loadingDashboard}
                         tooltip="Your earnings after platform commission"
-                        isEarning
+                        
                     />
                 </div>
 
@@ -184,7 +183,6 @@ export default function SellerPayoutDashboardPage() {
                     />
                 </div>
 
-                {/* Row 3: Payout Status */}
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <SummaryCard
                         title="Total Paid Out"
@@ -193,7 +191,7 @@ export default function SellerPayoutDashboardPage() {
                         accent="indigo"
                         loading={loadingDashboard}
                         tooltip="Total amount paid out to you historically"
-                        isDeduction
+                        
                     />
                     <SummaryCard
                         title="Available Now"
@@ -259,21 +257,21 @@ export default function SellerPayoutDashboardPage() {
                                 </li>
                                 <li className="flex justify-between items-center py-2 border-b border-white/5">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-orange-300">3. Platform Fee ({platformFeePct}%)</span>
+                                        <span className="text-rose-300">3. Platform Fee ({platformFeePct}%)</span>
                                         <Tooltip content="Processing and service fee">
                                             <Info className="w-3.5 h-3.5 text-white/30 hover:text-white/60" />
                                         </Tooltip>
                                     </div>
-                                    <span className="font-mono text-orange-300">-${formatCurrencyStrict(platformFeeAmount)}</span>
+                                    <span className="font-mono text-rose-300">-${formatCurrencyStrict(platformFeeAmount)}</span>
                                 </li>
                                 <li className="flex justify-between items-center py-2 border-b border-white/5">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-purple-300">4. Transaction Fee (Fixed)</span>
+                                        <span className="text-rose-300">4. Transaction Fee (Fixed)</span>
                                         <Tooltip content="Fixed fee per payout transaction">
                                             <Info className="w-3.5 h-3.5 text-white/30 hover:text-white/60" />
                                         </Tooltip>
                                     </div>
-                                    <span className="font-mono text-purple-300">-${formatCurrencyStrict(processingFeeAmount)}</span>
+                                    <span className="font-mono text-rose-300">-${formatCurrencyStrict(processingFeeAmount)}</span>
                                 </li>
                                 <li className="flex justify-between items-center py-3 mt-2 bg-emerald-500/10 rounded-lg px-3">
                                     <span className="text-emerald-400 font-semibold text-lg">= Net Earnings</span>
@@ -512,7 +510,10 @@ function RecentPayouts({ payouts = [], loading, formatCurrencyStrict }) {
                 <div className="px-4 py-3">Method</div>
                 <div className="px-4 py-3 flex items-center gap-1">
                     Status
-                    <Tooltip content="Payout lifecycle: Approved → Processed → Completed. Each colored dot fills when the stage is reached.">
+                    
+                </div>
+                <div className="px-4 py-3">Status</div>
+                <Tooltip content="Payout lifecycle: Approved → Processed → Completed. Each colored dot fills when the stage is reached.">
                         <button
                             type="button"
                             aria-label="Payout lifecycle info"
@@ -520,8 +521,6 @@ function RecentPayouts({ payouts = [], loading, formatCurrencyStrict }) {
                             <Info className="w-4 h-4" />
                         </button>
                     </Tooltip>
-                </div>
-                <div className="px-4 py-3">Status</div>
                 <div className="px-4 py-3">Details</div>
             </div>
             <ul className="divide-y divide-white/5">

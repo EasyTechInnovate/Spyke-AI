@@ -149,14 +149,18 @@ const SupportCard = ({ isCollapsed }) => {
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className={`bg-gradient-to-r from-[#FFC050]/5 to-transparent rounded-2xl border border-[#FFC050]/10 group hover:border-[#FFC050]/20 transition-all duration-300 cursor-pointer hover:from-[#FFC050]/10 ${
-                isCollapsed ? 'p-2 flex justify-center' : 'p-3'
+            className={`block bg-gradient-to-r from-[#FFC050]/10 to-transparent rounded-2xl border border-[#FFC050]/20 group hover:border-[#FFC050]/40 transition-all duration-300 cursor-pointer hover:from-[#FFC050]/15 hover:shadow-lg hover:shadow-[#FFC050]/10 ${
+                isCollapsed ? 'p-3' : 'p-4'
             }`}>
-            <div className={`flex items-center transition-all duration-300 ${isCollapsed ? 'gap-0' : 'gap-3'}`}>
-                <HelpCircle className="w-4 h-4 text-[#FFC050]/60 group-hover:text-[#FFC050]/80" />
-                <div className={`transition-all duration-300 ${isCollapsed ? 'hidden' : ''}`}>
-                    <p className="text-xs font-semibold text-[#FFC050]/80 group-hover:text-[#FFC050]">24/7 Support</p>
-                    <p className="text-xs text-white/30">We're here to help</p>
+            <div className={`flex items-center transition-all duration-300 ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
+                <div className={`flex-shrink-0 w-9 h-9 rounded-xl bg-[#FFC050]/10 flex items-center justify-center group-hover:bg-[#FFC050]/20 transition-all duration-300 ${
+                    isCollapsed ? '' : ''
+                }`}>
+                    <HelpCircle className="w-5 h-5 text-[#FFC050] group-hover:text-[#FFC050] group-hover:scale-110 transition-transform duration-300" />
+                </div>
+                <div className={`flex-1 min-w-0 transition-all duration-300 ${isCollapsed ? 'hidden' : 'block'}`}>
+                    <p className="text-sm font-bold text-[#FFC050] group-hover:text-[#FFC050] mb-0.5">Support</p>
+                    <p className="text-xs text-white/40 group-hover:text-white/60 transition-colors">We're here to help</p>
                 </div>
             </div>
         </a>

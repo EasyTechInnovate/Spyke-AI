@@ -57,27 +57,23 @@ const HeaderBrand = ({ isCollapsed }) => (
 )
 const BottomActions = ({ isCollapsed, onLogout }) => (
   <div className="flex-shrink-0 border-t border-white/5 bg-gradient-to-t from-black/50 to-transparent backdrop-blur-sm">
-    <div className={`pt-2 pb-1 transition-all duration-300 ${isCollapsed ? 'px-2' : 'px-4'}`}>
-      <div
-        className={`bg-gradient-to-r from-[#FFC050]/5 to-transparent rounded-2xl border border-[#FFC050]/10 group hover:border-[#FFC050]/20 transition-all duration-300 ${
-          isCollapsed ? 'p-1.5 flex justify-center' : 'p-2.5'
-        }`}>
-        
-      </div>
-    </div>
     <div className={`pb-3 transition-all duration-300 ${isCollapsed ? 'px-2' : 'px-4'}`}>
       <button
         onClick={onLogout}
-        className={`w-full group flex items-center text-white/60 hover:text-white hover:bg-white/5 rounded-2xl font-medium text-sm tracking-tight transition-all duration-300 ${
+        className={`w-full group flex items-center text-white/60 hover:text-red-500 hover:bg-white/5 rounded-2xl font-medium text-sm tracking-tight transition-all duration-300 ${
           isCollapsed ? 'justify-center px-2 py-2' : 'gap-3 px-4 py-3'
         }`}
         title={isCollapsed ? 'Sign Out' : undefined}>
-        <LogOut className="w-4 h-4 transition-transform duration-300 group-hover:rotate-12" />
-        <span className={`transition-all duration-300 ${isCollapsed ? 'hidden' : ''}`}>Sign Out</span>
+        <LogOut className="w-4 h-4 transition-transform duration-300 group-hover:rotate-12 group-hover:text-red-500" />
+        <span
+          className={`transition-all duration-300 ${isCollapsed ? 'hidden' : 'group-hover:text-red-500'}`}>
+          Sign Out
+        </span>
       </button>
     </div>
   </div>
 )
+
 const MobileHeader = ({ onClose }) => (
   <div className="px-6 py-3 border-b border-white/5 flex-shrink-0">
     <div className="flex items-center justify-between">

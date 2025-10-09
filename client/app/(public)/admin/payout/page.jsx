@@ -262,8 +262,18 @@ export default function AdminPayoutPage() {
                     transactionId: transactionForm.transactionId || undefined,
                     notes: transactionForm.notes || undefined
                 })
-                setPayoutList((prev) => prev.map((p) => (p.id === payoutId ? { ...p, status: 'completed', displayStatus: 'completed' } : p)))
+                setPayoutList((prev) => prev.map((p) => (p.id === payoutId ? { ...p, status: 'completed', displayStatus: 'completed', transactionId: transactionForm.transactionId, notes: transactionForm.notes } : p)))
                 showSuccess?.('Payout completed')
+                await fetchPayoutList({ manual: false })
+                // Clear the details cache for this payout so it will be refetched with updated data
+                setPayoutDetailsCache((prev) => {
+                    const newCache = { ...prev }
+                    delete newCache[payoutId]
+                    return newCache
+                })
+                if (expandedId === payoutId) {
+                    fetchPayoutDetails(payoutId)
+                }
             }
         } catch (e) {
             console.error(e)
@@ -283,7 +293,7 @@ export default function AdminPayoutPage() {
                 })
                 return
             }
-            if (['processing', 'completed'].includes(nextStatus)) {
+            if (nextStatus === 'completed') {
                 setTransactionModal({ open: true, action: nextStatus, payoutId: id })
                 return
             }
@@ -293,6 +303,10 @@ export default function AdminPayoutPage() {
                     await adminAPI.payouts.approve(id, {})
                     setPayoutList((prev) => prev.map((p) => (p.id === id ? { ...p, status: 'approved', displayStatus: 'approved' } : p)))
                     showSuccess?.('Payout approved')
+                } else if (nextStatus === 'processing') {
+                    await adminAPI.payouts.markProcessing(id, {})
+                    setPayoutList((prev) => prev.map((p) => (p.id === id ? { ...p, status: 'processing', displayStatus: 'processing' } : p)))
+                    showSuccess?.('Marked as processing')
                 } else if (nextStatus === 'release') {
                     await adminAPI.payouts.release(id)
                     setPayoutList((prev) =>
@@ -821,10 +835,8 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
     if (canResume) actions.push({ label: 'Release', next: 'release', tone: 'blue' })
     if (canReject) actions.push({ label: 'Reject', next: 'reject', tone: 'red' })
     const detailsLoading = loading
-    const salesIncluded = details?.salesIncluded || details?.sales || payout.salesIncluded || []
     const approver = details?.approvedBy || details?.approver || payout.approvedBy
     const audit = details?.audit || details?.history || []
-    // Use payout data first, then fallback to details
     const transactionId = payout.transactionId || details?.transactionId || details?.payment?.transactionId
     const notes = payout.notes || details?.notes || details?.adminNotes
     const dateStr = new Date(payout.requestedAt || payout.createdAt).toLocaleString()
@@ -966,34 +978,7 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                     </div>
                     {details && !detailsLoading && !error && (
                         <div className="space-y-4">
-                            {salesIncluded.length > 0 && (
-                                <div className="bg-[#1a1a1a] rounded-xl p-4 border border-gray-800">
-                                    <h4 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">
-                                        Included Sales ({salesIncluded.length})
-                                    </h4>
-                                    <div className="max-h-48 overflow-auto space-y-2">
-                                        {salesIncluded.map((s) => (
-                                            <div
-                                                key={s.id || s.saleId}
-                                                className="flex items-center justify-between p-3 bg-[#0f0f0f] rounded-lg border border-gray-800/50">
-                                                <div className="flex-1 min-w-0">
-                                                    <p
-                                                        className="text-sm text-gray-200 font-medium truncate"
-                                                        title={s.productName || s.title}>
-                                                        {s.productName || s.title || 'Sale'}
-                                                    </p>
-                                                    <p className="text-xs text-gray-500 font-mono">
-                                                        #{(s.id || s.saleId || '').toString().slice(-8)}
-                                                    </p>
-                                                </div>
-                                                <span className="text-sm font-bold text-[#00FF89] ml-3">
-                                                    ${Number(s.amount || s.total || 0).toFixed(2)}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+
                             {Array.isArray(audit) && audit.length > 0 && (
                                 <div className="bg-[#1a1a1a] rounded-xl p-4 border border-gray-800">
                                     <h4 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Activity Log</h4>
