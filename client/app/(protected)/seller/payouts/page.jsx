@@ -131,6 +131,7 @@ export default function SellerPayoutDashboardPage() {
                         accent="sky"
                         loading={loadingDashboard}
                         tooltip="Total revenue from all your sales"
+                        isEarning
                     />
                     <SummaryCard
                         title="Platform Commission"
@@ -139,6 +140,7 @@ export default function SellerPayoutDashboardPage() {
                         accent="rose"
                         loading={loadingDashboard}
                         tooltip="Amount retained by the platform"
+                        isDeduction
                     />
                     <SummaryCard
                         title="Your Share"
@@ -147,6 +149,7 @@ export default function SellerPayoutDashboardPage() {
                         accent="amber"
                         loading={loadingDashboard}
                         tooltip="Your earnings after platform commission"
+                        isEarning
                     />
                 </div>
 
@@ -159,6 +162,7 @@ export default function SellerPayoutDashboardPage() {
                         accent="orange"
                         loading={loadingDashboard}
                         tooltip="Platform processing fee"
+                        isDeduction
                     />
                     <SummaryCard
                         title="Transaction Fee"
@@ -167,6 +171,7 @@ export default function SellerPayoutDashboardPage() {
                         accent="purple"
                         loading={loadingDashboard}
                         tooltip="Fixed processing fee per transaction"
+                        isDeduction
                     />
                     <SummaryCard
                         title="Net Earnings"
@@ -188,6 +193,7 @@ export default function SellerPayoutDashboardPage() {
                         accent="indigo"
                         loading={loadingDashboard}
                         tooltip="Total amount paid out to you historically"
+                        isDeduction
                     />
                     <SummaryCard
                         title="Available Now"
@@ -197,6 +203,7 @@ export default function SellerPayoutDashboardPage() {
                         loading={loadingDashboard}
                         highlight
                         tooltip="Amount available for immediate payout request"
+                        isEarning
                     />
                     <SummaryCard
                         title="Currency"
@@ -397,7 +404,7 @@ export default function SellerPayoutDashboardPage() {
     )
 }
 
-function SummaryCard({ title, value, subtitle, icon: Icon, accent = 'emerald', loading, highlight, tooltip }) {
+function SummaryCard({ title, value, subtitle, icon: Icon, accent = 'emerald', loading, highlight, tooltip, isDeduction, isEarning }) {
     const accentMap = {
         emerald: 'from-emerald-500/20 to-emerald-500/5 text-emerald-300',
         amber: 'from-amber-500/20 to-amber-500/5 text-amber-300',
@@ -408,9 +415,24 @@ function SummaryCard({ title, value, subtitle, icon: Icon, accent = 'emerald', l
         purple: 'from-purple-500/20 to-purple-500/5 text-purple-300',
         gray: 'from-gray-500/20 to-gray-500/5 text-gray-300'
     }
+    
+    let borderClass = 'border-white/10'
+    let valueColorClass = 'text-white'
+    
+    if (highlight) {
+        borderClass = 'border-emerald-500/40 ring-2 ring-emerald-500/20'
+        valueColorClass = 'text-emerald-300'
+    } else if (isDeduction) {
+        borderClass = 'border-rose-500/40'
+        valueColorClass = 'text-rose-300'
+    } else if (isEarning) {
+        borderClass = 'border-emerald-500/40'
+        valueColorClass = 'text-emerald-300'
+    }
+    
     return (
         <div
-            className={`relative overflow-hidden rounded-xl border ${highlight ? 'border-emerald-500/40 ring-2 ring-emerald-500/20' : 'border-white/10'} bg-gradient-to-br from-white/5 to-white/0 p-4 flex flex-col gap-1 transition-all hover:border-white/20`}>
+            className={`relative overflow-hidden rounded-xl border ${borderClass} bg-gradient-to-br from-white/5 to-white/0 p-4 flex flex-col gap-1 transition-all hover:border-white/20`}>
             <div className={`absolute inset-0 bg-gradient-to-br ${accentMap[accent]} opacity-10 pointer-events-none`} />
             <div className="flex items-start justify-between relative">
                 <div className="flex flex-col flex-1">
@@ -431,7 +453,7 @@ function SummaryCard({ title, value, subtitle, icon: Icon, accent = 'emerald', l
                 )}
             </div>
             <div
-                className={`text-lg font-semibold tracking-tight min-h-[1.75rem] flex items-center relative ${highlight ? 'text-emerald-300' : 'text-white'}`}>
+                className={`text-lg font-semibold tracking-tight min-h-[1.75rem] flex items-center relative ${valueColorClass}`}>
                 {loading ? <span className="text-white/40">…</span> : value}
             </div>
         </div>

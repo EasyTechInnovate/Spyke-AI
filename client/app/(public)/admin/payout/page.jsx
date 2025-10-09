@@ -50,7 +50,12 @@ export default function AdminPayoutPage() {
             ...p,
             id: p.id || p._id,
             _id: p._id || p.id,
-            displayStatus: p.status === 'failed' && p.failureReason ? 'hold' : p.status
+            displayStatus: p.status === 'failed' && p.failureReason ? 'hold' : p.status,
+            method: p.payoutMethod || p.method || 'N/A',
+            sellerName:
+                p.sellerName || p.sellerId?.name || p.sellerId?.email || p.payoutDetails?.paypalEmail || p.payoutDetails?.email || 'Unknown Seller',
+            transactionId: p.transactionId || null,
+            notes: p.notes || null
         }
         return payout
     }, [])
@@ -816,40 +821,43 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
     if (canResume) actions.push({ label: 'Release', next: 'release', tone: 'blue' })
     if (canReject) actions.push({ label: 'Reject', next: 'reject', tone: 'red' })
     const detailsLoading = loading
-    const salesIncluded = details?.salesIncluded || details?.sales || []
-    const approver = details?.approvedBy || details?.approver
+    const salesIncluded = details?.salesIncluded || details?.sales || payout.salesIncluded || []
+    const approver = details?.approvedBy || details?.approver || payout.approvedBy
     const audit = details?.audit || details?.history || []
-    const transactionId = details?.transactionId || details?.payment?.transactionId
-    const notes = details?.notes || details?.adminNotes
+    // Use payout data first, then fallback to details
+    const transactionId = payout.transactionId || details?.transactionId || details?.payment?.transactionId
+    const notes = payout.notes || details?.notes || details?.adminNotes
     const dateStr = new Date(payout.requestedAt || payout.createdAt).toLocaleString()
     return (
         <div
-            className="fixed inset-0 z-40 flex"
+            className="fixed inset-0 z-40 flex animate-fadeIn"
             style={{ fontFamily: 'var(--font-league-spartan)' }}>
             <div
-                className="flex-1 bg-black/40 backdrop-blur-sm lg:block hidden"
+                className="flex-1 bg-black/40 backdrop-blur-sm"
                 onClick={onClose}
             />
-            <div className="relative w-full lg:w-[480px] xl:w-[520px] 2xl:w-[560px] h-full bg-[#121212] lg:border-l border-gray-800 flex flex-col">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800 bg-[#121212] sticky top-0 z-10">
+            <div className="relative w-full sm:w-[85vw] md:w-[65vw] lg:w-[520px] xl:w-[560px] 2xl:w-[600px] h-full bg-[#121212] border-l border-gray-800 flex flex-col shadow-2xl animate-slideInRight">
+                <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-800 bg-[#121212] sticky top-0 z-10">
                     <div className="flex flex-col min-w-0 flex-1 mr-3">
-                        <h3 className="text-xl sm:text-2xl font-bold text-white tracking-wide truncate">Payout Detail</h3>
-                        <span className="text-xs text-gray-400 truncate font-mono">ID: {payout.id}</span>
+                        <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white tracking-wide truncate">Payout Detail</h3>
+                        <span className="text-[10px] sm:text-xs text-gray-400 truncate font-mono">ID: {payout.id}</span>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2.5 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors flex-shrink-0">
-                        <X className="w-5 h-5" />
+                        className="p-2 sm:p-2.5 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors flex-shrink-0">
+                        <X className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                 </div>
-                <div className="overflow-y-auto flex-1 px-4 py-4 space-y-6">
-                    <div className="bg-[#1a1a1a] rounded-xl p-4 border border-gray-800">
-                        <h4 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Progress</h4>
-                        <div className="flex items-center justify-between relative">
-                            <div className="absolute top-4 left-6 right-6 h-0.5 bg-gray-700 rounded-full"></div>
+                <div className="overflow-y-auto flex-1 px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+                    <div className="bg-[#1a1a1a] rounded-xl p-3 sm:p-4 border border-gray-800">
+                        <h4 className="text-xs sm:text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Progress</h4>
+                        <div className="flex items-center justify-between relative px-2 sm:px-4">
+                            <div className="absolute top-4 left-8 right-8 sm:left-10 sm:right-10 h-0.5 bg-gray-700 rounded-full"></div>
                             <div
-                                className="absolute top-4 left-6 h-0.5 bg-[#00FF89] rounded-full transition-all duration-500"
-                                style={{ width: `${(currentIndex / (timeline.length - 1)) * 100}%` }}></div>
+                                className="absolute top-4 left-8 sm:left-10 h-0.5 bg-[#00FF89] rounded-full transition-all duration-500"
+                                style={{
+                                    width: `calc(${(currentIndex / (timeline.length - 1)) * 100}% - ${currentIndex === 0 ? '0px' : '32px'})`
+                                }}></div>
                             {timeline.map((step, i) => {
                                 const done = i <= currentIndex
                                 const isCurrent = i === currentIndex
@@ -878,14 +886,15 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                                 return (
                                     <div
                                         key={step}
-                                        className="flex flex-col items-center relative z-10">
+                                        className="flex flex-col items-center relative z-10 flex-1 min-w-0">
                                         <div
-                                            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${circleBase}`}>
+                                            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold transition-all duration-300 ${circleBase}`}>
                                             {isCurrent && (isHold ? '⚠' : '●')}
                                             {done && !isCurrent && '✓'}
                                             {!done && !isCurrent && i + 1}
                                         </div>
-                                        <span className={`text-[10px] mt-2 capitalize tracking-wide text-center leading-tight ${labelClass}`}>
+                                        <span
+                                            className={`text-[9px] sm:text-[10px] mt-1.5 sm:mt-2 capitalize tracking-wide text-center leading-tight px-1 ${labelClass}`}>
                                             {stepLabels[step] || step}
                                         </span>
                                     </div>
@@ -893,33 +902,34 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                             })}
                         </div>
                     </div>
-                    <div className="bg-gradient-to-br from-[#1a1a1a] to-[#141414] rounded-xl p-4 border border-gray-800 shadow-lg">
-                        <h4 className="text-sm font-semibold text-gray-300 mb-4 uppercase tracking-wider flex items-center gap-2">
-                            <DollarSign className="w-4 h-4 text-[#00FF89]" />
+                    <div className="bg-gradient-to-br from-[#1a1a1a] to-[#141414] rounded-xl p-3 sm:p-4 border border-gray-800 shadow-lg">
+                        <h4 className="text-xs sm:text-sm font-semibold text-gray-300 mb-3 sm:mb-4 uppercase tracking-wider flex items-center gap-2">
+                            <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00FF89]" />
                             Payout Summary
                         </h4>
-                        <div className="space-y-4">
+                        <div className="space-y-3 sm:space-y-4">
                             <div className="flex items-center justify-between py-2 border-b border-gray-700/50">
-                                <span className="text-sm text-gray-400 font-medium">Amount</span>
-                                <span className="text-2xl font-bold text-white">
-                                    ${payout.amount?.toFixed(2)} <span className="text-sm text-gray-400 font-normal">{payout.currency}</span>
+                                <span className="text-xs sm:text-sm text-gray-400 font-medium">Amount</span>
+                                <span className="text-xl sm:text-2xl font-bold text-white">
+                                    ${payout.amount?.toFixed(2)}{' '}
+                                    <span className="text-xs sm:text-sm text-gray-400 font-normal">{payout.currency}</span>
                                 </span>
                             </div>
-                            <div className="flex items-center justify-between py-2 border-b border-gray-700/50">
-                                <span className="text-sm text-gray-400 font-medium">Seller</span>
-                                <span className="text-sm text-gray-200 font-semibold truncate max-w-[60%] text-right">{payout.sellerName}</span>
+                            <div className="flex items-start sm:items-center justify-between py-2 border-b border-gray-700/50 gap-3">
+                                <span className="text-xs sm:text-sm text-gray-400 font-medium flex-shrink-0">Seller</span>
+                                <span className="text-xs sm:text-sm text-gray-200 font-semibold text-right break-words">{payout.sellerName}</span>
                             </div>
                             <div className="flex items-center justify-between py-2 border-b border-gray-700/50">
-                                <span className="text-sm text-gray-400 font-medium">Method</span>
-                                <span className="text-sm text-gray-200 font-semibold uppercase tracking-wide">{payout.method}</span>
+                                <span className="text-xs sm:text-sm text-gray-400 font-medium">Method</span>
+                                <span className="text-xs sm:text-sm text-gray-200 font-semibold uppercase tracking-wide">{payout.method}</span>
                             </div>
                             <div className="flex items-center justify-between py-2 border-b border-gray-700/50">
-                                <span className="text-sm text-gray-400 font-medium">Status</span>
+                                <span className="text-xs sm:text-sm text-gray-400 font-medium">Status</span>
                                 <MemoizedStatusBadge status={payout.displayStatus} />
                             </div>
                             <div className="flex items-center justify-between py-2">
-                                <span className="text-sm text-gray-400 font-medium">Requested</span>
-                                <span className="text-xs text-gray-300 font-mono text-right leading-tight">
+                                <span className="text-xs sm:text-sm text-gray-400 font-medium">Requested</span>
+                                <span className="text-[10px] sm:text-xs text-gray-300 font-mono text-right leading-tight">
                                     {new Date(payout.requestedAt || payout.createdAt).toLocaleDateString()}
                                     <br />
                                     <span className="text-gray-500">{new Date(payout.requestedAt || payout.createdAt).toLocaleTimeString()}</span>
@@ -928,32 +938,34 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                         </div>
                     </div>
                     {detailsLoading && (
-                        <div className="bg-[#1a1a1a] rounded-xl p-4 border border-gray-800">
-                            <div className="flex items-center gap-3 text-sm text-gray-400">
-                                <Loader2 className="w-5 h-5 animate-spin text-[#00FF89]" />
+                        <div className="bg-[#1a1a1a] rounded-xl p-3 sm:p-4 border border-gray-800">
+                            <div className="flex items-center gap-3 text-xs sm:text-sm text-gray-400">
+                                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-[#00FF89]" />
                                 <span>Loading additional details...</span>
                             </div>
                         </div>
                     )}
+                    {/* Always show Transaction Details section */}
+                    <div className="bg-[#1a1a1a] rounded-xl p-3 sm:p-4 border border-gray-800">
+                        <h4 className="text-xs sm:text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Transaction Details</h4>
+                        <div className="grid grid-cols-1 gap-3">
+                            <InfoRow
+                                label="Transaction ID"
+                                value={transactionId || 'Not assigned'}
+                            />
+                            <InfoRow
+                                label="Approver"
+                                value={approver ? approver.name || approver.email || approver._id || approver.id || 'Unknown' : 'Pending approval'}
+                            />
+                            <InfoRow
+                                label="Notes"
+                                value={notes || 'No notes available'}
+                                multiline
+                            />
+                        </div>
+                    </div>
                     {details && !detailsLoading && !error && (
                         <div className="space-y-4">
-                            <div className="bg-[#1a1a1a] rounded-xl p-4 border border-gray-800">
-                                <h4 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">Transaction Details</h4>
-                                <div className="grid grid-cols-1 gap-3">
-                                    <InfoRow
-                                        label="Transaction ID"
-                                        value={transactionId || 'Not assigned'}
-                                    />
-                                    <InfoRow
-                                        label="Approver"
-                                        value={approver ? approver.name || approver.email || approver.id : 'Pending approval'}
-                                    />
-                                    <InfoRow
-                                        label="Notes"
-                                        value={notes || 'No notes available'}
-                                    />
-                                </div>
-                            </div>
                             {salesIncluded.length > 0 && (
                                 <div className="bg-[#1a1a1a] rounded-xl p-4 border border-gray-800">
                                     <h4 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wider">
@@ -1009,14 +1021,14 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                     )}
                 </div>
                 {actions.length > 0 && (
-                    <div className="px-4 py-4 border-t border-gray-800 bg-[#121212] sticky bottom-0">
-                        <div className="flex flex-wrap gap-2">
+                    <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-800 bg-[#121212] sticky bottom-0">
+                        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
                             {actions.map((a) => (
                                 <button
                                     key={a.label}
                                     disabled={updatingId === payout.id}
                                     onClick={() => onUpdateStatus(payout.id, a.next, payout.displayStatus)}
-                                    className={`flex-1 min-w-0 px-4 py-3 rounded-lg text-sm font-semibold border transition-all duration-200 ${
+                                    className={`flex-1 min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold border transition-all duration-200 ${
                                         updatingId === payout.id ? 'opacity-50 cursor-wait' : ''
                                     } ${
                                         a.tone === 'green'
@@ -1029,8 +1041,9 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
                                     }`}>
                                     {updatingId === payout.id ? (
                                         <div className="flex items-center justify-center gap-2">
-                                            <Loader2 className="w-4 h-4 animate-spin" />
-                                            <span>Updating...</span>
+                                            <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
+                                            <span className="hidden sm:inline">Updating...</span>
+                                            <span className="sm:hidden">...</span>
                                         </div>
                                     ) : (
                                         a.label
@@ -1044,12 +1057,12 @@ function PayoutDetailPanel({ payout, details, loading, error, onClose, onUpdateS
         </div>
     )
 }
-function InfoRow({ label, value }) {
+function InfoRow({ label, value, multiline }) {
     return (
-        <div className="flex items-center justify-between py-2">
+        <div className="flex items-start justify-between py-2">
             <span className="text-sm text-gray-400 font-medium">{label}</span>
             <span
-                className="text-sm text-gray-200 font-mono text-right max-w-[60%] truncate"
+                className={`text-sm text-gray-200 font-mono text-right ${multiline ? 'whitespace-pre-wrap break-words' : 'truncate max-w-[60%]'}`}
                 title={value}>
                 {value}
             </span>

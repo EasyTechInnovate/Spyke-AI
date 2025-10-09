@@ -62,13 +62,7 @@ const BottomActions = ({ isCollapsed, onLogout }) => (
         className={`bg-gradient-to-r from-[#FFC050]/5 to-transparent rounded-2xl border border-[#FFC050]/10 group hover:border-[#FFC050]/20 transition-all duration-300 ${
           isCollapsed ? 'p-1.5 flex justify-center' : 'p-2.5'
         }`}>
-        <div className={`flex items-center transition-all duration-300 ${isCollapsed ? 'gap-0' : 'gap-2'}`}>
-          <HelpCircle className="w-4 h-4 text-[#FFC050]/60" />
-          <div className={`transition-all duration-300 ${isCollapsed ? 'hidden' : ''}`}>
-            <p className="text-xs font-semibold text-[#FFC050]/80">Admin Support</p>
-            <p className="text-xs text-white/30">System assistance</p>
-          </div>
-        </div>
+        
       </div>
     </div>
     <div className={`pb-3 transition-all duration-300 ${isCollapsed ? 'px-2' : 'px-4'}`}>

@@ -141,20 +141,27 @@ const CollapseButton = ({ isCollapsed, onToggle }) => (
         {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
     </button>
 )
-const SupportCard = ({ isCollapsed }) => (
-    <div
-        className={`bg-gradient-to-r from-[#FFC050]/5 to-transparent rounded-2xl border border-[#FFC050]/10 group hover:border-[#FFC050]/20 transition-all duration-300 ${
-            isCollapsed ? 'p-2 flex justify-center' : 'p-3'
-        }`}>
-        <div className={`flex items-center transition-all duration-300 ${isCollapsed ? 'gap-0' : 'gap-3'}`}>
-            <HelpCircle className="w-4 h-4 text-[#FFC050]/60" />
-            <div className={`transition-all duration-300 ${isCollapsed ? 'hidden' : ''}`}>
-                <p className="text-xs font-semibold text-[#FFC050]/80">24/7 Support</p>
-                <p className="text-xs text-white/30">We're here to help</p>
+const SupportCard = ({ isCollapsed }) => {
+    const whatsappUrl = 'https://wa.link/7uwiza'
+    
+    return (
+        <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`bg-gradient-to-r from-[#FFC050]/5 to-transparent rounded-2xl border border-[#FFC050]/10 group hover:border-[#FFC050]/20 transition-all duration-300 cursor-pointer hover:from-[#FFC050]/10 ${
+                isCollapsed ? 'p-2 flex justify-center' : 'p-3'
+            }`}>
+            <div className={`flex items-center transition-all duration-300 ${isCollapsed ? 'gap-0' : 'gap-3'}`}>
+                <HelpCircle className="w-4 h-4 text-[#FFC050]/60 group-hover:text-[#FFC050]/80" />
+                <div className={`transition-all duration-300 ${isCollapsed ? 'hidden' : ''}`}>
+                    <p className="text-xs font-semibold text-[#FFC050]/80 group-hover:text-[#FFC050]">24/7 Support</p>
+                    <p className="text-xs text-white/30">We're here to help</p>
+                </div>
             </div>
-        </div>
-    </div>
-)
+        </a>
+    )
+}
 const ActionButton = ({ onClick, icon: Icon, label, variant = 'secondary', isCollapsed, title }) => {
     const baseClasses = "w-full group flex items-center rounded-2xl font-medium text-sm tracking-tight transition-all duration-300"
     const sizeClasses = isCollapsed ? 'justify-center px-2 py-2' : 'gap-3 px-4 py-3'

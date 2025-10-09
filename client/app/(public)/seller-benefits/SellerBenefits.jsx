@@ -39,8 +39,8 @@ const benefits = [
     },
     {
         icon: Zap,
-        title: 'Instant Payouts',
-        description: 'Get paid immediately with our automated payout system'
+        title: 'Faster Payouts',
+        description: 'Get paid faster with our automated payout system'
     },
     {
         icon: Globe,
@@ -277,7 +277,7 @@ export default function SellerBenefitsPage() {
                             </div>
                             <div className="flex items-center gap-2 bg-brand-primary/10 px-4 py-2 rounded-full border border-brand-primary/30">
                                 <CheckCircle className="w-5 h-5 text-brand-primary" />
-                                <span className="text-white font-medium">Instant Payouts</span>
+                                <span className="text-white font-medium">Faster Payouts</span>
                             </div>
                         </div>
 

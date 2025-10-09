@@ -499,7 +499,7 @@ export default function SellerManagementPage() {
                                     <th className="text-left p-4 text-gray-300 font-medium font-league-spartan">Status</th>
                                     <th className="text-left p-4 text-gray-300 font-medium font-league-spartan">Joined</th>
                                     <th className="text-left p-4 text-gray-300 font-medium font-league-spartan">Products</th>
-                                    <th className="text-left p-4 text-gray-300 font-medium font-league-spartan">Total Earnings</th>
+                                    <th className="text-left p-4 text-gray-300 font-medium font-league-spartan">Total Revenue</th>
                                     <th className="text-left p-4 text-gray-300 font-medium font-league-spartan">Actions</th>
                                 </tr>
                             </thead>
