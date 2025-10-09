@@ -234,7 +234,7 @@ export default {
             const sortOptions = { [sortBy]: sortOrder === 'desc' ? -1 : 1 }
 
             let matchQuery = {}
-            if (verificationStatus) matchQuery.verificationStatus = verificationStatus
+            if (verificationStatus) matchQuery['verification.status'] = verificationStatus
 
             // Get sellers with performance analytics
             const pipeline = [
@@ -343,6 +343,92 @@ export default {
                 }
             ])
 
+            const nicheDistribution = await sellerProfileModel.aggregate([
+                { $match: {} },
+                {
+                    $lookup: {
+                        from: 'purchases',
+                        let: { sellerId: '$_id' },
+                        pipeline: [
+                            { $unwind: '$items' },
+                            {
+                                $match: {
+                                    $expr: { $eq: ['$items.sellerId', '$$sellerId'] },
+                                    orderStatus: 'completed'
+                                }
+                            },
+                            {
+                                $group: {
+                                    _id: null,
+                                    totalRevenue: { $sum: '$items.price' },
+                                    totalSales: { $sum: 1 }
+                                }
+                            }
+                        ],
+                        as: 'salesAgg'
+                    }
+                },
+                {
+                    $addFields: {
+                        _sellerRevenue: { $ifNull: [{ $arrayElemAt: ['$salesAgg.totalRevenue', 0] }, 0] },
+                        _sellerSales: { $ifNull: [{ $arrayElemAt: ['$salesAgg.totalSales', 0] }, 0] }
+                    }
+                },
+                { $unwind: '$niches' },
+                {
+                    $group: {
+                        _id: '$niches',
+                        count: { $sum: 1 },
+                        revenue: { $sum: '$_sellerRevenue' },
+                        sales: { $sum: '$_sellerSales' }
+                    }
+                },
+                { $sort: { count: -1 } }
+            ])
+
+            const toolDistribution = await sellerProfileModel.aggregate([
+                { $match: {} },
+                {
+                    $lookup: {
+                        from: 'purchases',
+                        let: { sellerId: '$_id' },
+                        pipeline: [
+                            { $unwind: '$items' },
+                            {
+                                $match: {
+                                    $expr: { $eq: ['$items.sellerId', '$$sellerId'] },
+                                    orderStatus: 'completed'
+                                }
+                            },
+                            {
+                                $group: {
+                                    _id: null,
+                                    totalRevenue: { $sum: '$items.price' },
+                                    totalSales: { $sum: 1 }
+                                }
+                            }
+                        ],
+                        as: 'salesAgg'
+                    }
+                },
+                {
+                    $addFields: {
+                        _sellerRevenue: { $ifNull: [{ $arrayElemAt: ['$salesAgg.totalRevenue', 0] }, 0] },
+                        _sellerSales: { $ifNull: [{ $arrayElemAt: ['$salesAgg.totalSales', 0] }, 0] }
+                    }
+                },
+                { $unwind: '$toolsSpecialization' },
+                {
+                    $group: {
+                        _id: '$toolsSpecialization',
+                        count: { $sum: 1 },
+                        revenue: { $sum: '$_sellerRevenue' },
+                        sales: { $sum: '$_sellerSales' }
+                    }
+                },
+                { $sort: { count: -1 } }
+            ])
+
             httpResponse(req, res, 200, responseMessage.SUCCESS, {
                 sellers,
                 pagination: {
@@ -352,7 +438,9 @@ export default {
                     hasNextPage: parseInt(page) < Math.ceil(totalCount / parseInt(limit)),
                     hasPrevPage: parseInt(page) > 1
                 },
-                topSellers
+                topSellers,
+                nicheDistribution,
+                toolDistribution
             })
         } catch (err) {
             httpError(next, err, req, 500)

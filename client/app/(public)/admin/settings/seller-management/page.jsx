@@ -572,7 +572,7 @@ export default function SellerManagementPage() {
                                                 <td className="p-4">
                                                     <div className="flex items-center gap-2">
                                                         <DollarSign className="w-4 h-4 text-green-400" />
-                                                        <span className="text-gray-300 font-league-spartan">${seller.stats?.totalEarnings || 0}</span>
+                                                        <span className="text-gray-300 font-league-spartan">${seller?.totalRevenue || 0}</span>
                                                     </div>
                                                 </td>
                                                 <td className="p-4">

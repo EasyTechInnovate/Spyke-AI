@@ -43,21 +43,32 @@ export default function SellerPayoutDashboardPage() {
         setRequestSuccess(null)
         try {
             await requestPayout(requestNotes || undefined)
-            setRequestSuccess('Payout request submitted')
+            setRequestSuccess('Payout request submitted successfully!')
+            await loadDashboard() // Refresh dashboard after request
         } catch (e) {
             setRequestError(e?.message || 'Request failed')
         }
-    }, [requestPayout, requestNotes])
+    }, [requestPayout, requestNotes, loadDashboard])
 
     const earnings = dashboard?.earnings
-    const gross = earnings?.grossEarnings ?? 0
+    
+    // API returns grossEarnings = totalSales * (commissionRate/100) (seller's share after commission)
+    // So totalSales is the original amount, grossEarnings is what seller gets after platform takes commission
+    const totalSales = earnings?.totalSales ?? 0
     const commissionRate = earnings?.commissionRate ?? 0
+    const grossEarnings = earnings?.grossEarnings ?? 0 // This is seller's share (85% of total)
+    const platformCommission = totalSales - grossEarnings // Platform keeps 15%
+    
+    // Now subtract fees from grossEarnings
     const platformFeePct = earnings?.platformFeePercentage ?? 0
-    const commissionAmount = gross * (commissionRate / 100)
-    const platformFeeAmount = gross * (platformFeePct / 100)
+    const platformFeeAmount = earnings?.platformFee ?? 0 // Use API value directly
     const processingFeeAmount = earnings?.processingFee ?? 0
-    const youReceiveCalculated = gross - commissionAmount - platformFeeAmount - processingFeeAmount
-    const availableForPayout = earnings?.availableForPayout
+    
+    // Net earnings calculation
+    const netEarnings = earnings?.netEarnings ?? 0 // Use API value
+    const totalPaidOut = earnings?.totalPaidOut ?? 0
+    const availableForPayout = earnings?.availableForPayout ?? 0
+    
     const currency = earnings?.currency || 'USD'
     const pending = dashboard?.pendingPayouts?.[0]
     const recent = dashboard?.recentPayouts || []
@@ -74,19 +85,20 @@ export default function SellerPayoutDashboardPage() {
                     <button
                         onClick={() => loadDashboard()}
                         disabled={loadingDashboard}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-base border border-white/10 disabled:opacity-50">
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-base border border-white/10 disabled:opacity-50 transition-colors">
                         {loadingDashboard ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
                         Refresh
                     </button>
                     <button
                         onClick={handleRequest}
                         disabled={!canRequest || loadingRequest || loadingDashboard}
-                        className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-medium text-base disabled:opacity-50 disabled:cursor-not-allowed">
+                        className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-medium text-base disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                         {loadingRequest ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wallet className="w-4 h-4" />}
                         {canRequest ? 'Request Payout' : 'Not Eligible'}
                     </button>
                 </div>
             </div>
+
             {(error || requestError || requestSuccess) && (
                 <div className="space-y-2">
                     {error && (
@@ -106,133 +118,271 @@ export default function SellerPayoutDashboardPage() {
                     )}
                 </div>
             )}
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-                <SummaryCard
-                    title="Gross"
-                    value={`$${formatCurrencyStrict(gross)}`}
-                    subtitle="Gross Earnings"
-                    accent="amber"
-                    loading={loadingDashboard}
-                />
-                <SummaryCard
-                    title="Commission"
-                    value={`$${formatCurrencyStrict(commissionAmount)}`}
-                    subtitle={`${commissionRate}%`}
-                    accent="rose"
-                    loading={loadingDashboard}
-                />
-                <SummaryCard
-                    title="Platform Fee"
-                    value={`$${formatCurrencyStrict(platformFeeAmount)}`}
-                    subtitle={`${platformFeePct}%`}
-                    accent="orange"
-                    loading={loadingDashboard}
-                />
-                <SummaryCard
-                    title="Processing"
-                    value={`$${formatCurrencyStrict(processingFeeAmount)}`}
-                    subtitle="Fixed Fee"
-                    accent="purple"
-                    loading={loadingDashboard}
-                />
-                <SummaryCard
-                    title="You Receive"
-                    value={`$${formatCurrencyStrict(youReceiveCalculated)}`}
-                    subtitle="After All Fees"
-                    accent="emerald"
-                    loading={loadingDashboard}
-                    highlight
-                />
-                <SummaryCard
-                    title="Available"
-                    value={`$${formatCurrencyStrict(availableForPayout)}`}
-                    subtitle="Available Now"
-                    accent="indigo"
-                    loading={loadingDashboard}
-                />
+
+            {/* Summary Cards - 3 rows of 3 cards each */}
+            <div className="space-y-4">
+                {/* Row 1: Total Sales Flow */}
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <SummaryCard
+                        title="Total Sales"
+                        value={`$${formatCurrencyStrict(totalSales)}`}
+                        subtitle={`${earnings?.salesCount ?? 0} Sales`}
+                        accent="sky"
+                        loading={loadingDashboard}
+                        tooltip="Total revenue from all your sales"
+                    />
+                    <SummaryCard
+                        title="Platform Commission"
+                        value={`$${formatCurrencyStrict(platformCommission)}`}
+                        subtitle={`${100 - commissionRate}% Platform Fee`}
+                        accent="rose"
+                        loading={loadingDashboard}
+                        tooltip="Amount retained by the platform"
+                    />
+                    <SummaryCard
+                        title="Your Share"
+                        value={`$${formatCurrencyStrict(grossEarnings)}`}
+                        subtitle={`${commissionRate}% of Sales`}
+                        accent="amber"
+                        loading={loadingDashboard}
+                        tooltip="Your earnings after platform commission"
+                    />
+                </div>
+
+                {/* Row 2: Fees Breakdown */}
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <SummaryCard
+                        title="Platform Fee"
+                        value={`$${formatCurrencyStrict(platformFeeAmount)}`}
+                        subtitle={`${platformFeePct}% Processing`}
+                        accent="orange"
+                        loading={loadingDashboard}
+                        tooltip="Platform processing fee"
+                    />
+                    <SummaryCard
+                        title="Transaction Fee"
+                        value={`$${formatCurrencyStrict(processingFeeAmount)}`}
+                        subtitle="Fixed Per Payout"
+                        accent="purple"
+                        loading={loadingDashboard}
+                        tooltip="Fixed processing fee per transaction"
+                    />
+                    <SummaryCard
+                        title="Net Earnings"
+                        value={`$${formatCurrencyStrict(netEarnings)}`}
+                        subtitle="After All Fees"
+                        accent="emerald"
+                        loading={loadingDashboard}
+                        highlight
+                        tooltip="Total amount you receive after all deductions"
+                    />
+                </div>
+
+                {/* Row 3: Payout Status */}
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <SummaryCard
+                        title="Total Paid Out"
+                        value={`$${formatCurrencyStrict(totalPaidOut)}`}
+                        subtitle="All Time"
+                        accent="indigo"
+                        loading={loadingDashboard}
+                        tooltip="Total amount paid out to you historically"
+                    />
+                    <SummaryCard
+                        title="Available Now"
+                        value={`$${formatCurrencyStrict(availableForPayout)}`}
+                        subtitle="Ready to Request"
+                        accent="emerald"
+                        loading={loadingDashboard}
+                        highlight
+                        tooltip="Amount available for immediate payout request"
+                    />
+                    <SummaryCard
+                        title="Currency"
+                        value={currency}
+                        subtitle={`Min: $${formatCurrencyStrict(earnings?.minimumThreshold ?? 0)}`}
+                        accent="gray"
+                        loading={loadingDashboard}
+                        tooltip="Payment currency and minimum payout threshold"
+                    />
+                </div>
             </div>
+
             {earnings && (
                 <div className="grid gap-8 lg:grid-cols-5">
+                    {/* Left: Calculation Breakdown */}
                     <div className="lg:col-span-3 space-y-8">
                         <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-                            <h2 className="text-base font-semibold uppercase tracking-wide text-white/60 mb-4">How Your Payout Is Calculated</h2>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-base font-semibold uppercase tracking-wide text-white/60">Earnings Breakdown</h2>
+                                <Tooltip content="This shows how your payout amount is calculated from your total sales">
+                                    <button
+                                        type="button"
+                                        aria-label="Earnings breakdown info"
+                                        className="text-white/40 hover:text-white/70 transition">
+                                        <Info className="w-4 h-4" />
+                                    </button>
+                                </Tooltip>
+                            </div>
                             <ol className="space-y-2 text-base">
-                                <li className="flex justify-between items-center py-1 border-b border-white/5">
-                                    <span className="text-white/80">1. Gross Earnings</span>
-                                    <span className="font-mono text-white">${formatCurrencyStrict(gross)}</span>
+                                <li className="flex justify-between items-center py-2 border-b border-white/5">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-white/80">1. Total Sales Revenue</span>
+                                        <Tooltip content={`From ${earnings.salesCount} sales`}>
+                                            <Info className="w-3.5 h-3.5 text-white/30 hover:text-white/60" />
+                                        </Tooltip>
+                                    </div>
+                                    <span className="font-mono text-white font-semibold">${formatCurrencyStrict(totalSales)}</span>
                                 </li>
-                                <li className="flex justify-between items-center py-1 border-b border-white/5">
-                                    <span className="text-red-300">2. Platform Commission ({commissionRate}%)</span>
-                                    <span className="font-mono text-red-300">-${formatCurrencyStrict(commissionAmount)}</span>
+                                <li className="flex justify-between items-center py-2 border-b border-white/5">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-rose-300">2. Platform Commission ({100 - commissionRate}%)</span>
+                                        <Tooltip content="Platform's share of the revenue">
+                                            <Info className="w-3.5 h-3.5 text-white/30 hover:text-white/60" />
+                                        </Tooltip>
+                                    </div>
+                                    <span className="font-mono text-rose-300">-${formatCurrencyStrict(platformCommission)}</span>
                                 </li>
-                                <li className="flex justify-between items-center py-1 border-b border-white/5">
-                                    <span className="text-red-300">3. Platform Fee ({platformFeePct}%)</span>
-                                    <span className="font-mono text-red-300">-${formatCurrencyStrict(platformFeeAmount)}</span>
+                                <li className="flex justify-between items-center py-2 border-b border-white/5 bg-amber-500/5">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-amber-300 font-medium">= Your Share ({commissionRate}%)</span>
+                                    </div>
+                                    <span className="font-mono text-amber-300 font-semibold">${formatCurrencyStrict(grossEarnings)}</span>
                                 </li>
-                                <li className="flex justify-between items-center py-1 border-b border-white/5">
-                                    <span className="text-red-300">4. Processing Fee (Fixed)</span>
-                                    <span className="font-mono text-red-300">-${formatCurrencyStrict(processingFeeAmount)}</span>
+                                <li className="flex justify-between items-center py-2 border-b border-white/5">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-orange-300">3. Platform Fee ({platformFeePct}%)</span>
+                                        <Tooltip content="Processing and service fee">
+                                            <Info className="w-3.5 h-3.5 text-white/30 hover:text-white/60" />
+                                        </Tooltip>
+                                    </div>
+                                    <span className="font-mono text-orange-300">-${formatCurrencyStrict(platformFeeAmount)}</span>
+                                </li>
+                                <li className="flex justify-between items-center py-2 border-b border-white/5">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-purple-300">4. Transaction Fee (Fixed)</span>
+                                        <Tooltip content="Fixed fee per payout transaction">
+                                            <Info className="w-3.5 h-3.5 text-white/30 hover:text-white/60" />
+                                        </Tooltip>
+                                    </div>
+                                    <span className="font-mono text-purple-300">-${formatCurrencyStrict(processingFeeAmount)}</span>
+                                </li>
+                                <li className="flex justify-between items-center py-3 mt-2 bg-emerald-500/10 rounded-lg px-3">
+                                    <span className="text-emerald-400 font-semibold text-lg">= Net Earnings</span>
+                                    <span className="font-mono text-emerald-400 text-2xl font-bold">${formatCurrencyStrict(netEarnings)}</span>
                                 </li>
                                 <li className="flex justify-between items-center py-2 mt-2">
-                                    <span className="text-emerald-400 font-semibold">You Receive (Calculated)</span>
-                                    <span className="font-mono text-emerald-400 text-xl">${formatCurrencyStrict(youReceiveCalculated)}</span>
+                                    <span className="text-indigo-300">Already Paid Out</span>
+                                    <span className="font-mono text-indigo-300">-${formatCurrencyStrict(totalPaidOut)}</span>
+                                </li>
+                                <li className="flex justify-between items-center py-3 bg-emerald-500/10 rounded-lg px-3 border-2 border-emerald-500/30">
+                                    <span className="text-emerald-300 font-bold text-lg">Available for Payout</span>
+                                    <span className="font-mono text-emerald-300 text-2xl font-bold">${formatCurrencyStrict(availableForPayout)}</span>
                                 </li>
                             </ol>
                         </div>
                     </div>
+
+                    {/* Right: Status & Info */}
                     <div className="lg:col-span-2 space-y-8">
                         <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4">
                             <h2 className="text-base font-semibold uppercase tracking-wide text-white/60">Eligibility & Status</h2>
                             <div className="flex flex-wrap gap-2 text-sm">
-                                <Tag tone={earnings.isEligible ? 'emerald' : 'rose'}>{earnings.isEligible ? 'Eligible' : 'Not Eligible'}</Tag>
-                                <Tag tone={earnings.isOnHold ? 'amber' : 'gray'}>{earnings.isOnHold ? 'On Hold' : 'No Hold'}</Tag>
-                                <Tag tone="indigo">Threshold ${formatCurrencyStrict(earnings.minimumThreshold)}</Tag>
-                                <Tag tone="sky">Sales {earnings.salesCount}</Tag>
-                                <Tag tone="purple">Total Sales ${formatCurrencyStrict(earnings.totalSales)}</Tag>
+                                <Tag tone={earnings.isEligible ? 'emerald' : 'rose'}>
+                                    {earnings.isEligible ? '✓ Eligible' : '✗ Not Eligible'}
+                                </Tag>
+                                <Tag tone={earnings.isOnHold ? 'amber' : 'emerald'}>
+                                    {earnings.isOnHold ? '⏸ On Hold' : '✓ Active'}
+                                </Tag>
+                                <Tag tone="indigo">
+                                    Min ${formatCurrencyStrict(earnings.minimumThreshold)}
+                                </Tag>
                             </div>
+                            
+                            <div className="space-y-3 pt-2">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-white/60">Total Sales:</span>
+                                    <span className="text-white font-mono">${formatCurrencyStrict(earnings.totalSales)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-white/60">Sales Count:</span>
+                                    <span className="text-white font-mono">{earnings.salesCount}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-white/60">Your Share Rate:</span>
+                                    <span className="text-emerald-300 font-mono">{commissionRate}%</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-white/60">Currency:</span>
+                                    <span className="text-white font-mono">{currency}</span>
+                                </div>
+                            </div>
+
                             {!earnings.isEligible && (
-                                <p className="text-base text-white/50">
-                                    You need at least ${formatCurrencyStrict(earnings.minimumThreshold)} available before requesting a payout.
-                                </p>
+                                <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                                    <p className="text-sm text-amber-300">
+                                        You need at least ${formatCurrencyStrict(earnings.minimumThreshold)} available to request a payout.
+                                    </p>
+                                </div>
                             )}
-                            <div className="pt-2 text-base text-white/40">Currency: {currency}</div>
+
+                            {earnings.isOnHold && earnings.holdPeriodEnd && (
+                                <div className="mt-4 p-3 bg-rose-500/10 border border-rose-500/30 rounded-lg">
+                                    <p className="text-sm text-rose-300">
+                                        Your account is on hold until {new Date(earnings.holdPeriodEnd).toLocaleDateString()}
+                                    </p>
+                                </div>
+                            )}
                         </div>
+
                         {pending && (
                             <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4">
                                 <div className="flex items-center justify-between">
                                     <h2 className="text-base font-semibold uppercase tracking-wide text-white/60">Pending Request</h2>
                                     <span
-                                        className={`px-2 py-1 rounded-full border text-sm font-medium ${statusColorMap[pending.status] || 'bg-white/10 text-white/60 border-white/20'}`}>
+                                        className={`px-2.5 py-1 rounded-full border text-sm font-medium capitalize ${statusColorMap[pending.status] || 'bg-white/10 text-white/60 border-white/20'}`}>
                                         {pending.status}
                                     </span>
                                 </div>
-                                <div className="text-base text-white/70">
+                                <div className="text-base text-white/70 space-y-2">
                                     <div className="flex justify-between py-1">
                                         <span>Amount</span>
-                                        <span>${formatCurrencyStrict(pending.amount)}</span>
+                                        <span className="font-mono font-semibold text-emerald-300">${formatCurrencyStrict(pending.amount)}</span>
                                     </div>
                                     <div className="flex justify-between py-1">
                                         <span>Requested</span>
-                                        <span>{new Date(pending.requestedAt).toLocaleDateString()}</span>
+                                        <span className="font-mono text-sm">{new Date(pending.requestedAt).toLocaleDateString()}</span>
                                     </div>
                                     {pending.approvedAt && (
                                         <div className="flex justify-between py-1">
                                             <span>Approved</span>
-                                            <span>{new Date(pending.approvedAt).toLocaleDateString()}</span>
+                                            <span className="font-mono text-sm">{new Date(pending.approvedAt).toLocaleDateString()}</span>
+                                        </div>
+                                    )}
+                                    {pending.payoutMethod && (
+                                        <div className="flex justify-between py-1">
+                                            <span>Method</span>
+                                            <span className="font-mono text-sm capitalize">{pending.payoutMethod}</span>
                                         </div>
                                     )}
                                 </div>
-                                <p className="text-base text-white/50">You will be notified by email for each status update.</p>
+                                <p className="text-sm text-white/50 pt-2 border-t border-white/10">
+                                    You will be notified by email for each status update.
+                                </p>
                             </div>
                         )}
                     </div>
                 </div>
             )}
+
             {earnings && (
                 <div className="mt-10 space-y-4">
                     <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-4 w-full">
                         <div className="flex items-center justify-between">
                             <h2 className="text-base font-semibold uppercase tracking-wide text-white/60">Recent Payouts</h2>
+                            {recent.length > 0 && (
+                                <span className="text-sm text-white/40">{recent.length} transaction{recent.length !== 1 ? 's' : ''}</span>
+                            )}
                         </div>
                         <RecentPayouts
                             loading={loadingDashboard}
@@ -246,7 +396,7 @@ export default function SellerPayoutDashboardPage() {
     )
 }
 
-function SummaryCard({ title, value, subtitle, icon: Icon, accent = 'emerald', loading, highlight }) {
+function SummaryCard({ title, value, subtitle, icon: Icon, accent = 'emerald', loading, highlight, tooltip }) {
     const accentMap = {
         emerald: 'from-emerald-500/20 to-emerald-500/5 text-emerald-300',
         amber: 'from-amber-500/20 to-amber-500/5 text-amber-300',
@@ -254,15 +404,23 @@ function SummaryCard({ title, value, subtitle, icon: Icon, accent = 'emerald', l
         sky: 'from-sky-500/20 to-sky-500/5 text-sky-300',
         rose: 'from-rose-500/20 to-rose-500/5 text-rose-300',
         orange: 'from-orange-500/20 to-orange-500/5 text-orange-300',
-        purple: 'from-purple-500/20 to-purple-500/5 text-purple-300'
+        purple: 'from-purple-500/20 to-purple-500/5 text-purple-300',
+        gray: 'from-gray-500/20 to-gray-500/5 text-gray-300'
     }
     return (
         <div
-            className={`relative overflow-hidden rounded-xl border ${highlight ? 'border-emerald-500/40' : 'border-white/10'} bg-gradient-to-br from-white/5 to-white/0 p-4 flex flex-col gap-1`}>
+            className={`relative overflow-hidden rounded-xl border ${highlight ? 'border-emerald-500/40 ring-2 ring-emerald-500/20' : 'border-white/10'} bg-gradient-to-br from-white/5 to-white/0 p-4 flex flex-col gap-1 transition-all hover:border-white/20`}>
             <div className={`absolute inset-0 bg-gradient-to-br ${accentMap[accent]} opacity-10 pointer-events-none`} />
-            <div className="flex items-start justify-between">
-                <div className="flex flex-col">
-                    <span className="text-[10px] uppercase tracking-wide text-white/50 font-medium">{title}</span>
+            <div className="flex items-start justify-between relative">
+                <div className="flex flex-col flex-1">
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] uppercase tracking-wide text-white/50 font-medium">{title}</span>
+                        {tooltip && (
+                            <Tooltip content={tooltip}>
+                                <Info className="w-3 h-3 text-white/30 hover:text-white/60 cursor-help" />
+                            </Tooltip>
+                        )}
+                    </div>
                     {subtitle && <span className="text-[10px] text-white/40">{subtitle}</span>}
                 </div>
                 {Icon && (
@@ -272,7 +430,7 @@ function SummaryCard({ title, value, subtitle, icon: Icon, accent = 'emerald', l
                 )}
             </div>
             <div
-                className={`text-lg font-semibold tracking-tight min-h-[1.75rem] flex items-center ${highlight ? 'text-emerald-300' : 'text-white'}`}>
+                className={`text-lg font-semibold tracking-tight min-h-[1.75rem] flex items-center relative ${highlight ? 'text-emerald-300' : 'text-white'}`}>
                 {loading ? <span className="text-white/40">…</span> : value}
             </div>
         </div>

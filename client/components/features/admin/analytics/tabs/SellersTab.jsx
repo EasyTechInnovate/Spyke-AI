@@ -229,38 +229,60 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
         const totalSales = sellers.reduce((sum, s) => sum + (s.totalSales || 0), 0)
         const totalProfileViews = sellers.reduce((sum, s) => sum + (s.stats?.profileViews || 0), 0)
         const totalReviews = sellers.reduce((sum, s) => sum + (s.stats?.totalReviews || 0), 0)
-        const nichesData = sellers.reduce((acc, seller) => {
-            (seller.niches || []).forEach(niche => {
-                const existing = acc.find(item => item.name === niche)
-                if (existing) {
-                    existing.count++
-                    existing.revenue += seller.totalRevenue || 0
-                } else {
-                    acc.push({ 
-                        name: niche, 
-                        count: 1, 
-                        revenue: seller.totalRevenue || 0 
-                    })
-                }
-            })
-            return acc
-        }, []).sort((a, b) => b.count - a.count)
-        const toolsData = sellers.reduce((acc, seller) => {
-            (seller.toolsSpecialization || []).forEach(tool => {
-                const existing = acc.find(item => item.name === tool)
-                if (existing) {
-                    existing.count++
-                    existing.revenue += seller.totalRevenue || 0
-                } else {
-                    acc.push({ 
-                        name: tool, 
-                        count: 1, 
-                        revenue: seller.totalRevenue || 0 
-                    })
-                }
-            })
-            return acc
-        }, []).sort((a, b) => b.count - a.count)
+
+        // Prefer server-calculated distributions if present
+        let finalNichesData = []
+        let finalToolsData = []
+
+        if (analyticsData.nicheDistribution && analyticsData.nicheDistribution.length > 0) {
+            finalNichesData = analyticsData.nicheDistribution.map(item => ({
+                name: item._id,
+                count: item.count || 0,
+                revenue: item.revenue || 0,
+                sales: item.sales || 0
+            }))
+        } else {
+            // Fallback to client-side computation
+            finalNichesData = sellers.reduce((acc, seller) => {
+                ;(seller.niches || []).forEach(niche => {
+                    const existing = acc.find(item => item.name === niche)
+                    if (existing) {
+                        existing.count++
+                        existing.revenue += seller.totalRevenue || 0
+                    } else {
+                        acc.push({ name: niche, count: 1, revenue: seller.totalRevenue || 0 })
+                    }
+                })
+                return acc
+            }, []).sort((a, b) => b.count - a.count)
+        }
+
+        if (analyticsData.toolDistribution && analyticsData.toolDistribution.length > 0) {
+            finalToolsData = analyticsData.toolDistribution.map(item => ({
+                name: item._id,
+                count: item.count || 0,
+                revenue: item.revenue || 0,
+                sales: item.sales || 0
+            }))
+        } else {
+            // Fallback to client-side computation
+            finalToolsData = sellers.reduce((acc, seller) => {
+                ;(seller.toolsSpecialization || []).forEach(tool => {
+                    const existing = acc.find(item => item.name === tool)
+                    if (existing) {
+                        existing.count++
+                        existing.revenue += seller.totalRevenue || 0
+                    } else {
+                        acc.push({ name: tool, count: 1, revenue: seller.totalRevenue || 0 })
+                    }
+                })
+                return acc
+            }, []).sort((a, b) => b.count - a.count)
+        }
+
+        console.log('📊 Niches Data:', finalNichesData)
+        console.log('🔧 Tools Data:', finalToolsData)
+
         const verificationStatusData = [
             { 
                 name: 'Approved', 
@@ -278,6 +300,7 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
                 color: '#EF4444'
             }
         ].filter(item => item.count > 0)
+
         const commissionRates = sellers.reduce((acc, seller) => {
             const rate = seller.commissionOffer?.rate || 0
             const existing = acc.find(item => item.rate === rate)
@@ -294,6 +317,7 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
             }
             return acc
         }, []).sort((a, b) => b.count - a.count)
+
         const countryData = sellers.reduce((acc, seller) => {
             const country = seller.location?.country || 'Unknown'
             const existing = acc.find(item => item.name === country)
@@ -309,6 +333,7 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
             }
             return acc
         }, []).sort((a, b) => b.count - a.count)
+
         const payoutMethods = sellers.reduce((acc, seller) => {
             const method = seller.payoutInfo?.method || 'Not Set'
             const existing = acc.find(item => item.name === method)
@@ -324,6 +349,7 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
             }
             return acc
         }, [])
+
         const performanceData = sellers.map(seller => ({
             name: seller.fullName,
             revenue: seller.totalRevenue || 0,
@@ -334,6 +360,7 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
             profileViews: seller.stats?.profileViews || 0,
             commission: seller.commissionOffer?.rate || 0
         }))
+
         return {
             sellers,
             topSellers,
@@ -353,8 +380,8 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
                 verificationRate: totalSellers > 0 ? (verifiedSellers / totalSellers) * 100 : 0,
                 activeRate: totalSellers > 0 ? (activeSellers / totalSellers) * 100 : 0
             },
-            nichesData,
-            toolsData,
+            nichesData: finalNichesData,
+            toolsData: finalToolsData,
             verificationStatusData,
             commissionRates,
             countryData,
@@ -570,38 +597,31 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
                         subtitle="Seller specialization trends"
                         height={350}>
                         <ResponsiveContainer width="100%" height="100%">
-                            <RechartsLineChart data={nichesData}>
+                            <BarChart data={nichesData} margin={{ top: 10, right: 20, left: 10, bottom: 60 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                                <XAxis 
-                                    dataKey="name" 
-                                    stroke="#9CA3AF" 
+                                <XAxis
+                                    dataKey="name"
+                                    stroke="#9CA3AF"
                                     fontSize={12}
-                                    angle={-45}
+                                    angle={-30}
                                     textAnchor="end"
-                                    height={80}
+                                    height={60}
                                 />
-                                <YAxis stroke="#9CA3AF" fontSize={12} />
+                                <YAxis stroke="#9CA3AF" fontSize={12} allowDecimals={false} />
                                 <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: '#1F2937',
-                                        border: '1px solid #374151',
-                                        borderRadius: '8px'
-                                    }}
+                                    contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
                                     labelStyle={{ color: '#F3F4F6' }}
                                     formatter={(value, name) => [
                                         name === 'count' ? `${value} sellers` : formatCurrency(value),
                                         name === 'count' ? 'Sellers' : 'Revenue'
                                     ]}
                                 />
-                                <Line
-                                    type="monotone"
-                                    dataKey="count"
-                                    stroke="#00FF89"
-                                    strokeWidth={3}
-                                    dot={{ fill: '#00FF89', strokeWidth: 2, r: 6 }}
-                                    activeDot={{ r: 8 }}
-                                />
-                            </RechartsLineChart>
+                                <Bar dataKey="count" fill="#00FF89" radius={[8, 8, 0, 0]}>
+                                    {nichesData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill="#00FF89" />
+                                    ))}
+                                </Bar>
+                            </BarChart>
                         </ResponsiveContainer>
                     </ChartCard>
                 )}
@@ -612,32 +632,28 @@ export default function SellersTab({ timeRange = '30d', loading: parentLoading }
                         subtitle="Popular automation tools"
                         height={350}>
                         <ResponsiveContainer width="100%" height="100%">
-                            <RechartsLineChart data={toolsData}>
+                            <BarChart data={toolsData} margin={{ top: 10, right: 20, left: 10, bottom: 60 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                                <XAxis 
-                                    dataKey="name" 
-                                    stroke="#9CA3AF" 
+                                <XAxis
+                                    dataKey="name"
+                                    stroke="#9CA3AF"
                                     fontSize={12}
+                                    angle={-30}
+                                    textAnchor="end"
+                                    height={60}
                                 />
-                                <YAxis stroke="#9CA3AF" fontSize={12} />
+                                <YAxis stroke="#9CA3AF" fontSize={12} allowDecimals={false} />
                                 <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: '#1F2937',
-                                        border: '1px solid #374151',
-                                        borderRadius: '8px'
-                                    }}
+                                    contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
                                     labelStyle={{ color: '#F3F4F6' }}
-                                    formatter={(value) => [`${value} sellers`, 'Count']}
+                                    formatter={(value) => [`${value} sellers`, 'Sellers']}
                                 />
-                                <Line
-                                    type="monotone"
-                                    dataKey="count"
-                                    stroke="#8B5CF6"
-                                    strokeWidth={3}
-                                    dot={{ fill: '#8B5CF6', strokeWidth: 2, r: 6 }}
-                                    activeDot={{ r: 8 }}
-                                />
-                            </RechartsLineChart>
+                                <Bar dataKey="count" fill="#8B5CF6" radius={[8, 8, 0, 0]}>
+                                    {toolsData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill="#8B5CF6" />
+                                    ))}
+                                </Bar>
+                            </BarChart>
                         </ResponsiveContainer>
                     </ChartCard>
                 )}
