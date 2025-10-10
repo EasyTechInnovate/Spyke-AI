@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://spykeai.com
+
+# Sitemaps
+Sitemap: https://spykeai.com/sitemap.xml
