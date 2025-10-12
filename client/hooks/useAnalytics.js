@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import tracking from '../lib/analytics/events';
 
@@ -22,7 +22,9 @@ export const useAnalytics = () => {
     };
 
     // Track initial page view
-    handleRouteChange(window.location.pathname);
+    if (typeof window !== 'undefined') {
+      handleRouteChange(window.location.pathname);
+    }
 
     // Listen for route changes (if using app router)
     // For pages router, you'd use router.events.on('routeChangeComplete', handleRouteChange)
@@ -30,15 +32,19 @@ export const useAnalytics = () => {
       handleRouteChange(window.location.pathname);
     };
 
-    window.addEventListener('popstate', handlePopState);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('popstate', handlePopState);
+    }
     
     return () => {
-      window.removeEventListener('popstate', handlePopState);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('popstate', handlePopState);
+      }
     };
   }, []);
 
   // Memoized tracking functions
-  const track = useCallback({
+  const track = useMemo(() => ({
     // Authentication
     signupStarted: (method, source) => tracking.auth.signupStarted(method, source),
     signupCompleted: (userId, userType) => tracking.auth.signupCompleted(userId, userType),
@@ -49,77 +55,87 @@ export const useAnalytics = () => {
     logout: () => tracking.auth.logout(),
 
     // Products
-    productViewed: (productId, productName, category, sellerId, price) => 
-      tracking.product.productViewed(productId, productName, category, sellerId, price),
-    productSearched: (query, resultsCount, filters) => 
-      tracking.product.productSearched(query, resultsCount, filters),
-    categoryViewed: (category, productsCount) => 
-      tracking.product.categoryViewed(category, productsCount),
-    productFavorited: (productId, productName, sellerId) => 
-      tracking.product.productFavorited(productId, productName, sellerId),
-    productUnfavorited: (productId, productName, sellerId) => 
-      tracking.product.productUnfavorited(productId, productName, sellerId),
-    productUpvoted: (productId, productName, sellerId) => 
-      tracking.product.productUpvoted(productId, productName, sellerId),
+    product: {
+      productViewed: (productId, productName, category, sellerId, price) => 
+        tracking.product.productViewed(productId, productName, category, sellerId, price),
+      productSearched: (query, resultsCount, filters) => 
+        tracking.product.productSearched(query, resultsCount, filters),
+      categoryViewed: (category, productsCount) => 
+        tracking.product.categoryViewed(category, productsCount),
+      productFavorited: (productId, productName, sellerId) => 
+        tracking.product.productFavorited(productId, productName, sellerId),
+      productUnfavorited: (productId, productName, sellerId) => 
+        tracking.product.productUnfavorited(productId, productName, sellerId),
+      productUpvoted: (productId, productName, sellerId) => 
+        tracking.product.productUpvoted(productId, productName, sellerId),
+    },
 
     // Cart & Purchase
-    addToCart: (productId, productName, price, sellerId, quantity) => 
-      tracking.purchase.productAddedToCart(productId, productName, price, sellerId, quantity),
-    removeFromCart: (productId, productName, price, sellerId) => 
-      tracking.purchase.productRemovedFromCart(productId, productName, price, sellerId),
-    cartViewed: (itemsCount, totalValue, uniqueSellers) => 
-      tracking.purchase.cartViewed(itemsCount, totalValue, uniqueSellers),
-    checkoutStarted: (itemsCount, totalValue, paymentMethod) => 
-      tracking.purchase.checkoutStarted(itemsCount, totalValue, paymentMethod),
-    promocodeApplied: (code, discountAmount, discountType, sellerId) => 
-      tracking.purchase.promocodeApplied(code, discountAmount, discountType, sellerId),
-    purchaseCompleted: (orderId, totalValue, itemsCount, paymentMethod, items) => 
-      tracking.purchase.purchaseCompleted(orderId, totalValue, itemsCount, paymentMethod, items),
-    purchaseFailed: (error, totalValue, paymentMethod) => 
-      tracking.purchase.purchaseFailed(error, totalValue, paymentMethod),
+    purchase: {
+      addToCart: (productId, productName, price, sellerId, quantity) => 
+        tracking.purchase.productAddedToCart(productId, productName, price, sellerId, quantity),
+      removeFromCart: (productId, productName, price, sellerId) => 
+        tracking.purchase.productRemovedFromCart(productId, productName, price, sellerId),
+      cartViewed: (itemsCount, totalValue, uniqueSellers) => 
+        tracking.purchase.cartViewed(itemsCount, totalValue, uniqueSellers),
+      checkoutStarted: (itemsCount, totalValue, paymentMethod) => 
+        tracking.purchase.checkoutStarted(itemsCount, totalValue, paymentMethod),
+      promocodeApplied: (code, discountAmount, discountType, sellerId) => 
+        tracking.purchase.promocodeApplied(code, discountAmount, discountType, sellerId),
+      purchaseCompleted: (orderId, totalValue, itemsCount, paymentMethod, items) => 
+        tracking.purchase.purchaseCompleted(orderId, totalValue, itemsCount, paymentMethod, items),
+      purchaseFailed: (error, totalValue, paymentMethod) => 
+        tracking.purchase.purchaseFailed(error, totalValue, paymentMethod),
+    },
 
     // Seller
-    sellerProfileViewed: (sellerId, sellerName, productsCount) => 
-      tracking.seller.sellerProfileViewed(sellerId, sellerName, productsCount),
-    becomeSellerStarted: (source) => tracking.seller.becomeSellerStarted(source),
-    sellerOnboardingCompleted: (sellerId) => tracking.seller.sellerOnboardingCompleted(sellerId),
-    productCreated: (productId, productName, category, price) => 
-      tracking.seller.productCreated(productId, productName, category, price),
-    productPublished: (productId, productName, category) => 
-      tracking.seller.productPublished(productId, productName, category),
-    payoutRequested: (amount, paymentMethod, sellerId) => 
-      tracking.seller.payoutRequested(amount, paymentMethod, sellerId),
-    payoutCompleted: (amount, paymentMethod, sellerId) => 
-      tracking.seller.payoutCompleted(amount, paymentMethod, sellerId),
+    seller: {
+      sellerProfileViewed: (sellerId, sellerName, productsCount) => 
+        tracking.seller.sellerProfileViewed(sellerId, sellerName, productsCount),
+      becomeSellerStarted: (source) => tracking.seller.becomeSellerStarted(source),
+      sellerOnboardingCompleted: (sellerId) => tracking.seller.sellerOnboardingCompleted(sellerId),
+      productCreated: (productId, productName, category, price) => 
+        tracking.seller.productCreated(productId, productName, category, price),
+      productPublished: (productId, productName, category) => 
+        tracking.seller.productPublished(productId, productName, category),
+      payoutRequested: (amount, paymentMethod, sellerId) => 
+        tracking.seller.payoutRequested(amount, paymentMethod, sellerId),
+      payoutCompleted: (amount, paymentMethod, sellerId) => 
+        tracking.seller.payoutCompleted(amount, paymentMethod, sellerId),
+    },
 
     // Engagement
-    reviewSubmitted: (productId, rating, sellerId) => 
-      tracking.engagement.reviewSubmitted(productId, rating, sellerId),
-    searchPerformed: (query, category, resultsCount) => 
-      tracking.engagement.searchPerformed(query, category, resultsCount),
-    filterApplied: (filterType, filterValue, resultsCount) => 
-      tracking.engagement.filterApplied(filterType, filterValue, resultsCount),
-    headerLinkClicked: (linkName, destination) => 
-      tracking.engagement.headerLinkClicked(linkName, destination),
-    footerLinkClicked: (linkName, destination) => 
-      tracking.engagement.footerLinkClicked(linkName, destination),
-    featureUsed: (featureName, context) => 
-      tracking.engagement.featureUsed(featureName, context),
+    engagement: {
+      reviewSubmitted: (productId, rating, sellerId) => 
+        tracking.engagement.reviewSubmitted(productId, rating, sellerId),
+      searchPerformed: (query, category, resultsCount) => 
+        tracking.engagement.searchPerformed(query, category, resultsCount),
+      filterApplied: (filterType, filterValue, resultsCount) => 
+        tracking.engagement.filterApplied(filterType, filterValue, resultsCount),
+      headerLinkClicked: (linkName, destination) => 
+        tracking.engagement.headerLinkClicked(linkName, destination),
+      footerLinkClicked: (linkName, destination) => 
+        tracking.engagement.footerLinkClicked(linkName, destination),
+      featureUsed: (featureName, context) => 
+        tracking.engagement.featureUsed(featureName, context),
+    },
 
     // System
-    pageLoadTime: (pageName, loadTime) => 
-      tracking.system.pageLoadTime(pageName, loadTime),
-    errorOccurred: (errorType, errorMessage, context) => 
-      tracking.system.errorOccurred(errorType, errorMessage, context),
-    apiCallMade: (endpoint, method, responseTime, statusCode) => 
-      tracking.system.apiCallMade(endpoint, method, responseTime, statusCode),
+    system: {
+      pageLoadTime: (pageName, loadTime) => 
+        tracking.system.pageLoadTime(pageName, loadTime),
+      errorOccurred: (errorType, errorMessage, context) => 
+        tracking.system.errorOccurred(errorType, errorMessage, context),
+      apiCallMade: (endpoint, method, responseTime, statusCode) => 
+        tracking.system.apiCallMade(endpoint, method, responseTime, statusCode),
+    },
 
     // Custom events
     custom: (eventName, properties) => tracking.custom(eventName, properties)
-  }, []);
+  }), []);
 
   // User identification
-  const identify = useCallback((userId, userProperties) => {
+  const identify = useMemo(() => (userId, userProperties) => {
     tracking.identify(userId, userProperties);
   }, []);
 
