@@ -8,6 +8,8 @@ import api from '@/lib/api'
 import { checkPasswordStrength, countryCodes, validateEmail, validatePhone, formatPhone } from '@/lib/utils/utils'
 import { Eye, EyeOff, Mail, Lock, Phone, ArrowRight, Sparkles, Shield, Zap, Users, CheckCircle, Globe, ChevronDown, Loader } from 'lucide-react'
 import Notification from '@/components/shared/Notification'
+import { useAnalytics } from '@/hooks/useAnalytics'
+
 export const debounce = (func, wait) => {
     let timeout
     return (...args) => {
@@ -15,8 +17,10 @@ export const debounce = (func, wait) => {
         timeout = setTimeout(() => func(...args), wait)
     }
 }
+
 export default function SignupPage() {
     const router = useRouter()
+    const { track, identify } = useAnalytics()
     const [loading, setLoading] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
     const [emailChecking, setEmailChecking] = useState(false)
@@ -33,6 +37,7 @@ export default function SignupPage() {
     const [errors, setErrors] = useState({})
     const [touched, setTouched] = useState({})
     const emailCheckRef = useRef(null)
+
     const showNotification = (message, type = 'success') => {
         setNotification({
             id: Date.now(),
@@ -41,12 +46,23 @@ export default function SignupPage() {
             duration: type === 'error' ? 6000 : 4000
         })
     }
+
+    useEffect(() => {
+        track.engagement.pageViewed('/signup', 'auth');
+    }, [track]);
+
     useEffect(() => {
         emailCheckRef.current = debounce(async (email) => {
             if (!email || !validateEmail(email)) {
                 setEmailAvailable(true)
                 return
             }
+
+            track.engagement.featureUsed('email_availability_check', {
+                email_domain: email.split('@')[1],
+                source: 'signup_form'
+            });
+
             setEmailChecking(true)
             try {
                 const response = await api.auth.checkEmail(email)
@@ -54,25 +70,58 @@ export default function SignupPage() {
                 setEmailAvailable(data.available !== false)
                 if (!data.available) {
                     setErrors((prev) => ({ ...prev, emailAddress: 'This email is already registered' }))
+                    track.auth.signupFailed('email_already_exists', 'email');
                 } else {
                     setErrors((prev) => ({ ...prev, emailAddress: '' }))
                 }
             } catch (error) {
                 setEmailAvailable(true)
+                track.system.errorOccurred('email_check_failed', error.message, {
+                    email_domain: email.split('@')[1]
+                });
             } finally {
                 setEmailChecking(false)
             }
         }, 500)
-    }, [])
+    }, [track])
+
     const validateEmailInput = (email) => {
         if (!email) return 'Email is required'
         if (!email.includes('@')) return "Please include an '@' in the email address"
         if (!validateEmail(email)) return 'Please enter a valid email address'
         return ''
     }
+
     const handleChange = useCallback(
         (e) => {
             const { name, value, type, checked } = e.target
+
+            if (name === 'emailAddress' && value) {
+                track.engagement.featureUsed('signup_form_field_filled', {
+                    field_name: 'email',
+                    email_domain: value.includes('@') ? value.split('@')[1] : null
+                });
+            } else if (name === 'phoneNumber' && value) {
+                track.engagement.featureUsed('signup_form_field_filled', {
+                    field_name: 'phone',
+                    country_code: formData.countryCode
+                });
+            } else if (name === 'password' && value) {
+                const strength = checkPasswordStrength(value);
+                track.engagement.featureUsed('signup_form_field_filled', {
+                    field_name: 'password',
+                    password_strength: strength.label.toLowerCase()
+                });
+            } else if (name === 'consent' && checked) {
+                track.engagement.featureUsed('terms_accepted', {
+                    source: 'signup_form'
+                });
+            } else if (name === 'marketingConsent' && checked) {
+                track.engagement.featureUsed('marketing_consent_accepted', {
+                    source: 'signup_form'
+                });
+            }
+
             if (name === 'phoneNumber') {
                 const formatted = formatPhone(value, formData.countryCode)
                 setFormData((prev) => ({ ...prev, phoneNumber: formatted }))
@@ -82,23 +131,42 @@ export default function SignupPage() {
                     [name]: type === 'checkbox' ? checked : value
                 }))
             }
+
             if (name === 'emailAddress') {
                 const emailError = validateEmailInput(value)
                 setErrors((prev) => ({ ...prev, emailAddress: emailError }))
             } else {
                 setErrors((prev) => ({ ...prev, [name]: '' }))
             }
+
             setTouched((prev) => ({ ...prev, [name]: true }))
+
             if (name === 'emailAddress' && emailCheckRef.current) {
                 emailCheckRef.current(value)
             }
         },
-        [formData.countryCode]
+        [formData.countryCode, track]
     )
+
+    const handleCountryCodeChange = (e) => {
+        const newCountryCode = e.target.value;
+        track.engagement.featureUsed('country_code_selected', {
+            country_code: newCountryCode,
+            source: 'signup_form'
+        });
+
+        setFormData((prev) => ({
+            ...prev,
+            countryCode: newCountryCode,
+            phoneNumber: ''
+        }));
+    };
+
     const handleBlur = useCallback((e) => {
         const { name } = e.target
         setTouched((prev) => ({ ...prev, [name]: true }))
     }, [])
+
     const validateForm = useCallback(() => {
         const newErrors = {}
         if (!formData.emailAddress) {
@@ -124,21 +192,31 @@ export default function SignupPage() {
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }, [formData, emailAvailable])
+
     const handleSubmit = useCallback(
         async (e) => {
             e.preventDefault()
+
+            track.auth.signupStarted('email', 'signup_page');
+
             setTouched({
                 emailAddress: true,
                 phoneNumber: true,
                 password: true,
                 consent: true
             })
-            if (!validateForm()) return
+
+            if (!validateForm()) {
+                track.auth.signupFailed('form_validation_failed', 'email');
+                return;
+            }
+
             setLoading(true)
             try {
                 const countryCodeDigits = formData.countryCode.replace(/\D/g, '')
                 const phoneNumberDigits = formData.phoneNumber.replace(/\D/g, '')
                 const fullPhoneNumber = countryCodeDigits + phoneNumberDigits
+
                 const response = await api.auth.register({
                     emailAddress: formData.emailAddress.toLowerCase().trim(),
                     phoneNumber: fullPhoneNumber,
@@ -148,8 +226,23 @@ export default function SignupPage() {
                     userLocation: { lat: 0, long: 0 },
                     role: 'user'
                 })
+
                 if (response && (response.success === true || response.statusCode === 201 || (response.id && response.emailAddress))) {
+                    track.auth.signupCompleted(response.id || 'pending', 'buyer');
+
+                    identify(response.id || 'pending', {
+                        user_type: 'buyer',
+                        signup_date: new Date().toISOString(),
+                        email_domain: formData.emailAddress.split('@')[1],
+                        country_code: formData.countryCode,
+                        marketing_consent: formData.marketingConsent,
+                        signup_method: 'email',
+                        phone_verified: false,
+                        email_verified: false
+                    });
+
                     showNotification('Account created successfully! Please check your email to verify your account before signing in.', 'success')
+
                     setTimeout(() => {
                         router.push(`/verify-email?email=${encodeURIComponent(formData.emailAddress)}`)
                     }, 3000)
@@ -158,13 +251,42 @@ export default function SignupPage() {
                 }
             } catch (error) {
                 const errorMessage = error?.response?.data?.message || error?.message || 'Registration failed. Please try again.'
+
+                track.auth.signupFailed(errorMessage, 'email');
+
                 showNotification(errorMessage, 'error')
             } finally {
                 setLoading(false)
             }
         },
-        [formData, router, validateForm]
+        [formData, router, validateForm, track, identify]
     )
+
+    const handleGoogleAuth = () => {
+        track.auth.signupStarted('google', 'signup_page');
+        api.auth.googleAuth();
+    };
+
+    const handleSigninLinkClick = () => {
+        track.engagement.headerLinkClicked('signin_from_signup', '/signin');
+    };
+
+    const handleTermsClick = () => {
+        track.engagement.headerLinkClicked('terms_of_service', '/terms');
+    };
+
+    const handlePrivacyClick = () => {
+        track.engagement.headerLinkClicked('privacy_policy', '/privacy-policy');
+    };
+
+    const handlePasswordVisibilityToggle = () => {
+        track.engagement.featureUsed('password_visibility_toggle', {
+            action: showPassword ? 'hide' : 'show',
+            source: 'signup_form'
+        });
+        setShowPassword(!showPassword);
+    };
+
     const passwordStrength = checkPasswordStrength(formData.password)
     const countryOptions = countryCodes
         .map(({ code, country, flag }) => ({
@@ -179,6 +301,7 @@ export default function SignupPage() {
             return countryA.localeCompare(countryB)
         })
     const selectedCountry = countryCodes.find((c) => c.code === formData.countryCode) || countryCodes[0]
+
     return (
         <div className="min-h-screen bg-[#121212] relative overflow-hidden flex flex-col">
             <div className="absolute inset-0 overflow-hidden">
@@ -299,13 +422,7 @@ export default function SignupPage() {
                                                 <div className="relative group">
                                                     <select
                                                         value={formData.countryCode}
-                                                        onChange={(e) => {
-                                                            setFormData((prev) => ({
-                                                                ...prev,
-                                                                countryCode: e.target.value,
-                                                                phoneNumber: ''
-                                                            }))
-                                                        }}
+                                                        onChange={handleCountryCodeChange}
                                                         className="w-full pl-3 pr-9 py-3 bg-[#121212]/60 border border-gray-600/60 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#00FF89]/60 focus:border-[#00FF89]/60 focus:bg-[#121212]/80 transition-all duration-200 text-sm font-medium appearance-none cursor-pointer hover:border-gray-500/60 hover:bg-[#121212]/70 group-hover:border-gray-500/60"
                                                         disabled={loading}
                                                         style={{
@@ -373,7 +490,7 @@ export default function SignupPage() {
                                             />
                                             <button
                                                 type="button"
-                                                onClick={() => setShowPassword(!showPassword)}
+                                                onClick={handlePasswordVisibilityToggle}
                                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#00FF89] transition-colors p-0.5"
                                                 disabled={loading}>
                                                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -486,12 +603,14 @@ export default function SignupPage() {
                                                 I agree to SpykeAI's{' '}
                                                 <Link
                                                     href="/terms"
+                                                    onClick={handleTermsClick}
                                                     className="text-[#00FF89] hover:underline font-semibold">
                                                     Terms of Service
                                                 </Link>{' '}
                                                 and{' '}
                                                 <Link
                                                     href="/privacy-policy"
+                                                    onClick={handlePrivacyClick}
                                                     className="text-[#00FF89] hover:underline font-semibold">
                                                     Privacy Policy
                                                 </Link>
@@ -541,7 +660,7 @@ export default function SignupPage() {
                                     </div>
                                     <button
                                         type="button"
-                                        onClick={() => api.auth.googleAuth()}
+                                        onClick={handleGoogleAuth}
                                         disabled={loading}
                                         className={`w-full py-3 px-6 bg-white hover:bg-gray-50 text-gray-800 rounded-xl font-bold transition-all duration-200 flex items-center justify-center gap-2 text-sm ${
                                             loading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02] transform active:scale-[0.98]'
@@ -575,6 +694,7 @@ export default function SignupPage() {
                                         Already have an account?{' '}
                                         <Link
                                             href="/signin"
+                                            onClick={handleSigninLinkClick}
                                             className={`font-bold text-[#00FF89] hover:text-[#00e67a] transition-colors ${
                                                 loading ? 'pointer-events-none opacity-50' : ''
                                             }`}>

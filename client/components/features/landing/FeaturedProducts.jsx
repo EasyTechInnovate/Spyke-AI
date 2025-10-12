@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { useCart } from '@/hooks/useCart'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import { productsAPI } from '@/lib/api'
 
 const BackgroundEffectsLight = dynamic(() => import('./hero/BackgroundEffectsLight'), { ssr: false, loading: () => null })
@@ -32,6 +33,7 @@ const getTypeDisplay = (type) => {
 
 const FeaturedProducts = memo(function FeaturedProducts() {
     const router = useRouter()
+    const { track } = useAnalytics()
     const [featuredProducts, setFeaturedProducts] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
@@ -43,11 +45,23 @@ const FeaturedProducts = memo(function FeaturedProducts() {
     const userPausedRef = useRef(false)
 
     useEffect(() => {
+        track.engagement.featureUsed('featured_products_section_viewed', {
+            source: 'landing_page'
+        });
+
         const fetchFeaturedProducts = async () => {
+            const fetchStartTime = performance.now();
+            
+            track.engagement.featureUsed('featured_products_load_started', {
+                source: 'landing_page'
+            });
+
             try {
                 setLoading(true)
                 setError(null)
                 const res = await productsAPI.getFeaturedHybrid({ status: 'active', limit: 8 })
+                const fetchDuration = performance.now() - fetchStartTime;
+                
                 const list = Array.isArray(res?.data)
                     ? res.data
                     : Array.isArray(res?.data?.items)
@@ -61,15 +75,34 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                             : []
                 const items = list.map((p) => ({ ...p, isFeatured: true }))
                 setFeaturedProducts(items)
+                
+                track.system.apiCallMade('/api/products/featured', 'GET', fetchDuration, 200);
+                track.engagement.featureUsed('featured_products_loaded_success', {
+                    products_count: items.length,
+                    load_duration_ms: Math.round(fetchDuration),
+                    source: 'landing_page'
+                });
+                
             } catch (err) {
-                setError(err.message || 'Failed to load featured products')
+                const fetchDuration = performance.now() - fetchStartTime;
+                const errorMessage = err.message || 'Failed to load featured products';
+                
+                setError(errorMessage)
                 setFeaturedProducts([])
+                
+                track.system.errorOccurred('featured_products_load_failed', errorMessage, {
+                    api_duration: fetchDuration,
+                    source: 'landing_page'
+                });
+                
+                track.system.apiCallMade('/api/products/featured', 'GET', fetchDuration, err.status || 500);
+                
             } finally {
                 setLoading(false)
             }
         }
         fetchFeaturedProducts()
-    }, [])
+    }, [track])
 
     const updateEdgeState = () => {
         const el = carouselRef.current
@@ -97,8 +130,20 @@ const FeaturedProducts = memo(function FeaturedProducts() {
         if (!el) return 0
         return Math.min(el.clientWidth * 0.85, 900)
     }
-    const scrollLeft = () => carouselRef.current?.scrollBy({ left: -scrollAmount(), behavior: 'smooth' })
-    const scrollRight = () => carouselRef.current?.scrollBy({ left: scrollAmount(), behavior: 'smooth' })
+    const scrollLeft = () => {
+        track.engagement.featureUsed('featured_products_carousel_scrolled', {
+            direction: 'left',
+            source: 'landing_page'
+        });
+        carouselRef.current?.scrollBy({ left: -scrollAmount(), behavior: 'smooth' })
+    }
+    const scrollRight = () => {
+        track.engagement.featureUsed('featured_products_carousel_scrolled', {
+            direction: 'right',
+            source: 'landing_page'
+        });
+        carouselRef.current?.scrollBy({ left: scrollAmount(), behavior: 'smooth' })
+    }
 
     useEffect(() => {
         const el = carouselRef.current
@@ -152,8 +197,41 @@ const FeaturedProducts = memo(function FeaturedProducts() {
     }, [featuredProducts, atEnd])
 
     const handleProductClick = (product) => {
+        track.engagement.featureUsed('featured_product_clicked', {
+            product_id: product._id || product.id,
+            product_title: product.title,
+            product_type: product.type,
+            product_price: product.price,
+            product_rating: product.averageRating || product.rating,
+            position_in_list: featuredProducts.findIndex(p => (p._id || p.id) === (product._id || product.id)),
+            source: 'landing_featured_products'
+        });
+        
+        track.conversion.funnelStepCompleted('featured_product_to_detail', {
+            product_id: product._id || product.id,
+            product_title: product.title,
+            source: 'landing_featured_products'
+        });
+        
         router.push(`/products/${product.slug || product.id || product._id}`)
     }
+
+    const handleViewAllClick = () => {
+        track.engagement.headerLinkClicked('view_all_products_from_featured', '/explore');
+        track.conversion.funnelStepCompleted('featured_to_explore', {
+            cta_type: 'secondary',
+            cta_text: 'View All Products',
+            featured_products_count: featuredProducts.length,
+            source: 'landing_featured_products'
+        });
+    };
+
+    const handleRetryClick = () => {
+        track.engagement.featureUsed('featured_products_retry_clicked', {
+            source: 'landing_page'
+        });
+        window.location.reload();
+    };
 
     return (
         <section className="relative overflow-hidden bg-black">
@@ -200,11 +278,13 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                                     <div className="flex flex-col sm:flex-row gap-3">
                                         <button
                                             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#00FF89] text-black font-semibold rounded-xl hover:bg-[#00FF89]/90 transition-all duration-200"
-                                            onClick={() => window.location.reload()}>
+                                            onClick={handleRetryClick}>
                                             Try Again
                                         </button>
                                         <Link href="/explore">
-                                            <button className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white bg-transparent hover:border-white/40 hover:bg-white/5 rounded-xl transition-all duration-200">
+                                            <button 
+                                                onClick={() => track.engagement.headerLinkClicked('browse_all_from_featured_error', '/explore')}
+                                                className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white bg-transparent hover:border-white/40 hover:bg-white/5 rounded-xl transition-all duration-200">
                                                 Browse All Products
                                                 <ArrowRight className="w-4 h-4" />
                                             </button>
@@ -214,54 +294,19 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                             </div>
                         ) : featuredProducts.length === 0 ? (
                             <div className="text-center py-16 sm:py-24">
-                                <div className="flex flex-col items-center gap-8 max-w-md mx-auto">
-                                    <motion.div
-                                        initial={{ scale: 0.8, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 1 }}
-                                        transition={{ duration: 0.5, delay: 0.2 }}
-                                        className="relative">
-                                        <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-[#00FF89]/20 to-[#00FF89]/5 rounded-3xl flex items-center justify-center border border-[#00FF89]/20 backdrop-blur-sm">
-                                            <Package className="w-10 h-10 sm:w-12 sm:h-12 text-[#00FF89]" />
-                                        </div>
-                                        <div className="absolute -top-2 -right-2 w-3 h-3 bg-[#00FF89] rounded-full animate-ping opacity-75"></div>
-                                        <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-[#00FF89]/60 rounded-full animate-pulse"></div>
-                                    </motion.div>
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.5, delay: 0.4 }}
-                                        className="space-y-4">
-                                        <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">No Featured Products Available</h3>
-                                        <p className="text-base sm:text-lg text-gray-400 leading-relaxed">
-                                            We're working on curating amazing products for you. Check out our full catalog in the meantime.
-                                        </p>
-                                    </motion.div>
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.5, delay: 0.6 }}>
-                                        <Link href="/explore">
-                                            <button className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-[#00FF89] to-[#00e67a] text-black font-bold rounded-2xl hover:from-[#00e67a] hover:to-[#00FF89] transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-[#00FF89]/25 text-lg">
-                                                Explore All Products
-                                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
-                                            </button>
-                                        </Link>
-                                    </motion.div>
-                                    <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ duration: 0.5, delay: 0.8 }}
-                                        className="flex items-center gap-6 pt-6 border-t border-gray-800/50">
-                                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                                            <Sparkles className="w-4 h-4 text-[#00FF89]" />
-                                            <span>AI-Powered Tools</span>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                                            <CheckCircle className="w-4 h-4 text-[#00FF89]" />
-                                            <span>Verified Quality</span>
-                                        </div>
-                                    </motion.div>
-                                </div>
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5, delay: 0.6 }}>
+                                    <Link href="/explore">
+                                        <button 
+                                            onClick={() => track.engagement.headerLinkClicked('explore_from_empty_featured', '/explore')}
+                                            className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-[#00FF89] to-[#00e67a] text-black font-bold rounded-2xl hover:from-[#00e67a] hover:to-[#00FF89] transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-[#00FF89]/25 text-lg">
+                                            Explore All Products
+                                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                                        </button>
+                                    </Link>
+                                </motion.div>
                             </div>
                         ) : featuredProducts.length === 1 ? (
                             <div className="flex justify-center">
@@ -269,6 +314,8 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                                     <ProductCard
                                         product={featuredProducts[0]}
                                         onClick={() => handleProductClick(featuredProducts[0])}
+                                        track={track}
+                                        position={0}
                                     />
                                 </div>
                             </div>
@@ -308,6 +355,8 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                                             <ProductCard
                                                 product={product}
                                                 onClick={() => handleProductClick(product)}
+                                                track={track}
+                                                position={index}
                                             />
                                         </motion.div>
                                     ))}
@@ -323,7 +372,9 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                             transition={{ duration: 0.5, delay: 0.2 }}
                             className="text-center">
                             <Link href="/explore">
-                                <button className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#00FF89] text-black font-semibold rounded-xl hover:bg-[#00FF89]/90 transition-all duration-200 text-lg">
+                                <button 
+                                    onClick={handleViewAllClick}
+                                    className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#00FF89] text-black font-semibold rounded-xl hover:bg-[#00FF89]/90 transition-all duration-200 text-lg">
                                     <span>View All Products</span>
                                     <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
                                 </button>
@@ -336,7 +387,7 @@ const FeaturedProducts = memo(function FeaturedProducts() {
     )
 })
 
-function ProductCard({ product, onClick }) {
+function ProductCard({ product, onClick, track, position }) {
     const [isImageLoading, setIsImageLoading] = useState(true)
     const [imageError, setImageError] = useState(false)
     const [isLiked, setIsLiked] = useState(false)
@@ -390,10 +441,27 @@ function ProductCard({ product, onClick }) {
         e.preventDefault()
         e.stopPropagation()
         setIsLiked(!isLiked)
+        
+        track.engagement.featureUsed('featured_product_liked', {
+            product_id: id,
+            product_title: title,
+            liked: !isLiked,
+            position: position,
+            source: 'landing_featured_products'
+        });
     }
     const handleAddToCart = async (e) => {
         e.stopPropagation()
         e.preventDefault()
+        
+        track.engagement.featureUsed('featured_product_add_to_cart', {
+            product_id: id,
+            product_title: title,
+            product_price: actualDiscountPrice || price,
+            position: position,
+            source: 'landing_featured_products'
+        });
+        
         const cartProduct = {
             id: id,
             title: title,
@@ -404,8 +472,22 @@ function ProductCard({ product, onClick }) {
         }
         try {
             await addToCart(cartProduct)
+            
+            track.conversion.funnelStepCompleted('featured_product_added_to_cart', {
+                product_id: id,
+                product_title: title,
+                cart_value: actualDiscountPrice || price,
+                source: 'landing_featured_products'
+            });
+            
         } catch (error) {
             console.error('Error adding to cart:', error)
+            
+            track.system.errorOccurred('featured_product_cart_add_failed', error.message, {
+                product_id: id,
+                product_title: title,
+                source: 'landing_featured_products'
+            });
         }
     }
     const microMeta = (
@@ -430,7 +512,24 @@ function ProductCard({ product, onClick }) {
         setImageError(true)
         setIsImageLoading(false)
         console.warn('Featured product image failed to load:', productImage)
+        
+        track.system.errorOccurred('featured_product_image_load_failed', 'Image failed to load', {
+            product_id: id,
+            image_url: productImage,
+            source: 'landing_featured_products'
+        });
     }
+    useEffect(() => {
+        track.engagement.featureUsed('featured_product_card_viewed', {
+            product_id: id,
+            product_title: title,
+            product_type: type,
+            product_price: price,
+            position: position,
+            source: 'landing_featured_products'
+        });
+    }, [id, title, type, price, position, track]);
+
     return (
         <motion.div
             layout

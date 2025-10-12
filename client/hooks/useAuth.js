@@ -89,7 +89,16 @@ export function useAuth() {
 
     const logout = async () => {
         try {
-            // Update local state immediately
+            if (typeof window !== 'undefined' && window.amplitude) {
+                window.amplitude.getInstance().logEvent('logout_completed', {
+                    user_id: user?.id,
+                    user_type: user?.user_type,
+                    logout_method: 'manual',
+                    page: window.location.pathname,
+                    session_duration: Date.now() - (user?.login_time || Date.now())
+                });
+            }
+
             setUser(null)
             setIsAuthenticated(false)
 

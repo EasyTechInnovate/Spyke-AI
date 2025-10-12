@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { CheckCircle, Package, ArrowRight, Loader2, Sparkles, Star, Download } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import Link from 'next/link'
 import { paymentAPI } from '@/lib/api'
 import { useCart } from '@/hooks/useCart'
@@ -45,6 +46,7 @@ function CheckoutSuccessContent() {
     const searchParams = useSearchParams()
     const router = useRouter()
     const { clearCart, reload: reloadCart } = useCart()
+    const { track } = useAnalytics()
     const sessionId = searchParams.get('session_id')
 
     const [state, setState] = useState({
@@ -84,10 +86,16 @@ function CheckoutSuccessContent() {
 
     useEffect(() => {
         if (!sessionId) {
+            track.system.errorOccurred('checkout_success_no_session', 'No payment session found', {
+                source: 'checkout_success_page'
+            });
             setState(prev => ({ ...prev, loading: false, error: 'No payment session found' }))
             return
         }
 
+        // Track page view
+        track.engagement.pageViewed('/checkout/success', 'purchase');
+        
         // Prevent duplicate processing
         const storageKey = `order_confirmed_${sessionId}`
         const alreadyProcessed = sessionStorage.getItem(storageKey)
@@ -95,6 +103,14 @@ function CheckoutSuccessContent() {
         if (alreadyProcessed) {
             try {
                 const cachedOrder = JSON.parse(alreadyProcessed)
+                
+                // Track cached order view
+                track.engagement.featureUsed('order_confirmation_cached', {
+                    order_id: cachedOrder.id,
+                    total_amount: cachedOrder.total,
+                    source: 'checkout_success_page'
+                });
+                
                 setState({ loading: false, error: null, order: cachedOrder, confettiTriggered: true })
                 triggerConfetti()
                 return
@@ -104,6 +120,8 @@ function CheckoutSuccessContent() {
         let isMounted = true
 
         const confirmOrder = async () => {
+            const confirmStartTime = performance.now();
+            
             try {
                 const response = await paymentAPI.confirmCheckoutSession(sessionId)
                 
@@ -126,6 +144,34 @@ function CheckoutSuccessContent() {
                     date: data.purchaseDate || new Date().toISOString()
                 }
 
+                const confirmDuration = performance.now() - confirmStartTime;
+
+                // Track successful order confirmation
+                track.purchase.purchaseCompleted(
+                    order.id,
+                    order.items.map(item => ({
+                        product_id: item.id || item._id,
+                        product_name: item.title,
+                        price: item.price || 0,
+                        quantity: 1,
+                        seller_id: item.sellerId || 'unknown'
+                    })),
+                    order.total,
+                    'stripe'
+                );
+
+                track.system.apiCallMade('/api/payments/confirm-session', 'POST', confirmDuration, 200);
+
+                track.engagement.featureUsed('order_confirmation_success', {
+                    order_id: order.id,
+                    items_count: order.items.length,
+                    total_amount: order.total,
+                    discount_amount: order.discount,
+                    payment_method: order.method,
+                    confirmation_duration_ms: Math.round(confirmDuration),
+                    source: 'checkout_success_page'
+                });
+
                 // Cache successful order
                 sessionStorage.setItem(storageKey, JSON.stringify(order))
 
@@ -134,6 +180,10 @@ function CheckoutSuccessContent() {
                 // Trigger confetti
                 setTimeout(() => {
                     if (isMounted) {
+                        track.engagement.featureUsed('success_celebration_triggered', {
+                            order_id: order.id,
+                            source: 'checkout_success_page'
+                        });
                         triggerConfetti()
                         setState(prev => ({ ...prev, confettiTriggered: true }))
                     }
@@ -144,30 +194,51 @@ function CheckoutSuccessContent() {
                     try {
                         await clearCart?.()
                         await reloadCart?.()
+                        
+                        track.engagement.featureUsed('post_purchase_cart_cleared', {
+                            order_id: order.id,
+                            source: 'checkout_success_page'
+                        });
                     } catch (e) {
-                        console.error('Cart clear failed:', e)
+                        track.system.errorOccurred('post_purchase_cart_clear_failed', e.message, {
+                            order_id: order.id
+                        });
                     }
                 }, 500)
 
             } catch (error) {
                 if (!isMounted) return
                 
+                const confirmDuration = performance.now() - confirmStartTime;
                 const message = error?.message || 'Failed to confirm order'
                 
+                track.system.errorOccurred('order_confirmation_failed', message, {
+                    session_id: sessionId,
+                    api_duration: confirmDuration,
+                    source: 'checkout_success_page'
+                });
+                
                 if (/already|existing|duplicate/i.test(message)) {
+                    const fallbackOrder = {
+                        id: 'processed',
+                        items: [],
+                        total: 0,
+                        subtotal: 0,
+                        discount: 0,
+                        status: 'completed',
+                        method: 'Stripe Checkout',
+                        date: new Date().toISOString()
+                    };
+                    
+                    track.engagement.featureUsed('order_confirmation_duplicate', {
+                        session_id: sessionId,
+                        source: 'checkout_success_page'
+                    });
+                    
                     setState({
                         loading: false,
                         error: null,
-                        order: {
-                            id: 'processed',
-                            items: [],
-                            total: 0,
-                            subtotal: 0,
-                            discount: 0,
-                            status: 'completed',
-                            method: 'Stripe Checkout',
-                            date: new Date().toISOString()
-                        },
+                        order: fallbackOrder,
                         confettiTriggered: false
                     })
                     setTimeout(() => triggerConfetti(), 100)
@@ -182,7 +253,35 @@ function CheckoutSuccessContent() {
         return () => {
             isMounted = false
         }
-    }, [sessionId, clearCart, reloadCart, triggerConfetti])
+    }, [sessionId, clearCart, reloadCart, triggerConfetti, track])
+
+    // Track navigation clicks
+    const handleAccessProductsClick = () => {
+        track.engagement.headerLinkClicked('access_my_products', '/purchases');
+        
+        track.engagement.featureUsed('post_purchase_access_products', {
+            order_id: state.order?.id,
+            source: 'checkout_success_page'
+        });
+    };
+
+    const handleContinueShoppingClick = () => {
+        track.engagement.headerLinkClicked('continue_shopping', '/explore');
+        
+        track.engagement.featureUsed('post_purchase_continue_shopping', {
+            order_id: state.order?.id,
+            source: 'checkout_success_page'
+        });
+    };
+
+    const handleCheckPurchaseHistoryClick = () => {
+        track.engagement.headerLinkClicked('check_purchase_history', '/purchases');
+        
+        track.engagement.featureUsed('checkout_error_purchase_history', {
+            error_message: state.error,
+            source: 'checkout_success_page'
+        });
+    };
 
     if (state.loading) return <LoadingUI />
 
@@ -202,6 +301,7 @@ function CheckoutSuccessContent() {
                             <p className="text-gray-300 mb-6">{state.error}</p>
                             <Link
                                 href="/purchases"
+                                onClick={handleCheckPurchaseHistoryClick}
                                 className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:from-green-400 hover:to-green-500 transition-all duration-300">
                                 Check Purchase History
                             </Link>
@@ -370,11 +470,13 @@ function CheckoutSuccessContent() {
                                 className="space-y-3">
                                 <Link
                                     href="/purchases"
+                                    onClick={handleAccessProductsClick}
                                     className="w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:from-green-400 hover:to-green-500 transition-all shadow-lg shadow-green-500/25">
                                     Access My Products
                                 </Link>
                                 <Link
                                     href="/explore"
+                                    onClick={handleContinueShoppingClick}
                                     className="w-full flex items-center justify-center px-6 py-4 bg-white/10 text-white rounded-xl font-semibold hover:bg-white/20 transition-all border border-white/20">
                                     <span>Continue Shopping</span>
                                     <ArrowRight className="ml-2 h-4 w-4" />

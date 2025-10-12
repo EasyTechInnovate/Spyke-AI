@@ -24,12 +24,16 @@ import {
 } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
 import { useCart } from '@/hooks/useCart'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import { paymentAPI, cartAPI } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
 import Link from 'next/link'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
+
 export default function CheckoutPage() {
     const [notification, setNotification] = useState(null)
+    const { track } = useAnalytics()
+    
     const showMessage = (message, type = 'info') => {
         setNotification({ message, type })
         setTimeout(() => setNotification(null), 5000)
@@ -52,16 +56,21 @@ export default function CheckoutPage() {
     }, [cartLoading])
     useEffect(() => {
         if (hasCheckedCart && !cartLoading && !initialLoad && !isAuthenticated) {
+            track.auth.checkoutRequiresAuth('/checkout');
             router.push('/auth/signup?redirect=/checkout')
             return
         }
+        
         const timer = setTimeout(() => {
             if (hasCheckedCart && !cartLoading && !initialLoad && !skipCartRedirect && cartItems.length === 0) {
+                track.engagement.featureUsed('checkout_empty_cart_redirect', {
+                    source: 'checkout_page'
+                });
                 router.push('/cart')
             }
         }, 500)
         return () => clearTimeout(timer)
-    }, [cartItems.length, cartLoading, hasCheckedCart, initialLoad, router, skipCartRedirect, isAuthenticated])
+    }, [cartItems.length, cartLoading, hasCheckedCart, initialLoad, router, skipCartRedirect, isAuthenticated, track])
     const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
     const discount = cartData.appliedPromocode
         ? cartData.appliedPromocode.discountType === 'percentage'
@@ -69,29 +78,106 @@ export default function CheckoutPage() {
             : cartData.appliedPromocode.discountValue || cartData.appliedPromocode.discountAmount
         : 0
     const total = Math.max(0, subtotal - discount)
+    useEffect(() => {
+        if (!cartLoading && cartItems.length > 0) {
+            track.engagement.pageViewed('/checkout', 'purchase');
+            
+            track.engagement.featureUsed('checkout_page_viewed', {
+                items_count: cartItems.length,
+                cart_value: total,
+                has_promocode: Boolean(cartData?.appliedPromocode),
+                source: 'checkout_page'
+            });
+        }
+    }, [cartLoading, cartItems.length, total, cartData, track]);
     const handleRemoveItem = async (itemId) => {
+        const item = cartItems.find(item => (item._id || item.id) === itemId);
+        if (item) {
+            track.purchase.productRemovedFromCart(
+                item._id || item.id,
+                item.title || item.productId?.title,
+                item.price || item.productId?.price || 0,
+                item.sellerId || 'unknown'
+            );
+
+            track.engagement.featureUsed('checkout_item_removed', {
+                product_id: item._id || item.id,
+                product_name: item.title || item.productId?.title,
+                price: item.price || item.productId?.price,
+                source: 'checkout_page',
+                checkout_step: step
+            });
+        }
+
         try {
             await removeFromCart(itemId)
             showMessage('Item removed from cart', 'success')
         } catch (error) {
+            track.system.errorOccurred('checkout_item_removal_failed', error.message, {
+                product_id: itemId,
+                source: 'checkout_page'
+            });
             showMessage('Failed to remove item', 'error')
         }
     }
     const handlePaymentMethodChange = async (newPaymentMethod) => {
+        track.engagement.featureUsed('payment_method_selected', {
+            payment_method: newPaymentMethod,
+            previous_method: paymentMethod,
+            cart_value: total,
+            source: 'checkout_page'
+        });
+
         setPaymentMethod(newPaymentMethod)
     }
     const handleNextStep = async () => {
         if (step === 1) {
+            track.engagement.featureUsed('checkout_step_advanced', {
+                from_step: 1,
+                to_step: 2,
+                cart_items: cartItems.length,
+                cart_value: total,
+                source: 'checkout_page'
+            });
             setStep(2)
         }
     }
     const handlePreviousStep = () => {
-        if (step > 1) setStep(step - 1)
+        if (step > 1) {
+            track.engagement.featureUsed('checkout_step_back', {
+                from_step: step,
+                to_step: step - 1,
+                cart_items: cartItems.length,
+                cart_value: total,
+                source: 'checkout_page'
+            });
+            setStep(step - 1)
+        }
     }
     const handleCheckout = async () => {
+        track.purchase.purchaseAttempted(
+            cartItems.map(item => ({
+                product_id: item._id || item.id,
+                product_name: item.title || item.productId?.title,
+                price: item.price || item.productId?.price || 0,
+                quantity: item.quantity || 1
+            })),
+            total,
+            paymentMethod
+        );
+
+        track.engagement.featureUsed('purchase_button_clicked', {
+            payment_method: paymentMethod,
+            cart_items: cartItems.length,
+            cart_value: total,
+            has_promocode: Boolean(cartData?.appliedPromocode),
+            source: 'checkout_page'
+        });
+
         setLoading(true)
+        const purchaseStartTime = performance.now();
+        
         try {
-            // Only allow Stripe payments
             if (paymentMethod !== 'stripe') {
                 throw new Error('Only Stripe payments are supported')
             }
@@ -106,15 +192,49 @@ export default function CheckoutPage() {
                 throw new Error('Failed to create checkout session')
             }
 
+            const purchaseDuration = performance.now() - purchaseStartTime;
+            
+            track.system.apiCallMade('/api/payments/create-checkout-session', 'POST', purchaseDuration, 200);
+            
+            track.engagement.featureUsed('stripe_checkout_redirect', {
+                cart_items: cartItems.length,
+                cart_value: total,
+                checkout_session_created: true,
+                source: 'checkout_page'
+            });
+
             window.location.href = result.url
             
         } catch (error) {
+            const purchaseDuration = performance.now() - purchaseStartTime;
+            
+            track.purchase.purchaseFailed(error.message, paymentMethod);
+            
+            track.system.errorOccurred('checkout_session_failed', error.message, {
+                payment_method: paymentMethod,
+                cart_value: total,
+                api_duration: purchaseDuration
+            });
+            
             showMessage(error.message || 'Payment failed. Please try again.', 'error')
         } finally {
             setLoading(false)
         }
     }
     const completeCheckout = async (purchaseId, method) => {
+        track.purchase.purchaseCompleted(
+            purchaseId,
+            cartItems.map(item => ({
+                product_id: item._id || item.id,
+                product_name: item.title || item.productId?.title,
+                price: item.price || item.productId?.price || 0,
+                quantity: item.quantity || 1,
+                seller_id: item.sellerId || 'unknown'
+            })),
+            total,
+            method
+        );
+
         const successData = {
             orderId: purchaseId,
             isManual: method === 'manual',
@@ -133,16 +253,28 @@ export default function CheckoutPage() {
                 appliedPromocode: cartData.appliedPromocode
             }
         }
+        
         setSkipCartRedirect(true)
         if (typeof window !== 'undefined') {
             sessionStorage.setItem('lastOrderDetails', JSON.stringify(successData))
         }
+        
         const successUrl = `/checkout/success?orderId=${purchaseId}&manual=${method === 'manual'}&total=${total}&items=${cartItems.length}`
         router.push(successUrl)
         await clearCart()
         setSkipCartRedirect(false)
         showMessage('Order completed successfully!', 'success')
     }
+    const handleBackToCartClick = () => {
+        track.engagement.headerLinkClicked('back_to_cart', '/cart');
+        
+        track.engagement.featureUsed('checkout_back_to_cart', {
+            checkout_step: step,
+            cart_items: cartItems.length,
+            cart_value: total,
+            source: 'checkout_page'
+        });
+    };
     if (cartLoading || !hasCheckedCart) {
         return (
             <div className="min-h-screen bg-black">
@@ -265,6 +397,7 @@ export default function CheckoutPage() {
                                     ) : (
                                         <Link
                                             href="/cart"
+                                            onClick={handleBackToCartClick}
                                             className="flex items-center justify-center gap-2 px-6 py-3 text-gray-400 hover:text-white transition-colors order-2 sm:order-1"
                                             aria-label="Return to shopping cart">
                                             <ArrowLeft className="w-4 h-4" />
@@ -331,6 +464,16 @@ export default function CheckoutPage() {
     )
 }
 function ReviewStep({ cartItems, total, subtotal, discount, promocode, onRemoveItem }) {
+    const { track } = useAnalytics()
+    
+    const handleTermsClick = () => {
+        track.engagement.headerLinkClicked('terms_of_service', '/terms');
+    };
+
+    const handlePrivacyClick = () => {
+        track.engagement.headerLinkClicked('privacy_policy', '/privacy-policy');
+    };
+
     const getProductImage = (item) => {
         const imageUrl =
             item.thumbnail ||
@@ -349,7 +492,6 @@ function ReviewStep({ cartItems, total, subtotal, discount, promocode, onRemoveI
 
     const handleImageError = (e) => {
         console.warn('Checkout product image failed to load:', e.target.src)
-        // Hide the broken image and show fallback
         const fallbackDiv = e.target.nextElementSibling
         if (fallbackDiv) {
             e.target.style.display = 'none'
@@ -474,12 +616,14 @@ function ReviewStep({ cartItems, total, subtotal, discount, promocode, onRemoveI
                 By completing this purchase, you agree to our{' '}
                 <Link
                     href="/terms"
+                    onClick={handleTermsClick}
                     className="text-brand-primary hover:underline">
                     Terms of Service
                 </Link>{' '}
                 and{' '}
                 <Link
                     href="/privacy-policy"
+                    onClick={handlePrivacyClick}
                     className="text-brand-primary hover:underline">
                     Privacy Policy
                 </Link>
@@ -488,6 +632,8 @@ function ReviewStep({ cartItems, total, subtotal, discount, promocode, onRemoveI
     )
 }
 function PaymentMethodStep({ paymentMethod, setPaymentMethod, onPaymentMethodChange }) {
+    const { track } = useAnalytics()
+    
     const paymentOptions = [
         {
             id: 'stripe',
@@ -505,7 +651,6 @@ function PaymentMethodStep({ paymentMethod, setPaymentMethod, onPaymentMethodCha
         },
     ]
 
-    // Set default payment method to stripe if no method is selected or if manual was selected
     useEffect(() => {
         if (!paymentMethod || paymentMethod === 'manual') {
             setPaymentMethod('stripe')
@@ -514,6 +659,21 @@ function PaymentMethodStep({ paymentMethod, setPaymentMethod, onPaymentMethodCha
             }
         }
     }, [paymentMethod, setPaymentMethod, onPaymentMethodChange])
+
+    const handlePaymentOptionClick = (optionId, isComingSoon) => {
+        if (isComingSoon) {
+            track.engagement.featureUsed('coming_soon_payment_clicked', {
+                payment_method: optionId,
+                source: 'checkout_payment_step'
+            });
+        } else {
+            const newMethod = optionId;
+            setPaymentMethod(newMethod);
+            if (onPaymentMethodChange) {
+                onPaymentMethodChange(newMethod);
+            }
+        }
+    };
 
     return (
         <div>
@@ -536,15 +696,7 @@ function PaymentMethodStep({ paymentMethod, setPaymentMethod, onPaymentMethodCha
                                 name="paymentMethod"
                                 value={option.id}
                                 checked={paymentMethod === option.id}
-                                onChange={(e) => {
-                                    if (!option.comingSoon) {
-                                        const newMethod = e.target.value
-                                        setPaymentMethod(newMethod)
-                                        if (onPaymentMethodChange) {
-                                            onPaymentMethodChange(newMethod)
-                                        }
-                                    }
-                                }}
+                                onChange={(e) => handlePaymentOptionClick(e.target.value, option.comingSoon)}
                                 disabled={option.comingSoon}
                                 className="sr-only"
                             />
@@ -614,7 +766,6 @@ function OrderSummary({ cartItems, subtotal, discount, total, promocode }) {
 
     const handleImageError = (e) => {
         console.warn('Checkout summary image failed to load:', e.target.src)
-        // Hide the broken image and show fallback
         const fallbackDiv = e.target.nextElementSibling
         if (fallbackDiv) {
             e.target.style.display = 'none'

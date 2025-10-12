@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
 import Link from 'next/link'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import {
     Heart,
     Share2,
@@ -103,6 +104,8 @@ export default function ProductHero({
     ctaRef,
     onNavigateToReviews
 }) {
+    const { track } = useAnalytics()
+    
     const [currentImageIndex, setCurrentImageIndex] = useState(selectedImage || 0)
     const [isImageFullscreen, setIsImageFullscreen] = useState(false)
     const [copiedText, setCopiedText] = useState('')
@@ -218,6 +221,229 @@ export default function ProductHero({
         setAutoCarouselPaused(false)
     }
 
+    // Track product view on component mount
+    useEffect(() => {
+        if (product) {
+            track.product.productViewed(
+                product._id || product.id,
+                product.title,
+                product.category?.name || 'uncategorized',
+                product.sellerId?._id || product.sellerId?.id || 'unknown',
+                product.price || 0
+            );
+
+            track.engagement.featureUsed('product_detail_viewed', {
+                product_id: product._id || product.id,
+                product_type: product.type,
+                industry: product.industry?.name,
+                has_discount: product.originalPrice > product.price,
+                discount_percentage: calculatedDiscount,
+                is_verified: product.isVerified,
+                is_tested: product.isTested,
+                setup_time: product.setupTime,
+                seller_country: product.sellerId?.location?.country,
+                view_source: 'product_hero'
+            });
+        }
+    }, [product, track, calculatedDiscount]);
+
+    // Enhanced onAddToCart with analytics
+    const handleAddToCartWithAnalytics = () => {
+        if (product) {
+            track.purchase.productAddedToCart(
+                product._id || product.id,
+                product.title,
+                product.price || 0,
+                product.sellerId?._id || product.sellerId?.id || 'unknown',
+                1
+            );
+
+            track.engagement.featureUsed('add_to_cart_clicked', {
+                product_id: product._id || product.id,
+                source: 'product_hero',
+                price: product.price,
+                has_discount: product.originalPrice > product.price
+            });
+        }
+        
+        if (onAddToCart) onAddToCart();
+    };
+
+    // Enhanced onBuyNow with analytics
+    const handleBuyNowWithAnalytics = () => {
+        if (product) {
+            track.purchase.checkoutStarted(1, product.price || 0, 'stripe');
+            
+            track.engagement.featureUsed('buy_now_clicked', {
+                product_id: product._id || product.id,
+                source: 'product_hero',
+                price: product.price,
+                checkout_type: 'instant'
+            });
+        }
+        
+        if (onBuyNow) onBuyNow();
+    };
+
+    // Enhanced onLike with analytics
+    const handleLikeWithAnalytics = () => {
+        if (product) {
+            const action = liked ? 'remove' : 'add';
+            
+            if (action === 'add') {
+                track.product.productFavorited(
+                    product._id || product.id,
+                    product.title,
+                    product.sellerId?._id || product.sellerId?.id || 'unknown'
+                );
+            } else {
+                track.product.productUnfavorited(
+                    product._id || product.id,
+                    product.title,
+                    product.sellerId?._id || product.sellerId?.id || 'unknown'
+                );
+            }
+
+            track.engagement.featureUsed('product_liked', {
+                product_id: product._id || product.id,
+                action,
+                source: 'product_hero'
+            });
+        }
+        
+        if (onLike) onLike();
+    };
+
+    // Enhanced onUpvote with analytics
+    const handleUpvoteWithAnalytics = () => {
+        if (product) {
+            track.product.productUpvoted(
+                product._id || product.id,
+                product.title,
+                product.sellerId?._id || product.sellerId?.id || 'unknown'
+            );
+
+            track.engagement.featureUsed('product_upvoted', {
+                product_id: product._id || product.id,
+                source: 'product_hero',
+                current_upvotes: product.upvotes || 0
+            });
+        }
+        
+        if (onUpvote) onUpvote();
+    };
+
+    // Enhanced onShare with analytics
+    const handleShareWithAnalytics = () => {
+        if (product) {
+            track.engagement.featureUsed('product_shared', {
+                product_id: product._id || product.id,
+                product_title: product.title,
+                share_method: 'link_copy',
+                source: 'product_hero',
+                seller_id: product.sellerId?._id || product.sellerId?.id
+            });
+        }
+        
+        if (onShare) onShare();
+    };
+
+    // Enhanced onDownload with analytics
+    const handleDownloadWithAnalytics = () => {
+        if (product) {
+            track.engagement.featureUsed('product_downloaded', {
+                product_id: product._id || product.id,
+                product_title: product.title,
+                source: 'product_hero',
+                download_type: 'purchased_access'
+            });
+        }
+        
+        if (onDownload) onDownload();
+    };
+
+    // Track seller profile clicks
+    const handleSellerProfileClick = () => {
+        if (product?.sellerId) {
+            track.seller.sellerProfileViewed(
+                product.sellerId._id || product.sellerId.id,
+                product.sellerId.fullName || 'Unknown Seller',
+                product.sellerId.stats?.totalProducts || 0
+            );
+
+            track.engagement.headerLinkClicked('seller_profile', getSellerProfileUrl());
+        }
+    };
+
+    // Track WhatsApp clicks
+    const handleWhatsAppClick = () => {
+        if (product) {
+            track.engagement.featureUsed('whatsapp_contact_clicked', {
+                product_id: product._id || product.id,
+                source: 'product_hero',
+                contact_type: 'whatsapp'
+            });
+        }
+    };
+
+    // Enhanced tag click with analytics
+    const handleTagClick = (tag) => {
+        if (product) {
+            track.engagement.featureUsed('product_tag_clicked', {
+                product_id: product._id || product.id,
+                tag_name: tag,
+                source: 'product_hero'
+            });
+        }
+        copyToClipboard(tag, `Tag: ${tag}`);
+    };
+
+    // Enhanced reviews click with analytics
+    const handleReviewsClick = () => {
+        if (product) {
+            track.engagement.featureUsed('reviews_section_clicked', {
+                product_id: product._id || product.id,
+                source: 'product_hero',
+                average_rating: product.averageRating,
+                total_reviews: product.totalReviews
+            });
+        }
+        if (onNavigateToReviews) onNavigateToReviews();
+    };
+
+    // Track image interactions
+    const handleImageClick = (index) => {
+        track.engagement.featureUsed('product_image_viewed', {
+            product_id: product._id || product.id,
+            image_index: index,
+            media_type: mediaItems[index]?.type || 'image',
+            source: 'product_hero'
+        });
+        setCurrentImageIndex(index);
+    };
+
+    const handleImageFullscreen = () => {
+        track.engagement.featureUsed('product_image_fullscreen', {
+            product_id: product._id || product.id,
+            image_index: currentImageIndex,
+            media_type: activeMedia?.type || 'image',
+            source: 'product_hero'
+        });
+        setIsImageFullscreen(true);
+    };
+
+    // Enhanced video handlers with analytics
+    const handleVideoPlayWithAnalytics = () => {
+        setIsVideoPlaying(true)
+        setAutoCarouselPaused(true)
+        
+        track.engagement.featureUsed('product_video_played', {
+            product_id: product._id || product.id,
+            video_index: currentImageIndex,
+            source: 'product_hero'
+        });
+    }
+
     return (
         <div
             ref={heroRef}
@@ -247,7 +473,7 @@ export default function ProductHero({
                         <div className="relative group">
                             <div
                                 className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-gray-900/80 border border-gray-700/50 cursor-pointer"
-                                onClick={() => setIsImageFullscreen(true)}>
+                                onClick={handleImageFullscreen}>
                                 {activeMedia?.src ? (
                                     activeMedia.type === 'image' ? (
                                         <>
@@ -285,7 +511,7 @@ export default function ProductHero({
                                             src={activeMedia.src}
                                             controls
                                             className="w-full h-full object-cover"
-                                            onPlay={handleVideoPlay}
+                                            onPlay={handleVideoPlayWithAnalytics}
                                             onPause={handleVideoPause}
                                             onEnded={handleVideoEnded}
                                             onClick={(e) => e.stopPropagation()}
@@ -323,7 +549,7 @@ export default function ProductHero({
                                     {mediaItems.map((media, index) => (
                                         <button
                                             key={index}
-                                            onClick={() => setCurrentImageIndex(index)}
+                                            onClick={() => handleImageClick(index)}
                                             className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
                                                 currentImageIndex === index
                                                     ? 'border-[#00FF89] ring-2 ring-[#00FF89]/25'
@@ -388,7 +614,7 @@ export default function ProductHero({
                                     {product.tags.slice(0, 6).map((tag, index) => (
                                         <button
                                             key={index}
-                                            onClick={() => copyToClipboard(tag, `Tag: ${tag}`)}
+                                            onClick={() => handleTagClick(tag)}
                                             className="px-2 py-1 bg-white/5 hover:bg-[#00FF89]/10 border border-gray-700 hover:border-[#00FF89]/30 text-gray-300 hover:text-[#00FF89] rounded text-xs transition-all duration-300 flex items-center gap-1">
                                             #{tag}
                                             {copiedText === `Tag: ${tag}` && <CheckCircle className="w-3 h-3 text-[#00FF89]" />}
@@ -402,6 +628,7 @@ export default function ProductHero({
                             href={whatsappUrl}
                             target="_blank"
                             rel="noopener noreferrer"
+                            onClick={handleWhatsAppClick}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.15 }}
@@ -506,7 +733,7 @@ export default function ProductHero({
                                 transition={{ delay: 1 }}
                                 className="flex flex-wrap items-center gap-6">
                                 <button
-                                    onClick={onNavigateToReviews}
+                                    onClick={handleReviewsClick}
                                     className="flex items-center gap-2 hover:opacity-80 transition-opacity group">
                                     <div className="flex items-center">
                                         {[...Array(5)].map((_, i) => (
@@ -523,7 +750,7 @@ export default function ProductHero({
                                 </button>
                                 <div className="flex items-center gap-2">
                                     <button
-                                        onClick={onUpvote}
+                                        onClick={handleUpvoteWithAnalytics}
                                         disabled={isUpvoting}
                                         className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-sm ${
                                             upvoted
@@ -534,7 +761,7 @@ export default function ProductHero({
                                         <span className="font-medium">{product.upvotes || 0}</span>
                                     </button>
                                     <button
-                                        onClick={onLike}
+                                        onClick={handleLikeWithAnalytics}
                                         className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-sm ${
                                             liked
                                                 ? 'bg-red-500/10 border-red-500/30 text-red-400'
@@ -544,7 +771,7 @@ export default function ProductHero({
                                         <span className="font-medium">{product.favorites || 0}</span>
                                     </button>
                                     <button
-                                        onClick={onShare}
+                                        onClick={handleShareWithAnalytics}
                                         className="relative flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-gray-700 hover:border-[#00FF89]/30 rounded-lg transition-all text-sm">
                                         <Share2 className="w-4 h-4 text-gray-300" />
                                         <span className="text-gray-300 font-medium">Share</span>
@@ -615,7 +842,7 @@ export default function ProductHero({
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
-                                        onClick={onDownload}
+                                        onClick={handleDownloadWithAnalytics}
                                         className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-[#00FF89] hover:bg-[#00FF89]/90 text-black rounded-xl font-bold transition-all duration-300">
                                         <Download className="w-5 h-5" />
                                         Access Your Product
@@ -634,7 +861,7 @@ export default function ProductHero({
                                         <motion.button
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
-                                            onClick={onBuyNow}
+                                            onClick={handleBuyNowWithAnalytics}
                                             className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-[#00FF89] hover:bg-[#00FF89]/90 text-black rounded-xl font-bold transition-all duration-300">
                                             <Zap className="w-5 h-5" />
                                             Buy Now - Instant Access
@@ -642,7 +869,7 @@ export default function ProductHero({
                                         <motion.button
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
-                                            onClick={onAddToCart}
+                                            onClick={handleAddToCartWithAnalytics}
                                             disabled={inCart || addingToCart}
                                             className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white/10 hover:bg-white/20 border border-gray-600 hover:border-[#00FF89]/50 text-white rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
                                             <ShoppingCart className="w-5 h-5" />
@@ -689,6 +916,7 @@ export default function ProductHero({
                                                     href={getSellerProfileUrl()}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
+                                                    onClick={handleSellerProfileClick}
                                                     className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-gray-700/70 hover:border-[#00FF89]/40 text-white text-xs font-semibold transition-colors inline-flex items-center gap-1">
                                                     View
                                                     <ArrowUpRight className="w-3 h-3" />

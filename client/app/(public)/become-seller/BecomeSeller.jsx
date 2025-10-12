@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { Check, User, Store, Package, Settings, LogOut, ArrowRight } from 'lucide-react'
 import Container from '@/components/shared/layout/Container'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import {
     MultiStepForm,
     FormInput,
@@ -22,6 +23,13 @@ import { categoryAPI, toolAPI } from '@/lib/api/toolsNiche'
 import CustomSelect from '@/components/shared/CustomSelect'
 
 export default function BecomeSellerPage() {
+    const { track } = useAnalytics()
+    const [sessionStartTime] = useState(Date.now())
+    const [stepStartTime, setStepStartTime] = useState(Date.now())
+    const [currentStepRef, setCurrentStepRef] = useState(1)
+    const [formInteractions, setFormInteractions] = useState(0)
+    const [fieldInteractions, setFieldInteractions] = useState({})
+
     const {
         formData,
         errors,
@@ -50,51 +58,205 @@ export default function BecomeSellerPage() {
     const [loadingTools, setLoadingTools] = useState(false)
     const [showAgreementModal, setShowAgreementModal] = useState(false)
 
-    // Fetch dynamic categories and tools (replace hardcoded suggestions)
+    // Track seller onboarding flow initialization
+    useEffect(() => {
+        track.engagement.pageViewed('/become-seller', 'public');
+        
+        track.conversion.funnelStepCompleted('seller_onboarding_started', {
+            source: 'public_page',
+            session_start_time: sessionStartTime,
+            user_agent: typeof window !== 'undefined' ? navigator.userAgent : 'unknown'
+        });
+        
+        track.engagement.featureUsed('seller_onboarding_flow_initiated', {
+            initial_step: 1,
+            total_steps: formSteps.length,
+            source: 'public_page'
+        });
+
+        // Track session duration on unmount
+        return () => {
+            const sessionDuration = Date.now() - sessionStartTime;
+            track.engagement.featureUsed('seller_onboarding_session_ended', {
+                session_duration_ms: sessionDuration,
+                final_step: currentStepRef,
+                total_steps: formSteps.length,
+                form_interactions: formInteractions,
+                field_interactions: Object.keys(fieldInteractions).length,
+                was_completed: isSuccess,
+                source: 'public_page'
+            });
+        };
+    }, [track, sessionStartTime, formSteps.length, formInteractions, fieldInteractions, isSuccess, currentStepRef]);
+
+    // Track step changes
+    useEffect(() => {
+        const stepDuration = Date.now() - stepStartTime;
+        
+        if (currentStepRef > 0) {
+            track.engagement.featureUsed('seller_onboarding_step_viewed', {
+                step_number: currentStepRef,
+                step_title: formSteps[currentStepRef - 1]?.title || `Step ${currentStepRef}`,
+                total_steps: formSteps.length,
+                has_errors: Object.keys(errors).length > 0,
+                time_on_previous_step_ms: stepDuration,
+                source: 'public_page'
+            });
+        }
+        
+        setStepStartTime(Date.now());
+    }, [currentStepRef, track, formSteps, errors]);
+
+    // Track form field interactions
+    const trackFormInteraction = (fieldName, interactionType = 'input') => {
+        setFormInteractions(prev => prev + 1);
+        setFieldInteractions(prev => ({
+            ...prev,
+            [fieldName]: (prev[fieldName] || 0) + 1
+        }));
+
+        track.engagement.featureUsed('seller_onboarding_field_interacted', {
+            field_name: fieldName,
+            interaction_type: interactionType,
+            current_step: currentStepRef,
+            total_interactions: formInteractions + 1,
+            source: 'public_page'
+        });
+    };
+
+    // Enhanced input change handler with tracking
+    const handleTrackedInputChange = (e) => {
+        const fieldName = e.target.name;
+        trackFormInteraction(fieldName, 'input');
+        handleInputChange(e);
+    };
+
+    // Enhanced social handle change with tracking
+    const handleTrackedSocialHandleChange = (platform, value) => {
+        trackFormInteraction(`socialHandles.${platform}`, 'social_input');
+        handleSocialHandleChange(platform, value);
+    };
+
+    // Enhanced tag operations with tracking
+    const handleTrackedAddTag = (tagValue) => {
+        trackFormInteraction('portfolioLinks', 'add_tag');
+        addTag(tagValue);
+    };
+
+    const handleTrackedRemoveTag = (index) => {
+        trackFormInteraction('portfolioLinks', 'remove_tag');
+        removeTag(index);
+    };
+
+    const handleTrackedAddPortfolioLink = (linkValue) => {
+        trackFormInteraction('portfolioLinks', 'add_portfolio_link');
+        addPortfolioLink(linkValue);
+    };
+
+    const handleTrackedRemovePortfolioLink = (index) => {
+        trackFormInteraction('portfolioLinks', 'remove_portfolio_link');
+        removePortfolioLink(index);
+    };
+
+    // Fetch dynamic categories and tools with analytics tracking
     useEffect(() => {
         let isMounted = true
+        
         const fetchCategories = async () => {
             try {
                 setLoadingCategories(true)
+                const fetchStartTime = Date.now();
                 const res = await categoryAPI.getCategories({ isActive: 'true' })
+                const fetchDuration = Date.now() - fetchStartTime;
+                
+                track.system.apiCallMade('/api/categories', 'GET', fetchDuration, 200);
+                
                 const raw = res?.data?.categories || res?.categories || res?.data || []
                 if (!isMounted) return
                 const opts = Array.isArray(raw) ? raw.filter((c) => c?.isActive !== false).map((c) => ({ value: c.name, label: c.name })) : []
                 setCategoryOptions(opts)
+                
+                track.engagement.featureUsed('seller_onboarding_categories_loaded', {
+                    categories_count: opts.length,
+                    fetch_duration_ms: fetchDuration,
+                    source: 'public_page'
+                });
             } catch (e) {
+                track.system.errorOccurred('seller_onboarding_categories_fetch_failed', e.message, {
+                    source: 'public_page'
+                });
                 if (isMounted) setCategoryOptions([])
             } finally {
                 if (isMounted) setLoadingCategories(false)
             }
         }
+        
         const fetchTools = async () => {
             try {
                 setLoadingTools(true)
+                const fetchStartTime = Date.now();
                 const res = await toolAPI.getTools({ isActive: 'true' })
+                const fetchDuration = Date.now() - fetchStartTime;
+                
+                track.system.apiCallMade('/api/tools', 'GET', fetchDuration, 200);
+                
                 const raw = res?.data?.tools || res?.tools || res?.data || []
                 if (!isMounted) return
                 const opts = Array.isArray(raw) ? raw.filter((t) => t?.isActive !== false).map((t) => ({ value: t.name, label: t.name })) : []
                 setToolOptions(opts)
+                
+                track.engagement.featureUsed('seller_onboarding_tools_loaded', {
+                    tools_count: opts.length,
+                    fetch_duration_ms: fetchDuration,
+                    source: 'public_page'
+                });
             } catch (e) {
+                track.system.errorOccurred('seller_onboarding_tools_fetch_failed', e.message, {
+                    source: 'public_page'
+                });
                 if (isMounted) setToolOptions([])
             } finally {
                 if (isMounted) setLoadingTools(false)
             }
         }
+        
         fetchCategories()
         fetchTools()
+        
         return () => {
             isMounted = false
         }
-    }, [])
+    }, [track])
 
     const handleMultiSelectChange = (fieldName, values) => {
+        trackFormInteraction(fieldName, 'multi_select');
         handleInputChange({ target: { name: fieldName, value: values } })
     }
 
-    const openAgreementModal = () => setShowAgreementModal(true)
-    const closeAgreementModal = () => setShowAgreementModal(false)
+    const openAgreementModal = () => {
+        track.engagement.featureUsed('seller_onboarding_agreement_modal_opened', {
+            current_step: currentStepRef,
+            source: 'public_page'
+        });
+        setShowAgreementModal(true)
+    }
+    
+    const closeAgreementModal = () => {
+        track.engagement.featureUsed('seller_onboarding_agreement_modal_closed', {
+            current_step: currentStepRef,
+            was_accepted: formData?.revenueShareAgreement?.accepted || false,
+            source: 'public_page'
+        });
+        setShowAgreementModal(false)
+    }
+    
     const acceptAgreement = () => {
+        track.conversion.funnelStepCompleted('seller_onboarding_agreement_accepted', {
+            current_step: currentStepRef,
+            session_duration_ms: Date.now() - sessionStartTime,
+            source: 'public_page'
+        });
+        
         handleInputChange({ target: { name: 'revenueShareAgreement.accepted', type: 'checkbox', checked: true, value: true } })
         closeAgreementModal()
     }
@@ -203,10 +365,61 @@ export default function BecomeSellerPage() {
     }
 
     const handleFormSubmit = async (data) => {
-        await handleSubmit(data)
+        const submissionStartTime = Date.now();
+        
+        track.conversion.funnelStepCompleted('seller_onboarding_submission_started', {
+            total_session_time_ms: submissionStartTime - sessionStartTime,
+            form_interactions: formInteractions,
+            field_interactions: Object.keys(fieldInteractions).length,
+            selected_niches: data.niches?.length || 0,
+            selected_tools: data.toolsSpecialization?.length || 0,
+            has_social_handles: !!(data.socialHandles?.linkedin || data.socialHandles?.twitter || data.socialHandles?.instagram || data.socialHandles?.youtube),
+            payout_method: data.payoutInfo?.method,
+            source: 'public_page'
+        });
+
+        try {
+            await handleSubmit(data)
+            
+            const totalSessionTime = Date.now() - sessionStartTime;
+            
+            track.conversion.funnelStepCompleted('seller_onboarding_completed', {
+                seller_email: data.email,
+                seller_country: data.location?.country,
+                seller_timezone: data.location?.timezone,
+                total_session_time_ms: totalSessionTime,
+                form_interactions: formInteractions,
+                field_interactions_count: Object.keys(fieldInteractions).length,
+                selected_niches_count: data.niches?.length || 0,
+                selected_tools_count: data.toolsSpecialization?.length || 0,
+                has_website: !!data.websiteUrl,
+                has_social_profiles: !!(data.socialHandles?.linkedin || data.socialHandles?.twitter || data.socialHandles?.instagram || data.socialHandles?.youtube),
+                portfolio_links_count: data.portfolioLinks?.length || 0,
+                payout_method: data.payoutInfo?.method,
+                custom_automation_services: data.customAutomationServices,
+                source: 'public_page'
+            });
+
+        } catch (error) {
+            const submissionDuration = Date.now() - submissionStartTime;
+            
+            track.system.errorOccurred('seller_onboarding_submission_failed', error.message, {
+                submission_duration_ms: submissionDuration,
+                current_step: currentStepRef,
+                form_interactions: formInteractions,
+                error_details: error.response?.data,
+                source: 'public_page'
+            });
+        }
     }
 
     const handleLogoutAndRedirect = () => {
+        track.engagement.featureUsed('seller_onboarding_success_relogin_clicked', {
+            total_session_time_ms: Date.now() - sessionStartTime,
+            redirect_destination: '/signin?relogin=1',
+            source: 'public_page'
+        });
+
         try {
             logoutService.logout()
         } catch (e) {}
@@ -221,8 +434,18 @@ export default function BecomeSellerPage() {
         return (
             <ImageUpload
                 {...props}
-                onUploadStart={() => setImageUploading(true)}
-                onUploadEnd={() => setImageUploading(false)}
+                onUploadStart={() => {
+                    trackFormInteraction('sellerBanner', 'upload_start');
+                    setImageUploading(true);
+                }}
+                onUploadEnd={() => {
+                    trackFormInteraction('sellerBanner', 'upload_end');
+                    setImageUploading(false);
+                }}
+                onChange={(e) => {
+                    trackFormInteraction('sellerBanner', 'upload_change');
+                    props.onChange(e);
+                }}
             />
         )
     }
@@ -321,7 +544,38 @@ export default function BecomeSellerPage() {
         )
     }
 
+    // Enhanced step tracking for MultiStepForm
+    const handleStepChange = (stepNumber) => {
+        const stepDuration = Date.now() - stepStartTime;
+        
+        track.engagement.featureUsed('seller_onboarding_step_navigated', {
+            from_step: currentStepRef,
+            to_step: stepNumber,
+            time_on_step_ms: stepDuration,
+            navigation_type: stepNumber > currentStepRef ? 'forward' : 'backward',
+            source: 'public_page'
+        });
+
+        if (stepNumber > currentStepRef) {
+            track.conversion.funnelStepCompleted('seller_onboarding_step_completed', {
+                step_number: currentStepRef,
+                step_title: formSteps[currentStepRef - 1]?.title,
+                time_spent_ms: stepDuration,
+                next_step: stepNumber,
+                source: 'public_page'
+            });
+        }
+
+        setCurrentStepRef(stepNumber);
+        setStepStartTime(Date.now());
+    };
+
     const renderStepContent = ({ currentStep }) => {
+        // Update current step reference
+        if (currentStep !== currentStepRef) {
+            handleStepChange(currentStep);
+        }
+
         switch (currentStep) {
             case 1:
                 return (
@@ -331,7 +585,7 @@ export default function BecomeSellerPage() {
                             name="fullName"
                             type={formFields.fullName.type}
                             value={formData.fullName}
-                            onChange={handleInputChange}
+                            onChange={handleTrackedInputChange}
                             placeholder={formFields.fullName.placeholder}
                             required={SELLER_VALIDATION_RULES.fullName.required}
                             error={errors.fullName}
@@ -345,7 +599,7 @@ export default function BecomeSellerPage() {
                             name="email"
                             type="email"
                             value={formData.email}
-                            onChange={handleInputChange}
+                            onChange={handleTrackedInputChange}
                             placeholder={formFields.email.placeholder}
                             helperText={formFields.email.helperText}
                             required={SELLER_VALIDATION_RULES.email.required}
@@ -357,7 +611,7 @@ export default function BecomeSellerPage() {
                             name="websiteUrl"
                             type="url"
                             value={formData.websiteUrl}
-                            onChange={handleInputChange}
+                            onChange={handleTrackedInputChange}
                             placeholder={formFields.websiteUrl.placeholder}
                             required={SELLER_VALIDATION_RULES.websiteUrl.required}
                             error={errors.websiteUrl}
@@ -373,7 +627,7 @@ export default function BecomeSellerPage() {
                             label={formFields.bio.label}
                             name="bio"
                             value={formData.bio}
-                            onChange={handleInputChange}
+                            onChange={handleTrackedInputChange}
                             placeholder={formFields.bio.placeholder}
                             required={SELLER_VALIDATION_RULES.bio.required}
                             maxLength={SELLER_VALIDATION_RULES.bio.maxLength}
@@ -387,7 +641,7 @@ export default function BecomeSellerPage() {
                             label={formFields.sellerBanner.label}
                             value={formData.sellerBanner}
                             onChange={(e) =>
-                                handleInputChange({
+                                handleTrackedInputChange({
                                     target: {
                                         name: 'sellerBanner',
                                         value: e.target.value
@@ -449,7 +703,7 @@ export default function BecomeSellerPage() {
                             <FormCheckbox
                                 name="customAutomationServices"
                                 checked={formData.customAutomationServices}
-                                onChange={handleInputChange}
+                                onChange={handleTrackedInputChange}
                                 label={formFields.customAutomationServices.label}
                                 helperText={formFields.customAutomationServices.helperText}
                                 required={SELLER_VALIDATION_RULES.customAutomationServices.required}
@@ -466,7 +720,7 @@ export default function BecomeSellerPage() {
                                 label="Country *"
                                 name="location.country"
                                 value={formData?.location?.country || ''}
-                                onChange={handleInputChange}
+                                onChange={handleTrackedInputChange}
                                 options={countries}
                                 placeholder="Select country"
                                 required={SELLER_VALIDATION_RULES['location.country'].required}
@@ -477,7 +731,7 @@ export default function BecomeSellerPage() {
                                 label="Timezone *"
                                 name="location.timezone"
                                 value={formData?.location?.timezone || ''}
-                                onChange={handleInputChange}
+                                onChange={handleTrackedInputChange}
                                 options={timezones.map((tz) => ({
                                     value: tz.value,
                                     label: tz.label,
@@ -496,7 +750,7 @@ export default function BecomeSellerPage() {
                                     label="LinkedIn"
                                     type="url"
                                     value={formData?.socialHandles?.linkedin || ''}
-                                    onChange={(e) => handleSocialHandleChange('linkedin', e.target.value)}
+                                    onChange={(e) => handleTrackedSocialHandleChange('linkedin', e.target.value)}
                                     placeholder="LinkedIn URL"
                                     required={SELLER_VALIDATION_RULES['socialHandles.linkedin'].required}
                                     error={errors['socialHandles.linkedin']}
@@ -505,7 +759,7 @@ export default function BecomeSellerPage() {
                                     label="Twitter/X"
                                     type="url"
                                     value={formData?.socialHandles?.twitter || ''}
-                                    onChange={(e) => handleSocialHandleChange('twitter', e.target.value)}
+                                    onChange={(e) => handleTrackedSocialHandleChange('twitter', e.target.value)}
                                     placeholder="Twitter URL"
                                     required={SELLER_VALIDATION_RULES['socialHandles.twitter'].required}
                                     error={errors['socialHandles.twitter']}
@@ -514,7 +768,7 @@ export default function BecomeSellerPage() {
                                     label="Instagram"
                                     type="url"
                                     value={formData?.socialHandles?.instagram || ''}
-                                    onChange={(e) => handleSocialHandleChange('instagram', e.target.value)}
+                                    onChange={(e) => handleTrackedSocialHandleChange('instagram', e.target.value)}
                                     placeholder="Instagram URL"
                                     required={SELLER_VALIDATION_RULES['socialHandles.instagram'].required}
                                     error={errors['socialHandles.instagram']}
@@ -523,7 +777,7 @@ export default function BecomeSellerPage() {
                                     label="YouTube"
                                     type="url"
                                     value={formData?.socialHandles?.youtube || ''}
-                                    onChange={(e) => handleSocialHandleChange('youtube', e.target.value)}
+                                    onChange={(e) => handleTrackedSocialHandleChange('youtube', e.target.value)}
                                     placeholder="YouTube URL"
                                     required={SELLER_VALIDATION_RULES['socialHandles.youtube'].required}
                                     error={errors['socialHandles.youtube']}
@@ -535,8 +789,8 @@ export default function BecomeSellerPage() {
                             label="Portfolio Links (Optional)"
                             name="portfolioLinks"
                             value={formData?.portfolioLinks || []}
-                            onAddTag={addPortfolioLink}
-                            onRemoveTag={removePortfolioLink}
+                            onAddTag={handleTrackedAddPortfolioLink}
+                            onRemoveTag={handleTrackedRemovePortfolioLink}
                             placeholder="https://example.com/portfolio"
                             required={SELLER_VALIDATION_RULES.portfolioLinks.required}
                             maxItems={SELLER_VALIDATION_RULES.portfolioLinks.maxItems}
@@ -556,7 +810,7 @@ export default function BecomeSellerPage() {
                                 label="Payout Method *"
                                 name="payoutInfo.method"
                                 value={formData?.payoutInfo?.method || ''}
-                                onChange={handleInputChange}
+                                onChange={handleTrackedInputChange}
                                 options={formFields?.payoutInfo?.fields?.method?.options || []}
                                 required={SELLER_VALIDATION_RULES['payoutInfo.method'].required}
                                 error={errors['payoutInfo.method']}
@@ -576,7 +830,7 @@ export default function BecomeSellerPage() {
                                         label: cfg.label,
                                         name: fieldName,
                                         value,
-                                        onChange: handleInputChange,
+                                        onChange: handleTrackedInputChange,
                                         required: cfg.required,
                                         placeholder: cfg.placeholder,
                                         error: errors[fieldName]

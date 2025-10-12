@@ -1,16 +1,22 @@
 'use client'
 export const dynamic = 'force-dynamic'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff, AlertCircle, Mail, Lock, ArrowRight, Sparkles, Shield, Zap, RefreshCw } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import Header from '@/components/shared/layout/Header'
 import { DSStack, DSHeading, DSText, DSButton, DSBadge } from '@/lib/design-system'
 import { authAPI } from '@/lib/api/auth'
 import { useNotifications } from '@/components/shared/NotificationProvider'
+import { useRouter } from 'next/navigation'
+
 export default function SignInPage() {
-    const { login } = useAuth()
+    const { login, logout } = useAuth()
     const { showError, showSuccess } = useNotifications()
+    const { track, identify } = useAnalytics()
+    const router = useRouter()
+    
     const [loading, setLoading] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
     const [loginError, setLoginError] = useState('')
@@ -19,22 +25,87 @@ export default function SignInPage() {
         emailAddress: '',
         password: ''
     })
+
+    // Track page view on component mount
+    useEffect(() => {
+        track.engagement.pageViewed('/signin', 'auth');
+        
+        // Track page load performance
+        const startTime = performance.now();
+        const handleLoad = () => {
+            const loadTime = performance.now() - startTime;
+            track.system.pageLoadTime('/signin', loadTime);
+        };
+        
+        if (document.readyState === 'complete') {
+            handleLoad();
+        } else {
+            window.addEventListener('load', handleLoad);
+            return () => window.removeEventListener('load', handleLoad);
+        }
+    }, [track]);
+
     const handleChange = (e) => {
         const { name, value } = e.target
         setFormData({ ...formData, [name]: value })
+        
+        // Track form field interactions
+        if (name === 'emailAddress' && value) {
+            track.engagement.featureUsed('login_form_field_filled', {
+                field_name: 'email',
+                email_domain: value.includes('@') ? value.split('@')[1] : null,
+                source: 'signin_form'
+            });
+        }
+        
         if (loginError) {
             setLoginError('')
         }
     }
+
     const handleLogin = async (e) => {
         e.preventDefault()
         if (loading) return
+
+        // Track login attempt start
+        track.auth.loginStarted('email');
+
         setLoading(true)
         setLoginError('')
+        
+        const loginStartTime = performance.now();
+        
         try {
-            await login(formData)
+            const userData = await login(formData)
+            
+            const loginDuration = performance.now() - loginStartTime;
+            
+            // Track successful login
+            track.auth.loginCompleted(userData.id, userData.user_type || 'buyer');
+            
+            // Identify user with comprehensive properties
+            identify(userData.id, {
+                user_type: userData.user_type || 'buyer',
+                last_login: new Date().toISOString(),
+                email_domain: formData.emailAddress.split('@')[1],
+                login_method: 'email',
+                login_duration_ms: Math.round(loginDuration),
+                account_status: 'active'
+            });
+
+            // Track session started
+            track.system.apiCallMade('/auth/login', 'POST', loginDuration, 200);
+
         } catch (error) {
             const errorMessage = error?.message || error?.data?.message || 'Login failed. Please try again.'
+            const loginDuration = performance.now() - loginStartTime;
+            
+            // Track login failure with detailed error info
+            track.auth.loginFailed(errorMessage, 'email');
+            
+            // Track API failure
+            track.system.apiCallMade('/auth/login', 'POST', loginDuration, error.status || 400);
+            
             if (errorMessage.toLowerCase().includes('account not confirmed')) {
                 showSuccess('Please check your email and verify your account to continue.')
                 setLoginError('account_not_confirmed')
@@ -45,31 +116,79 @@ export default function SignInPage() {
             setLoading(false)
         }
     }
+
     const handleGoogleAuth = () => {
         if (!loading) {
+            // Track Google auth attempt
+            track.auth.loginStarted('google');
+            
             import('@/lib/api/auth').then(({ authAPI }) => {
                 authAPI.googleAuth()
             })
         }
     }
+
     const handleResendVerification = async () => {
         if (!formData.emailAddress) {
             showError('Please enter your email address first')
             return
         }
 
+        // Track resend verification attempt
+        track.engagement.featureUsed('resend_verification_email', {
+            email_domain: formData.emailAddress.split('@')[1],
+            source: 'signin_page'
+        });
+
         setResendLoading(true)
+        const startTime = performance.now();
+        
         try {
             await authAPI.resendVerificationEmail(formData.emailAddress)
+            const duration = performance.now() - startTime;
+            
             showSuccess('Verification email sent! Check your inbox and spam folder.')
             setLoginError('')
+            
+            // Track successful resend
+            track.system.apiCallMade('/auth/resend-verification', 'POST', duration, 200);
+            
         } catch (error) {
             const errorMessage = error?.response?.data?.message || error?.data?.message || error?.message || 'Failed to send verification email'
+            const duration = performance.now() - startTime;
+            
             showError(errorMessage)
+            
+            // Track resend verification failure
+            track.system.errorOccurred('resend_verification_failed', errorMessage, {
+                email_domain: formData.emailAddress.split('@')[1],
+                api_duration: duration
+            });
+            
+            track.system.apiCallMade('/auth/resend-verification', 'POST', duration, error.status || 400);
         } finally {
             setResendLoading(false)
         }
     }
+
+    // Track link clicks with enhanced properties
+    const handleSignupLinkClick = () => {
+        track.engagement.headerLinkClicked('signup_from_signin', '/signup');
+    };
+
+    const handleForgotPasswordClick = () => {
+        track.engagement.headerLinkClicked('forgot_password', '/auth/forgot-password');
+    };
+
+    // Track password visibility toggle
+    const handlePasswordVisibilityToggle = () => {
+        track.engagement.featureUsed('password_visibility_toggle', {
+            action: showPassword ? 'hide' : 'show',
+            source: 'signin_form'
+        });
+        setShowPassword(!showPassword);
+    };
+
     return (
         <div className="min-h-screen bg-[#121212] relative overflow-hidden flex flex-col">
             <div className="absolute inset-0 overflow-hidden">
@@ -216,6 +335,7 @@ export default function SignInPage() {
                                                     <label className="block text-sm font-semibold text-gray-300 pl-1">Password</label>
                                                     <Link
                                                         href="/auth/forgot-password"
+                                                        onClick={handleForgotPasswordClick}
                                                         className="text-xs text-[#00FF89] hover:text-[#FFC050] font-medium transition-colors hover:underline">
                                                         Forgot password?
                                                     </Link>
@@ -234,7 +354,7 @@ export default function SignInPage() {
                                                     />
                                                     <button
                                                         type="button"
-                                                        onClick={() => setShowPassword(!showPassword)}
+                                                        onClick={handlePasswordVisibilityToggle}
                                                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#00FF89] transition-colors p-1 rounded-md hover:bg-gray-800/30"
                                                         disabled={loading}>
                                                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -350,6 +470,7 @@ export default function SignInPage() {
                                                 New to SpykeAI?{' '}
                                                 <Link
                                                     href="/signup"
+                                                    onClick={handleSignupLinkClick}
                                                     className={`font-bold text-[#00FF89] hover:text-[#00e67a] transition-all duration-200 ${
                                                         loading ? 'pointer-events-none opacity-50' : 'hover:underline'
                                                     }`}>

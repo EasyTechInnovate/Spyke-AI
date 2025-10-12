@@ -3,12 +3,17 @@ import { motion } from 'framer-motion'
 import { TrendingUp, Award, Zap, Package, ArrowRight, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
+import { useAnalytics } from '@/hooks/useAnalytics'
+import { useEffect } from 'react'
+
 const BackgroundEffectsLight = dynamic(() => import('./hero/BackgroundEffectsLight'), {
   ssr: false,
   loading: () => null
 })
+
 const BRAND = '#00FF89'
 const AMBER = '#FFC050'
+
 const collections = [
   {
     id: 'top-sales-agents',
@@ -55,7 +60,38 @@ const collections = [
     stats: 'Under $20'
   }
 ]
+
 export default function FeaturedCollections() {
+  const { track } = useAnalytics()
+
+  useEffect(() => {
+    // Track collections section view
+    track.engagement.featureUsed('featured_collections_section_viewed', {
+      collections_count: collections.length,
+      source: 'landing_page'
+    });
+  }, [track]);
+
+  const handleCollectionClick = (collection, index) => {
+    track.engagement.featureUsed('featured_collection_clicked', {
+      collection_id: collection.id,
+      collection_title: collection.title,
+      collection_stats: collection.stats,
+      position: index,
+      destination_url: collection.link,
+      source: 'landing_collections'
+    });
+
+    track.conversion.funnelStepCompleted('collection_to_explore', {
+      collection_id: collection.id,
+      collection_title: collection.title,
+      cta_type: 'collection_card',
+      source: 'landing_collections'
+    });
+
+    track.engagement.headerLinkClicked(`collection_${collection.id}`, collection.link);
+  };
+
   return (
     <section className="relative overflow-hidden bg-black">
       <BackgroundEffectsLight />
@@ -90,6 +126,7 @@ export default function FeaturedCollections() {
                 transition={{ duration: 0.5, delay: index * 0.1 }}>
                 <Link
                   href={collection.link}
+                  onClick={() => handleCollectionClick(collection, index)}
                   className="group block h-full">
                   <div className="relative h-full bg-[#171717] border border-gray-800 rounded-xl sm:rounded-2xl overflow-hidden hover:border-gray-700 transition-all duration-300 hover:transform hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20">
                     <div 

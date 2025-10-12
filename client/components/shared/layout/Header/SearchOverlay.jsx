@@ -2,10 +2,13 @@ import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Search, X, Mic, Package, History, TrendingUp as TrendingUpIcon, ChevronRight, Star } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import toast from '@/lib/utils/toast'
 import productsAPI from '@/lib/api/products'
+
 export default function SearchOverlay({ isOpen, onClose }) {
     const router = useRouter()
+    const { track } = useAnalytics()
     const [searchQuery, setSearchQuery] = useState('')
     const [searchResults, setSearchResults] = useState({ products: [] })
     const [isSearching, setIsSearching] = useState(false)
@@ -32,11 +35,27 @@ export default function SearchOverlay({ isOpen, onClose }) {
             }
         }
     }, [])
+    useEffect(() => {
+        if (isOpen) {
+            track.engagement.featureUsed('search_overlay_opened', {
+                source: 'header_search_button'
+            });
+        }
+    }, [isOpen, track]);
     const handleVoiceSearch = () => {
         if (!voiceSupported) {
+            track.engagement.featureUsed('voice_search_not_supported', {
+                source: 'search_overlay'
+            });
             toast.search.voiceNotSupported()
             return
         }
+
+        track.engagement.featureUsed('voice_search_started', {
+            source: 'search_overlay',
+            current_query: searchQuery
+        });
+
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
         const recognition = new SpeechRecognition()
         recognition.continuous = false
@@ -50,10 +69,23 @@ export default function SearchOverlay({ isOpen, onClose }) {
             const transcript = event.results[0][0].transcript
             setSearchQuery(transcript)
             setIsListening(false)
+            
+            track.engagement.featureUsed('voice_search_success', {
+                source: 'search_overlay',
+                transcript_length: transcript.length,
+                search_query: transcript
+            });
+            
             toast.search.voiceSuccess(transcript)
         }
         recognition.onerror = (event) => {
             setIsListening(false)
+            
+            track.engagement.featureUsed('voice_search_error', {
+                source: 'search_overlay',
+                error_type: event.error
+            });
+            
             if (event.error === 'no-speech') {
                 toast.search.voiceNoSpeech()
             } else if (event.error === 'not-allowed') {
@@ -76,20 +108,46 @@ export default function SearchOverlay({ isOpen, onClose }) {
             setSearchResults({ products: [] })
             return
         }
+
+        const searchStartTime = performance.now();
+        
+        track.product.productSearched(query.trim(), 0, { source: 'search_overlay' });
+
         setIsSearching(true)
         try {
             const response = await productsAPI.getProducts({
                 search: query.trim(),
                 limit: 5
             })
+            
+            const searchDuration = performance.now() - searchStartTime;
+            
             let products = []
             if (response?.data?.products && Array.isArray(response.data.products)) {
                 products = response.data.products
             } else if (response?.products && Array.isArray(response.products)) {
                 products = response.products
             }
+
+            track.engagement.searchPerformed(query.trim(), 'all', products.length);
+            
+            track.engagement.featureUsed('search_results_displayed', {
+                search_query: query.trim(),
+                results_count: products.length,
+                search_duration_ms: Math.round(searchDuration),
+                source: 'search_overlay'
+            });
+
             setSearchResults({ products })
         } catch (error) {
+            const searchDuration = performance.now() - searchStartTime;
+            
+            track.system.errorOccurred('search_api_failed', error.message, {
+                search_query: query.trim(),
+                search_duration_ms: Math.round(searchDuration),
+                source: 'search_overlay'
+            });
+            
             console.error('Search error:', error)
             setSearchResults({ products: [] })
         } finally {
@@ -109,6 +167,13 @@ export default function SearchOverlay({ isOpen, onClose }) {
     const handleSearchSubmit = (e) => {
         if (e) e.preventDefault()
         if (searchQuery.trim()) {
+            track.engagement.featureUsed('search_submitted', {
+                search_query: searchQuery.trim(),
+                results_count: searchResults.products?.length || 0,
+                source: 'search_overlay',
+                submit_method: 'enter_key'
+            });
+
             const updatedRecent = [searchQuery.trim(), ...recentSearches.filter((s) => s !== searchQuery.trim())].slice(0, 5)
             setRecentSearches(updatedRecent)
             localStorage.setItem('recentSearches', JSON.stringify(updatedRecent))
@@ -118,6 +183,22 @@ export default function SearchOverlay({ isOpen, onClose }) {
         }
     }
     const handleProductClick = (product) => {
+        track.product.productViewed(
+            product.id || product._id,
+            product.title,
+            'search_result',
+            product.sellerId || 'unknown',
+            product.price || 0
+        );
+
+        track.engagement.featureUsed('search_result_clicked', {
+            product_id: product.id || product._id,
+            product_name: product.title,
+            search_query: searchQuery,
+            result_position: searchResults.products?.indexOf(product) || 0,
+            source: 'search_overlay'
+        });
+
         const updatedRecent = [product.title, ...recentSearches.filter((s) => s !== product.title)].slice(0, 5)
         setRecentSearches(updatedRecent)
         localStorage.setItem('recentSearches', JSON.stringify(updatedRecent))
@@ -127,8 +208,40 @@ export default function SearchOverlay({ isOpen, onClose }) {
         setSearchQuery('')
     }
     const handleRecentSearchClick = (search) => {
+        track.engagement.featureUsed('recent_search_clicked', {
+            search_query: search,
+            source: 'search_overlay'
+        });
+        
         setSearchQuery(search)
         performSearch(search)
+    }
+    const handleTrendingSearchClick = (trend) => {
+        track.engagement.featureUsed('trending_search_clicked', {
+            search_query: trend,
+            source: 'search_overlay'
+        });
+        
+        setSearchQuery(trend)
+        performSearch(trend)
+    }
+    const handleQuickSearchClick = (query) => {
+        track.engagement.featureUsed('quick_search_clicked', {
+            search_query: query,
+            source: 'search_overlay'
+        });
+        
+        setSearchQuery(query)
+        performSearch(query)
+    }
+    const handleOverlayClose = () => {
+        track.engagement.featureUsed('search_overlay_closed', {
+            search_query: searchQuery,
+            had_results: searchResults.products?.length > 0,
+            source: 'search_overlay'
+        });
+        
+        onClose()
     }
     if (!isOpen) return null
     return (
@@ -139,7 +252,7 @@ export default function SearchOverlay({ isOpen, onClose }) {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100]"
-                onClick={onClose}
+                onClick={handleOverlayClose}
             />
             <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: -20 }}
@@ -177,29 +290,29 @@ export default function SearchOverlay({ isOpen, onClose }) {
                             )}
                             <button
                                 type="button"
-                                onClick={onClose}
+                                onClick={handleOverlayClose}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-0">
                                 <X className="h-5 w-5" />
                             </button>
                         </form>
                         <div className="flex items-center gap-2 mt-4 overflow-x-auto scrollbar-hide">
                             <button 
-                                onClick={() => setSearchQuery('AI prompts')}
+                                onClick={() => handleQuickSearchClick('AI prompts')}
                                 className="px-3 py-1.5 bg-brand-primary/20 text-brand-primary rounded-lg text-sm font-medium hover:bg-brand-primary/30 transition-colors whitespace-nowrap flex-shrink-0">
                                 AI Prompts
                             </button>
                             <button 
-                                onClick={() => setSearchQuery('automation tools')}
+                                onClick={() => handleQuickSearchClick('automation tools')}
                                 className="px-3 py-1.5 bg-gray-800/50 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700/50 transition-colors whitespace-nowrap flex-shrink-0">
                                 Automation
                             </button>
                             <button 
-                                onClick={() => setSearchQuery('templates')}
+                                onClick={() => handleQuickSearchClick('templates')}
                                 className="px-3 py-1.5 bg-gray-800/50 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700/50 transition-colors whitespace-nowrap flex-shrink-0">
                                 Templates
                             </button>
                             <button 
-                                onClick={() => setSearchQuery('scripts')}
+                                onClick={() => handleQuickSearchClick('scripts')}
                                 className="px-3 py-1.5 bg-gray-800/50 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700/50 transition-colors whitespace-nowrap flex-shrink-0">
                                 Scripts
                             </button>
@@ -212,6 +325,7 @@ export default function SearchOverlay({ isOpen, onClose }) {
                         recentSearches={recentSearches}
                         onProductClick={handleProductClick}
                         onRecentSearchClick={handleRecentSearchClick}
+                        onTrendingSearchClick={handleTrendingSearchClick}
                         onSearchSubmit={handleSearchSubmit}
                     />
                 </div>
@@ -219,7 +333,16 @@ export default function SearchOverlay({ isOpen, onClose }) {
         </>
     )
 }
-function SearchResults({ isSearching, searchQuery, searchResults, recentSearches, onProductClick, onRecentSearchClick, onSearchSubmit }) {
+function SearchResults({ 
+    isSearching, 
+    searchQuery, 
+    searchResults, 
+    recentSearches, 
+    onProductClick, 
+    onRecentSearchClick, 
+    onTrendingSearchClick,
+    onSearchSubmit 
+}) {
     if (isSearching) {
         return (
             <div className="p-8 text-center">
@@ -334,7 +457,7 @@ function SearchResults({ isSearching, searchQuery, searchResults, recentSearches
                         {['AI Writing Assistant', 'Social Media Templates', 'Email Marketing', 'Automation Scripts', 'ChatGPT Prompts'].map((trend, index) => (
                             <button
                                 key={index}
-                                onClick={() => onRecentSearchClick(trend)}
+                                onClick={() => onTrendingSearchClick(trend)}
                                 className="w-full text-left px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors text-sm">
                                 {trend}
                             </button>

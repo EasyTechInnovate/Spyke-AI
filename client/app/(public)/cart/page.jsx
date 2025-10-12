@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowLeft, Sparkles, Clock, ShoppingBag, Package, TrendingUp, Star, Shield, Zap } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import Container from '@/components/shared/layout/Container'
 import CartItem from './components/CartItem'
 import OrderSummary from './components/OrderSummary'
@@ -23,6 +24,7 @@ const normalizeProductType = (raw) => {
 export default function CartPage() {
     const router = useRouter()
     const { cartItems, cartData, loading, updateQuantity: updateCartQuantity, removeFromCart, applyPromocode, removePromocode } = useCart()
+    const { track } = useAnalytics()
     const [promoCode, setPromoCode] = useState('')
     const [promoLoading, setPromoLoading] = useState(false)
     const [promoError, setPromoError] = useState('')
@@ -41,45 +43,168 @@ export default function CartPage() {
             return acc
         }, {})
     }, [cartItems])
+    // Track cart view on component mount
+    useEffect(() => {
+        if (!loading && cartItems.length > 0) {
+            const uniqueSellers = [...new Set(cartItems.map(item => item.sellerId || 'unknown'))].length;
+            
+            track.purchase.cartViewed(
+                cartItems.length,
+                calculations.total,
+                uniqueSellers
+            );
+
+            track.engagement.pageViewed('/cart', 'purchase');
+
+            track.engagement.featureUsed('cart_composition_viewed', {
+                items_count: cartItems.length,
+                unique_sellers: uniqueSellers,
+                product_types: Object.keys(typeCounts),
+                total_value: calculations.total,
+                has_promocode: Boolean(cartData?.appliedPromocode)
+            });
+        }
+    }, [loading, cartItems.length, calculations.total, cartData, track, typeCounts]);
     const handleUpdateQuantity = useCallback(
         (itemId, newQuantity) => {
-            if (newQuantity < 1) return
-            updateCartQuantity(itemId, newQuantity)
+            if (newQuantity < 1) return;
+            
+            const item = cartItems.find(item => getItemId(item) === itemId);
+            if (item) {
+                track.engagement.featureUsed('cart_quantity_updated', {
+                    product_id: item._id || item.id,
+                    product_name: item.title,
+                    old_quantity: item.quantity || 1,
+                    new_quantity: newQuantity,
+                    price: item.price,
+                    source: 'cart_page'
+                });
+            }
+            
+            updateCartQuantity(itemId, newQuantity);
         },
-        [updateCartQuantity]
+        [updateCartQuantity, cartItems, track]
     )
     const handleRemoveItem = useCallback(
         (itemId) => {
-            removeFromCart(itemId)
+            const item = cartItems.find(item => getItemId(item) === itemId);
+            if (item) {
+                track.purchase.productRemovedFromCart(
+                    item._id || item.id,
+                    item.title,
+                    item.price || 0,
+                    item.sellerId || 'unknown'
+                );
+
+                track.engagement.featureUsed('cart_item_removed', {
+                    product_id: item._id || item.id,
+                    product_name: item.title,
+                    price: item.price,
+                    source: 'cart_page',
+                    removal_method: 'remove_button'
+                });
+            }
+            
+            removeFromCart(itemId);
         },
-        [removeFromCart]
+        [removeFromCart, cartItems, track]
     )
     const handleApplyPromo = useCallback(
         async (code) => {
             const codeToApply = code || promoCode?.trim()
             if (!codeToApply) return
+
+            // Track promocode attempt
+            track.engagement.featureUsed('promocode_attempt', {
+                promocode: codeToApply,
+                cart_value: calculations.subtotal,
+                items_count: cartItems.length,
+                source: 'cart_page'
+            });
+
             setPromoLoading(true)
             setPromoError('')
             try {
                 await applyPromocode(codeToApply)
+                
+                // Track successful promocode application
+                const discountAmount = calculatePromoDiscount(cartData, calculations.subtotal);
+                track.purchase.promocodeApplied(
+                    codeToApply,
+                    discountAmount,
+                    'percentage', // or get actual type from response
+                    null // seller_id if applicable
+                );
+
+                track.engagement.featureUsed('promocode_applied_success', {
+                    promocode: codeToApply,
+                    discount_amount: discountAmount,
+                    cart_value: calculations.subtotal,
+                    source: 'cart_page'
+                });
+
                 setPromoCode('')
             } catch (error) {
+                // Track promocode failure
+                track.engagement.featureUsed('promocode_failed', {
+                    promocode: codeToApply,
+                    error_message: error.message,
+                    cart_value: calculations.subtotal,
+                    source: 'cart_page'
+                });
+
                 setPromoError(error.message || 'Invalid promo code')
             } finally {
                 setPromoLoading(false)
             }
         },
-        [promoCode, applyPromocode]
+        [promoCode, applyPromocode, track, calculations, cartItems.length, cartData]
     )
     const handleRemovePromo = useCallback(async () => {
+        if (cartData?.appliedPromocode) {
+            track.engagement.featureUsed('promocode_removed', {
+                promocode: cartData.appliedPromocode.code,
+                discount_amount: calculatePromoDiscount(cartData, calculations.subtotal),
+                source: 'cart_page'
+            });
+        }
+
         try {
             await removePromocode()
             setPromoError('')
-        } catch (error) {}
-    }, [removePromocode])
+        } catch (error) {
+            track.system.errorOccurred('promocode_removal_failed', error.message, {
+                source: 'cart_page'
+            });
+        }
+    }, [removePromocode, cartData, calculations, track])
     const handleCheckout = useCallback(async () => {
+        // Track checkout initiation
+        track.purchase.checkoutStarted(
+            cartItems.length,
+            calculations.total,
+            'stripe'
+        );
+
+        track.engagement.featureUsed('checkout_button_clicked', {
+            items_count: cartItems.length,
+            total_value: calculations.total,
+            has_promocode: Boolean(cartData?.appliedPromocode),
+            unique_sellers: [...new Set(cartItems.map(item => item.sellerId || 'unknown'))].length,
+            source: 'cart_page'
+        });
+
         router.push('/checkout')
-    }, [router])
+    }, [router, track, cartItems, calculations, cartData])
+    const handleContinueShoppingClick = () => {
+        track.engagement.headerLinkClicked('continue_shopping', '/');
+        
+        track.engagement.featureUsed('continue_shopping_clicked', {
+            cart_items_count: cartItems.length,
+            cart_value: calculations.total,
+            source: 'cart_page'
+        });
+    };
     if (loading) {
         return <CartLoading />
     }
@@ -229,7 +354,7 @@ export default function CartPage() {
                                 cartItems={cartItems}
                             />
                         </div>
-                        <ContinueShoppingLink />
+                        <ContinueShoppingLink onContinueShoppingClick={handleContinueShoppingClick} />
                     </div>
                 </Container>
             </main>
@@ -267,7 +392,7 @@ function CartHeader({ itemCount, total, totalSavings }) {
     )
 }
 
-function ContinueShoppingLink() {
+function ContinueShoppingLink({ onContinueShoppingClick }) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -276,6 +401,7 @@ function ContinueShoppingLink() {
             className="mt-8 text-center">
             <Link
                 href="/"
+                onClick={onContinueShoppingClick}
                 className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
                 <ArrowLeft className="w-4 h-4" />
                 Continue Shopping

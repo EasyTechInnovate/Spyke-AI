@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { ArrowRight, Sparkles, Star, Zap } from 'lucide-react'
 import { appConfig } from '@/lib/config'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import SearchBar from './hero/SearchBar'
 import HeroAccessibility from './hero/HeroAccessibility'
 import SellerButton from './hero/SellerButton'
@@ -21,25 +22,41 @@ import {
   DSStatsCard,
   DSLoadingState
 } from '@/lib/design-system/components'
+
 const BackgroundEffectsLight = dynamic(() => import('./hero/BackgroundEffectsLight'), {
   ssr: false,
   loading: () => <DSLoadingState type="skeleton" height="100vh" className="absolute inset-0" />
 })
+
 const STATS = [
   { label: 'AI Prompts', value: '10,000+', icon: Sparkles },
   { label: 'Active Creators', value: '5,000+', icon: Star },
   { label: 'Happy Customers', value: '50,000+', icon: Zap }
 ]
+
 const POPULAR_TAGS = ['ChatGPT Prompts', 'Automation Tools', 'Sales Scripts', 'Content Creation']
+
 export default function HeroSectionOptimized() {
   const [mounted, setMounted] = useState(false)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [dimensions, setDimensions] = useState({ height: '90vh' })
   const [isLoading, setIsLoading] = useState(true)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  
+  const { track } = useAnalytics()
   const metrics = useHeroPerformance()
   const { user } = useAuth()
+
   useEffect(() => {
+    // Track hero section view
+    track.engagement.featureUsed('hero_section_viewed', {
+      user_authenticated: !!user,
+      source: 'landing_hero'
+    });
+
+    // Track hero section load performance
+    const heroLoadStart = performance.now();
+    
     setMounted(true)
     if (typeof window !== 'undefined') {
       const updateDimensions = () => {
@@ -47,10 +64,12 @@ export default function HeroSectionOptimized() {
       }
       updateDimensions()
       window.addEventListener('resize', updateDimensions)
+      
       const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
       setPrefersReducedMotion(mediaQuery.matches)
       const handleMotionChange = (e) => setPrefersReducedMotion(e.matches)
       mediaQuery.addEventListener('change', handleMotionChange)
+      
       const handleMouseMove = (e) => {
         if (!prefersReducedMotion) {
           setMousePosition({
@@ -60,20 +79,71 @@ export default function HeroSectionOptimized() {
         }
       }
       window.addEventListener('mousemove', handleMouseMove)
+      
       const loadingTimer = setTimeout(() => {
         setIsLoading(false)
+        const heroLoadDuration = performance.now() - heroLoadStart;
+        
+        // Track hero section fully loaded
+        track.engagement.featureUsed('hero_section_loaded', {
+          load_duration_ms: Math.round(heroLoadDuration),
+          has_reduced_motion: prefersReducedMotion,
+          viewport_height: window.innerHeight,
+          source: 'landing_hero'
+        });
       }, 800)
+
+      // Track hero section interaction
+      const handleHeroInteraction = () => {
+        track.engagement.featureUsed('hero_section_interacted', {
+          interaction_type: 'click',
+          source: 'landing_hero'
+        });
+      };
+
+      document.addEventListener('click', handleHeroInteraction, { once: true });
+      
       return () => {
         window.removeEventListener('resize', updateDimensions)
         mediaQuery.removeEventListener('change', handleMotionChange)
         window.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('click', handleHeroInteraction)
         clearTimeout(loadingTimer)
       }
     }
-  }, [prefersReducedMotion])
+  }, [prefersReducedMotion, track, user])
+
   const handleSearch = (query) => {
     console.log('🎯 [HeroSectionOptimized] Search initiated:', query)
+    
+    // Track hero search
+    track.engagement.searchPerformed(query, 'hero_search', 0);
+    track.engagement.featureUsed('hero_search_performed', {
+      search_query: query,
+      query_length: query.length,
+      user_authenticated: !!user,
+      source: 'landing_hero'
+    });
   }
+
+  const handleExploreClick = () => {
+    track.engagement.headerLinkClicked('explore_from_hero', '/explore');
+    track.conversion.funnelStepCompleted('hero_to_explore', {
+      cta_type: 'primary',
+      cta_text: 'Explore Marketplace',
+      user_authenticated: !!user,
+      source: 'landing_hero'
+    });
+  };
+
+  const handleStatsClick = (stat) => {
+    track.engagement.featureUsed('hero_stats_clicked', {
+      stat_label: stat.label,
+      stat_value: stat.value,
+      source: 'landing_hero'
+    });
+  };
+
   if (!mounted || isLoading) {
     return (
       <section
@@ -109,6 +179,7 @@ export default function HeroSectionOptimized() {
       </section>
     )
   }
+
   return (
     <HeroAccessibility>
       <section
@@ -138,14 +209,19 @@ export default function HeroSectionOptimized() {
                 initial={prefersReducedMotion ? {} : { opacity: 0, y: 20 }}
                 animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
                 transition={{ duration: prefersReducedMotion ? 0 : 0.6 }}
+                onClick={() => track.engagement.featureUsed('hero_badge_clicked', {
+                  badge_text: `#${appConfig.company.name} - AI Marketplace`,
+                  source: 'landing_hero'
+                })}
               >
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#00FF89]/20 bg-[#00FF89]/5 backdrop-blur-sm">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#00FF89]/20 bg-[#00FF89]/5 backdrop-blur-sm cursor-pointer hover:bg-[#00FF89]/10 transition-colors">
                   <Sparkles className="w-4 h-4 text-[#00FF89]" />
                   <span className="text-sm font-medium text-white">
                     #{appConfig.company.name} - AI Marketplace
                   </span>
                 </div>
               </motion.div>
+              
               <motion.div
                 initial={prefersReducedMotion ? {} : { opacity: 0, y: 30 }}
                 animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
@@ -173,6 +249,7 @@ export default function HeroSectionOptimized() {
                   </span>
                 </DSHeading>
               </motion.div>
+              
               <motion.div
                 initial={prefersReducedMotion ? {} : { opacity: 0, y: 20 }}
                 animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
@@ -185,6 +262,7 @@ export default function HeroSectionOptimized() {
                   {appConfig.company.tagline}
                 </DSText>
               </motion.div>
+              
               <motion.div
                 initial={prefersReducedMotion ? {} : { opacity: 0, y: 20 }}
                 animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
@@ -196,6 +274,7 @@ export default function HeroSectionOptimized() {
                   onSearch={handleSearch}
                 />
               </motion.div>
+              
               <motion.div
                 initial={prefersReducedMotion ? {} : { opacity: 0, y: 20 }}
                 animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
@@ -203,7 +282,10 @@ export default function HeroSectionOptimized() {
               >
                 <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 w-full max-w-md sm:max-w-none mx-auto">
                   <Link href="/explore" className="w-full sm:w-auto">
-                    <button className="group relative inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-3 text-black font-semibold bg-[#00FF89] rounded-lg hover:bg-[#00FF89]/90 transition-all duration-200 hover:shadow-lg hover:shadow-[#00FF89]/25 w-full sm:w-auto min-h-[48px] touch-manipulation">
+                    <button 
+                      onClick={handleExploreClick}
+                      className="group relative inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-3 text-black font-semibold bg-[#00FF89] rounded-lg hover:bg-[#00FF89]/90 transition-all duration-200 hover:shadow-lg hover:shadow-[#00FF89]/25 w-full sm:w-auto min-h-[48px] touch-manipulation"
+                    >
                       <span className="text-base sm:text-base">Explore Marketplace</span>
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
                     </button>
@@ -214,6 +296,7 @@ export default function HeroSectionOptimized() {
                 </div>
               </motion.div>
             </DSStack>
+            
             <motion.div
               initial={prefersReducedMotion ? {} : { opacity: 0, y: 30 }}
               animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
@@ -224,7 +307,11 @@ export default function HeroSectionOptimized() {
                 {STATS.map((stat, index) => {
                   const Icon = stat.icon
                   return (
-                    <div key={stat.label} className="text-center group">
+                    <div 
+                      key={stat.label} 
+                      className="text-center group cursor-pointer"
+                      onClick={() => handleStatsClick(stat)}
+                    >
                       <div className="inline-flex items-center justify-center w-12 h-12 mb-4 rounded-xl bg-[#00FF89]/10 border border-[#00FF89]/20 group-hover:bg-[#00FF89]/20 transition-all duration-300">
                         <Icon className="w-6 h-6 text-[#00FF89]" />
                       </div>

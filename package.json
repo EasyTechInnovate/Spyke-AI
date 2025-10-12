@@ -45,6 +45,7 @@
         "npm": ">=9.0.0"
     },
     "dependencies": {
+        "amplitude-js": "^8.21.9",
         "concurrently": "^9.1.2",
         "react-icons": "^5.5.0"
     }

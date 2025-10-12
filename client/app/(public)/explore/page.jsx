@@ -8,6 +8,7 @@ import ExploreControls from '@/components/features/explore/ExploreControls'
 import ActiveFilters from '@/components/features/explore/ActiveFilters'
 import ProductGrid from '@/components/features/explore/ProductGrid'
 import Pagination from '@/components/features/explore/Pagination'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import { productsAPI } from '@/lib/api'
 import { CATEGORIES, PRODUCT_TYPES, INDUSTRIES, SETUP_TIMES, ITEMS_PER_PAGE, DEFAULT_FILTERS, SORT_OPTIONS } from '@/data/explore/constants'
 import { Loader2, AlertTriangle } from 'lucide-react'
@@ -86,6 +87,7 @@ const slugify = (val = '') =>
 function useExploreData(initialURLState) {
     const mounted = useMounted()
     const online = useNetwork()
+    const { track } = useAnalytics()
     const [products, setProducts] = useState([])
     const [totalItems, setTotalItems] = useState(0)
     const [loading, setLoading] = useState(true)
@@ -134,12 +136,32 @@ function useExploreData(initialURLState) {
     const fetchProducts = useCallback(
         async (filters) => {
             if (!online) {
+                track.system.errorOccurred('explore_offline', 'User is offline', {
+                    filters: JSON.stringify(filters)
+                });
                 setError('You are offline')
                 return
             }
             setLoading(true)
             setError(null)
+            const fetchStartTime = performance.now();
             const sortOpt = SORT_OPTIONS.find((o) => o.id === (filters.sort || 'newest')) || SORT_OPTIONS[0]
+            // Track search/filter activity
+            track.product.productSearched(
+                filters.search || '', 
+                filters.page || 1, 
+                {
+                    category: filters.category,
+                    type: filters.type,
+                    industry: filters.industry,
+                    setup_time: filters.setupTime,
+                    rating_filter: filters.rating,
+                    verified_only: filters.verifiedOnly,
+                    price_range: filters.priceRange,
+                    sort_option: sortOpt.id,
+                    source: 'explore_page'
+                }
+            );
             // Resolve category (handles slug -> id mapping)
             const resolvedCategory = await resolveCategoryIfNeeded(filters.category)
             const params = {
@@ -169,6 +191,13 @@ function useExploreData(initialURLState) {
             const key = JSON.stringify(params)
             if (cache.current.has(key)) {
                 const cached = cache.current.get(key)
+                const fetchDuration = performance.now() - fetchStartTime;
+                track.engagement.featureUsed('explore_cache_hit', {
+                    cache_key_length: key.length,
+                    products_count: cached.products.length,
+                    fetch_duration_ms: Math.round(fetchDuration),
+                    source: 'explore_page'
+                });
                 setProducts(cached.products)
                 setTotalItems(cached.totalItems)
                 setLoading(false)
@@ -181,20 +210,47 @@ function useExploreData(initialURLState) {
                 const data = res?.data || res
                 const list = Array.isArray(data?.products) ? data.products : []
                 const total = data?.pagination?.totalItems || data?.pagination?.total || list.length
+                const fetchDuration = performance.now() - fetchStartTime;
                 if (!mounted.current) return
+                // Track successful product fetch
+                track.system.apiCallMade('/api/products', 'GET', fetchDuration, 200);
+                track.engagement.searchPerformed(
+                    filters.search || '',
+                    'products',
+                    list.length
+                );
+                track.engagement.featureUsed('explore_products_loaded', {
+                    products_count: list.length,
+                    total_items: total,
+                    page: filters.page || 1,
+                    has_filters: Object.keys(filters).some(key => 
+                        key !== 'page' && filters[key] !== DEFAULT_FILTERS[key]
+                    ),
+                    fetch_duration_ms: Math.round(fetchDuration),
+                    cache_miss: true,
+                    source: 'explore_page'
+                });
                 setProducts(list)
                 setTotalItems(total)
                 cache.current.set(key, { products: list, totalItems: total })
             } catch (e) {
                 if (e.name === 'AbortError') return
-                setError(e?.message || 'Failed to load products')
+                const fetchDuration = performance.now() - fetchStartTime;
+                const errorMessage = e?.message || 'Failed to load products';
+                track.system.errorOccurred('explore_fetch_failed', errorMessage, {
+                    api_duration: fetchDuration,
+                    filters: JSON.stringify(filters),
+                    source: 'explore_page'
+                });
+                track.system.apiCallMade('/api/products', 'GET', fetchDuration, e.status || 500);
+                setError(errorMessage)
                 setProducts([])
                 setTotalItems(0)
             } finally {
                 if (mounted.current) setLoading(false)
             }
         },
-        [online, mounted, resolveCategoryIfNeeded]
+        [online, mounted, resolveCategoryIfNeeded, track]
     )
     useEffect(() => {
         fetchProducts(initialURLState)
@@ -210,6 +266,7 @@ export default function ExplorePage() {
 }
 function ExplorePageContent() {
     const router = useRouter()
+    const { track } = useAnalytics()
     const urlState = useURLState()
     const [filters, setFilters] = useState({
         ...DEFAULT_FILTERS,
@@ -229,6 +286,22 @@ function ExplorePageContent() {
     const [viewMode, setViewMode] = useState('grid')
     const debouncedSearch = useDebounce(filters.search, 350)
     const { products, totalItems, loading, error, fetchProducts } = useExploreData({ ...filters, page, sort: urlState.sort })
+    // Track page view on initial load
+    useEffect(() => {
+        track.engagement.pageViewed('/explore', 'discovery');
+        // Track initial filters/search if present
+        if (urlState.search || urlState.category !== 'all' || urlState.type !== 'all') {
+            track.engagement.featureUsed('explore_page_loaded_with_params', {
+                has_search: Boolean(urlState.search),
+                search_query: urlState.search,
+                category: urlState.category,
+                type: urlState.type,
+                industry: urlState.industry,
+                page: urlState.page,
+                source: 'explore_page_url'
+            });
+        }
+    }, [track]);
     useEffect(() => {
         fetchProducts({ ...filters, search: debouncedSearch, page, sort: sortId })
     }, [filters.category, filters.type, filters.industry, filters.setupTime, debouncedSearch, filters.rating, filters.verifiedOnly, filters.priceRange[0], filters.priceRange[1], page, sortId, fetchProducts])
@@ -263,20 +336,99 @@ function ExplorePageContent() {
         [filters]
     )
     const handleFilterChange = (next) => {
+        // Track filter changes
+        Object.keys(next).forEach(key => {
+            if (next[key] !== filters[key]) {
+                track.engagement.featureUsed('explore_filter_changed', {
+                    filter_type: key,
+                    old_value: filters[key],
+                    new_value: next[key],
+                    source: 'explore_page'
+                });
+            }
+        });
         setFilters(next)
         setPage(1)
     }
     const clearFilters = () => {
+        track.engagement.featureUsed('explore_filters_cleared', {
+            previous_filters: JSON.stringify(filters),
+            had_active_filters: hasActiveFilters,
+            source: 'explore_page'
+        });
         setFilters(DEFAULT_FILTERS)
         setPage(1)
     }
     const handlePageChange = (p) => {
+        track.engagement.featureUsed('explore_page_changed', {
+            from_page: page,
+            to_page: p,
+            total_pages: totalPages,
+            products_per_page: ITEMS_PER_PAGE,
+            source: 'explore_pagination'
+        });
         setPage(p)
         if (typeof window !== 'undefined') {
             const el = document.getElementById('products-section')
             el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
     }
+    const handleSortChange = (id) => {
+        const oldSort = SORT_OPTIONS.find(o => o.id === sortId);
+        const newSort = SORT_OPTIONS.find(o => o.id === id);
+        track.engagement.featureUsed('explore_sort_changed', {
+            old_sort: oldSort?.id || 'newest',
+            new_sort: id,
+            old_sort_label: oldSort?.label,
+            new_sort_label: newSort?.label,
+            products_count: products.length,
+            source: 'explore_page'
+        });
+        setSortId(id)
+        setPage(1)
+    };
+    const handleViewModeChange = (mode) => {
+        track.engagement.featureUsed('explore_view_mode_changed', {
+            old_mode: viewMode,
+            new_mode: mode,
+            products_count: products.length,
+            source: 'explore_page'
+        });
+        setViewMode(mode)
+    };
+    const handleToggleFilters = () => {
+        track.engagement.featureUsed('explore_filters_toggled', {
+            action: showFilters ? 'hide' : 'show',
+            source: 'explore_page'
+        });
+        setShowFilters((v) => !v)
+    };
+    const handleToggleMobileFilters = () => {
+        track.engagement.featureUsed('explore_mobile_filters_opened', {
+            source: 'explore_page'
+        });
+        setShowMobileFilters(true)
+    };
+    const handleMobileFiltersClose = () => {
+        track.engagement.featureUsed('explore_mobile_filters_closed', {
+            source: 'explore_page'
+        });
+        setShowMobileFilters(false)
+    };
+    const handleRetry = () => {
+        track.engagement.featureUsed('explore_retry_clicked', {
+            error_message: error,
+            source: 'explore_error_state'
+        });
+        fetchProducts({ ...filters, search: debouncedSearch, page })
+    };
+    const handleReload = () => {
+        track.engagement.featureUsed('explore_reload_clicked', {
+            error_message: error,
+            source: 'explore_error_state'
+        });
+        window.location.reload()
+    };
     const useVirtual = products.length > 50
     return (
         <div className="min-h-screen bg-black text-white">
@@ -293,16 +445,20 @@ function ExplorePageContent() {
                     filters={filters}
                     viewMode={viewMode}
                     showFilters={showFilters}
-                    onSearch={(s) => setFilters((f) => ({ ...f, search: s }))}
-                    onViewModeChange={setViewMode}
-                    onToggleFilters={() => setShowFilters((v) => !v)}
-                    onToggleMobileFilters={() => setShowMobileFilters(true)}
+                    onSearch={(s) => {
+                        track.engagement.featureUsed('explore_search_input', {
+                            search_query: s,
+                            query_length: s.length,
+                            source: 'explore_controls'
+                        });
+                        setFilters((f) => ({ ...f, search: s }))
+                    }}
+                    onViewModeChange={handleViewModeChange}
+                    onToggleFilters={handleToggleFilters}
+                    onToggleMobileFilters={handleToggleMobileFilters}
                     sortId={sortId}
                     sortOptions={SORT_OPTIONS}
-                    onSortChange={(id) => {
-                        setSortId(id)
-                        setPage(1)
-                    }}
+                    onSortChange={handleSortChange}
                 />
                 <ActiveFilters
                     filters={filters}
@@ -333,7 +489,8 @@ function ExplorePageContent() {
                         {!loading && error && (
                             <ErrorState
                                 message={error}
-                                onRetry={() => fetchProducts({ ...filters, search: debouncedSearch, page })}
+                                onRetry={handleRetry}
+                                onReload={handleReload}
                             />
                         )}
                         {!error && products.length > 0 && (
@@ -402,7 +559,7 @@ function ExplorePageContent() {
             </main>
             <MobileFilterDrawer
                 isOpen={showMobileFilters}
-                onClose={() => setShowMobileFilters(false)}
+                onClose={handleMobileFiltersClose}
                 filters={filters}
                 categories={CATEGORIES}
                 productTypes={PRODUCT_TYPES}
@@ -421,7 +578,8 @@ function Spinner({ large = false, label }) {
         </div>
     )
 }
-function ErrorState({ message, onRetry }) {
+// Enhanced error state with analytics
+function ErrorState({ message, onRetry, onReload }) {
     return (
         <div className="min-h-[50vh] flex flex-col items-center justify-center gap-5 text-center">
             <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center">
@@ -438,7 +596,7 @@ function ErrorState({ message, onRetry }) {
                     Retry
                 </button>
                 <button
-                    onClick={() => window.location.reload()}
+                    onClick={onReload}
                     className="px-4 py-2 rounded-lg bg-gray-900 hover:bg-gray-800 border border-gray-800 text-sm">
                     Reload
                 </button>

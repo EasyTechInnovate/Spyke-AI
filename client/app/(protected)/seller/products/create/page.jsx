@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Save, Eye, Edit3, RotateCcw, CheckCircle, AlertCircle, AlertTriangle, X, Info } from 'lucide-react'
 import { useProductCreateStore, useProductCreateSelectors } from '@/store/productCreate'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import { STEP_HELPERS } from '@/lib/constants/productCreate'
 import { productsAPI } from '@/lib/api'
 import { useNotifications } from '@/hooks/useNotifications'
@@ -16,6 +17,7 @@ import Step6Launch from './steps/Step6Launch'
 import LivePreview from './components/LivePreview'
 import HelperRail from './components/HelperRail'
 import ReviewSubmit from './components/ReviewSubmit'
+
 const STEP_COMPONENTS = {
     1: Step1Basic,
     2: Step2Details,
@@ -24,12 +26,18 @@ const STEP_COMPONENTS = {
     5: Step5MediaPricing,
     6: Step6Launch
 }
+
 export default function ProductCreatePage() {
     const router = useRouter()
+    const { track } = useAnalytics()
     const [mode, setMode] = useState('form')
     const [showReview, setShowReview] = useState(false)
     const [notification, setNotification] = useState(null)
     const [showResetConfirm, setShowResetConfirm] = useState(false)
+    const [sessionStartTime] = useState(Date.now())
+    const [stepStartTime, setStepStartTime] = useState(Date.now())
+    const [formInteractions, setFormInteractions] = useState(0)
+
     const currentStep = useProductCreateStore(useProductCreateSelectors.currentStep)
     const isDirty = useProductCreateStore(useProductCreateSelectors.isDirty)
     const lastSaved = useProductCreateStore(useProductCreateSelectors.lastSaved)
@@ -45,13 +53,93 @@ export default function ProductCreatePage() {
     const reset = useProductCreateStore((state) => state.reset)
     const toApiPayload = useProductCreateStore((state) => state.toApiPayload)
     const setSubmitting = useProductCreateStore((state) => state.setSubmitting)
+    
     const { showSuccess, showError, showInfo } = useNotifications()
+
+    useEffect(() => {
+        track.engagement.pageViewed('/seller/products/create', 'seller_dashboard');
+        
+        track.conversion.funnelStepCompleted('product_creation_started', {
+            source: 'seller_dashboard',
+            session_start_time: sessionStartTime
+        });
+        
+        track.engagement.featureUsed('product_creation_flow_initiated', {
+            initial_step: currentStep,
+            completion_percentage: completionPercentage,
+            source: 'seller_dashboard'
+        });
+
+        return () => {
+            const sessionDuration = Date.now() - sessionStartTime;
+            track.engagement.featureUsed('product_creation_session_ended', {
+                session_duration_ms: sessionDuration,
+                final_step: currentStep,
+                completion_percentage: completionPercentage,
+                form_interactions: formInteractions,
+                was_submitted: false,
+                source: 'seller_dashboard'
+            });
+        };
+    }, [track, sessionStartTime, currentStep, completionPercentage, formInteractions]);
+
+    useEffect(() => {
+        if (currentStep > 0) {
+            const stepDuration = Date.now() - stepStartTime;
+            
+            track.engagement.featureUsed('product_creation_step_viewed', {
+                step_number: currentStep,
+                step_name: STEP_HELPERS[currentStep]?.title || `Step ${currentStep}`,
+                completion_percentage: completionPercentage,
+                has_errors: Object.keys(errors).length > 0,
+                time_on_previous_step_ms: stepDuration,
+                source: 'seller_dashboard'
+            });
+
+            setStepStartTime(Date.now());
+        }
+    }, [currentStep, track, completionPercentage, errors, stepStartTime]);
+
+    useEffect(() => {
+        const handleFormInteraction = () => {
+            setFormInteractions(prev => prev + 1);
+        };
+
+        const formElement = document.querySelector('form, input, textarea, select');
+        if (formElement) {
+            document.addEventListener('input', handleFormInteraction);
+            document.addEventListener('change', handleFormInteraction);
+        }
+
+        return () => {
+            document.removeEventListener('input', handleFormInteraction);
+            document.removeEventListener('change', handleFormInteraction);
+        };
+    }, [currentStep]);
+
     const handleStepClick = useCallback(
         (targetStep) => {
+            const stepDuration = Date.now() - stepStartTime;
+            
+            track.engagement.featureUsed('product_creation_step_navigation_attempted', {
+                from_step: currentStep,
+                to_step: targetStep,
+                navigation_type: 'step_click',
+                time_on_step_ms: stepDuration,
+                source: 'seller_dashboard'
+            });
+
             if (targetStep <= currentStep) {
+                track.engagement.featureUsed('product_creation_step_navigated', {
+                    from_step: currentStep,
+                    to_step: targetStep,
+                    navigation_type: 'backward',
+                    source: 'seller_dashboard'
+                });
                 setStep(targetStep)
                 return
             }
+
             let canNavigate = true
             let blockingStep = null
             for (let step = 1; step < targetStep; step++) {
@@ -61,9 +149,24 @@ export default function ProductCreatePage() {
                     break
                 }
             }
+            
             if (canNavigate) {
+                track.engagement.featureUsed('product_creation_step_navigated', {
+                    from_step: currentStep,
+                    to_step: targetStep,
+                    navigation_type: 'forward',
+                    source: 'seller_dashboard'
+                });
                 setStep(targetStep)
             } else {
+                track.engagement.featureUsed('product_creation_step_navigation_blocked', {
+                    from_step: currentStep,
+                    to_step: targetStep,
+                    blocking_step: blockingStep,
+                    error_count: Object.keys(errors).length,
+                    source: 'seller_dashboard'
+                });
+
                 const stepNames = {
                     1: 'Basic Information',
                     2: 'Product Details',
@@ -75,8 +178,9 @@ export default function ProductCreatePage() {
                 showError(`Please complete Step ${blockingStep}: ${stepNames[blockingStep]} before proceeding to Step ${targetStep}`)
             }
         },
-        [currentStep, validateStep, setStep, showError]
+        [currentStep, validateStep, setStep, showError, track, errors, stepStartTime]
     )
+
     useEffect(() => {
         requestAnimationFrame(() => {
             document.documentElement.scrollTo({ top: 0, behavior: 'smooth' })
@@ -87,56 +191,186 @@ export default function ProductCreatePage() {
             }
         })
     }, [currentStep, showReview, mode])
+
     const handleNext = useCallback(() => {
+        const stepDuration = Date.now() - stepStartTime;
         const isValid = validateStep(currentStep)
+        
+        track.engagement.featureUsed('product_creation_next_clicked', {
+            current_step: currentStep,
+            step_valid: isValid,
+            time_on_step_ms: stepDuration,
+            error_count: Object.keys(errors).length,
+            completion_percentage: completionPercentage,
+            source: 'seller_dashboard'
+        });
+
         if (isValid) {
             markStepComplete(currentStep)
+            
             if (currentStep < 6) {
+                track.conversion.funnelStepCompleted('product_creation_step_completed', {
+                    step_number: currentStep,
+                    step_name: STEP_HELPERS[currentStep]?.title,
+                    time_spent_ms: stepDuration,
+                    completion_percentage: completionPercentage,
+                    source: 'seller_dashboard'
+                });
                 nextStep()
             } else {
+                track.conversion.funnelStepCompleted('product_creation_ready_for_review', {
+                    total_steps_completed: 6,
+                    completion_percentage: completionPercentage,
+                    total_session_time_ms: Date.now() - sessionStartTime,
+                    source: 'seller_dashboard'
+                });
                 setShowReview(true)
             }
         } else {
+            track.engagement.featureUsed('product_creation_validation_failed', {
+                current_step: currentStep,
+                error_count: Object.keys(errors).length,
+                errors: Object.keys(errors),
+                source: 'seller_dashboard'
+            });
             showError('Please fix the errors before proceeding')
         }
-    }, [currentStep, validateStep, markStepComplete, nextStep, showError])
+    }, [currentStep, validateStep, markStepComplete, nextStep, showError, track, errors, completionPercentage, stepStartTime, sessionStartTime])
+
     const handlePrev = useCallback(() => {
+        const stepDuration = Date.now() - stepStartTime;
+        
+        track.engagement.featureUsed('product_creation_previous_clicked', {
+            current_step: currentStep,
+            time_on_step_ms: stepDuration,
+            source: 'seller_dashboard'
+        });
+
         if (currentStep > 1) {
             prevStep()
         }
-    }, [currentStep, prevStep])
+    }, [currentStep, prevStep, track, stepStartTime])
+
     const handleSave = useCallback(() => {
+        track.engagement.featureUsed('product_creation_save_clicked', {
+            current_step: currentStep,
+            completion_percentage: completionPercentage,
+            is_dirty: isDirty,
+            source: 'seller_dashboard'
+        });
+
         save()
         showSuccess('Progress saved automatically')
-    }, [save, showSuccess])
+    }, [save, showSuccess, track, currentStep, completionPercentage, isDirty])
+
     const handleReset = useCallback(() => {
+        track.engagement.featureUsed('product_creation_reset_initiated', {
+            current_step: currentStep,
+            completion_percentage: completionPercentage,
+            session_duration_ms: Date.now() - sessionStartTime,
+            source: 'seller_dashboard'
+        });
+
         setShowResetConfirm(true)
-    }, [])
+    }, [track, currentStep, completionPercentage, sessionStartTime])
+
     const confirmReset = useCallback(() => {
+        track.engagement.featureUsed('product_creation_reset_confirmed', {
+            current_step: currentStep,
+            completion_percentage: completionPercentage,
+            session_duration_ms: Date.now() - sessionStartTime,
+            form_interactions: formInteractions,
+            source: 'seller_dashboard'
+        });
+
         reset()
         setShowResetConfirm(false)
         showInfo('Form reset successfully')
-    }, [reset, showInfo])
+    }, [reset, showInfo, track, currentStep, completionPercentage, sessionStartTime, formInteractions])
+
     const handleSubmit = useCallback(async () => {
+        const submissionStartTime = Date.now();
+        
+        track.conversion.funnelStepCompleted('product_creation_submission_started', {
+            completion_percentage: completionPercentage,
+            total_session_time_ms: submissionStartTime - sessionStartTime,
+            form_interactions: formInteractions,
+            source: 'seller_dashboard'
+        });
+
         try {
             setSubmitting(true)
             let allValid = true
+            const validationErrors = [];
+
             for (let step = 1; step <= 6; step++) {
                 if (!validateStep(step)) {
                     allValid = false
+                    validationErrors.push(step);
                 }
             }
+            
             if (!allValid) {
+                track.engagement.featureUsed('product_creation_submission_validation_failed', {
+                    invalid_steps: validationErrors,
+                    error_count: Object.keys(errors).length,
+                    submission_attempt_duration_ms: Date.now() - submissionStartTime,
+                    source: 'seller_dashboard'
+                });
+
                 showError('Please fix all errors before submitting')
                 return
             }
+
             const payload = toApiPayload()
+            
+            track.engagement.featureUsed('product_creation_payload_prepared', {
+                product_type: payload.type,
+                product_category: payload.category,
+                product_industry: payload.industry,
+                has_premium_content: !!(payload.premiumContent),
+                price: payload.price,
+                payload_size_bytes: JSON.stringify(payload).length,
+                source: 'seller_dashboard'
+            });
+
             if (payload.thumbnail instanceof File) {
+                track.system.errorOccurred('product_creation_thumbnail_file_error', 'Thumbnail provided as file instead of URL', {
+                    product_type: payload.type,
+                    source: 'seller_dashboard'
+                });
                 showError('Please provide image URLs instead of files for now')
                 return
             }
+
+            const apiCallStartTime = Date.now();
             const response = await productsAPI.createProduct(payload)
+            const apiCallDuration = Date.now() - apiCallStartTime;
+            
+            track.system.apiCallMade('/api/products/create', 'POST', apiCallDuration, 200);
+
             if (response.data) {
+                const totalSessionTime = Date.now() - sessionStartTime;
+                
+                track.conversion.funnelStepCompleted('product_creation_completed', {
+                    product_id: response.data._id || response.data.id,
+                    product_type: payload.type,
+                    product_category: payload.category,
+                    product_price: payload.price,
+                    total_session_time_ms: totalSessionTime,
+                    form_interactions: formInteractions,
+                    api_call_duration_ms: apiCallDuration,
+                    source: 'seller_dashboard'
+                });
+
+                track.engagement.featureUsed('product_creation_success', {
+                    product_id: response.data._id || response.data.id,
+                    product_title: payload.title,
+                    completion_time_ms: totalSessionTime,
+                    redirect_destination: '/seller/products',
+                    source: 'seller_dashboard'
+                });
+
                 showSuccess('Product created successfully!')
                 setTimeout(() => {
                     router.push('/seller/products')
@@ -144,7 +378,22 @@ export default function ProductCreatePage() {
                 reset()
             }
         } catch (error) {
+            const submissionDuration = Date.now() - submissionStartTime;
+            const errorMessage = error?.message || 'Failed to create product';
+            
             console.error('Submission error:', error)
+            
+            track.system.errorOccurred('product_creation_submission_failed', errorMessage, {
+                error_status: error.response?.status,
+                error_data: error.response?.data,
+                submission_duration_ms: submissionDuration,
+                current_step: currentStep,
+                completion_percentage: completionPercentage,
+                source: 'seller_dashboard'
+            });
+
+            track.system.apiCallMade('/api/products/create', 'POST', submissionDuration, error.response?.status || 500);
+
             if (error.response?.data) {
                 const errorData = error.response.data
                 if (errorData.errors && Array.isArray(errorData.errors)) {
@@ -168,9 +417,39 @@ export default function ProductCreatePage() {
         } finally {
             setSubmitting(false)
         }
-    }, [validateStep, toApiPayload, showError, showSuccess, router, reset, setSubmitting])
+    }, [validateStep, toApiPayload, showError, showSuccess, router, reset, setSubmitting, track, completionPercentage, sessionStartTime, formInteractions, currentStep, errors])
+
+    const handleModeChange = (newMode) => {
+        track.engagement.featureUsed('product_creation_mode_changed', {
+            old_mode: mode,
+            new_mode: newMode,
+            current_step: currentStep,
+            completion_percentage: completionPercentage,
+            source: 'seller_dashboard'
+        });
+
+        setMode(newMode);
+    };
+
+    const handleShowReview = (show) => {
+        if (show) {
+            track.engagement.featureUsed('product_creation_review_opened', {
+                completion_percentage: completionPercentage,
+                total_session_time_ms: Date.now() - sessionStartTime,
+                source: 'seller_dashboard'
+            });
+        } else {
+            track.engagement.featureUsed('product_creation_review_closed', {
+                completion_percentage: completionPercentage,
+                source: 'seller_dashboard'
+            });
+        }
+        setShowReview(show);
+    };
+
     const CurrentStepComponent = STEP_COMPONENTS[currentStep]
     const stepInfo = STEP_HELPERS[currentStep] || {}
+    
     const hasStepErrors = Object.keys(errors).some((key) => {
         const stepFields = {
             1: ['title', 'type', 'category', 'industry', 'shortDescription', 'fullDescription'],
@@ -182,6 +461,7 @@ export default function ProductCreatePage() {
         }
         return stepFields[currentStep]?.includes(key)
     })
+
     useEffect(() => {
         requestAnimationFrame(() => {
             document.documentElement.scrollTo({ top: 0, behavior: 'smooth' })
@@ -192,6 +472,7 @@ export default function ProductCreatePage() {
             }
         })
     }, [currentStep, showReview, mode])
+
     return (
         <div>
             <div className="border-b border-gray-700 bg-gray-900/95 backdrop-blur-md sticky top-0 z-50">
@@ -258,7 +539,7 @@ export default function ProductCreatePage() {
                         <div className="flex flex-col sm:flex-row items-center gap-3">
                             <div className="flex items-center bg-gray-800/70 rounded-xl p-1 border border-gray-700">
                                 <button
-                                    onClick={() => setMode('form')}
+                                    onClick={() => handleModeChange('form')}
                                     className={`px-3 py-2 text-sm font-semibold rounded-lg transition-all duration-200 flex items-center space-x-2 ${
                                         mode === 'form'
                                             ? 'bg-[#00FF89] text-black shadow-lg shadow-[#00FF89]/20'
@@ -269,7 +550,7 @@ export default function ProductCreatePage() {
                                     <span className="sm:hidden">Form</span>
                                 </button>
                                 <button
-                                    onClick={() => setMode('preview')}
+                                    onClick={() => handleModeChange('preview')}
                                     className={`px-3 py-2 text-sm font-semibold rounded-lg transition-all duration-200 flex items-center space-x-2 ${
                                         mode === 'preview'
                                             ? 'bg-[#00FF89] text-black shadow-lg shadow-[#00FF89]/20'
@@ -314,7 +595,7 @@ export default function ProductCreatePage() {
                                     <ReviewSubmit
                                         key="review"
                                         onSubmit={handleSubmit}
-                                        onBack={() => setShowReview(false)}
+                                        onBack={() => handleShowReview(false)}
                                         isSubmitting={isSubmitting}
                                     />
                                 ) : mode === 'form' ? (
