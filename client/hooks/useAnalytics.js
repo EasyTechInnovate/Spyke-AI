@@ -72,9 +72,9 @@ export const useAnalytics = () => {
 
     // Cart & Purchase
     purchase: {
-      addToCart: (productId, productName, price, sellerId, quantity) => 
+      productAddedToCart: (productId, productName, price, sellerId, quantity) => 
         tracking.purchase.productAddedToCart(productId, productName, price, sellerId, quantity),
-      removeFromCart: (productId, productName, price, sellerId) => 
+      productRemovedFromCart: (productId, productName, price, sellerId) => 
         tracking.purchase.productRemovedFromCart(productId, productName, price, sellerId),
       cartViewed: (itemsCount, totalValue, uniqueSellers) => 
         tracking.purchase.cartViewed(itemsCount, totalValue, uniqueSellers),
@@ -86,6 +86,11 @@ export const useAnalytics = () => {
         tracking.purchase.purchaseCompleted(orderId, totalValue, itemsCount, paymentMethod, items),
       purchaseFailed: (error, totalValue, paymentMethod) => 
         tracking.purchase.purchaseFailed(error, totalValue, paymentMethod),
+      // Keep the old aliases for backward compatibility
+      addToCart: (productId, productName, price, sellerId, quantity) => 
+        tracking.purchase.productAddedToCart(productId, productName, price, sellerId, quantity),
+      removeFromCart: (productId, productName, price, sellerId) => 
+        tracking.purchase.productRemovedFromCart(productId, productName, price, sellerId),
     },
 
     // Seller
@@ -106,6 +111,8 @@ export const useAnalytics = () => {
 
     // Engagement
     engagement: {
+      pageViewed: (pageName, category) => 
+        tracking.engagement.pageViewed(pageName, category),
       reviewSubmitted: (productId, rating, sellerId) => 
         tracking.engagement.reviewSubmitted(productId, rating, sellerId),
       searchPerformed: (query, category, resultsCount) => 
