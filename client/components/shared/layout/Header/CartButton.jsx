@@ -11,6 +11,7 @@ export default function CartButton({ count = 0 }) {
         <Link
             href="/cart"
             className="relative p-2 sm:p-3 text-gray-300 hover:text-[#00FF89] bg-white/5 hover:bg-[#00FF89]/10 rounded-lg transition-all duration-300"
+            aria-label={`Shopping cart${mounted && count > 0 ? ` with ${count > 99 ? '99+' : count} items` : ''}`}
         >
             <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
             {mounted && count > 0 && (

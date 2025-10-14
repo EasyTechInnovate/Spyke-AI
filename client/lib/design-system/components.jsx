@@ -377,6 +377,7 @@ export const DSFormInput = ({
             className={`absolute right-4 top-1/2 -translate-y-1/2 p-1 transition-colors ${
               disabled ? 'text-gray-500' : 'text-gray-400 hover:text-[#00FF89]'
             }`}
+            aria-label={type === 'password' ? 'Toggle password visibility' : 'Clear input'}
           >
             <RightIcon className="w-5 h-5" />
           </button>

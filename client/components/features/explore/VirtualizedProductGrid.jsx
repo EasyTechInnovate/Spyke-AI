@@ -31,6 +31,7 @@ const VirtualizedProductGrid = memo(function VirtualizedProductGrid({
           <button
             onClick={() => window.location.reload()}
             className="px-6 py-2 bg-brand-primary text-black font-semibold rounded-xl hover:bg-brand-primary/90 transition-colors"
+            aria-label="Reload page to try loading products again"
           >
             Try Again
           </button>
@@ -49,6 +50,7 @@ const VirtualizedProductGrid = memo(function VirtualizedProductGrid({
         <button
           onClick={onClearFilters}
           className="px-6 py-2 bg-brand-primary text-black font-semibold rounded-xl hover:bg-brand-primary/90 transition-colors"
+          aria-label="Clear all active filters to show all products"
         >
           Clear Filters
         </button>

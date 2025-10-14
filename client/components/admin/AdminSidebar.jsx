@@ -63,7 +63,8 @@ const BottomActions = ({ isCollapsed, onLogout }) => (
         className={`w-full group flex items-center text-white/60 hover:text-red-500 hover:bg-white/5 rounded-2xl font-medium text-sm tracking-tight transition-all duration-300 ${
           isCollapsed ? 'justify-center px-2 py-2' : 'gap-3 px-4 py-3'
         }`}
-        title={isCollapsed ? 'Sign Out' : undefined}>
+        title={isCollapsed ? 'Sign Out' : undefined}
+        aria-label="Sign out of admin panel">
         <LogOut className="w-4 h-4 transition-transform duration-300 group-hover:rotate-12 group-hover:text-red-500" />
         <span
           className={`transition-all duration-300 ${isCollapsed ? 'hidden' : 'group-hover:text-red-500'}`}>
@@ -88,7 +89,8 @@ const MobileHeader = ({ onClose }) => (
       </div>
       <button
         onClick={onClose}
-        className="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200">
+        className="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200"
+        aria-label="Close admin sidebar">
         <X className="w-5 h-5" />
       </button>
     </div>

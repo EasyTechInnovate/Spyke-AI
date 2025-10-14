@@ -38,6 +38,7 @@ const ProductGrid = memo(function ProductGrid({
           <button
             onClick={() => window.location.reload()}
             className="px-5 py-2.5 bg-[#00FF89] text-black font-semibold rounded-xl hover:bg-[#00FF89]/90 transition-colors text-sm"
+            aria-label="Reload page to try loading products again"
           >
             Try Again
           </button>
@@ -55,6 +56,7 @@ const ProductGrid = memo(function ProductGrid({
           <button
             onClick={onClearFilters}
             className="px-5 py-2.5 bg-[#1a1a1a] border border-[#2a2a2a] text-gray-300 hover:text-white hover:border-[#3a3a3a] rounded-xl transition-colors text-sm"
+            aria-label="Clear all active filters to show all products"
           >
             Clear Filters
           </button>

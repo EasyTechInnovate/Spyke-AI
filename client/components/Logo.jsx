@@ -156,7 +156,7 @@ export default function CommonUsageExamples() {
                             priority={true}
                         />
                         <div className="flex items-center space-x-4">
-                            <button className="px-4 py-2 text-gray-600">Menu</button>
+                            <button className="px-4 py-2 text-gray-600" aria-label="Open navigation menu">Menu</button>
                         </div>
                     </div>
                 </div>
@@ -170,7 +170,7 @@ export default function CommonUsageExamples() {
                             priority={true}
                         />
                         <div className="flex items-center space-x-4">
-                            <button className="px-4 py-2 text-gray-300">Menu</button>
+                            <button className="px-4 py-2 text-gray-300" aria-label="Open navigation menu">Menu</button>
                         </div>
                     </div>
                 </div>

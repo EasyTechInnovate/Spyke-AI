@@ -132,7 +132,7 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                             onFocus={() => setIsFocused(true)}
                             onKeyDown={handleKeyDown}
                             placeholder="Search AI prompts, tools..."
-                            className="flex-1 h-full !bg-transparent !text-white/90 !placeholder-gray-400 text-sm sm:text-lg font-light tracking-wide !outline-none !border-none !focus:outline-none !focus:ring-0 pr-2 sm:pr-4 !appearance-none !shadow-none !focus:shadow-none !ring-0 !focus:ring-0 !m-0 !p-0"
+                            className="flex-1 h-full !bg-transparent !text-white !placeholder-gray-300 text-sm sm:text-lg font-light tracking-wide !outline-none !border-none !focus:outline-none !focus:ring-0 pr-2 sm:pr-4 !appearance-none !shadow-none !focus:shadow-none !ring-0 !focus:ring-0 !m-0 !p-0"
                             style={{
                                 border: '0 !important',
                                 outline: '0 !important',
@@ -171,9 +171,9 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                                             <button
                                                 type="button"
                                                 onClick={() => removeTag(tag)}
-                                                className="w-4 h-4 rounded-full hover:bg-red-400/20 hover:text-red-400 transition-colors duration-200 flex items-center justify-center"
+                                                className="w-5 h-5 rounded-full hover:bg-red-400/20 hover:text-red-400 transition-colors duration-200 flex items-center justify-center"
                                                 aria-label={`Remove ${tag} tag`}>
-                                                <X className="w-2.5 h-2.5" />
+                                                <X className="w-3 h-3" />
                                             </button>
                                         </motion.span>
                                     ))}
@@ -351,7 +351,7 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                                     whileHover={{ scale: 1.05, y: -2 }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => handleTagClick(tag)}
-                                    className={`group relative px-2.5 sm:px-4 py-1.5 sm:py-2 bg-gray-800/40 hover:bg-gray-700/50 border border-gray-600 hover:border-[#00FF89]/40 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 min-h-[32px] sm:min-h-[36px] ${selectedTags.includes(tag) ? 'bg-[#00FF89]/10 border-[#00FF89]/50 text-[#00FF89]' : 'text-gray-300 hover:text-white'}`}
+                                    className={`group relative px-2.5 sm:px-4 py-1.5 sm:py-2 bg-gray-800/40 hover:bg-gray-700/50 border border-gray-600 hover:border-[#00FF89]/40 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/50 min-h-[44px] sm:min-h-[44px] ${selectedTags.includes(tag) ? 'bg-[#00FF89]/10 border-[#00FF89]/50 text-[#00FF89]' : 'text-gray-300 hover:text-white'}`}
                                     aria-label={`Add ${tag} filter`}>
                                     <motion.div
                                         className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100"

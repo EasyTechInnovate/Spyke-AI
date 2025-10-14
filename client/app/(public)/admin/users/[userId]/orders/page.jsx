@@ -274,8 +274,22 @@ export default function AdminUserOrdersPage() {
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="inline-flex bg-[#121212] border border-gray-700 rounded-lg overflow-hidden">
-                                <button onClick={() => setViewMode('grid')} className={`px-3 py-2 text-sm ${viewMode==='grid' ? 'bg-[#00FF89] text-black' : 'text-gray-400 hover:text-white'}`}>Grid</button>
-                                <button onClick={() => setViewMode('list')} className={`px-3 py-2 text-sm ${viewMode==='list' ? 'bg-[#00FF89] text-black' : 'text-gray-400 hover:text-white'}`}>List</button>
+                                <button 
+                                    onClick={() => setViewMode('grid')} 
+                                    className={`px-3 py-2 text-sm ${viewMode==='grid' ? 'bg-[#00FF89] text-black' : 'text-gray-400 hover:text-white'}`}
+                                    aria-label="Switch to grid view"
+                                    aria-pressed={viewMode === 'grid'}
+                                >
+                                    Grid
+                                </button>
+                                <button 
+                                    onClick={() => setViewMode('list')} 
+                                    className={`px-3 py-2 text-sm ${viewMode==='list' ? 'bg-[#00FF89] text-black' : 'text-gray-400 hover:text-white'}`}
+                                    aria-label="Switch to list view"
+                                    aria-pressed={viewMode === 'list'}
+                                >
+                                    List
+                                </button>
                             </div>
                             <button
                                 onClick={() => fetchUserAndOrders(currentPage)}

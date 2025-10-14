@@ -141,8 +141,9 @@ export default function ActiveFilters({ filters, onFilterChange }) {
                             search: ''
                         })
                     }
-                    className="inline-flex items-center gap-1 px-3 py-1 bg-gray-800/50 hover:bg-gray-700 text-white hover:text-red-400 border border-gray-700 hover:border-red-400/50 rounded-full text-sm font-medium transition-all duration-200">
-                    <X className="w-3 h-3" />
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-gray-800/50 hover:bg-gray-700 text-white hover:text-red-400 border border-gray-700 hover:border-red-400/50 rounded-full text-sm font-medium transition-all duration-200"
+                    aria-label="Clear all active filters">
+                    <X className="w-3 h-3" aria-hidden="true" />
                     Clear all
                 </button>
             </motion.div>
@@ -155,8 +156,9 @@ function FilterBadge({ label, onRemove }) {
             {label}
             <button
                 onClick={onRemove}
-                className="hover:bg-brand-primary/30 rounded-full p-0.5">
-                <X className="w-3 h-3" />
+                className="hover:bg-brand-primary/30 rounded-full p-0.5"
+                aria-label={`Remove ${label} filter`}>
+                <X className="w-3 h-3" aria-hidden="true" />
             </button>
         </span>
     )
