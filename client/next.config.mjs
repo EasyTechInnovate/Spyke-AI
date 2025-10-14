@@ -262,15 +262,12 @@ const nextConfig = {
               reuseExistingChunk: true,
               test: /[\\/]src[\\/]|[\\/]components[\\/]|[\\/]lib[\\/]/,
             },
-            // Page-specific chunks
-            shared: {
-              name(module, chunks) {
-                const names = chunks.map(chunk => chunk.name).filter(Boolean)
-                if (names.length === 1) return names[0]
-                return `shared-${crypto.createHash('sha1').update(names.join('')).digest('hex').substring(0, 8)}`
-              },
+            // Default vendor chunks for other node_modules
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
               priority: 5,
-              minChunks: 2,
               reuseExistingChunk: true,
             },
           },
