@@ -1,248 +1,119 @@
 'use client'
 import { motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+
 export default function BackgroundEffectsLight() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setPrefersReducedMotion(mediaQuery.matches)
-    const handleChange = (e) => setPrefersReducedMotion(e.matches)
-    mediaQuery.addEventListener('change', handleChange)
-    return () => mediaQuery.removeEventListener('change', handleChange)
+    if (typeof window !== 'undefined') {
+      const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+      setPrefersReducedMotion(mediaQuery.matches)
+      const handleChange = (e) => setPrefersReducedMotion(e.matches)
+      mediaQuery.addEventListener('change', handleChange)
+      return () => mediaQuery.removeEventListener('change', handleChange)
+    }
   }, [])
-  const particles = Array.from({ length: 12 }, (_, i) => ({
-    id: i,
-    size: Math.random() * 4 + 2,
-    initialX: Math.random() * 100,
-    initialY: Math.random() * 100,
-    duration: Math.random() * 20 + 15,
-    delay: Math.random() * 5,
-  }))
+
+  // Simple green particles - no complex calculations
+  const particles = useMemo(() => 
+    Array.from({ length: 6 }, (_, i) => ({
+      id: i,
+      x: `${15 + (i * 15)}%`,
+      y: `${20 + (i * 10)}%`,
+      size: 2 + (i % 3),
+      delay: i * 0.5
+    })), []
+  )
+
   return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-black" />
-        <div className="absolute inset-0 bg-gradient-to-b from-gray-900/10 via-black to-gray-900/15" />
-        <div
-          className="absolute inset-0 opacity-25"
-          style={{
-            background: `
-              radial-gradient(ellipse 800px 400px at 20% 20%, rgba(0, 255, 137, 0.12) 0%, rgba(0, 255, 137, 0.04) 40%, transparent 70%),
-              radial-gradient(ellipse 600px 300px at 80% 80%, rgba(0, 255, 137, 0.08) 0%, rgba(0, 255, 137, 0.02) 50%, transparent 80%),
-              radial-gradient(ellipse 1000px 500px at 50% 50%, rgba(0, 255, 137, 0.06) 0%, transparent 60%)
-            `
-          }}
-        />
-        <div
-          className="absolute inset-0 opacity-15"
-          style={{
-            background: `
-              linear-gradient(135deg, rgba(0, 255, 137, 0.05) 0%, transparent 30%, rgba(0, 255, 137, 0.03) 60%, transparent 100%),
-              linear-gradient(-45deg, transparent 0%, rgba(0, 255, 137, 0.04) 40%, transparent 80%)
-            `
-          }}
-        />
-      </div>
-      <motion.div
-        className="absolute w-[600px] h-[600px] rounded-full blur-3xl"
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {/* Simple green gradient background */}
+      <div 
+        className="absolute inset-0 opacity-20"
         style={{
-          top: '15%',
-          right: '15%',
-          background: `radial-gradient(circle, rgba(0, 255, 137, 0.12) 0%, rgba(0, 255, 137, 0.06) 40%, transparent 70%)`
-        }}
-        animate={prefersReducedMotion ? {} : {
-          scale: [1, 1.2, 1.1, 1],
-          opacity: [0.4, 0.8, 0.6, 0.4],
-          x: [0, -30, 20, 0],
-          y: [0, 25, -15, 0],
-        }}
-        transition={{
-          duration: prefersReducedMotion ? 0 : 35,
-          repeat: prefersReducedMotion ? 0 : Infinity,
-          ease: "easeInOut"
+          background: `
+            radial-gradient(circle at 20% 30%, rgba(0, 255, 137, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 80% 70%, rgba(0, 255, 137, 0.06) 0%, transparent 60%),
+            radial-gradient(circle at 50% 50%, rgba(0, 255, 137, 0.04) 0%, transparent 70%)
+          `
         }}
       />
-      <motion.div
-        className="absolute w-[500px] h-[500px] rounded-full blur-3xl"
-        style={{
-          bottom: '10%',
-          left: '20%',
-          background: `radial-gradient(circle, rgba(0, 255, 137, 0.10) 0%, rgba(0, 255, 137, 0.05) 50%, transparent 70%)`
-        }}
-        animate={prefersReducedMotion ? {} : {
-          scale: [1.1, 1, 1.3, 1.1],
-          opacity: [0.3, 0.7, 0.4, 0.3],
-          x: [0, 40, -25, 0],
-          y: [0, -20, 30, 0],
-        }}
-        transition={{
-          duration: prefersReducedMotion ? 0 : 40,
-          repeat: prefersReducedMotion ? 0 : Infinity,
-          ease: "easeInOut",
-          delay: 3
-        }}
-      />
-      <motion.div
-        className="absolute w-[400px] h-[400px] rounded-full blur-2xl"
-        style={{
-          top: '40%',
-          left: '45%',
-          background: `radial-gradient(circle, rgba(0, 255, 137, 0.08) 0%, rgba(0, 255, 137, 0.03) 60%, transparent 80%)`
-        }}
-        animate={prefersReducedMotion ? {} : {
-          scale: [1, 1.15, 1],
-          opacity: [0.3, 0.6, 0.3],
-          x: [0, -20, 0],
-          y: [0, 20, 0],
-        }}
-        transition={{
-          duration: prefersReducedMotion ? 0 : 25,
-          repeat: prefersReducedMotion ? 0 : Infinity,
-          ease: "easeInOut",
-          delay: 8
-        }}
-      />
+
+      {/* Static green orbs for depth */}
+      <div className="absolute top-1/4 right-1/5 w-80 h-80 rounded-full blur-3xl bg-[rgba(0,255,137,0.05)]" />
+      <div className="absolute bottom-1/4 left-1/5 w-60 h-60 rounded-full blur-2xl bg-[rgba(0,255,137,0.03)]" />
+      
+      {/* Animated elements only if motion is allowed */}
       {!prefersReducedMotion && (
-        <div className="absolute inset-0">
+        <>
+          {/* Gentle floating orb */}
+          <motion.div
+            className="absolute top-1/3 left-1/2 w-40 h-40 rounded-full blur-xl bg-[rgba(0,255,137,0.04)]"
+            animate={{
+              y: [-10, 10, -10],
+              scale: [1, 1.1, 1],
+            }}
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+
+          {/* Simple floating particles */}
           {particles.map((particle) => (
             <motion.div
               key={particle.id}
-              className="absolute rounded-full blur-sm"
+              className="absolute rounded-full bg-[rgba(0,255,137,0.6)]"
               style={{
-                left: `${particle.initialX}%`,
-                top: `${particle.initialY}%`,
+                left: particle.x,
+                top: particle.y,
                 width: `${particle.size}px`,
                 height: `${particle.size}px`,
-                background: `rgba(0, 255, 137, 0.5)`,
-                boxShadow: `0 0 ${particle.size * 3}px rgba(0, 255, 137, 0.2)`,
+                boxShadow: `0 0 ${particle.size * 3}px rgba(0, 255, 137, 0.2)`
               }}
               animate={{
-                y: [-50, -150, -50],
-                x: [-25, 30, -25],
-                opacity: [0, 1, 0],
-                scale: [0.3, 1.2, 0.3],
+                y: [-20, -40, -20],
+                opacity: [0.3, 0.7, 0.3],
               }}
               transition={{
-                duration: particle.duration,
+                duration: 6,
                 repeat: Infinity,
                 delay: particle.delay,
                 ease: "easeInOut"
               }}
             />
           ))}
-        </div>
-      )}
-      <div
-        className="absolute inset-0 opacity-[0.06]"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(0, 255, 137, 0.3) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 255, 137, 0.3) 1px, transparent 1px)
-          `,
-          backgroundSize: '80px 80px',
-        }}
-      />
-      {!prefersReducedMotion && (
-        <div className="absolute inset-0">
+
+          {/* Rotating ring */}
           <motion.div
-            className="absolute w-60 h-60 border-2 rounded-full"
-            style={{
-              top: '25%',
-              right: '20%',
-              borderColor: 'rgba(0, 255, 137, 0.15)',
-              boxShadow: '0 0 30px rgba(0, 255, 137, 0.08)'
-            }}
-            animate={{
-              rotate: [0, 360],
-              scale: [1, 1.08, 1],
-              opacity: [0.3, 0.6, 0.3],
-            }}
-            transition={{
-              duration: 45,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-          />
-          <motion.div
-            className="absolute w-32 h-32 border rounded-full"
-            style={{
-              bottom: '30%',
-              left: '65%',
-              borderColor: 'rgba(0, 255, 137, 0.2)',
-              boxShadow: '0 0 20px rgba(0, 255, 137, 0.08)'
-            }}
-            animate={{
-              rotate: [360, 0],
-              scale: [1, 1.12, 1],
-              opacity: [0.4, 0.7, 0.4],
-            }}
+            className="absolute top-1/4 right-1/4 w-32 h-32 border border-[rgba(0,255,137,0.1)] rounded-full"
+            animate={{ rotate: 360 }}
             transition={{
               duration: 30,
               repeat: Infinity,
               ease: "linear"
             }}
           />
-          {[...Array(8)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-2 h-2 rounded-full"
-              style={{
-                left: `${10 + (i * 12)}%`,
-                top: `${20 + (i * 9)}%`,
-                background: 'rgba(0, 255, 137, 0.6)',
-                boxShadow: '0 0 12px rgba(0, 255, 137, 0.4)',
-              }}
-              animate={{
-                scale: [1, 2.5, 1],
-                opacity: [0.3, 1, 0.3],
-              }}
-              transition={{
-                duration: 3 + i * 0.4,
-                repeat: Infinity,
-                delay: i * 0.5,
-                ease: "easeInOut"
-              }}
-            />
-          ))}
-        </div>
+        </>
       )}
-      <div className="absolute inset-0">
-        <div
-          className="absolute w-0.5 h-60 opacity-30"
-          style={{
-            top: '5%',
-            left: '20%',
-            background: `linear-gradient(to bottom, rgba(0, 255, 137, 0.6) 0%, rgba(0, 255, 137, 0.2) 50%, transparent 100%)`,
-            transform: 'rotate(12deg)',
-            boxShadow: '0 0 15px rgba(0, 255, 137, 0.2)'
-          }}
-        />
-        <div
-          className="absolute w-0.5 h-48 opacity-30"
-          style={{
-            bottom: '5%',
-            right: '20%',
-            background: `linear-gradient(to top, rgba(0, 255, 137, 0.5) 0%, rgba(0, 255, 137, 0.2) 50%, transparent 100%)`,
-            transform: 'rotate(-15deg)',
-            boxShadow: '0 0 12px rgba(0, 255, 137, 0.2)'
-          }}
-        />
-        <div
-          className="absolute w-0.5 h-40 opacity-25"
-          style={{
-            top: '50%',
-            left: '70%',
-            background: `linear-gradient(to bottom, transparent 0%, rgba(0, 255, 137, 0.4) 50%, transparent 100%)`,
-            transform: 'rotate(8deg)',
-            boxShadow: '0 0 10px rgba(0, 255, 137, 0.2)'
-          }}
-        />
-      </div>
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/20" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/15 via-transparent to-black/15" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-transparent" />
-      </div>
+
+      {/* Subtle grid pattern */}
+      <div 
+        className="absolute inset-0 opacity-[0.02]"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(0, 255, 137, 0.3) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 255, 137, 0.3) 1px, transparent 1px)
+          `,
+          backgroundSize: '80px 80px'
+        }}
+      />
+
+      {/* Edge gradients for depth */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/10" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
     </div>
   )
 }

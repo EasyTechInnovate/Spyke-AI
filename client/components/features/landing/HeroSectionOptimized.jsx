@@ -35,10 +35,10 @@ export default function HeroSectionOptimized() {
   const [mounted, setMounted] = useState(false)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [dimensions, setDimensions] = useState({ height: '90vh' })
-  const [isLoading, setIsLoading] = useState(true)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const metrics = useHeroPerformance()
   const { user } = useAuth()
+
   useEffect(() => {
     setMounted(true)
     if (typeof window !== 'undefined') {
@@ -47,10 +47,12 @@ export default function HeroSectionOptimized() {
       }
       updateDimensions()
       window.addEventListener('resize', updateDimensions)
+
       const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
       setPrefersReducedMotion(mediaQuery.matches)
       const handleMotionChange = (e) => setPrefersReducedMotion(e.matches)
       mediaQuery.addEventListener('change', handleMotionChange)
+
       const handleMouseMove = (e) => {
         if (!prefersReducedMotion) {
           setMousePosition({
@@ -60,25 +62,25 @@ export default function HeroSectionOptimized() {
         }
       }
       window.addEventListener('mousemove', handleMouseMove)
-      const loadingTimer = setTimeout(() => {
-        setIsLoading(false)
-      }, 800)
+
       return () => {
         window.removeEventListener('resize', updateDimensions)
         mediaQuery.removeEventListener('change', handleMotionChange)
         window.removeEventListener('mousemove', handleMouseMove)
-        clearTimeout(loadingTimer)
       }
     }
   }, [prefersReducedMotion])
+
   const handleSearch = (query) => {
     console.log('🎯 [HeroSectionOptimized] Search initiated:', query)
   }
-  if (!mounted || isLoading) {
+
+  // Show minimal loading only during initial mount for SSR/hydration
+  if (!mounted) {
     return (
       <section
         className="relative overflow-hidden flex items-center pt-16"
-        style={{ minHeight: dimensions.height }}
+        style={{ minHeight: '90vh' }}
         aria-label="Loading hero section"
       >
         <div className="absolute inset-0 bg-black" />
@@ -109,6 +111,7 @@ export default function HeroSectionOptimized() {
       </section>
     )
   }
+
   return (
     <HeroAccessibility>
       <section
