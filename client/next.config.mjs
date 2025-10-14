@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 import bundleAnalyzer from '@next/bundle-analyzer'
 import crypto from 'crypto'
+import path from 'path'
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
@@ -199,6 +200,7 @@ const nextConfig = {
           cacheGroups: {
             defaultVendors: false,
             default: false,
+            // React framework bundle
             framework: {
               name: 'framework',
               chunks: 'all',
@@ -206,43 +208,88 @@ const nextConfig = {
               priority: 40,
               enforce: true,
             },
+            // Next.js runtime
+            nextjs: {
+              name: 'nextjs',
+              chunks: 'all',
+              test: /[\\/]node_modules[\\/]next[\\/]/,
+              priority: 35,
+              enforce: true,
+            },
+            // Charts and visualization libraries
+            charts: {
+              name: 'charts',
+              chunks: 'all',
+              test: /[\\/]node_modules[\\/](recharts|chart\.js|d3|plotly)[\\/]/,
+              priority: 30,
+              enforce: true,
+            },
+            // Animation libraries
+            animation: {
+              name: 'animation',
+              chunks: 'all',
+              test: /[\\/]node_modules[\\/](framer-motion|lottie-react|react-spring)[\\/]/,
+              priority: 25,
+              enforce: true,
+            },
+            // UI component libraries
+            ui: {
+              name: 'ui',
+              chunks: 'all',
+              test: /[\\/]node_modules[\\/](lucide-react|@headlessui|@radix-ui)[\\/]/,
+              priority: 20,
+              enforce: true,
+            },
+            // Utilities and common libraries
             lib: {
               test(module) {
-                return module.size() > 160000
+                return module.size() > 160000 && /node_modules[/\\]/.test(module.identifier())
               },
               name(module) {
-                const hash = crypto.createHash('sha1')
-                hash.update(module.identifier())
-                return `lib-${hash.digest('hex').substring(0, 8)}`
+                const hash = crypto.createHash('sha1').update(module.identifier()).digest('hex').substring(0, 8)
+                return `lib-${hash}`
               },
-              priority: 30,
+              priority: 15,
               minChunks: 1,
               reuseExistingChunk: true,
             },
+            // Application code commons
             commons: {
               name: 'commons',
               chunks: 'all',
               minChunks: 2,
-              priority: 20,
-              reuseExistingChunk: true,
-            },
-            shared: {
-              name(_module, chunks) {
-                return `shared-${crypto
-                  .createHash('sha1')
-                  .update(chunks.map((c) => c.name).join('_'))
-                  .digest('hex')
-                  .substring(0, 8)}`
-              },
               priority: 10,
+              reuseExistingChunk: true,
+              test: /[\\/]src[\\/]|[\\/]components[\\/]|[\\/]lib[\\/]/,
+            },
+            // Page-specific chunks
+            shared: {
+              name(module, chunks) {
+                const names = chunks.map(chunk => chunk.name).filter(Boolean)
+                if (names.length === 1) return names[0]
+                return `shared-${crypto.createHash('sha1').update(names.join('')).digest('hex').substring(0, 8)}`
+              },
+              priority: 5,
               minChunks: 2,
               reuseExistingChunk: true,
             },
           },
         },
+        // Better tree shaking
+        usedExports: true,
+        sideEffects: false,
+        // Minimize bundle size
+        minimize: true,
       }
     }
 
+    // Optimize module resolution
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve('./'),
+    }
+
+    // Ignore source maps in production
     config.module.rules.push({
       test: /\.map$/,
       use: 'ignore-loader',

@@ -148,8 +148,14 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                                 WebkitBorderRadius: '0 !important',
                                 MozBorderRadius: '0 !important'
                             }}
-                            aria-label="Search AI prompts and tools"
-                            aria-describedby="search-help"
+                            aria-label="Search AI prompts, automation tools and scripts"
+                            aria-describedby="search-help search-instructions"
+                            aria-expanded={showResults}
+                            aria-haspopup="listbox"
+                            role="combobox"
+                            aria-autocomplete="list"
+                            aria-controls={showResults ? "search-results" : undefined}
+                            autoComplete="off"
                         />
                         <AnimatePresence>
                             {selectedTags.length > 0 && (
@@ -212,14 +218,22 @@ export default function SearchBar({ popularTags = [], onSearch }) {
                     className="sr-only">
                     Search for AI prompts, automation tools, and scripts. Results will appear below as you type.
                 </div>
+                <div
+                    id="search-instructions" 
+                    className="sr-only">
+                    Use arrow keys to navigate search results. Press Enter to select a result or Escape to close.
+                </div>
                 <AnimatePresence>
                     {showResults && (
                         <motion.div
+                            id="search-results"
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
                             transition={{ duration: 0.2 }}
                             className="absolute top-full left-0 right-0 mt-2 z-[999] bg-[#1f1f1f]/98 backdrop-blur-xl border border-gray-700 rounded-xl sm:rounded-2xl overflow-hidden max-h-80 overflow-y-auto shadow-2xl mx-2 sm:mx-0"
+                            role="listbox"
+                            aria-label="Search results"
                             style={{
                                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05)'
                             }}>

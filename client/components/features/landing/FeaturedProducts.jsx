@@ -488,6 +488,7 @@ function ProductCard({ product, onClick }) {
                     <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                             onClick={handleLike}
+                            aria-label={isLiked ? "Remove from favorites" : "Add to favorites"}
                             className="p-1.5 rounded-md bg-black/45 backdrop-blur hover:bg-black/65 transition">
                             <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-200'}`} />
                         </button>

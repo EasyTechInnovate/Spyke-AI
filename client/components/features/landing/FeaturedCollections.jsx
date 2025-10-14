@@ -26,9 +26,9 @@ const collections = [
     title: 'Trending Prompts',
     description: 'Most popular prompts this week',
     icon: Award,
-    color: '#8B5CF6',
-    bgColor: 'rgba(139, 92, 246, 0.1)',
-    borderColor: 'rgba(139, 92, 246, 0.2)',
+    color: '#7C3AED',
+    bgColor: 'rgba(124, 58, 237, 0.1)',
+    borderColor: 'rgba(124, 58, 237, 0.2)',
     link: '/explore?type=prompt&sortBy=popularity',
     stats: '1k+ uses'
   },
