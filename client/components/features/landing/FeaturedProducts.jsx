@@ -200,13 +200,18 @@ const FeaturedProducts = memo(function FeaturedProducts() {
                                     <div className="flex flex-col sm:flex-row gap-3">
                                         <button
                                             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#00FF89] text-black font-semibold rounded-xl hover:bg-[#00FF89]/90 transition-all duration-200"
-                                            onClick={() => window.location.reload()}>
+                                            onClick={() => window.location.reload()}
+                                            aria-label="Try loading featured products again"
+                                        >
                                             Try Again
                                         </button>
-                                        <Link href="/explore">
-                                            <button className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white bg-transparent hover:border-white/40 hover:bg-white/5 rounded-xl transition-all duration-200">
+                                        <Link href="/explore" aria-label="Browse all products in marketplace">
+                                            <button 
+                                                className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white bg-transparent hover:border-white/40 hover:bg-white/5 rounded-xl transition-all duration-200"
+                                                aria-label="Browse all products in the marketplace"
+                                            >
                                                 Browse All Products
-                                                <ArrowRight className="w-4 h-4" />
+                                                <ArrowRight className="w-4 h-4" aria-hidden="true" />
                                             </button>
                                         </Link>
                                     </div>

@@ -102,6 +102,7 @@ export default function CuratedUseCases() {
                 <Link
                   href={useCase.link}
                   className="group block h-full"
+                  aria-label={`Explore ${useCase.role} tools - ${useCase.title}: ${useCase.description}`}
                 >
                   <div className="relative h-full bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-brand-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-brand-primary/10">
                     <div className="p-6 flex flex-col h-full">

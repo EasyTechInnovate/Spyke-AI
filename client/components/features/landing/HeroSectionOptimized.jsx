@@ -202,10 +202,13 @@ export default function HeroSectionOptimized() {
                 transition={{ duration: prefersReducedMotion ? 0 : 0.6, delay: prefersReducedMotion ? 0 : 0.8 }}
               >
                 <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 w-full max-w-md sm:max-w-none mx-auto">
-                  <Link href="/explore" className="w-full sm:w-auto">
-                    <button className="group relative inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-3 text-black font-semibold bg-[#00FF89] rounded-lg hover:bg-[#00FF89]/90 transition-all duration-200 hover:shadow-lg hover:shadow-[#00FF89]/25 w-full sm:w-auto min-h-[48px] touch-manipulation">
+                  <Link href="/explore" className="w-full sm:w-auto" aria-label="Explore AI marketplace with thousands of tools and prompts">
+                    <button 
+                      className="group relative inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-3 text-black font-semibold bg-[#00FF89] rounded-lg hover:bg-[#00FF89]/90 transition-all duration-200 hover:shadow-lg hover:shadow-[#00FF89]/25 w-full sm:w-auto min-h-[48px] touch-manipulation"
+                      aria-label="Explore marketplace - Browse AI prompts, tools, and automation solutions"
+                    >
                       <span className="text-base sm:text-base">Explore Marketplace</span>
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" aria-hidden="true" />
                     </button>
                   </Link>
                   <div className="w-full sm:w-auto">

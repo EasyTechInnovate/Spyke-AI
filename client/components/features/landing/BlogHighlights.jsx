@@ -29,9 +29,11 @@ export default function BlogHighlights() {
                         <div className="flex justify-center">
                             <Link
                                 href="/blog"
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-[#00FF89] text-black font-semibold rounded-lg hover:bg-[#00FF89]/90 transition-all duration-200 hover:shadow-lg hover:shadow-[#00FF89]/25 group">
-                                Browse the Blog
-                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-[#00FF89] to-[#00e67a] text-black font-bold rounded-2xl hover:from-[#00e67a] hover:to-[#00FF89] transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-[#00FF89]/25 text-lg"
+                                aria-label="Read our blog - Explore articles on AI, automation, and business insights"
+                            >
+                                <span>Read Our Blog</span>
+                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" aria-hidden="true" />
                             </Link>
                         </div>
                     </motion.div>

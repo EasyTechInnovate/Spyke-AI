@@ -245,9 +245,10 @@ export default function QuickFilters() {
                         className="text-center mt-12">
                         <Link
                             href="/explore"
-                            className="group inline-flex items-center gap-3 px-8 py-4 bg-brand-primary text-black font-semibold rounded-xl hover:bg-brand-primary/90 transition-all duration-200 hover:shadow-lg hover:shadow-brand-primary/25">
+                            className="group inline-flex items-center gap-3 px-8 py-4 bg-brand-primary text-black font-semibold rounded-xl hover:bg-brand-primary/90 transition-all duration-200 hover:shadow-lg hover:shadow-brand-primary/25"
+                            aria-label="Explore all AI tools and automation solutions">
                             <span>Explore Tools</span>
-                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
                         </Link>
                     </motion.div>
                 </div>

@@ -164,13 +164,14 @@ export default function CreatorSpotlights() {
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: 0.2 }}
                             className="text-center mt-8 sm:mt-12">
-                            <Link href="/creators">
+                            <Link href="/creators" aria-label="Browse all AI creators and sellers on the platform">
                                 <DSButton
                                     variant="primary"
                                     size="large"
-                                    className="group">
+                                    className="group"
+                                    aria-label="Browse all creators - View profiles of AI experts and automation specialists">
                                     <span>Browse All Creators</span>
-                                    <span className="group-hover:translate-x-1 transition-transform">→</span>
+                                    <span className="group-hover:translate-x-1 transition-transform" aria-hidden="true">→</span>
                                 </DSButton>
                             </Link>
                         </motion.div>

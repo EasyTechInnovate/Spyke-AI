@@ -87,10 +87,13 @@ export default function FeaturedCollections() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}>
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+              >
                 <Link
                   href={collection.link}
-                  className="group block h-full">
+                  className="group block h-full"
+                  aria-label={`Browse ${collection.title} - ${collection.description}`}
+                >
                   <div className="relative h-full bg-[#171717] border border-gray-800 rounded-xl sm:rounded-2xl overflow-hidden hover:border-gray-700 transition-all duration-300 hover:transform hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20">
                     <div 
                       className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
