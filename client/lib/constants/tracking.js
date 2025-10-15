@@ -33,6 +33,12 @@ export const TRACKING_EVENTS = {
     FILTER_APPLIED: 'filter_applied',
     CATEGORY_VIEWED: 'category_viewed',
 
+    SEARCH: 'search_performed_explore',
+    FILTER_CHANGE: 'filter_applied', 
+    CLEAR_FILTERS: 'filters_cleared',
+    SORT_CHANGE: 'sort_changed',
+    PAGE_CHANGE: 'page_changed',
+
     // User Engagement Events
     PAGE_VIEWED: 'page_viewed',
     BUTTON_CLICKED: 'button_clicked',
@@ -132,6 +138,27 @@ export const TRACKING_PROPERTIES = {
         NEW: 'new',
         RETURNING: 'returning',
         PREMIUM: 'premium'
+    },
+
+    // Explore Page Properties
+    SEARCH: {
+        source: 'explore_page'
+    },
+
+    FILTER_CHANGE: {
+        source: 'explore_page'
+    },
+
+    CLEAR_FILTERS: {
+        source: 'explore_page'
+    },
+
+    SORT_CHANGE: {
+        source: 'explore_page'  
+    },
+
+    PAGE_CHANGE: {
+        source: 'explore_page'
     }
 }
 

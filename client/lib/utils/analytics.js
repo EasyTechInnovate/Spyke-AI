@@ -20,16 +20,10 @@ export const track = (eventName, properties = {}, userId = null) => {
   try {
     // Auto-initialize with env variable if not already done
     if (!isInitialized) {
-      const apiKey = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY;
-      if (apiKey) {
+      const apiKey = "60f1e4c9467fa9b1c4e6748e2794dd53";
         initializeAmplitude(apiKey);
-      } else {
-        console.warn('Amplitude API key not found. Set NEXT_PUBLIC_AMPLITUDE_API_KEY in your environment.');
-        return;
-      }
     }
 
-    // Set user ID if provided
     if (userId) {
       amplitude.getInstance().setUserId(userId);
     }
