@@ -76,9 +76,8 @@ export default function HeroSectionOptimized() {
   }
 
   const handleExploreClick = () => {
-    track(TRACKING_EVENTS.BUTTON_CLICKED, {
-      button_name: 'explore_marketplace',
-      location: 'hero_section',
+    track(TRACKING_EVENTS.MARKETPLACE_BROWSED, {
+      source: 'hero_cta',
       user_type: user ? 'authenticated' : 'anonymous'
     })
   }

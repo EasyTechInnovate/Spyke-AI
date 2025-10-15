@@ -43,7 +43,6 @@ export const track = (eventName, properties = {}, userId = null) => {
       ...properties
     };
 
-    // Send the event
     amplitude.getInstance().logEvent(eventName, commonProperties);
     
     console.log(`📊 Tracked: ${eventName}`, commonProperties);

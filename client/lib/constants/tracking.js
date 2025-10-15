@@ -106,7 +106,8 @@ export const TRACKING_PROPERTIES = {
         EMAIL: 'email',
         GOOGLE: 'google',
         FACEBOOK: 'facebook',
-        APPLE: 'apple'
+        APPLE: 'apple',
+        STRIPE: 'stripe'
     },
 
     // Device Types

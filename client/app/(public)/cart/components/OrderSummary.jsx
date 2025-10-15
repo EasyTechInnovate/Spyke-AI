@@ -7,7 +7,7 @@ import { CHECKOUT_FEATURES } from '../constants'
 import CartPromoDisplay from '@/components/features/cart/CartPromoDisplay'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
 import { track } from '@/lib/utils/analytics'
-import { TRACKING_EVENTS } from '@/lib/constants/tracking'
+import { TRACKING_EVENTS, TRACKING_PROPERTIES } from '@/lib/constants/tracking'
 
 export default function OrderSummary({
     subtotal,

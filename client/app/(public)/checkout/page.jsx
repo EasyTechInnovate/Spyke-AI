@@ -29,7 +29,7 @@ import { useAuth } from '@/hooks/useAuth'
 import Link from 'next/link'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
 import { track } from '@/lib/utils/analytics'
-import { TRACKING_EVENTS } from '@/lib/constants/tracking'
+import { TRACKING_EVENTS, TRACKING_PROPERTIES } from '@/lib/constants/tracking'
 
 export default function CheckoutPage() {
     const [notification, setNotification] = useState(null)
@@ -93,22 +93,12 @@ export default function CheckoutPage() {
         }
     }
     const handlePaymentMethodChange = async (newPaymentMethod) => {
-        setPaymentMethod(newPaymentMethod)        
-        track(TRACKING_EVENTS.BUTTON_CLICKED, {
-            button_name: 'payment_method_selected',
-            payment_method: newPaymentMethod,
-            cart_value: total,
-            item_count: cartItems.length
-        })
+        setPaymentMethod(newPaymentMethod)
+        // No tracking needed for payment method selection as it's just UI state
     }
     const handleNextStep = async () => {
         if (step === 1) {
-            track(TRACKING_EVENTS.BUTTON_CLICKED, {
-                button_name: 'continue_to_payment',
-                checkout_step: step,
-                cart_value: total,
-                item_count: cartItems.length
-            })
+            // No tracking needed for step navigation as it's just UI progression
             setStep(2)
         }
     }
@@ -118,9 +108,8 @@ export default function CheckoutPage() {
     const handleCheckout = async () => {
         setLoading(true)
         
-        track(TRACKING_EVENTS.BUTTON_CLICKED, {
-            button_name: 'complete_purchase',
-            payment_method: paymentMethod,
+        track(TRACKING_EVENTS.PURCHASE_COMPLETED, {
+            payment_method: TRACKING_PROPERTIES.METHOD.STRIPE,
             cart_value: total,
             item_count: cartItems.length,
             has_promo: !!cartData.appliedPromocode,
@@ -144,7 +133,7 @@ export default function CheckoutPage() {
             }
 
             track(TRACKING_EVENTS.CHECKOUT_COMPLETED, {
-                payment_method: paymentMethod,
+                payment_method: TRACKING_PROPERTIES.METHOD.STRIPE,
                 cart_value: total,
                 item_count: cartItems.length,
                 redirect_to_stripe: true
@@ -154,7 +143,7 @@ export default function CheckoutPage() {
             
         } catch (error) {
             track(TRACKING_EVENTS.CHECKOUT_FAILED, {
-                payment_method: paymentMethod,
+                payment_method: TRACKING_PROPERTIES.METHOD.STRIPE,
                 error_message: error.message,
                 cart_value: total,
                 item_count: cartItems.length,

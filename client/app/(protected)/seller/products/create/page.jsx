@@ -8,7 +8,7 @@ import { STEP_HELPERS } from '@/lib/constants/productCreate'
 import { productsAPI } from '@/lib/api'
 import { useNotifications } from '@/hooks/useNotifications'
 import { track } from '@/lib/utils/analytics'
-import { TRACKING_EVENTS } from '@/lib/constants/tracking'
+import { TRACKING_EVENTS, TRACKING_PROPERTIES } from '@/lib/constants/tracking'
 import Step1Basic from './steps/Step1Basic'
 import Step2Details from './steps/Step2Details'
 import Step3Technical from './steps/Step3Technical'
@@ -106,14 +106,7 @@ export default function ProductCreatePage() {
         const isValid = validateStep(currentStep)
         if (isValid) {
             markStepComplete(currentStep)
-
-            track(TRACKING_EVENTS.BUTTON_CLICKED, {
-                button_name: 'next_step',
-                product_creation_step: currentStep,
-                step_name: STEP_HELPERS[currentStep]?.title || `Step ${currentStep}`,
-                completion_percentage: completionPercentage
-            })
-
+            
             if (currentStep < 6) {
                 nextStep()
             } else {
@@ -122,7 +115,7 @@ export default function ProductCreatePage() {
         } else {
             showError('Please fix the errors before proceeding')
         }
-    }, [currentStep, validateStep, markStepComplete, nextStep, showError, completionPercentage])
+    }, [currentStep, validateStep, markStepComplete, nextStep, showError])
 
     const handlePrev = useCallback(() => {
         if (currentStep > 1) {

@@ -9,7 +9,7 @@ import { paymentAPI } from '@/lib/api'
 import { useCart } from '@/hooks/useCart'
 import confetti from 'canvas-confetti'
 import { track } from '@/lib/utils/analytics'
-import { TRACKING_EVENTS } from '@/lib/constants/tracking'
+import { TRACKING_EVENTS, TRACKING_PROPERTIES } from '@/lib/constants/tracking'
 
 function LoadingUI() {
     return (
@@ -140,7 +140,7 @@ function CheckoutSuccessContent() {
                 track(TRACKING_EVENTS.PURCHASE_COMPLETED, {
                     order_id: order.id,
                     total_amount: order.total,
-                    payment_method: 'stripe',
+                    payment_method: TRACKING_PROPERTIES.METHOD.STRIPE,
                     items_purchased: order.items.length,
                     discount_applied: order.discount > 0,
                     discount_amount: order.discount,
@@ -250,17 +250,15 @@ function CheckoutSuccessContent() {
     const formatCurrency = (val) => Number(val ?? 0).toFixed(2)
 
     const handleAccessProducts = () => {
-        track(TRACKING_EVENTS.BUTTON_CLICKED, {
-            button_name: 'access_my_products',
-            location: 'checkout_success',
+        track(TRACKING_EVENTS.PRODUCT_ACCESSED, {
+            source: 'checkout_success',
             order_id: order?.id
         })
     }
 
     const handleContinueShopping = () => {
-        track(TRACKING_EVENTS.BUTTON_CLICKED, {
-            button_name: 'continue_shopping',
-            location: 'checkout_success',
+        track(TRACKING_EVENTS.MARKETPLACE_BROWSED, {
+            source: 'checkout_success',  
             order_id: order?.id
         })
     }
