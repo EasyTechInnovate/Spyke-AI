@@ -15,6 +15,7 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { categoryAPI } from '@/lib/api/toolsNiche'
 import { track } from '@/lib/utils/analytics'
 import { TRACKING_EVENTS, TRACKING_PROPERTIES } from '@/lib/constants/tracking'
+import FilterSidebar from '@/components/features/explore/FilterSidebar'
 
 function useMounted() {
     const mounted = useRef(false)
