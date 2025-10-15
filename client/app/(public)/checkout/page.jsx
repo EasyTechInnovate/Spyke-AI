@@ -28,9 +28,6 @@ import { paymentAPI, cartAPI } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
 import Link from 'next/link'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
-import { track } from '@/lib/utils/analytics'
-import { TRACKING_EVENTS, TRACKING_PROPERTIES } from '@/lib/constants/tracking'
-
 export default function CheckoutPage() {
     const [notification, setNotification] = useState(null)
     const showMessage = (message, type = 'info') => {
@@ -65,18 +62,6 @@ export default function CheckoutPage() {
         }, 500)
         return () => clearTimeout(timer)
     }, [cartItems.length, cartLoading, hasCheckedCart, initialLoad, router, skipCartRedirect, isAuthenticated])
-
-    useEffect(() => {
-        if (hasCheckedCart && !cartLoading && cartItems.length > 0) {
-            track(TRACKING_EVENTS.PAGE_VIEWED, {
-                page_name: 'checkout',
-                cart_value: total,
-                item_count: cartItems.length,
-                has_promo: !!cartData.appliedPromocode
-            })
-        }
-    }, [hasCheckedCart, cartLoading, cartItems.length, total, cartData.appliedPromocode])
-
     const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
     const discount = cartData.appliedPromocode
         ? cartData.appliedPromocode.discountType === 'percentage'
@@ -94,11 +79,9 @@ export default function CheckoutPage() {
     }
     const handlePaymentMethodChange = async (newPaymentMethod) => {
         setPaymentMethod(newPaymentMethod)
-        // No tracking needed for payment method selection as it's just UI state
     }
     const handleNextStep = async () => {
         if (step === 1) {
-            // No tracking needed for step navigation as it's just UI progression
             setStep(2)
         }
     }
@@ -107,15 +90,6 @@ export default function CheckoutPage() {
     }
     const handleCheckout = async () => {
         setLoading(true)
-        
-        track(TRACKING_EVENTS.PURCHASE_COMPLETED, {
-            payment_method: TRACKING_PROPERTIES.METHOD.STRIPE,
-            cart_value: total,
-            item_count: cartItems.length,
-            has_promo: !!cartData.appliedPromocode,
-            discount_amount: discount
-        })
-
         try {
             // Only allow Stripe payments
             if (paymentMethod !== 'stripe') {
@@ -132,24 +106,9 @@ export default function CheckoutPage() {
                 throw new Error('Failed to create checkout session')
             }
 
-            track(TRACKING_EVENTS.CHECKOUT_COMPLETED, {
-                payment_method: TRACKING_PROPERTIES.METHOD.STRIPE,
-                cart_value: total,
-                item_count: cartItems.length,
-                redirect_to_stripe: true
-            })
-
             window.location.href = result.url
             
         } catch (error) {
-            track(TRACKING_EVENTS.CHECKOUT_FAILED, {
-                payment_method: TRACKING_PROPERTIES.METHOD.STRIPE,
-                error_message: error.message,
-                cart_value: total,
-                item_count: cartItems.length,
-                failure_step: 'stripe_session_creation'
-            })
-            
             showMessage(error.message || 'Payment failed. Please try again.', 'error')
         } finally {
             setLoading(false)
