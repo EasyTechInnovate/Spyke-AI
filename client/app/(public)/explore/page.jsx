@@ -2,7 +2,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo, Suspense } from 'react'
 import dynamic from 'next/dynamic'
 import { useSearchParams, useRouter } from 'next/navigation'
-import Header from '@/components/shared/layout/Header'
 import ExploreHeader from '@/components/features/explore/ExploreHeader'
 import ExploreControls from '@/components/features/explore/ExploreControls'
 import ActiveFilters from '@/components/features/explore/ActiveFilters'
@@ -13,10 +12,9 @@ import { CATEGORIES, PRODUCT_TYPES, INDUSTRIES, SETUP_TIMES, ITEMS_PER_PAGE, DEF
 import { Loader2, AlertTriangle } from 'lucide-react'
 import { useDebounce } from '@/hooks/useDebounce'
 import { categoryAPI } from '@/lib/api/toolsNiche'
-import { track } from '@/lib/utils/analytics'
-import { TRACKING_EVENTS, TRACKING_PROPERTIES } from '@/lib/constants/tracking'
-import FilterSidebar from '@/components/features/explore/FilterSidebar'
-
+const FilterSidebar = dynamic(() => import('@/components/features/explore/FilterSidebar'), { ssr: false })
+const MobileFilterDrawer = dynamic(() => import('@/components/features/explore/MobileFilterDrawer'), { ssr: false })
+const VirtualizedProductGrid = dynamic(() => import('@/components/features/explore/VirtualizedProductGrid'), { ssr: false })
 function useMounted() {
     const mounted = useRef(false)
     useEffect(() => {
@@ -266,41 +264,17 @@ function ExplorePageContent() {
     const handleFilterChange = (next) => {
         setFilters(next)
         setPage(1)
-        
-        track(TRACKING_EVENTS.FILTER_APPLIED, {
-            source: 'explore_page',
-            category: next.category,
-            type: next.type,
-            industry: next.industry,
-            setup_time: next.setupTime,
-            rating: next.rating,
-            verified_only: next.verifiedOnly,
-            price_range: `${next.priceRange[0]}-${next.priceRange[1]}`
-        })
     }
-
     const clearFilters = () => {
         setFilters(DEFAULT_FILTERS)
         setPage(1)
-        
-        track(TRACKING_EVENTS.CLEAR_FILTERS, {
-            source: 'explore_page'
-        })
     }
-
     const handlePageChange = (p) => {
         setPage(p)
         if (typeof window !== 'undefined') {
             const el = document.getElementById('products-section')
             el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
-        
-        track(TRACKING_EVENTS.PAGE_CHANGE, {
-            source: 'explore_page',
-            page: p,
-            total_pages: totalPages,
-            results_count: totalItems
-        })
     }
     const useVirtual = products.length > 50
     return (
@@ -318,13 +292,7 @@ function ExplorePageContent() {
                     filters={filters}
                     viewMode={viewMode}
                     showFilters={showFilters}
-                    onSearch={(s) => {
-                        setFilters((f) => ({ ...f, search: s }))
-                        track(TRACKING_EVENTS.SEARCH, {
-                            ...TRACKING_PROPERTIES.SEARCH,
-                            search: s
-                        })
-                    }}
+                    onSearch={(s) => setFilters((f) => ({ ...f, search: s }))}
                     onViewModeChange={setViewMode}
                     onToggleFilters={() => setShowFilters((v) => !v)}
                     onToggleMobileFilters={() => setShowMobileFilters(true)}
@@ -333,10 +301,6 @@ function ExplorePageContent() {
                     onSortChange={(id) => {
                         setSortId(id)
                         setPage(1)
-                        track(TRACKING_EVENTS.SORT_CHANGE, {
-                            ...TRACKING_PROPERTIES.SORT_CHANGE,
-                            sortId: id
-                        })
                     }}
                 />
                 <ActiveFilters
