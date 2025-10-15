@@ -6,8 +6,10 @@ import { useRouter } from 'next/navigation'
 import Header from '@/components/shared/layout/Header'
 import api from '@/lib/api'
 import { checkPasswordStrength, countryCodes, validateEmail, validatePhone, formatPhone } from '@/lib/utils/utils'
+import { track } from '@/lib/utils/analytics'
 import { Eye, EyeOff, Mail, Lock, Phone, ArrowRight, Sparkles, Shield, Zap, Users, CheckCircle, Globe, ChevronDown, Loader } from 'lucide-react'
 import Notification from '@/components/shared/Notification'
+import { TRACKING_EVENTS, TRACKING_PROPERTIES } from '@/lib/constants/tracking'
 export const debounce = (func, wait) => {
     let timeout
     return (...args) => {
@@ -135,6 +137,10 @@ export default function SignupPage() {
             })
             if (!validateForm()) return
             setLoading(true)
+            track(TRACKING_EVENTS.SIGNUP_STARTED, {
+                method: TRACKING_PROPERTIES.METHOD.EMAIL
+            })
+
             try {
                 const countryCodeDigits = formData.countryCode.replace(/\D/g, '')
                 const phoneNumberDigits = formData.phoneNumber.replace(/\D/g, '')
@@ -150,6 +156,12 @@ export default function SignupPage() {
                 })
                 if (response && (response.success === true || response.statusCode === 201 || (response.id && response.emailAddress))) {
                     showNotification('Account created successfully! Please check your email to verify your account before signing in.', 'success')
+
+                    // Track successful signup
+                    track(TRACKING_EVENTS.SIGNUP_COMPLETED, {
+                        method: TRACKING_PROPERTIES.METHOD.EMAIL
+                    })
+
                     setTimeout(() => {
                         router.push(`/verify-email?email=${encodeURIComponent(formData.emailAddress)}`)
                     }, 3000)
@@ -159,6 +171,12 @@ export default function SignupPage() {
             } catch (error) {
                 const errorMessage = error?.response?.data?.message || error?.message || 'Registration failed. Please try again.'
                 showNotification(errorMessage, 'error')
+
+                // Track failed signup
+                track(TRACKING_EVENTS.SIGNUP_FAILED, {
+                    method: TRACKING_PROPERTIES.METHOD.EMAIL,
+                    error: errorMessage
+                })
             } finally {
                 setLoading(false)
             }

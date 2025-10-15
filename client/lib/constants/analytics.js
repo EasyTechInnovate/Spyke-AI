@@ -305,3 +305,5 @@ export const METRIC_DEFINITIONS = {
         calculation: "Count of sellers with recent activity or sales"
     }
 }
+
+export default METRIC_DEFINITIONS;

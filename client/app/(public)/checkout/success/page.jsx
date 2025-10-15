@@ -8,6 +8,8 @@ import Link from 'next/link'
 import { paymentAPI } from '@/lib/api'
 import { useCart } from '@/hooks/useCart'
 import confetti from 'canvas-confetti'
+import { track } from '@/lib/utils/analytics'
+import { TRACKING_EVENTS } from '@/lib/constants/tracking'
 
 function LoadingUI() {
     return (
@@ -64,34 +66,42 @@ function CheckoutSuccessContent() {
             gravity: 0.8,
             scalar: 1.2
         })
-        setTimeout(() => confetti({
-            particleCount: 80,
-            spread: 60,
-            origin: { x: 0.3, y: 0.4 },
-            colors,
-            shapes: ['star'],
-            gravity: 0.6
-        }), 200)
-        setTimeout(() => confetti({
-            particleCount: 80,
-            spread: 60,
-            origin: { x: 0.7, y: 0.4 },
-            colors,
-            shapes: ['star'],
-            gravity: 0.6
-        }), 400)
+        setTimeout(
+            () =>
+                confetti({
+                    particleCount: 80,
+                    spread: 60,
+                    origin: { x: 0.3, y: 0.4 },
+                    colors,
+                    shapes: ['star'],
+                    gravity: 0.6
+                }),
+            200
+        )
+        setTimeout(
+            () =>
+                confetti({
+                    particleCount: 80,
+                    spread: 60,
+                    origin: { x: 0.7, y: 0.4 },
+                    colors,
+                    shapes: ['star'],
+                    gravity: 0.6
+                }),
+            400
+        )
     }, [])
 
     useEffect(() => {
         if (!sessionId) {
-            setState(prev => ({ ...prev, loading: false, error: 'No payment session found' }))
+            setState((prev) => ({ ...prev, loading: false, error: 'No payment session found' }))
             return
         }
 
         // Prevent duplicate processing
         const storageKey = `order_confirmed_${sessionId}`
         const alreadyProcessed = sessionStorage.getItem(storageKey)
-        
+
         if (alreadyProcessed) {
             try {
                 const cachedOrder = JSON.parse(alreadyProcessed)
@@ -106,11 +116,11 @@ function CheckoutSuccessContent() {
         const confirmOrder = async () => {
             try {
                 const response = await paymentAPI.confirmCheckoutSession(sessionId)
-                
+
                 if (!isMounted) return
 
                 const data = response?.data || response
-                
+
                 if (!data || !data.purchaseId) {
                     throw new Error('Invalid order data received')
                 }
@@ -122,9 +132,27 @@ function CheckoutSuccessContent() {
                     subtotal: data.totalAmount ?? data.finalAmount ?? 0,
                     discount: data.discountAmount ?? 0,
                     status: 'completed',
-                    method: data.paymentMethod?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || 'Stripe Checkout',
+                    method: data.paymentMethod?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || 'Stripe Checkout',
                     date: data.purchaseDate || new Date().toISOString()
                 }
+
+                // Track successful purchase completion
+                track(TRACKING_EVENTS.PURCHASE_COMPLETED, {
+                    order_id: order.id,
+                    total_amount: order.total,
+                    payment_method: 'stripe',
+                    items_purchased: order.items.length,
+                    discount_applied: order.discount > 0,
+                    discount_amount: order.discount,
+                    product_types: order.items.map((item) => item.type).join(','),
+                    purchase_flow: 'stripe_checkout'
+                })
+
+                track(TRACKING_EVENTS.PAGE_VIEWED, {
+                    page_name: 'checkout_success',
+                    order_id: order.id,
+                    order_value: order.total
+                })
 
                 // Cache successful order
                 sessionStorage.setItem(storageKey, JSON.stringify(order))
@@ -135,7 +163,7 @@ function CheckoutSuccessContent() {
                 setTimeout(() => {
                     if (isMounted) {
                         triggerConfetti()
-                        setState(prev => ({ ...prev, confettiTriggered: true }))
+                        setState((prev) => ({ ...prev, confettiTriggered: true }))
                     }
                 }, 100)
 
@@ -148,12 +176,18 @@ function CheckoutSuccessContent() {
                         console.error('Cart clear failed:', e)
                     }
                 }, 500)
-
             } catch (error) {
                 if (!isMounted) return
-                
+
+                // Track purchase failure
+                track(TRACKING_EVENTS.PURCHASE_FAILED, {
+                    error_message: error.message || 'Failed to confirm order',
+                    session_id: sessionId,
+                    failure_step: 'order_confirmation'
+                })
+
                 const message = error?.message || 'Failed to confirm order'
-                
+
                 if (/already|existing|duplicate/i.test(message)) {
                     setState({
                         loading: false,
@@ -172,7 +206,7 @@ function CheckoutSuccessContent() {
                     })
                     setTimeout(() => triggerConfetti(), 100)
                 } else {
-                    setState(prev => ({ ...prev, loading: false, error: message }))
+                    setState((prev) => ({ ...prev, loading: false, error: message }))
                 }
             }
         }
@@ -215,6 +249,22 @@ function CheckoutSuccessContent() {
     const { order } = state
     const formatCurrency = (val) => Number(val ?? 0).toFixed(2)
 
+    const handleAccessProducts = () => {
+        track(TRACKING_EVENTS.BUTTON_CLICKED, {
+            button_name: 'access_my_products',
+            location: 'checkout_success',
+            order_id: order?.id
+        })
+    }
+
+    const handleContinueShopping = () => {
+        track(TRACKING_EVENTS.BUTTON_CLICKED, {
+            button_name: 'continue_shopping',
+            location: 'checkout_success',
+            order_id: order?.id
+        })
+    }
+
     return (
         <div className="min-h-screen bg-black relative overflow-hidden">
             {/* Background Effects */}
@@ -241,11 +291,11 @@ function CheckoutSuccessContent() {
                                     key={i}
                                     className="absolute top-1/2 left-1/2"
                                     initial={{ opacity: 0, scale: 0 }}
-                                    animate={{ 
+                                    animate={{
                                         opacity: [0, 1, 0],
                                         scale: [0, 1, 0],
-                                        x: Math.cos(i * 60 * Math.PI / 180) * 50,
-                                        y: Math.sin(i * 60 * Math.PI / 180) * 50
+                                        x: Math.cos((i * 60 * Math.PI) / 180) * 50,
+                                        y: Math.sin((i * 60 * Math.PI) / 180) * 50
                                     }}
                                     transition={{ duration: 2, delay: i * 0.1, repeat: Infinity }}>
                                     <Sparkles className="h-4 w-4 text-green-300" />
@@ -370,11 +420,13 @@ function CheckoutSuccessContent() {
                                 className="space-y-3">
                                 <Link
                                     href="/purchases"
+                                    onClick={handleAccessProducts}
                                     className="w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:from-green-400 hover:to-green-500 transition-all shadow-lg shadow-green-500/25">
                                     Access My Products
                                 </Link>
                                 <Link
                                     href="/explore"
+                                    onClick={handleContinueShopping}
                                     className="w-full flex items-center justify-center px-6 py-4 bg-white/10 text-white rounded-xl font-semibold hover:bg-white/20 transition-all border border-white/20">
                                     <span>Continue Shopping</span>
                                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -395,3 +447,4 @@ export default function CheckoutSuccessPage() {
         </Suspense>
     )
 }
+

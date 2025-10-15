@@ -7,6 +7,8 @@ import { useProductCreateStore, useProductCreateSelectors } from '@/store/produc
 import { STEP_HELPERS } from '@/lib/constants/productCreate'
 import { productsAPI } from '@/lib/api'
 import { useNotifications } from '@/hooks/useNotifications'
+import { track } from '@/lib/utils/analytics'
+import { TRACKING_EVENTS } from '@/lib/constants/tracking'
 import Step1Basic from './steps/Step1Basic'
 import Step2Details from './steps/Step2Details'
 import Step3Technical from './steps/Step3Technical'
@@ -16,6 +18,7 @@ import Step6Launch from './steps/Step6Launch'
 import LivePreview from './components/LivePreview'
 import HelperRail from './components/HelperRail'
 import ReviewSubmit from './components/ReviewSubmit'
+
 const STEP_COMPONENTS = {
     1: Step1Basic,
     2: Step2Details,
@@ -24,6 +27,7 @@ const STEP_COMPONENTS = {
     5: Step5MediaPricing,
     6: Step6Launch
 }
+
 export default function ProductCreatePage() {
     const router = useRouter()
     const [mode, setMode] = useState('form')
@@ -46,6 +50,15 @@ export default function ProductCreatePage() {
     const toApiPayload = useProductCreateStore((state) => state.toApiPayload)
     const setSubmitting = useProductCreateStore((state) => state.setSubmitting)
     const { showSuccess, showError, showInfo } = useNotifications()
+
+    useEffect(() => {
+        track(TRACKING_EVENTS.PRODUCT_CREATED, {
+            step: currentStep,
+            mode: 'started',
+            completion_percentage: completionPercentage
+        })
+    }, [])
+
     const handleStepClick = useCallback(
         (targetStep) => {
             if (targetStep <= currentStep) {
@@ -77,6 +90,7 @@ export default function ProductCreatePage() {
         },
         [currentStep, validateStep, setStep, showError]
     )
+
     useEffect(() => {
         requestAnimationFrame(() => {
             document.documentElement.scrollTo({ top: 0, behavior: 'smooth' })
@@ -87,10 +101,19 @@ export default function ProductCreatePage() {
             }
         })
     }, [currentStep, showReview, mode])
+
     const handleNext = useCallback(() => {
         const isValid = validateStep(currentStep)
         if (isValid) {
             markStepComplete(currentStep)
+
+            track(TRACKING_EVENTS.BUTTON_CLICKED, {
+                button_name: 'next_step',
+                product_creation_step: currentStep,
+                step_name: STEP_HELPERS[currentStep]?.title || `Step ${currentStep}`,
+                completion_percentage: completionPercentage
+            })
+
             if (currentStep < 6) {
                 nextStep()
             } else {
@@ -99,24 +122,29 @@ export default function ProductCreatePage() {
         } else {
             showError('Please fix the errors before proceeding')
         }
-    }, [currentStep, validateStep, markStepComplete, nextStep, showError])
+    }, [currentStep, validateStep, markStepComplete, nextStep, showError, completionPercentage])
+
     const handlePrev = useCallback(() => {
         if (currentStep > 1) {
             prevStep()
         }
     }, [currentStep, prevStep])
+
     const handleSave = useCallback(() => {
         save()
         showSuccess('Progress saved automatically')
     }, [save, showSuccess])
+
     const handleReset = useCallback(() => {
         setShowResetConfirm(true)
     }, [])
+
     const confirmReset = useCallback(() => {
         reset()
         setShowResetConfirm(false)
         showInfo('Form reset successfully')
     }, [reset, showInfo])
+
     const handleSubmit = useCallback(async () => {
         try {
             setSubmitting(true)
@@ -137,6 +165,35 @@ export default function ProductCreatePage() {
             }
             const response = await productsAPI.createProduct(payload)
             if (response.data) {
+                const productTypeEvents = {
+                    'prompt': TRACKING_EVENTS.AI_PROMPT_CREATED,
+                    'automation': TRACKING_EVENTS.AUTOMATION_CREATED,
+                    'agent': TRACKING_EVENTS.AI_AGENT_CREATED
+                }
+
+                const specificEvent = productTypeEvents[payload.type] || TRACKING_EVENTS.PRODUCT_CREATED
+                track(specificEvent, {
+                    product_type: payload.type,
+                    category: payload.category,
+                    industry: payload.industry,
+                    pricing_model: payload.pricingModel,
+                    has_premium_content: payload.premiumContent?.enabled || false,
+                    tags_count: payload.productTags?.length || 0,
+                    tools_used: payload.toolsUsed?.length || 0,
+                    setup_time: payload.setupTimeEstimate,
+                    creation_time_minutes: Math.round((Date.now() - (payload.createdAt || Date.now())) / (1000 * 60))
+                })
+
+                track(TRACKING_EVENTS.PRODUCT_PUBLISHED, {
+                    product_type: payload.type,
+                    category: payload.category,
+                    industry: payload.industry,
+                    pricing_model: payload.pricingModel,
+                    has_premium_content: payload.premiumContent?.enabled || false,
+                    tags_count: payload.productTags?.length || 0,
+                    creation_time_minutes: Math.round((Date.now() - (payload.createdAt || Date.now())) / (1000 * 60))
+                })
+
                 showSuccess('Product created successfully!')
                 setTimeout(() => {
                     router.push('/seller/products')
@@ -144,6 +201,13 @@ export default function ProductCreatePage() {
                 reset()
             }
         } catch (error) {
+            track(TRACKING_EVENTS.ERROR_OCCURRED, {
+                error_type: 'product_creation_failed',
+                error_message: error.message || 'Unknown error',
+                step: 'submission',
+                completion_percentage: completionPercentage
+            })
+
             console.error('Submission error:', error)
             if (error.response?.data) {
                 const errorData = error.response.data
@@ -168,7 +232,8 @@ export default function ProductCreatePage() {
         } finally {
             setSubmitting(false)
         }
-    }, [validateStep, toApiPayload, showError, showSuccess, router, reset, setSubmitting])
+    }, [validateStep, toApiPayload, showError, showSuccess, router, reset, setSubmitting, completionPercentage])
+
     const CurrentStepComponent = STEP_COMPONENTS[currentStep]
     const stepInfo = STEP_HELPERS[currentStep] || {}
     const hasStepErrors = Object.keys(errors).some((key) => {
@@ -182,6 +247,7 @@ export default function ProductCreatePage() {
         }
         return stepFields[currentStep]?.includes(key)
     })
+
     useEffect(() => {
         requestAnimationFrame(() => {
             document.documentElement.scrollTo({ top: 0, behavior: 'smooth' })
@@ -192,6 +258,7 @@ export default function ProductCreatePage() {
             }
         })
     }, [currentStep, showReview, mode])
+
     return (
         <div>
             <div className="border-b border-gray-700 bg-gray-900/95 backdrop-blur-md sticky top-0 z-50">

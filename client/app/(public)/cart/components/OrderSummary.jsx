@@ -6,6 +6,9 @@ import { formatCurrency, formatPromoDisplay } from '../utils'
 import { CHECKOUT_FEATURES } from '../constants'
 import CartPromoDisplay from '@/components/features/cart/CartPromoDisplay'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
+import { track } from '@/lib/utils/analytics'
+import { TRACKING_EVENTS } from '@/lib/constants/tracking'
+
 export default function OrderSummary({
     subtotal,
     totalSavings,
@@ -29,6 +32,17 @@ export default function OrderSummary({
     const numericTotalSavings = typeof totalSavings === 'number' ? totalSavings : parseFloat(totalSavings) || 0
     const numericDiscount = typeof discount === 'number' ? discount : parseFloat(discount) || 0
     const numericTotal = typeof total === 'number' ? total : parseFloat(total) || 0
+
+    const handleCheckoutClick = () => {
+        track(TRACKING_EVENTS.CHECKOUT_STARTED, {
+            cart_value: total,
+            item_count: cartItems?.length || 0,
+            promo_applied: promocodeData ? promocodeData.code : null,
+            discount_amount: discount || 0
+        })
+        handleCheckout()
+    }
+
     return (
         <div className="lg:col-span-1">
             {notification && (
@@ -95,7 +109,7 @@ export default function OrderSummary({
                 </div>
                 <div className="mt-6">
                     <button
-                        onClick={handleCheckout}
+                        onClick={handleCheckoutClick}
                         className="w-full inline-flex items-center justify-center gap-3 px-5 py-3 bg-[#00FF89] text-black font-bold rounded-xl hover:bg-[#00FF89]/95 focus:outline-none focus:ring-2 focus:ring-[#00FF89]/40"
                         aria-label="Proceed to checkout">
                         <CreditCard className="w-5 h-5" />

@@ -16,11 +16,11 @@ import {
   DSStack,
   DSHeading,
   DSText,
-  DSButton,
-  DSBadge,
-  DSStatsCard,
   DSLoadingState
 } from '@/lib/design-system/components'
+import { track } from '@/lib/utils/analytics'
+import { TRACKING_EVENTS } from '@/lib/constants/tracking'
+
 const BackgroundEffectsLight = dynamic(() => import('./hero/BackgroundEffectsLight'), {
   ssr: false,
   loading: () => <DSLoadingState type="skeleton" height="100vh" className="absolute inset-0" />
@@ -73,6 +73,14 @@ export default function HeroSectionOptimized() {
 
   const handleSearch = (query) => {
     console.log('🎯 [HeroSectionOptimized] Search initiated:', query)
+  }
+
+  const handleExploreClick = () => {
+    track(TRACKING_EVENTS.BUTTON_CLICKED, {
+      button_name: 'explore_marketplace',
+      location: 'hero_section',
+      user_type: user ? 'authenticated' : 'anonymous'
+    })
   }
 
   // Always wrap in HeroAccessibility - even during loading
@@ -215,6 +223,7 @@ export default function HeroSectionOptimized() {
                       aria-label="Explore AI marketplace with thousands of tools and prompts"
                     >
                       <button 
+                        onClick={handleExploreClick}
                         className="group relative inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-3 text-black font-semibold bg-[#00FF89] rounded-lg hover:bg-[#00FF89]/90 transition-all duration-200 hover:shadow-lg hover:shadow-[#00FF89]/25 w-full sm:w-auto min-h-[48px] touch-manipulation focus:outline-none focus:ring-2 focus:ring-[#00FF89] focus:ring-offset-2 focus:ring-offset-black"
                         aria-describedby="explore-button-desc"
                       >

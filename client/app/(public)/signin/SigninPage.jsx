@@ -8,6 +8,9 @@ import Header from '@/components/shared/layout/Header'
 import { DSStack, DSHeading, DSText, DSButton, DSBadge } from '@/lib/design-system'
 import { authAPI } from '@/lib/api/auth'
 import { useNotifications } from '@/components/shared/NotificationProvider'
+import { track } from '@/lib/utils/analytics'
+import { TRACKING_EVENTS, TRACKING_PROPERTIES } from '@/lib/constants/tracking'
+
 export default function SignInPage() {
     const { login } = useAuth()
     const { showError, showSuccess } = useNotifications()
@@ -19,6 +22,7 @@ export default function SignInPage() {
         emailAddress: '',
         password: ''
     })
+
     const handleChange = (e) => {
         const { name, value } = e.target
         setFormData({ ...formData, [name]: value })
@@ -26,13 +30,25 @@ export default function SignInPage() {
             setLoginError('')
         }
     }
+
     const handleLogin = async (e) => {
         e.preventDefault()
         if (loading) return
+
         setLoading(true)
         setLoginError('')
+
+        // Track signin attempt
+        track(TRACKING_EVENTS.SIGNIN_STARTED, {
+            method: TRACKING_PROPERTIES.METHOD.EMAIL
+        })
+
         try {
             await login(formData)
+            // Track successful signin
+            track(TRACKING_EVENTS.SIGNIN_COMPLETED, {
+                method: TRACKING_PROPERTIES.METHOD.EMAIL
+            })
         } catch (error) {
             const errorMessage = error?.message || error?.data?.message || 'Login failed. Please try again.'
             if (errorMessage.toLowerCase().includes('account not confirmed')) {
@@ -41,17 +57,29 @@ export default function SignInPage() {
             } else {
                 setLoginError(errorMessage)
             }
+            // Track failed signin
+            track(TRACKING_EVENTS.SIGNIN_FAILED, {
+                method: TRACKING_PROPERTIES.METHOD.EMAIL,
+                error: errorMessage
+            })
         } finally {
             setLoading(false)
         }
     }
+
     const handleGoogleAuth = () => {
         if (!loading) {
+            // Track Google signin attempt
+            track(TRACKING_EVENTS.SIGNIN_STARTED, {
+                method: TRACKING_PROPERTIES.METHOD.GOOGLE
+            })
+
             import('@/lib/api/auth').then(({ authAPI }) => {
                 authAPI.googleAuth()
             })
         }
     }
+
     const handleResendVerification = async () => {
         if (!formData.emailAddress) {
             showError('Please enter your email address first')

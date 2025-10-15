@@ -9,3 +9,6 @@ export * from './browser'
 
 // Authentication utilities
 export * from './auth'
+
+// Analytics utilities
+export { track, setUserProperties, initAnalytics } from './analytics'
