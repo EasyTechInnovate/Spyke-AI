@@ -12,6 +12,8 @@ import { CATEGORIES, PRODUCT_TYPES, INDUSTRIES, SETUP_TIMES, ITEMS_PER_PAGE, DEF
 import { Loader2, AlertTriangle } from 'lucide-react'
 import { useDebounce } from '@/hooks/useDebounce'
 import { categoryAPI } from '@/lib/api/toolsNiche'
+import { track } from '@/lib/utils/analytics'
+import { TRACKING_EVENTS, TRACKING_PROPERTIES } from '@/lib/constants/tracking'
 const FilterSidebar = dynamic(() => import('@/components/features/explore/FilterSidebar'), { ssr: false })
 const MobileFilterDrawer = dynamic(() => import('@/components/features/explore/MobileFilterDrawer'), { ssr: false })
 const VirtualizedProductGrid = dynamic(() => import('@/components/features/explore/VirtualizedProductGrid'), { ssr: false })
@@ -50,22 +52,22 @@ function useURLState() {
         const industry = get('industry', 'all')
         const setupTime = get('setupTime', 'all')
         const search = get('search', '')
-        const sort = get('sort', 'newest') 
+        const sort = get('sort', 'newest')
         const rating = parseInt(get('rating', '0')) || 0
         const verifiedOnly = get('verified', '') === 'true'
         const minPrice = parseInt(get('minPrice', '0')) || 0
         const maxPrice = parseInt(get('maxPrice', '1000')) || 1000
-        return { 
-            page, 
-            category, 
-            type, 
-            industry, 
-            setupTime, 
-            search, 
-            sort, 
-            rating, 
-            verifiedOnly, 
-            priceRange: [minPrice, maxPrice] 
+        return {
+            page,
+            category,
+            type,
+            industry,
+            setupTime,
+            search,
+            sort,
+            rating,
+            verifiedOnly,
+            priceRange: [minPrice, maxPrice]
         }
     }, [searchParams])
 }
@@ -197,7 +199,7 @@ function useExploreData(initialURLState) {
     )
     useEffect(() => {
         fetchProducts(initialURLState)
-    }, []) 
+    }, [])
     return { products, totalItems, loading, error, fetchProducts }
 }
 export default function ExplorePage() {
@@ -228,9 +230,166 @@ function ExplorePageContent() {
     const [viewMode, setViewMode] = useState('grid')
     const debouncedSearch = useDebounce(filters.search, 350)
     const { products, totalItems, loading, error, fetchProducts } = useExploreData({ ...filters, page, sort: urlState.sort })
+
+    const getAppliedFiltersDetails = useCallback(() => {
+        const appliedFilters = {}
+
+        if (filters.category !== 'all') appliedFilters.category = filters.category
+        if (filters.type !== 'all') appliedFilters.type = filters.type
+        if (filters.industry !== 'all') appliedFilters.industry = filters.industry
+        if (filters.setupTime !== 'all') appliedFilters.setupTime = filters.setupTime
+        if (filters.rating > 0) appliedFilters.rating = filters.rating
+        if (filters.verifiedOnly) appliedFilters.verifiedOnly = true
+        if (filters.priceRange[0] > 0 || filters.priceRange[1] < 1000) {
+            appliedFilters.priceRange = {
+                min: filters.priceRange[0],
+                max: filters.priceRange[1]
+            }
+        }
+
+        return {
+            filters_applied: appliedFilters,
+            filters_count: Object.keys(appliedFilters).length,
+            has_filters: Object.keys(appliedFilters).length > 0
+        }
+    }, [filters])
+
+    const prevDebouncedSearchRef = useRef('')
+    useEffect(() => {
+        if (debouncedSearch !== prevDebouncedSearchRef.current) {
+            if (debouncedSearch && debouncedSearch.trim().length >= 2) {
+                const filterDetails = getAppliedFiltersDetails()
+                track(TRACKING_EVENTS.SEARCH, {
+                    ...TRACKING_PROPERTIES.SEARCH,
+                    search_query: debouncedSearch.trim(),
+                    search_length: debouncedSearch.trim().length,
+                    current_page: page,
+                    sort_by: sortId || 'newest',
+                    ...filterDetails
+                })
+            }
+            prevDebouncedSearchRef.current = debouncedSearch
+        }
+    }, [debouncedSearch, filters, page, sortId, getAppliedFiltersDetails])
+
+    const prevFiltersRef = useRef(filters)
+    useEffect(() => {
+        const prevFilters = prevFiltersRef.current
+        const currentFilters = filters
+
+        const filtersChanged =
+            prevFilters.category !== currentFilters.category ||
+            prevFilters.type !== currentFilters.type ||
+            prevFilters.industry !== currentFilters.industry ||
+            prevFilters.setupTime !== currentFilters.setupTime ||
+            prevFilters.rating !== currentFilters.rating ||
+            prevFilters.verifiedOnly !== currentFilters.verifiedOnly ||
+            prevFilters.priceRange[0] !== currentFilters.priceRange[0] ||
+            prevFilters.priceRange[1] !== currentFilters.priceRange[1]
+
+        if (filtersChanged) {
+            const changedFilters = {}
+            if (prevFilters.category !== currentFilters.category)
+                changedFilters.category = { from: prevFilters.category, to: currentFilters.category }
+            if (prevFilters.type !== currentFilters.type) changedFilters.type = { from: prevFilters.type, to: currentFilters.type }
+            if (prevFilters.industry !== currentFilters.industry)
+                changedFilters.industry = { from: prevFilters.industry, to: currentFilters.industry }
+            if (prevFilters.setupTime !== currentFilters.setupTime)
+                changedFilters.setupTime = { from: prevFilters.setupTime, to: currentFilters.setupTime }
+            if (prevFilters.rating !== currentFilters.rating) changedFilters.rating = { from: prevFilters.rating, to: currentFilters.rating }
+            if (prevFilters.verifiedOnly !== currentFilters.verifiedOnly)
+                changedFilters.verifiedOnly = { from: prevFilters.verifiedOnly, to: currentFilters.verifiedOnly }
+            if (prevFilters.priceRange[0] !== currentFilters.priceRange[0] || prevFilters.priceRange[1] !== currentFilters.priceRange[1]) {
+                changedFilters.priceRange = {
+                    from: { min: prevFilters.priceRange[0], max: prevFilters.priceRange[1] },
+                    to: { min: currentFilters.priceRange[0], max: currentFilters.priceRange[1] }
+                }
+            }
+
+            const filterDetails = getAppliedFiltersDetails()
+            track(TRACKING_EVENTS.FILTER_APPLIED, {
+                ...TRACKING_PROPERTIES.FILTER_CHANGE,
+                changed_filters: changedFilters,
+                current_page: page,
+                has_search_query: !!(filters.search && filters.search.trim()),
+                search_query_length: filters.search ? filters.search.trim().length : 0,
+                sort_by: sortId || 'newest',
+                ...filterDetails
+            })
+        }
+
+        prevFiltersRef.current = currentFilters
+    }, [filters, page, sortId, getAppliedFiltersDetails])
+
+    const prevSortRef = useRef(sortId)
+    useEffect(() => {
+        if (prevSortRef.current !== sortId && prevSortRef.current !== '') {
+            const filterDetails = getAppliedFiltersDetails()
+            track(TRACKING_EVENTS.SORT_CHANGE, {
+                ...TRACKING_PROPERTIES.SORT_CHANGE,
+                sort_from: prevSortRef.current,
+                sort_to: sortId,
+                current_page: page,
+                has_search_query: !!(filters.search && filters.search.trim()),
+                search_query_length: filters.search ? filters.search.trim().length : 0,
+                ...filterDetails
+            })
+        }
+        prevSortRef.current = sortId
+    }, [sortId, page, filters.search, getAppliedFiltersDetails])
+
+    const clearFilters = () => {
+        const filterDetails = getAppliedFiltersDetails()
+        track(TRACKING_EVENTS.CLEAR_FILTERS, {
+            ...TRACKING_PROPERTIES.CLEAR_FILTERS,
+            cleared_filters: filterDetails.filters_applied,
+            filters_count_cleared: filterDetails.filters_count,
+            current_page: page,
+            has_search_query: !!(filters.search && filters.search.trim()),
+            search_query_length: filters.search ? filters.search.trim().length : 0,
+            sort_by: sortId || 'newest'
+        })
+        setFilters(DEFAULT_FILTERS)
+        setPage(1)
+    }
+
+    const handlePageChange = (p) => {
+        const filterDetails = getAppliedFiltersDetails()
+        track(TRACKING_EVENTS.PAGE_CHANGE, {
+            ...TRACKING_PROPERTIES.PAGE_CHANGE,
+            page_from: page,
+            page_to: p,
+            total_pages: totalPages,
+            has_search_query: !!(filters.search && filters.search.trim()),
+            search_query_length: filters.search ? filters.search.trim().length : 0,
+            sort_by: sortId || 'newest',
+            ...filterDetails
+        })
+
+        setPage(p)
+        if (typeof window !== 'undefined') {
+            const el = document.getElementById('products-section')
+            el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+    }
+
     useEffect(() => {
         fetchProducts({ ...filters, search: debouncedSearch, page, sort: sortId })
-    }, [filters.category, filters.type, filters.industry, filters.setupTime, debouncedSearch, filters.rating, filters.verifiedOnly, filters.priceRange[0], filters.priceRange[1], page, sortId, fetchProducts])
+    }, [
+        filters.category,
+        filters.type,
+        filters.industry,
+        filters.setupTime,
+        debouncedSearch,
+        filters.rating,
+        filters.verifiedOnly,
+        filters.priceRange[0],
+        filters.priceRange[1],
+        page,
+        sortId,
+        fetchProducts
+    ])
+
     useEffect(() => {
         const params = new URLSearchParams()
         if (filters.category !== 'all') params.set('category', filters.category)
@@ -264,17 +423,6 @@ function ExplorePageContent() {
     const handleFilterChange = (next) => {
         setFilters(next)
         setPage(1)
-    }
-    const clearFilters = () => {
-        setFilters(DEFAULT_FILTERS)
-        setPage(1)
-    }
-    const handlePageChange = (p) => {
-        setPage(p)
-        if (typeof window !== 'undefined') {
-            const el = document.getElementById('products-section')
-            el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        }
     }
     const useVirtual = products.length > 50
     return (

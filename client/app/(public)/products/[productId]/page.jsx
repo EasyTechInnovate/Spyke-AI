@@ -19,6 +19,9 @@ import ProductBreadcrumb from '@/components/product/ProductBreadcrumb'
 import ProductHero from '@/components/product/ProductHero'
 import InlineNotification from '@/components/shared/notifications/InlineNotification'
 import Notification from '@/components/shared/Notification'
+import { track } from '@/lib/utils/analytics'
+import { TRACKING_EVENTS, TRACKING_PROPERTIES } from '@/lib/constants/tracking'
+
 const PRODUCT_TABS = [
     {
         id: 'overview',
@@ -120,6 +123,7 @@ export default function ProductPage() {
     const [addingToCart, setAddingToCart] = useState(false)
     const [activeTab, setActiveTab] = useState('overview')
     const [relatedProducts, setRelatedProducts] = useState([])
+    const hasTrackedViewRef = useRef(false) // Use ref instead of state to avoid re-renders
     const ctaRef = useRef(null)
     const discountPercentage = useMemo(() => {
         if (!product || product.originalPrice <= product.price) return 0
@@ -164,10 +168,20 @@ export default function ProductPage() {
                 if (response && response.data) {
                     const productData = response.data
                     setProduct(productData)
-
-                    // Initialize liked state based on product data
                     setLiked(productData.userInteractions?.isLiked || false)
                     setUpvoted(productData.userInteractions?.isUpvoted || false)
+
+                    // Track product viewed event only once per product
+                    if (!hasTrackedViewRef.current) {
+                        track(TRACKING_EVENTS.PRODUCT_VIEWED, {
+                            product_id: productData._id,
+                            product_name: productData.title,
+                            product_category: productData.category,
+                            product_price: productData.price,
+                            product_slug: productSlug
+                        })
+                        hasTrackedViewRef.current = true
+                    }
 
                     if (productData._id) {
                         try {
@@ -246,6 +260,13 @@ export default function ProductPage() {
             const success = await addToCart(cartProduct)
             if (success) {
                 addNotification(`"${product.title}" has been added to your cart!`, 'success')
+                track(TRACKING_EVENTS.PRODUCT_ADDED_TO_CART, {
+                    [TRACKING_PROPERTIES.PRODUCT_ID]: product._id,
+                    [TRACKING_PROPERTIES.PRODUCT_NAME]: product.title,
+                    [TRACKING_PROPERTIES.PRODUCT_CATEGORY]: product.category,
+                    [TRACKING_PROPERTIES.PRODUCT_PRICE]: product.price
+                })
+
                 setTimeout(() => {
                     setAddingToCart(false)
                 }, 500)
@@ -343,7 +364,6 @@ export default function ProductPage() {
         const previousFavorites = product.favorites || 0
 
         try {
-            // Optimistically update the UI
             setLiked(newLiked)
             setProduct((prevProduct) => ({
                 ...prevProduct,
